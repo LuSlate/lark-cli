@@ -28,12 +28,14 @@ const (
 	SourceValue = "lark-cli"
 
 	HeaderUserAgent = "User-Agent"
+	HeaderLarkChannel = "Rpc-Persist-Lane-C-Lark-Channel"
 
 	// BuildKindOfficial / BuildKindExtended / BuildKindUnknown are the values
 	// reported in the X-Cli-Build header; see DetectBuildKind for semantics.
 	BuildKindOfficial = "official"
 	BuildKindExtended = "extended"
 	BuildKindUnknown  = "unknown"
+	LarkChannelGray   = "GRAY"
 
 	officialModulePath = "github.com/larksuite/cli"
 )
@@ -50,6 +52,7 @@ func BaseSecurityHeaders() http.Header {
 	h.Set(HeaderVersion, build.Version)
 	h.Set(HeaderBuild, DetectBuildKind())
 	h.Set(HeaderUserAgent, UserAgentValue())
+	h.Set(HeaderLarkChannel, LarkChannelGray)
 	return h
 }
 
