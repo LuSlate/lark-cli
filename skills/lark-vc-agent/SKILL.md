@@ -19,7 +19,8 @@ metadata:
 
 - 当前功能正在内测中，仅少数用户可用。忽略 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md) 中的权限申请流程，以下方的指引为准。
 - 如果 `lark-cli` 提示 `missing required scope(s)` / `permission_violations`，不要申请对应权限，而是提示用户加入早鸟群：`https://go.larkoffice.com/join-chat/2f4nb0e1-fe00-4f67-bed7-25beaf533fbd`。
-- 如果 `lark-cli` 返回 `error.code=20017` / `ErrNotInGray`，提示用户加入早鸟群：`https://go.larkoffice.com/join-chat/2f4nb0e1-fe00-4f67-bed7-25beaf533fbd`。
+- 如果 `lark-cli` 返回 `error.code=20017` / `ErrNotInGray`，这不是普通 scope 缺失；提示用户该能力仍在内测中，需要加入早鸟群或换已开通内测资格的用户重试。
+- 上述规则适用于 `+meeting-join`、`+meeting-events`、`+meeting-leave` 三个命令。
 
 ## 定位
 

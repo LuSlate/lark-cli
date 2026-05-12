@@ -89,7 +89,25 @@ lark-cli vc +meeting-join --meeting-number 123456789
 lark-cli vc +meeting-leave --meeting-id <meeting.id>
 ```
 
-### 场景 2：加入会议 → 会后拉取纪要 / 录制
+### 场景 2：同时加入多场会议
+
+可以帮助用户同时加入多场会议，但 `+meeting-join` 是单会议 shortcut：一次命令只接收一个 `--meeting-number`，不接受逗号分隔的多个会议号。用户给出多个会议号时，由 agent 按会议号逐个调用 `+meeting-join` 并聚合结果；每成功加入一场，都必须分别记录该场返回的 `meeting.id`，不要把 9 位会议号当作后续 `meeting_id` 使用。
+
+```bash
+# 对每个 9 位会议号分别调用一次
+lark-cli vc +meeting-join --meeting-number 123456789
+lark-cli vc +meeting-join --meeting-number 987654321
+
+# 后续按每场会议自己的 meeting.id 分别查事件和离会
+lark-cli vc +meeting-events --meeting-id <meeting.id-1> --page-all --format pretty
+lark-cli vc +meeting-events --meeting-id <meeting.id-2> --page-all --format pretty
+lark-cli vc +meeting-leave --meeting-id <meeting.id-1>
+lark-cli vc +meeting-leave --meeting-id <meeting.id-2>
+```
+
+多场会议的事件查询和离会都必须按 `meeting.id` 分开处理：对每场会议分别执行 `+meeting-events`，保留各自的 `page_token`；任务结束时对每场会议分别执行 `+meeting-leave`。
+
+### 场景 3：加入会议 → 会后拉取纪要 / 录制
 
 ```bash
 # 第 1 步：加入并参会
