@@ -2891,6 +2891,63 @@
       }
     ]
   },
+  "+cells-batch-clear": {
+    "risk": "high-risk-write",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "ranges",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Target ranges as a JSON array (e.g. `[\"sheet1!A1:B2\",\"sheet1!D1:D10\"]`); each item must include the sheet prefix; the same scope is cleared from every range",
+        "input": [
+          "file",
+          "stdin"
+        ]
+      },
+      {
+        "name": "scope",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Clear scope: `content` (default, values only) / `formats` (formats only) / `all` (values and formats)",
+        "default": "content",
+        "enum": [
+          "content",
+          "formats",
+          "all"
+        ]
+      },
+      {
+        "name": "yes",
+        "kind": "system",
+        "type": "bool",
+        "required": "required",
+        "desc": "Confirm destructive write (exit code 10 without this flag); batch clear is irreversible"
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
   "+chart-list": {
     "risk": "read",
     "flags": [

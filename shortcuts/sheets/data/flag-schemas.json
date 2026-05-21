@@ -67,7 +67,7 @@
                 "+float-image-update",
                 "+float-image-delete"
               ],
-              "description": "CLI shortcut 名（不是底层 MCP tool 名）。+dim-move 不在表中——它走 legacy v2 endpoint，无法批；+cells-set-image / +workbook-create 也不在——前者含多步图片上传，后者是新建工作簿，都不属于 atomic batch 范畴；所有读操作、fan-out wrapper（+batch-update 自身 / +cells-batch-set-style / +dropdown-{update,delete}）一律禁。"
+              "description": "CLI shortcut 名（不是底层 MCP tool 名）。+dim-move 不在表中——它走 legacy v2 endpoint，无法批；+cells-set-image / +workbook-create 也不在——前者含多步图片上传，后者是新建工作簿，都不属于 atomic batch 范畴；所有读操作、fan-out wrapper（+batch-update 自身 / +cells-batch-set-style / +cells-batch-clear / +dropdown-{update,delete}）一律禁。"
             },
             "input": {
               "type": "object",
@@ -88,12 +88,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -116,12 +117,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -144,12 +146,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -172,12 +175,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -210,12 +214,13 @@
                     "type": "string"
                   },
                   "style": {
-                    "description": "边框线型",
+                    "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                     "enum": [
                       "solid",
                       "dashed",
                       "dotted",
-                      "double"
+                      "double",
+                      "none"
                     ],
                     "type": "string"
                   },
@@ -238,12 +243,13 @@
                     "type": "string"
                   },
                   "style": {
-                    "description": "边框线型",
+                    "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                     "enum": [
                       "solid",
                       "dashed",
                       "dotted",
-                      "double"
+                      "double",
+                      "none"
                     ],
                     "type": "string"
                   },
@@ -266,12 +272,13 @@
                     "type": "string"
                   },
                   "style": {
-                    "description": "边框线型",
+                    "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                     "enum": [
                       "solid",
                       "dashed",
                       "dotted",
-                      "double"
+                      "double",
+                      "none"
                     ],
                     "type": "string"
                   },
@@ -294,12 +301,13 @@
                     "type": "string"
                   },
                   "style": {
-                    "description": "边框线型",
+                    "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                     "enum": [
                       "solid",
                       "dashed",
                       "dotted",
-                      "double"
+                      "double",
+                      "none"
                     ],
                     "type": "string"
                   },
@@ -615,12 +623,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -643,12 +652,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -671,12 +681,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },
@@ -699,12 +710,13 @@
                 "type": "string"
               },
               "style": {
-                "description": "边框线型",
+                "description": "边框线型；传 \"none\" 表示清除该方向边框（无边框线）",
                 "enum": [
                   "solid",
                   "dashed",
                   "dotted",
-                  "double"
+                  "double",
+                  "none"
                 ],
                 "type": "string"
               },

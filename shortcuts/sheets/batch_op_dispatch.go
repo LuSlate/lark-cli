@@ -25,7 +25,7 @@ import (
 // 产出的 MCP body 与该 shortcut 单独调用产出的 body 完全一致（由
 // batch-vs-standalone 契约测试保证）。dispatch 表只列**可纳入 atomic batch
 // 的 write shortcut**——读操作、fan-out wrapper（+batch-update 自身、
-// +cells-batch-set-style、+dropdown-{update,delete}）一律不放进表里，
+// +cells-batch-set-style、+cells-batch-clear、+dropdown-{update,delete}）一律不放进表里，
 // 用户传到 +batch-update 里会被 translator 拒绝。
 
 // batchTranslateFn turns a sub-op's CLI-shape input (via flagView) into the MCP
@@ -224,7 +224,7 @@ func translateBatchOp(raw interface{}, token string, index int) (map[string]inte
 	if !ok {
 		return nil, common.FlagErrorf(
 			"operations[%d]: shortcut %q not allowed in +batch-update "+
-				"(read ops / fan-out wrappers like +batch-update / +cells-batch-set-style / +dropdown-{update,delete} are excluded; "+
+				"(read ops / fan-out wrappers like +batch-update / +cells-batch-set-style / +cells-batch-clear / +dropdown-{update,delete} are excluded; "+
 				"run `lark-cli sheets +batch-update --print-schema --flag-name operations` to see the full enum)",
 			index, sc,
 		)

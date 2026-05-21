@@ -103,6 +103,89 @@ func TestCellsBatchSetStyle_FansOutOps(t *testing.T) {
 	}
 }
 
+// TestCellsBatchClear_FansOutOps verifies multiple ranges produce one
+// clear_cell_range op each, all sharing the same --scope-derived clear_type,
+// with the sheet prefix split into sheet_name + bare range.
+func TestCellsBatchClear_FansOutOps(t *testing.T) {
+	t.Parallel()
+	body := parseDryRunBody(t, CellsBatchClear, []string{
+		"--url", testURL,
+		"--ranges", `["sheet1!A1:A10","sheet2!C1:D5","sheet1!F3"]`,
+		"--scope", "all",
+		"--yes",
+	})
+	input := decodeToolInput(t, body, "batch_update")
+	ops, _ := input["operations"].([]interface{})
+	if len(ops) != 3 {
+		t.Fatalf("operations length = %d, want 3 (one per range)", len(ops))
+	}
+	wantSheet := []string{"sheet1", "sheet2", "sheet1"}
+	wantRange := []string{"A1:A10", "C1:D5", "F3"}
+	for i, raw := range ops {
+		op, _ := raw.(map[string]interface{})
+		if op["tool_name"] != "clear_cell_range" {
+			t.Errorf("op[%d].tool_name = %v, want clear_cell_range", i, op["tool_name"])
+		}
+		params, _ := op["input"].(map[string]interface{})
+		if params["sheet_name"] != wantSheet[i] {
+			t.Errorf("op[%d].sheet_name = %v, want %s", i, params["sheet_name"], wantSheet[i])
+		}
+		if params["range"] != wantRange[i] {
+			t.Errorf("op[%d].range = %v, want %s", i, params["range"], wantRange[i])
+		}
+		if params["clear_type"] != "all" {
+			t.Errorf("op[%d].clear_type = %v, want all", i, params["clear_type"])
+		}
+	}
+}
+
+// TestCellsBatchClear_ScopeDefaultsToContents verifies the default --scope
+// (content) maps to the tool's clear_type "contents" — identical to the
+// standalone +cells-clear normalization.
+func TestCellsBatchClear_ScopeDefaultsToContents(t *testing.T) {
+	t.Parallel()
+	body := parseDryRunBody(t, CellsBatchClear, []string{
+		"--url", testURL,
+		"--ranges", `["sheet1!A1:B2"]`,
+		"--yes",
+	})
+	input := decodeToolInput(t, body, "batch_update")
+	ops, _ := input["operations"].([]interface{})
+	if len(ops) != 1 {
+		t.Fatalf("operations length = %d, want 1", len(ops))
+	}
+	params, _ := ops[0].(map[string]interface{})["input"].(map[string]interface{})
+	if params["clear_type"] != "contents" {
+		t.Errorf("clear_type = %v, want contents (default scope)", params["clear_type"])
+	}
+}
+
+// TestCellsBatchClear_Guards covers the sheet-prefix requirement and the
+// high-risk-write confirmation gate.
+func TestCellsBatchClear_Guards(t *testing.T) {
+	t.Parallel()
+
+	// sheetless range → prefix guard (shared with the dropdown fan-outs).
+	stdout, stderr, err := runShortcutCapturingErr(t, CellsBatchClear, []string{
+		"--url", testURL,
+		"--ranges", `["A1:A10"]`,
+		"--yes",
+		"--dry-run",
+	})
+	if err == nil || !strings.Contains(stdout+stderr+err.Error(), "must include a sheet prefix") {
+		t.Errorf("expected sheet-prefix guard; got=%s|%s|%v", stdout, stderr, err)
+	}
+
+	// missing --yes → confirmation_required (high-risk-write).
+	stdout, stderr, err = runShortcutCapturingErr(t, CellsBatchClear, []string{
+		"--url", testURL,
+		"--ranges", `["sheet1!A1:A10"]`,
+	})
+	if err == nil {
+		t.Errorf("expected confirmation_required without --yes; stdout=%s stderr=%s", stdout, stderr)
+	}
+}
+
 // TestDropdownUpdate_BatchPayload verifies the multi-range dropdown
 // update fans out into a single batch_update with one set_cell_range
 // op per range.
@@ -243,6 +326,11 @@ func TestBatchUpdate_TranslatorRejects(t *testing.T) {
 		{
 			name:      "fan-out wrapper rejected",
 			opsJSON:   `[{"shortcut":"+cells-batch-set-style","input":{}}]`,
+			wantMatch: "not allowed in +batch-update",
+		},
+		{
+			name:      "fan-out wrapper +cells-batch-clear rejected",
+			opsJSON:   `[{"shortcut":"+cells-batch-clear","input":{}}]`,
 			wantMatch: "not allowed in +batch-update",
 		},
 		{

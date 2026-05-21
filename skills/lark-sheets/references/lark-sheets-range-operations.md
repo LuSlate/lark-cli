@@ -204,6 +204,8 @@ _排序条件列表（仅 sort 操作）_
 
 ### `+cells-clear`
 
+> 需要一次清除**多个不连续 range**（如把内容搬走后批量去掉散落各处的边框/底色）时，改用 `lark-sheets-batch-update` 的 `+cells-batch-clear`，避免对 `+cells-clear` 逐个 range 调用。
+
 ```bash
 # dry-run 先看
 lark-cli sheets +cells-clear --url "..." --sheet-id "$SID" --range "A2:Z1000" --scope all --dry-run

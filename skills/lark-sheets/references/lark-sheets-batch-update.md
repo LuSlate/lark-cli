@@ -28,6 +28,7 @@
 | `+cells-batch-set-style` | write | 批量 |
 | `+dropdown-update` | write | 对象 |
 | `+dropdown-delete` | high-risk-write | 对象 |
+| `+cells-batch-clear` | high-risk-write | 批量 |
 
 ## Flags
 
@@ -78,6 +79,15 @@ _公共：URL/token（无 sheet 定位） · 系统：`--yes`、`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--ranges` | string + File + Stdin（简单 JSON） | required | 目标范围 JSON 数组（最多 100 个，每项必须带 sheet 前缀） |
+
+### `+cells-batch-clear`
+
+_公共：URL/token（无 sheet 定位） · 系统：`--yes`、`--dry-run`_
+
+| Flag | Type | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `--ranges` | string + File + Stdin（简单 JSON） | required | 目标范围 JSON 数组，每项必须带 sheet 前缀（如 `["sheet1!A1:B2","sheet1!D1:D10"]`）；对所有 range 执行同一 scope 的清除 |
+| `--scope` | string | optional | 清除范围 enum：`content`（默认，仅清内容）/ `formats`（仅清格式）/ `all`（清内容 + 格式）（可选值：`content` / `formats` / `all`） |
 
 ## Schemas
 
@@ -151,8 +161,21 @@ lark-cli sheets +cells-batch-set-style --url "..." \
   --background-color "#1E5BC6" --font-color "#FFFFFF" --font-weight bold
 ```
 
+### `+cells-batch-clear`
+
+多 range 一次性清除（服务端走 `+batch-update` 原子事务）；`--scope` 同 `+cells-clear`（`content` / `formats` / `all`，默认 `content`），`high-risk-write` 强制 `--yes`：
+
+```bash
+# dry-run 先看清除范围
+lark-cli sheets +cells-batch-clear --url "..." \
+  --ranges '["sheet1!A2:Z1000","sheet2!A2:Z1000"]' --scope all --dry-run
+# 执行
+lark-cli sheets +cells-batch-clear --url "..." \
+  --ranges '["sheet1!A2:Z1000","sheet2!A2:Z1000"]' --scope all --yes
+```
+
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：`+batch-update` 的 `--operations` 必须合法 JSON，且为非空数组；逐个子操作 `shortcut` / `input` 字段必填校验；**禁止嵌套 `+batch-update`**。`+cells-batch-set-style` 的 `--ranges` 必须 JSON 数组、每项带 sheet 前缀；样式 flag 至少一个非空（或带 `--border-styles`）。
+- `Validate`：`+batch-update` 的 `--operations` 必须合法 JSON，且为非空数组；逐个子操作 `shortcut` / `input` 字段必填校验；**禁止嵌套 `+batch-update`**。`+cells-batch-set-style` 的 `--ranges` 必须 JSON 数组、每项带 sheet 前缀；样式 flag 至少一个非空（或带 `--border-styles`）。`+cells-batch-clear` 的 `--ranges` 同样必须 JSON 数组、每项带 sheet 前缀，`high-risk-write` 强制 `--yes` 或 `--dry-run`（`--scope` 默认 `content`）。
 - `DryRun`：按顺序输出每个子操作的目标 API + 请求 body 模板；首个失败则整批 fail-fast（不实际执行任何后续）。
 - `Execute`：按声明顺序串行执行；任一子操作失败立即中断并回滚到该子操作前状态（具体回滚能力取决于子操作类型，沿用 MCP `+batch-update` 的语义）。

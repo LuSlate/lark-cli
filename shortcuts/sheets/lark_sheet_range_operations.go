@@ -75,21 +75,26 @@ func cellsClearInput(runtime flagView, token, sheetID, sheetName string) (map[st
 	if strings.TrimSpace(runtime.Str("range")) == "" {
 		return nil, common.FlagErrorf("--range is required")
 	}
-	scope := runtime.Str("scope")
-	clearType := "contents"
-	switch scope {
-	case "content", "":
-		clearType = "contents"
-	case "formats", "all":
-		clearType = scope
-	}
 	input := map[string]interface{}{
 		"excel_id":   token,
 		"range":      strings.TrimSpace(runtime.Str("range")),
-		"clear_type": clearType,
+		"clear_type": normalizeClearType(runtime.Str("scope")),
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
 	return input, nil
+}
+
+// normalizeClearType maps the CLI --scope vocabulary (content / formats / all)
+// to the clear_cell_range tool's clear_type vocabulary (contents / formats /
+// all). The content↔contents singular/plural mismatch is absorbed here so both
+// +cells-clear and the +cells-batch-clear fan-out stay in lockstep.
+func normalizeClearType(scope string) string {
+	switch scope {
+	case "formats", "all":
+		return scope
+	default: // "content" or unset
+		return "contents"
+	}
 }
 
 // CellsMerge / CellsUnmerge share the merge_cells tool, dispatched by the

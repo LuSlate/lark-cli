@@ -236,6 +236,84 @@ func cellsBatchSetStyleInput(runtime *common.RuntimeContext, token string) (map[
 	}, nil
 }
 
+// CellsBatchClear clears content / formats / both across many sheet-prefixed
+// ranges in one atomic batch. --ranges is a JSON array of sheet-prefixed A1
+// strings; --scope reuses the +cells-clear vocabulary (content / formats /
+// all). CLI fans each range into a separate clear_cell_range op inside one
+// batch_update. high-risk-write because clear is irreversible.
+var CellsBatchClear = common.Shortcut{
+	Service:     "sheets",
+	Command:     "+cells-batch-clear",
+	Description: "Clear content/formats across many sheet-prefixed ranges in one atomic batch (irreversible).",
+	Risk:        "high-risk-write",
+	Scopes:      []string{"sheets:spreadsheet:write_only"},
+	AuthTypes:   []string{"user", "bot"},
+	HasFormat:   true,
+	Flags:       flagsFor("+cells-batch-clear"),
+	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
+		if _, err := resolveSpreadsheetToken(runtime); err != nil {
+			return err
+		}
+		if _, err := validateDropdownRanges(runtime); err != nil {
+			return err
+		}
+		return nil
+	},
+	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
+		token, _ := resolveSpreadsheetToken(runtime)
+		input, _ := cellsBatchClearInput(runtime, token)
+		return invokeToolDryRun(token, ToolKindWrite, "batch_update", input)
+	},
+	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
+		token, err := resolveSpreadsheetToken(runtime)
+		if err != nil {
+			return err
+		}
+		input, err := cellsBatchClearInput(runtime, token)
+		if err != nil {
+			return err
+		}
+		out, err := callTool(ctx, runtime, token, ToolKindWrite, "batch_update", input)
+		if err != nil {
+			return err
+		}
+		runtime.Out(out, nil)
+		return nil
+	},
+	Tips: []string{
+		"high-risk-write — always preview with --dry-run; clear is not undoable.",
+		"Every --ranges item must carry a sheet prefix (e.g. \"Sheet1!A1:A10\"); all ranges are cleared with the same --scope.",
+	},
+}
+
+func cellsBatchClearInput(runtime *common.RuntimeContext, token string) (map[string]interface{}, error) {
+	ranges, err := validateDropdownRanges(runtime)
+	if err != nil {
+		return nil, err
+	}
+	clearType := normalizeClearType(runtime.Str("scope"))
+	var ops []interface{}
+	for _, rng := range ranges {
+		sheet, sub, err := splitSheetPrefixedRange(rng)
+		if err != nil {
+			return nil, err
+		}
+		ops = append(ops, map[string]interface{}{
+			"tool_name": "clear_cell_range",
+			"input": map[string]interface{}{
+				"excel_id":   token,
+				"sheet_name": sheet,
+				"range":      sub,
+				"clear_type": clearType,
+			},
+		})
+	}
+	return map[string]interface{}{
+		"excel_id":   token,
+		"operations": ops,
+	}, nil
+}
+
 // DropdownUpdate installs/replaces a single dropdown on many ranges in one
 // atomic batch. Sheet ids come from the per-range sheet prefix.
 var DropdownUpdate = common.Shortcut{

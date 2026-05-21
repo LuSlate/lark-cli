@@ -97,6 +97,7 @@ func shortcutList() []common.Shortcut {
 		// lark_sheet_batch_update
 		BatchUpdate,
 		CellsBatchSetStyle,
+		CellsBatchClear,
 		DropdownUpdate,
 		DropdownDelete,
 	}
