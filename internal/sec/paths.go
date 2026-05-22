@@ -21,10 +21,27 @@ const (
 	// tree (install + data) to a single root. When set, install_dir is <root>
 	// and data_dir is <root>/data — no platform-conventional lookup happens.
 	envInstallDirOverride = "LARKSUITE_CLI_SEC_DIR"
-
-	// BinaryName is the executable name we expect inside the extracted artifact.
-	BinaryName = "lark-sec-cli"
 )
+
+// BinaryName returns the executable basename inside the sec-cli artifact for
+// the current platform:
+//
+//	darwin  → libLarkEntCli.dylib
+//	linux   → liblarkentcli.so
+//	windows → lark_enterprise_cli.exe
+//
+// The .dylib/.so extensions on POSIX are convention only — those files are
+// normal Mach-O / ELF executables, not loadable libraries.
+func BinaryName() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "libLarkEntCli.dylib"
+	case "windows":
+		return "lark_enterprise_cli.exe"
+	default:
+		return "liblarkentcli.so"
+	}
+}
 
 // Paths exposes the filesystem layout for the sec sidecar. All methods return
 // absolute paths; nothing on disk is created — callers must call Ensure().
@@ -119,13 +136,10 @@ func (p *Paths) VersionDir(version string) string {
 // CurrentLink points to the active version (symlink on POSIX, plain copy on Windows).
 func (p *Paths) CurrentLink() string { return filepath.Join(p.install, "current") }
 
-// BinaryPath is the active lark-sec-cli executable (with .exe on Windows).
+// BinaryPath is the active sec-cli executable, addressed through the
+// `current` symlink so it stays valid across version swaps.
 func (p *Paths) BinaryPath() string {
-	name := BinaryName
-	if runtime.GOOS == "windows" {
-		name += ".exe"
-	}
-	return filepath.Join(p.CurrentLink(), name)
+	return filepath.Join(p.CurrentLink(), BinaryName())
 }
 
 // StateFile records what version is installed and where its binary lives.

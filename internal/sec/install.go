@@ -183,10 +183,7 @@ func (i *Installer) Install(ctx context.Context, opts InstallOptions) (*State, e
 // manifest's example payload uses nested ("linux-amd64-1.0.1-alpha.23/...");
 // we accommodate either since the wrapping dir name could change per build.
 func locateBinary(versionDir string) (string, error) {
-	name := BinaryName
-	if runtime.GOOS == "windows" {
-		name += ".exe"
-	}
+	name := BinaryName()
 
 	flat := filepath.Join(versionDir, name)
 	if _, err := os.Stat(flat); err == nil {

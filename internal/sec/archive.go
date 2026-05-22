@@ -24,8 +24,8 @@ const maxArchiveBytes = 1 << 30
 // already exist.
 //
 // Executable permission is preserved when the zip stores POSIX mode bits;
-// otherwise we apply 0o755 to suspected binaries (anything named lark-sec-cli
-// or *.dylib/*.so) and 0o644 to everything else.
+// otherwise we apply 0o755 to suspected binaries (matching BinaryName() /
+// legacy names or anything *.dylib/*.so/*.dll) and 0o644 to everything else.
 func ExtractZip(src, dst string) error {
 	r, err := zip.OpenReader(src)
 	if err != nil {
@@ -122,7 +122,7 @@ func extractZipEntry(f *zip.File, dstAbs string) error {
 // with POSIX mode info — typically the case for archives built on Windows.
 func guessMode(name string) os.FileMode {
 	base := filepath.Base(name)
-	if base == BinaryName || base == BinaryName+".exe" {
+	if base == BinaryName() {
 		return 0o755
 	}
 	ext := strings.ToLower(filepath.Ext(base))
@@ -131,7 +131,7 @@ func guessMode(name string) os.FileMode {
 		return 0o755
 	}
 	if runtime.GOOS != "windows" && !strings.ContainsRune(base, '.') {
-		// Plausibly an extra unix binary shipped alongside lark-sec-cli.
+		// Plausibly an extra unix binary shipped alongside the sec-cli binary.
 		return 0o755
 	}
 	return 0o644
