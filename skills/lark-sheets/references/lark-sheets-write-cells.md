@@ -199,9 +199,7 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | 目标范围（A1 格式，如 `A2:A100`） |
 | `--options` | string + File + Stdin（复合 JSON） | required | 选项 JSON 数组 `["opt1","opt2"]`；最多 500 项，每项 ≤100 字符，不含逗号 |
-| `--colors` | string + File + Stdin（简单 JSON） | optional | RGB hex 颜色数组（如 `["#1FB6C1","#F006C2"]`），长度必须与 `--options` 一致 |
 | `--multiple` | bool | optional | 启用多选；默认 `false` |
-| `--highlight` | bool | optional | 选项配色显示；默认 `false` |
 
 ### `+csv-put`
 

@@ -156,7 +156,7 @@ func sheetSelectorPlaceholder(sheetID, sheetName string) string {
 
 // parseJSONFlag parses a JSON string from a flag value. Returns nil when the
 // flag is empty (caller decides if that's acceptable). Used by --data /
-// --style / --options / --ranges / --colors and friends.
+// --style / --options / --ranges / --properties and friends.
 func parseJSONFlag(runtime flagView, name string) (interface{}, error) {
 	raw := strings.TrimSpace(runtime.Str(name))
 	if raw == "" {

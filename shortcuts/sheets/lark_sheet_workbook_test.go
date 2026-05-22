@@ -317,6 +317,15 @@ func TestWorkbookCreate_DryRun(t *testing.T) {
 		if input["range"] != "A1:B3" {
 			t.Errorf("fill range = %v, want A1:B3 (1 header + 2 data rows × 2 cols)", input["range"])
 		}
+		// New workbook → fill targets the default sheet by name (no
+		// extra get_workbook_structure call is needed to learn the
+		// auto-generated sheet_id).
+		if input["sheet_name"] != "Sheet1" {
+			t.Errorf("fill sheet_name = %v, want Sheet1", input["sheet_name"])
+		}
+		if _, hasID := input["sheet_id"]; hasID {
+			t.Errorf("fill sheet_id should be omitted (server rejects empty); got %v", input["sheet_id"])
+		}
 	})
 }
 

@@ -215,8 +215,12 @@ func TestDropdownUpdate_BatchPayload(t *testing.T) {
 		if dv == nil || dv["type"] != "list" {
 			t.Errorf("op[%d] missing data_validation list: %#v", i, cell)
 		}
-		if dv["multiple_values"] != true {
-			t.Errorf("op[%d] multiple_values = %v, want true", i, dv["multiple_values"])
+		items, _ := dv["items"].([]interface{})
+		if len(items) != 3 {
+			t.Errorf("op[%d] data_validation.items length = %d, want 3", i, len(items))
+		}
+		if dv["support_multiple_values"] != true {
+			t.Errorf("op[%d] support_multiple_values = %v, want true", i, dv["support_multiple_values"])
 		}
 	}
 }

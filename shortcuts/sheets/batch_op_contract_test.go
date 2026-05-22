@@ -132,8 +132,8 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 		{
 			shortcut: "+range-sort",
 			sc:       RangeSort,
-			args:     []string{"--sheet-id", "sh1", "--range", "A1:D10", "--sort-keys", `[{"col":"B","order":"asc"}]`, "--has-header"},
-			subInput: `{"sheet-id":"sh1","range":"A1:D10","sort-keys":[{"col":"B","order":"asc"}],"has-header":true}`,
+			args:     []string{"--sheet-id", "sh1", "--range", "A1:D10", "--sort-keys", `[{"column":"B","ascending":true}]`, "--has-header"},
+			subInput: `{"sheet-id":"sh1","range":"A1:D10","sort-keys":[{"column":"B","ascending":true}],"has-header":true}`,
 		},
 		{
 			shortcut: "+sheet-create",

@@ -54,7 +54,8 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 			toolName: "get_cell_ranges",
 			wantInput: map[string]interface{}{
 				"excel_id":            testToken,
-				"ranges":              []interface{}{"sheet1!A2:A100"},
+				"sheet_name":          "sheet1",
+				"ranges":              []interface{}{"A2:A100"},
 				"include_styles":      false,
 				"value_render_option": "formatted_value",
 			},

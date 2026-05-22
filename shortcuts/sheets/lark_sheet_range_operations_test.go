@@ -185,7 +185,7 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 		{
 			name:     "+range-sort multi-key with header",
 			sc:       RangeSort,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:E100", "--has-header", "--sort-keys", `[{"col":"B","order":"asc"},{"col":"D","order":"desc"}]`},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:E100", "--has-header", "--sort-keys", `[{"column":"B","ascending":true},{"column":"D","ascending":false}]`},
 			toolName: "transform_range",
 			wantInput: map[string]interface{}{
 				"excel_id":   testToken,
@@ -194,8 +194,8 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 				"range":      "A1:E100",
 				"has_header": true,
 				"sort_conditions": []interface{}{
-					map[string]interface{}{"col": "B", "order": "asc"},
-					map[string]interface{}{"col": "D", "order": "desc"},
+					map[string]interface{}{"column": "B", "ascending": true},
+					map[string]interface{}{"column": "D", "ascending": false},
 				},
 			},
 		},
@@ -207,6 +207,41 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 			body := parseDryRunBody(t, tt.sc, tt.args)
 			got := decodeToolInput(t, body, tt.toolName)
 			assertInputEquals(t, got, tt.wantInput)
+		})
+	}
+}
+
+// TestRangeSort_RejectsMalformedKeys verifies the pre-check that each
+// --sort-keys entry has both `column` (string) and `ascending` (bool);
+// previously the CLI passed any JSON through and the server bounced
+// with a terse "required property X missing" that didn't name the bad
+// entry.
+func TestRangeSort_RejectsMalformedKeys(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		keys string
+		want string
+	}{
+		{"missing column", `[{"ascending":true}]`, "missing required string field `column`"},
+		{"missing ascending", `[{"column":"B"}]`, "missing required bool field `ascending`"},
+		{"old vocab col/order", `[{"col":"B","order":"asc"}]`, "missing required string field `column`"},
+		{"non-object item", `["B"]`, "must be an object"},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			stdout, stderr, err := runShortcutCapturingErr(t, RangeSort, []string{
+				"--url", testURL, "--sheet-id", testSheetID,
+				"--range", "A1:E10", "--sort-keys", c.keys, "--dry-run",
+			})
+			if err == nil {
+				t.Fatalf("expected validation error; stdout=%s stderr=%s", stdout, stderr)
+			}
+			if !strings.Contains(stdout+stderr+err.Error(), c.want) {
+				t.Errorf("want substring %q in error; got stdout=%s stderr=%s err=%v", c.want, stdout, stderr, err)
+			}
 		})
 	}
 }

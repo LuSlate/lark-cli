@@ -70,9 +70,7 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--ranges` | string + File + Stdin（简单 JSON） | required | 目标范围 JSON 数组（如 `["sheet1!A2:A100"]`），每项必须带 sheet 前缀 |
 | `--options` | string + File + Stdin（复合 JSON） | required | 选项 JSON 数组（如 `["opt1","opt2"]`） |
-| `--colors` | string + File + Stdin（简单 JSON） | optional | 颜色数组（与 `--options` 等长） |
 | `--multiple` | bool | optional | 启用多选 |
-| `--highlight` | bool | optional | 选项配色 |
 
 ### `+dropdown-delete`
 

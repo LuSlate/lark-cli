@@ -1875,29 +1875,11 @@
         ]
       },
       {
-        "name": "colors",
-        "kind": "own",
-        "type": "string",
-        "required": "optional",
-        "desc": "RGB hex color array (e.g. `[\"#1FB6C1\",\"#F006C2\"]`); length must equal `--options`",
-        "input": [
-          "file",
-          "stdin"
-        ]
-      },
-      {
         "name": "multiple",
         "kind": "own",
         "type": "bool",
         "required": "optional",
         "desc": "Enable multi-select; default `false`"
-      },
-      {
-        "name": "highlight",
-        "kind": "own",
-        "type": "bool",
-        "required": "optional",
-        "desc": "Color-highlight options; default `false`"
       },
       {
         "name": "dry-run",
@@ -2803,29 +2785,11 @@
         ]
       },
       {
-        "name": "colors",
-        "kind": "own",
-        "type": "string",
-        "required": "optional",
-        "desc": "Color array (same length as `--options`)",
-        "input": [
-          "file",
-          "stdin"
-        ]
-      },
-      {
         "name": "multiple",
         "kind": "own",
         "type": "bool",
         "required": "optional",
         "desc": "Enable multi-select"
-      },
-      {
-        "name": "highlight",
-        "kind": "own",
-        "type": "bool",
-        "required": "optional",
-        "desc": "Color-highlight options"
       },
       {
         "name": "dry-run",

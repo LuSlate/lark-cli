@@ -95,7 +95,7 @@ func TestWriteCellsShortcuts_DryRun(t *testing.T) {
 				"--url", testURL, "--sheet-id", testSheetID,
 				"--range", "A2:A4",
 				"--options", `["a","b"]`,
-				"--multiple", "--highlight",
+				"--multiple",
 			},
 			toolName: "set_cell_range",
 			wantInput: map[string]interface{}{
@@ -143,8 +143,15 @@ func TestDropdownSet_CellsShape(t *testing.T) {
 		if dv["type"] != "list" {
 			t.Errorf("row %d data_validation.type = %v, want list", i, dv["type"])
 		}
-		if dv["multiple_values"] != true {
-			t.Errorf("row %d data_validation.multiple_values = %v, want true", i, dv["multiple_values"])
+		items, _ := dv["items"].([]interface{})
+		if len(items) != 2 || items[0] != "a" || items[1] != "b" {
+			t.Errorf("row %d data_validation.items = %#v, want [\"a\",\"b\"]", i, dv["items"])
+		}
+		if dv["support_multiple_values"] != true {
+			t.Errorf("row %d data_validation.support_multiple_values = %v, want true", i, dv["support_multiple_values"])
+		}
+		if _, hasLegacy := dv["multiple_values"]; hasLegacy {
+			t.Errorf("row %d data_validation should not emit legacy `multiple_values`", i)
 		}
 	}
 }
