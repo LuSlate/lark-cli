@@ -111,7 +111,7 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--range` | string | required | 待合并 / 取消合并的范围（A1 格式） |
-| `--merge-type` | string | optional | 合并方向（仅 `+cells-merge`）（可选值：`all` / `rows` / `columns`） |
+| `--merge-type` | string | optional | 合并方向（仅 `+cells-merge`）（可选值：`all` / `rows` / `columns`）（默认 `all`） |
 
 ### `+cells-unmerge`
 
@@ -162,7 +162,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--source-range` | string | required | 源 A1 范围 |
 | `--target-sheet-id` | string | optional | 目标子表 id；省略时同源 sheet |
 | `--target-range` | string | required | 目标 A1 范围（传起点 cell 即可，按源尺寸自动推断） |
-| `--paste-type` | string | optional | 粘贴内容（仅 `+range-copy`）（可选值：`values` / `formulas` / `formats` / `all`） |
+| `--paste-type` | string | optional | 粘贴内容（仅 `+range-copy`）（可选值：`values` / `formulas` / `formats` / `all`）（默认 `all`） |
 
 ### `+range-fill`
 
@@ -172,7 +172,7 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--source-range` | string | required | 填充模板范围（系列起始 cells） |
 | `--target-range` | string | required | 目标填充范围（A1 格式） |
-| `--series-type` | string | optional | 填充序列类型（可选值：`auto` / `linear` / `growth` / `date` / `copy`） |
+| `--series-type` | string | optional | 填充序列类型（可选值：`auto` / `linear` / `growth` / `date` / `copy`）（默认 `auto`） |
 
 ### `+range-sort`
 

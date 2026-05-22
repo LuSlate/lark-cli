@@ -1,12 +1,12 @@
 # Lark Sheet Float Image
 
 > **单元格图片 vs 浮动图片**：飞书表格有两种图片类型，请根据需求选择正确的工具：
-> - **单元格图片**：图片嵌入在单元格内部，随单元格移动，属于单元格内容的一部分。→ 使用 `+cells-set`，在 `rich_text` 中设置 `type: "embed-image"`（见 lark_sheet_write_cells Skill）。
-> - **浮动图片**（本 Skill）：图片悬浮在单元格上方，可自由指定位置、大小和层级，不属于任何单元格的内容。→ 使用本 Skill 的 `+float-{image-create|image-update|image-delete}`。
+> - **单元格图片**：图片嵌入在单元格内部，随单元格移动，属于单元格内容的一部分。→ 使用 `+cells-set`，在 `rich_text` 中设置 `type: "embed-image"`（见 lark-sheets-write-cells）。
+> - **浮动图片**（本 Skill）：图片悬浮在单元格上方，可自由指定位置、大小和层级，不属于任何单元格的内容。→ 使用本 Skill 的 `+float-image-{create|update|delete}`。
 
 ## 真对象硬约束
 
-当用户要求"插入图片 / 添加 logo / 放一张图"时，**必须**通过 `+float-{image-create|image-update|image-delete}`（浮动图片）或 `+cells-set` 的 `embed-image`（单元格图片）创建真实的图片对象。**禁止**只在文本回复中给出图片链接 / 描述图片内容代替插入。判断标准：交付后 `+float-image-list` 或单元格 `rich_text` 必须能读到该图片对象。
+当用户要求"插入图片 / 添加 logo / 放一张图"时，**必须**通过 `+float-image-{create|update|delete}`（浮动图片）或 `+cells-set` 的 `embed-image`（单元格图片）创建真实的图片对象。**禁止**只在文本回复中给出图片链接 / 描述图片内容代替插入。判断标准：交付后 `+float-image-list` 或单元格 `rich_text` 必须能读到该图片对象。
 
 ## 使用场景
 
@@ -15,7 +15,7 @@
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
 | 查看已有浮动图片 | `+float-image-list` | 获取浮动图片的位置、大小和层级配置 |
-| 创建/更新/删除浮动图片 | `+float-{image-create|image-update|image-delete}` | 对浮动图片执行写入操作 |
+| 创建/更新/删除浮动图片 | `+float-image-{create|update|delete}` | 对浮动图片执行写入操作 |
 
 典型工作流：先读取现有浮动图片了解配置 → 执行创建/更新/删除 → **必须再次读取验证结果**。
 

@@ -27,6 +27,16 @@
 - 处理"在第 N 行后追加"这类请求时，注意 `--start` 是 0-based 索引、`--end` 是 exclusive，换算时避免 off-by-one
 - 例如"在第 20 行后新增 116 行"：`--dimension row --start 21 --end 137`（"第 20 行后"即从 index 21 起插入，`--end` = `--start` + 116）
 
+**⚠️ `--end` 区间端点语义对照（跨命令不一致，最高发的 off-by-one 来源）**：同样叫 `--start` / `--end`、同样作用于行/列区间，但 `--end` 含义因命令而异，构造参数前务必对照本表：
+
+| 命令 | `--end` 语义 | 备注 |
+| --- | --- | --- |
+| `+dim-insert` / `+dim-delete` / `+dim-hide` / `+dim-unhide` / `+dim-group` / `+dim-ungroup` | **exclusive**（不含 end） | 操作行/列数 = `--end` − `--start` |
+| `+dim-move` | **inclusive**（含 end） | ⚠️ 与同族 `+dim-*` **相反**！`--start`/`--end` 是**源区间**（闭区间），目标位置另用 `--target` |
+| `+rows-resize` / `+cols-resize` | **inclusive**（含 end） | `--start`/`--end` 均为 0-based 闭区间 |
+
+把 `+dim-insert` / `+dim-delete` 的 exclusive 习惯照搬到 `+dim-move` / `+rows-resize` / `+cols-resize`（或反过来）会少算/多算一行/一列——动手前先在本表确认目标命令的 `--end` 端点语义。
+
 **常见配置错误（必须注意）**：
 - **插入列位置偏移**：插入列时 `--start` 是基于 0 的列索引，不是列字母。插入前先通过 `+workbook-info` 或读取表头确认目标位置的实际列索引，不要凭猜测
 - **插入后引用偏移**：插入行/列后，原有数据的行列号会发生偏移。如果插入后还需要对原有区域执行写入操作，必须重新计算偏移后的行列号
@@ -120,7 +130,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--start` | int | required | 起始位置（0-based） |
 | `--end` | int | required | 结束位置（exclusive） |
 | `--depth` | int | optional | 嵌套层级（`+dim-group` 用），默认 1 |
-| `--group-state` | string | optional | 分组初始展开状态（可选值：`expand` / `fold`） |
+| `--group-state` | string | optional | 分组初始展开状态（可选值：`expand` / `fold`）（默认 `expand`） |
 
 ### `+dim-ungroup`
 

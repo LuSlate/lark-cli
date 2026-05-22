@@ -48,7 +48,7 @@
 
 > **单元格图片 vs 浮动图片**：
 > - **单元格图片**（本工具）：图片嵌入在单元格内部，属于单元格内容，随单元格移动。通过 `rich_text` 中 `type: "embed-image"` 写入。
-> - **浮动图片**：图片悬浮在单元格上方，可自由定位和调整大小，不属于单元格内容。→ 使用 lark_sheet_float_image Skill。
+> - **浮动图片**：图片悬浮在单元格上方，可自由定位和调整大小，不属于单元格内容。→ 使用 lark-sheets-float-image。
 
 高频模式（**必须遵守，禁止逐行写入替代**）：
 
@@ -124,7 +124,7 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 Step 1: 用模板单元格 + --copy-to-range 铺"完整样式"（不是只铺 border）到新区域
   `+cells-set` — range="A11", cells=[[{
     border_styles: {...},
-    cell_styles: { /* 按行性质填充：数据行继承数据区样式；汇总行见 lark_sheet_visual_standards */ }
+    cell_styles: { /* 按行性质填充：数据行继承数据区样式；汇总行见 lark-sheets-visual-standards */ }
   }]], --copy-to-range="A11:H11"
 
 Step 2: 再用 `+cells-set` 单独写具体 value/formula（不再传样式，避免覆盖）
@@ -187,7 +187,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--range` | string | required | 写入区域（A1 格式） |
 | `--cells` | string + File + Stdin（复合 JSON） | required | JSON：2D 数组 `[[{cell},...],...]`，维度与 `--range` 完全一致；每个 cell 可含 `value` / `formula` / `cell_styles` / `note` / `rich_text`（含 `type="embed-image"` 单元格嵌图）等，完整字段跑 `--print-schema` |
 | `--allow-overwrite` | bool | optional | 允许覆盖非空 cell（默认 true）；设为 false 时遇非空 cell 报错 |
-| `--max-cells` | int | optional | 防爆，默认 50000 |
+| `--max-cells` | int | optional | 防爆，默认 50000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--copy-to-range` | string | optional | 复制范围（A1 表示法）：把 --range 中 --cells 写入的内容（值/公式/样式，取决于实际传入字段）复制到该区域，公式引用自动平移（如 C2=B2 → C3=B3）。适合先写一行/一块模板再扩展填充整列/整区域（如 --range A1:G1 写模板、--copy-to-range A1:G100 填充 100 行）。支持整行 3:6、整列 C:E、到列尾 D3:D、到行尾 D3:3；支持英文逗号分隔多个目标区域，如 C1:D2,E5:F6 |
 
 ### `+cells-set-style`

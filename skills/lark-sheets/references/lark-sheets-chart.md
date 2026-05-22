@@ -27,20 +27,22 @@
 
 **多图表需求**：当用户同时提到多种分析（如"统计占比 + 对比数量"），必须创建多个图表，每个对应一种类型，不要只做一个。
 
+**`--properties` 结构锚点（构造前必读）**：`--properties` 顶层只有 `position` / `offset` / `size` / `snapshot` 四个字段，**没有**顶层 `data`，也没有再嵌一层 `properties`。图表数据配置全部挂在 `snapshot.data` 下——下文及示例里出现的 `refs` / `headerMode` / `dim1` / `dim2` / `nameRef` 一律指 `snapshot.data.refs` / `snapshot.data.headerMode` / `snapshot.data.dim1` / `snapshot.data.dim2`（及其下的 `serie.nameRef` / `series[].nameRef`）；样式 / 堆叠 / 数据标签等在 `snapshot.plotArea` 下。完整结构以 `lark-cli sheets +chart-create --print-schema --flag-name properties` 为准。
+
 **常见配置错误（必须注意）**：
 - **图表类型选择错误**：用户说"堆积柱状图/百分比堆积"时，应在 `properties.snapshot.plotArea.plot.extra.stack` 中配置堆叠；百分比堆叠需在该 stack 下设置 `percentage: true`。用户说"占比/比例"时，优先考虑饼图或百分比堆积图
 - **数据标签缺失**：用户需要看到具体数值时，需配置 `properties.snapshot.plotArea.plot.labels`（数据标签）相关字段
 - **数据源范围与系列名来源要对齐**：
   - **默认情况（inline 模式）**：`refs` 范围**应包含表头行**（首行/首列即系列名），且范围要精确覆盖目标数据，不要多选或少选。
   - **合并标题行要跳过**：如果表格在表头上方存在合并的标题行（如"员工统计表"横跨多列的大标题），`refs` 必须跳过标题行、从真正的列标题行开始。例如表头在第 3 行、数据在第 4-20 行，则 `refs` 应为 `A3:G20` 而非 `A1:G20`。包含合并标题行会导致列名识别错误、表头被当作数据参与聚合计算。
-  - **数据与表头分离时必须用 detached 模式**：当 `refs` 只覆盖完整数据的一个子集（按筛选/分组只画其中一段），而真正的语义表头在该子集之外时，**必须**设置 `data.headerMode='detached'`：refs 仅传纯数据范围，维度名/系列名通过 `dim1.serie.nameRef` / `dim2.series[].nameRef` 指向真正的表头单元格。详见下文"硬性规则：数据与表头分离场景必须使用 detached 模式"。
+  - **数据与表头分离时必须用 detached 模式**：当 `refs` 只覆盖完整数据的一个子集（按筛选/分组只画其中一段），而真正的语义表头在该子集之外时，**必须**设置 `snapshot.data.headerMode='detached'`：refs 仅传纯数据范围，维度名/系列名通过 `snapshot.data.dim1.serie.nameRef` / `snapshot.data.dim2.series[].nameRef` 指向真正的表头单元格。详见下文"硬性规则：数据与表头分离场景必须使用 detached 模式"。
 - **axes[].label 不接受 `format` / `number_format` 字段**：想给坐标轴数值加千分位、百分号等格式化时，不要在 `axes[i].label` 里传 `format` 或 `number_format`（schema 未定义，会报 `unexpected property "format" is not defined in schema`）。数值格式化统一在源数据单元格的 `cell_styles.number_format` 里设置（写 `+cells-set` 时），图表会沿用单元格格式。
 - **创建后必须验证**：图表创建后必须调用 `+chart-list` 验证配置是否正确
 
 > **⚠️ 硬性规则：当用户通过列标题名称（而非列索引）指定横轴/纵轴系列时，必须先读取表格首行（表头）来确定列名与列索引的对应关系，再设置 `dim1`/`dim2` 的 `index`。**
 > 例如用户说"横轴为车型系列，纵轴为Q1-Q4的销量"，你不能猜测列索引，必须先通过读取表格数据源范围的首行内容（使用 `lark-sheets-read-data` 的 `+cells-get` 或其他读取单元格的工具），确认"车型系列"是第几列、"Q1"~"Q4"分别是第几列，然后再将正确的列索引填入 `dim1.serie.index` 和 `dim2.series[].index`。
 
-> **⚠️ 硬性规则：数据与表头分离场景必须使用 detached 模式。** 当 `refs` 仅覆盖数据的一个子集，而真正的语义表头行/列位于该子集之外时，**必须** `data.headerMode='detached'` 并配上 `nameRef`。不能用 inline 模式 + 把 refs 多带 1 行兜底表头来替代——那种写法已废弃。否则图表会把错误的首行/首列当系列名，或图例显示成"系列1/系列2"等默认名，或者 refs 里混入相邻分组的数据。
+> **⚠️ 硬性规则：数据与表头分离场景必须使用 detached 模式。** 当 `refs` 仅覆盖数据的一个子集，而真正的语义表头行/列位于该子集之外时，**必须** `snapshot.data.headerMode='detached'` 并配上 `nameRef`。不能用 inline 模式 + 把 refs 多带 1 行兜底表头来替代——那种写法已废弃。否则图表会把错误的首行/首列当系列名，或图例显示成"系列1/系列2"等默认名，或者 refs 里混入相邻分组的数据。
 >
 > **触发该规则的典型信号**（满足任意一条都必须走 detached）：
 > - 用户要求"针对 X 类的数据画图"、"只看某个分组"、"只画筛选后的部分"，而 X 类对应的行段在数据中间或末尾，与表头不连续；
@@ -74,7 +76,7 @@
 1. `+pivot-create create` 返回 `sheet_id` + `pivot_table_id`
 2. 调 `+csv-get(sheet_id, 'A1:E30')` 或 `+pivot-list` 读 pivot 产物的**实际数据范围**
 3. 识别并排除"总计"/"小计"行（通常最后一行；嵌套 pivot 还要排除中间层小计）
-4. `+chart-create create` 时 `data.refs` 精确到数据行（如 pivot 占 A1:D9、总计在 row9 → chart 用 `A1:D8`）
+4. `+chart-create create` 时 `snapshot.data.refs` 精确到数据行（如 pivot 占 A1:D9、总计在 row9 → chart 用 `A1:D8`）
 
 详细规则见 `lark-sheets-pivot-table` 第 5 节"pivot → chart 组合场景"。
 
@@ -119,7 +121,7 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--properties` | string + File + Stdin（复合 JSON） | required | 图表完整配置 JSON（`position` / `data` / `properties` 等）；结构嵌套深，统一走 JSON 注入 |
+| `--properties` | string + File + Stdin（复合 JSON） | required | 图表完整配置 JSON。顶层字段为 `position` / `offset` / `size` / `snapshot`（无顶层 `data`，也无再嵌一层 `properties`）；图表数据配置在 `snapshot.data` 下（含 `refs` / `headerMode` / `dim1` / `dim2`）。结构嵌套深，完整结构跑 `--print-schema --flag-name properties` |
 
 ### `+chart-update`
 
@@ -177,7 +179,7 @@ lark-cli sheets +chart-create --url "https://example.feishu.cn/sheets/shtXXX" \
 > **`--properties` JSON 关键字段**（结构见上方 `## Schemas` 段；详见语义内容章节）：
 > - `position.row` / `position.col` 必须留足空间，越界会被 API 拒
 > - `snapshot.data.headerMode`：默认 inline；当 refs 仅覆盖数据子集且语义表头在子集之外，必须 `detached` + `nameRef`
-> - chart 引用 pivot 输出时，`snapshot.data.data_range` 必须排除总计 / 小计行
+> - chart 引用 pivot 输出时，`snapshot.data.refs` 必须排除总计 / 小计行
 
 ### `+chart-update`
 

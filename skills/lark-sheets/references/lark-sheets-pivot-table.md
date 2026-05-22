@@ -63,9 +63,9 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--properties` | string + File + Stdin（复合 JSON） | required | JSON：{"rows":[...],"columns":[...],"values":[...],"filters":[...],"show_row_grand_total":true,"show_col_grand_total":true}（数据源走 --source，不要再放进 properties.source） |
 | `--target-sheet-id` | string | optional | 透视表落点子表 id；省略时自动新建子表（推荐） |
-| `--target-position` | string | optional | 落点起始 cell（A1 格式，如 `A1`），默认 `A1` |
+| `--target-position` | string | optional | 透视表落点子表内的起始 cell（A1 格式，如 `A1`），与 `--target-sheet-id` 配套、映射到顶层 `target_position`，默认 `A1`（值为 A1 时不下发）。它与 `--range` 都表达落点但落在不同 wire 字段，避免两者同时给冲突值 |
 | `--source` | string | required | 透视表源数据区域（A1 表示法，格式 `SheetName!StartCell:EndCell`，如 `Sheet1!A1:D100`） |
-| `--range` | string | optional | 透视表放置位置（左上角 A1 单值，如 `F1`）；省略时放在新建子表的左上角 |
+| `--range` | string | optional | 透视表左上角放置位置（A1 单值，如 `F1`，仅 create 生效），映射到 `properties.range`；省略时放在落点子表（默认新建子表）的左上角。它与 `--target-position` 都表达落点但落在不同 wire 字段，避免两者同时给冲突值 |
 
 ### `+pivot-update`
 
@@ -93,8 +93,8 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 _创建/更新的透视表属性_
 
 **顶层字段**：
-- `range` (string?) — 放置透视表的左上角单元格 A1 地址（例如：'F1'）（仅 create 时有效）
-- `source` (string?) — 源数据区域地址，格式为 'SheetName!StartCell:EndCell'（例如：'Sheet1!A1:D100'）
+- `range` (string?) — 放置透视表的左上角单元格 A1 地址（例如：'F1'）（仅 create 时有效） — ⚠️ 已拎为独立 flag `--range`，请勿在此 JSON 内重复填写（同名以独立 flag 为准）
+- `source` (string?) — 源数据区域地址，格式为 'SheetName!StartCell:EndCell'（例如：'Sheet1!A1:D100'） — ⚠️ 已拎为独立 flag `--source`，请勿在此 JSON 内重复填写（同名以独立 flag 为准）
 - `rows` (array<object>?) — 纵向分组字段（行字段） each: { field: string, display_name?: string, sort?: object, filter?: object, condition_filter?: object, …共 6 项 }
 - `columns` (array<object>?) — 横向分组字段（列字段） each: { field: string, display_name?: string, sort?: object, filter?: object, condition_filter?: object, …共 6 项 }
 - `filters` (array<object>?) — 筛选区域字段（页字段） each: { field: string, display_name?: string, filter?: object, condition_filter?: object, group?: object }

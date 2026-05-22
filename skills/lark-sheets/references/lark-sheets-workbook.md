@@ -132,7 +132,7 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--file-extension` | string | optional | 导出文件格式；`csv` 模式必须配 `--sheet-id`（可选值：`xlsx` / `csv`） |
+| `--file-extension` | string | optional | 导出文件格式；`csv` 模式必须配 `--sheet-id`（可选值：`xlsx` / `csv`）（默认 `xlsx`） |
 | `--sheet-id` | string | optional | 仅 csv 模式必填：指定要导出的 sheet reference_id |
 | `--output-path` | string | optional | 本地保存路径；省略时只触发导出不下载 |
 

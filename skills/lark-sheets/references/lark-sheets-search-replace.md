@@ -43,7 +43,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--match-entire-cell` | bool | optional | 完全匹配整个单元格 |
 | `--regex` | bool | optional | 把 `--find` 按正则解释 |
 | `--include-formulas` | bool | optional | 也在公式文本中搜索 |
-| `--max-matches` | int | optional | 防爆，默认 5000 |
+| `--max-matches` | int | optional | 防爆，默认 5000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--offset` | int | optional | 跳过前 N 个匹配（分页用），默认 0 |
 
 ### `+cells-replace`

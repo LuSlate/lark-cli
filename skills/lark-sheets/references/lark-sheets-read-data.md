@@ -90,8 +90,8 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `Sheet1!A1:F10` |
 | `--include` | string_slice | optional | 要返回的信息类别，逗号分隔多个（可选值：`value` / `formula` / `style` / `comment` / `data_validation`） |
-| `--cell-limit` | int | optional | 防爆，默认 5000 |
-| `--max-chars` | int | optional | 防爆，默认 200000 |
+| `--cell-limit` | int | optional | 防爆，默认 5000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
+| `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
 ### `+dropdown-get`
@@ -109,9 +109,9 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `Sheet1!A1:F30` |
-| `--value-render-option` | string | optional | 单元格取值模式（可选值：`formatted_value` / `raw_value` / `formula`） |
-| `--max-rows` | int | optional | 防爆，默认 100000 |
-| `--max-chars` | int | optional | 防爆，默认 200000 |
+| `--value-render-option` | string | optional | 单元格取值模式（可选值：`formatted_value` / `raw_value` / `formula`）（默认 `formatted_value`） |
+| `--max-rows` | int | optional | 防爆，默认 100000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
+| `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 

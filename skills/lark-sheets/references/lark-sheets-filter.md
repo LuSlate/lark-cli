@@ -77,7 +77,7 @@ _仅含公共 / 系统 flag。_
 _创建/更新的筛选器属性_
 
 **顶层字段**：
-- `range` (string) — 筛选对象作用的单元格范围（A1 表示法）
+- `range` (string) — 筛选对象作用的单元格范围（A1 表示法） — ⚠️ 已拎为独立 flag `--range`，请勿在此 JSON 内重复填写（同名以独立 flag 为准）
 - `rules` (array<object>) — 列级筛选规则列表，每一项对应一个具体列的筛选条件 each: { column_index: string, conditions: array<oneOf>, filtered_rows?: array<number> }
 - `filtered_columns` (array<string>?) — 可选
 

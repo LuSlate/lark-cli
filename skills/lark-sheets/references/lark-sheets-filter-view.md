@@ -4,7 +4,7 @@
 
 筛选视图是 sheet 内的多份独立筛选配置，每个视图持有自己的 `range` 和 `rules`，由独立 `view_id`（10 位随机字符串）标识。一个 sheet 可有多个视图，视图的隐藏行仅在用户进入该视图时本地生效，不影响其他协作者，也不与该 sheet 上可能并存的筛选器（filter）互相影响。
 
-`+filter-{view-create|view-update|view-delete}` 负责视图本身的 CRUD（create / update / delete）；视图的"进入 / 退出"（激活态）是本地状态，不在工具语义内。
+`+filter-view-{create|update|delete}` 负责视图本身的 CRUD（create / update / delete）；视图的"进入 / 退出"（激活态）是本地状态，不在工具语义内。
 
 ## 使用场景
 
@@ -13,7 +13,7 @@
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
 | 查看已有筛选视图 | `+filter-view-list` | 获取 sheet 上所有视图（视图名、范围、规则） |
-| 创建 / 更新 / 删除筛选视图 | `+filter-{view-create|view-update|view-delete}` | create / update / delete 三个独立 shortcut |
+| 创建 / 更新 / 删除筛选视图 | `+filter-view-{create|update|delete}` | create / update / delete 三个独立 shortcut |
 
 典型工作流：先读取现有视图了解配置 → 执行创建 / 更新 / 删除 → **必须再次读取验证结果**。
 
@@ -80,8 +80,8 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 _create / update 的视图属性_
 
 **顶层字段**：
-- `view_name` (string?) — 可选
-- `range` (string?) — 视图作用的单元格范围（A1 表示法）
+- `view_name` (string?) — 可选 — ⚠️ 已拎为独立 flag `--view-name`，请勿在此 JSON 内重复填写（同名以独立 flag 为准）
+- `range` (string?) — 视图作用的单元格范围（A1 表示法） — ⚠️ 已拎为独立 flag `--range`，请勿在此 JSON 内重复填写（同名以独立 flag 为准）
 - `rules` (array<object>?) — 列级筛选规则列表，每一项对应一个具体列的筛选条件 each: { column_index: string, conditions: array<oneOf>, filtered_rows?: array<number> }
 - `filtered_columns` (array<string>?) — 可选
 

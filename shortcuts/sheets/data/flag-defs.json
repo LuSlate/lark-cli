@@ -3038,7 +3038,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Full chart config JSON (`position` / `data` / `properties` etc.); deeply nested, must be passed as JSON",
+        "desc": "Full chart config JSON. Top-level keys: `position` / `offset` / `size` / `snapshot` (no top-level `data`, no extra nested `properties`); chart data config lives under `snapshot.data` (`refs` / `headerMode` / `dim1` / `dim2`). Deeply nested — run `--print-schema --flag-name properties` for the full structure.",
         "input": [
           "file",
           "stdin"
@@ -3266,7 +3266,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Destination anchor cell (A1 notation, e.g. `A1`); default `A1`",
+        "desc": "Top-left cell within the target sub-sheet (A1 notation, e.g. `A1`); pairs with `--target-sheet-id`, maps to the top-level `target_position`, default `A1` (not sent when the value is A1). It and `--range` both express placement but map to different wire fields — avoid passing conflicting values for both.",
         "default": "A1"
       },
       {
@@ -3281,7 +3281,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Pivot table placement (single A1 anchor for the top-left, e.g. `F1`); placed at the top-left of a newly created sub-sheet when omitted"
+        "desc": "Pivot table top-left placement (single A1 value, e.g. `F1`; create only), maps to `properties.range`; placed at the top-left of the target sub-sheet (a newly created one by default) when omitted. It and `--target-position` both express placement but map to different wire fields — avoid passing conflicting values for both."
       },
       {
         "name": "dry-run",
