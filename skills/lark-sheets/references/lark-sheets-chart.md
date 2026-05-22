@@ -6,7 +6,7 @@
 
 ## 使用场景
 
-读写图表对象。本 Skill 包含两个工具：
+读写图表对象。本 reference 覆盖 4 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -76,7 +76,7 @@
 3. 识别并排除"总计"/"小计"行（通常最后一行；嵌套 pivot 还要排除中间层小计）
 4. `+chart-create create` 时 `data.refs` 精确到数据行（如 pivot 占 A1:D9、总计在 row9 → chart 用 `A1:D8`）
 
-详细规则见 `lark-sheets-pivot-table` skill 第 5 节"pivot → chart 组合场景"。
+详细规则见 `lark-sheets-pivot-table` 第 5 节"pivot → chart 组合场景"。
 
 ## 图表位置选择（创建前必做）
 
@@ -87,12 +87,12 @@
 3. **校验**：`position.row + needRows ≤ rowCount` 且 `col_idx + needCols ≤ columnCount`（col 按 A=0、B=1、…、Z=25、AA=26… 换算）。
 4. **不够就先扩表**，二选一，禁止硬塞越界位置：
    - **优先**放数据下方空区：`position = {row: data_end_row + 2, col: "A"}`；
-   - 否则先调 `+dim-insert(operation="insert")`（`lark-sheets-sheet-structure` skill）扩行/列，再 create。
+   - 否则先调 `+dim-insert`（`lark-sheets-sheet-structure`）扩行/列，再 create。
 
 **示例**：21 列 sheet 放 600×400 图 → `needCols=6, needRows=15`
 - ❌ `{row: 0, col: "W"}` — col=22 越界
 - ✅ `{row: 42, col: "A"}` — 放数据下方
-- ✅ 先 `insert position="U" count=6 side="after"`，再 `{row: 0, col: "V"}`
+- ✅ 先 `+dim-insert --dimension column --start 21 --end 27`（在 U 列后插 6 列；U=index 20，after 即从 21 起），再放图到 `{row: 0, col: "V"}`
 
 ## Shortcuts
 
@@ -140,17 +140,17 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 
 ## Schemas
 
-> 复合 JSON flag（如 `--cells` / `--properties` / `--operations` / `--border-styles` / `--sort-keys`）的字段速查：只列顶层字段 + 一层嵌套结构。深层结构看 `## Examples` 段的真实示例；要拿完整 JSON Schema 跑 `lark-cli sheets <shortcut> --print-schema --flag-name <name>`。先 `--print-schema`（不带 `--flag-name`）会列出该 shortcut 所有可查询的 flag。
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
 
 ### `+chart-create` `--properties` / `+chart-update` `--properties`
 
 _创建/更新的图表属性_
 
 **顶层字段**：
-- `offset` (object?) — 可选 { col_offset?: number, row_offset?: number }
-- `position` (object?) — 必填 { col: string, row: number }
-- `size` (object?) — 必填 { height: number, width: number }
-- `snapshot` (object?) — 图表快照配置 { data?: object, legend?: oneOf, plotArea?: object, style?: object, subTitle?: object, …共 6 项 }
+- `position` (object?) — 必填 { row: number, col: string }
+- `offset` (object?) — 可选 { row_offset?: number, col_offset?: number }
+- `size` (object?) — 必填 { width: number, height: number }
+- `snapshot` (object?) — 图表快照配置 { title?: object, subTitle?: object, style?: object, legend?: oneOf, plotArea?: object, …共 6 项 }
 
 ## Examples
 

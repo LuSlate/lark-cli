@@ -32,8 +32,9 @@ import (
 // All set_cell_range-backed shortcuts construct a cells matrix whose
 // dimensions exactly match the target range — the tool errors on mismatch.
 
-// CellsSet wraps set_cell_range with raw --data: caller provides the cells
-// matrix (and any optional copy_to_range / resize_* fields) as JSON.
+// CellsSet wraps set_cell_range: caller provides the cells matrix via --cells
+// (JSON), with an optional --copy-to-range to replicate the written block
+// across a larger area (formula refs auto-shift).
 var CellsSet = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+cells-set",
@@ -91,6 +92,9 @@ func cellsSetInput(runtime flagView, token, sheetID, sheetName string) (map[stri
 	sheetSelectorForToolInput(input, sheetID, sheetName)
 	if !runtime.Bool("allow-overwrite") {
 		input["allow_overwrite"] = false
+	}
+	if copyTo := strings.TrimSpace(runtime.Str("copy-to-range")); copyTo != "" {
+		input["copy_to_range"] = copyTo
 	}
 	return input, nil
 }

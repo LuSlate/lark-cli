@@ -8,12 +8,12 @@
 
 ## 使用场景
 
-读写筛选视图对象。本 Skill 包含两个工具：
+读写筛选视图对象。本 reference 覆盖 4 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
 | 查看已有筛选视图 | `+filter-view-list` | 获取 sheet 上所有视图（视图名、范围、规则） |
-| 创建 / 更新 / 删除筛选视图 | `+filter-{view-create|view-update|view-delete}` | 3 种 operation：create / update / delete |
+| 创建 / 更新 / 删除筛选视图 | `+filter-{view-create|view-update|view-delete}` | create / update / delete 三个独立 shortcut |
 
 典型工作流：先读取现有视图了解配置 → 执行创建 / 更新 / 删除 → **必须再次读取验证结果**。
 
@@ -73,21 +73,19 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 
 ## Schemas
 
-> 复合 JSON flag（如 `--cells` / `--properties` / `--operations` / `--border-styles` / `--sort-keys`）的字段速查：只列顶层字段 + 一层嵌套结构。深层结构看 `## Examples` 段的真实示例；要拿完整 JSON Schema 跑 `lark-cli sheets <shortcut> --print-schema --flag-name <name>`。先 `--print-schema`（不带 `--flag-name`）会列出该 shortcut 所有可查询的 flag。
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
 
 ### `+filter-view-create` `--properties` / `+filter-view-update` `--properties`
 
 _create / update 的视图属性_
 
 **顶层字段**：
-- `filtered_columns` (array<string>?) — 可选
+- `view_name` (string?) — 可选
 - `range` (string?) — 视图作用的单元格范围（A1 表示法）
 - `rules` (array<object>?) — 列级筛选规则列表，每一项对应一个具体列的筛选条件 each: { column_index: string, conditions: array<oneOf>, filtered_rows?: array<number> }
-- `view_name` (string?) — 可选
+- `filtered_columns` (array<string>?) — 可选
 
 ## Examples
-
-> ⚠️ 本 skill 是 **CLI 独有**（meta `surface: cli-only`）；`generate_mcp` 跳过，不会进 sheet-ai-skills SKILL 集。AI/MCP 侧暂不暴露筛选视图能力。
 
 公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`（XOR）。`view_id` 是 10 位随机字符串，每个 sheet 可有多个视图。
 

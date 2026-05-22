@@ -6,7 +6,7 @@
 
 ## 使用场景
 
-读写迷你图对象。本 Skill 包含两个工具：
+读写迷你图对象。本 reference 覆盖 4 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -66,15 +66,15 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 
 ## Schemas
 
-> 复合 JSON flag（如 `--cells` / `--properties` / `--operations` / `--border-styles` / `--sort-keys`）的字段速查：只列顶层字段 + 一层嵌套结构。深层结构看 `## Examples` 段的真实示例；要拿完整 JSON Schema 跑 `lark-cli sheets <shortcut> --print-schema --flag-name <name>`。先 `--print-schema`（不带 `--flag-name`）会列出该 shortcut 所有可查询的 flag。
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
 
 ### `+sparkline-create` `--properties` / `+sparkline-update` `--properties`
 
 _创建/更新/部分删除的迷你图属性_
 
 **顶层字段**：
-- `config` (object?) — 迷你图样式配置, 相同 groupId 的迷你图共享相同的样式 { axis?: object, contain_hidden_cells?: boolean, empty_show_as?: enum, extremum_max?: object, extremum_min?: object, …共 13 项 }
-- `sparklines` (array<object>?) — 迷你图项列表 each: { position?: object, source?: string, source_range?: object, sparkline_id?: string }
+- `config` (object?) — 迷你图样式配置, 相同 groupId 的迷你图共享相同的样式 { theme_type?: enum, non_num_show_as?: enum, empty_show_as?: enum, contain_hidden_cells?: boolean, series_color?: string, …共 13 项 }
+- `sparklines` (array<object>?) — 迷你图项列表 each: { sparkline_id?: string, position?: object, source?: string, source_range?: object }
 
 ## Examples
 

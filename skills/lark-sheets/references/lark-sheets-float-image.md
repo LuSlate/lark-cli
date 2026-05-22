@@ -10,7 +10,7 @@
 
 ## 使用场景
 
-读写**浮动图片**对象（悬浮在单元格上方的图片，不属于单元格内容）。本 Skill 包含两个工具：
+读写**浮动图片**对象（悬浮在单元格上方的图片，不属于单元格内容）。本 reference 覆盖 4 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -102,6 +102,10 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 
 ### `+float-image-list`
 
+```bash
+lark-cli sheets +float-image-list --url "..." --sheet-id "$SID"
+```
+
 ### `+float-image-create`
 
 所有字段拍平为独立 flag：`--image-name` / `--image-token` 或 `--image-uri`（XOR） / `--position-{row,col}` / `--size-{width,height}` / `--offset-{row,col}` / `--z-index`。
@@ -135,6 +139,10 @@ lark-cli sheets +float-image-update --url "..." --sheet-id "$SID" \
 ```
 
 ### `+float-image-delete`
+
+```bash
+lark-cli sheets +float-image-delete --url "..." --float-image-id "$IMG_ID" --yes
+```
 
 ### Validate / DryRun / Execute 约束
 

@@ -1611,6 +1611,13 @@
         "hidden": true
       },
       {
+        "name": "copy-to-range",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Copy-to range (A1 notation): replicate what --cells wrote into --range (values/formulas/styles, per the fields actually passed) to this range; formula refs auto-shift (C2=B2 -> C3=B3). Write a one-row/one-block template then fill a whole column/area. Supports full rows '3:6', full columns 'C:E', to-col-end 'D3:D', to-row-end 'D3:3', and comma-separated multiple targets like 'C1:D2,E5:F6'."
+      },
+      {
         "name": "dry-run",
         "kind": "system",
         "type": "bool",

@@ -6,7 +6,7 @@
 
 ## 使用场景
 
-读写透视表对象。本 Skill 包含两个工具：
+读写透视表对象。本 reference 覆盖 4 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -86,32 +86,36 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 
 ## Schemas
 
-> 复合 JSON flag（如 `--cells` / `--properties` / `--operations` / `--border-styles` / `--sort-keys`）的字段速查：只列顶层字段 + 一层嵌套结构。深层结构看 `## Examples` 段的真实示例；要拿完整 JSON Schema 跑 `lark-cli sheets <shortcut> --print-schema --flag-name <name>`。先 `--print-schema`（不带 `--flag-name`）会列出该 shortcut 所有可查询的 flag。
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
 
 ### `+pivot-create` `--properties` / `+pivot-update` `--properties`
 
 _创建/更新的透视表属性_
 
 **顶层字段**：
-- `auto_fit_col` (boolean?) — 是否自动调整列宽以适应内容
-- `calculated_fields` (array<object>?) — 计算字段列表 each: { formula: string, name: string, summarize_by?: enum }
-- `collapse` (object?) — 行字段展开/折叠状态：字段名 -> 要折叠的项目列表
-- `columns` (array<object>?) — 横向分组字段（列字段） each: { condition_filter?: object, display_name?: string, field: string, filter?: object, group?: object, …共 6 项 }
-- `filters` (array<object>?) — 筛选区域字段（页字段） each: { condition_filter?: object, display_name?: string, field: string, filter?: object, group?: object }
 - `range` (string?) — 放置透视表的左上角单元格 A1 地址（例如：'F1'）（仅 create 时有效）
-- `repeat_row_labels` (boolean?) — 是否显示重复项标签
-- `rows` (array<object>?) — 纵向分组字段（行字段） each: { condition_filter?: object, display_name?: string, field: string, filter?: object, group?: object, …共 6 项 }
-- `show_col_grand_total` (boolean?) — 是否显示列总计（默认 true）
-- `show_row_grand_total` (boolean?) — 是否显示行总计（默认 true）
-- `show_subtotals` (boolean?) — 是否显示分类小计（默认 true，应用于所有字段）
 - `source` (string?) — 源数据区域地址，格式为 'SheetName!StartCell:EndCell'（例如：'Sheet1!A1:D100'）
-- `values` (array<object>?) — 要汇总的字段（至少需要 1 个） each: { base_field?: string, display_name?: string, field: string, show_data_as?: enum, summarize_by?: enum }
+- `rows` (array<object>?) — 纵向分组字段（行字段） each: { field: string, display_name?: string, sort?: object, filter?: object, condition_filter?: object, …共 6 项 }
+- `columns` (array<object>?) — 横向分组字段（列字段） each: { field: string, display_name?: string, sort?: object, filter?: object, condition_filter?: object, …共 6 项 }
+- `filters` (array<object>?) — 筛选区域字段（页字段） each: { field: string, display_name?: string, filter?: object, condition_filter?: object, group?: object }
+- `values` (array<object>?) — 要汇总的字段（至少需要 1 个） each: { field: string, display_name?: string, summarize_by?: enum, show_data_as?: enum, base_field?: string }
+- `auto_fit_col` (boolean?) — 是否自动调整列宽以适应内容
+- `show_row_grand_total` (boolean?) — 是否显示行总计（默认 true）
+- `show_col_grand_total` (boolean?) — 是否显示列总计（默认 true）
+- `show_subtotals` (boolean?) — 是否显示分类小计（默认 true，应用于所有字段）
+- `repeat_row_labels` (boolean?) — 是否显示重复项标签
+- `calculated_fields` (array<object>?) — 计算字段列表 each: { name: string, formula: string, summarize_by?: enum }
+- `collapse` (object?) — 行字段展开/折叠状态：字段名 -> 要折叠的项目列表
 
 ## Examples
 
 公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`（XOR）。`+pivot-create` 默认自动新建子表存放透视表产物（推荐）。
 
 ### `+pivot-list`
+
+```bash
+lark-cli sheets +pivot-list --url "..." --sheet-id "$SID"
+```
 
 ### `+pivot-create`
 
@@ -127,6 +131,10 @@ lark-cli sheets +pivot-create --url "..." --sheet-id "$SRC_SID" \
 > 不允许改 `--source` / `--range`（透视表创建后位置/数据源固定）；只能用 `--properties` 改 rows / columns / values / filters 等。先 `+pivot-list --pivot-table-id <id>` 回读再 patch，避免漏字段。
 
 ### `+pivot-delete`
+
+```bash
+lark-cli sheets +pivot-delete --url "..." --pivot-table-id "$PID" --yes
+```
 
 ### Validate / DryRun / Execute 约束
 

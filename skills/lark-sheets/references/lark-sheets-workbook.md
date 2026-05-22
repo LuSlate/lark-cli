@@ -10,7 +10,7 @@
 
 ## 使用场景
 
-读写。管理工作簿结构。本 Skill 包含两个工具：
+读写。管理工作簿结构。本 reference 覆盖 11 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -159,6 +159,10 @@ lark-cli sheets +sheet-create --url "https://example.feishu.cn/sheets/shtXXX" \
 
 ### `+sheet-rename`
 
+```bash
+lark-cli sheets +sheet-rename --url "..." --sheet-id "$SID" --title "汇总"
+```
+
 ### `+sheet-move`
 
 standalone 路径在缺 `--source-index` / 只给 `--sheet-name` 时会自动发起一次 `+workbook-info` 读把它们解出来。
@@ -167,9 +171,24 @@ standalone 路径在缺 `--source-index` / 只给 `--sheet-name` 时会自动发
 
 ### `+sheet-copy`
 
+```bash
+# --title 省略时由服务端生成副本名
+lark-cli sheets +sheet-copy --url "..." --sheet-id "$SID" --title "副本"
+```
+
 ### `+sheet-hide` / `+sheet-unhide`
 
+```bash
+lark-cli sheets +sheet-hide   --url "..." --sheet-id "$SID"
+lark-cli sheets +sheet-unhide --url "..." --sheet-id "$SID"
+```
+
 ### `+sheet-set-tab-color`
+
+```bash
+# Hex 色值；传空字符串 "" 清除标签色
+lark-cli sheets +sheet-set-tab-color --url "..." --sheet-id "$SID" --color "#FF0000"
+```
 
 ### Validate / DryRun / Execute 约束
 

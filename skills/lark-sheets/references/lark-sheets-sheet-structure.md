@@ -12,7 +12,7 @@
 
 ## 使用场景
 
-读写。管理子表结构与布局。本 Skill 包含两个工具：
+读写。管理子表结构与布局。本 reference 覆盖 9 个 shortcut（按用途分两类）：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -23,16 +23,16 @@
 
 - 当表格存在合并单元格时，应结合返回的 `merged_cells` 判断表头、分组标题和区域语义
 - 不要把合并区域中非左上角的空白单元格理解为"无内容"；通常应将左上角单元格的内容视为整个合并区域的语义内容
-- 当前插入语义使用 `operation="insert"` + `position` + `count` + `side`
-- 处理"在第 N 行后追加"这类请求时，要显式区分 `before` 和 `after`，避免 off-by-one
-- 例如"在第 20 行后新增 116 行"，应优先理解为 `position="20"`、`side="after"`、`count=116`
+- 插入用 `+dim-insert`：`--dimension`（`row`/`column`）+ `--start`（插入起始 index，0-based）+ `--end`（结束 index，exclusive）；插入行/列数 = `--end` − `--start`。新行/列样式继承用 `--inherit-style`（`before`/`after`/`none`）
+- 处理"在第 N 行后追加"这类请求时，注意 `--start` 是 0-based 索引、`--end` 是 exclusive，换算时避免 off-by-one
+- 例如"在第 20 行后新增 116 行"：`--dimension row --start 21 --end 137`（"第 20 行后"即从 index 21 起插入，`--end` = `--start` + 116）
 
 **常见配置错误（必须注意）**：
-- **插入列位置偏移**：插入列时 `position` 是基于 0 的列索引，不是列字母。插入前先通过 `+workbook-info` 或读取表头确认目标位置的实际列索引，不要凭猜测
+- **插入列位置偏移**：插入列时 `--start` 是基于 0 的列索引，不是列字母。插入前先通过 `+workbook-info` 或读取表头确认目标位置的实际列索引，不要凭猜测
 - **插入后引用偏移**：插入行/列后，原有数据的行列号会发生偏移。如果插入后还需要对原有区域执行写入操作，必须重新计算偏移后的行列号
-- **删除行列前先确认范围**：删除操作不可逆，执行前应确认 `position` 和 `count` 精确无误。可先用 `+csv-get` 读取目标区域验证内容
-- **"在左侧新增一列"的正确写法**：用户说"在 D 列左侧新增一列"时，应使用 `position` 对应 D 列索引 + `side="before"`，而不是 C 列 + `side="after"`（两者效果一样但前者语义更清晰）
-- **插入列后必须检查多行表头合并区域**：很多表格有 2-3 行的合并表头。插入列后，原有的合并区域不会自动扩展到新列。必须先用 `+sheet-info`（`info_type: merged_cells_infos`）读取合并区域，插入后将跨越插入位置的合并区域重新设置（用 `+cells-{merge|unmerge}`），否则新列的表头会是空的、格式不连续
+- **删除行列前先确认范围**：删除操作不可逆，执行前应确认 `--start` / `--end` 精确无误（`+dim-delete` 用 `--dimension` + `--start`（0-based）+ `--end`（exclusive））。可先用 `+csv-get` 读取目标区域验证内容
+- **"在左侧新增一列"的正确写法**：用户说"在 D 列左侧新增一列"时，`--dimension column`、`--start` 取 D 列的 0-based 索引（新列插在该 index 之前）、`--end = --start + 1`；要继承左侧列样式加 `--inherit-style before`
+- **插入列后必须检查多行表头合并区域**：很多表格有 2-3 行的合并表头。插入列后，原有的合并区域不会自动扩展到新列。必须先用 `+sheet-info --include merges` 读取合并区域，插入后将跨越插入位置的合并区域重新设置（用 `+cells-{merge|unmerge}`），否则新列的表头会是空的、格式不连续
 - **公式写入范围跳过表头行**：写入公式时从数据行开始（不是第 1 行）。先确认表头占几行（可能 1-3 行），公式的起始行 = 表头行数 + 1
 
 ## Shortcuts
@@ -164,7 +164,17 @@ lark-cli sheets +dim-insert --url "https://example.feishu.cn/sheets/shtXXX" \
 
 ### `+dim-delete`
 
+```bash
+# 删除第 5-7 行（0-based，--end 为 exclusive）
+lark-cli sheets +dim-delete --url "..." --sheet-id "$SID" --dimension row --start 5 --end 8 --yes
+```
+
 ### `+dim-hide` / `+dim-unhide`
+
+```bash
+lark-cli sheets +dim-hide   --url "..." --sheet-id "$SID" --dimension row --start 5 --end 8
+lark-cli sheets +dim-unhide --url "..." --sheet-id "$SID" --dimension row --start 5 --end 8
+```
 
 ### `+rows-resize` / `+cols-resize`
 
@@ -173,6 +183,11 @@ lark-cli sheets +dim-insert --url "https://example.feishu.cn/sheets/shtXXX" \
 > 行 vs 列底层 schema 有差异：`+rows-resize.--type` 支持 `pixel` / `standard` / `auto`，`+cols-resize.--type` 只支持 `pixel` / `standard`（列宽不支持自动适应）。
 
 ### `+dim-freeze`
+
+```bash
+# 冻结前 1 行（--count 传 0 解除冻结）
+lark-cli sheets +dim-freeze --url "..." --sheet-id "$SID" --dimension row --count 1
+```
 
 ### `+dim-group` / `+dim-ungroup`（大纲）
 

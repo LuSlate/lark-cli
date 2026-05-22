@@ -142,10 +142,10 @@
 **核心思路：三步分层法**
 
 ```
-Step 1 — 格式铺开：`+batch-update` + `+range-{move|copy|fill|sort}`(copy/fill)
+Step 1 — 格式铺开：`+batch-update` + `+range-copy`（或 `+range-fill`）
   └── 将模板行/区域的 **全部格式**（样式、边框、数字格式、数据验证等）复制到目标区域
-  └── 推荐传 paste_type: "format_only"（仅复制格式，目标值/公式保留），即"格式刷"
-  └── 若需连带公式平移填充（如公式列结构一致），改用 fill(copyCells) 或 copy 默认的 paste_type: "all"
+  └── 推荐用 `+range-copy --paste-type formats`（仅复制格式，目标值/公式保留），即"格式刷"
+  └── 若需连带公式平移填充（如公式列结构一致），改用 `+range-fill --series-type copy` 或 `+range-copy --paste-type all`
 
 Step 2 — 内容覆写：`+batch-update` + `+cells-set`（仅传 value/formula，不传任何样式）
   └── 将每行的实际数据写入，cell_styles 全部省略，因为格式已在 Step 1 中就位
@@ -155,14 +155,14 @@ Step 3 — 微调收尾：`+batch-update` + `+rows-resize / +cols-resize` / `+ce
 ```
 
 **关键注意事项：**
-- Step 1 用 `paste_type: "format_only"` 时，目标区域的值/公式不会被覆盖，Step 2 的 `+cells-set` 无需 `allow_overwrite: true`；若 Step 1 用默认 `all` 连带复制了值/公式，则 Step 2 需要 `allow_overwrite: true`
-- `+range-{move|copy|fill|sort}(fill)` 的 `fillSeries` 模式会自动递增数字序列（1→2→3）和日期序列，`copyCells` 则原样复制值但公式引用会自动平移
+- Step 1 用 `+range-copy --paste-type formats` 时只铺格式、不动值/公式，Step 2 再用 `+cells-set` 写值即可（`+cells-set` 默认覆盖，无需额外 flag）；若 Step 1 用 `--paste-type all` 连带复制了值/公式，Step 2 写入同样会覆盖（默认行为）
+- `+range-fill --series-type auto`（或 `linear`/`date`）会自动递增数字序列（1→2→3）和日期序列，`+range-fill --series-type copy` 则原样复制值但公式引用会自动平移
 - 如果模板区域存在合并单元格，copy/fill 不会复制合并状态，必须在 Step 3 中用 `+cells-{merge|unmerge}` 补全
-- 如果模板区域有条件格式，需要在 Step 3 中通过 `+cond-{format-create|format-update|format-delete}(update)` 扩展 ranges
+- 如果模板区域有条件格式，需要在 Step 3 中通过 `+cond-format-update` 扩展 ranges
 
 **场景：纯"格式刷"（用户说"把 A 列样式应用到 B 列"、"格式复制过去"、"只刷格式不改数据"）**
 
-单步即可，无需三步分层：调用 `+range-copy(operation=copy, paste_type="format_only")`，源区域为样式来源，`destination_range` 为目标起点。参数细节见 `lark-sheets-range-operations`。
+单步即可，无需三步分层：调用 `+range-copy --paste-type formats`，`--source-range` 为样式来源、`--target-range` 为目标起点。参数细节见 `lark-sheets-range-operations`。
 
 ### 场景三：已有区域格式美化
 
@@ -173,8 +173,8 @@ Step 3 — 微调收尾：`+batch-update` + `+rows-resize / +cols-resize` / `+ce
 ```
 1. 探查阶段
    ├── `+workbook-info` → 获取子表列表、行列数、冻结位置
-   ├── `+sheet-info`（info_type: merged_cells_infos）→ 获取合并区域
-   ├── `+cells-get`（前几行 + 末尾几行，include_styles: true）→ 采样表头/数据区/汇总行样式
+   ├── `+sheet-info --include merges` → 获取合并区域
+   ├── `+cells-get`（前几行 + 末尾几行，`--include style`）→ 采样表头/数据区/汇总行样式
    └── 分析结果 → 建立区域地图（表头行号、数据起止行号、汇总行号、合并区域列表）
 
 2. 规划阶段

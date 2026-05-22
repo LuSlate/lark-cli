@@ -8,7 +8,7 @@
 
 ## 使用场景
 
-读写筛选器对象。本 Skill 包含两个工具：
+读写筛选器对象。本 reference 覆盖 4 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -70,22 +70,27 @@ _仅含公共 / 系统 flag。_
 
 ## Schemas
 
-> 复合 JSON flag（如 `--cells` / `--properties` / `--operations` / `--border-styles` / `--sort-keys`）的字段速查：只列顶层字段 + 一层嵌套结构。深层结构看 `## Examples` 段的真实示例；要拿完整 JSON Schema 跑 `lark-cli sheets <shortcut> --print-schema --flag-name <name>`。先 `--print-schema`（不带 `--flag-name`）会列出该 shortcut 所有可查询的 flag。
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
 
 ### `+filter-create` `--properties` / `+filter-update` `--properties`
 
 _创建/更新的筛选器属性_
 
 **顶层字段**：
-- `filtered_columns` (array<string>?) — 可选
 - `range` (string) — 筛选对象作用的单元格范围（A1 表示法）
 - `rules` (array<object>) — 列级筛选规则列表，每一项对应一个具体列的筛选条件 each: { column_index: string, conditions: array<oneOf>, filtered_rows?: array<number> }
+- `filtered_columns` (array<string>?) — 可选
 
 ## Examples
 
 公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`（XOR）。`filter_id` 等同于 `sheet_id`（每个工作表至多一个筛选器）。
 
 ### `+filter-list`
+
+```bash
+# 查看当前 sheet 的筛选器配置（filter_id 等于 sheet_id）
+lark-cli sheets +filter-list --url "..." --sheet-id "$SID"
+```
 
 ### `+filter-create`
 
@@ -102,6 +107,10 @@ lark-cli sheets +filter-create --url "..." --sheet-id "$SID" \
 > ⚠️ update 是覆盖式：`--properties` 中传新 `rules` 会替换旧组。如只想加一条，要带上已有的全部条件再追加。必填 `--range`。
 
 ### `+filter-delete`
+
+```bash
+lark-cli sheets +filter-delete --url "..." --sheet-id "$SID" --yes
+```
 
 ### Validate / DryRun / Execute 约束
 

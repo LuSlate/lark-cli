@@ -55,6 +55,24 @@ func TestWriteCellsShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
+			name: "+cells-set --copy-to-range passes copy_to_range",
+			sc:   CellsSet,
+			args: []string{
+				"--url", testURL, "--sheet-id", testSheetID,
+				"--range", "H2",
+				"--cells", `[[{"formula":"=A2*B2"}]]`,
+				"--copy-to-range", "H2:H100",
+			},
+			toolName: "set_cell_range",
+			wantInput: map[string]interface{}{
+				"excel_id":      testToken,
+				"sheet_id":      testSheetID,
+				"range":         "H2",
+				"cells":         []interface{}{[]interface{}{map[string]interface{}{"formula": "=A2*B2"}}},
+				"copy_to_range": "H2:H100",
+			},
+		},
+		{
 			name: "+csv-put inline csv",
 			sc:   CsvPut,
 			args: []string{

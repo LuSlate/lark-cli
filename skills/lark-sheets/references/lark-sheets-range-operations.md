@@ -25,14 +25,14 @@
 - 用户说"这行 / 整行 / 首行"时，优先使用整行范围如 `1:1`；"这列 / 整列"时使用 `J:J`。不要截断为局部矩形
 - 合并后只保留左上角单元格的内容，其余清除。写入合并区域用 `+cells-set` 对左上角单元格操作
 - 调整行高列宽时，先读取相邻行列尺寸再决定像素值，不要随意猜测
-- `copy_to_range`（`+cells-set` 的参数）复制的是值/公式/样式，不含行高列宽。需要统一尺寸时另行调用 `+rows-resize / +cols-resize`
+- `--copy-to-range`（`+cells-set` 的参数）复制的是值/公式/样式，不含行高列宽。需要统一尺寸时另行调用 `+rows-resize / +cols-resize`
 
 ## 写入后列宽自适应（防内容遮挡）
 
 写入文本 / 数值后**必须**主动检查列宽是否适配，否则会出现"内容被截断 / 长数字显示为科学计数法 / 文本溢出被相邻列遮挡"等用户感知问题：
 
 1. **写入后回读最长内容字符数**：用 `+csv-get` 读目标列的实际写入内容，统计最长单元格的字符数（`max(len(cell) for cell in col)`）。汉字按 2 字符宽度估算，半角字母数字按 1 字符。
-2. **判定阈值**：当前列宽（用 `+sheet-info --info_type=row_heights_column_widths` 拿）≥ 最长字符数 × 字体宽度系数 + buffer 才算适配。默认列宽 11 通常只够 11 个半角字符或 5-6 个汉字，写长文本前必扩宽。
+2. **判定阈值**：当前列宽（用 `+sheet-info --include row_heights,col_widths` 拿）≥ 最长字符数 × 字体宽度系数 + buffer 才算适配。默认列宽 11 通常只够 11 个半角字符或 5-6 个汉字，写长文本前必扩宽。
 3. **修复二选一**：
    - **扩列宽**：用 `+rows-resize / +cols-resize` 把目标列宽设为 `max(表头字符数, 内容采样最长字符数) × 8 + 16` 像素（经验值）
    - **自动换行**：在 `+cells-set` 时给单元格设置 `cell_styles.word_wrap="auto-wrap"`（可选值：`overflow` / `auto-wrap` / `word-clip`），并用 `+rows-resize / +cols-resize` 调高对应行的行高
@@ -42,18 +42,18 @@
 
 **⚠️ 合并单元格安全操作规则**（`+cells-{merge|unmerge}` 必读）：
 
-1. **先读后写**：操作前必须用 `+sheet-info`（`info_type: merged_cells_infos`）或 `+cells-get` 识别已有合并区域（特征：多个连续单元格中只有左上角有值，其余为空）。
+1. **先读后写**：操作前必须用 `+sheet-info --include merges` 或 `+cells-get` 识别已有合并区域（特征：多个连续单元格中只有左上角有值，其余为空）。
 2. **不要对已合并区域重复 merge**：对已合并的区域再次调用 merge 会报错或产生不可预期结果。
 3. **修改合并区域的正确顺序**：先 `unmerge` → 修改内容/样式 → 再 `merge`。
 4. **对合并区域设置样式**：只对完整 range 设置一次 `cell_styles`（写在左上角单元格），其余位置用 `{}` 占位。
 5. **新增合并时数据保护**：合并前确认目标区域只有左上角有数据，其余单元格为空，否则合并会导致非左上角的数据丢失。
-6. **批量取消合并一次调用即可**：当一个范围（整列 `A:A`、整行 `3:3`、矩形 `A1:D100`）内存在多个合并区域，直接调一次 `+cells-{merge|unmerge}(operation: unmerge)` 传入这个大范围，会一次性取消该范围内所有合并区域；**不要**为每个合并区域单独调用 unmerge，也不要用 `+batch-update` 拆成多次 unmerge。
+6. **批量取消合并一次调用即可**：当一个范围（整列 `A:A`、整行 `3:3`、矩形 `A1:D100`）内存在多个合并区域，直接调一次 `+cells-unmerge` 传入这个大范围，会一次性取消该范围内所有合并区域；**不要**为每个合并区域单独调用 unmerge，也不要用 `+batch-update` 拆成多次 unmerge。
 
 **⚠️ 批量操作必须用 `+batch-update`**：
 
-当需要对**多个**不同区域执行 `+cells-{merge|unmerge}`（merge）或 `+rows-resize / +cols-resize` 时，**禁止逐个调用**，必须使用 `+batch-update`（参见 `lark-sheets-batch-update` skill）将所有操作合并为一次请求。逐个调用会快速耗尽工具调用轮次上限。
+当需要对**多个**不同区域执行 `+cells-{merge|unmerge}`（merge）或 `+rows-resize / +cols-resize` 时，**禁止逐个调用**，必须使用 `+batch-update`（参见 `lark-sheets-batch-update`）将所有操作合并为一次请求。逐个调用会快速耗尽工具调用轮次上限。
 
-**例外**：`+cells-{merge|unmerge}(operation: unmerge)` 原生支持对覆盖多个合并区域的大 range 一次性取消，应直接单次调用，**不要**拆进 `+batch-update`。
+**例外**：`+cells-unmerge` 原生支持对覆盖多个合并区域的大 range 一次性取消，应直接单次调用，**不要**拆进 `+batch-update`。
 
 > 多操作组合示例（合并多区域、批量调整列宽行高的 `+batch-update --operations` JSON 入参格式）见 `lark-sheets-batch-update` 文档。
 
@@ -73,7 +73,7 @@
 
 **硬性流程**：
 
-1. sort 前先用 `+csv-get` 抽样目标列的前 3–5 行，或用 `+cells-get`（`value_render_option: "raw_value"` 看原始值；默认 `formatted_value` 返回显示值）确认原始值形态，不要只看列名和用户问题就直接排。
+1. sort 前先用 `+csv-get` 抽样目标列的前 3–5 行，或用 `+cells-get`（`--value-render-option raw_value` 看原始值；默认 `formatted_value` 返回显示值）确认原始值形态，不要只看列名和用户问题就直接排。
 2. 若是纯数字或日期 → 直接 sort。
 3. 若是带符号 / 表达式 / 单位的文本 → **不要直接排**：
    - 简单场景（货币、千分位、单位前缀）：新增辅助列，用公式提取数值（如 `=VALUE(SUBSTITUTE(SUBSTITUTE(A2,"¥",""),",",""))`），按辅助列排序，排完可按需清除辅助列。
@@ -186,15 +186,15 @@ _公共四件套 · 系统：`--dry-run`_
 
 ## Schemas
 
-> 复合 JSON flag（如 `--cells` / `--properties` / `--operations` / `--border-styles` / `--sort-keys`）的字段速查：只列顶层字段 + 一层嵌套结构。深层结构看 `## Examples` 段的真实示例；要拿完整 JSON Schema 跑 `lark-cli sheets <shortcut> --print-schema --flag-name <name>`。先 `--print-schema`（不带 `--flag-name`）会列出该 shortcut 所有可查询的 flag。
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
 
 ### `+range-sort` `--sort-keys`
 
 _排序条件列表（仅 sort 操作）_
 
 **数组项**（类型 object）：
-- `ascending` (boolean) — 是否升序排序
 - `column` (string) — 排序依据的列字母（如 "C"、"D"），必须在 range 范围内
+- `ascending` (boolean) — 是否升序排序
 
 ## Examples
 
@@ -214,6 +214,13 @@ lark-cli sheets +cells-clear --url "..." --sheet-id "$SID" --range "A2:Z1000" --
 ```
 
 ### `+cells-merge` / `+cells-unmerge`
+
+```bash
+# 合并 A1:C1（可选 --merge-type all/rows/columns）
+lark-cli sheets +cells-merge   --url "..." --sheet-id "$SID" --range "A1:C1"
+# 取消合并：传大 range 一次性取消其中所有合并区域
+lark-cli sheets +cells-unmerge --url "..." --sheet-id "$SID" --range "A1:C100"
+```
 
 ### `+rows-resize` / `+cols-resize`
 
@@ -241,7 +248,17 @@ lark-cli sheets +cols-resize --url "..." --sheet-id "$SID" --start 0 --end 5 --t
 
 ### `+range-fill`
 
+```bash
+# 用 A1:A2 的序列规律自动填充到 A1:A100
+lark-cli sheets +range-fill --url "..." --sheet-id "$SID" --source-range "A1:A2" --target-range "A1:A100" --series-type auto
+```
+
 ### `+range-sort`
+
+```bash
+# 按 C 列降序排 A1:E100（首行为表头不参与）
+lark-cli sheets +range-sort --url "..." --sheet-id "$SID" --range "A1:E100" --has-header --sort-keys '[{"column":"C","ascending":false}]'
+```
 
 ### Validate / DryRun / Execute 约束
 
