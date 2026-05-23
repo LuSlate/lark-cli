@@ -1197,15 +1197,6 @@
         ]
       },
       {
-        "name": "cell-limit",
-        "kind": "own",
-        "type": "int",
-        "required": "optional",
-        "desc": "Safety cap; default 5000",
-        "default": "5000",
-        "hidden": true
-      },
-      {
         "name": "max-chars",
         "kind": "own",
         "type": "int",
@@ -1313,15 +1304,6 @@
           "raw_value",
           "formula"
         ]
-      },
-      {
-        "name": "max-rows",
-        "kind": "own",
-        "type": "int",
-        "required": "optional",
-        "desc": "Safety cap; default 100000",
-        "default": "100000",
-        "hidden": true
       },
       {
         "name": "max-chars",

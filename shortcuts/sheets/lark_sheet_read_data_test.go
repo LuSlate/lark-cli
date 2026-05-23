@@ -31,6 +31,7 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 				"ranges":              []interface{}{"A1:B2"},
 				"include_styles":      true,
 				"value_render_option": "formula",
+				"cell_limit":          float64(unboundedReadLimit), // pinned high; --max-chars is the only cap
 			},
 		},
 		{
@@ -43,6 +44,7 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 				"sheet_id":            testSheetID,
 				"range":               "A1:C10",
 				"value_render_option": "formula",
+				"max_rows":            float64(unboundedReadLimit), // pinned high; --max-chars is the only cap
 			},
 		},
 		{

@@ -19,6 +19,14 @@ import (
 // The sandbox tool (export_sheet_to_sandbox) is Sheet-Tool-only and has no
 // CLI surface here.
 
+// unboundedReadLimit is pinned into the tool's cell_limit / max_rows so that
+// --max-chars is the single effective read cap. The underlying tools default
+// those two to smaller values; without an explicit high value they could
+// truncate before max_chars. The CLI no longer exposes --cell-limit / --max-rows
+// (only --max-chars), so we pass this sentinel to neutralize the tool defaults.
+// Large enough to never bind on any real sheet.
+const unboundedReadLimit = 1_000_000_000
+
 // CellsGet wraps get_cell_ranges: read multiple A1 ranges and return per-cell
 // values, formulas, styles, and other metadata as requested via --include.
 var CellsGet = common.Shortcut{
@@ -75,9 +83,10 @@ func cellsGetInput(runtime *common.RuntimeContext, token, sheetID, sheetName str
 	if runtime.Bool("skip-hidden") {
 		input["skip_hidden"] = true
 	}
-	if n := runtime.Int("cell-limit"); n > 0 {
-		input["cell_limit"] = n
-	}
+	// --cell-limit was removed from the CLI surface; --max-chars is the single
+	// read cap. Pin cell_limit very high so the tool's own default never binds
+	// before max_chars.
+	input["cell_limit"] = unboundedReadLimit
 	if n := runtime.Int("max-chars"); n > 0 {
 		input["max_chars"] = n
 	}
@@ -172,9 +181,10 @@ func csvGetInput(runtime *common.RuntimeContext, token, sheetID, sheetName strin
 	if runtime.Bool("skip-hidden") {
 		input["skip_hidden"] = true
 	}
-	if n := runtime.Int("max-rows"); n > 0 {
-		input["max_rows"] = n
-	}
+	// --max-rows was removed from the CLI surface; --max-chars is the single
+	// read cap. Pin max_rows very high so the tool's own default never binds
+	// before max_chars.
+	input["max_rows"] = unboundedReadLimit
 	if n := runtime.Int("max-chars"); n > 0 {
 		input["max_chars"] = n
 	}
