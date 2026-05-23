@@ -19,14 +19,14 @@
 
 | 读取目的 | 用这个 shortcut | 数据去向 | 说明 |
 |---------|----------------|---------|------|
-| 快速查看纯值数据、批量处理 | `+csv-get` | 对话上下文 | 返回 CSV 文本；大表请分批读（控制 `--max-rows` / `--max-chars`） |
+| 快速查看纯值数据、批量处理 | `+csv-get` | 对话上下文 | 返回 CSV 文本；大表请按 `--range` 行窗口分批读（单次返回量由 `--max-chars` 自动兜底，截断时看 `has_more`） |
 | 查看公式、样式、批注、数据验证 | `+cells-get` | 对话上下文 | 返回单元格完整信息，token 开销较大 |
 
 **选择原则**：
 - 只看值或做数据处理 → `+csv-get`；大表分批读取，避免一次拉全表撑爆上下文
 - 需要公式/样式/批注 → `+cells-get`
 
-⚠️ 超大数据请走"`+csv-get --max-rows N` 分批读到本地文件 + 本地脚本处理 + `+csv-put` 分批回写"。
+⚠️ 超大数据请走"`+csv-get` 按 `--range` 行窗口（如 `A1:Z500` / `A501:Z1000` …）分批读到本地文件 + 本地脚本处理 + `+csv-put` 分批回写"。
 
 **`+csv-get` 返回值核心设计**：
 - `annotated_csv` — **CSV 数据唯一入口**。每一逻辑行前加 `[row=N] ` 前缀（N = 真实表格行号）。任何需要行号的下游操作（合并、写入、清空、格式化、插入/删除、条件格式、筛选、图表/透视表范围、搜索替换等），**行号一律直接从 `[row=N]` 读取**。若需要纯 CSV（如喂给本地脚本做解析），去前缀即可：`line.replace(/^\[row=\d+\] /, '')`。
@@ -40,7 +40,7 @@
 - 隐藏行列默认包含在返回结果中（`--skip-hidden=false`），如需只看可见数据设为 `true`
 
 **常见配置错误（必须注意）**：
-- **全量读取导致上下文溢出（高频致命错误）**：不要对大表（数百行以上）直接用 `+csv-get` 或 `+cells-get` 读取全部数据到上下文。大表场景必须分批读取：`+csv-get` 控制 `--max-rows` / `--max-chars`，`+cells-get` 控制 `--range` / `--cell-limit` / `--max-chars`；过大时考虑导出到本地文件后用脚本处理再分批回写
+- **全量读取导致上下文溢出（高频致命错误）**：不要对大表（数百行以上）直接用 `+csv-get` 或 `+cells-get` 读取全部数据到上下文。大表场景必须分批读取：用 `--range` 切行窗口逐块读（`+csv-get` / `+cells-get` 单次返回量由 `--max-chars` 自动兜底，截断时返回 `has_more`）；过大时考虑导出到本地文件后用脚本处理再分批回写
 - **了解结构 ≠ 读取全量数据**：探表不用读全表，但必须同时探两个方向的表头：
   - **横向（列头）**：先读前几行，且**列范围必须覆盖所有列**——用 `+workbook-info` 拿总列数，`range` 末列填到最后一列（例如总列数是 N，则 `range: "A1:[列N]10"`）。列范围截短会遗漏右侧字段、后续写入列定位错误。
   - **纵向（行标）**：若左侧 1-2 列是行标签（日期/类别/编号枚举每行含义，典型交叉表/透视布局），**必须再读 `A:A` 或 `A:B` 把行标列读到底**，拿全部行标。只读前几行会看不全表尾的行，导致批量写入漏改——这是"只改前 N 行、其余未更新"的主要成因。扁平列表（每行独立记录、列是字段）可跳过这一步，但仍要靠 `current_region` 兜底。
@@ -90,7 +90,6 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `Sheet1!A1:F10` |
 | `--include` | string_slice | optional | 要返回的信息类别，逗号分隔多个（可选值：`value` / `formula` / `style` / `comment` / `data_validation`） |
-| `--cell-limit` | int | optional | 防爆，默认 5000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
@@ -110,7 +109,6 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `Sheet1!A1:F30` |
 | `--value-render-option` | string | optional | 单元格取值模式（可选值：`formatted_value` / `raw_value` / `formula`）（默认 `formatted_value`） |
-| `--max-rows` | int | optional | 防爆，默认 100000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |

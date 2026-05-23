@@ -130,8 +130,8 @@
 
 **路径 A：数据分析/清洗/可视化/大数据集/"完善 / 补齐 / 填空 / 修正所有 XX"** → 分批 `+csv-get` 把数据导出到本地文件，再用本地脚本（如 pandas）处理：
 ```bash
-# 分批导出（按 has_more 翻页拼接到本地 data.csv，直到读完）
-lark-cli sheets +csv-get --url "$URL" --range "A:Z" --max-rows 500 > data.csv
+# 分批导出（按 --range 行窗口翻页拼接到本地 data.csv，直到读完；单次返回量由 --max-chars 自动兜底，看 has_more / actual_range 续读）
+lark-cli sheets +csv-get --url "$URL" --range "A1:Z500" > data.csv   # 首窗口；后续 A501:Z1000 … 用 >> 追加
 ```
 ```python
 import pandas as pd
