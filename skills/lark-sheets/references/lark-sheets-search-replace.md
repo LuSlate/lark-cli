@@ -15,7 +15,7 @@
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
 | 搜索/定位文本 | `+cells-search` | 返回匹配的单元格位置，支持正则、精确匹配等 |
-| 查找并替换文本 | `+cells-replace` | 批量替换文本，支持正则捕获组引用 |
+| 查找并替换文本 | `+cells-replace` | 批量替换文本；`--regex` 模式下 `--replacement` 可用 `$1`、`$2` 引用 `--find` 的捕获组 |
 
 **常见配置错误（必须注意）**：
 - **不要把操作动词当搜索词**：用户说"汇总金额"是一个操作动作（求和），不是要搜索"汇总金额"这个文本。只有当确实需要定位某个文本值的位置时才用 `+cells-search`
@@ -95,6 +95,10 @@ lark-cli sheets +cells-replace --url "https://example.feishu.cn/sheets/shtXXX" \
 # 确认后执行
 lark-cli sheets +cells-replace --url "https://example.feishu.cn/sheets/shtXXX" \
   --sheet-name "Sheet1" --find "v1" --replacement "v2"
+
+# 正则捕获组：把 "2026-03" 重排成 "03/2026"（$1/$2 引用 --find 的捕获组）
+lark-cli sheets +cells-replace --url "https://example.feishu.cn/sheets/shtXXX" \
+  --sheet-name "Sheet1" --regex --find "(\\d{4})-(\\d{2})" --replacement "$2/$1" --dry-run
 ```
 
 > `+cells-replace` 虽然 Risk = write，但范围大或正则错可能改一堆。**强烈推荐工作流**：先 `+cells-search` 看匹配数，再 `+cells-replace --dry-run` 预览，最后真正执行。

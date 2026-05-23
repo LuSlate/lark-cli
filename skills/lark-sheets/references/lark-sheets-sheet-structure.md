@@ -129,7 +129,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
 | `--start` | int | required | 起始位置（0-based） |
 | `--end` | int | required | 结束位置（exclusive） |
-| `--depth` | int | optional | 嵌套层级（`+dim-group` 用），默认 1 |
+| `--depth` | int | optional | 嵌套分组的层级（创建到第几层），默认 1 |
 | `--group-state` | string | optional | 分组初始展开状态（可选值：`expand` / `fold`）（默认 `expand`） |
 
 ### `+dim-ungroup`
@@ -141,7 +141,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
 | `--start` | int | required | 起始位置（0-based） |
 | `--end` | int | required | 结束位置（exclusive） |
-| `--depth` | int | optional | 嵌套层级（`+dim-group` 用），默认 1 |
+| `--depth` | int | optional | 要取消的分组层级，默认 1（最外层） |
 
 ### `+dim-move`
 
@@ -205,6 +205,6 @@ lark-cli sheets +dim-freeze --url "..." --sheet-id "$SID" --dimension row --coun
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`--start ≤ --end`；`+dim-delete` 强制 `--yes` 或 `--dry-run`；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 应省略；`+rows-resize` / `+cols-resize` 的行 vs 列 `--type` 差异详见 `lark-sheets-range-operations.md`。
+- `Validate`：XOR 公共四件套；`--start ≤ --end`；`+dim-delete` 强制 `--yes` 或 `--dry-run`；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 会被忽略（传了无害）；`+rows-resize` / `+cols-resize` 的行 vs 列 `--type` 差异详见 `lark-sheets-range-operations.md`。
 - `DryRun`：写操作输出"将要 PATCH 的 dimension 区间 + 目标参数"。
 - `Execute`：写后自动调用 `+sheet-info --include row_heights,col_widths,hidden_rows,hidden_cols,groups,frozen` 回读对比，envelope.meta.verification 给出受影响的范围。

@@ -120,6 +120,11 @@ lark-cli sheets +pivot-list --url "..." --sheet-id "$SID"
 ### `+pivot-create`
 
 > 数据源 `--source` 必须从表头行开始；空行 / 汇总行会被当作数据参与聚合，需提前用 `+csv-get` 确认起止边界。`--source` 和 `--range` 是独立 flag（不要再放 `--properties`）；`rows` / `columns` / `values` 等数组字段走 `--properties`。
+>
+> **落点 flag 三选一的决策（避免冲突）**：
+> - **默认（推荐）**：`--target-sheet-id` / `--target-position` / `--range` 都不传 → 自动新建子表存放透视表产物。
+> - **放进指定的已有子表**：传 `--target-sheet-id <落点子表 id>` + 可选 `--target-position <子表内起点 cell，默认 A1>`。
+> - **`--range`** 只在不指定落点子表、想精确指定左上角 cell（映射到 `properties.range`）时用；与 `--target-position` 表达同一意图但落不同 wire 字段，**两者不要同时给**。一般用前两种即可，无需 `--range`。
 
 ```bash
 lark-cli sheets +pivot-create --url "..." --sheet-id "$SRC_SID" \
@@ -142,4 +147,4 @@ lark-cli sheets +pivot-delete --url "..." --pivot-table-id "$PID" --yes
 - `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 pivot 请求模板"+ 预估输出尺寸（行数 × 列数）。
 - `Execute`：写后调用 `+pivot-list --pivot-table-id <id>` 回读 + `+csv-get` 抽样读透视产物，envelope.meta.verification 给出实际输出尺寸 + 总计行位置。
 
-> ⚠️ pivot 输出包含总计 / 小计行；后续 chart 引用 pivot 时，`data_range` 必须排除这些行（见 `lark-sheets-chart` 决策段）。
+> ⚠️ pivot 输出包含总计 / 小计行；后续 chart 引用 pivot 时，`snapshot.data.refs` 必须排除这些行（见 `lark-sheets-chart` 的「⚠️ chart 数据源引用 pivot 时必须排除总计行」段）。

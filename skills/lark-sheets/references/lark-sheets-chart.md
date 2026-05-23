@@ -20,9 +20,9 @@
 | 用户说 | 图表类型 | 备注 |
 |--------|---------|------|
 | "占比"、"比例"、"各XX占多少" | 饼图（pie） | 单维度占比首选 |
-| "对比"、"各XX的YY" | 柱状图（bar） | 多类别数值对比 |
+| "对比"、"各XX的YY" | 柱形图（column，纵向） | 多类别数值对比；横向条形用 `bar` |
 | "趋势"、"变化"、"走势" | 折线图（line） | 时间序列首选 |
-| "堆积"、"组成构成" | 堆积柱状图（bar + stack） | 多系列累加 |
+| "堆积"、"组成构成" | 堆积柱形图（column + stack） | 多系列累加 |
 | "分布"、"相关性" | 散点图（scatter） | 两变量关系 |
 
 **多图表需求**：当用户同时提到多种分析（如"统计占比 + 对比数量"），必须创建多个图表，每个对应一种类型，不要只做一个。
@@ -30,7 +30,7 @@
 **`--properties` 结构锚点（构造前必读）**：`--properties` 顶层只有 `position` / `offset` / `size` / `snapshot` 四个字段，**没有**顶层 `data`，也没有再嵌一层 `properties`。图表数据配置全部挂在 `snapshot.data` 下——下文及示例里出现的 `refs` / `headerMode` / `dim1` / `dim2` / `nameRef` 一律指 `snapshot.data.refs` / `snapshot.data.headerMode` / `snapshot.data.dim1` / `snapshot.data.dim2`（及其下的 `serie.nameRef` / `series[].nameRef`）；样式 / 堆叠 / 数据标签等在 `snapshot.plotArea` 下。完整结构以 `lark-cli sheets +chart-create --print-schema --flag-name properties` 为准。
 
 **常见配置错误（必须注意）**：
-- **图表类型选择错误**：用户说"堆积柱状图/百分比堆积"时，应在 `properties.snapshot.plotArea.plot.extra.stack` 中配置堆叠；百分比堆叠需在该 stack 下设置 `percentage: true`。用户说"占比/比例"时，优先考虑饼图或百分比堆积图
+- **图表类型选择错误**：用户说"堆积柱形图/百分比堆积"时，应在 `properties.snapshot.plotArea.plot.extra.stack` 中配置堆叠；百分比堆叠需在该 stack 下设置 `percentage: true`。用户说"占比/比例"时，优先考虑饼图或百分比堆积图。注意区分 `column`（柱形图，纵向）与 `bar`（条形图，横向）是两个不同的 type 取值，"对比/各 XX" 类纵向柱默认用 `column`
 - **数据标签缺失**：用户需要看到具体数值时，需配置 `properties.snapshot.plotArea.plot.labels`（数据标签）相关字段
 - **数据源范围与系列名来源要对齐**：
   - **默认情况（inline 模式）**：`refs` 范围**应包含表头行**（首行/首列即系列名），且范围要精确覆盖目标数据，不要多选或少选。
@@ -69,7 +69,7 @@
 ## ⚠️ chart 数据源引用 pivot 时必须排除总计行（高频致命错误）
 
 当 chart 要基于刚创建的 pivot 产物画图时，**禁止凭猜写 `refs`**。pivot 默认启用 `show_row_grand_total` / `show_col_grand_total`，产物最后一行/一列通常是"总计"。如果 `refs` 把总计行一并框进去：
-- **柱状图**末尾会多一根天文数字柱子（=所有数据求和），把其他柱子压扁到看不见
+- **柱形图**末尾会多一根天文数字柱子（=所有数据求和），把其他柱子压扁到看不见
 - **饼图**会多一个"总计"扇区占 33%+，真实类别的比例完全失真
 
 **正确流程**：
@@ -77,8 +77,6 @@
 2. 调 `+csv-get(sheet_id, 'A1:E30')` 或 `+pivot-list` 读 pivot 产物的**实际数据范围**
 3. 识别并排除"总计"/"小计"行（通常最后一行；嵌套 pivot 还要排除中间层小计）
 4. `+chart-create create` 时 `snapshot.data.refs` 精确到数据行（如 pivot 占 A1:D9、总计在 row9 → chart 用 `A1:D8`）
-
-详细规则见 `lark-sheets-pivot-table` 第 5 节"pivot → chart 组合场景"。
 
 ## 图表位置选择（创建前必做）
 

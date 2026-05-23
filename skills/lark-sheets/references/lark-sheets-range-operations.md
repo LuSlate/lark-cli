@@ -262,6 +262,6 @@ lark-cli sheets +range-sort --url "..." --sheet-id "$SID" --range "A1:E100" --ha
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`+cells-clear` 强制 `--yes` 或 `--dry-run`；`+range-*` 校验源 / 目标 range 在同一 spreadsheet；`+range-sort` 的 `--sort-keys` 必须合法 JSON 数组且 col 都在 `--range` 内；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 应省略；`+cols-resize.--type` 不接受 `auto`（只行高支持自适应）。
+- `Validate`：XOR 公共四件套；`+cells-clear` 强制 `--yes` 或 `--dry-run`；`+range-*` 校验源 / 目标 range 在同一 spreadsheet；`+range-sort` 的 `--sort-keys` 必须合法 JSON 数组且 col 都在 `--range` 内；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 会被忽略（传了无害）；`+cols-resize.--type` 不接受 `auto`（只行高支持自适应）。
 - `DryRun`：所有写操作输出"将要 PATCH 的 range + 受影响 cell 数估算"。
 - `Execute`：写后调用 `+cells-get --range <影响范围>` 抽样回读对比，envelope.meta.verification 沉淀对比结果。

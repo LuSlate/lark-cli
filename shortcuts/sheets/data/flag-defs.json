@@ -975,7 +975,7 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Nesting level (used by `+dim-group`); default 1",
+        "desc": "Nesting level for grouping; default 1",
         "default": "1"
       },
       {
@@ -1060,7 +1060,7 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Nesting level (used by `+dim-group`); default 1",
+        "desc": "Group nesting level to ungroup; default 1 (outermost)",
         "default": "1"
       },
       {

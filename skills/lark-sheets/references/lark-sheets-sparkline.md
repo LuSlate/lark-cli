@@ -82,8 +82,7 @@ _创建/更新/部分删除的迷你图属性_
 
 > **何时需要先 `+sparkline-list`：**
 > - `+sparkline-update`：**总是**需要——拿到组内每一项的 `sparkline_id`，回填到 `properties.sparklines[i]`，server 用它做映射。
-> - `+sparkline-delete` 删单个 / 部分项：需要——同样要把 `sparkline_id` 填进 `properties.sparklines[i]`。
-> - `+sparkline-delete` 删整组：**不需要** `sparkline_id`，只要 `--group-id`。
+> - `+sparkline-delete`：**不需要** `sparkline_id`——CLI 仅支持按 `--group-id` 整组删除（该 shortcut 没有 `--properties`）。
 
 ### `+sparkline-list`
 
@@ -131,19 +130,11 @@ lark-cli sheets +sparkline-update --url "..." --sheet-id "$SID" --group-id "grpA
 
 ### `+sparkline-delete`
 
-> 两种模式：
-> - **删整组**：不传 `--properties`，仅 `--group-id`。删完后该 group 整个清掉。
-> - **删单个 / 部分项**：传 `--properties '{"sparklines":[{"sparkline_id":"..."},...]}'`，每项必须含 `sparkline_id`；删指定项后组内为空会自动清理 group。
->
-> 强制 `--yes` 或 `--dry-run`；先 `--dry-run` 确认要删的目标。
+> CLI 仅支持**整组删除**：传 `--group-id` 删掉该组全部迷你图。该 shortcut **没有** `--properties`，无法只删组内单项（需求上要"留一部分"时，改用 `+sparkline-update` 重写该组的 `sparklines` 列表，而不是 delete）。强制 `--yes` 或 `--dry-run`；先 `--dry-run` 确认要删的目标组。
 
 ```bash
 # 删整组
 lark-cli sheets +sparkline-delete --url "..." --sheet-id "$SID" --group-id "grpA" --yes
-
-# 删组内指定项（先 +sparkline-list 拿到 sparkline_id）
-lark-cli sheets +sparkline-delete --url "..." --sheet-id "$SID" --group-id "grpA" \
-  --properties '{"sparklines":[{"sparkline_id":"sl_1"}]}' --yes
 ```
 
 ### Validate / DryRun / Execute 约束
@@ -151,8 +142,8 @@ lark-cli sheets +sparkline-delete --url "..." --sheet-id "$SID" --group-id "grpA
 - `Validate`：
   - XOR 公共四件套；`+sparkline-{update,delete}` 必须 `--group-id`。
   - **`+sparkline-update`**：当 `properties.sparklines` 非空时，每一项必须含 `sparkline_id`（CLI 预检，错误信息会指回 `+sparkline-list`，避免命中服务端的不可读拒绝）；只传 `properties.config`（config-only update）合法、不触发 sparkline_id 检查。
-  - **`+sparkline-delete`**：不传 `--properties` = 删整组（合法路径，不需要 sparkline_id）；传 `properties.sparklines` 时每项必须含 `sparkline_id`（server contract；CLI 本地暂未预检 delete 的 partial-item 分支，缺 id 会到 server 端才被拒）。
-  - `--properties` 顶层只接 `config`（同组共享样式）和 `sparklines`（迷你图项数组）；`+sparkline-create` 要求每个 `sparklines[i]` 含 `position` 与 `source`（或 `source_range`，二选一）。
+  - **`+sparkline-delete`**：只接 `--group-id`（整组删除），**没有** `--properties`，无法删组内单项。
+  - `--properties`（仅 `+sparkline-create` / `+sparkline-update`）顶层只接 `config`（同组共享样式）和 `sparklines`（迷你图项数组）；`+sparkline-create` 要求每个 `sparklines[i]` 含 `position` 与 `source`（或 `source_range`，二选一）。
   - `+sparkline-delete` 强制 `--yes` 或 `--dry-run`。
 - `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 sparkline group 请求模板"。
 - `Execute`：写后调用 `+sparkline-list --group-id <id>` 回读，envelope.meta.verification 给出 `config` / `sparklines` 字段级对比。

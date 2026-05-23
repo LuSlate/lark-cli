@@ -205,13 +205,18 @@ Excel：`{=A1:A10*B1:B10}`（Ctrl+Shift+Enter 输入）
 - 年份差：`=DATEDIF(A2,B2,"Y")`
 - 工作日差：`=NETWORKDAYS(A2,B2)`
 
-## 飞书不支持的 Excel 专有函数
+## 飞书不支持的函数
 
-以下函数在飞书里不存在，遇到时需要告知用户并提供替代方案：
+> 本段是"飞书不支持函数"的**唯一权威清单**（`lark-sheets-core-operations` 不再单列，统一指向这里）。以下函数在飞书里不存在或被禁用，禁止主动使用；用户明确要求时应拒绝并提供替代方案：
 
 - `STOCKHISTORY` — 实时股票数据，飞书无等价函数，需手动导入数据
 - `WEBSERVICE` — 外部 HTTP 请求，飞书无等价函数
-- `CUBEVALUE`、`CUBEMEMBER`、`CUBESET` 等 — OLAP cube 函数，飞书不支持
+- CUBE 系列（`CUBEVALUE`、`CUBEMEMBER`、`CUBESET`、`CUBERANK` 等）— OLAP cube 函数，飞书不支持
+- `GOOGLEFINANCE`、`GOOGLETRANSLATE` 等 Google 特有函数 — 无等价函数
+- `FORECAST.ETS` 系列（`FORECAST.ETS`、`FORECAST.ETS.STAT` 等）— 飞书不支持
+- `INFO`、`RTD` — 系统信息 / 实时数据函数，飞书不支持
+- `PIVOT` — 用 `+pivot-{create|update|delete}` 透视表对象替代
+- `AMORDEGRC`、`PHONETIC`、`DETECTLANGUAGE` — 飞书不支持
 
 ## 代表性改写示例
 
