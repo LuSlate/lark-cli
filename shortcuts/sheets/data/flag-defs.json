@@ -1879,7 +1879,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "RGB hex pill colors for dropdown options (e.g. `[\"#1FB6C1\",\"#F006C2\"]`); maps to server `data_validation.highlight_colors`. Length may be **shorter than** `--options` (server cycles remaining slots through a built-in 10-color palette) but **must not exceed** it. Only takes effect when `--highlight` is also set.",
+        "desc": "Per-option pill colors, RGB hex array (e.g. `[\"#1FB6C1\",\"#F006C2\"]`). Length may be shorter than the source (`--options` items / `--source-range` cells) — extras cycle through a 10-color palette — but never longer (CLI Validate rejects: `--colors length (N) must not exceed dropdown source size (M)`). **Applies on its own**; ignored when `--highlight=false`.",
         "input": [
           "file",
           "stdin"
@@ -1897,7 +1897,7 @@
         "kind": "own",
         "type": "bool",
         "required": "optional",
-        "desc": "Enable pill-background color highlighting for dropdown options; default `false`. Maps to server `data_validation.enable_highlight`. When `true`, colors come from `--colors` in order; options beyond `--colors` length cycle through a built-in 10-color palette."
+        "desc": "Pill-highlight switch. **Omitted = ON** (options cycle through a 10-color palette). Pass `--highlight=false` for a plain dropdown. Override colors via `--colors`."
       },
       {
         "name": "source-range",
@@ -2814,7 +2814,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "RGB hex pill colors for dropdown options (e.g. `[\"#1FB6C1\",\"#F006C2\"]`); maps to server `data_validation.highlight_colors`. Length may be **shorter than** `--options` (remaining slots cycle through a built-in palette) but **must not exceed** it. Only takes effect when `--highlight` is also set.",
+        "desc": "Per-option pill colors, RGB hex array (e.g. `[\"#1FB6C1\",\"#F006C2\"]`). Length may be shorter than the source (`--options` items / `--source-range` cells) — extras cycle through a 10-color palette — but never longer (CLI Validate rejects: `--colors length (N) must not exceed dropdown source size (M)`). **Applies on its own**; ignored when `--highlight=false`.",
         "input": [
           "file",
           "stdin"
@@ -2832,7 +2832,7 @@
         "kind": "own",
         "type": "bool",
         "required": "optional",
-        "desc": "Enable pill-background color highlighting for dropdown options; default `false`. Maps to server `data_validation.enable_highlight`. Works with `--colors`; if `--colors` is omitted, all options cycle through a built-in 10-color palette."
+        "desc": "Pill-highlight switch. **Omitted = ON** (options cycle through a 10-color palette). Pass `--highlight=false` for a plain dropdown. Override colors via `--colors`."
       },
       {
         "name": "source-range",

@@ -131,42 +131,59 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 
 两个 flag **必须传一个、且只能传一个**——同时传或都不传，CLI 会立刻报错。`--source-range` 用 A1 + sheet 前缀写法（如 `Sheet1!T1:T3`），可以指同 sheet 也可以指其它 sheet（如 `Refs!A1:A10`）。
 
-### 配色：`--colors` 与 `--highlight`（与选项模式无关）
+### 配色：默认即上色，三种意图三条线
 
-- `--highlight`：开下拉选项的胶囊背景色总开关；不传默认 `false`、无配色。
-- `--colors '["#hex","#hex",...]'`：每个选项对应一种胶囊背景色；只在 `--highlight` 也传时生效。
+下拉**默认带胶囊高亮**——什么 flag 都不传时，所有选项按内置 10 色色板循环上色，跟 UI 手动配下拉的默认行为对齐。三种意图：
 
-长度规则：
-- `--colors` 长度**可以短于**选项数（list 模式短于 `--options` 长度，listFromRange 模式短于 `--source-range` 的单元格数），未指定的选项按内置 10 色色板循环补色；
-- `--colors` 长度**不能长于**选项数——CLI 端 Validate 阶段就会拦截，错误信息形如 `--colors length (4) must not exceed dropdown source size (3)`。
+| 想要的效果 | 怎么传 |
+|---|---|
+| 默认色板循环上色 | 都不传 `--highlight` / `--colors` |
+| 按选项指定具体颜色 | 只传 `--colors '["#hex",...]'`（不需要再传 `--highlight`） |
+| 纯白下拉、不要高亮 | 传 `--highlight=false`（注意 `=false` 不能省，单写 `--highlight` 在 cobra 里等价于 true） |
 
-排列组合：
-- 想要纯文本下拉、无配色 → 都不传 `--highlight` / `--colors`；
-- 想要每个选项指定确切颜色 → 同时传 `--highlight` 和 `--colors`；
-- 想要所有选项都有颜色但不指定具体色 → 只传 `--highlight`，颜色按内置色板循环。
+`--colors` 长度**可以短于**选项数（list 模式短于 `--options` 长度，listFromRange 模式短于 `--source-range` 的单元格数），未指定的选项按内置色板循环补色；但**不能长于**——CLI 在 Validate 阶段就会拦截，错误形如 `--colors length (4) must not exceed dropdown source size (3)`。
+
+当 `--highlight=false` 显式关闭高亮时，`--colors` 即使传了也会被忽略（语义自相矛盾，但不报错）。
 
 ### 最小用例
 
-**`--options` 模式**（4 个选项配 3 个颜色——前 3 个指定色，第 4 个按内置色板补）：
+**`--options` 模式 — 默认色板（最常见）**：
+
+```
+lark-cli sheets +dropdown-set \
+  --url https://... --sheet-id <id> \
+  --range A2:A100 \
+  --options '["待开始","进行中","已完成","已取消"]'
+```
+
+**`--options` 模式 — 指定颜色**（4 个选项配 3 个颜色，第 4 个按色板补）：
 
 ```
 lark-cli sheets +dropdown-set \
   --url https://... --sheet-id <id> \
   --range A2:A100 \
   --options '["待开始","进行中","已完成","已取消"]' \
-  --colors '["#bff7d9","#FFE699","#bacefd"]' \
-  --highlight
+  --colors '["#bff7d9","#FFE699","#bacefd"]'
 ```
 
-**`--source-range` 模式**（先在 Sheet1!T1:T3 维护「男/女/保密」三行，再让 B2:B21 引用它）：
+**`--source-range` 模式**（先在 `Sheet1!T1:T3` 维护「男/女/保密」三行，再让 `B2:B21` 引用它）：
 
 ```
 lark-cli sheets +dropdown-set \
   --url https://... --sheet-id <id> \
   --range B2:B21 \
   --source-range 'Sheet1!T1:T3' \
-  --colors '["#cce8ff","#ffd6e7","#e6e6e6"]' \
-  --highlight
+  --colors '["#cce8ff","#ffd6e7","#e6e6e6"]'
+```
+
+**纯白下拉**（明确告诉用户"不要彩色"时才用）：
+
+```
+lark-cli sheets +dropdown-set \
+  --url https://... --sheet-id <id> \
+  --range A2:A100 \
+  --options '["低","中","高"]' \
+  --highlight=false
 ```
 
 > ⚠️ **`--source-range` 必须带 sheet 前缀**（即使跟 `--range` 同 sheet）。注意一个坑：回读这种 listFromRange 下拉单元格时，`data_validation.range` 看起来不带 sheet 前缀（形如 `$T$1:$T$3`），如果要把读出来的 range 反过来写回 `--source-range`，**必须自己重新补上 sheet 前缀**，否则会被拒。
@@ -252,9 +269,9 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | 目标范围（A1 格式，如 `A2:A100`） |
 | `--options` | string + File + Stdin（复合 JSON） | xor | 选项 JSON 数组 `["opt1","opt2"]`；最多 500 项，每项 ≤100 字符，不含逗号 |
-| `--colors` | string + File + Stdin（简单 JSON） | optional | 下拉选项的胶囊背景色，RGB hex 数组，如 `["#1FB6C1","#F006C2"]`。映射到 server `data_validation.highlight_colors`。长度可以**短于** `--options`（剩余项 server 按内置 10 色色板循环补色），但**不能长于**。仅当 `--highlight` 也传时才生效；单独传本 flag 不显示高亮色。 |
+| `--colors` | string + File + Stdin（简单 JSON） | optional | 下拉胶囊背景色，RGB hex 数组（如 `["#1FB6C1","#F006C2"]`）。长度可短不可长——超长 Validate 拦截（`--colors length (N) must not exceed dropdown source size (M)`），未指定项按内置 10 色色板循环补色。**单独传即生效**；`--highlight=false` 时被忽略。 |
 | `--multiple` | bool | optional | 启用多选；默认 `false` |
-| `--highlight` | bool | optional | 开启下拉选项的胶囊背景色高亮；默认 `false`。映射到 server `data_validation.enable_highlight`。不传或为 `false` 时所有选项无背景色；为 `true` 时按 `--colors` 顺序上色，未在 `--colors` 中提供的选项使用内置 10 色色板循环补色。 |
+| `--highlight` | bool | optional | 下拉胶囊背景色高亮开关。**不传 = 开**（按内置 10 色色板循环上色）；`--highlight=false` 关闭得到纯白下拉。配色用 `--colors` 覆盖。 |
 | `--source-range` | string | xor | listFromRange 模式的下拉源 range，A1 表示法 + sheet 前缀（如 `Sheet1!T1:T3`）。映射到 server `data_validation.range`，搭配 server `data_validation.type='listFromRange'` 自动生效。跟 `--options` 二选一：传 `--options` 走 inline 列表（type=list），传本 flag 走 range 引用（type=listFromRange）。`--colors` 长度规则不变（≤ 源 range 单元格数），`--highlight` / `--multiple` 行为相同。 |
 
 ### `+csv-put`
