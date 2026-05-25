@@ -95,7 +95,7 @@ func TestWriteCellsShortcuts_DryRun(t *testing.T) {
 				"--url", testURL, "--sheet-id", testSheetID,
 				"--range", "A2:A4",
 				"--options", `["a","b"]`,
-				"--multiple", "--highlight",
+				"--multiple",
 			},
 			toolName: "set_cell_range",
 			wantInput: map[string]interface{}{
@@ -118,11 +118,15 @@ func TestWriteCellsShortcuts_DryRun(t *testing.T) {
 
 // TestDropdownSet_CellsShape inspects the 3×1 matrix produced from
 // --range A2:A4 to confirm the data_validation prototype is replicated.
+// Also covers --colors / --highlight emitting the canonical
+// `highlight_colors` / `enable_highlight` field names (not the legacy
+// `colors` / `highlight_options`).
 func TestDropdownSet_CellsShape(t *testing.T) {
 	t.Parallel()
 	body := parseDryRunBody(t, DropdownSet, []string{
 		"--url", testURL, "--sheet-id", testSheetID,
 		"--range", "A2:A4", "--options", `["a","b"]`, "--multiple",
+		"--colors", `["#FFE699","#bff7d9"]`, "--highlight",
 	})
 	input := decodeToolInput(t, body, "set_cell_range")
 	cells, _ := input["cells"].([]interface{})
@@ -143,9 +147,164 @@ func TestDropdownSet_CellsShape(t *testing.T) {
 		if dv["type"] != "list" {
 			t.Errorf("row %d data_validation.type = %v, want list", i, dv["type"])
 		}
-		if dv["multiple_values"] != true {
-			t.Errorf("row %d data_validation.multiple_values = %v, want true", i, dv["multiple_values"])
+		items, _ := dv["items"].([]interface{})
+		if len(items) != 2 || items[0] != "a" || items[1] != "b" {
+			t.Errorf("row %d data_validation.items = %#v, want [\"a\",\"b\"]", i, dv["items"])
 		}
+		if dv["support_multiple_values"] != true {
+			t.Errorf("row %d data_validation.support_multiple_values = %v, want true", i, dv["support_multiple_values"])
+		}
+		if _, hasLegacy := dv["multiple_values"]; hasLegacy {
+			t.Errorf("row %d data_validation should not emit legacy `multiple_values`", i)
+		}
+		colors, _ := dv["highlight_colors"].([]interface{})
+		if len(colors) != 2 || colors[0] != "#FFE699" || colors[1] != "#bff7d9" {
+			t.Errorf("row %d data_validation.highlight_colors = %#v, want [\"#FFE699\",\"#bff7d9\"]", i, dv["highlight_colors"])
+		}
+		if dv["enable_highlight"] != true {
+			t.Errorf("row %d data_validation.enable_highlight = %v, want true", i, dv["enable_highlight"])
+		}
+		if _, hasLegacy := dv["colors"]; hasLegacy {
+			t.Errorf("row %d data_validation should not emit legacy `colors`", i)
+		}
+		if _, hasLegacy := dv["highlight_options"]; hasLegacy {
+			t.Errorf("row %d data_validation should not emit legacy `highlight_options`", i)
+		}
+	}
+}
+
+// TestDropdownSet_ColorsLongerThanOptions checks the early Validate-time
+// error when --colors length exceeds the dropdown source size (options
+// length in list mode). Equal-or-shorter lengths are accepted (server
+// cycles the rest through a built-in palette).
+func TestDropdownSet_ColorsLongerThanOptions(t *testing.T) {
+	t.Parallel()
+	_, stderr, err := runShortcutCapturingErr(t, DropdownSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "A2:A4",
+		"--options", `["a","b"]`,
+		"--colors", `["#FFE699","#bff7d9","#ffb3b3"]`,
+		"--dry-run",
+	})
+	if err == nil {
+		t.Fatal("expected --colors length error, got nil")
+	}
+	if !strings.Contains(stderr, "must not exceed dropdown source size") && !strings.Contains(err.Error(), "must not exceed dropdown source size") {
+		t.Errorf("error message missing length-overflow hint:\nerr=%v\nstderr=%s", err, stderr)
+	}
+}
+
+// TestDropdownSet_ColorsShorterAccepted verifies the partial-colors case:
+// fewer colors than options is legal — array is forwarded as-is and the
+// server fills remaining slots from its default palette.
+func TestDropdownSet_ColorsShorterAccepted(t *testing.T) {
+	t.Parallel()
+	body := parseDryRunBody(t, DropdownSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "A2:A4",
+		"--options", `["a","b","c","d"]`,
+		"--colors", `["#FFE699","#bff7d9"]`,
+	})
+	input := decodeToolInput(t, body, "set_cell_range")
+	cells, _ := input["cells"].([]interface{})
+	row0, _ := cells[0].([]interface{})
+	cell, _ := row0[0].(map[string]interface{})
+	dv, _ := cell["data_validation"].(map[string]interface{})
+	colors, _ := dv["highlight_colors"].([]interface{})
+	if len(colors) != 2 {
+		t.Errorf("highlight_colors length = %d, want 2 (forwarded as-is)", len(colors))
+	}
+}
+
+// TestDropdownSet_ListFromRange verifies --source-range emits
+// data_validation.type=listFromRange + data_validation.range, paired with
+// --colors / --highlight propagating to highlight_colors / enable_highlight.
+func TestDropdownSet_ListFromRange(t *testing.T) {
+	t.Parallel()
+	body := parseDryRunBody(t, DropdownSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "B2:B21",
+		"--source-range", "Sheet1!T1:T3",
+		"--colors", `["#cce8ff","#ffd6e7","#e6e6e6"]`,
+		"--highlight",
+	})
+	input := decodeToolInput(t, body, "set_cell_range")
+	cells, _ := input["cells"].([]interface{})
+	row0, _ := cells[0].([]interface{})
+	cell, _ := row0[0].(map[string]interface{})
+	dv, _ := cell["data_validation"].(map[string]interface{})
+	if dv["type"] != "listFromRange" {
+		t.Errorf("data_validation.type = %v, want listFromRange", dv["type"])
+	}
+	if dv["range"] != "Sheet1!T1:T3" {
+		t.Errorf("data_validation.range = %v, want Sheet1!T1:T3 (verbatim, server normalizes)", dv["range"])
+	}
+	if _, hasItems := dv["items"]; hasItems {
+		t.Errorf("listFromRange mode should not emit `items`: %#v", dv)
+	}
+	if dv["enable_highlight"] != true {
+		t.Errorf("data_validation.enable_highlight = %v, want true", dv["enable_highlight"])
+	}
+	colors, _ := dv["highlight_colors"].([]interface{})
+	if len(colors) != 3 {
+		t.Errorf("highlight_colors length = %d, want 3", len(colors))
+	}
+}
+
+// TestDropdownSet_ListFromRange_ColorsLongerThanCells rejects --colors
+// longer than the source range cell count (T1:T3 has 3 cells, 4 colors
+// must be refused).
+func TestDropdownSet_ListFromRange_ColorsLongerThanCells(t *testing.T) {
+	t.Parallel()
+	_, stderr, err := runShortcutCapturingErr(t, DropdownSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "B2:B21",
+		"--source-range", "Sheet1!T1:T3",
+		"--colors", `["#a","#b","#c","#d"]`,
+		"--highlight",
+		"--dry-run",
+	})
+	if err == nil {
+		t.Fatal("expected --colors length error, got nil")
+	}
+	if !strings.Contains(stderr, "must not exceed dropdown source size") && !strings.Contains(err.Error(), "must not exceed dropdown source size") {
+		t.Errorf("error message missing source-size hint:\nerr=%v\nstderr=%s", err, stderr)
+	}
+}
+
+// TestDropdownSet_XorBothSet rejects passing both --options and
+// --source-range.
+func TestDropdownSet_XorBothSet(t *testing.T) {
+	t.Parallel()
+	_, stderr, err := runShortcutCapturingErr(t, DropdownSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "B2:B21",
+		"--options", `["a","b"]`,
+		"--source-range", "Sheet1!T1:T3",
+		"--dry-run",
+	})
+	if err == nil {
+		t.Fatal("expected XOR error, got nil")
+	}
+	if !strings.Contains(stderr, "mutually exclusive") && !strings.Contains(err.Error(), "mutually exclusive") {
+		t.Errorf("error message missing XOR hint:\nerr=%v\nstderr=%s", err, stderr)
+	}
+}
+
+// TestDropdownSet_XorNeitherSet rejects passing neither --options nor
+// --source-range.
+func TestDropdownSet_XorNeitherSet(t *testing.T) {
+	t.Parallel()
+	_, stderr, err := runShortcutCapturingErr(t, DropdownSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "B2:B21",
+		"--dry-run",
+	})
+	if err == nil {
+		t.Fatal("expected required-one error, got nil")
+	}
+	if !strings.Contains(stderr, "one of --options") && !strings.Contains(err.Error(), "one of --options") {
+		t.Errorf("error message missing required-one hint:\nerr=%v\nstderr=%s", err, stderr)
 	}
 }
 

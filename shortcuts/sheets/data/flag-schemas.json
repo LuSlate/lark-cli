@@ -558,7 +558,7 @@
                 ]
               },
               "items": {
-                "description": "列表选项",
+                "description": "列表选项（type='list' 时必填）",
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -603,6 +603,17 @@
               "help_text": {
                 "description": "验证失败时显示的提示文本",
                 "type": "string"
+              },
+              "enable_highlight": {
+                "description": "是否开启下拉选项的胶囊背景色高亮，仅 type='list'/'listFromRange' 生效，默认 false。",
+                "type": "boolean"
+              },
+              "highlight_colors": {
+                "description": "下拉选项的胶囊背景色数组（十六进制，例如 [\"#FFE699\",\"#bff7d9\",\"#ffb3b3\"]），仅当 enable_highlight=true 时生效。按顺序对应（type='list' 对应 items；type='listFromRange' 按 range 内单元格行优先顺序，如 A1:A10 对应第 1-10 项；A1:B2 顺序为 A1,B1,A2,B2）。长度可以短于但不能长于；未指定项及不提供该字段时按内置 10 色色板循环补色。",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "required": [
@@ -1759,10 +1770,6 @@
             }
           }
         },
-        "required": [
-          "position",
-          "size"
-        ],
         "additionalProperties": {}
       }
     },
@@ -2789,10 +2796,6 @@
             }
           }
         },
-        "required": [
-          "position",
-          "size"
-        ],
         "additionalProperties": {}
       }
     },
@@ -3568,7 +3571,7 @@
     },
     "+dropdown-set": {
       "options": {
-        "description": "列表选项",
+        "description": "列表选项（type='list' 时必填）",
         "type": "array",
         "items": {
           "type": "string"
@@ -3577,7 +3580,7 @@
     },
     "+dropdown-update": {
       "options": {
-        "description": "列表选项",
+        "description": "列表选项（type='list' 时必填）",
         "type": "array",
         "items": {
           "type": "string"

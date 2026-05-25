@@ -1867,7 +1867,7 @@
         "name": "options",
         "kind": "own",
         "type": "string",
-        "required": "required",
+        "required": "xor",
         "desc": "Options as a JSON array, e.g. `[\"opt1\",\"opt2\"]`; up to 500 items, each ≤100 chars, no commas",
         "input": [
           "file",
@@ -1879,7 +1879,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "RGB hex color array (e.g. `[\"#1FB6C1\",\"#F006C2\"]`); length must equal `--options`",
+        "desc": "RGB hex pill colors for dropdown options (e.g. `[\"#1FB6C1\",\"#F006C2\"]`); maps to server `data_validation.highlight_colors`. Length may be **shorter than** `--options` (server cycles remaining slots through a built-in 10-color palette) but **must not exceed** it. Only takes effect when `--highlight` is also set.",
         "input": [
           "file",
           "stdin"
@@ -1897,7 +1897,14 @@
         "kind": "own",
         "type": "bool",
         "required": "optional",
-        "desc": "Color-highlight options; default `false`"
+        "desc": "Enable pill-background color highlighting for dropdown options; default `false`. Maps to server `data_validation.enable_highlight`. When `true`, colors come from `--colors` in order; options beyond `--colors` length cycle through a built-in 10-color palette."
+      },
+      {
+        "name": "source-range",
+        "kind": "own",
+        "type": "string",
+        "required": "xor",
+        "desc": "Source range for listFromRange dropdown (A1 + sheet prefix, e.g. `Sheet1!T1:T3`); maps to server `data_validation.range` and auto-sets `data_validation.type='listFromRange'`. XOR with `--options`: pass `--options` for an inline list (type=list), pass this for a range reference (type=listFromRange). `--colors` length rule unchanged (≤ source range cell count); `--highlight` / `--multiple` behave the same."
       },
       {
         "name": "dry-run",
@@ -2795,7 +2802,7 @@
         "name": "options",
         "kind": "own",
         "type": "string",
-        "required": "required",
+        "required": "xor",
         "desc": "Options as a JSON array (e.g. `[\"opt1\",\"opt2\"]`)",
         "input": [
           "file",
@@ -2807,7 +2814,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Color array (same length as `--options`)",
+        "desc": "RGB hex pill colors for dropdown options (e.g. `[\"#1FB6C1\",\"#F006C2\"]`); maps to server `data_validation.highlight_colors`. Length may be **shorter than** `--options` (remaining slots cycle through a built-in palette) but **must not exceed** it. Only takes effect when `--highlight` is also set.",
         "input": [
           "file",
           "stdin"
@@ -2825,7 +2832,14 @@
         "kind": "own",
         "type": "bool",
         "required": "optional",
-        "desc": "Color-highlight options"
+        "desc": "Enable pill-background color highlighting for dropdown options; default `false`. Maps to server `data_validation.enable_highlight`. Works with `--colors`; if `--colors` is omitted, all options cycle through a built-in 10-color palette."
+      },
+      {
+        "name": "source-range",
+        "kind": "own",
+        "type": "string",
+        "required": "xor",
+        "desc": "Source range for listFromRange dropdown (A1 + sheet prefix, e.g. `Sheet1!T1:T3`); maps to server `data_validation.range` and auto-sets `data_validation.type='listFromRange'`. XOR with `--options`: pass `--options` for an inline list (type=list), pass this for a range reference (type=listFromRange). `--colors` length rule unchanged (≤ source range cell count); `--highlight` / `--multiple` behave the same."
       },
       {
         "name": "dry-run",

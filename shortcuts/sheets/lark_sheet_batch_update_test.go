@@ -188,14 +188,16 @@ func TestCellsBatchClear_Guards(t *testing.T) {
 
 // TestDropdownUpdate_BatchPayload verifies the multi-range dropdown
 // update fans out into a single batch_update with one set_cell_range
-// op per range.
+// op per range. Also covers --colors / --highlight -> highlight_colors
+// / enable_highlight propagation through dropdownBatchInput.
 func TestDropdownUpdate_BatchPayload(t *testing.T) {
 	t.Parallel()
 	body := parseDryRunBody(t, DropdownUpdate, []string{
 		"--url", testURL,
 		"--ranges", `["sheet1!A2:A5","sheet1!C2:C5"]`,
 		"--options", `["a","b","c"]`,
-		"--multiple",
+		"--colors", `["#FFE699","#bff7d9","#ffb3b3"]`,
+		"--multiple", "--highlight",
 	})
 	input := decodeToolInput(t, body, "batch_update")
 	ops, _ := input["operations"].([]interface{})
@@ -215,8 +217,19 @@ func TestDropdownUpdate_BatchPayload(t *testing.T) {
 		if dv == nil || dv["type"] != "list" {
 			t.Errorf("op[%d] missing data_validation list: %#v", i, cell)
 		}
-		if dv["multiple_values"] != true {
-			t.Errorf("op[%d] multiple_values = %v, want true", i, dv["multiple_values"])
+		items, _ := dv["items"].([]interface{})
+		if len(items) != 3 {
+			t.Errorf("op[%d] data_validation.items length = %d, want 3", i, len(items))
+		}
+		if dv["support_multiple_values"] != true {
+			t.Errorf("op[%d] support_multiple_values = %v, want true", i, dv["support_multiple_values"])
+		}
+		colors, _ := dv["highlight_colors"].([]interface{})
+		if len(colors) != 3 {
+			t.Errorf("op[%d] highlight_colors length = %d, want 3", i, len(colors))
+		}
+		if dv["enable_highlight"] != true {
+			t.Errorf("op[%d] enable_highlight = %v, want true", i, dv["enable_highlight"])
 		}
 	}
 }

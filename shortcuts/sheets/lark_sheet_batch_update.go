@@ -332,7 +332,7 @@ var DropdownUpdate = common.Shortcut{
 		if _, err := validateDropdownRanges(runtime); err != nil {
 			return err
 		}
-		if _, err := validateDropdownOptionsColors(runtime); err != nil {
+		if _, err := validateDropdownSourceOrOptions(runtime); err != nil {
 			return err
 		}
 		return nil

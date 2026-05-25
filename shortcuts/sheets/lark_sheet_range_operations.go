@@ -598,6 +598,23 @@ func rangeSortInput(runtime flagView, token, sheetID, sheetName string) (map[str
 	if err != nil {
 		return nil, err
 	}
+	// transform_range.sort_conditions[i] requires both `column` (string)
+	// and `ascending` (bool); the server's own validation surfaces a
+	// terse "required property X is missing" with no per-item context.
+	// Pre-check here so the user sees which entry is malformed.
+	for i, raw := range keys {
+		item, ok := raw.(map[string]interface{})
+		if !ok {
+			return nil, common.FlagErrorf("--sort-keys[%d] must be an object {column, ascending}; got %T", i, raw)
+		}
+		col, _ := item["column"].(string)
+		if strings.TrimSpace(col) == "" {
+			return nil, common.FlagErrorf("--sort-keys[%d] missing required string field `column` (the column letter to sort by, e.g. \"C\")", i)
+		}
+		if _, ok := item["ascending"].(bool); !ok {
+			return nil, common.FlagErrorf("--sort-keys[%d] missing required bool field `ascending`", i)
+		}
+	}
 	input := map[string]interface{}{
 		"excel_id":        token,
 		"operation":       "sort",

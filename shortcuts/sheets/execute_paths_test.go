@@ -398,7 +398,7 @@ func TestExecute_RangeSort(t *testing.T) {
 		"--url", testURL, "--sheet-id", testSheetID,
 		"--range", "A1:D50",
 		"--has-header",
-		"--sort-keys", `[{"col":"B","order":"asc"}]`,
+		"--sort-keys", `[{"column":"B","ascending":true}]`,
 	}, stub)
 	if err != nil {
 		t.Fatalf("execute failed: %v", err)

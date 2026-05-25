@@ -215,8 +215,12 @@ func stripRowPrefixFromCsvOutput(out interface{}) interface{} {
 }
 
 // DropdownGet wraps get_cell_ranges scoped to data_validation: read the
-// dropdown configuration on a range. The range carries its own sheet prefix
-// (e.g. "sheet1!A2:A100"), so no separate --sheet-id / --sheet-name is needed.
+// dropdown configuration on a range. The CLI accepts the range in the
+// sheet-prefixed form (e.g. "sheet1!A2:A100") for convenience; the
+// prefix is split client-side into sheet_name + bare A1 because the
+// get_cell_ranges tool wants sheet selector and ranges as separate
+// fields (ranges with the "sheet!" prefix gets the empty-sheet_id
+// rejection from the server).
 var DropdownGet = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+dropdown-get",
@@ -257,10 +261,15 @@ var DropdownGet = common.Shortcut{
 }
 
 func dropdownGetInput(runtime *common.RuntimeContext, token string) map[string]interface{} {
-	return map[string]interface{}{
+	// Validate already enforced the "Sheet!range" prefix, so the
+	// split error path can't be reached here in practice.
+	sheetName, bareRange, _ := splitSheetPrefixedRange(strings.TrimSpace(runtime.Str("range")))
+	input := map[string]interface{}{
 		"excel_id":            token,
-		"ranges":              []string{strings.TrimSpace(runtime.Str("range"))},
+		"ranges":              []string{bareRange},
 		"include_styles":      false,
 		"value_render_option": "formatted_value",
 	}
+	sheetSelectorForToolInput(input, "", sheetName)
+	return input
 }

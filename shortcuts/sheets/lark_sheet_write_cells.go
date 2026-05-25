@@ -331,40 +331,85 @@ func dropdownSetInput(runtime flagView, token, sheetID, sheetName string) (map[s
 
 // ─── shared dropdown helpers ──────────────────────────────────────────
 
-// buildDropdownValidation packs --options / --colors / --multiple / --highlight
-// into the data_validation block expected by set_cell_range.
+// buildDropdownValidation packs --options or --source-range plus --colors /
+// --multiple / --highlight into the data_validation block expected by
+// set_cell_range. Field names follow the canonical
+// set_cell_range.data_validation schema:
+//
+//	--options       -> {type: "list",          items: <strings>}
+//	--source-range  -> {type: "listFromRange", range: <A1+sheet prefix>}
+//	--multiple      -> support_multiple_values  (bool)
+//	--colors        -> highlight_colors         (string array, hex)
+//	--highlight     -> enable_highlight         (bool)
+//
+// --options and --source-range are XOR (caller must pass exactly one).
+// --colors length may be shorter than the source size (options length or
+// source-range cell count) — server cycles remaining slots through a
+// built-in 10-color palette — but must not exceed it.
 func buildDropdownValidation(runtime flagView) (map[string]interface{}, error) {
-	options, err := requireJSONArray(runtime, "options")
+	sourceSize, dv, err := dropdownTypeAndItems(runtime)
 	if err != nil {
 		return nil, err
-	}
-	dv := map[string]interface{}{
-		"type":   "list",
-		"values": options,
 	}
 	if runtime.Str("colors") != "" {
 		colors, err := requireJSONArray(runtime, "colors")
 		if err != nil {
 			return nil, err
 		}
-		if len(colors) != len(options) {
-			return nil, common.FlagErrorf("--colors length (%d) must equal --options length (%d)", len(colors), len(options))
+		if len(colors) > sourceSize {
+			return nil, common.FlagErrorf("--colors length (%d) must not exceed dropdown source size (%d)", len(colors), sourceSize)
 		}
-		dv["colors"] = colors
+		dv["highlight_colors"] = colors
 	}
 	if runtime.Bool("multiple") {
-		dv["multiple_values"] = true
+		dv["support_multiple_values"] = true
 	}
 	if runtime.Bool("highlight") {
-		dv["highlight_options"] = true
+		dv["enable_highlight"] = true
 	}
 	return dv, nil
 }
 
-// validateDropdownOptionsColors validates --options is a JSON array and that
-// --colors (when set) has matching length. Used by +dropdown-update Validate.
-func validateDropdownOptionsColors(runtime flagView) (int, error) {
-	options, err := requireJSONArray(runtime, "options")
+// dropdownTypeAndItems resolves the XOR between --options and --source-range
+// and returns (sourceSize, partial dv with type+items|range set). sourceSize
+// is the option count for `list` mode or the source-range cell count for
+// `listFromRange` mode — used to validate --colors length.
+func dropdownTypeAndItems(runtime flagView) (int, map[string]interface{}, error) {
+	optsRaw := runtime.Str("options")
+	sourceRange := strings.TrimSpace(runtime.Str("source-range"))
+	switch {
+	case optsRaw != "" && sourceRange != "":
+		return 0, nil, common.FlagErrorf("--options and --source-range are mutually exclusive; pass exactly one")
+	case optsRaw == "" && sourceRange == "":
+		return 0, nil, common.FlagErrorf("one of --options (inline list) or --source-range (listFromRange) is required")
+	case optsRaw != "":
+		options, err := requireJSONArray(runtime, "options")
+		if err != nil {
+			return 0, nil, err
+		}
+		return len(options), map[string]interface{}{
+			"type":  "list",
+			"items": options,
+		}, nil
+	default: // sourceRange != ""
+		rows, cols, err := rangeDimensions(sourceRange)
+		if err != nil {
+			return 0, nil, common.FlagErrorf("--source-range %q: %v", sourceRange, err)
+		}
+		return rows * cols, map[string]interface{}{
+			"type":  "listFromRange",
+			"range": sourceRange,
+		}, nil
+	}
+}
+
+// validateDropdownSourceOrOptions runs the XOR + --colors length check at
+// Validate time so +dropdown-update / +dropdown-delete can fail fast without
+// reaching the body-build step. Returns the dropdown source size (options
+// length for list mode, source-range cell count for listFromRange) so
+// callers can size their cells matrix.
+func validateDropdownSourceOrOptions(runtime flagView) (int, error) {
+	sourceSize, _, err := dropdownTypeAndItems(runtime)
 	if err != nil {
 		return 0, err
 	}
@@ -373,11 +418,11 @@ func validateDropdownOptionsColors(runtime flagView) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		if len(colors) != len(options) {
-			return 0, common.FlagErrorf("--colors length (%d) must equal --options length (%d)", len(colors), len(options))
+		if len(colors) > sourceSize {
+			return 0, common.FlagErrorf("--colors length (%d) must not exceed dropdown source size (%d)", len(colors), sourceSize)
 		}
 	}
-	return len(options), nil
+	return sourceSize, nil
 }
 
 // ─── range parsing helpers ────────────────────────────────────────────
