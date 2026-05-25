@@ -340,12 +340,19 @@ func dropdownSetInput(runtime flagView, token, sheetID, sheetName string) (map[s
 //	--source-range  -> {type: "listFromRange", range: <A1+sheet prefix>}
 //	--multiple      -> support_multiple_values  (bool)
 //	--colors        -> highlight_colors         (string array, hex)
-//	--highlight     -> enable_highlight         (bool)
+//	--highlight     -> enable_highlight         (bool, tri-state via Changed)
 //
 // --options and --source-range are XOR (caller must pass exactly one).
 // --colors length may be shorter than the source size (options length or
 // source-range cell count) — server cycles remaining slots through a
 // built-in 10-color palette — but must not exceed it.
+//
+// --highlight is tri-state: omitted leaves enable_highlight off the body so the
+// server's new default (true) applies; --highlight=true stamps an explicit true;
+// --highlight=false stamps false to turn the highlight off. Using Changed() lets
+// us distinguish "not passed" from "explicit false" — required because the
+// server-side default flipped from false to true and a plain cobra Bool can no
+// longer carry the opt-out signal.
 func buildDropdownValidation(runtime flagView) (map[string]interface{}, error) {
 	sourceSize, dv, err := dropdownTypeAndItems(runtime)
 	if err != nil {
@@ -364,8 +371,8 @@ func buildDropdownValidation(runtime flagView) (map[string]interface{}, error) {
 	if runtime.Bool("multiple") {
 		dv["support_multiple_values"] = true
 	}
-	if runtime.Bool("highlight") {
-		dv["enable_highlight"] = true
+	if runtime.Changed("highlight") {
+		dv["enable_highlight"] = runtime.Bool("highlight")
 	}
 	return dv, nil
 }

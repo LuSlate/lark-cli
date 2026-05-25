@@ -184,6 +184,16 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 			subInput: `{"sheet-id":"sh1","range":"A2:A4","options":["x","y"],"multiple":true}`,
 		},
 		{
+			// --highlight=false explicitly opts out of the server's new
+			// enable_highlight=true default. Covers the tri-state Changed()
+			// branch in buildDropdownValidation: standalone reads the cobra
+			// "Changed" bit; sub-op reads the key's presence in the map.
+			shortcut: "+dropdown-set",
+			sc:       DropdownSet,
+			args:     []string{"--sheet-id", "sh1", "--range", "A2:A4", "--options", `["x","y"]`, "--highlight=false"},
+			subInput: `{"sheet-id":"sh1","range":"A2:A4","options":["x","y"],"highlight":false}`,
+		},
+		{
 			shortcut: "+chart-create",
 			sc:       ChartCreate,
 			args:     []string{"--sheet-id", "sh1", "--properties", `{"position":{"start":"A1"}}`},
