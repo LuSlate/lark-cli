@@ -73,6 +73,10 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 ```
 这比在 99 个单元格中都重复写样式 JSON 高效得多。
 
+💡 **样式更新是「部分合并」，不是整体覆盖**：`+cells-set-style` / `+cells-batch-set-style`（以及 `+cells-set` 的 `cell_styles` / `border_styles`）只改你**显式传入**的样式属性，未传的属性保留原值。两个实用推论：
+- **可分层叠加**：对同一区域先刷字体色、再单独刷背景色、再单独刷边框，后一步不会清掉前一步——美化已有区域时无需一次带齐所有字段，可拆成多次窄调用。
+- **`border_styles` 按边合并**：只传 `{"top":{...}}` 只更新上边框，`bottom` / `left` / `right` 保留原状；不必为了「只改一条边」而把四边全部重传。（例外见上方「新增行的边框/样式禁止用 `{}` 跳过」：**全新行**底子里没有边框，仍需把要显示的边都显式传出。）
+
 💡 **大批量数据分批写入（推荐）**：当需要写入大量行（如几十行以上）时，不要试图在一次调用中生成全部 `cells` 数据——`cells` 数组过大会让单次生成的内容过长，容易出错或被截断。应将数据拆分为多批，每批 20-50 行，分多次调用 `+cells-set` 逐批生成并写入（如先写 `A2:D21`，再写 `A22:D41`，依此类推）。每次只生成当前批次的数据，控制单次生成量。
 
 注意：
@@ -187,6 +191,8 @@ lark-cli sheets +dropdown-set \
 ```
 
 > ⚠️ **`--source-range` 必须带 sheet 前缀**（即使跟 `--range` 同 sheet）。注意一个坑：回读这种 listFromRange 下拉单元格时，`data_validation.range` 看起来不带 sheet 前缀（形如 `$T$1:$T$3`），如果要把读出来的 range 反过来写回 `--source-range`，**必须自己重新补上 sheet 前缀**，否则会被拒。
+>
+> ⚠️ **sheet 前缀里的表名一律「裸写」，不要加引号**——这条对所有带 sheet 前缀的 range 入参通用（`--source-range`、`+cells-batch-set-style` / `+cells-batch-clear` / `+dropdown-update` 的 `--ranges` 等）。即使表名含点或空格（如 `2025.9`、`一月份 `），也直接写 `2025.9!A1`；**不要**按电子表格习惯写成 `'2025.9'!A1`——引号会被当成表名的一部分，导致 `sheet "'2025.9'" not found`。
 
 `+dropdown-update`（多 range 批量更新）的所有 flag 语义与 `+dropdown-set` 完全一致；只是目标 `--ranges` 由单值变成 JSON 数组（每项带 sheet 前缀），同一份选项 + 配色应用到所有 range。
 

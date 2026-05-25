@@ -5,8 +5,11 @@ package sheets
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 
+	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -408,21 +411,47 @@ var SparklineDelete = newObjectDeleteShortcut(sparklineSpec)
 // the tool's properties is composed entirely from the position / size /
 // offset / image_token / image_uri / z_index flat flags.
 
-// floatImageProperties assembles the tool's properties object from the
-// 10 flat flags. Caller is responsible for marking required flags via
-// cobra Required:true; this function only enforces the image_token XOR
-// image_uri pair (one must be set).
-func floatImageProperties(runtime flagView) (map[string]interface{}, error) {
+// floatImageUploadPlaceholder is the stand-in image_token shown in
+// Validate/DryRun for the --image (local upload) path, before the real
+// file_token is known. Execute replaces it with the uploaded token.
+const floatImageUploadPlaceholder = "<file_token>"
+
+// floatImageName resolves the image name: explicit --image-name wins,
+// otherwise fall back to the basename of a local --image path.
+func floatImageName(runtime flagView) string {
+	if n := strings.TrimSpace(runtime.Str("image-name")); n != "" {
+		return n
+	}
+	if img := strings.TrimSpace(runtime.Str("image")); img != "" {
+		return filepath.Base(img)
+	}
+	return ""
+}
+
+// floatImageProperties assembles the tool's properties object from the flat
+// flags. Caller marks required flags via cobra Required:true; this function
+// enforces the image source XOR: exactly one of --image / --image-token /
+// --image-uri must be set. uploadedImageToken, when non-empty, is the
+// file_token obtained by uploading a local --image (Execute only); in
+// Validate/DryRun it is "" and a placeholder token stands in.
+func floatImageProperties(runtime flagView, uploadedImageToken string) (map[string]interface{}, error) {
+	img := strings.TrimSpace(runtime.Str("image"))
 	token := strings.TrimSpace(runtime.Str("image-token"))
 	uri := strings.TrimSpace(runtime.Str("image-uri"))
-	if token == "" && uri == "" {
-		return nil, common.FlagErrorf("either --image-token or --image-uri is required")
+	set := 0
+	for _, v := range []string{img, token, uri} {
+		if v != "" {
+			set++
+		}
 	}
-	if token != "" && uri != "" {
-		return nil, common.FlagErrorf("--image-token and --image-uri are mutually exclusive")
+	if set == 0 {
+		return nil, common.FlagErrorf("one of --image, --image-token, or --image-uri is required")
+	}
+	if set > 1 {
+		return nil, common.FlagErrorf("--image, --image-token, and --image-uri are mutually exclusive")
 	}
 	props := map[string]interface{}{
-		"image_name": strings.TrimSpace(runtime.Str("image-name")),
+		"image_name": floatImageName(runtime),
 		"position": map[string]interface{}{
 			"row": runtime.Int("position-row"),
 			"col": strings.TrimSpace(runtime.Str("position-col")),
@@ -432,9 +461,21 @@ func floatImageProperties(runtime flagView) (map[string]interface{}, error) {
 			"height": runtime.Int("size-height"),
 		},
 	}
-	if token != "" {
+	switch {
+	case img != "":
+		// Local file: validate path safety here so --dry-run also rejects
+		// unsafe paths; Execute uploads it and passes the real token in.
+		if _, err := validate.SafeLocalFlagPath("--image", img); err != nil {
+			return nil, output.ErrValidation("%s", err)
+		}
+		if uploadedImageToken != "" {
+			props["image_token"] = uploadedImageToken
+		} else {
+			props["image_token"] = floatImageUploadPlaceholder
+		}
+	case token != "":
 		props["image_token"] = token
-	} else {
+	default:
 		props["image_uri"] = uri
 	}
 	if runtime.Changed("offset-row") || runtime.Changed("offset-col") {
@@ -475,13 +516,33 @@ func newFloatImageWriteShortcut(command, description, op string, withIDFlag, isH
 			}
 			sheetID := strings.TrimSpace(runtime.Str("sheet-id"))
 			sheetName := strings.TrimSpace(runtime.Str("sheet-name"))
-			_, err = floatImageWriteInput(runtime, token, sheetID, sheetName, op, withIDFlag)
+			// uploadedImageToken="": Validate never uploads; floatImageProperties
+			// still validates the --image path and the source XOR.
+			_, err = floatImageWriteInput(runtime, token, sheetID, sheetName, op, withIDFlag, "")
 			return err
 		},
 		DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 			token, _ := resolveSpreadsheetToken(runtime)
 			sheetID, sheetName, _ := resolveSheetSelector(runtime)
-			input, _ := floatImageWriteInput(runtime, token, sheetID, sheetName, op, withIDFlag)
+			input, _ := floatImageWriteInput(runtime, token, sheetID, sheetName, op, withIDFlag, "")
+			// With a local --image, Execute first uploads the file; surface that
+			// extra step in the preview (mirrors +cells-set-image's dry-run).
+			if img := strings.TrimSpace(runtime.Str("image")); img != "" {
+				manageBody, _ := buildToolBody("manage_float_image_object", input)
+				return common.NewDryRunAPI().
+					POST("/open-apis/drive/v1/medias/upload_all").
+					Desc("upload local image to drive (parent_type=sheet_image)").
+					Body(map[string]interface{}{
+						"file_name":   floatImageName(runtime),
+						"parent_type": "sheet_image",
+						"parent_node": token,
+						"size":        "<file_size>",
+						"file":        "@" + img,
+					}).
+					POST(toolInvokePath(token, ToolKindWrite)).
+					Desc("create float image referencing the uploaded file_token").
+					Body(manageBody)
+			}
 			return invokeToolDryRun(token, ToolKindWrite, "manage_float_image_object", input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
@@ -493,7 +554,14 @@ func newFloatImageWriteShortcut(command, description, op string, withIDFlag, isH
 			if err != nil {
 				return err
 			}
-			input, err := floatImageWriteInput(runtime, token, sheetID, sheetName, op, withIDFlag)
+			// If a local --image was given, upload it first (parent_type=
+			// sheet_image) and embed the returned file_token; otherwise this
+			// returns "" and the token/uri flags are used as-is.
+			uploadedImageToken, err := uploadFloatImageIfLocal(runtime, token)
+			if err != nil {
+				return err
+			}
+			input, err := floatImageWriteInput(runtime, token, sheetID, sheetName, op, withIDFlag, uploadedImageToken)
 			if err != nil {
 				return err
 			}
@@ -507,14 +575,36 @@ func newFloatImageWriteShortcut(command, description, op string, withIDFlag, isH
 	}
 }
 
-func floatImageWriteInput(runtime flagView, token, sheetID, sheetName, op string, withIDFlag bool) (map[string]interface{}, error) {
+// uploadFloatImageIfLocal uploads a local --image (when set) as a sheet_image
+// and returns its file_token. Returns ("", nil) when --image is not set (the
+// token/uri source flags are used instead, e.g. on +float-image-update which
+// does not register --image).
+func uploadFloatImageIfLocal(runtime *common.RuntimeContext, spreadsheetToken string) (string, error) {
+	img := strings.TrimSpace(runtime.Str("image"))
+	if img == "" {
+		return "", nil
+	}
+	info, err := runtime.FileIO().Stat(img)
+	if err != nil {
+		return "", common.WrapInputStatError(err)
+	}
+	return common.UploadDriveMediaAll(runtime, common.DriveMediaUploadAllConfig{
+		FilePath:   img,
+		FileName:   floatImageName(runtime),
+		FileSize:   info.Size(),
+		ParentType: "sheet_image",
+		ParentNode: &spreadsheetToken,
+	})
+}
+
+func floatImageWriteInput(runtime flagView, token, sheetID, sheetName, op string, withIDFlag bool, uploadedImageToken string) (map[string]interface{}, error) {
 	if err := requireSheetSelector(sheetID, sheetName); err != nil {
 		return nil, err
 	}
 	if withIDFlag && strings.TrimSpace(runtime.Str("float-image-id")) == "" {
 		return nil, common.FlagErrorf("--float-image-id is required")
 	}
-	props, err := floatImageProperties(runtime)
+	props, err := floatImageProperties(runtime, uploadedImageToken)
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +622,7 @@ func floatImageWriteInput(runtime flagView, token, sheetID, sheetName, op string
 
 var FloatImageCreate = newFloatImageWriteShortcut(
 	"+float-image-create",
-	"Create a floating image (referenced by --image-token or --image-uri).",
+	"Create a floating image (from a local --image path, or an existing --image-token / --image-uri).",
 	"create", false, false,
 )
 var FloatImageUpdate = newFloatImageWriteShortcut(

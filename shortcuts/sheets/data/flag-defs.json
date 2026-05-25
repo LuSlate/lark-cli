@@ -4476,6 +4476,13 @@
         "desc": "Image z-index controlling stacking order"
       },
       {
+        "name": "image",
+        "kind": "own",
+        "type": "string",
+        "required": "xor",
+        "desc": "Local image path; the CLI uploads it as a sheet_image and uses the returned file_token (XOR with --image-token / --image-uri)"
+      },
+      {
         "name": "dry-run",
         "kind": "system",
         "type": "bool",

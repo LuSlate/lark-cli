@@ -164,12 +164,28 @@ var batchOpDispatch = map[string]batchOpMapping{
 	"+sparkline-delete": {"manage_sparkline_object", objDeleteTranslate(sparklineSpec)},
 
 	"+float-image-create": {"manage_float_image_object", func(fv flagView, token, sid, sname string) (map[string]interface{}, error) {
-		return floatImageWriteInput(fv, token, sid, sname, "create", false)
+		if err := rejectLocalImageInBatch(fv); err != nil {
+			return nil, err
+		}
+		return floatImageWriteInput(fv, token, sid, sname, "create", false, "")
 	}},
 	"+float-image-update": {"manage_float_image_object", func(fv flagView, token, sid, sname string) (map[string]interface{}, error) {
-		return floatImageWriteInput(fv, token, sid, sname, "update", true)
+		if err := rejectLocalImageInBatch(fv); err != nil {
+			return nil, err
+		}
+		return floatImageWriteInput(fv, token, sid, sname, "update", true, "")
 	}},
 	"+float-image-delete": {"manage_float_image_object", objDeleteTranslate(floatImageDeleteSpec)},
+}
+
+// rejectLocalImageInBatch blocks the local-file --image source inside
+// +batch-update: a batch sub-op has no upload phase, so the file could not be
+// turned into a file_token. Callers must pass --image-token / --image-uri.
+func rejectLocalImageInBatch(fv flagView) error {
+	if strings.TrimSpace(fv.Str("image")) != "" {
+		return common.FlagErrorf("--image (local upload) is not supported inside +batch-update; pass --image-token or --image-uri instead")
+	}
+	return nil
 }
 
 // sheetMoveBatchInput translates +sheet-move inside a batch. Unlike the

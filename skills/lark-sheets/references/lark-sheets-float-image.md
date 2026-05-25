@@ -24,14 +24,13 @@
 - **图片位置参数要精确**：锚点单元格的行列索引和偏移量决定了图片位置，设置不当会导致图片遮挡数据
 - **创建后必须验证**：调用 `+float-image-list` 确认图片位置和大小正确
 
-`--image-uri` 与 `--image-token` 是「指定**已有**图片资源」的两种等价方式（XOR，create 时必给其一）：
-- `--image-token`：图片 fileToken。常见来源是 `+float-image-list` 返回的 `image_token`（适合"换皮不换位置"等复用已有图片的场景）。
-- `--image-uri`：图片上传句柄（image URI），由系统自动转 fileToken。
-- update 时**仅在需要替换图片本身时**才传新的 `--image-uri` / `--image-token`，不传则保留原图。
+图片来源有三种方式，`+float-image-create` 上三者 **XOR、必给其一**（`--image` / `--image-token` / `--image-uri`）：
 
-⚠️ **本 shortcut 不接受本地图片文件路径**——只能引用已存在的图片资源。若手上只有本地新图（如 `logo.png`）：
-- **可接受单元格内嵌图** → 直接用 `+cells-set-image --image <本地路径>`（见 `lark-sheets-write-cells`，它支持本地路径）。
-- **必须是浮动图片** → 需先把本地图片上传到飞书拿到 file_token（上传步骤不在本 skill 内，例如经云空间），再把该 token 传给 `--image-token`。
+- **`--image <本地路径>`（首选，最省事）**：直接给本地图片文件路径（PNG/JPEG/GIF/BMP/HEIC 等）。CLI 会自动把它以 `parent_type=sheet_image` 上传，拿到 file_token 后创建浮动图，**不用你手动上传 / 取 token**。路径规则同其它本地文件 flag：必须是当前工作目录内的相对路径（绝对路径会被 Validate 拒，`--dry-run` 也会拦）。
+- `--image-token`：复用**已存在**的图片 file_token。常见来源：① `+float-image-list` 返回的 `image_token`（适合"换皮不换位置"复用同一张图）；② `+cells-set-image` 成功返回里的 `file_token`（它也是 `sheet_image` 上传句柄）。适合"同一张图复用到多处"，省去重复上传。
+- `--image-uri`：图片 reference_id（image URI），由系统自动转 file_token。
+
+> ⚠️ **`--image` 仅 `+float-image-create` 支持**。`+float-image-update` 换图仍只接受 `--image-token` / `--image-uri`（patch 模式：不传则保留原图）；要在 update 里换一张本地新图，先用 `+cells-set-image` 上传到任意临时单元格、从返回取 `file_token`，再把它传给 update 的 `--image-token`。
 
 ## Shortcuts
 
@@ -68,6 +67,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--offset-row` | int | optional | 在 `--position-row` 基础上的行内偏移（像素） |
 | `--offset-col` | int | optional | 在 `--position-col` 基础上的列内偏移（像素） |
 | `--z-index` | int | optional | 图片 Z 轴层级，控制重叠顺序 |
+| `--image` | string | xor | 本地图片路径（PNG/JPEG 等）；CLI 自动上传为 sheet_image 并用返回的 file_token，省去手动拿 token（与 --image-token / --image-uri 三选一） |
 
 ### `+float-image-update`
 
@@ -107,10 +107,15 @@ lark-cli sheets +float-image-list --url "..." --sheet-id "$SID"
 
 ### `+float-image-create`
 
-所有字段拍平为独立 flag：`--image-name` / `--image-token` 或 `--image-uri`（XOR） / `--position-{row,col}` / `--size-{width,height}` / `--offset-{row,col}` / `--z-index`。
+所有字段拍平为独立 flag：图片来源 `--image` / `--image-token` / `--image-uri`（三选一 XOR）/ `--image-name` / `--position-{row,col}` / `--size-{width,height}` / `--offset-{row,col}` / `--z-index`。
 
 ```bash
-# 用 file_token（从 +float-image-list 返回的 image_token 或独立上传得到）
+# 首选：直接给本地图片路径，CLI 自动上传（无需手动拿 token）
+lark-cli sheets +float-image-create --url "..." --sheet-id "$SID" \
+  --image ./logo.png \
+  --position-row 2 --position-col B --size-width 300 --size-height 200 --z-index 1
+
+# 用已有 file_token（从 +float-image-list 的 image_token 或 +cells-set-image 返回的 file_token）
 lark-cli sheets +float-image-create --url "..." --sheet-id "$SID" \
   --image-name "logo.png" --image-token "$TOKEN" \
   --position-row 0 --position-col A --size-width 200 --size-height 150
@@ -145,6 +150,6 @@ lark-cli sheets +float-image-delete --url "..." --sheet-id "$SID" --float-image-
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`+float-image-create` 校验 `--image-name` 非空，`--image-token` 与 `--image-uri` 互斥且至少一个非空，`--position-row/col` 与 `--size-width/height` 必填且为合法整数；`+float-image-update` 必须 `--float-image-id`，其余 `--image-name` / `--image-token` / `--image-uri` / `--position-*` / `--size-*` / `--offset-*` / `--z-index` 至少传 1 个（patch 模式：未传字段保持原值）；`+float-image-delete` 强制 `--yes` 或 `--dry-run`。
-- `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 float_image 请求模板"。
+- `Validate`：XOR 公共四件套；`+float-image-create` 要求 `--image` / `--image-token` / `--image-uri` **恰好给一个**，`--position-row/col` 与 `--size-width/height` 必填且为合法整数；传 `--image` 时还会校验路径安全（绝对路径 / 越出工作目录会被拒，`--dry-run` 同样拦）。`+float-image-update` 必须 `--float-image-id`，其余字段至少传 1 个（patch 模式：未传字段保持原值，换图只接受 `--image-token` / `--image-uri`）；`+float-image-delete` 强制 `--yes` 或 `--dry-run`。
+- `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 float_image 请求模板"；传 `--image` 时会多打印一步本地图片上传（`POST /open-apis/drive/v1/medias/upload_all`，`parent_type=sheet_image`）。
 - `Execute`：写后调用 `+float-image-list --float-image-id <id>` 回读，envelope.meta.verification 给出新位置 / 尺寸对比。
