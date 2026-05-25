@@ -286,7 +286,7 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--start-cell` | string | required | 目标区域起点 A1（如 `Sheet1!A1`）；终点按 CSV 实际行列数自动推断 |
+| `--start-cell` | string | required | 目标区域起点 A1（如 `A1`、`B5`，不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet）；必须是单个单元格，不接受范围写法；终点按 CSV 实际行列数自动推断 |
 | `--csv` | string + File + Stdin（非 JSON 文本） | required | RFC 4180 CSV 文本；只写纯值，不带公式/样式/批注 |
 | `--allow-overwrite` | bool | optional | 允许覆盖（默认 true）；设为 false 时若目标非空报错 |
 

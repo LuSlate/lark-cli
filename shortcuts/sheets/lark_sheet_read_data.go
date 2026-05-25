@@ -215,16 +215,16 @@ func stripRowPrefixFromCsvOutput(out interface{}) interface{} {
 }
 
 // DropdownGet wraps get_cell_ranges scoped to data_validation: read the
-// dropdown configuration on a range. The CLI accepts the range in the
-// sheet-prefixed form (e.g. "sheet1!A2:A100") for convenience; the
-// prefix is split client-side into sheet_name + bare A1 because the
-// get_cell_ranges tool wants sheet selector and ranges as separate
-// fields (ranges with the "sheet!" prefix gets the empty-sheet_id
-// rejection from the server).
+// dropdown configuration on a range. Aligned with its sibling +cells-get
+// — sheet selection is via --sheet-id / --sheet-name (XOR), and --range
+// is a bare A1 reference. The earlier "must include a sheet prefix"
+// shape was the odd one out among the get_cell_ranges wrappers and made
+// callers treat the prefix as either name or id; folding it into the
+// canonical --sheet-id selector removes that ambiguity.
 var DropdownGet = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+dropdown-get",
-	Description: "Read the dropdown / data-validation configuration on a sheet-prefixed range.",
+	Description: "Read the dropdown / data-validation configuration on a range.",
 	Risk:        "read",
 	Scopes:      []string{"sheets:spreadsheet:read"},
 	AuthTypes:   []string{"user", "bot"},
@@ -234,24 +234,29 @@ var DropdownGet = common.Shortcut{
 		if _, err := resolveSpreadsheetToken(runtime); err != nil {
 			return err
 		}
+		if _, _, err := resolveSheetSelector(runtime); err != nil {
+			return err
+		}
 		if strings.TrimSpace(runtime.Str("range")) == "" {
 			return common.FlagErrorf("--range is required")
-		}
-		if !strings.Contains(runtime.Str("range"), "!") {
-			return common.FlagErrorf("--range must include a sheet prefix (e.g. sheet1!A2:A100)")
 		}
 		return nil
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := resolveSpreadsheetToken(runtime)
-		return invokeToolDryRun(token, ToolKindRead, "get_cell_ranges", dropdownGetInput(runtime, token))
+		sheetID, sheetName, _ := resolveSheetSelector(runtime)
+		return invokeToolDryRun(token, ToolKindRead, "get_cell_ranges", dropdownGetInput(runtime, token, sheetID, sheetName))
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		token, err := resolveSpreadsheetToken(runtime)
 		if err != nil {
 			return err
 		}
-		out, err := callTool(ctx, runtime, token, ToolKindRead, "get_cell_ranges", dropdownGetInput(runtime, token))
+		sheetID, sheetName, err := resolveSheetSelector(runtime)
+		if err != nil {
+			return err
+		}
+		out, err := callTool(ctx, runtime, token, ToolKindRead, "get_cell_ranges", dropdownGetInput(runtime, token, sheetID, sheetName))
 		if err != nil {
 			return err
 		}
@@ -260,16 +265,13 @@ var DropdownGet = common.Shortcut{
 	},
 }
 
-func dropdownGetInput(runtime *common.RuntimeContext, token string) map[string]interface{} {
-	// Validate already enforced the "Sheet!range" prefix, so the
-	// split error path can't be reached here in practice.
-	sheetName, bareRange, _ := splitSheetPrefixedRange(strings.TrimSpace(runtime.Str("range")))
+func dropdownGetInput(runtime *common.RuntimeContext, token, sheetID, sheetName string) map[string]interface{} {
 	input := map[string]interface{}{
 		"excel_id":            token,
-		"ranges":              []string{bareRange},
+		"ranges":              []string{strings.TrimSpace(runtime.Str("range"))},
 		"include_styles":      false,
 		"value_render_option": "formatted_value",
 	}
-	sheetSelectorForToolInput(input, "", sheetName)
+	sheetSelectorForToolInput(input, sheetID, sheetName)
 	return input
 }
