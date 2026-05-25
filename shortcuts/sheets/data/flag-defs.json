@@ -2660,7 +2660,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Target ranges as a JSON array (e.g. `[\"sheet1!A1:B2\",\"sheet1!D1:D10\"]`); each item must include the sheet prefix; the same style is applied to all ranges",
+        "desc": "Target ranges as a JSON array (e.g. `[\"Sheet1!A1:B2\",\"Sheet2!D1:D10\"]`); each item must include a sheet prefix; the prefix must be the sheet display name (e.g. `Sheet1`), not the sheet reference_id; ranges may target different sheets; the same style is applied to every range",
         "input": [
           "file",
           "stdin"
@@ -2806,7 +2806,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Target ranges as a JSON array (e.g. `[\"sheet1!A2:A100\"]`); each item must include the sheet prefix",
+        "desc": "Target ranges as a JSON array (e.g. `[\"Sheet1!A2:A100\",\"Sheet1!C2:C100\"]`); each item must include a sheet prefix; the prefix must be the sheet display name (e.g. `Sheet1`), not the sheet reference_id",
         "input": [
           "file",
           "stdin"
@@ -2886,7 +2886,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Target ranges as a JSON array (up to 100 items; each must include the sheet prefix)",
+        "desc": "Target ranges as a JSON array (up to 100 items, e.g. `[\"Sheet1!E2:E6\"]`); each item must include a sheet prefix; the prefix must be the sheet display name (e.g. `Sheet1`), not the sheet reference_id",
         "input": [
           "file",
           "stdin"
@@ -2930,7 +2930,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Target ranges as a JSON array (e.g. `[\"sheet1!A1:B2\",\"sheet1!D1:D10\"]`); each item must include the sheet prefix; the same scope is cleared from every range",
+        "desc": "Target ranges as a JSON array (e.g. `[\"Sheet1!A2:Z1000\",\"Sheet2!A2:Z1000\"]`); each item must include a sheet prefix; the prefix must be the sheet display name (e.g. `Sheet1`), not the sheet reference_id; ranges may target different sheets; the same scope is cleared from every range",
         "input": [
           "file",
           "stdin"
