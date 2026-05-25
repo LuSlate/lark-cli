@@ -120,6 +120,35 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 
 **判断是不是"新行"**：写入 range 超出 `+csv-get` 返回的 `current_region` 右 / 下边界（如 `current_region=A1:H10`、写 `A11:H11`）即新行，必须按上述做法补边框。
 
+## Dropdown 配色（`+dropdown-set` / `+dropdown-update`）
+
+下拉的胶囊背景色高亮由两个 flag 控制，分别映射到 server `data_validation` 的两个字段：
+
+| CLI flag | server 字段 | 类型 | 含义 |
+|---|---|---|---|
+| `--highlight` | `enable_highlight` | bool | 总开关；为 `false`（默认）时所有选项无背景色 |
+| `--colors` | `highlight_colors` | string[] | RGB hex 数组，如 `["#1FB6C1","#F006C2"]` |
+
+规则：
+
+- **`--colors` 长度可以短于 `--options`**（剩余项 server 按内置 10 色色板循环补色），**但不能长于**——CLI 端 Validate 阶段会拦截长于的情况。
+- **`--colors` 仅在 `--highlight=true` 时生效**——单独传 `--colors` 而不传 `--highlight`，server 不会显示任何背景色。
+- 完全不传两者，下拉就是纯文本选项（无配色）。
+- 想让所有选项都有颜色但不指定具体色——只传 `--highlight`，server 用内置色板循环。
+
+最小用例（4 个 options 配 3 个 colors —— 前 3 个用指定色，第 4 个按内置色板补色）：
+
+```
+lark-cli sheets +dropdown-set \
+  --url https://... --sheet-id <id> \
+  --range A2:A100 \
+  --options '["待开始","进行中","已完成","已取消"]' \
+  --colors '["#bff7d9","#FFE699","#bacefd"]' \
+  --highlight
+```
+
+`+dropdown-update`（多 range 批量更新）的 `--colors` / `--highlight` 行为完全一致；只是 range 由单值变成 JSON 数组（每项带 sheet 前缀），同一份配色应用到所有 range。
+
 ## 工具选择
 
 本 skill 提供以下 CLI shortcut，按数据来源 + 内容形态选：
@@ -199,9 +228,9 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | 目标范围（A1 格式，如 `A2:A100`） |
 | `--options` | string + File + Stdin（复合 JSON） | required | 选项 JSON 数组 `["opt1","opt2"]`；最多 500 项，每项 ≤100 字符，不含逗号 |
-| `--colors` | string + File + Stdin（简单 JSON） | optional | RGB hex 颜色数组（如 `["#1FB6C1","#F006C2"]`），长度必须与 `--options` 一致 |
+| `--colors` | string + File + Stdin（简单 JSON） | optional | 下拉选项的胶囊背景色，RGB hex 数组，如 `["#1FB6C1","#F006C2"]`。映射到 server `data_validation.highlight_colors`。长度可以**短于** `--options`（剩余项 server 按内置 10 色色板循环补色），但**不能长于**。仅当 `--highlight` 也传时才生效；单独传本 flag 不显示高亮色。 |
 | `--multiple` | bool | optional | 启用多选；默认 `false` |
-| `--highlight` | bool | optional | 选项配色显示；默认 `false` |
+| `--highlight` | bool | optional | 开启下拉选项的胶囊背景色高亮；默认 `false`。映射到 server `data_validation.enable_highlight`。不传或为 `false` 时所有选项无背景色；为 `true` 时按 `--colors` 顺序上色，未在 `--colors` 中提供的选项使用内置 10 色色板循环补色。 |
 
 ### `+csv-put`
 

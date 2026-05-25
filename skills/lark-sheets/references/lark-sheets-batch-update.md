@@ -22,6 +22,8 @@
 
 当同一工具需要对多个区域重复调用时，**必须**改用 `+batch-update` 合并为单次请求——`+batch-update` 是原子提交（要么全成功要么整批回滚）；逐个调用非原子，中途失败会留下半成品。
 
+**`+dropdown-update` / `+dropdown-delete` 的配色规则**（`--colors` 长度可短于 `--options` 但不能长于、必须配 `--highlight=true` 才生效、不传按内置 10 色色板循环补色）见 [`lark-sheets-write-cells`](./lark-sheets-write-cells.md) 的「Dropdown 配色」节，本 skill 不重复。
+
 ## Shortcuts
 
 | Shortcut | Risk | 分组 |
@@ -70,9 +72,9 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--ranges` | string + File + Stdin（简单 JSON） | required | 目标范围 JSON 数组（如 `["sheet1!A2:A100"]`），每项必须带 sheet 前缀 |
 | `--options` | string + File + Stdin（复合 JSON） | required | 选项 JSON 数组（如 `["opt1","opt2"]`） |
-| `--colors` | string + File + Stdin（简单 JSON） | optional | 颜色数组（与 `--options` 等长） |
+| `--colors` | string + File + Stdin（简单 JSON） | optional | 下拉选项的胶囊背景色，RGB hex 数组（如 `["#1FB6C1","#F006C2"]`）。映射到 server `data_validation.highlight_colors`。长度可以**短于** `--options`（剩余项按内置色板补色）但**不能长于**。仅当 `--highlight` 也传时才生效。 |
 | `--multiple` | bool | optional | 启用多选 |
-| `--highlight` | bool | optional | 选项配色 |
+| `--highlight` | bool | optional | 开启下拉选项的胶囊背景色高亮；默认 `false`。映射到 server `data_validation.enable_highlight`。需配合 `--colors` 使用——不传 `--colors` 时全部选项按内置 10 色色板循环。 |
 
 ### `+dropdown-delete`
 
