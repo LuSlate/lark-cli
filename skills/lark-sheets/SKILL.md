@@ -34,13 +34,20 @@ metadata:
 
 ## References
 
-本 skill 按能力子域组织，每个子域有独立 reference。先按下表索引定位到目标子域，再进入对应 reference 查 shortcut / 调用细节。
+本 skill 的 reference 分两组：先读**通用方法与规范**（横切所有任务的工作流、铁律、样式、公式规则，不含具体 shortcut），它们规定了"怎么做对"；再按操作对象进入**工具参考**查具体 shortcut 与调用细节。编辑类任务务必先过一遍通用方法与规范，其中的铁律对所有工具参考一律生效。
+
+### 通用方法与规范（先读，横切所有任务，不含具体 shortcut）
 
 | Reference | 描述 |
 | --- | --- |
 | [飞书表格核心操作：分析、编辑与可视化](references/lark-sheets-core-operations.md) | 飞书表格核心操作工作流。当用户需要对已有的飞书表格进行查看、分析、编辑或可视化时使用。适用场景：数据查询与统计、公式计算、表格美化、创建图表/透视表、筛选排序、批量修改数据、调整表格结构等。即使用户没有明确说"飞书表格"，只要操作对象是已有的在线表格，都应触发此工作流。不适用于本地 Excel 文件操作。 |
 | [飞书表格样式与配色规范](references/lark-sheets-visual-standards.md) | 飞书表格样式与配色规范：表头/数据区/汇总行的颜色、字号、对齐、边框等取值标准，以及新增汇总行、追加行列继承原表风格、已有区域美化等典型场景的决策流程与样式要点。工具调用参数细节请参考对应的 lark-sheets-write-cells / lark-sheets-range-operations / lark-sheets-batch-update。条件格式（高亮、标红、数据条、色阶）请使用 lark-sheets-conditional-format。仅针对飞书表格，不适用于本地 Excel 文件。 |
 | [飞书表格公式生成规则](references/lark-sheets-formula-translation.md) | Excel 公式到飞书表格公式的迁移与生成规则。核心目标不是保留 Excel 原语法，而是按飞书表格可执行规则重写公式，并在结果上尽量对齐 Excel。当用户要求把 Excel 公式改写成飞书表格公式，或需要生成飞书公式（尤其涉及 ARRAYFORMULA、原生数组函数、INDEX/OFFSET、MAP/LAMBDA、日期差、多层范围结果与二次展开）时使用。仅针对飞书在线表格，不适用于本地 Excel 文件执行。 |
+
+### 按对象的工具参考（含 shortcut）
+
+| Reference | 描述 |
+| --- | --- |
 | [Lark Sheet Workbook](references/lark-sheets-workbook.md) | 管理飞书表格的工作簿结构（子表列表及元数据）。当用户提到"看看这个表格有什么"、"表格结构"、"有哪些 sheet"、"新建一个 sheet"、"删除这个工作表"、"重命名"、"复制一份"、"移动到前面"时使用。仅针对飞书表格。 |
 | [Lark Sheet Sheet Structure](references/lark-sheets-sheet-structure.md) | 管理飞书表格的子表结构与布局。适用场景：查看行高、列宽、隐藏行列、合并单元格等布局信息，以及"插入一行"、"删除这列"、"隐藏行"、"冻结表头"、行列分组（大纲折叠/展开）等操作。行列大纲仅在用户明确提到"行分组"、"列分组"、"大纲"、"outline"时才触发，"按XXX分组"等数据分组场景请使用 lark-sheets-pivot-table。如需在表尾追加数据，应先通过此 skill 插入行，再通过 lark-sheets-write-cells 写入。仅针对飞书表格。 |
 | [Lark Sheet Read Data](references/lark-sheets-read-data.md) | 读取飞书表格中的单元格数据。当用户需要"看看数据"、"分析数据"、"统计/汇总"时使用；也适用于需要查看公式、样式、批注等详细信息的场景。仅针对飞书表格。 |
