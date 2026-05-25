@@ -600,9 +600,11 @@ var WorkbookCreate = common.Shortcut{
 			Body(body)
 		if runtime.Str("headers") != "" || runtime.Str("values") != "" {
 			fill, _ := buildInitialFillInput(runtime)
+			fill["excel_id"] = "<new-token>"
+			fill["sheet_id"] = "<first-sheet-id>" // resolved from the workbook at execute time
 			wireBody, _ := buildToolBody("set_cell_range", fill)
 			dry.POST("/open-apis/sheet_ai/v2/spreadsheets/<new-token>/tools/invoke_write").
-				Desc("fill headers + data via set_cell_range").
+				Desc("fill headers + data via set_cell_range (sheet_id resolved after create)").
 				Body(wireBody)
 		}
 		return dry
@@ -633,6 +635,13 @@ var WorkbookCreate = common.Shortcut{
 				return err
 			}
 			fill["excel_id"] = token
+			// set_cell_range needs a concrete sheet selector; the create
+			// response doesn't echo the default sheet's id, so read it back.
+			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
+			if err != nil {
+				return fmt.Errorf("spreadsheet %s created but resolving its first sheet for initial fill failed: %w", token, err)
+			}
+			fill["sheet_id"] = firstSheetID
 			fillOut, err := callTool(ctx, runtime, token, ToolKindWrite, "set_cell_range", fill)
 			if err != nil {
 				// Spreadsheet exists; surface the fill failure but keep the new
@@ -692,9 +701,11 @@ func buildInitialFillInput(runtime *common.RuntimeContext) (map[string]interface
 	endCol := columnIndexToLetter(maxCols - 1)
 	rangeStr := fmt.Sprintf("A1:%s%d", endCol, len(rows))
 	return map[string]interface{}{
-		"range":    rangeStr,
-		"cells":    rows,
-		"sheet_id": "", // filled in by caller if sheet_id known; otherwise server picks first sheet
+		"range": rangeStr,
+		"cells": rows,
+		// sheet_id is left for the caller to fill: Execute resolves the new
+		// workbook's first sheet via lookupFirstSheetID. The DryRun preview
+		// can't know it yet (the workbook doesn't exist), so it stays absent.
 	}, nil
 }
 
@@ -939,4 +950,51 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 		target = sheetName
 	}
 	return "", 0, output.Errorf(output.ExitAPI, "not_found", fmt.Sprintf("sheet %q not found in workbook", target))
+}
+
+// lookupFirstSheetID returns the sheet_id of the sub-sheet at index 0 (the
+// default sheet of a freshly created workbook). Used by +workbook-create to
+// target the initial-fill set_cell_range write — set_cell_range rejects an
+// empty sheet selector ("sheet_id or sheet_name is required"), and the v3
+// create-spreadsheet response does not echo the default sheet's id.
+func lookupFirstSheetID(ctx context.Context, runtime *common.RuntimeContext, token string) (string, error) {
+	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_workbook_structure", map[string]interface{}{
+		"excel_id": token,
+	})
+	if err != nil {
+		return "", err
+	}
+	m, ok := out.(map[string]interface{})
+	if !ok {
+		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned non-object output")
+	}
+	sheets, _ := m["sheets"].([]interface{})
+	bestID := ""
+	bestIdx := -1
+	for _, raw := range sheets {
+		sm, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		id, _ := sm["sheet_id"].(string)
+		if id == "" {
+			continue
+		}
+		idx, ok := util.ToFloat64(sm["index"])
+		if !ok {
+			// No index field — fall back to first encountered sheet.
+			if bestID == "" {
+				bestID = id
+			}
+			continue
+		}
+		if bestIdx < 0 || int(idx) < bestIdx {
+			bestIdx = int(idx)
+			bestID = id
+		}
+	}
+	if bestID == "" {
+		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned no sheets")
+	}
+	return bestID, nil
 }

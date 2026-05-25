@@ -169,9 +169,10 @@ func TestDimRange_StartEndValidation(t *testing.T) {
 	}
 }
 
-// TestDimMove_DryRun verifies the legacy v2 dimension_range payload
-// shape. CLI's 0-based inclusive (--start / --end) becomes the v2
-// endpoint's half-open [startIndex, endIndex).
+// TestDimMove_DryRun verifies the native v3 move_dimension payload shape.
+// CLI's 0-based inclusive (--start / --end) maps straight through to v3's
+// source.{start_index,end_index} (also 0-based inclusive), and sheet_id is
+// carried in the path, not the body.
 func TestDimMove_DryRun(t *testing.T) {
 	t.Parallel()
 	calls := parseDryRunAPI(t, DimMove, []string{
@@ -182,25 +183,23 @@ func TestDimMove_DryRun(t *testing.T) {
 		t.Fatalf("api calls = %d, want 1", len(calls))
 	}
 	c := calls[0].(map[string]interface{})
-	if !strings.Contains(c["url"].(string), "/sheets/v2/spreadsheets/") {
-		t.Errorf("url = %v, want sheets/v2 path", c["url"])
+	wantURL := "/sheets/v3/spreadsheets/" + testToken + "/sheets/" + testSheetID + "/move_dimension"
+	if !strings.Contains(c["url"].(string), wantURL) {
+		t.Errorf("url = %v, want suffix %v", c["url"], wantURL)
 	}
 	body, _ := c["body"].(map[string]interface{})
 	src, _ := body["source"].(map[string]interface{})
-	if src["sheetId"] != testSheetID {
-		t.Errorf("source.sheetId = %v", src["sheetId"])
+	if src["major_dimension"] != "ROWS" {
+		t.Errorf("source.major_dimension = %v, want ROWS", src["major_dimension"])
 	}
-	if src["majorDimension"] != "ROWS" {
-		t.Errorf("source.majorDimension = %v, want ROWS", src["majorDimension"])
+	if src["start_index"].(float64) != 0 {
+		t.Errorf("start_index = %v, want 0", src["start_index"])
 	}
-	if src["startIndex"].(float64) != 0 {
-		t.Errorf("startIndex = %v, want 0", src["startIndex"])
+	if src["end_index"].(float64) != 2 {
+		t.Errorf("end_index = %v, want 2 (0-based inclusive, passes straight through)", src["end_index"])
 	}
-	if src["endIndex"].(float64) != 3 {
-		t.Errorf("endIndex = %v, want 3 (CLI end+1 for half-open)", src["endIndex"])
-	}
-	if body["destinationIndex"].(float64) != 10 {
-		t.Errorf("destinationIndex = %v, want 10", body["destinationIndex"])
+	if body["destination_index"].(float64) != 10 {
+		t.Errorf("destination_index = %v, want 10", body["destination_index"])
 	}
 }
 

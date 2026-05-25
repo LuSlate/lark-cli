@@ -531,12 +531,17 @@ func columnIndexToLetter(idx int) string {
 	return string(out)
 }
 
-// ─── +dim-move (legacy OAPI, cli_status: cli-only) ───────────────────
+// ─── +dim-move (native v3 move_dimension, cli_status: cli-only) ──────
 //
 // Moves a contiguous block of rows or columns to a new index in the same
-// sheet via the legacy v2 endpoint (not the One-OpenAPI dispatcher).
-// CLI's --start / --end are 0-based inclusive; the endpoint expects
-// half-open [startIndex, endIndex).
+// sheet via the native v3 move_dimension endpoint (not the One-OpenAPI
+// dispatcher). CLI's --start / --end are 0-based inclusive; v3
+// move_dimension's source.{start_index,end_index} are likewise 0-based
+// inclusive, so they pass straight through. The earlier build POSTed a
+// {source,destinationIndex} body to the v2 dimension_range endpoint, which
+// is the add/update/delete surface and expects a `dimension` object —
+// hence the server rejected it with "[9499] Missing required parameter:
+// Dimension".
 
 var DimMove = common.Shortcut{
 	Service:     "sheets",
@@ -568,10 +573,9 @@ var DimMove = common.Shortcut{
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := resolveSpreadsheetToken(runtime)
 		sheetID, sheetName, _ := resolveSheetSelector(runtime)
-		body := dimMoveBody(runtime, sheetSelectorPlaceholder(sheetID, sheetName))
 		return common.NewDryRunAPI().
-			POST(fmt.Sprintf("/open-apis/sheets/v2/spreadsheets/%s/dimension_range", token)).
-			Body(body).
+			POST(dimMovePath(token, sheetSelectorPlaceholder(sheetID, sheetName))).
+			Body(dimMoveBody(runtime)).
 			Set("spreadsheet_token", token)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
@@ -583,8 +587,9 @@ var DimMove = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		// Legacy v2 endpoint needs sheet_id. Resolve sheet_name client-side
-		// when needed (reuses lookupSheetIndex which fetches workbook structure).
+		// v3 move_dimension carries sheet_id in the path. Resolve
+		// sheet_name client-side when needed (reuses lookupSheetIndex
+		// which fetches workbook structure).
 		if sheetID == "" {
 			lookedID, _, err := lookupSheetIndex(ctx, runtime, token, "", sheetName)
 			if err != nil {
@@ -592,12 +597,7 @@ var DimMove = common.Shortcut{
 			}
 			sheetID = lookedID
 		}
-		body := dimMoveBody(runtime, sheetID)
-		data, err := runtime.CallAPI(
-			"POST",
-			fmt.Sprintf("/open-apis/sheets/v2/spreadsheets/%s/dimension_range", validate.EncodePathSegment(token)),
-			nil, body,
-		)
+		data, err := runtime.CallAPI("POST", dimMovePath(token, sheetID), nil, dimMoveBody(runtime))
 		if err != nil {
 			return err
 		}
@@ -606,18 +606,24 @@ var DimMove = common.Shortcut{
 	},
 }
 
-func dimMoveBody(runtime *common.RuntimeContext, sheetID string) map[string]interface{} {
+// dimMovePath builds the native v3 move_dimension endpoint. sheet_id lives in
+// the path (unlike the v2 dimension_range body that the earlier build used).
+func dimMovePath(token, sheetID string) string {
+	return fmt.Sprintf("/open-apis/sheets/v3/spreadsheets/%s/sheets/%s/move_dimension",
+		validate.EncodePathSegment(token), validate.EncodePathSegment(sheetID))
+}
+
+func dimMoveBody(runtime *common.RuntimeContext) map[string]interface{} {
 	dim := "ROWS"
 	if runtime.Str("dimension") == "column" {
 		dim = "COLUMNS"
 	}
 	return map[string]interface{}{
 		"source": map[string]interface{}{
-			"sheetId":        sheetID,
-			"majorDimension": dim,
-			"startIndex":     runtime.Int("start"),
-			"endIndex":       runtime.Int("end") + 1, // CLI inclusive → API exclusive
+			"major_dimension": dim,
+			"start_index":     runtime.Int("start"),
+			"end_index":       runtime.Int("end"), // both CLI --end and v3 end_index are 0-based inclusive
 		},
-		"destinationIndex": runtime.Int("target"),
+		"destination_index": runtime.Int("target"),
 	}
 }

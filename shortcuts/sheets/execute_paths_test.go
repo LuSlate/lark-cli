@@ -271,8 +271,8 @@ func TestExecute_BatchUpdate_Translated(t *testing.T) {
 	}
 }
 
-// TestExecute_WorkbookCreate covers the legacy POST + optional
-// set_cell_range follow-up. Stubs both endpoints.
+// TestExecute_WorkbookCreate covers the create POST + first-sheet lookup +
+// set_cell_range follow-up. Stubs all three endpoints.
 func TestExecute_WorkbookCreate(t *testing.T) {
 	t.Parallel()
 	create := &httpmock.Stub{
@@ -289,12 +289,15 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 			},
 		},
 	}
+	// Initial fill first reads the workbook structure to resolve the default
+	// sheet's id (the create response doesn't echo it), then writes.
+	structure := toolOutputStub("shtcnBRAND", "read", `{"sheets":[{"sheet_id":"shtFirst","sheet_name":"Sheet1","index":0}]}`)
 	fill := toolOutputStub("shtcnBRAND", "write", `{"updated_cells":4}`)
 	out, err := runShortcutWithStubs(t, WorkbookCreate, []string{
 		"--title", "Sales",
 		"--headers", `["Name","Score"]`,
 		"--values", `[["alice",95]]`,
-	}, create, fill)
+	}, create, structure, fill)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
 	}
@@ -306,15 +309,21 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 	if data["initial_fill"] == nil {
 		t.Errorf("initial_fill missing in envelope")
 	}
+	// The fill must target the resolved first sheet, not an empty selector.
+	fillInput := decodeToolInput(t, decodeRawEnvelopeBody(t, fill.CapturedBody), "set_cell_range")
+	if fillInput["sheet_id"] != "shtFirst" {
+		t.Errorf("fill sheet_id = %v, want shtFirst (resolved from workbook structure)", fillInput["sheet_id"])
+	}
 }
 
-// TestExecute_DimMove covers the legacy v2 dimension_range call with
-// CLI inclusive → API exclusive end-index conversion.
+// TestExecute_DimMove covers the native v3 move_dimension call. CLI's
+// 0-based inclusive --start/--end pass straight through to v3's
+// source.{start_index,end_index} (also 0-based inclusive).
 func TestExecute_DimMove(t *testing.T) {
 	t.Parallel()
 	move := &httpmock.Stub{
 		Method: "POST",
-		URL:    "/open-apis/sheets/v2/spreadsheets/" + testToken + "/dimension_range",
+		URL:    "/open-apis/sheets/v3/spreadsheets/" + testToken + "/sheets/" + testSheetID + "/move_dimension",
 		Body: map[string]interface{}{
 			"code": 0,
 			"msg":  "success",
@@ -330,8 +339,11 @@ func TestExecute_DimMove(t *testing.T) {
 	}
 	body := decodeRawEnvelopeBody(t, move.CapturedBody)
 	src, _ := body["source"].(map[string]interface{})
-	if src["startIndex"].(float64) != 0 || src["endIndex"].(float64) != 3 {
-		t.Errorf("indices = (%v,%v), want (0,3)", src["startIndex"], src["endIndex"])
+	if src["start_index"].(float64) != 0 || src["end_index"].(float64) != 2 {
+		t.Errorf("indices = (%v,%v), want (0,2) — 0-based inclusive", src["start_index"], src["end_index"])
+	}
+	if body["destination_index"].(float64) != 10 {
+		t.Errorf("destination_index = %v, want 10", body["destination_index"])
 	}
 }
 
