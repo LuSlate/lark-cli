@@ -1180,7 +1180,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "A1 range, e.g. `Sheet1!A1:F10`"
+        "desc": "A1 range, e.g. `A1:F10` (no sheet prefix — use `--sheet-id` / `--sheet-name` to select the sheet)"
       },
       {
         "name": "include",
@@ -1304,7 +1304,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "A1 range, e.g. `Sheet1!A1:F30`"
+        "desc": "A1 range, e.g. `A1:F30` (no sheet prefix — use `--sheet-id` / `--sheet-name` to select the sheet)"
       },
       {
         "name": "value-render-option",
@@ -1965,7 +1965,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Top-left A1 anchor (e.g. `Sheet1!A1`); the bottom-right is inferred from CSV row/column counts",
+        "desc": "Top-left A1 anchor (e.g. `A1`, `B5`; no sheet prefix — use `--sheet-id` / `--sheet-name` to select the sheet); must be a single cell, range notation not accepted; the bottom-right is inferred from CSV row/column counts",
         "default": "A1"
       },
       {
