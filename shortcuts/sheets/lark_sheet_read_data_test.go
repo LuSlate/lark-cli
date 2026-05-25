@@ -48,14 +48,30 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name:     "+dropdown-get range with sheet prefix only",
+			// Canonical form: --sheet-id + bare --range. Aligned with
+			// +cells-get / +csv-get; before the e2e BUG-019 fix this
+			// shortcut was the odd one out (range-prefix required).
+			name:     "+dropdown-get with --sheet-id",
 			sc:       DropdownGet,
-			args:     []string{"--url", testURL, "--range", "sheet1!A2:A100"},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "C2:C6"},
 			toolName: "get_cell_ranges",
 			wantInput: map[string]interface{}{
 				"excel_id":            testToken,
-				"sheet_name":          "sheet1",
-				"ranges":              []interface{}{"A2:A100"},
+				"sheet_id":            testSheetID,
+				"ranges":              []interface{}{"C2:C6"},
+				"include_styles":      false,
+				"value_render_option": "formatted_value",
+			},
+		},
+		{
+			name:     "+dropdown-get with --sheet-name",
+			sc:       DropdownGet,
+			args:     []string{"--url", testURL, "--sheet-name", "Sheet1", "--range", "C2:C6"},
+			toolName: "get_cell_ranges",
+			wantInput: map[string]interface{}{
+				"excel_id":            testToken,
+				"sheet_name":          "Sheet1",
+				"ranges":              []interface{}{"C2:C6"},
 				"include_styles":      false,
 				"value_render_option": "formatted_value",
 			},
@@ -72,7 +88,12 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 	}
 }
 
-func TestDropdownGet_RequiresSheetPrefix(t *testing.T) {
+// TestDropdownGet_RequiresSheetSelector locks the +cells-get-style
+// selector contract: at least one of --sheet-id / --sheet-name must be
+// supplied. Before BUG-019 fix this shortcut required a "Sheet!A1"
+// prefix inside --range instead; the canonical selector pair is what
+// every other get_cell_ranges wrapper uses.
+func TestDropdownGet_RequiresSheetSelector(t *testing.T) {
 	t.Parallel()
 	stdout, stderr, err := runShortcutCapturingErr(t, DropdownGet, []string{
 		"--url", testURL, "--range", "A2:A100", "--dry-run",
@@ -80,8 +101,9 @@ func TestDropdownGet_RequiresSheetPrefix(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected validation error; stdout=%s stderr=%s", stdout, stderr)
 	}
-	if !strings.Contains(stdout+stderr+err.Error(), "must include a sheet prefix") {
-		t.Errorf("expected sheet-prefix guard; got=%s|%s|%v", stdout, stderr, err)
+	combined := stdout + stderr + err.Error()
+	if !strings.Contains(combined, "sheet-id") && !strings.Contains(combined, "sheet-name") {
+		t.Errorf("expected --sheet-id/--sheet-name guard; got=%s|%s|%v", stdout, stderr, err)
 	}
 }
 
@@ -96,6 +118,7 @@ func TestReadData_RequiresRange(t *testing.T) {
 	}{
 		{"+cells-get", CellsGet},
 		{"+csv-get", CsvGet},
+		{"+dropdown-get", DropdownGet},
 	}
 	for _, c := range cases {
 		c := c

@@ -1239,11 +1239,25 @@
         "desc": "Spreadsheet token (XOR with `--url`)"
       },
       {
+        "name": "sheet-id",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Sheet reference_id (XOR with `--sheet-name`)"
+      },
+      {
+        "name": "sheet-name",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Sheet name (XOR with `--sheet-id`)"
+      },
+      {
         "name": "range",
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Target range (A1 notation; must include the sheet prefix, e.g. `sheet1!A2:A100`)"
+        "desc": "Target range in A1 notation, e.g. `A2:A100` (no sheet prefix — use `--sheet-id` / `--sheet-name` to select the sheet)"
       },
       {
         "name": "dry-run",

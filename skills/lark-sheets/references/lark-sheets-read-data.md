@@ -97,11 +97,11 @@ _公共四件套 · 系统：`--dry-run`_
 
 ### `+dropdown-get`
 
-_公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
+_公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--range` | string | required | 目标范围（A1 格式，必须带 sheet 前缀，如 `sheet1!A2:A100`） |
+| `--range` | string | required | A1 范围，如 `A2:A100`（不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet） |
 
 ### `+csv-get`
 
