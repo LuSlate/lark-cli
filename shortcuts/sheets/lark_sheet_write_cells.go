@@ -271,7 +271,13 @@ var DropdownSet = common.Shortcut{
 	AuthTypes:   []string{"user", "bot"},
 	HasFormat:   true,
 	Flags:       flagsFor("+dropdown-set"),
-	Validate:    validateViaInput(dropdownSetInput),
+	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
+		if err := validateViaInput(dropdownSetInput)(ctx, runtime); err != nil {
+			return err
+		}
+		warnDropdownSourceRangeHighlight(runtime)
+		return nil
+	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := resolveSpreadsheetToken(runtime)
 		sheetID, sheetName, _ := resolveSheetSelector(runtime)
@@ -432,6 +438,44 @@ func validateDropdownSourceOrOptions(runtime flagView) (int, error) {
 		}
 	}
 	return sourceSize, nil
+}
+
+// dropdownSourceRangeHighlightLimit is the cell-count cap above which the
+// server marks the dropdown's options as invalid when highlight is on.
+// Source: byted-sheet core LIST_WITH_COLOR_MAX_COUNT
+// (sheet-packages/.../dataValidation/list/ListFromRangeValidation.ts:49).
+// Beyond this, ListFromRangeValidation.checkOptionsValid() sets
+// isOptionError=true (highlight + range > 2000 is an unsupported combo).
+const dropdownSourceRangeHighlightLimit = 2000
+
+// warnDropdownSourceRangeHighlight emits a soft stderr warning when the user
+// targets a --source-range larger than dropdownSourceRangeHighlightLimit while
+// highlight is on (the server-side default and the most common path).
+// Inline --options is not subject to this limit (server has no inline count
+// or per-item length cap; only the listFromRange + highlight combo is).
+// Validate phase only — never blocks the request. Caller must already have
+// confirmed the source-or-options validation passed.
+func warnDropdownSourceRangeHighlight(runtime *common.RuntimeContext) {
+	sourceRange := strings.TrimSpace(runtime.Str("source-range"))
+	if sourceRange == "" {
+		return // inline --options mode — no server-side size cap applies
+	}
+	// highlight is tri-state: omitted = ON (server default), --highlight=true
+	// = ON, --highlight=false = OFF. Only the OFF case avoids the warning.
+	if runtime.Changed("highlight") && !runtime.Bool("highlight") {
+		return
+	}
+	rows, cols, err := rangeDimensions(sourceRange)
+	if err != nil {
+		return // already errored upstream; don't double-report
+	}
+	cellCount := rows * cols
+	if cellCount <= dropdownSourceRangeHighlightLimit {
+		return
+	}
+	fmt.Fprintf(runtime.IO().ErrOut,
+		"warning: --source-range covers %d cells; server marks the dropdown as option-error when highlight is on and the source exceeds %d cells. Pass --highlight=false to suppress this.\n",
+		cellCount, dropdownSourceRangeHighlightLimit)
 }
 
 // ─── range parsing helpers ────────────────────────────────────────────

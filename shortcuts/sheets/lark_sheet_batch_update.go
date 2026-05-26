@@ -335,6 +335,7 @@ var DropdownUpdate = common.Shortcut{
 		if _, err := validateDropdownSourceOrOptions(runtime); err != nil {
 			return err
 		}
+		warnDropdownSourceRangeHighlight(runtime)
 		return nil
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
