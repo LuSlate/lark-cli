@@ -1,0 +1,88 @@
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
+
+package common
+
+import (
+	"context"
+	"testing"
+
+	"github.com/spf13/cobra"
+
+	"github.com/larksuite/cli/internal/cmdutil"
+)
+
+type stubArgs struct{}
+
+func newTypedFixture() TypedShortcut[*stubArgs] {
+	return TypedShortcut[*stubArgs]{
+		Service:     "im",
+		Command:     "+demo",
+		Description: "demo",
+		AuthTypes:   []string{"user"},
+		Risk:        "write",
+		Scopes:      []string{"x"},
+	}
+}
+
+func TestTypedShortcut_Descriptors(t *testing.T) {
+	ts := newTypedFixture()
+	if ts.GetService() != "im" {
+		t.Errorf("GetService=%q", ts.GetService())
+	}
+	if ts.GetCommand() != "+demo" {
+		t.Errorf("GetCommand=%q", ts.GetCommand())
+	}
+	if ts.GetDescription() != "demo" {
+		t.Errorf("GetDescription=%q", ts.GetDescription())
+	}
+	if ts.GetRisk() != "write" {
+		t.Errorf("GetRisk=%q", ts.GetRisk())
+	}
+}
+
+func TestTypedShortcut_SatisfiesMountable(t *testing.T) {
+	var _ Mountable = newTypedFixture()
+}
+
+type adapterArgs struct {
+	Name string `flag:"name"`
+}
+
+// TestMountTyped_RegistersFlags verifies the mountTyped adapter wires the
+// binder-registered flag into cobra. Full Validate/Execute integration is
+// covered by tests_e2e/shortcuts/ (out of unit-test scope — runShortcut
+// needs a fully-initialized Factory with auth/config).
+func TestMountTyped_RegistersFlags(t *testing.T) {
+	root := &cobra.Command{Use: "root"}
+	ts := TypedShortcut[*adapterArgs]{
+		Service: "x", Command: "+demo", AuthTypes: []string{"user"},
+		Risk: "read",
+		Execute: func(ctx context.Context, args *adapterArgs, rt *RuntimeContext) error {
+			return nil
+		},
+	}
+	ts.MountWithContext(context.Background(), root, &cmdutil.Factory{})
+	sub, _, err := root.Find([]string{"+demo"})
+	if err != nil {
+		t.Fatalf("find subcommand: %v", err)
+	}
+	if sub.Flag("name") == nil {
+		t.Error("expected --name flag to be registered via binder")
+	}
+}
+
+func TestMountTyped_HelpFuncInstalled(t *testing.T) {
+	root := &cobra.Command{Use: "root"}
+	ts := TypedShortcut[*adapterArgs]{
+		Service: "x", Command: "+demo", AuthTypes: []string{"user"},
+		Risk:     "read",
+		Examples: []HelpExample{{Title: "demo", Cmd: "--name alice"}},
+		Execute:  func(ctx context.Context, args *adapterArgs, rt *RuntimeContext) error { return nil },
+	}
+	ts.MountWithContext(context.Background(), root, &cmdutil.Factory{})
+	sub, _, _ := root.Find([]string{"+demo"})
+	if sub == nil || sub.HelpFunc() == nil {
+		t.Fatal("expected typed help func installed on subcommand")
+	}
+}

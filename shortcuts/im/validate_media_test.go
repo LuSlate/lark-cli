@@ -52,12 +52,18 @@ func TestValidateMediaFlagPath(t *testing.T) {
 	}
 }
 
+// TestIMMediaFlagDescriptionsDocumentPathRestrictions asserts the legacy
+// shortcuts (still on common.Shortcut) keep the path-restriction language in
+// their --image/--file/--video/--video-cover/--audio descriptions. The
+// migrated ImMessagesSend now sources its flag help from argstype.MediaInput
+// tags in shortcuts/im/protocol.go, and the absolute-path / `..` rejection is
+// enforced by argstype.MediaInput.ValidateValue (covered by
+// shortcuts/common/argstype/media_input_test.go and safe_path_test.go).
 func TestIMMediaFlagDescriptionsDocumentPathRestrictions(t *testing.T) {
 	shortcuts := []struct {
 		name  string
 		flags []common.Flag
 	}{
-		{name: "messages-send", flags: ImMessagesSend.Flags},
 		{name: "messages-reply", flags: ImMessagesReply.Flags},
 	}
 	mediaFlags := []string{"image", "file", "video", "video-cover", "audio"}

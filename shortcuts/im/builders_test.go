@@ -349,83 +349,61 @@ func TestShortcutValidateBranches(t *testing.T) {
 		}
 	})
 
-	t.Run("ImMessagesSend conflicting target", func(t *testing.T) {
-		runtime := newTestRuntimeContext(t, map[string]string{
-			"chat-id": "oc_123",
-			"user-id": "ou_123",
-			"text":    "hello",
-		}, nil)
-		err := ImMessagesSend.Validate(context.Background(), runtime)
-		if err == nil || !strings.Contains(err.Error(), "--chat-id and --user-id are mutually exclusive") {
-			t.Fatalf("ImMessagesSend.Validate() error = %v", err)
-		}
-	})
+	// ImMessagesSend was migrated to common.TypedShortcut[*ImMessagesSendArgs].
+	// Validate now takes (ctx, *ImMessagesSendArgs, *RuntimeContext) and only
+	// covers the rules the shared framework binder does not handle yet
+	// (VideoContent paired-flag group + explicit --msg-type interplay). Rules
+	// previously hand-rolled here — OneOf "exactly one target/content" mutual
+	// exclusion, --content JSON validity — moved to the framework binder /
+	// RawContent.ValidateValue. Those are now asserted at the framework
+	// layer (shortcuts/common/binder_test.go) and from the CLI end in
+	// tests_e2e/shortcuts/. See im_messages_send_test.go for the new typed
+	// unit tests.
 
-	t.Run("ImMessagesSend invalid content json", func(t *testing.T) {
-		runtime := newTestRuntimeContext(t, map[string]string{
-			"chat-id": "oc_123",
-			"content": "{invalid",
-		}, nil)
-		err := ImMessagesSend.Validate(context.Background(), runtime)
-		if err == nil || !strings.Contains(err.Error(), "--content is not valid JSON") {
-			t.Fatalf("ImMessagesSend.Validate() error = %v", err)
-		}
-	})
-
-	t.Run("ImMessagesSend media with text", func(t *testing.T) {
-		runtime := newTestRuntimeContext(t, map[string]string{
-			"chat-id": "oc_123",
-			"text":    "hello",
-			"image":   "img_123",
-		}, nil)
-		err := ImMessagesSend.Validate(context.Background(), runtime)
-		if err == nil || !strings.Contains(err.Error(), "--image/--file/--video/--audio cannot be used with --text, --markdown, or --content") {
-			t.Fatalf("ImMessagesSend.Validate() error = %v", err)
-		}
-	})
-
-	t.Run("ImMessagesSend valid text", func(t *testing.T) {
+	t.Run("ImMessagesSend valid text passes Validate", func(t *testing.T) {
 		runtime := newTestRuntimeContext(t, map[string]string{
 			"chat-id": "oc_123",
 			"text":    "hello",
 		}, nil)
-		if err := ImMessagesSend.Validate(context.Background(), runtime); err != nil {
+		args := &ImMessagesSendArgs{}
+		if err := ImMessagesSend.Validate(context.Background(), args, runtime); err != nil {
 			t.Fatalf("ImMessagesSend.Validate() unexpected error = %v", err)
 		}
 	})
 
-	t.Run("ImMessagesSend video with video-cover passes validate", func(t *testing.T) {
-		// Previously broken: the deleted check used imageKey instead of videoCoverKey,
-		// so --video + --video-cover would incorrectly fail at Validate.
+	t.Run("ImMessagesSend video with video-cover passes Validate", func(t *testing.T) {
 		runtime := newTestRuntimeContext(t, map[string]string{
 			"chat-id":     "oc_123",
 			"video":       "file_456",
 			"video-cover": "img_789",
 		}, nil)
-		if err := ImMessagesSend.Validate(context.Background(), runtime); err != nil {
+		args := &ImMessagesSendArgs{}
+		if err := ImMessagesSend.Validate(context.Background(), args, runtime); err != nil {
 			t.Fatalf("ImMessagesSend.Validate() unexpected error = %v", err)
 		}
 	})
 
-	t.Run("ImMessagesSend video without video-cover fails validate", func(t *testing.T) {
+	t.Run("ImMessagesSend video without video-cover → group_incomplete", func(t *testing.T) {
 		runtime := newTestRuntimeContext(t, map[string]string{
 			"chat-id": "oc_123",
 			"video":   "file_456",
 		}, nil)
-		err := ImMessagesSend.Validate(context.Background(), runtime)
-		if err == nil || !strings.Contains(err.Error(), "--video-cover is required when using --video") {
-			t.Fatalf("ImMessagesSend.Validate() error = %v", err)
+		args := &ImMessagesSendArgs{}
+		err := ImMessagesSend.Validate(context.Background(), args, runtime)
+		if err == nil || !strings.Contains(err.Error(), "VideoContent requires --video-cover") {
+			t.Fatalf("ImMessagesSend.Validate() error = %v, want VideoContent requires --video-cover", err)
 		}
 	})
 
-	t.Run("ImMessagesSend video-cover without video fails validate", func(t *testing.T) {
+	t.Run("ImMessagesSend video-cover without video → group_incomplete", func(t *testing.T) {
 		runtime := newTestRuntimeContext(t, map[string]string{
 			"chat-id":     "oc_123",
 			"video-cover": "img_789",
 		}, nil)
-		err := ImMessagesSend.Validate(context.Background(), runtime)
-		if err == nil || !strings.Contains(err.Error(), "--video-cover can only be used with --video") {
-			t.Fatalf("ImMessagesSend.Validate() error = %v", err)
+		args := &ImMessagesSendArgs{}
+		err := ImMessagesSend.Validate(context.Background(), args, runtime)
+		if err == nil || !strings.Contains(err.Error(), "VideoContent requires --video") {
+			t.Fatalf("ImMessagesSend.Validate() error = %v, want VideoContent requires --video", err)
 		}
 	})
 
@@ -435,7 +413,8 @@ func TestShortcutValidateBranches(t *testing.T) {
 			"msg-type": "file",
 			"image":    "img_123",
 		}, nil)
-		err := ImMessagesSend.Validate(context.Background(), runtime)
+		args := &ImMessagesSendArgs{}
+		err := ImMessagesSend.Validate(context.Background(), args, runtime)
 		if err == nil || !strings.Contains(err.Error(), "conflicts with the inferred message type") {
 			t.Fatalf("ImMessagesSend.Validate() error = %v", err)
 		}
@@ -723,7 +702,8 @@ func TestShortcutDryRunShapes(t *testing.T) {
 			"image":           "img_123",
 			"idempotency-key": "uuid-2",
 		}, nil)
-		got := mustMarshalDryRun(t, ImMessagesSend.DryRun(context.Background(), runtime))
+		args := &ImMessagesSendArgs{IdempotencyKey: "uuid-2"}
+		got := mustMarshalDryRun(t, ImMessagesSend.DryRun(context.Background(), args, runtime))
 		if !strings.Contains(got, `"receive_id_type":"open_id"`) || !strings.Contains(got, `"msg_type":"image"`) || !strings.Contains(got, `"uuid":"uuid-2"`) || !strings.Contains(got, `\"image_key\":\"img_123\"`) {
 			t.Fatalf("ImMessagesSend.DryRun() = %s", got)
 		}
@@ -734,7 +714,8 @@ func TestShortcutDryRunShapes(t *testing.T) {
 			"chat-id": "oc_123",
 			"image":   "https://example.com/a.png",
 		}, nil)
-		got := mustMarshalDryRun(t, ImMessagesSend.DryRun(context.Background(), runtime))
+		args := &ImMessagesSendArgs{}
+		got := mustMarshalDryRun(t, ImMessagesSend.DryRun(context.Background(), args, runtime))
 		if !strings.Contains(got, `"description":"dry-run uses placeholder media keys for --image URL input; execution uploads it before sending"`) ||
 			!strings.Contains(got, `"msg_type":"image"`) ||
 			!strings.Contains(got, `\"image_key\":\"img_dryrun_upload\"`) {

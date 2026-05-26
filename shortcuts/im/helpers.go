@@ -13,6 +13,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -71,6 +72,27 @@ func validateMessageID(input string) (string, error) {
 		return "", output.ErrValidation("invalid message ID %q: must start with om_", input)
 	}
 	return input, nil
+}
+
+// isMediaKey returns true if the value looks like an existing API key rather
+// than a local file path.
+func isMediaKey(value string) bool {
+	return strings.HasPrefix(value, "img_") || strings.HasPrefix(value, "file_")
+}
+
+// validateMediaFlagPath validates a media flag value as a local file path via
+// FileIO. Empty values, URLs, and media keys are skipped (not local files).
+// The typed-primitive layer (argstype.MediaInput) handles cwd-relative path
+// safety; this loose os.Stat check stays at the shortcut layer because it
+// touches the filesystem.
+func validateMediaFlagPath(fio fileio.FileIO, flagName, value string) error {
+	if value == "" || strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://") || isMediaKey(value) {
+		return nil
+	}
+	if _, err := fio.Stat(value); err != nil && !os.IsNotExist(err) {
+		return output.ErrValidation("%s: %v", flagName, err)
+	}
+	return nil
 }
 
 // buildMediaContentFromKey builds (msgType, contentJSON) for DryRun purposes from flag values.

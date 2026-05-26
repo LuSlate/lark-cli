@@ -44,6 +44,7 @@ type RuntimeContext struct {
 	apiClientFunc func() (*client.APIClient, error) // sync.OnceValues; initialized in newRuntimeContext
 	botInfoFunc   func() (*BotInfo, error)          // sync.OnceValues; lazy bot identity from /bot/v3/info
 	larkSDK       *lark.Client                      // eagerly initialized in mountDeclarative
+	typedArgs     any                               // per-run typed Args, set by binder; consumed by DryRun/Execute
 }
 
 // ── Identity ──
@@ -1022,3 +1023,12 @@ func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f
 		})
 	}
 }
+
+// TypedArgs returns the per-run Args struct populated by the binder. Returns
+// nil for runs that didn't go through TypedShortcut[T]. Callers should
+// type-assert to the concrete *Args type.
+func (ctx *RuntimeContext) TypedArgs() any { return ctx.typedArgs }
+
+// SetTypedArgs stores the per-run Args struct. Called once by the binder
+// after bind + Normalize complete. Must not be called by user hooks.
+func (ctx *RuntimeContext) SetTypedArgs(v any) { ctx.typedArgs = v }

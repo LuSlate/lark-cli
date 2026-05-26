@@ -1,0 +1,662 @@
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
+
+package common
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/larksuite/cli/errs"
+)
+
+// fieldSpec is the binder's intermediate representation of one Args field.
+// It captures both reflection metadata and the parsed tag values so later
+// binder stages don't repeat the parsing work.
+type fieldSpec struct {
+	GoFieldName  string
+	FlagName     string
+	Description  string
+	DefaultValue string
+	EnumValues   []string
+	Required     bool
+	IsOneOfBkt   bool
+	IsGroup      bool
+	IsMaybe      bool
+	IsPtr        bool
+	OneOfTrig    bool
+	FieldType    reflect.Type
+	StructType   reflect.Type
+}
+
+// walkArgs reflects an Args struct (must be *T where T is struct) and
+// returns one fieldSpec per top-level field. Duplicate flag tags inside
+// the same Args struct panic at Mount time — cross-shortcut duplicates are
+// not checked (cobra's own per-command Add check covers that).
+func walkArgs(t reflect.Type) ([]fieldSpec, error) {
+	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+		return nil, fmt.Errorf("Args must be *struct, got %s", t)
+	}
+	st := t.Elem()
+	specs := make([]fieldSpec, 0, st.NumField())
+	seen := map[string]string{}
+	for i := 0; i < st.NumField(); i++ {
+		f := st.Field(i)
+		spec, err := parseFieldSpec(f)
+		if err != nil {
+			return nil, err
+		}
+		if spec.FlagName != "" {
+			if owner, dup := seen[spec.FlagName]; dup {
+				panic(fmt.Sprintf("duplicate flag tag %q in Args struct: fields %s and %s",
+					spec.FlagName, owner, f.Name))
+			}
+			seen[spec.FlagName] = f.Name
+		}
+		specs = append(specs, spec)
+	}
+	return specs, nil
+}
+
+// parseFieldSpec extracts the relevant tag values from one struct field.
+// Sub-struct (OneOf bucket / group) detection is delegated to caller stages;
+// here we only set flags about the field shape.
+func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
+	spec := fieldSpec{
+		GoFieldName:  f.Name,
+		FlagName:     f.Tag.Get("flag"),
+		Description:  f.Tag.Get("desc"),
+		DefaultValue: f.Tag.Get("default"),
+	}
+	if enum := f.Tag.Get("enum"); enum != "" {
+		spec.EnumValues = strings.Split(enum, ",")
+	}
+	if _, has := f.Tag.Lookup("required"); has {
+		spec.Required = true
+	}
+	if f.Tag.Get("oneof_trigger") == "true" {
+		spec.OneOfTrig = true
+	}
+	ft := f.Type
+	spec.FieldType = ft
+	if ft.Kind() == reflect.Ptr {
+		spec.IsPtr = true
+		ft = ft.Elem()
+	}
+	if ft.Kind() == reflect.Struct {
+		if maybeSet, ok := ft.FieldByName("Set"); ok && maybeSet.Type.Kind() == reflect.Bool {
+			if _, ok := ft.FieldByName("Value"); ok {
+				spec.IsMaybe = true
+				return spec, nil
+			}
+		}
+		spec.StructType = ft
+		ptr := reflect.PointerTo(ft)
+		marker := reflect.TypeOf((*OneOfMarker)(nil)).Elem()
+		if ft.Implements(marker) || ptr.Implements(marker) {
+			spec.IsOneOfBkt = true
+		} else {
+			spec.IsGroup = true
+		}
+	}
+	return spec, nil
+}
+
+// registerFlags registers cobra flags for the given specs. Sub-struct fields
+// (OneOf bucket / group) recurse into their inner fields.
+func registerFlags(cmd *cobra.Command, specs []fieldSpec) error {
+	for _, s := range specs {
+		if s.IsOneOfBkt || s.IsGroup {
+			inner, err := walkArgs(reflect.PointerTo(s.StructType))
+			if err != nil {
+				return err
+			}
+			if err := registerFlags(cmd, inner); err != nil {
+				return err
+			}
+			continue
+		}
+		if s.IsMaybe {
+			inner := s.FieldType
+			if inner.Kind() == reflect.Ptr {
+				inner = inner.Elem()
+			}
+			valType, _ := inner.FieldByName("Value")
+			if err := registerLeaf(cmd, s, valType.Type); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := registerLeaf(cmd, s, s.FieldType); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// registerLeaf registers a single primitive flag based on the underlying type.
+func registerLeaf(cmd *cobra.Command, s fieldSpec, t reflect.Type) error {
+	if s.FlagName == "" {
+		return nil
+	}
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	switch t.Kind() {
+	case reflect.Bool:
+		def := s.DefaultValue == "true"
+		cmd.Flags().Bool(s.FlagName, def, s.Description)
+	case reflect.Int, reflect.Int64:
+		def := 0
+		if s.DefaultValue != "" {
+			def, _ = strconv.Atoi(s.DefaultValue)
+		}
+		cmd.Flags().Int(s.FlagName, def, s.Description)
+	default:
+		cmd.Flags().String(s.FlagName, s.DefaultValue, s.Description)
+	}
+	if s.Required {
+		_ = cmd.MarkFlagRequired(s.FlagName)
+	}
+	return nil
+}
+
+// bindFlags writes cobra-parsed values back into the Args struct. argsVal
+// is a reflect.Value of the struct (not pointer).
+func bindFlags(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
+	for _, s := range specs {
+		if s.IsOneOfBkt || s.IsGroup {
+			continue
+		}
+		if s.IsMaybe {
+			if err := bindMaybe(cmd, argsVal, s); err != nil {
+				return err
+			}
+			continue
+		}
+		if s.FlagName == "" {
+			continue
+		}
+		if err := bindLeaf(cmd, argsVal, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func bindLeaf(cmd *cobra.Command, argsVal reflect.Value, s fieldSpec) error {
+	fv := argsVal.FieldByName(s.GoFieldName)
+	if !fv.CanSet() {
+		return nil
+	}
+	leafType := s.FieldType
+	if leafType.Kind() == reflect.Ptr {
+		leafType = leafType.Elem()
+	}
+	switch leafType.Kind() {
+	case reflect.Bool:
+		v, _ := cmd.Flags().GetBool(s.FlagName)
+		setLeaf(fv, reflect.ValueOf(v))
+	case reflect.Int, reflect.Int64:
+		v, _ := cmd.Flags().GetInt(s.FlagName)
+		setLeaf(fv, reflect.ValueOf(int64(v)).Convert(leafType))
+	default:
+		v, _ := cmd.Flags().GetString(s.FlagName)
+		setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
+	}
+	return nil
+}
+
+func setLeaf(dst reflect.Value, src reflect.Value) {
+	if dst.Kind() == reflect.Ptr {
+		ptr := reflect.New(dst.Type().Elem())
+		ptr.Elem().Set(src.Convert(dst.Type().Elem()))
+		dst.Set(ptr)
+		return
+	}
+	dst.Set(src.Convert(dst.Type()))
+}
+
+// bindBuckets allocates and populates OneOf bucket / group sub-struct fields
+// from cobra flag state. The shared bindFlags() above only writes top-level
+// leaves; this function is the framework's recursion into nested Args structs
+// so future typed shortcuts don't each have to ship a bespoke binder helper.
+//
+// Conventions:
+//   - Pointer-leaf in a bucket (e.g. *string, *argstype.ChatID): set iff
+//     cobra reports the flag was explicitly provided. nil means "variant not
+//     selected" — the framework's runFrameworkRules and runValidateValue
+//     both honor this nil/non-nil split.
+//   - Non-pointer leaf in a group (e.g. argstype.MediaInput inside
+//     VideoContent): always copy the cobra flag value back. Empty string is
+//     a valid "not provided" sentinel for group completeness checks.
+//   - Pointer-to-group / pointer-to-bucket (e.g. *VideoContent inside the
+//     MessageContent bucket): allocate iff at least one inner flag was
+//     Changed, then recurse to bind the inner fields.
+func bindBuckets(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
+	for _, s := range specs {
+		if !s.IsOneOfBkt {
+			continue
+		}
+		fv := argsVal.FieldByName(s.GoFieldName)
+		if !fv.IsValid() || !fv.CanSet() {
+			continue
+		}
+		target := fv
+		if target.Kind() == reflect.Ptr {
+			if target.IsNil() {
+				target.Set(reflect.New(s.StructType))
+			}
+			target = target.Elem()
+		}
+		inner, err := walkArgs(reflect.PointerTo(s.StructType))
+		if err != nil {
+			return err
+		}
+		if err := bindBucketInner(cmd, target, inner); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func bindBucketInner(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
+	for _, s := range specs {
+		if s.IsOneOfBkt || s.IsGroup {
+			grandSpecs, err := walkArgs(reflect.PointerTo(s.StructType))
+			if err != nil {
+				return err
+			}
+			anyChanged := false
+			for _, g := range grandSpecs {
+				if g.FlagName != "" && cmd.Flags().Changed(g.FlagName) {
+					anyChanged = true
+					break
+				}
+			}
+			if !anyChanged {
+				continue
+			}
+			fv := argsVal.FieldByName(s.GoFieldName)
+			if !fv.IsValid() || !fv.CanSet() {
+				continue
+			}
+			target := fv
+			if fv.Kind() == reflect.Ptr {
+				if fv.IsNil() {
+					fv.Set(reflect.New(s.StructType))
+				}
+				target = fv.Elem()
+			}
+			if err := bindBucketInner(cmd, target, grandSpecs); err != nil {
+				return err
+			}
+			continue
+		}
+		if s.FlagName == "" {
+			continue
+		}
+		fv := argsVal.FieldByName(s.GoFieldName)
+		if !fv.IsValid() || !fv.CanSet() {
+			continue
+		}
+		if s.IsPtr {
+			if !cmd.Flags().Changed(s.FlagName) {
+				continue
+			}
+			elemType := fv.Type().Elem()
+			ptr := reflect.New(elemType)
+			ptr.Elem().Set(bucketLeafValue(cmd, s.FlagName, elemType))
+			fv.Set(ptr)
+			continue
+		}
+		fv.Set(bucketLeafValue(cmd, s.FlagName, fv.Type()))
+	}
+	return nil
+}
+
+// bucketLeafValue reads a single cobra flag and returns it as a reflect.Value
+// convertible to targetType. It dispatches on the underlying kind so nested
+// bucket/group leaves typed as bool or int bind correctly instead of being
+// force-read through GetString (which would panic on reflect conversion of a
+// string into a numeric/bool type).
+func bucketLeafValue(cmd *cobra.Command, flagName string, targetType reflect.Type) reflect.Value {
+	kind := targetType.Kind()
+	if kind == reflect.Ptr {
+		kind = targetType.Elem().Kind()
+	}
+	switch kind {
+	case reflect.Bool:
+		v, _ := cmd.Flags().GetBool(flagName)
+		return reflect.ValueOf(v).Convert(targetType)
+	case reflect.Int, reflect.Int64:
+		v, _ := cmd.Flags().GetInt(flagName)
+		return reflect.ValueOf(int64(v)).Convert(targetType)
+	default:
+		v, _ := cmd.Flags().GetString(flagName)
+		return reflect.ValueOf(v).Convert(targetType)
+	}
+}
+
+func bindMaybe(cmd *cobra.Command, argsVal reflect.Value, s fieldSpec) error {
+	fv := argsVal.FieldByName(s.GoFieldName)
+	if !fv.CanSet() {
+		return nil
+	}
+	changed := cmd.Flags().Changed(s.FlagName)
+	setField := fv.FieldByName("Set")
+	valField := fv.FieldByName("Value")
+	setField.SetBool(changed)
+	if !changed {
+		return nil
+	}
+	switch valField.Kind() {
+	case reflect.Bool:
+		v, _ := cmd.Flags().GetBool(s.FlagName)
+		valField.SetBool(v)
+	case reflect.Int, reflect.Int64:
+		v, _ := cmd.Flags().GetInt(s.FlagName)
+		valField.SetInt(int64(v))
+	default:
+		v, _ := cmd.Flags().GetString(s.FlagName)
+		valField.SetString(v)
+	}
+	return nil
+}
+
+// runNormalize invokes the Normalize method (via reflection) on every field
+// whose type implements Normalizable[T]. The canonical value is written back.
+// Plan's static type assertion can't work because Normalizable is generic —
+// the method's return type is the typed T, not any — so we dispatch by
+// reflection on method shape.
+//
+// Local-path normalization hints are dropped at the primitive layer; only
+// non-path hints reach stderr (log safety).
+func runNormalize(ctx context.Context, rt *RuntimeContext, argsVal reflect.Value, specs []fieldSpec) error {
+	ctxType := reflect.TypeOf((*context.Context)(nil)).Elem()
+	for _, s := range specs {
+		fv := argsVal.FieldByName(s.GoFieldName)
+		if !fv.IsValid() {
+			continue
+		}
+		m := fv.MethodByName("Normalize")
+		if !m.IsValid() {
+			continue
+		}
+		mt := m.Type()
+		if mt.NumIn() != 2 || mt.NumOut() != 3 {
+			continue
+		}
+		if !ctxType.AssignableTo(mt.In(0)) || mt.In(1).Kind() != reflect.String {
+			continue
+		}
+		raw := asString(fv)
+		rets := m.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(raw)})
+		if errRet := rets[2]; !errRet.IsNil() {
+			return errRet.Interface().(error)
+		}
+		canon := rets[0]
+		if fv.CanSet() && canon.Type().AssignableTo(fv.Type()) {
+			fv.Set(canon)
+		}
+		hints, _ := rets[1].Interface().([]string)
+		if len(hints) > 0 && rt != nil && rt.Cmd != nil {
+			for _, h := range hints {
+				_, _ = rt.Cmd.ErrOrStderr().Write([]byte(h + "\n"))
+			}
+		}
+	}
+	return nil
+}
+
+func asString(fv reflect.Value) string {
+	if fv.Kind() == reflect.String {
+		return fv.String()
+	}
+	if fv.Kind() == reflect.Ptr && !fv.IsNil() {
+		return asString(fv.Elem())
+	}
+	return ""
+}
+
+// runValidateValue calls ValidateValue on every Validatable field, recursing
+// into OneOf bucket / group sub-structs so typed-primitive leaves inside
+// nested Args structs (e.g. ChatID inside MessageTarget) still get their
+// format check. Returns the first error to keep error envelopes deterministic.
+func runValidateValue(rt *RuntimeContext, argsVal reflect.Value, specs []fieldSpec) error {
+	for _, s := range specs {
+		fv := argsVal.FieldByName(s.GoFieldName)
+		if !fv.IsValid() {
+			continue
+		}
+		if s.IsOneOfBkt || s.IsGroup {
+			structVal := fv
+			if structVal.Kind() == reflect.Ptr {
+				if structVal.IsNil() {
+					continue
+				}
+				structVal = structVal.Elem()
+			}
+			// Some buckets/groups implement Validatable themselves (e.g.
+			// RawContent does JSON validity in its ValidateValue). Call the
+			// struct-level check BEFORE recursing into inner fields so the
+			// cross-field rule fires even when none of the inner leaves are
+			// individually Validatable.
+			if fv.CanInterface() {
+				if val, ok := fv.Interface().(Validatable); ok {
+					if err := val.ValidateValue(rt, s.FlagName); err != nil {
+						return err
+					}
+				}
+			}
+			inner, err := walkArgs(reflect.PointerTo(s.StructType))
+			if err != nil {
+				return err
+			}
+			if err := runValidateValue(rt, structVal, inner); err != nil {
+				return err
+			}
+			continue
+		}
+		// Leaf field. Skip nil pointers (variant not selected).
+		if fv.Kind() == reflect.Ptr && fv.IsNil() {
+			continue
+		}
+		if !fv.CanInterface() {
+			continue
+		}
+		v := fv.Interface()
+		if val, ok := v.(Validatable); ok {
+			if err := val.ValidateValue(rt, s.FlagName); err != nil {
+				return err
+			}
+			continue
+		}
+		// Pointer leaf: dereference and re-check (for value-receiver
+		// ValidateValue methods on the pointee type).
+		if fv.Kind() == reflect.Ptr {
+			if val, ok := fv.Elem().Interface().(Validatable); ok {
+				if err := val.ValidateValue(rt, s.FlagName); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// runFrameworkRules enforces OneOf / group / required / enum invariants and
+// returns a *errs.ValidationError on the first violation. Each rule's
+// stderr-facing param is the Args field name (not the inner struct type name),
+// so OneOf bucket errors mention the user-visible field (e.g. "Target") rather
+// than the implementation-detail type name ("MessageTarget").
+//
+// Recurses into OneOf bucket sub-structs so a nested group (e.g. VideoContent
+// inside MessageContent) still gets its checkGroup fire automatically.
+func runFrameworkRules(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
+	for _, s := range specs {
+		fv := argsVal.FieldByName(s.GoFieldName)
+		switch {
+		case s.IsOneOfBkt:
+			if err := checkOneOf(cmd, fv, s); err != nil {
+				return err
+			}
+			structVal := fv
+			if structVal.Kind() == reflect.Ptr {
+				if structVal.IsNil() {
+					continue
+				}
+				structVal = structVal.Elem()
+			}
+			inner, err := walkArgs(reflect.PointerTo(s.StructType))
+			if err != nil {
+				return err
+			}
+			if err := runFrameworkRules(cmd, structVal, inner); err != nil {
+				return err
+			}
+		case s.IsGroup:
+			if err := checkGroup(cmd, fv, s); err != nil {
+				return err
+			}
+		default:
+			if err := checkEnumAndRequired(cmd, fv, s); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// checkOneOf counts how many variant trigger flags the user set inside the
+// bucket struct. Exactly one is required.
+func checkOneOf(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
+	inner, err := walkArgs(reflect.PointerTo(s.StructType))
+	if err != nil {
+		return err
+	}
+	var triggered []string
+	for _, child := range inner {
+		if isTrigger(child) {
+			if cmd.Flags().Changed(child.FlagName) {
+				triggered = append(triggered, "--"+child.FlagName)
+			}
+			continue
+		}
+		if child.IsGroup || child.IsOneOfBkt {
+			grand, _ := walkArgs(reflect.PointerTo(child.StructType))
+			for _, g := range grand {
+				if g.OneOfTrig && cmd.Flags().Changed(g.FlagName) {
+					triggered = append(triggered, "--"+g.FlagName)
+					break
+				}
+			}
+		}
+	}
+	switch len(triggered) {
+	case 0:
+		return &errs.ValidationError{
+			Problem: errs.Problem{
+				Category: errs.CategoryValidation,
+				Subtype:  errs.SubtypeShortcutOneOfMissing,
+				Message:  "exactly one " + s.GoFieldName + " variant must be provided",
+			},
+			Param: s.GoFieldName,
+		}
+	case 1:
+		return nil
+	default:
+		return &errs.ValidationError{
+			Problem: errs.Problem{
+				Category: errs.CategoryValidation,
+				Subtype:  errs.SubtypeShortcutOneOfMultiple,
+				Message:  "choose only one of " + strings.Join(triggered, ", "),
+			},
+			Param: s.GoFieldName,
+		}
+	}
+}
+
+// isTrigger reports whether the field is a top-level pointer-variant in a
+// OneOf bucket (i.e. its flag itself decides selection).
+func isTrigger(s fieldSpec) bool {
+	if s.OneOfTrig {
+		return true
+	}
+	return s.IsPtr && !s.IsOneOfBkt && !s.IsGroup
+}
+
+// checkGroup ensures all fields of a group sub-struct were provided when
+// the group's trigger (or first field) was set.
+func checkGroup(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
+	inner, err := walkArgs(reflect.PointerTo(s.StructType))
+	if err != nil {
+		return err
+	}
+	anySet := false
+	var missing []string
+	for _, child := range inner {
+		if child.FlagName == "" {
+			continue
+		}
+		if cmd.Flags().Changed(child.FlagName) {
+			anySet = true
+			continue
+		}
+		// Flags with a default value are never "missing" — the default is a
+		// valid implicit value (e.g. RawContent.MsgType defaults to "text").
+		// Only flags without defaults need explicit user input when the
+		// group is partially populated.
+		if child.DefaultValue != "" {
+			continue
+		}
+		missing = append(missing, "--"+child.FlagName)
+	}
+	if anySet && len(missing) > 0 {
+		// Group errors use the inner struct TYPE name (e.g. "VideoContent"),
+		// not the Args field name (e.g. "Video"). This matches the spec's
+		// "shortcut_group_incomplete" envelope contract — callers identify
+		// the *kind* of group that is incomplete, which is the type name.
+		// OneOf bucket errors use the field name instead (see checkOneOf).
+		return &errs.ValidationError{
+			Problem: errs.Problem{
+				Category: errs.CategoryValidation,
+				Subtype:  errs.SubtypeShortcutGroupIncomplete,
+				Message:  s.StructType.Name() + " requires " + strings.Join(missing, ", "),
+			},
+			Param: s.StructType.Name(),
+		}
+	}
+	return nil
+}
+
+// checkEnumAndRequired enforces enum membership. Required-presence is already
+// enforced at cobra level via MarkFlagRequired, so this only adds the enum
+// check.
+func checkEnumAndRequired(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
+	if len(s.EnumValues) == 0 {
+		return nil
+	}
+	v, _ := cmd.Flags().GetString(s.FlagName)
+	if v == "" && s.DefaultValue == "" {
+		return nil
+	}
+	for _, allowed := range s.EnumValues {
+		if v == allowed {
+			return nil
+		}
+	}
+	return &errs.ValidationError{
+		Problem: errs.Problem{
+			Category: errs.CategoryValidation,
+			Subtype:  errs.SubtypeInvalidArgument,
+			Message:  "--" + s.FlagName + ": value must be one of " + strings.Join(s.EnumValues, "|"),
+		},
+		Param: s.FlagName,
+	}
+}

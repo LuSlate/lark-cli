@@ -704,6 +704,9 @@ func TestShortcuts(t *testing.T) {
 	for _, shortcut := range Shortcuts() {
 		commands = append(commands, shortcut.Command)
 	}
+	for _, m := range TypedShortcuts() {
+		commands = append(commands, m.GetCommand())
+	}
 
 	want := []string{
 		"+chat-create",
@@ -715,13 +718,16 @@ func TestShortcuts(t *testing.T) {
 		"+messages-reply",
 		"+messages-resources-download",
 		"+messages-search",
-		"+messages-send",
+		// +messages-send moved from legacy Shortcuts() to TypedShortcuts()
+		// as part of the shortcut-protocol pilot; the unified list still
+		// covers it.
 		"+threads-messages-list",
 		"+flag-create",
 		"+flag-cancel",
 		"+flag-list",
+		"+messages-send",
 	}
 	if !reflect.DeepEqual(commands, want) {
-		t.Fatalf("Shortcuts() commands = %#v, want %#v", commands, want)
+		t.Fatalf("Shortcuts()+TypedShortcuts() commands = %#v, want %#v", commands, want)
 	}
 }
