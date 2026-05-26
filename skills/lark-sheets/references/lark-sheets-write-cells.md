@@ -124,6 +124,18 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 
 **判断是不是"新行"**：写入 range 超出 `+csv-get` 返回的 `current_region` 右 / 下边界（如 `current_region=A1:H10`、写 `A11:H11`）即新行，必须按上述做法补边框。
 
+## 富文本单元格：超链接 / @人 / @文档（`rich_text`）
+
+带显示文本的超链接、@人、@文档这类富内容**必须**走 `+cells-set` 的 `rich_text` 字段（`cells[].rich_text` 数组，每段一个对象、带 `type`），**不能**直接传普通字符串——纯字符串只会被当作纯文本存进单元格。完整字段跑 `lark-cli sheets +cells-set --print-schema --flag-name cells`，常用段类型：
+
+- **超链接（带显示文本）**：`{"type":"link","text":"飞书","link":"https://www.feishu.cn"}`。纯 URL 不需要 `rich_text`，直接写普通字符串即可。
+- **@人**：`{"type":"mention","mention_token":"<userId>","notify":false}`。**仅支持同租户用户，单次写入最多 50 人。** `notify` **默认 `true`**（会给被 @ 的人发通知），不想发务必显式传 `false`。
+- **@文档**：同样 `"type":"mention"`，`mention_token` 传文档 token（如 `shtXXX`）。
+
+`mention_type`（类型编号）等可选字段以 `--print-schema` 输出为准。
+
+> ⚠️ `rich_text` 一旦设置会**忽略**同一 cell 的 `value`；它与 `formula` / `multiple_values` 三者只能选其一作为内容字段（可叠加 `cell_styles` / `note` 等）。
+
 ## Dropdown 选项 + 配色（`+dropdown-set` / `+dropdown-update`）
 
 ### 选项怎么来：`--options` 与 `--source-range` 二选一

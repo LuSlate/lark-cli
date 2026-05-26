@@ -77,6 +77,8 @@ metadata:
 **公共四件套** = `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`，分成两组 XOR，**每组都必须给且只能给一个**（XOR = 二选一必填，不是"可选"）：
 
 1. **spreadsheet 定位（必填）**：`--url` 与 `--spreadsheet-token` 二选一，**必须给其中之一**。两个都不给 → 校验报错 `specify at least one of --url or --spreadsheet-token`；两个都给 → 互斥冲突。
+   - **`--url` 只解析 `/sheets/` 与 `/spreadsheets/` 两种链接**（从路径里抽出 token；也可以直接把裸 token 传给 `--spreadsheet-token`）。其它形态的链接不会被解析成表格 token。
+   - ⚠️ **`/wiki/` 知识库链接不能直接当表格定位用**：wiki 链接背后可能是电子表格，也可能是文档 / 多维表格等其它类型，`--url` **不会**自动把 wiki token 解析成 spreadsheet token，直接传会失败。必须先把它解析成真实文档 token —— `lark-cli wiki +node-get --node-token "<wiki 链接或 token>"`，确认返回的 `obj_type` 为 `sheet` 后，取其 `obj_token` 作为 `--spreadsheet-token` 传入（解析细节见 [`../lark-wiki/SKILL.md`](../lark-wiki/SKILL.md)）。
    - **例外**：`+workbook-create` 是新建一个还不存在的表格，**不接受任何 spreadsheet / sheet 定位 flag**（只有 `--title` / `--folder-token` / `--headers` / `--values`）。
 2. **sheet 定位（公共四件套 shortcut 必填）**：`--sheet-id` 与 `--sheet-name` 二选一，**必须给其中之一**。两个都不给 → 校验报错 `specify at least one of --sheet-id or --sheet-name`。
    - ⚠️ **`--range` 里的 `Sheet1!` 前缀不能替代 sheet 定位**：即使写了 `--range "Sheet1!A1:B2"`，仍**必须**额外传 `--sheet-id` 或 `--sheet-name`，否则照样报上面的错。
