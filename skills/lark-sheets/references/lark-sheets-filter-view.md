@@ -59,7 +59,7 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--view-id` | string | required | 目标筛选视图 reference_id |
-| `--properties` | string + File + Stdin（复合 JSON） | required | 筛选视图规则 JSON，含 `rules?` 和 `filtered_columns?`。`range` 和 `view_name` 是独立 flag；至少传 `--properties.rules` / `--range` / `--view-name` 之一 |
+| `--properties` | string + File + Stdin（复合 JSON） | required | 筛选视图规则 JSON，含 `rules?` 和 `filtered_columns?`；update 是整组覆盖式（先 `+filter-view-list` 回读再 patch；传空 `rules: []` 清空）。`range` 和 `view_name` 是独立 flag |
 | `--range` | string | optional | 筛选视图作用的单元格范围（A1 表示法，如 `A1:F1000`）；优先级高于 `--properties` 中同名字段；update 时省略表示保留当前 range |
 | `--view-name` | string | optional | 筛选视图名称；create 不传时系统自动分配，update 不传时保留原名；优先级高于 `--properties` 中同名字段 |
 
@@ -113,7 +113,7 @@ lark-cli sheets +filter-view-create --url "..." --sheet-id "$SID" \
 
 ### `+filter-view-update`
 
-> ⚠️ update 是 patch：`--view-name` / `--range` / `--properties.rules` 任传一个或多个；至少传一个。先 `+filter-view-list` 读取当前 rules 再回写差异。重复 `+filter-view-create` 不会复用 view_id，会产生新视图。
+> ⚠️ update 是整组覆盖（PUT 语义）：`--properties` **必传**，未在请求里出现的 rules / filtered_columns 会被清空。如要保留已有 rules，先 `+filter-view-list` 读回再合并写回。`--range` 变更会丢弃已有筛选规则属预期行为（rules 跟当前 range 绑定）。重复 `+filter-view-create` 不会复用 view_id，会产生新视图。
 
 ### `+filter-view-delete`
 
@@ -121,6 +121,6 @@ lark-cli sheets +filter-view-create --url "..." --sheet-id "$SID" \
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`+filter-view-create` 校验 `--range` 起始行为表头（第一行）；`+filter-view-update` 必须先 `+filter-view-list` 确认 view 存在，且 `--view-name` / `--range` / `--properties` 至少传一个；`+filter-view-delete` 强制 `--yes` 或 `--dry-run`。
+- `Validate`：XOR 公共四件套；`+filter-view-create` 校验 `--range` 起始行为表头（第一行）；`+filter-view-update` 必须先 `+filter-view-list` 确认 view 存在，`--properties` 必传（整组覆盖式）；`+filter-view-delete` 强制 `--yes` 或 `--dry-run`。
 - `DryRun`：输出"将要 POST/PATCH/DELETE 的 view 请求模板"，零网络副作用；`--sheet-name` 在 dry-run 输出里生成为 `<resolve:Sheet1>` 占位符。
 - `Execute`：写后调用 `+filter-view-list --view-id <new>` 回读，envelope.meta.verification 给出当前 range + rules 与请求体的对比。

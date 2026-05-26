@@ -4048,7 +4048,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Filter-view rule JSON: `rules?`, `filtered_columns?`. `range` and `view_name` are separate flags; pass at least one of `--properties.rules` / `--range` / `--view-name`",
+        "desc": "Filter-view rule JSON: `rules?`, `filtered_columns?`; update overwrites the entire rule set (read back with `+filter-view-list` first, then patch; pass `rules: []` to clear). `range` and `view_name` are separate flags",
         "input": [
           "file",
           "stdin"
