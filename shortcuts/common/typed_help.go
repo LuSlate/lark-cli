@@ -21,7 +21,7 @@ import (
 // we only override per-command via cmd.SetHelpFunc.
 //
 // Section titles use the Args struct's field name (e.g. "TARGET", "CONTENT"),
-// not the inner Go type name (e.g. "MESSAGETARGET"), so the help mirrors the
+// not the inner Go type name behind the field, so the help mirrors the
 // user-visible variable name rather than an implementation detail.
 func buildTypedHelp(specs []fieldSpec, examples []HelpExample) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, _ []string) {
@@ -43,8 +43,8 @@ func buildTypedHelp(specs []fieldSpec, examples []HelpExample) func(*cobra.Comma
 
 // renderOneOfSections walks each OneOf bucket and prints "CHOOSE ONE <FIELD>:"
 // followed by every flag inside the bucket — including flags inside nested
-// groups (e.g. VideoContent.Cover under VideoContent.File) and nested raw-
-// content variants (RawContent.JSON / RawContent.MsgType).
+// groups (a paired group's companion flag under its trigger) and nested
+// raw-content variants (a raw-JSON variant's body + msg-type flags).
 func renderOneOfSections(w io.Writer, specs []fieldSpec, rendered map[string]struct{}) {
 	for _, s := range specs {
 		if !s.IsOneOfBkt {
@@ -62,9 +62,10 @@ func renderOneOfSections(w io.Writer, specs []fieldSpec, rendered map[string]str
 // inside a nested group renders at the parent's indent (it IS the variant
 // selector, not a companion). Non-trigger leaves with a default value also
 // render at parent indent (a default makes them "optional companions" rather
-// than required follow-ons — see RawContent.MsgType). Only non-trigger leaves
-// WITHOUT a default render at parent+2 indent, signaling "you must supply
-// this together with the trigger" (see VideoContent.Cover under --video).
+// than required follow-ons — e.g. an enum flag with a default). Only
+// non-trigger leaves WITHOUT a default render at parent+2 indent, signaling
+// "you must supply this together with the trigger" (e.g. a required companion
+// flag under its trigger flag).
 func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered map[string]struct{}) {
 	for _, child := range specs {
 		if child.IsGroup || child.IsOneOfBkt {

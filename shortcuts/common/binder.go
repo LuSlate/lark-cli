@@ -232,11 +232,11 @@ func setLeaf(dst reflect.Value, src reflect.Value) {
 //     cobra reports the flag was explicitly provided. nil means "variant not
 //     selected" — the framework's runFrameworkRules and runValidateValue
 //     both honor this nil/non-nil split.
-//   - Non-pointer leaf in a group (e.g. argstype.MediaInput inside
-//     VideoContent): always copy the cobra flag value back. Empty string is
-//     a valid "not provided" sentinel for group completeness checks.
-//   - Pointer-to-group / pointer-to-bucket (e.g. *VideoContent inside the
-//     MessageContent bucket): allocate iff at least one inner flag was
+//   - Non-pointer leaf in a group (e.g. a typed-primitive field inside a
+//     paired group struct): always copy the cobra flag value back. Empty
+//     string is a valid "not provided" sentinel for group completeness checks.
+//   - Pointer-to-group / pointer-to-bucket (a nested group/bucket pointer
+//     inside an outer OneOf bucket): allocate iff at least one inner flag was
 //     Changed, then recurse to bind the inner fields.
 func bindBuckets(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
 	for _, s := range specs {
@@ -426,8 +426,9 @@ func asString(fv reflect.Value) string {
 
 // runValidateValue calls ValidateValue on every Validatable field, recursing
 // into OneOf bucket / group sub-structs so typed-primitive leaves inside
-// nested Args structs (e.g. ChatID inside MessageTarget) still get their
-// format check. Returns the first error to keep error envelopes deterministic.
+// nested Args structs (e.g. a typed ID primitive inside a OneOf bucket) still
+// get their format check. Returns the first error to keep error envelopes
+// deterministic.
 func runValidateValue(rt *RuntimeContext, argsVal reflect.Value, specs []fieldSpec) error {
 	for _, s := range specs {
 		fv := argsVal.FieldByName(s.GoFieldName)
@@ -442,10 +443,10 @@ func runValidateValue(rt *RuntimeContext, argsVal reflect.Value, specs []fieldSp
 				}
 				structVal = structVal.Elem()
 			}
-			// Some buckets/groups implement Validatable themselves (e.g.
-			// RawContent does JSON validity in its ValidateValue). Call the
-			// struct-level check BEFORE recursing into inner fields so the
-			// cross-field rule fires even when none of the inner leaves are
+			// Some buckets/groups implement Validatable themselves (e.g. a
+			// raw-JSON variant that checks JSON validity in its ValidateValue).
+			// Call the struct-level check BEFORE recursing into inner fields so
+			// the cross-field rule fires even when none of the inner leaves are
 			// individually Validatable.
 			if fv.CanInterface() {
 				if val, ok := fv.Interface().(Validatable); ok {
@@ -494,10 +495,10 @@ func runValidateValue(rt *RuntimeContext, argsVal reflect.Value, specs []fieldSp
 // returns a *errs.ValidationError on the first violation. Each rule's
 // stderr-facing param is the Args field name (not the inner struct type name),
 // so OneOf bucket errors mention the user-visible field (e.g. "Target") rather
-// than the implementation-detail type name ("MessageTarget").
+// than the implementation-detail type name behind it.
 //
-// Recurses into OneOf bucket sub-structs so a nested group (e.g. VideoContent
-// inside MessageContent) still gets its checkGroup fire automatically.
+// Recurses into OneOf bucket sub-structs so a nested group inside a bucket
+// still gets its checkGroup fire automatically.
 func runFrameworkRules(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
 	for _, s := range specs {
 		fv := argsVal.FieldByName(s.GoFieldName)
@@ -609,7 +610,7 @@ func checkGroup(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
 			continue
 		}
 		// Flags with a default value are never "missing" — the default is a
-		// valid implicit value (e.g. RawContent.MsgType defaults to "text").
+		// valid implicit value (e.g. an enum flag that defaults to a value).
 		// Only flags without defaults need explicit user input when the
 		// group is partially populated.
 		if child.DefaultValue != "" {
@@ -618,8 +619,8 @@ func checkGroup(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
 		missing = append(missing, "--"+child.FlagName)
 	}
 	if anySet && len(missing) > 0 {
-		// Group errors use the inner struct TYPE name (e.g. "VideoContent"),
-		// not the Args field name (e.g. "Video"). This matches the spec's
+		// Group errors use the inner struct TYPE name (the group struct's own
+		// name), not the Args field name. This matches the spec's
 		// "shortcut_group_incomplete" envelope contract — callers identify
 		// the *kind* of group that is incomplete, which is the type name.
 		// OneOf bucket errors use the field name instead (see checkOneOf).

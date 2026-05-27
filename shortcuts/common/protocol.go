@@ -41,8 +41,9 @@ type OneOfMarker interface {
 	OneOf()
 }
 
-// Validatable is implemented by typed primitives (and may be by RawContent-
-// style sub-structs) that own their format check. The binder calls
+// Validatable is implemented by typed primitives (and may be by sub-structs
+// that validate a composite value, e.g. a raw JSON body) that own their
+// format check. The binder calls
 // ValidateValue per field after Normalize. Returning an error must produce
 // a *errs.ValidationError so the stderr envelope carries type/subtype/param.
 type Validatable interface {

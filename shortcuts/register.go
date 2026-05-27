@@ -59,6 +59,10 @@ func IsShortcutServiceAvailable(service string, brand core.LarkBrand) bool {
 // it. The slice element type is ShortcutDescriptor so read-only consumers
 // (auth login, scope hint, shortcuts.json generator) can read metadata without
 // caring about which concrete implementation backs each entry.
+//
+// Only legacy shortcuts are registered today; the typed track stays wired
+// (ShortcutDescriptor / Mountable dispatch + buildTypedHelp) but currently has
+// no domain caller.
 var allShortcuts []common.ShortcutDescriptor
 
 // addLegacy boxes a legacy []common.Shortcut into the descriptor slice. We use
@@ -71,21 +75,12 @@ func addLegacy(list []common.Shortcut) {
 	}
 }
 
-// addTyped boxes a []common.Mountable produced by domain TypedShortcuts() into
-// the descriptor slice. TypedShortcut[T] satisfies Mountable directly.
-func addTyped(list []common.Mountable) {
-	for _, m := range list {
-		allShortcuts = append(allShortcuts, m)
-	}
-}
-
 func init() {
 	addLegacy(apps.Shortcuts())
 	addLegacy(calendar.Shortcuts())
 	addLegacy(doc.Shortcuts())
 	addLegacy(drive.Shortcuts())
 	addLegacy(im.Shortcuts())
-	addTyped(im.TypedShortcuts())
 	addLegacy(contact_shortcuts.Shortcuts())
 	addLegacy(sheets.Shortcuts())
 	addLegacy(base.Shortcuts())
