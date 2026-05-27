@@ -80,8 +80,9 @@ lark-cli sheets +cells-search --spreadsheet-token shtXXX --sheet-id "$SID" \
 
 输出契约（envelope.data）：
 
-- `matched_cells` — 命中 cell 列表，每条含 `cell`（A1）+ `value` + `sheet_id`
+- `matches` — 命中 cell 列表，每条含 `address`（A1）+ `value` + `sheet_id`
 - `total_matches` — 匹配总数
+- `has_more` / `next_offset` — 分页游标（命中数超过单页上限时用于继续读取）
 
 ### `+cells-replace`
 
@@ -107,4 +108,4 @@ lark-cli sheets +cells-replace --url "https://example.feishu.cn/sheets/shtXXX" \
 
 - `Validate`：XOR 公共四件套；`--find` 非空；正则模式下 `--find` 必须是合法正则。
 - `DryRun`：`+cells-search` 输出请求模板；`+cells-replace` 额外返回预估替换数（`would_replace_count`）。
-- `Execute`：写后自动回读匹配范围抽样验证，`envelope.meta.verification` 给出"预估替换数 vs 实际替换数"对比。
+- `Execute`：写后不自动回读；如需确认，自行用 `+cells-search` 复查旧值是否已不再命中。

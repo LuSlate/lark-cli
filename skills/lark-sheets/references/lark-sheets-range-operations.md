@@ -245,8 +245,8 @@ lark-cli sheets +cols-resize --url "..." --sheet-id "$SID" --start 0 --end 5 --t
 ### `+range-fill`
 
 ```bash
-# 用 A1:A2 的序列规律自动填充到 A1:A100
-lark-cli sheets +range-fill --url "..." --sheet-id "$SID" --source-range "A1:A2" --target-range "A1:A100" --series-type auto
+# 用 A1:A2 的序列规律向下填充到 A3:A100（target 区域不能与 source 重叠，否则后端报 source overlaps destination）
+lark-cli sheets +range-fill --url "..." --sheet-id "$SID" --source-range "A1:A2" --target-range "A3:A100" --series-type auto
 ```
 
 ### `+range-sort`
@@ -260,4 +260,4 @@ lark-cli sheets +range-sort --url "..." --sheet-id "$SID" --range "A1:E100" --ha
 
 - `Validate`：XOR 公共四件套；`+cells-clear` 强制 `--yes` 或 `--dry-run`；`+range-*` 校验源 / 目标 range 在同一 spreadsheet；`+range-sort` 的 `--sort-keys` 必须合法 JSON 数组且 col 都在 `--range` 内；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 会被忽略（传了无害）；`+cols-resize.--type` 不接受 `auto`（只行高支持自适应）。
 - `DryRun`：所有写操作输出"将要 PATCH 的 range + 受影响 cell 数估算"。
-- `Execute`：写后调用 `+cells-get --range <影响范围>` 抽样回读对比，envelope.meta.verification 沉淀对比结果。
+- `Execute`：写后不自动回读；如需确认，自行调用 `+cells-get --range <影响范围>` 抽样比对。

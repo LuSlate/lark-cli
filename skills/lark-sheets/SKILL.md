@@ -114,7 +114,7 @@ lark-cli sheets <shortcut> <workbook 定位> <sheet 定位> <其它 flag>
 ### flag 内容类型与输出约定（术语速记）
 
 - flag 表里 JSON 类入参标三类：**复合 JSON** = 深层嵌套对象（用 `--print-schema` 取完整结构）；**简单 JSON** = 一维 / 二维标量数组（如 `["sheet1!A1:B2",...]` / `[["alice",95]]`，结构简单无需 print-schema）；**非 JSON 文本** = 原样文本（如 CSV）。`--print-schema` 只对**复合 JSON** flag 有效（同一 shortcut 的简单 JSON flag 如 `--colors` 不在此列）。
-- **envelope**：所有 shortcut 返回统一外层结构 `{ok, identity, data, ...}`。正文里 `envelope.data` 指业务数据层（如 `+csv-get` 的 `annotated_csv`）；`envelope.meta.verification` 指写操作执行后 CLI 自动回读、给出的"预期 vs 实际"对比。
+- **envelope**：所有 shortcut 返回统一外层结构 `{ok, identity, data, ...}`。正文里 `envelope.data` 指业务数据层（如 `+csv-get` 的 `annotated_csv`）；写操作不会自动回读，如需校验请自行调用对应的 `+*-list` / `+*-get` / `+cells-get`。
 
 ## 复合 JSON / 大入参：优先 stdin
 

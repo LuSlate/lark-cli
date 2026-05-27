@@ -314,6 +314,6 @@ lark-cli sheets +chart-delete --url "https://example.feishu.cn/sheets/shtXXX" --
 
 - `Validate`：XOR 公共四件套；`+chart-create` / `+chart-update` 的 `--properties` 必须能解析为合法 JSON；`+chart-delete`（high-risk-write）校验 `--yes` 或 `--dry-run` 至少一个。
 - `DryRun`：`+chart-create` / `+chart-update` 输出"将要 POST 的 body 模板"；`+chart-delete` 输出"将要删除的 chart_id 及隶属 sheet"，零网络副作用。
-- `Execute`：写操作执行后自动调用 `+chart-list` 回读对比，记录到 `envelope.meta.verification`，便于上层根据回读结果判定是否符合预期。
+- `Execute`：写操作执行后不自动回读；如需确认，自行调用 `+chart-list` 比对结果。
 
 > `+chart-create` / `+chart-update` 是 write 级别，按需可用 `--dry-run` 预览，不要求 `--yes`。只有 `+chart-delete`（high-risk-write）必须 `--yes`。

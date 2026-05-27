@@ -142,7 +142,7 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 
 ### `+workbook-info`
 
-输出契约：返回 `sheets[]`，每个含 `sheet_id` / `title` / `row_count` / `column_count` / `frozen_row_count` / `frozen_col_count` / `index` / `hidden`。是操作飞书表格的第一步——任何后续 sheet 级动作都需要先拿这里的 sheet_id。
+输出契约：返回 `sheets[]`，每个含 `sheet_id` / `sheet_name` / `row_count` / `column_count` / `index` / `is_hidden`，以及计数字段 `merged_cells_count` / `chart_count` / `pivot_table_count` / `float_image_count`（无 `frozen_*` 字段，冻结信息请用 `+sheet-info` 读取）。是操作飞书表格的第一步——任何后续 sheet 级动作都需要先拿这里的 sheet_id。
 
 ### `+sheet-create`
 
@@ -194,4 +194,4 @@ lark-cli sheets +sheet-set-tab-color --url "..." --sheet-id "$SID" --color "#FF0
 
 - `Validate`：XOR 公共四件套；`+sheet-create` 校验 `--title` 非空、`--row-count` ≤ 50000、`--col-count` ≤ 200；`+sheet-delete` 必须 `--yes` 或 `--dry-run`。
 - `DryRun`：`+sheet-*` 写操作输出"将要 PATCH 的 sheet metadata"；`--sheet-name` 在 dry-run 输出里生成为 `<resolve:Sheet1>` 占位符，不实际解析为 sheet-id。
-- `Execute`：所有写操作执行后自动调用 `+workbook-info` 回读，envelope.meta.verification 包含目标 sheet 的新状态。
+- `Execute`：写操作不自动回读；如需确认目标 sheet 的新状态，自行调用 `+workbook-info`。

@@ -174,4 +174,4 @@ lark-cli sheets +cond-format-delete --url "..." --sheet-id "$SID" --rule-id "$RU
 
 - `Validate`：XOR 公共四件套；`--rule-type` / `--ranges` 必填；`--properties` 必须能解析为合法 JSON；按 `--rule-type` 检查必填子字段（`cellIs` 需 `attrs.operator` + `attrs.value`、`expression` 需 `attrs.formula`、`colorScale` 需 `min/mid/max` 配色等）；`+cond-format-delete` 强制 `--yes` 或 `--dry-run`。
 - `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 conditional_format 请求模板"。
-- `Execute`：写后调用 `+cond-format-list --rule-id <id>` 回读，envelope.meta.verification 给出规则 / 范围 / 样式对比。
+- `Execute`：写后不自动回读；如需确认，自行调用 `+cond-format-list --rule-id <id>` 比对规则 / 范围 / 样式。

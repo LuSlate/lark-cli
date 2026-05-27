@@ -157,6 +157,6 @@ lark-cli sheets +pivot-delete --url "..." --sheet-id "$SID" --pivot-table-id "$P
 
 - `Validate`：XOR 公共四件套；`+pivot-create` 的 `--source` 必填且必须含表头行；`--properties` 中 `rows` / `columns` / `values` 至少非空之一；`+pivot-delete` 强制 `--yes` 或 `--dry-run`。
 - `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 pivot 请求模板"+ 预估输出尺寸（行数 × 列数）。
-- `Execute`：写后调用 `+pivot-list --pivot-table-id <id>` 回读 + `+csv-get` 抽样读透视产物，envelope.meta.verification 给出实际输出尺寸 + 总计行位置。
+- `Execute`：写后不自动回读；如需确认，自行调用 `+pivot-list --pivot-table-id <id>` 并用 `+csv-get` 抽样读透视产物核对输出尺寸 + 总计行位置。
 
 > ⚠️ pivot 输出包含总计 / 小计行；后续 chart 引用 pivot 时，`snapshot.data.refs` 必须排除这些行（见 `lark-sheets-chart` 的「⚠️ chart 数据源引用 pivot 时必须排除总计行」段）。

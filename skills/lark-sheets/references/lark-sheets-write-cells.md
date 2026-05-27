@@ -426,4 +426,4 @@ lark-cli sheets +csv-put --spreadsheet-token shtXXX --sheet-id "$SID" \
 
 - `Validate`：XOR 公共四件套；`+cells-set` 的 `--cells` 必须能解析为 JSON 二维矩阵且行列数与 `--range` 完全一致；`+cells-set-style` 的样式 flag 至少一个非空（或带 `--border-styles`）；`+cells-set-image` 的 `--range` 必须是单 cell（起止 cell 相同）；`+csv-put` 的 `--csv` 必须能按 RFC 4180 解析；防爆参数上限校验。
 - `DryRun`：输出目标 range + 推断尺寸 + 是否覆盖非空 cell 警告，零网络副作用。
-- `Execute`：写后调用 `+cells-get --range <写入区域> --include value,formula` 抽样回读，envelope.meta.verification 给出"预期 vs 实际"对比。
+- `Execute`：写后不自动回读；如需确认，自行调用 `+cells-get --range <写入区域> --include value,formula` 抽样核对。

@@ -207,4 +207,4 @@ lark-cli sheets +dim-freeze --url "..." --sheet-id "$SID" --dimension row --coun
 
 - `Validate`：XOR 公共四件套；`--start ≤ --end`；`+dim-delete` 强制 `--yes` 或 `--dry-run`；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 会被忽略（传了无害）；`+rows-resize` / `+cols-resize` 的行 vs 列 `--type` 差异详见 `lark-sheets-range-operations.md`。
 - `DryRun`：写操作输出"将要 PATCH 的 dimension 区间 + 目标参数"。
-- `Execute`：写后自动调用 `+sheet-info --include row_heights,col_widths,hidden_rows,hidden_cols,groups,frozen` 回读对比，envelope.meta.verification 给出受影响的范围。
+- `Execute`：写后不自动回读；如需确认，自行调用 `+sheet-info --include row_heights,col_widths,hidden_rows,hidden_cols,groups,frozen` 查看受影响的范围。
