@@ -42,9 +42,20 @@ func TestImMessagesSend_Metadata(t *testing.T) {
 	if len(gotAuth) != len(wantAuth) {
 		t.Errorf("GetAuthTypes = %v, want set %v", gotAuth, wantAuth)
 	}
+	gotSet := make(map[string]bool, len(gotAuth))
 	for _, a := range gotAuth {
+		if gotSet[a] {
+			t.Errorf("duplicate auth type %q in %v", a, gotAuth)
+			continue
+		}
+		gotSet[a] = true
 		if !wantAuth[a] {
 			t.Errorf("unexpected auth type %q in %v", a, gotAuth)
+		}
+	}
+	for a := range wantAuth {
+		if !gotSet[a] {
+			t.Errorf("missing auth type %q in %v", a, gotAuth)
 		}
 	}
 }
