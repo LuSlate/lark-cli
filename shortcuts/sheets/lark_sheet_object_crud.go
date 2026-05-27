@@ -27,10 +27,11 @@ import (
 // the surface narrow even though everything funnels through one tool).
 //
 // Five of the seven objects share the factory below (newObjectCRUDShortcuts).
-// pivot adds optional --target-sheet-id / --target-position on create,
-// declared with extraCreateFlags. filter is special-cased further down
-// (no separate id flag — filter_id is implicit per sheet — and --range is
-// a first-class create flag, not buried in --data).
+// pivot opts into allowEmptySheetSelectorOnCreate=true so the backend can
+// auto-create a placement sub-sheet when neither --sheet-id nor --sheet-name
+// is given; it also exposes optional --target-position on create. filter is
+// special-cased further down (no separate id flag — filter_id is implicit
+// per sheet — and --range is a first-class create flag, not buried in --data).
 
 // objectCRUDSpec describes a 3-shortcut create/update/delete cluster.
 // idFlag / idField empty → no per-object id flag (only filter uses that
@@ -54,6 +55,13 @@ type objectCRUDSpec struct {
 	// +sparkline-list instead of letting the caller hit an opaque
 	// server-side rejection).
 	validateUpdateInput func(input map[string]interface{}) error
+	// allowEmptySheetSelectorOnCreate, when true, makes the *create*
+	// shortcut accept empty --sheet-id / --sheet-name (backend then picks
+	// the placement target — e.g. manage_pivot_table_object auto-creates
+	// a sub-sheet to host the pivot). Both flags being set is still
+	// rejected. Update/delete continue to require an explicit selector.
+	// Today only pivotSpec opts in.
+	allowEmptySheetSelectorOnCreate bool
 }
 
 func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
@@ -79,7 +87,8 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 		},
 		DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 			token, _ := resolveSpreadsheetToken(runtime)
-			sheetID, sheetName, _ := resolveSheetSelector(runtime)
+			sheetID := strings.TrimSpace(runtime.Str("sheet-id"))
+			sheetName := strings.TrimSpace(runtime.Str("sheet-name"))
 			input, _ := objectCreateInput(runtime, token, sheetID, sheetName, spec)
 			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
 		},
@@ -88,10 +97,8 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			if err != nil {
 				return err
 			}
-			sheetID, sheetName, err := resolveSheetSelector(runtime)
-			if err != nil {
-				return err
-			}
+			sheetID := strings.TrimSpace(runtime.Str("sheet-id"))
+			sheetName := strings.TrimSpace(runtime.Str("sheet-name"))
 			input, err := objectCreateInput(runtime, token, sheetID, sheetName, spec)
 			if err != nil {
 				return err
@@ -107,7 +114,13 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 }
 
 func objectCreateInput(runtime flagView, token, sheetID, sheetName string, spec objectCRUDSpec) (map[string]interface{}, error) {
-	if err := requireSheetSelector(sheetID, sheetName); err != nil {
+	var err error
+	if spec.allowEmptySheetSelectorOnCreate {
+		err = optionalSheetSelector(sheetID, sheetName)
+	} else {
+		err = requireSheetSelector(sheetID, sheetName)
+	}
+	if err != nil {
 		return nil, err
 	}
 	props, err := requireJSONObject(runtime, "properties")
@@ -288,17 +301,18 @@ var ChartCreate = newObjectCreateShortcut(chartSpec)
 var ChartUpdate = newObjectUpdateShortcut(chartSpec)
 var ChartDelete = newObjectDeleteShortcut(chartSpec)
 
-// pivot — create exposes --target-sheet-id / --target-position (top-level
-// of the tool input) plus --source / --range hoisted from properties.
+// pivot — create exposes --target-position (top-level of the tool input)
+// plus --source / --range hoisted from properties. --sheet-id / --sheet-name
+// are the placement target (where the pivot table lands); the backend
+// auto-creates a new sub-sheet when both are omitted, so create opts into
+// allowEmptySheetSelectorOnCreate.
 var pivotSpec = objectCRUDSpec{
-	commandPrefix: "+pivot",
-	toolName:      "manage_pivot_table_object",
-	idFlag:        "pivot-table-id",
-	idField:       "pivot_table_id",
+	commandPrefix:                   "+pivot",
+	toolName:                        "manage_pivot_table_object",
+	idFlag:                          "pivot-table-id",
+	idField:                         "pivot_table_id",
+	allowEmptySheetSelectorOnCreate: true,
 	enhanceCreateInput: func(rt flagView, input map[string]interface{}) {
-		if v := strings.TrimSpace(rt.Str("target-sheet-id")); v != "" {
-			input["target_sheet_id"] = v
-		}
 		if v := strings.TrimSpace(rt.Str("target-position")); v != "" && v != "A1" {
 			input["target_position"] = v
 		}
