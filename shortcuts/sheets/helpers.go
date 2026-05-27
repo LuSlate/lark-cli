@@ -133,6 +133,33 @@ func requireSheetSelector(sheetID, sheetName string) error {
 	return nil
 }
 
+// optionalSheetSelector is the "at most one" counterpart of
+// requireSheetSelector: both empty is acceptable (the backend tool then
+// decides what to do — e.g. manage_pivot_table_object auto-creates a new
+// sub-sheet to host the pivot), and both set is rejected. Control-char
+// validation still applies whenever a value is provided.
+//
+// Used by shortcuts whose backend tool treats sheet_id/sheet_name as the
+// placement target rather than the operation context (currently only
+// +pivot-create). Other shortcuts continue to use requireSheetSelector.
+func optionalSheetSelector(sheetID, sheetName string) error {
+	sheetID = strings.TrimSpace(sheetID)
+	sheetName = strings.TrimSpace(sheetName)
+	if sheetID != "" && sheetName != "" {
+		return common.FlagErrorf("--sheet-id and --sheet-name are mutually exclusive")
+	}
+	if sheetID != "" {
+		if err := validate.RejectControlChars(sheetID, "sheet-id"); err != nil {
+			return common.FlagErrorf("%v", err)
+		}
+	} else if sheetName != "" {
+		if err := validate.RejectControlChars(sheetName, "sheet-name"); err != nil {
+			return common.FlagErrorf("%v", err)
+		}
+	}
+	return nil
+}
+
 // sheetSelectorForToolInput packs --sheet-id / --sheet-name into the tool
 // input map, omitting empty fields. Use after resolveSheetSelector returns.
 func sheetSelectorForToolInput(input map[string]interface{}, sheetID, sheetName string) {

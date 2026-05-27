@@ -3244,14 +3244,14 @@
         "kind": "public",
         "type": "string",
         "required": "xor",
-        "desc": "Sheet reference_id (XOR with `--sheet-name`)"
+        "desc": "Reference_id of the sub-sheet where the pivot table is located / will be created to (mutually exclusive with --sheet-name; takes priority when both given; when both omitted, a new sub-sheet is auto-created to host the pivot — recommended)"
       },
       {
         "name": "sheet-name",
         "kind": "public",
         "type": "string",
         "required": "xor",
-        "desc": "Sheet name (XOR with `--sheet-id`)"
+        "desc": "Name of the sub-sheet where the pivot table is located / will be created to (mutually exclusive with --sheet-id; when both omitted, a new sub-sheet is auto-created to host the pivot — recommended)"
       },
       {
         "name": "properties",
@@ -3263,13 +3263,6 @@
           "file",
           "stdin"
         ]
-      },
-      {
-        "name": "target-sheet-id",
-        "kind": "own",
-        "type": "string",
-        "required": "optional",
-        "desc": "Destination sub-sheet id for the pivot table; auto-creates a new sub-sheet when omitted (recommended)"
       },
       {
         "name": "target-position",

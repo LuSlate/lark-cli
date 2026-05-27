@@ -51,16 +51,20 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 				"properties": map[string]interface{}{"type": "bar"},
 			},
 		},
-		// pivot — has extra create flags incl. required --source
+		// pivot — has extra create flags incl. required --source.
+		// --sheet-id is the placement target (where the pivot lands);
+		// pivotSpec.allowEmptySheetSelectorOnCreate lets both --sheet-id
+		// and --sheet-name be omitted so the backend auto-creates a
+		// sub-sheet — covered separately in the +pivot-create empty-
+		// selector / mutex tests below.
 		{
-			name: "+pivot-create with target / source / range flags",
+			name: "+pivot-create with placement / source / range flags",
 			sc:   PivotCreate,
 			args: []string{
 				"--url", testURL, "--sheet-id", testSheetID,
 				"--properties", `{"rows":[{"field":"A"}]}`,
 				"--source", "Sheet1!A1:F1000",
 				"--range", "F1",
-				"--target-sheet-id", "sh2",
 				"--target-position", "B5",
 			},
 			toolName: "manage_pivot_table_object",
@@ -68,12 +72,31 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 				"excel_id":        testToken,
 				"sheet_id":        testSheetID,
 				"operation":       "create",
-				"target_sheet_id": "sh2",
 				"target_position": "B5",
 				"properties": map[string]interface{}{
 					"rows":   []interface{}{map[string]interface{}{"field": "A"}},
 					"source": "Sheet1!A1:F1000",
 					"range":  "F1",
+				},
+			},
+		},
+		// +pivot-create accepts both sheet selectors empty — backend
+		// auto-creates a placement sub-sheet.
+		{
+			name: "+pivot-create empty --sheet-id / --sheet-name omits sheet from input",
+			sc:   PivotCreate,
+			args: []string{
+				"--url", testURL,
+				"--properties", `{"rows":[{"field":"A"}]}`,
+				"--source", "Sheet1!A1:F1000",
+			},
+			toolName: "manage_pivot_table_object",
+			wantInput: map[string]interface{}{
+				"excel_id":  testToken,
+				"operation": "create",
+				"properties": map[string]interface{}{
+					"rows":   []interface{}{map[string]interface{}{"field": "A"}},
+					"source": "Sheet1!A1:F1000",
 				},
 			},
 		},
@@ -321,6 +344,98 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 			body := parseDryRunBody(t, tt.sc, tt.args)
 			got := decodeToolInput(t, body, tt.toolName)
 			assertInputEquals(t, got, tt.wantInput)
+		})
+	}
+}
+
+// TestPivotCreate_SheetSelectorSemantics locks in the "at most one"
+// semantics for +pivot-create (and only +pivot-create): both --sheet-id
+// and --sheet-name may be omitted (backend auto-creates a placement
+// sub-sheet), but passing both is rejected.
+//
+// Companion regression — TestObjectCreate_RequiresSheetSelector below —
+// confirms every other *-create still rejects empty selector.
+func TestPivotCreate_SheetSelectorSemantics(t *testing.T) {
+	t.Parallel()
+
+	t.Run("both empty is accepted", func(t *testing.T) {
+		t.Parallel()
+		body := parseDryRunBody(t, PivotCreate, []string{
+			"--url", testURL,
+			"--properties", `{"rows":[{"field":"A"}]}`,
+			"--source", "Sheet1!A1:F1000",
+		})
+		input := decodeToolInput(t, body, "manage_pivot_table_object")
+		if _, ok := input["sheet_id"]; ok {
+			t.Errorf("expected no sheet_id in input; got %v", input["sheet_id"])
+		}
+		if _, ok := input["sheet_name"]; ok {
+			t.Errorf("expected no sheet_name in input; got %v", input["sheet_name"])
+		}
+	})
+
+	t.Run("both set is rejected", func(t *testing.T) {
+		t.Parallel()
+		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+			"--url", testURL,
+			"--sheet-id", testSheetID,
+			"--sheet-name", "Sheet1",
+			"--properties", `{"rows":[{"field":"A"}]}`,
+			"--source", "Sheet1!A1:F1000",
+		})
+		if err == nil {
+			t.Fatalf("expected CLI to reject both --sheet-id and --sheet-name set; stderr=%s", stderr)
+		}
+		combined := stderr + err.Error()
+		if !strings.Contains(combined, "mutually exclusive") {
+			t.Errorf("expected error to say 'mutually exclusive'; got=%s|%v", stderr, err)
+		}
+	})
+
+	t.Run("only sheet-id is accepted", func(t *testing.T) {
+		t.Parallel()
+		body := parseDryRunBody(t, PivotCreate, []string{
+			"--url", testURL,
+			"--sheet-id", testSheetID,
+			"--properties", `{"rows":[{"field":"A"}]}`,
+			"--source", "Sheet1!A1:F1000",
+		})
+		input := decodeToolInput(t, body, "manage_pivot_table_object")
+		if got, _ := input["sheet_id"].(string); got != testSheetID {
+			t.Errorf("sheet_id = %q, want %q", got, testSheetID)
+		}
+	})
+}
+
+// TestObjectCreate_RequiresSheetSelector regresses the non-pivot create
+// shortcuts: pivot-create is the only one whose spec sets
+// allowEmptySheetSelectorOnCreate=true. Every other *-create must still
+// reject empty --sheet-id / --sheet-name (this is the guardrail that
+// keeps the change minimally scoped).
+func TestObjectCreate_RequiresSheetSelector(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		sc   common.Shortcut
+		args []string // omit sheet selector flags on purpose
+	}{
+		{"chart", ChartCreate, []string{"--url", testURL, "--properties", `{"type":"line"}`}},
+		{"cond-format", CondFormatCreate, []string{"--url", testURL, "--properties", `{"attrs":[]}`, "--rule-type", "cellIs", "--ranges", `["A1:A10"]`}},
+		{"sparkline", SparklineCreate, []string{"--url", testURL, "--properties", `{"sparklines":[]}`}},
+		{"filter-view", FilterViewCreate, []string{"--url", testURL, "--properties", `{}`, "--range", "A1:F10"}},
+	}
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, stderr, err := runShortcutCapturingErr(t, tt.sc, tt.args)
+			if err == nil {
+				t.Fatalf("expected CLI to reject empty sheet selector for +%s-create; stderr=%s", tt.name, stderr)
+			}
+			combined := stderr + err.Error()
+			if !strings.Contains(combined, "specify at least one of --sheet-id or --sheet-name") {
+				t.Errorf("expected 'specify at least one of --sheet-id or --sheet-name'; got=%s|%v", stderr, err)
+			}
 		})
 	}
 }
