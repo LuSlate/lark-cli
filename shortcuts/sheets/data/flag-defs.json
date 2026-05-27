@@ -4547,7 +4547,7 @@
         "name": "image-name",
         "kind": "own",
         "type": "string",
-        "required": "optional",
+        "required": "required",
         "desc": "Image name, including extension (e.g. `logo.png`)"
       },
       {
@@ -4568,28 +4568,28 @@
         "name": "position-row",
         "kind": "own",
         "type": "int",
-        "required": "optional",
+        "required": "required",
         "desc": "Row anchor of the image's top-left corner (0-based)"
       },
       {
         "name": "position-col",
         "kind": "own",
         "type": "string",
-        "required": "optional",
+        "required": "required",
         "desc": "Column anchor of the image's top-left corner (column letter, e.g. `A` / `B`)"
       },
       {
         "name": "size-width",
         "kind": "own",
         "type": "int",
-        "required": "optional",
+        "required": "required",
         "desc": "Image width in pixels"
       },
       {
         "name": "size-height",
         "kind": "own",
         "type": "int",
-        "required": "optional",
+        "required": "required",
         "desc": "Image height in pixels"
       },
       {

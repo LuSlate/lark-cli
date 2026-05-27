@@ -30,7 +30,7 @@
 - `--image-token`：复用**已存在**的图片 file_token。常见来源：① `+float-image-list` 返回的 `image_token`（适合"换皮不换位置"复用同一张图）；② `+cells-set-image` 成功返回里的 `file_token`（它也是 `sheet_image` 上传句柄）。适合"同一张图复用到多处"，省去重复上传。
 - `--image-uri`：图片 reference_id（image URI），由系统自动转 file_token。
 
-> ⚠️ **`--image` 仅 `+float-image-create` 支持**。`+float-image-update` 换图只接受 `--image-token` / `--image-uri`，**且即使不换图也必传其一**（CLI 强制；要保留原图就把 list 回读的 `image_token` 回填）；要在 update 里换一张本地新图，先用 `+cells-set-image` 上传到任意临时单元格、从返回取 `file_token`，再把它传给 update 的 `--image-token`。
+> ⚠️ **`--image` 仅 `+float-image-create` 支持**。`+float-image-update` 换图仍只接受 `--image-token` / `--image-uri`，而且**图片源是 update 唯一可省的部分**——三者全不传则保留原图。但 `--image-name` / `--position-{row,col}` / `--size-{width,height}` 在 update 时和 create 一样**必填**（`manage_float_image` 工具强制要求这套核心字段，且 `+float-image-list` 不回传 `image_name` 供 CLI 回填）。要在 update 里换一张本地新图，先用 `+cells-set-image` 上传到任意临时单元格、从返回取 `file_token`，再把它传给 update 的 `--image-token`。
 
 ## Shortcuts
 
@@ -76,13 +76,13 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--float-image-id` | string | required | 目标图片 id |
-| `--image-name` | string | optional | 图片名称，含扩展名（如 `logo.png`） |
+| `--image-name` | string | required | 图片名称，含扩展名（如 `logo.png`） |
 | `--image-token` | string | xor | 图片 file_token（与 `--image-uri` 二选一）。常见来源：`+float-image-list` 返回的 `image_token` |
 | `--image-uri` | string | xor | 图片 reference_id（与 `--image-token` 二选一）；图片上传链路返回的 reference_id |
-| `--position-row` | int | optional | 图片左上角所在行（0-based） |
-| `--position-col` | string | optional | 图片左上角所在列（列字母，如 `A` / `B`） |
-| `--size-width` | int | optional | 图片宽度（像素） |
-| `--size-height` | int | optional | 图片高度（像素） |
+| `--position-row` | int | required | 图片左上角所在行（0-based） |
+| `--position-col` | string | required | 图片左上角所在列（列字母，如 `A` / `B`） |
+| `--size-width` | int | required | 图片宽度（像素） |
+| `--size-height` | int | required | 图片高度（像素） |
 | `--offset-row` | int | optional | 在 `--position-row` 基础上的行内偏移（像素） |
 | `--offset-col` | int | optional | 在 `--position-col` 基础上的列内偏移（像素） |
 | `--z-index` | int | optional | 图片 Z 轴层级，控制重叠顺序 |
@@ -129,27 +129,20 @@ lark-cli sheets +float-image-create --url "..." --sheet-id "$SID" \
 
 ### `+float-image-update`
 
-> **patch 模式**：除了 `--float-image-id`（必填，定位目标图片）外，其它字段都可选——只传你需要改的那几个，未传的字段保持原值不变。至少传一个改动字段。
+> **update ≈ create，只有图片源可省**：`manage_float_image` 工具的 update 要求和 create 相同的核心字段——`--image-name`、`--position-{row,col}`、`--size-{width,height}` **全部必填**；唯一区别是**图片源（`--image-token` / `--image-uri`）可以全省**，省略即保留原图。这**不是**"只发改动字段"的 patch：缺任一核心字段会被工具拒绝（`+float-image-list` 不回传 `image_name`，CLI 无法替你回填）。
 >
-> ⚠️ **图片来源必传**：CLI 强制要求 `--image-token` / `--image-uri` 之一（即使本次不换图）。要"保留原图"也得显式传当前 `image_token`——先用 `+float-image-list --float-image-id <id>` 回读拿到 `image_token`，再传给 update。
->
-> 推荐流程：`+float-image-list --float-image-id <id>` → 抽 `image_token` → 调一次 `+float-image-update` 传完整图片来源 + 想改的字段。
+> 推荐流程：先 `+float-image-list --float-image-id <id>` 回读当前 position / size，再带上 `--image-name` 和完整的 position / size 调一次 `+float-image-update`。
 
 ```bash
-# 第 1 步：list 回读当前 image_token（必拿，下一步要用）
-lark-cli sheets +float-image-list --url "..." --sheet-id "$SID" \
-  --float-image-id "$IMG_ID" --jq '.data.sheets[0].float_images[0].image_token'
-# 拿到 e.g. "boxbn..."，赋给 shell 变量 IMG_TOKEN
-
-# 第 2 步：只改位置，图片来源原样回填（不传 --image-token 会被 CLI 拒）
+# 调整位置 + 尺寸，保留原图（不传图片源）
 lark-cli sheets +float-image-update --url "..." --sheet-id "$SID" \
-  --float-image-id "$IMG_ID" \
-  --image-token "$IMG_TOKEN" --image-name "logo.png" \
-  --position-row 5 --position-col C
+  --float-image-id "$IMG_ID" --image-name "logo.png" \
+  --position-row 5 --position-col C --size-width 300 --size-height 200
 
-# 只换图，位置/尺寸不变（image-name 必传；旧位置/尺寸字段不传则按 patch 语义保留）
+# 换图：额外带 --image-token，核心字段同样要给全
 lark-cli sheets +float-image-update --url "..." --sheet-id "$SID" \
-  --float-image-id "$IMG_ID" --image-name "new-logo.png" --image-token "$NEW_TOKEN"
+  --float-image-id "$IMG_ID" --image-name "new-logo.png" --image-token "$NEW_TOKEN" \
+  --position-row 5 --position-col C --size-width 300 --size-height 200
 ```
 
 ### `+float-image-delete`
@@ -160,6 +153,6 @@ lark-cli sheets +float-image-delete --url "..." --sheet-id "$SID" --float-image-
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`+float-image-create` 要求 `--image` / `--image-token` / `--image-uri` **恰好给一个** + `--image-name` 必填，`--position-row/col` 与 `--size-width/height` 必填且为合法整数；传 `--image` 时还会校验路径安全（绝对路径 / 越出工作目录会被拒，`--dry-run` 同样拦）。`+float-image-update` 必须 `--float-image-id`，**并且必须传 `--image-token` 或 `--image-uri` 之一**（patch 模式只是说"未传字段保持原值"，但图片来源仍是硬必填——只改位置 / 尺寸时也要把 list 回读的 `image_token` 回填）；`+float-image-delete` 强制 `--yes` 或 `--dry-run`。
+- `Validate`：XOR 公共四件套；`+float-image-create` 要求 `--image` / `--image-token` / `--image-uri` **恰好给一个**，`--position-row/col` 与 `--size-width/height` 必填且为合法整数；传 `--image` 时还会校验路径安全（绝对路径 / 越出工作目录会被拒，`--dry-run` 同样拦）。`+float-image-update` 必须 `--float-image-id`，并和 create 一样必填 `--image-name` / `--position-{row,col}` / `--size-{width,height}`（缺任一核心字段本地直接报错，不会静默发 0）；图片源 `--image-token` / `--image-uri` 可省（省略保留原图），给则二选一；`+float-image-delete` 强制 `--yes` 或 `--dry-run`。
 - `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 float_image 请求模板"；传 `--image` 时会多打印一步本地图片上传（`POST /open-apis/drive/v1/medias/upload_all`，`parent_type=sheet_image`）。
 - `Execute`：写后调用 `+float-image-list --float-image-id <id>` 回读，envelope.meta.verification 给出新位置 / 尺寸对比。

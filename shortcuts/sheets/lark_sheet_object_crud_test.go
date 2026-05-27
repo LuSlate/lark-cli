@@ -261,6 +261,58 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 				},
 			},
 		},
+		{
+			// patch mode: position + size with no image source. The image
+			// fields are omitted so the server keeps the current image; only
+			// image_name (server-mandated) and the changed geometry are sent.
+			// This is the shape that used to be rejected CLI-side.
+			name: "+float-image-update patch position+size, no image source",
+			sc:   FloatImageUpdate,
+			args: []string{
+				"--url", testURL, "--sheet-id", testSheetID,
+				"--float-image-id", "imgABC", "--image-name", "logo.png",
+				"--position-row", "10", "--position-col", "I",
+				"--size-width", "90", "--size-height", "70",
+			},
+			toolName: "manage_float_image_object",
+			wantInput: map[string]interface{}{
+				"excel_id":       testToken,
+				"sheet_id":       testSheetID,
+				"operation":      "update",
+				"float_image_id": "imgABC",
+				"properties": map[string]interface{}{
+					"image_name": "logo.png",
+					"position":   map[string]interface{}{"row": float64(10), "col": "I"},
+					"size":       map[string]interface{}{"width": float64(90), "height": float64(70)},
+				},
+			},
+		},
+		{
+			// swap the image: an explicit --image-token rides alongside the
+			// mandatory core (image_name + position + size).
+			name: "+float-image-update swap image via image-token",
+			sc:   FloatImageUpdate,
+			args: []string{
+				"--url", testURL, "--sheet-id", testSheetID,
+				"--float-image-id", "imgABC",
+				"--image-name", "new.png", "--image-token", "tok_new",
+				"--position-row", "2", "--position-col", "B",
+				"--size-width", "300", "--size-height", "200",
+			},
+			toolName: "manage_float_image_object",
+			wantInput: map[string]interface{}{
+				"excel_id":       testToken,
+				"sheet_id":       testSheetID,
+				"operation":      "update",
+				"float_image_id": "imgABC",
+				"properties": map[string]interface{}{
+					"image_name":  "new.png",
+					"image_token": "tok_new",
+					"position":    map[string]interface{}{"row": float64(2), "col": "B"},
+					"size":        map[string]interface{}{"width": float64(300), "height": float64(200)},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -292,6 +344,31 @@ func TestSparklineUpdate_MissingSparklineID(t *testing.T) {
 	}
 	if !strings.Contains(combined, "+sparkline-list") {
 		t.Errorf("expected error to point at +sparkline-list; got=%s|%v", stderr, err)
+	}
+}
+
+// Note: +float-image-update's image_name / position / size are cobra-required
+// (flag-defs.json), so the standalone path is gated by the flag layer — its
+// "required flag(s) … not set" wording is framework-owned and intentionally not
+// re-asserted here. The CLI-side enforcement that matters is on the
+// +batch-update sub-op path (no cobra layer); that is covered by
+// TestBatchOp_RejectsBadSubOpInput in batch_op_contract_test.go.
+
+// TestFloatImageCreate_RequiresImageSource guards the asymmetry with update:
+// create still mandates one of --image / --image-token / --image-uri.
+func TestFloatImageCreate_RequiresImageSource(t *testing.T) {
+	t.Parallel()
+	_, stderr, err := runShortcutCapturingErr(t, FloatImageCreate, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--image-name", "x.png",
+		"--position-row", "0", "--position-col", "A",
+		"--size-width", "10", "--size-height", "10",
+	})
+	if err == nil {
+		t.Fatalf("expected CLI to require an image source on create; stderr=%s", stderr)
+	}
+	if combined := stderr + err.Error(); !strings.Contains(combined, "one of --image, --image-token, or --image-uri is required") {
+		t.Errorf("expected error to require an image source; got=%s|%v", stderr, err)
 	}
 }
 

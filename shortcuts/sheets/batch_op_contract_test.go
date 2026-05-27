@@ -526,6 +526,29 @@ func TestBatchOp_RejectsBadSubOpInput(t *testing.T) {
 			`{"sheet-id":"sh1","image-name":"x.png","image-token":"t","position-row":0,"position-col":"A","size-width":100,"size-height":50}`,
 			"--float-image-id is required",
 		},
+		// +float-image-update's core (image_name / position / size) is mandatory
+		// on update too — the tool rejects without them and +float-image-list
+		// can't backfill image_name. cobra gates these on the standalone path;
+		// the batch sub-op must reject them here. The image source stays optional
+		// (omitting it keeps the current image), so these inputs omit it.
+		{
+			"+float-image-update missing --image-name",
+			"+float-image-update",
+			`{"sheet-id":"sh1","float-image-id":"fi1","position-row":0,"position-col":"A","size-width":100,"size-height":50}`,
+			"--image-name is required",
+		},
+		{
+			"+float-image-update missing position",
+			"+float-image-update",
+			`{"sheet-id":"sh1","float-image-id":"fi1","image-name":"x.png","size-width":100,"size-height":50}`,
+			"--position-row and --position-col are required",
+		},
+		{
+			"+float-image-update missing size",
+			"+float-image-update",
+			`{"sheet-id":"sh1","float-image-id":"fi1","image-name":"x.png","position-row":0,"position-col":"A"}`,
+			"--size-width and --size-height are required",
+		},
 		// +filter-{update,delete} need sheet-id (not sheet-name) because
 		// server contract: filter_id === sheet_id, and we can't resolve
 		// sheet-name → sheet-id mid-batch.

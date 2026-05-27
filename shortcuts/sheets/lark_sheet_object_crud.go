@@ -429,12 +429,26 @@ func floatImageName(runtime flagView) string {
 }
 
 // floatImageProperties assembles the tool's properties object from the flat
-// flags. Caller marks required flags via cobra Required:true; this function
-// enforces the image source XOR: exactly one of --image / --image-token /
-// --image-uri must be set. uploadedImageToken, when non-empty, is the
-// file_token obtained by uploading a local --image (Execute only); in
-// Validate/DryRun it is "" and a placeholder token stands in.
-func floatImageProperties(runtime flagView, uploadedImageToken string) (map[string]interface{}, error) {
+// flags. The manage_float_image tool requires image_name, position and size on
+// both create and update; the only difference is the image source:
+//   - create (requireImageSource=true): exactly one of --image / --image-token
+//     / --image-uri must be set.
+//   - update (requireImageSource=false): the image source is optional — omit
+//     all three to keep the current image; when given it stays mutually
+//     exclusive. Despite the "patch" framing, the tool still rejects an update
+//     missing image_name, position or size, and +float-image-list does not
+//     return image_name for the CLI to backfill, so the caller must supply the
+//     full core set.
+//
+// image_name, position and size are cobra-required on both create and update,
+// so the standalone path is already gated by the flag layer; the explicit
+// checks below are what enforces them on the +batch-update sub-op path, which
+// has no cobra layer (mirrors the --float-image-id check in floatImageWriteInput).
+//
+// uploadedImageToken, when non-empty, is the file_token obtained by uploading a
+// local --image (Execute only); in Validate/DryRun it is "" and a placeholder
+// token stands in.
+func floatImageProperties(runtime flagView, uploadedImageToken string, requireImageSource bool) (map[string]interface{}, error) {
 	img := strings.TrimSpace(runtime.Str("image"))
 	token := strings.TrimSpace(runtime.Str("image-token"))
 	uri := strings.TrimSpace(runtime.Str("image-uri"))
@@ -444,14 +458,24 @@ func floatImageProperties(runtime flagView, uploadedImageToken string) (map[stri
 			set++
 		}
 	}
-	if set == 0 {
+	if set == 0 && requireImageSource {
 		return nil, common.FlagErrorf("one of --image, --image-token, or --image-uri is required")
 	}
 	if set > 1 {
 		return nil, common.FlagErrorf("--image, --image-token, and --image-uri are mutually exclusive")
 	}
+	name := floatImageName(runtime)
+	if name == "" {
+		return nil, common.FlagErrorf("--image-name is required")
+	}
+	if !runtime.Changed("position-row") || !runtime.Changed("position-col") {
+		return nil, common.FlagErrorf("--position-row and --position-col are required")
+	}
+	if !runtime.Changed("size-width") || !runtime.Changed("size-height") {
+		return nil, common.FlagErrorf("--size-width and --size-height are required")
+	}
 	props := map[string]interface{}{
-		"image_name": floatImageName(runtime),
+		"image_name": name,
 		"position": map[string]interface{}{
 			"row": runtime.Int("position-row"),
 			"col": strings.TrimSpace(runtime.Str("position-col")),
@@ -475,7 +499,7 @@ func floatImageProperties(runtime flagView, uploadedImageToken string) (map[stri
 		}
 	case token != "":
 		props["image_token"] = token
-	default:
+	case uri != "":
 		props["image_uri"] = uri
 	}
 	if runtime.Changed("offset-row") || runtime.Changed("offset-col") {
@@ -604,7 +628,7 @@ func floatImageWriteInput(runtime flagView, token, sheetID, sheetName, op string
 	if withIDFlag && strings.TrimSpace(runtime.Str("float-image-id")) == "" {
 		return nil, common.FlagErrorf("--float-image-id is required")
 	}
-	props, err := floatImageProperties(runtime, uploadedImageToken)
+	props, err := floatImageProperties(runtime, uploadedImageToken, op == "create")
 	if err != nil {
 		return nil, err
 	}
