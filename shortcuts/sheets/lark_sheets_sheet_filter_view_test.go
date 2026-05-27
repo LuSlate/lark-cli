@@ -334,6 +334,104 @@ func TestCreateFilterViewConditionExecuteSuccess(t *testing.T) {
 	}
 }
 
+func TestCreateFilterViewConditionMultiValueExecuteSuccess(t *testing.T) {
+	f, stdout, _, reg := cmdutil.TestFactory(t, sheetsTestConfig())
+	stub := &httpmock.Stub{
+		Method: "POST", URL: "/open-apis/sheets/v3/spreadsheets/shtTOKEN/sheets/sheet1/filter_views/fv1/conditions",
+		Body: map[string]interface{}{"code": 0, "msg": "success", "data": map[string]interface{}{
+			"condition": map[string]interface{}{"condition_id": "C", "filter_type": "multiValue"},
+		}},
+	}
+	reg.Register(stub)
+	err := mountAndRunSheets(t, SheetCreateFilterViewCondition, []string{
+		"+create-filter-view-condition", "--spreadsheet-token", "shtTOKEN",
+		"--sheet-id", "sheet1", "--filter-view-id", "fv1",
+		"--condition-id", "C", "--filter-type", "multiValue",
+		"--expected", `["A","B"]`, "--as", "user",
+	}, f, stdout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var body map[string]interface{}
+	if err := json.Unmarshal(stub.CapturedBody, &body); err != nil {
+		t.Fatalf("parse body: %v", err)
+	}
+	if body["filter_type"] != "multiValue" {
+		t.Fatalf("unexpected filter_type: %v", body["filter_type"])
+	}
+	if _, ok := body["compare_type"]; ok {
+		t.Fatalf("multiValue body must omit compare_type: %v", body)
+	}
+	expected, ok := body["expected"].([]interface{})
+	if !ok || len(expected) != 2 || expected[0] != "A" || expected[1] != "B" {
+		t.Fatalf("unexpected expected values: %#v", body["expected"])
+	}
+}
+
+func TestCreateFilterViewConditionRejectsHiddenValue(t *testing.T) {
+	f, stdout, _, _ := cmdutil.TestFactory(t, sheetsTestConfig())
+	err := mountAndRunSheets(t, SheetCreateFilterViewCondition, []string{
+		"+create-filter-view-condition", "--spreadsheet-token", "shtTOKEN",
+		"--sheet-id", "sheet1", "--filter-view-id", "fv1",
+		"--condition-id", "C", "--filter-type", "hiddenValue",
+		"--expected", `["A"]`, "--as", "user",
+	}, f, stdout)
+	if err == nil {
+		t.Fatal("expected hiddenValue validation error, got nil")
+	}
+	if !strings.Contains(err.Error(), "--filter-type hiddenValue is no longer supported") {
+		t.Fatalf("unexpected error message: %v", err)
+	}
+}
+
+func TestCreateFilterViewConditionRejectsInvalidMultiValueFlags(t *testing.T) {
+	cases := []struct {
+		name     string
+		args     []string
+		wantText string
+	}{
+		{
+			name:     "compare type",
+			args:     []string{"--compare-type", "less", "--expected", `["A"]`},
+			wantText: "--compare-type must be omitted",
+		},
+		{
+			name:     "empty expected",
+			args:     []string{"--expected", `[]`},
+			wantText: "at least one value",
+		},
+		{
+			name:     "non-string expected",
+			args:     []string{"--expected", `[1]`},
+			wantText: "JSON string array",
+		},
+		{
+			name:     "too long expected",
+			args:     []string{"--expected", `["` + strings.Repeat("x", 50001) + `"]`},
+			wantText: "50000 characters",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			f, stdout, _, _ := cmdutil.TestFactory(t, sheetsTestConfig())
+			args := []string{
+				"+create-filter-view-condition", "--spreadsheet-token", "shtTOKEN",
+				"--sheet-id", "sheet1", "--filter-view-id", "fv1",
+				"--condition-id", "C", "--filter-type", "multiValue",
+			}
+			args = append(args, tc.args...)
+			args = append(args, "--as", "user")
+			err := mountAndRunSheets(t, SheetCreateFilterViewCondition, args, f, stdout)
+			if err == nil {
+				t.Fatalf("expected validation error for %s, got nil", tc.name)
+			}
+			if !strings.Contains(err.Error(), tc.wantText) {
+				t.Fatalf("unexpected error message: %v", err)
+			}
+		})
+	}
+}
+
 // ── UpdateFilterViewCondition ────────────────────────────────────────────────
 
 func TestUpdateFilterViewConditionDryRun(t *testing.T) {
@@ -380,6 +478,21 @@ func TestUpdateFilterViewConditionRejectsNoFields(t *testing.T) {
 		t.Fatal("expected validation error when no update fields provided, got nil")
 	}
 	if !strings.Contains(err.Error(), "at least one") {
+		t.Fatalf("unexpected error message: %v", err)
+	}
+}
+
+func TestUpdateFilterViewConditionRejectsHiddenValue(t *testing.T) {
+	f, stdout, _, _ := cmdutil.TestFactory(t, sheetsTestConfig())
+	err := mountAndRunSheets(t, SheetUpdateFilterViewCondition, []string{
+		"+update-filter-view-condition", "--spreadsheet-token", "shtTOKEN",
+		"--sheet-id", "sheet1", "--filter-view-id", "fv1", "--condition-id", "C",
+		"--filter-type", "hiddenValue", "--expected", `["A"]`, "--as", "user",
+	}, f, stdout)
+	if err == nil {
+		t.Fatal("expected hiddenValue validation error, got nil")
+	}
+	if !strings.Contains(err.Error(), "--filter-type hiddenValue is no longer supported") {
 		t.Fatalf("unexpected error message: %v", err)
 	}
 }

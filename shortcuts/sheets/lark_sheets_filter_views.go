@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/validate"
@@ -264,7 +265,7 @@ var SheetCreateFilterViewCondition = common.Shortcut{
 		{Name: "sheet-id", Desc: "sheet ID", Required: true},
 		{Name: "filter-view-id", Desc: "filter view ID", Required: true},
 		{Name: "condition-id", Desc: "column letter (e.g. E)", Required: true},
-		{Name: "filter-type", Desc: "filter type: hiddenValue, number, text, color", Required: true},
+		{Name: "filter-type", Desc: "filter type: multiValue, number, text, color", Required: true},
 		{Name: "compare-type", Desc: "comparison operator (e.g. less, beginsWith, between)"},
 		{Name: "expected", Desc: "filter values JSON array (e.g. [\"6\"])", Required: true},
 	},
@@ -272,7 +273,7 @@ var SheetCreateFilterViewCondition = common.Shortcut{
 		if _, err := validateFilterViewToken(runtime); err != nil {
 			return err
 		}
-		return validateExpectedFlag(runtime.Str("expected"))
+		return validateFilterViewConditionFlags(runtime)
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := validateFilterViewToken(runtime)
@@ -306,7 +307,7 @@ var SheetUpdateFilterViewCondition = common.Shortcut{
 		{Name: "sheet-id", Desc: "sheet ID", Required: true},
 		{Name: "filter-view-id", Desc: "filter view ID", Required: true},
 		{Name: "condition-id", Desc: "column letter (e.g. E)", Required: true},
-		{Name: "filter-type", Desc: "filter type: hiddenValue, number, text, color"},
+		{Name: "filter-type", Desc: "filter type: multiValue, number, text, color"},
 		{Name: "compare-type", Desc: "comparison operator"},
 		{Name: "expected", Desc: "filter values JSON array"},
 	},
@@ -319,10 +320,7 @@ var SheetUpdateFilterViewCondition = common.Shortcut{
 			!hasNonEmptyStringFlag(runtime, "expected") {
 			return common.FlagErrorf("specify at least one of --filter-type, --compare-type, or --expected")
 		}
-		if s := runtime.Str("expected"); s != "" {
-			return validateExpectedFlag(s)
-		}
-		return nil
+		return validateFilterViewConditionFlags(runtime)
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := validateFilterViewToken(runtime)
@@ -467,6 +465,55 @@ func validateExpectedFlag(s string) error {
 		return output.ErrValidation("--expected must be a JSON array (e.g. [\"6\"]), got: %s", s)
 	}
 	return nil
+}
+
+func validateFilterViewConditionFlags(runtime *common.RuntimeContext) error {
+	filterType := strings.TrimSpace(runtime.Str("filter-type"))
+	if filterType != "" {
+		switch filterType {
+		case "multiValue", "number", "text", "color":
+		case "hiddenValue":
+			return output.ErrValidation("--filter-type hiddenValue is no longer supported by Lark Sheets filter view conditions; use --filter-type multiValue with --expected values to show, and omit --compare-type")
+		default:
+			return output.ErrValidation("--filter-type must be one of multiValue, number, text, color; got %q", filterType)
+		}
+	}
+
+	expected := runtime.Str("expected")
+	if filterType == "multiValue" {
+		if strings.TrimSpace(runtime.Str("compare-type")) != "" {
+			return output.ErrValidation("--compare-type must be omitted when --filter-type multiValue")
+		}
+		values, err := parseExpectedStringArray(expected)
+		if err != nil {
+			return err
+		}
+		if len(values) == 0 {
+			return output.ErrValidation("--expected must contain at least one value when --filter-type multiValue")
+		}
+		for i, value := range values {
+			if utf8.RuneCountInString(value) > 50000 {
+				return output.ErrValidation("--expected[%d] must be 50000 characters or fewer when --filter-type multiValue", i)
+			}
+		}
+		return nil
+	}
+
+	if expected != "" {
+		return validateExpectedFlag(expected)
+	}
+	return nil
+}
+
+func parseExpectedStringArray(s string) ([]string, error) {
+	if strings.TrimSpace(s) == "" {
+		return nil, output.ErrValidation("--expected is required when --filter-type multiValue")
+	}
+	var values []string
+	if err := json.Unmarshal([]byte(s), &values); err != nil {
+		return nil, output.ErrValidation("--expected must be a JSON string array when --filter-type multiValue (e.g. [\"A\",\"B\"]), got: %s", s)
+	}
+	return values, nil
 }
 
 func buildConditionBody(runtime *common.RuntimeContext, includeConditionID bool) map[string]interface{} {

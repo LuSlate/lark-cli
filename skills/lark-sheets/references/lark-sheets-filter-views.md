@@ -123,6 +123,11 @@ lark-cli sheets +create-filter-view-condition --spreadsheet-token "shtxxxxxxxx" 
 lark-cli sheets +create-filter-view-condition --spreadsheet-token "shtxxxxxxxx" \
   --sheet-id "<sheetId>" --filter-view-id "<fvId>" \
   --condition-id "G" --filter-type "text" --compare-type "beginsWith" --expected '["a"]'
+
+# 多值筛选：只展示 Grade 为 A 或 B 的行（multiValue 不传 compare-type）
+lark-cli sheets +create-filter-view-condition --spreadsheet-token "shtxxxxxxxx" \
+  --sheet-id "<sheetId>" --filter-view-id "<fvId>" \
+  --condition-id "C" --filter-type "multiValue" --expected '["A","B"]'
 ```
 
 参数：
@@ -134,7 +139,7 @@ lark-cli sheets +create-filter-view-condition --spreadsheet-token "shtxxxxxxxx" 
 | `--sheet-id` | 是 | 工作表 ID |
 | `--filter-view-id` | 是 | 筛选视图 ID |
 | `--condition-id` | 是 | 列字母，如 `E` |
-| `--filter-type` | 是 | `hiddenValue` / `number` / `text` / `color` |
+| `--filter-type` | 是 | `multiValue` / `number` / `text` / `color` |
 | `--compare-type` | 否 | 比较运算符 |
 | `--expected` | 是 | 筛选值 JSON 数组 |
 
