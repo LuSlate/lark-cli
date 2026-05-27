@@ -72,20 +72,20 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 		{
 			shortcut: "+dim-insert",
 			sc:       DimInsert,
-			args:     []string{"--sheet-id", "sh1", "--dimension", "row", "--start", "10", "--end", "12", "--inherit-style", "before"},
-			subInput: `{"sheet-id":"sh1","dimension":"row","start":10,"end":12,"inherit-style":"before"}`,
+			args:     []string{"--sheet-id", "sh1", "--position", "11", "--count", "2", "--inherit-style", "before"},
+			subInput: `{"sheet-id":"sh1","position":"11","count":2,"inherit-style":"before"}`,
 		},
 		{
 			shortcut: "+dim-delete",
 			sc:       DimDelete,
-			args:     []string{"--sheet-id", "sh1", "--dimension", "column", "--start", "2", "--end", "4"},
-			subInput: `{"sheet-id":"sh1","dimension":"column","start":2,"end":4}`,
+			args:     []string{"--sheet-id", "sh1", "--range", "C:D"},
+			subInput: `{"sheet-id":"sh1","range":"C:D"}`,
 		},
 		{
 			shortcut: "+dim-hide",
 			sc:       DimHide,
-			args:     []string{"--sheet-id", "sh1", "--dimension", "row", "--start", "1", "--end", "3"},
-			subInput: `{"sheet-id":"sh1","dimension":"row","start":1,"end":3}`,
+			args:     []string{"--sheet-id", "sh1", "--range", "2:3"},
+			subInput: `{"sheet-id":"sh1","range":"2:3"}`,
 		},
 		{
 			shortcut: "+dim-freeze",
@@ -96,20 +96,20 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 		{
 			shortcut: "+dim-group",
 			sc:       DimGroup,
-			args:     []string{"--sheet-id", "sh1", "--dimension", "row", "--start", "1", "--end", "5", "--group-state", "fold"},
-			subInput: `{"sheet-id":"sh1","dimension":"row","start":1,"end":5,"group-state":"fold"}`,
+			args:     []string{"--sheet-id", "sh1", "--range", "2:5", "--group-state", "fold"},
+			subInput: `{"sheet-id":"sh1","range":"2:5","group-state":"fold"}`,
 		},
 		{
 			shortcut: "+rows-resize",
 			sc:       RowsResize,
-			args:     []string{"--sheet-id", "sh1", "--start", "0", "--end", "0", "--type", "pixel", "--size", "30"},
-			subInput: `{"sheet-id":"sh1","start":0,"end":0,"type":"pixel","size":30}`,
+			args:     []string{"--sheet-id", "sh1", "--range", "1", "--type", "pixel", "--size", "30"},
+			subInput: `{"sheet-id":"sh1","range":"1","type":"pixel","size":30}`,
 		},
 		{
 			shortcut: "+cols-resize",
 			sc:       ColsResize,
-			args:     []string{"--sheet-id", "sh1", "--start", "1", "--end", "3", "--type", "standard"},
-			subInput: `{"sheet-id":"sh1","start":1,"end":3,"type":"standard"}`,
+			args:     []string{"--sheet-id", "sh1", "--range", "B:D", "--type", "standard"},
+			subInput: `{"sheet-id":"sh1","range":"B:D","type":"standard"}`,
 		},
 		{
 			shortcut: "+range-move",
@@ -377,25 +377,25 @@ func TestBatchOp_ErrorEquivalence(t *testing.T) {
 		{
 			name:         "+dim-insert missing sheet selector",
 			shortcut:     DimInsert,
-			args:         []string{"--dimension", "row", "--start", "0", "--end", "1"},
+			args:         []string{"--position", "1", "--count", "1"},
 			subShortcut:  "+dim-insert",
-			subInput:     `{"dimension":"row","start":0,"end":1}`,
+			subInput:     `{"position":"1","count":1}`,
 			wantContains: "specify at least one of --sheet-id or --sheet-name",
 		},
 		{
-			name:         "+dim-insert --end <= --start",
+			name:         "+dim-insert count <= 0",
 			shortcut:     DimInsert,
-			args:         []string{"--sheet-id", "sh1", "--dimension", "row", "--start", "5", "--end", "3"},
+			args:         []string{"--sheet-id", "sh1", "--position", "5", "--count", "0"},
 			subShortcut:  "+dim-insert",
-			subInput:     `{"sheet-id":"sh1","dimension":"row","start":5,"end":3}`,
-			wantContains: "must be greater than --start",
+			subInput:     `{"sheet-id":"sh1","position":"5","count":0}`,
+			wantContains: "--count must be > 0",
 		},
 		{
 			name:         "+rows-resize --type pixel without --size",
 			shortcut:     RowsResize,
-			args:         []string{"--sheet-id", "sh1", "--start", "0", "--end", "1", "--type", "pixel"},
+			args:         []string{"--sheet-id", "sh1", "--range", "1:2", "--type", "pixel"},
 			subShortcut:  "+rows-resize",
-			subInput:     `{"sheet-id":"sh1","start":0,"end":1,"type":"pixel"}`,
+			subInput:     `{"sheet-id":"sh1","range":"1:2","type":"pixel"}`,
 			wantContains: "--type pixel requires --size",
 		},
 		{
@@ -485,15 +485,15 @@ func TestBatchOp_RejectsBadSubOpInput(t *testing.T) {
 			"--range is required",
 		},
 		{
-			"+dim-insert missing --dimension",
+			"+dim-insert missing --position",
 			"+dim-insert",
-			`{"sheet-id":"sh1","start":0,"end":1}`,
-			"--dimension is required",
+			`{"sheet-id":"sh1","count":1}`,
+			"--position is required",
 		},
 		{
 			"+rows-resize missing --type",
 			"+rows-resize",
-			`{"sheet-id":"sh1","start":0,"end":0}`,
+			`{"sheet-id":"sh1","range":"1:1"}`,
 			"--type is required",
 		},
 		{
@@ -622,10 +622,12 @@ func TestBatchOp_DispatchCoversReportedBugs(t *testing.T) {
 		t.Errorf("+range-copy operation = %v, want copy", copyIn["operation"])
 	}
 
-	// +rows-resize → resize_range with range + resize_height (not raw start/end).
+	// +rows-resize → resize_range with range + resize_height. The CLI's single
+	// "23" input must be expanded to "23:23" because resize_range rejects
+	// bare single-element ranges.
 	body = parseDryRunBody(t, BatchUpdate, []string{
 		"--url", testURL,
-		"--operations", `[{"shortcut":"+rows-resize","input":{"sheet-id":"sh1","start":22,"end":22,"type":"pixel","size":40}}]`,
+		"--operations", `[{"shortcut":"+rows-resize","input":{"sheet-id":"sh1","range":"23","type":"pixel","size":40}}]`,
 		"--yes",
 	})
 	ops = decodeToolInput(t, body, "batch_update")["operations"].([]interface{})

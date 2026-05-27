@@ -6,6 +6,7 @@ package sheets
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/larksuite/cli/internal/validate"
@@ -15,9 +16,12 @@ import (
 // ─── lark_sheet_sheet_structure ───────────────────────────────────────
 //
 // Wraps get_sheet_structure (read) and modify_sheet_structure (write,
-// operation-enum dispatch). CLI's --start/--end are 0-based with exclusive
-// end; the tool wants 1-based inclusive row numbers ("3:7") or column
-// letters ("C:F"). The conversion lives in dimRange / dimPosition below.
+// operation-enum dispatch). All region/position arguments use A1-style
+// strings (1-based row numbers like "3:7" / "5", or column letters like
+// "C:F" / "C"); dim-* / resize never expose 0-based int indices on the CLI
+// surface, so there is no inclusive/exclusive ambiguity across commands.
+// parseA1Range / parseA1Position handle parsing into the 0-based ints that
+// dim-move's native v3 endpoint expects.
 //
 // +rows-resize / +cols-resize live in lark_sheet_range_operations (different
 // tool); they are only grouped under "工作表" for discoverability.
@@ -118,7 +122,7 @@ func infoTypeFromInclude(include []string) string {
 var DimInsert = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+dim-insert",
-	Description: "Insert blank rows or columns at a given range.",
+	Description: "Insert blank rows or columns at a given position.",
 	Risk:        "write",
 	Scopes:      []string{"sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
@@ -153,21 +157,31 @@ var DimInsert = common.Shortcut{
 	},
 }
 
+// dimInsertInput passes --position (1-based row number "3" or column letter
+// "C") straight to the tool's `position` field; --count maps to `count`.
 func dimInsertInput(runtime flagView, token, sheetID, sheetName string) (map[string]interface{}, error) {
 	if err := requireSheetSelector(sheetID, sheetName); err != nil {
 		return nil, err
 	}
-	if err := requireDimRange(runtime); err != nil {
-		return nil, err
+	if !runtime.Changed("position") {
+		return nil, common.FlagErrorf("--position is required")
 	}
-	dim := runtime.Str("dimension")
-	start := runtime.Int("start")
-	end := runtime.Int("end")
+	if !runtime.Changed("count") {
+		return nil, common.FlagErrorf("--count is required")
+	}
+	position := strings.TrimSpace(runtime.Str("position"))
+	if _, _, err := parseA1Position(position); err != nil {
+		return nil, common.FlagErrorf("invalid --position %q: %v", position, err)
+	}
+	count := runtime.Int("count")
+	if count <= 0 {
+		return nil, common.FlagErrorf("--count must be > 0 (got %d)", count)
+	}
 	input := map[string]interface{}{
 		"excel_id":  token,
 		"operation": "insert",
-		"position":  dimPosition(dim, start),
-		"count":     end - start,
+		"position":  position,
+		"count":     count,
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
 	switch runtime.Str("inherit-style") {
@@ -338,40 +352,25 @@ func dimFreezeInput(runtime flagView, token, sheetID, sheetName string) (map[str
 	return input, nil
 }
 
-// requireDimRange validates the dimension/start/end triple shared by
-// insert/delete/hide/unhide/group/ungroup. Pure flag-level checks — the sheet
-// selector and token live in their own helpers.
-func requireDimRange(runtime flagView) error {
-	if !runtime.Changed("dimension") {
-		return common.FlagErrorf("--dimension is required")
-	}
-	if !runtime.Changed("start") || !runtime.Changed("end") {
-		return common.FlagErrorf("--start and --end are required")
-	}
-	start := runtime.Int("start")
-	end := runtime.Int("end")
-	if start < 0 {
-		return common.FlagErrorf("--start must be >= 0")
-	}
-	if end <= start {
-		return common.FlagErrorf("--end (%d) must be greater than --start (%d)", end, start)
-	}
-	return nil
-}
-
-// dimRangeOpInput builds the tool input for delete/hide/unhide which all
-// take a `range` field. dimRange handles 0-based exclusive → 1-based inclusive.
+// dimRangeOpInput builds the tool input for delete/hide/unhide/group/ungroup
+// which all take a `range` string field. --range is a 1-based A1 closed range
+// ("3:7" / "5" for rows, "C:F" / "C" for columns) and passes straight through
+// after format validation.
 func dimRangeOpInput(runtime flagView, token, sheetID, sheetName, op string) (map[string]interface{}, error) {
 	if err := requireSheetSelector(sheetID, sheetName); err != nil {
 		return nil, err
 	}
-	if err := requireDimRange(runtime); err != nil {
-		return nil, err
+	if !runtime.Changed("range") {
+		return nil, common.FlagErrorf("--range is required")
+	}
+	rangeStr := strings.TrimSpace(runtime.Str("range"))
+	if _, _, _, err := parseA1Range(rangeStr); err != nil {
+		return nil, common.FlagErrorf("invalid --range %q: %v", rangeStr, err)
 	}
 	input := map[string]interface{}{
 		"excel_id":  token,
 		"operation": op,
-		"range":     dimRange(runtime.Str("dimension"), runtime.Int("start"), runtime.Int("end")),
+		"range":     rangeStr,
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
 	return input, nil
@@ -475,48 +474,75 @@ func dimGroupInput(runtime flagView, token, sheetID, sheetName, op string) (map[
 	return input, nil
 }
 
-// ─── dimension formatting helpers ─────────────────────────────────────
+// ─── A1 parsing helpers ───────────────────────────────────────────────
 
-// dimRange formats a CLI (0-based exclusive end) range as the tool's
-// 1-based inclusive A1-style range string. row → "3:7", column → "C:F".
-// A single-element range collapses to "3" / "C".
-func dimRange(dimension string, start, end int) string {
-	if dimension == "column" {
-		startLetter := columnIndexToLetter(start)
-		endLetter := columnIndexToLetter(end - 1)
-		if start == end-1 {
-			return startLetter
+// parseA1Range parses an A1 closed range ("3:7" / "5" / "C:F" / "C") into
+// the inferred dimension ("row" or "column") and 0-based inclusive indices.
+// Single-element form yields startIdx == endIdx. Mixing digits and letters
+// across the two sides ("3:C") is rejected.
+func parseA1Range(s string) (dimension string, startIdx, endIdx int, err error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", 0, 0, fmt.Errorf("range is empty")
+	}
+	parts := strings.Split(s, ":")
+	if len(parts) > 2 {
+		return "", 0, 0, fmt.Errorf("expected \"start:end\" or single element")
+	}
+	dim1, idx1, err := parseA1Position(parts[0])
+	if err != nil {
+		return "", 0, 0, err
+	}
+	if len(parts) == 1 {
+		return dim1, idx1, idx1, nil
+	}
+	dim2, idx2, err := parseA1Position(parts[1])
+	if err != nil {
+		return "", 0, 0, err
+	}
+	if dim1 != dim2 {
+		return "", 0, 0, fmt.Errorf("cannot mix row (digits) and column (letters) in one range")
+	}
+	if idx2 < idx1 {
+		return "", 0, 0, fmt.Errorf("end position is before start")
+	}
+	return dim1, idx1, idx2, nil
+}
+
+// parseA1Position parses a single A1 position element: pure digits → row
+// (1-based number, returned as 0-based idx); pure letters → column (letters
+// case-insensitive, "A" → 0, "AA" → 26).
+func parseA1Position(s string) (dimension string, idx int, err error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", 0, fmt.Errorf("position is empty")
+	}
+	isDigits := true
+	isLetters := true
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			isDigits = false
 		}
-		return startLetter + ":" + endLetter
+		if !((r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')) {
+			isLetters = false
+		}
 	}
-	if start == end-1 {
-		return fmt.Sprintf("%d", start+1)
+	if isDigits {
+		n, _ := strconv.Atoi(s)
+		if n <= 0 {
+			return "", 0, fmt.Errorf("row number must be >= 1 (got %q)", s)
+		}
+		return "row", n - 1, nil
 	}
-	return fmt.Sprintf("%d:%d", start+1, end)
-}
-
-// dimRangeFull is like dimRange but never collapses a single-element range to
-// a bare index — it always emits the two-sided "N:N" / "C:C" form. resize_range
-// rejects a bare index ("23" → Invalid range), so single-row/column resizes
-// must keep both sides.
-func dimRangeFull(dimension string, start, end int) string {
-	if dimension == "column" {
-		return columnIndexToLetter(start) + ":" + columnIndexToLetter(end-1)
+	if isLetters {
+		return "column", letterToColumnIndex(s), nil
 	}
-	return fmt.Sprintf("%d:%d", start+1, end)
-}
-
-// dimPosition formats a single CLI 0-based index as the tool's 1-based row
-// number string or column letter.
-func dimPosition(dimension string, idx int) string {
-	if dimension == "column" {
-		return columnIndexToLetter(idx)
-	}
-	return fmt.Sprintf("%d", idx+1)
+	return "", 0, fmt.Errorf("expected pure digits (row number) or letters (column letter), got %q", s)
 }
 
 // columnIndexToLetter converts a 0-based column index to the spreadsheet
 // letter notation (0 → "A", 25 → "Z", 26 → "AA", 701 → "ZZ", 702 → "AAA").
+// Used by +workbook helpers that need to format absolute column references.
 func columnIndexToLetter(idx int) string {
 	if idx < 0 {
 		return ""
@@ -535,13 +561,9 @@ func columnIndexToLetter(idx int) string {
 //
 // Moves a contiguous block of rows or columns to a new index in the same
 // sheet via the native v3 move_dimension endpoint (not the One-OpenAPI
-// dispatcher). CLI's --start / --end are 0-based inclusive; v3
-// move_dimension's source.{start_index,end_index} are likewise 0-based
-// inclusive, so they pass straight through. The earlier build POSTed a
-// {source,destinationIndex} body to the v2 dimension_range endpoint, which
-// is the add/update/delete surface and expects a `dimension` object —
-// hence the server rejected it with "[9499] Missing required parameter:
-// Dimension".
+// dispatcher). CLI accepts --source-range (A1 closed range like "3:7" or
+// "C:F") + --target (A1 single position like "12" or "H"); both are parsed
+// into the 0-based int indices that v3 move_dimension expects.
 
 var DimMove = common.Shortcut{
 	Service:     "sheets",
@@ -559,16 +581,8 @@ var DimMove = common.Shortcut{
 		if _, _, err := resolveSheetSelector(runtime); err != nil {
 			return err
 		}
-		if !runtime.Changed("dimension") || !runtime.Changed("start") || !runtime.Changed("end") || !runtime.Changed("target") {
-			return common.FlagErrorf("--dimension / --start / --end / --target are all required")
-		}
-		if runtime.Int("start") < 0 || runtime.Int("end") < runtime.Int("start") {
-			return common.FlagErrorf("--end (%d) must be >= --start (%d) (both 0-indexed, inclusive)", runtime.Int("end"), runtime.Int("start"))
-		}
-		if runtime.Int("target") < 0 {
-			return common.FlagErrorf("--target must be >= 0")
-		}
-		return nil
+		_, err := buildDimMovePlan(runtime)
+		return err
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := resolveSpreadsheetToken(runtime)
@@ -606,6 +620,36 @@ var DimMove = common.Shortcut{
 	},
 }
 
+// dimMovePlan is the parsed form of --source-range / --target.
+type dimMovePlan struct {
+	dimension  string // "row" / "column"
+	startIdx   int    // 0-based inclusive
+	endIdx     int    // 0-based inclusive
+	targetIdx  int    // 0-based; destination position (move inserts before this)
+}
+
+// buildDimMovePlan parses --source-range + --target and enforces that the
+// target dimension matches the source. Used by both Validate and Execute.
+func buildDimMovePlan(runtime flagView) (*dimMovePlan, error) {
+	if !runtime.Changed("source-range") || !runtime.Changed("target") {
+		return nil, common.FlagErrorf("--source-range and --target are required")
+	}
+	src := strings.TrimSpace(runtime.Str("source-range"))
+	dim, startIdx, endIdx, err := parseA1Range(src)
+	if err != nil {
+		return nil, common.FlagErrorf("invalid --source-range %q: %v", src, err)
+	}
+	tgt := strings.TrimSpace(runtime.Str("target"))
+	tgtDim, tgtIdx, err := parseA1Position(tgt)
+	if err != nil {
+		return nil, common.FlagErrorf("invalid --target %q: %v", tgt, err)
+	}
+	if tgtDim != dim {
+		return nil, common.FlagErrorf("--target %q dimension (%s) must match --source-range %q dimension (%s)", tgt, tgtDim, src, dim)
+	}
+	return &dimMovePlan{dimension: dim, startIdx: startIdx, endIdx: endIdx, targetIdx: tgtIdx}, nil
+}
+
 // dimMovePath builds the native v3 move_dimension endpoint. sheet_id lives in
 // the path (unlike the v2 dimension_range body that the earlier build used).
 func dimMovePath(token, sheetID string) string {
@@ -614,16 +658,22 @@ func dimMovePath(token, sheetID string) string {
 }
 
 func dimMoveBody(runtime *common.RuntimeContext) map[string]interface{} {
+	plan, err := buildDimMovePlan(runtime)
+	if err != nil {
+		// Validate has already rejected this case; emit an empty body
+		// rather than panic on the dry-run path.
+		return map[string]interface{}{}
+	}
 	dim := "ROWS"
-	if runtime.Str("dimension") == "column" {
+	if plan.dimension == "column" {
 		dim = "COLUMNS"
 	}
 	return map[string]interface{}{
 		"source": map[string]interface{}{
 			"major_dimension": dim,
-			"start_index":     runtime.Int("start"),
-			"end_index":       runtime.Int("end"), // both CLI --end and v3 end_index are 0-based inclusive
+			"start_index":     plan.startIdx,
+			"end_index":       plan.endIdx,
 		},
-		"destination_index": runtime.Int("target"),
+		"destination_index": plan.targetIdx,
 	}
 }

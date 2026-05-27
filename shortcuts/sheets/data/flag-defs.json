@@ -608,31 +608,6 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
-        "kind": "own",
-        "type": "string",
-        "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Insert start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Insert end position (exclusive)"
-      },
-      {
         "name": "inherit-style",
         "kind": "own",
         "type": "string",
@@ -644,6 +619,20 @@
           "after",
           "none"
         ]
+      },
+      {
+        "name": "position",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Insert position (1-based row number like `3` or column letter like `C`); new rows/columns are inserted *before* this position"
+      },
+      {
+        "name": "count",
+        "kind": "own",
+        "type": "int",
+        "required": "required",
+        "desc": "Number of rows/columns to insert (must be > 0)"
       },
       {
         "name": "dry-run",
@@ -686,29 +675,11 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
+        "name": "range",
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End position (exclusive)"
+        "desc": "Row/column closed range to delete; rows use 1-based numbers like `3:7` or `5` (single row), columns use letters like `C:F` or `C`"
       },
       {
         "name": "yes",
@@ -758,29 +729,11 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
+        "name": "range",
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End position (exclusive)"
+        "desc": "Row/column closed range to hide; rows use 1-based numbers like `3:7`, columns use letters like `C:F`"
       },
       {
         "name": "dry-run",
@@ -823,29 +776,11 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
+        "name": "range",
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End position (exclusive)"
+        "desc": "Row/column closed range to unhide; rows use 1-based numbers like `3:7`, columns use letters like `C:F`"
       },
       {
         "name": "dry-run",
@@ -946,31 +881,6 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
-        "kind": "own",
-        "type": "string",
-        "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End position (exclusive)"
-      },
-      {
         "name": "depth",
         "kind": "own",
         "type": "int",
@@ -989,6 +899,13 @@
           "expand",
           "fold"
         ]
+      },
+      {
+        "name": "range",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Row/column closed range to group; rows use 1-based numbers like `3:7`, columns use letters like `C:F`"
       },
       {
         "name": "dry-run",
@@ -1031,37 +948,19 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
-        "kind": "own",
-        "type": "string",
-        "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End position (exclusive)"
-      },
-      {
         "name": "depth",
         "kind": "own",
         "type": "int",
         "required": "optional",
         "desc": "Group nesting level to ungroup; default 1 (outermost)",
         "default": "1"
+      },
+      {
+        "name": "range",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Row/column closed range to ungroup; rows use 1-based numbers like `3:7`, columns use letters like `C:F`"
       },
       {
         "name": "dry-run",
@@ -1104,36 +1003,18 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "dimension",
+        "name": "source-range",
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Dimension (row or column)",
-        "enum": [
-          "row",
-          "column"
-        ]
-      },
-      {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Source range start position (0-based)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Source range end position (inclusive)"
+        "desc": "Source row/column closed range to move; rows use 1-based numbers like `3:7`, columns use letters like `C:F`"
       },
       {
         "name": "target",
         "kind": "own",
-        "type": "int",
+        "type": "string",
         "required": "required",
-        "desc": "Destination position (move target inserts before this index; 0-based)"
+        "desc": "Destination position (the moved rows/columns are placed *before* this position); rows use 1-based row number like `12`, columns use column letter like `H`. Must match the dimension of --source-range"
       },
       {
         "name": "dry-run",
@@ -2202,20 +2083,6 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start row (0-based, inclusive)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End row (0-based, inclusive)"
-      },
-      {
         "name": "type",
         "kind": "own",
         "type": "string",
@@ -2234,6 +2101,13 @@
         "required": "optional",
         "desc": "Row height in pixels (e.g. 30 / 40 / 60); required when `--type pixel`, ignored otherwise",
         "default": "0"
+      },
+      {
+        "name": "range",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Row closed range to resize; 1-based row numbers like `2:10` or `5` (single row)"
       },
       {
         "name": "dry-run",
@@ -2276,20 +2150,6 @@
         "desc": "Sheet name (XOR with `--sheet-id`)"
       },
       {
-        "name": "start",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start column (0-based, inclusive)"
-      },
-      {
-        "name": "end",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "End column (0-based, inclusive)"
-      },
-      {
         "name": "type",
         "kind": "own",
         "type": "string",
@@ -2307,6 +2167,13 @@
         "required": "optional",
         "desc": "Column width in pixels (e.g. 80 / 120 / 200); required when `--type pixel`, ignored otherwise",
         "default": "0"
+      },
+      {
+        "name": "range",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Column closed range to resize; column letters like `A:E` or `C` (single column)"
       },
       {
         "name": "dry-run",
@@ -3269,7 +3136,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Top-left cell within the target sub-sheet (A1 notation, e.g. `A1`); pairs with `--target-sheet-id`, maps to the top-level `target_position`, default `A1` (not sent when the value is A1). It and `--range` both express placement but map to different wire fields — avoid passing conflicting values for both.",
+        "desc": "Top-left cell within the target sub-sheet (A1 notation, e.g. `A1`); maps to the top-level `target_position`, default `A1` (not sent when the value is A1). It and `--range` both express placement but map to different wire fields — avoid passing conflicting values for both.",
         "default": "A1"
       },
       {

@@ -67,9 +67,9 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name:     "+rows-resize --type pixel --size 200",
+			name:     "+rows-resize --range 1:5 pixel 200",
 			sc:       RowsResize,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "0", "--end", "4", "--type", "pixel", "--size", "200"},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "1:5", "--type", "pixel", "--size", "200"},
 			toolName: "resize_range",
 			wantInput: map[string]interface{}{
 				"excel_id": testToken,
@@ -82,9 +82,9 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name:     "+rows-resize single row (start==end) keeps N:N range",
+			name:     "+rows-resize single row \"1\" expands to \"1:1\"",
 			sc:       RowsResize,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "0", "--end", "0", "--type", "auto"},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "1", "--type", "auto"},
 			toolName: "resize_range",
 			wantInput: map[string]interface{}{
 				"range":         "1:1",
@@ -92,9 +92,9 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name:     "+cols-resize --type standard (reset to default)",
+			name:     "+cols-resize --range B:D standard",
 			sc:       ColsResize,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "1", "--end", "3", "--type", "standard"},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "B:D", "--type", "standard"},
 			toolName: "resize_range",
 			wantInput: map[string]interface{}{
 				"excel_id": testToken,
@@ -106,9 +106,9 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name:     "+cols-resize --type pixel --size 120",
+			name:     "+cols-resize --range A:C pixel 120",
 			sc:       ColsResize,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "0", "--end", "2", "--type", "pixel", "--size", "120"},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A:C", "--type", "pixel", "--size", "120"},
 			toolName: "resize_range",
 			wantInput: map[string]interface{}{
 				"range": "A:C",
@@ -116,6 +116,16 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 					"type":  "pixel",
 					"value": float64(120),
 				},
+			},
+		},
+		{
+			name:     "+cols-resize single column \"C\" expands to \"C:C\"",
+			sc:       ColsResize,
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "C", "--type", "standard"},
+			toolName: "resize_range",
+			wantInput: map[string]interface{}{
+				"range":        "C:C",
+				"resize_width": map[string]interface{}{"type": "standard"},
 			},
 		},
 		{
@@ -257,26 +267,38 @@ func TestResize_TypeAndSizeGuards(t *testing.T) {
 		{
 			name: "+rows-resize --type pixel without --size",
 			sc:   RowsResize,
-			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "0", "--end", "3", "--type", "pixel"},
+			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "1:5", "--type", "pixel"},
 			want: "--type pixel requires --size",
 		},
 		{
 			name: "+rows-resize --type standard with --size",
 			sc:   RowsResize,
-			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "0", "--end", "3", "--type", "standard", "--size", "30"},
+			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "1:5", "--type", "standard", "--size", "30"},
 			want: "--size is only valid with --type pixel",
 		},
 		{
 			name: "+cols-resize rejects --type auto",
 			sc:   ColsResize,
-			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "0", "--end", "2", "--type", "auto"},
+			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A:C", "--type", "auto"},
 			want: "auto", // cobra Enum gate kicks first with "valid values are: pixel, standard"
 		},
 		{
-			name: "--end < --start",
+			name: "+rows-resize given column range",
 			sc:   RowsResize,
-			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--start", "5", "--end", "3", "--type", "standard"},
-			want: "must be >= --start",
+			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A:C", "--type", "standard"},
+			want: "+rows-resize expects row numbers",
+		},
+		{
+			name: "+cols-resize given row range",
+			sc:   ColsResize,
+			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "1:5", "--type", "standard"},
+			want: "+cols-resize expects column letters",
+		},
+		{
+			name: "+rows-resize end < start",
+			sc:   RowsResize,
+			args: []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "5:3", "--type", "standard"},
+			want: "end position is before start",
 		},
 	}
 	for _, tt := range cases {

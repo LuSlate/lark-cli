@@ -20,7 +20,7 @@ func TestBatchUpdate_TranslatesShortcutToToolName(t *testing.T) {
 		"--url", testURL,
 		"--operations", `[
 		  {"shortcut":"+cells-set","input":{"sheet_id":"sh1","range":"A1","cells":[[{"value":42}]]}},
-		  {"shortcut":"+dim-insert","input":{"sheet_id":"sh1","dimension":"row","start":0,"end":3}}
+		  {"shortcut":"+dim-insert","input":{"sheet_id":"sh1","position":"1","count":3}}
 		]`,
 		"--continue-on-error",
 		"--yes",
@@ -353,7 +353,7 @@ func TestBatchUpdate_TranslatorRejects(t *testing.T) {
 		},
 		{
 			name:      "user filled operation manually",
-			opsJSON:   `[{"shortcut":"+dim-insert","input":{"operation":"delete","range":"1:1"}}]`,
+			opsJSON:   `[{"shortcut":"+dim-insert","input":{"operation":"delete","position":"1","count":1}}]`,
 			wantMatch: "do not pass input.operation",
 		},
 		{
@@ -430,7 +430,7 @@ func TestBatchUpdate_ResizeNoOperationField(t *testing.T) {
 	t.Parallel()
 	body := parseDryRunBody(t, BatchUpdate, []string{
 		"--url", testURL,
-		"--operations", `[{"shortcut":"+rows-resize","input":{"sheet_id":"sh1","start":0,"end":2,"type":"pixel","size":30}}]`,
+		"--operations", `[{"shortcut":"+rows-resize","input":{"sheet_id":"sh1","range":"1:3","type":"pixel","size":30}}]`,
 		"--yes",
 	})
 	input := decodeToolInput(t, body, "batch_update")

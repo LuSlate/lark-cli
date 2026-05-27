@@ -180,25 +180,24 @@ func mergeInput(runtime flagView, token, sheetID, sheetName, op string, withMerg
 	return input, nil
 }
 
-// resize_range now exposes two CLI shortcuts:
+// resize_range exposes two CLI shortcuts:
 //
-//   +rows-resize / +cols-resize — set row heights / column widths. The new
-//   --type enum (pixel / standard / [auto]) replaces the old --size/--reset
-//   pair; --type pixel still takes a --size pixel value, --type standard
-//   restores the sheet default, --type auto auto-fits row heights (rows only).
+//   +rows-resize / +cols-resize — set row heights / column widths. --type
+//   enum (pixel / standard / [auto]) controls how: --type pixel needs --size,
+//   --type standard restores the sheet default, --type auto auto-fits row
+//   heights (rows only). --range is an A1 closed range ("2:10" / "5" rows or
+//   "A:E" / "C" columns); single-element form is expanded to "N:N" before
+//   send because resize_range rejects bare single-element ranges.
 //
 // Wire shape: resize_height / resize_width carries { type, value? }, e.g.
 //   { "type": "pixel", "value": 30 }  or  { "type": "standard" }.
-//
-// Both shortcuts share the underlying resize_range tool; --end is inclusive
-// in the new CLI surface (was exclusive in the legacy +dim-resize).
 
 // RowsResize wraps resize_range for row heights. --type auto enables
 // auto-fit (rows only); --type pixel requires --size.
 var RowsResize = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+rows-resize",
-	Description: "Resize rows by pixel / standard / auto (--type pixel needs --size; --start/--end are 0-based inclusive).",
+	Description: "Resize rows by pixel / standard / auto (--type pixel needs --size; --range is 1-based A1 like \"2:10\" or \"5\").",
 	Risk:        "write",
 	Scopes:      []string{"sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
@@ -238,7 +237,7 @@ var RowsResize = common.Shortcut{
 var ColsResize = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+cols-resize",
-	Description: "Resize columns by pixel / standard (--type pixel needs --size; --start/--end are 0-based inclusive; no auto for cols).",
+	Description: "Resize columns by pixel / standard (--type pixel needs --size; --range is column letters like \"A:E\" or \"C\"; no auto for cols).",
 	Risk:        "write",
 	Scopes:      []string{"sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
@@ -275,7 +274,7 @@ var ColsResize = common.Shortcut{
 
 // validateViaResize wires the standalone Validate to resizeInput so both
 // paths (standalone + batch sub-op) emit the same error for missing --type,
-// out-of-range --start/--end, or --type auto on columns.
+// malformed --range, or --type auto on columns.
 func validateViaResize(dimension string) func(ctx context.Context, runtime *common.RuntimeContext) error {
 	return func(ctx context.Context, runtime *common.RuntimeContext) error {
 		token, err := resolveSpreadsheetToken(runtime)
@@ -297,20 +296,42 @@ func autoSuffix(dimension string) string {
 	return ""
 }
 
+// commandForDimension returns the shortcut command name a given dimension
+// belongs to; used in error messages so users see "+rows-resize" / "+cols-resize"
+// instead of the internal "row" / "column" tag.
+func commandForDimension(dimension string) string {
+	if dimension == "row" {
+		return "+rows-resize"
+	}
+	return "+cols-resize"
+}
+
 // resizeInput builds the resize_range tool input. dimension is "row" /
-// "column"; --end is inclusive on the CLI surface, dimRangeFull wants
-// exclusive end, so it is bumped by one here. dimRangeFull (not dimRange) is
-// used so a single row/column still emits "N:N" — resize_range rejects a bare
-// "N".
+// "column" (selected by the calling shortcut); --range must match that
+// dimension (row → digits like "2:10" / "5"; column → letters like "A:E" /
+// "C"). Single-element form is expanded to "N:N" because resize_range
+// rejects bare single-element ranges.
 func resizeInput(runtime flagView, token, sheetID, sheetName, dimension string) (map[string]interface{}, error) {
 	if err := requireSheetSelector(sheetID, sheetName); err != nil {
 		return nil, err
 	}
-	if !runtime.Changed("start") || !runtime.Changed("end") {
-		return nil, common.FlagErrorf("--start and --end are required")
+	if !runtime.Changed("range") {
+		return nil, common.FlagErrorf("--range is required")
 	}
-	if runtime.Int("start") < 0 || runtime.Int("end") < runtime.Int("start") {
-		return nil, common.FlagErrorf("invalid range: --start (%d) must be >= 0 and --end (%d) must be >= --start", runtime.Int("start"), runtime.Int("end"))
+	rangeStr := strings.TrimSpace(runtime.Str("range"))
+	parsedDim, _, _, err := parseA1Range(rangeStr)
+	if err != nil {
+		return nil, common.FlagErrorf("invalid --range %q: %v", rangeStr, err)
+	}
+	if parsedDim != dimension {
+		want := "row numbers (e.g. \"2:10\")"
+		if dimension == "column" {
+			want = "column letters (e.g. \"A:E\")"
+		}
+		return nil, common.FlagErrorf("--range %q is a %s range; %s expects %s", rangeStr, parsedDim, commandForDimension(dimension), want)
+	}
+	if !strings.Contains(rangeStr, ":") {
+		rangeStr = rangeStr + ":" + rangeStr
 	}
 	typ := strings.TrimSpace(runtime.Str("type"))
 	if typ == "" {
@@ -326,7 +347,6 @@ func resizeInput(runtime flagView, token, sheetID, sheetName, dimension string) 
 	if typ != "pixel" && hasSize {
 		return nil, common.FlagErrorf("--size is only valid with --type pixel")
 	}
-	rangeStr := dimRangeFull(dimension, runtime.Int("start"), runtime.Int("end")+1)
 	input := map[string]interface{}{
 		"excel_id": token,
 		"range":    rangeStr,

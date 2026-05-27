@@ -317,8 +317,9 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 }
 
 // TestExecute_DimMove covers the native v3 move_dimension call. CLI's
-// 0-based inclusive --start/--end pass straight through to v3's
-// source.{start_index,end_index} (also 0-based inclusive).
+// --source-range "1:3" (1-based inclusive) is parsed into v3's
+// source.{start_index=0,end_index=2} (0-based inclusive); --target "11" is
+// parsed into destination_index=10.
 func TestExecute_DimMove(t *testing.T) {
 	t.Parallel()
 	move := &httpmock.Stub{
@@ -332,7 +333,7 @@ func TestExecute_DimMove(t *testing.T) {
 	}
 	_, err := runShortcutWithStubs(t, DimMove, []string{
 		"--url", testURL, "--sheet-id", testSheetID,
-		"--dimension", "row", "--start", "0", "--end", "2", "--target", "10",
+		"--source-range", "1:3", "--target", "11",
 	}, move)
 	if err != nil {
 		t.Fatalf("execute failed: %v", err)

@@ -17,31 +17,31 @@
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
 | 查看子表布局 | `+sheet-info` | 获取行高、列宽、隐藏行列、行列分组、合并单元格等信息 |
-| 变更子表结构 | `+dim-{insert|delete|hide|unhide|freeze|group|ungroup}` | 插入/删除/隐藏/取消隐藏/冻结行列、行列分组操作 |
+| 变更子表结构 | `+dim-{insert|delete|hide|unhide|freeze|group|ungroup|move}` | 插入/删除/隐藏/取消隐藏/冻结/分组/移动行列 |
 
 注意：
 
 - 当表格存在合并单元格时，应结合返回的 `merged_cells` 判断表头、分组标题和区域语义
 - 不要把合并区域中非左上角的空白单元格理解为"无内容"；通常应将左上角单元格的内容视为整个合并区域的语义内容
-- 插入用 `+dim-insert`：`--dimension`（`row`/`column`）+ `--start`（插入起始 index，0-based）+ `--end`（结束 index，exclusive）；插入行/列数 = `--end` − `--start`。新行/列样式继承用 `--inherit-style`（`before`/`after`/`none`）
-- 处理"在第 N 行后追加"这类请求时，注意 `--start` 是 0-based 索引、`--end` 是 exclusive，换算时避免 off-by-one
-- 例如"在第 20 行后新增 116 行"：`--dimension row --start 21 --end 137`（"第 20 行后"即从 index 21 起插入，`--end` = `--start` + 116）
+- 插入用 `+dim-insert`：`--position`（插入位置；行用 1-based 行号如 `3`，列用字母如 `C`，新行/列插在此位置**之前**）+ `--count`（插入数量，>0）。新行/列样式继承用 `--inherit-style`（`before`/`after`/`none`）
+- 例如"在第 20 行后新增 116 行"：`--position 21 --count 116`（"第 20 行后"即 1-based 行号 21）
 
-**⚠️ `--end` 区间端点语义对照（跨命令不一致，最高发的 off-by-one 来源）**：同样叫 `--start` / `--end`、同样作用于行/列区间，但 `--end` 含义因命令而异，构造参数前务必对照本表：
+**区间表达统一为 A1 风格**：所有涉及"一段连续行/列"的 shortcut 都用同一套 A1 闭区间字符串语法，**不存在 inclusive / exclusive / 0-based / 1-based 跨命令差异**：
 
-| 命令 | `--end` 语义 | 备注 |
+| 命令 | 用什么 flag 表达区间 / 位置 | 例子 |
 | --- | --- | --- |
-| `+dim-insert` / `+dim-delete` / `+dim-hide` / `+dim-unhide` / `+dim-group` / `+dim-ungroup` | **exclusive**（不含 end） | 操作行/列数 = `--end` − `--start` |
-| `+dim-move` | **inclusive**（含 end） | ⚠️ 与同族 `+dim-*` **相反**！`--start`/`--end` 是**源区间**（闭区间），目标位置另用 `--target` |
-| `+rows-resize` / `+cols-resize` | **inclusive**（含 end） | `--start`/`--end` 均为 0-based 闭区间 |
+| `+dim-insert` | `--position` + `--count` | `--position 3 --count 5`（在第 3 行前插 5 行）/ `--position C --count 2`（在 C 列前插 2 列） |
+| `+dim-delete` / `+dim-hide` / `+dim-unhide` / `+dim-group` / `+dim-ungroup` / `+rows-resize` / `+cols-resize` | `--range` | `"3:7"`（第 3-7 行，闭区间）/ `"C:F"`（C-F 列，闭区间）/ `"5"` 或 `"C"`（单行/列） |
+| `+dim-move` | `--source-range`（源区间）+ `--target`（目标位置） | `--source-range "3:7" --target 12`（把第 3-7 行移到第 12 行前）/ `--source-range "C:F" --target H` |
 
-把 `+dim-insert` / `+dim-delete` 的 exclusive 习惯照搬到 `+dim-move` / `+rows-resize` / `+cols-resize`（或反过来）会少算/多算一行/一列——动手前先在本表确认目标命令的 `--end` 端点语义。
+行用 1-based 数字、列用字母——跟 Excel / 飞书 UI 看到的行号、列字母完全一致。
 
 **常见配置错误（必须注意）**：
-- **插入列位置偏移**：插入列时 `--start` 是基于 0 的列索引，不是列字母。插入前先通过 `+workbook-info` 或读取表头确认目标位置的实际列索引，不要凭猜测
-- **插入后引用偏移**：插入行/列后，原有数据的行列号会发生偏移。如果插入后还需要对原有区域执行写入操作，必须重新计算偏移后的行列号
-- **删除行列前先确认范围**：删除操作不可逆，执行前应确认 `--start` / `--end` 精确无误（`+dim-delete` 用 `--dimension` + `--start`（0-based）+ `--end`（exclusive））。可先用 `+csv-get` 读取目标区域验证内容
-- **"在左侧新增一列"的正确写法**：用户说"在 D 列左侧新增一列"时，`--dimension column`、`--start` 取 D 列的 0-based 索引（新列插在该 index 之前）、`--end = --start + 1`；要继承左侧列样式加 `--inherit-style before`
+- **插入列直接用字母**：`+dim-insert` 的 `--position` 在列场景直接传字母（如 `C`），不要把列字母换算成 0-based 索引
+- **插入后引用偏移**：插入行/列后，原有数据的行号 / 列字母会发生偏移。如果插入后还需要对原有区域执行写入操作，必须重新计算偏移后的位置
+- **删除行列前先确认范围**：删除操作不可逆，执行前应确认 `--range` 精确无误。可先用 `+csv-get` 读取目标区域验证内容
+- **"在 D 列左侧新增一列"的正确写法**：`--position D --count 1`（新列插在 D 列之前）；要继承左侧列样式加 `--inherit-style before`
+- **`+dim-move` 同维度约束**：`--source-range` 是行区间时 `--target` 必须是行号（数字），是列区间时 `--target` 必须是列字母——不可一行一列混用
 - **插入列后必须检查多行表头合并区域**：很多表格有 2-3 行的合并表头。插入列后，原有的合并区域不会自动扩展到新列。必须先用 `+sheet-info --include merges` 读取合并区域，插入后将跨越插入位置的合并区域重新设置（用 `+cells-{merge|unmerge}`），否则新列的表头会是空的、格式不连续
 - **公式写入范围跳过表头行**：写入公式时从数据行开始（不是第 1 行）。先确认表头占几行（可能 1-3 行），公式的起始行 = 表头行数 + 1
 
@@ -76,10 +76,9 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 插入起始位置（0-based） |
-| `--end` | int | required | 插入结束位置（exclusive） |
 | `--inherit-style` | string | optional | 新行/列样式继承策略 enum：`before`（继承前一行/列）/ `after`（继承后一行/列）/ `none`（默认）（可选值：`before` / `after` / `none`） |
+| `--position` | string | required | 插入位置（在此行/列**之前**插入）：行用 1-based 行号如 `3`；列用字母如 `C` |
+| `--count` | int | required | 插入数量（>0） |
 
 ### `+dim-delete`
 
@@ -87,9 +86,7 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 起始位置（0-based） |
-| `--end` | int | required | 结束位置（exclusive） |
+| `--range` | string | required | 要删除的行/列闭区间；行用 1-based 数字如 `3:7` 或单行 `5`，列用字母如 `C:F` 或单列 `C` |
 
 ### `+dim-hide`
 
@@ -97,9 +94,7 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 起始位置（0-based） |
-| `--end` | int | required | 结束位置（exclusive） |
+| `--range` | string | required | 要隐藏的行/列闭区间；行如 `3:7`，列如 `C:F` |
 
 ### `+dim-unhide`
 
@@ -107,9 +102,7 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 起始位置（0-based） |
-| `--end` | int | required | 结束位置（exclusive） |
+| `--range` | string | required | 要取消隐藏的行/列闭区间；行如 `3:7`，列如 `C:F` |
 
 ### `+dim-freeze`
 
@@ -126,11 +119,9 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 起始位置（0-based） |
-| `--end` | int | required | 结束位置（exclusive） |
 | `--depth` | int | optional | 嵌套分组的层级（创建到第几层），默认 1 |
 | `--group-state` | string | optional | 分组初始展开状态（可选值：`expand` / `fold`）（默认 `expand`） |
+| `--range` | string | required | 要创建分组的行/列闭区间；行如 `3:7`，列如 `C:F` |
 
 ### `+dim-ungroup`
 
@@ -138,10 +129,8 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 起始位置（0-based） |
-| `--end` | int | required | 结束位置（exclusive） |
 | `--depth` | int | optional | 要取消的分组层级，默认 1（最外层） |
+| `--range` | string | required | 要取消分组的行/列闭区间；行如 `3:7`，列如 `C:F` |
 
 ### `+dim-move`
 
@@ -149,10 +138,8 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--dimension` | string | required | 维度方向（行或列）（可选值：`row` / `column`） |
-| `--start` | int | required | 源起止区间的起始位置（0-based） |
-| `--end` | int | required | 源起止区间的结束位置（inclusive） |
-| `--target` | int | required | 目标位置（move 到该 index 之前；0-based） |
+| `--source-range` | string | required | 要移动的源行/列闭区间；行如 `3:7`，列如 `C:F` |
+| `--target` | string | required | 目标位置（移到此行/列**之前**）：行用 1-based 行号如 `12`，列用字母如 `H`。必须与 `--source-range` 同维度（行/列） |
 
 ## Examples
 
@@ -164,26 +151,41 @@ _公共四件套 · 系统：`--dry-run`_
 
 ### `+dim-insert`
 
-示例：
-
 ```bash
 # 在第 10 行前插 3 行，继承上方样式
 lark-cli sheets +dim-insert --url "https://example.feishu.cn/sheets/shtXXX" \
-  --sheet-id "$SID" --dimension row --start 10 --end 13 --inherit-style before
+  --sheet-id "$SID" --position 10 --count 3 --inherit-style before
+
+# 在 C 列前插 2 列
+lark-cli sheets +dim-insert --url "..." --sheet-id "$SID" --position C --count 2
 ```
 
 ### `+dim-delete`
 
 ```bash
-# 删除第 5-7 行（0-based，--end 为 exclusive）
-lark-cli sheets +dim-delete --url "..." --sheet-id "$SID" --dimension row --start 5 --end 8 --yes
+# 删除第 5-7 行
+lark-cli sheets +dim-delete --url "..." --sheet-id "$SID" --range "5:7" --yes
+
+# 删除 D-F 列
+lark-cli sheets +dim-delete --url "..." --sheet-id "$SID" --range "D:F" --yes
 ```
 
 ### `+dim-hide` / `+dim-unhide`
 
 ```bash
-lark-cli sheets +dim-hide   --url "..." --sheet-id "$SID" --dimension row --start 5 --end 8
-lark-cli sheets +dim-unhide --url "..." --sheet-id "$SID" --dimension row --start 5 --end 8
+lark-cli sheets +dim-hide   --url "..." --sheet-id "$SID" --range "5:7"
+lark-cli sheets +dim-unhide --url "..." --sheet-id "$SID" --range "5:7"
+lark-cli sheets +dim-hide   --url "..." --sheet-id "$SID" --range "C:F"
+```
+
+### `+dim-move`
+
+```bash
+# 把第 3-7 行移到第 12 行前
+lark-cli sheets +dim-move --url "..." --sheet-id "$SID" --source-range "3:7" --target 12
+
+# 把 C-F 列移到 H 列前
+lark-cli sheets +dim-move --url "..." --sheet-id "$SID" --source-range "C:F" --target H
 ```
 
 ### `+rows-resize` / `+cols-resize`
@@ -205,6 +207,6 @@ lark-cli sheets +dim-freeze --url "..." --sheet-id "$SID" --dimension row --coun
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`--start ≤ --end`；`+dim-delete` 强制 `--yes` 或 `--dry-run`；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 会被忽略（传了无害）；`+rows-resize` / `+cols-resize` 的行 vs 列 `--type` 差异详见 `lark-sheets-range-operations.md`。
-- `DryRun`：写操作输出"将要 PATCH 的 dimension 区间 + 目标参数"。
+- `Validate`：XOR 公共四件套；`--range` / `--source-range` 必须是合法 A1 闭区间（行用数字、列用字母，不可混用）；`+dim-insert` 的 `--count` > 0；`+dim-move` 的 `--target` 必须与 `--source-range` 同维度（行 vs 列）；`+dim-delete` 强制 `--yes` 或 `--dry-run`；`+rows-resize` / `+cols-resize` 的 `--type` 必填，`--type pixel` 时 `--size` 必填、其它 type 时 `--size` 会被忽略（传了无害）；`+rows-resize` / `+cols-resize` 的行 vs 列 `--type` 差异详见 `lark-sheets-range-operations.md`。
+- `DryRun`：写操作输出"将要 PATCH 的目标范围 + 目标参数"。
 - `Execute`：写后不自动回读；如需确认，自行调用 `+sheet-info --include row_heights,col_widths,hidden_rows,hidden_cols,groups,frozen` 查看受影响的范围。

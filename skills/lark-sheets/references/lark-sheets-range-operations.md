@@ -123,10 +123,9 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--start` | int | required | 起始行（0-based, inclusive） |
-| `--end` | int | required | 结束行（0-based, inclusive） |
 | `--type` | string | required | 尺寸方式 enum：`pixel`（指定 px 像素值，需配 `--size`）/ `standard`（重置为默认标准行高）/ `auto`（自动适应内容）（可选值：`pixel` / `standard` / `auto`） |
 | `--size` | int | optional | 行高（像素，例：30 / 40 / 60）；`--type pixel` 时必填，其它 type 忽略 |
+| `--range` | string | required | 要调整行高的行闭区间；1-based 行号如 `2:10` 或单行 `5` |
 
 ### `+cols-resize`
 
@@ -134,10 +133,9 @@ _公共四件套 · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--start` | int | required | 起始列（0-based, inclusive） |
-| `--end` | int | required | 结束列（0-based, inclusive） |
 | `--type` | string | required | 尺寸方式 enum：`pixel`（指定 px 像素值，需配 `--size`）/ `standard`（重置为默认标准列宽）（可选值：`pixel` / `standard`） |
 | `--size` | int | optional | 列宽（像素，例：80 / 120 / 200）；`--type pixel` 时必填，其它 type 忽略 |
+| `--range` | string | required | 要调整列宽的列闭区间；列字母如 `A:E` 或单列 `C` |
 
 ### `+range-move`
 
@@ -224,16 +222,16 @@ lark-cli sheets +cells-unmerge --url "..." --sheet-id "$SID" --range "A1:C100"
 
 ```bash
 # 把第 2-10 行设为固定 30 px
-lark-cli sheets +rows-resize --url "..." --sheet-id "$SID" --start 2 --end 10 --type pixel --size 30
+lark-cli sheets +rows-resize --url "..." --sheet-id "$SID" --range "2:10" --type pixel --size 30
 
 # 把 A-C 列设为固定 120 px
-lark-cli sheets +cols-resize --url "..." --sheet-id "$SID" --start 0 --end 2 --type pixel --size 120
+lark-cli sheets +cols-resize --url "..." --sheet-id "$SID" --range "A:C" --type pixel --size 120
 
-# 行高自动适应内容（列宽不支持 auto）
-lark-cli sheets +rows-resize --url "..." --sheet-id "$SID" --start 0 --end 0 --type auto
+# 第 1 行行高自动适应内容（列宽不支持 auto）
+lark-cli sheets +rows-resize --url "..." --sheet-id "$SID" --range "1" --type auto
 
-# 重置为默认
-lark-cli sheets +cols-resize --url "..." --sheet-id "$SID" --start 0 --end 5 --type standard
+# 重置 A-E 列为默认列宽
+lark-cli sheets +cols-resize --url "..." --sheet-id "$SID" --range "A:E" --type standard
 ```
 
 > 同时出现在 `lark-sheets-sheet-structure.md` —— 行高 / 列宽调整也算行列结构层动作。
