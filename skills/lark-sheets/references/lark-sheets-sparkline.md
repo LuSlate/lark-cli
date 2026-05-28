@@ -108,8 +108,8 @@ lark-cli sheets +sparkline-create --url "..." --sheet-id "$SID" --properties @sp
 {
   "config": { "line_width": 2 },
   "sparklines": [
-    {"position": {"row": 1, "col": "F"}, "source": "Sheet1!A2:E2"},
-    {"position": {"row": 2, "col": "F"}, "source": "Sheet1!A3:E3"}
+    {"position": {"row": 1, "col": "F"}, "source": "'Sheet1'!A2:E2"},
+    {"position": {"row": 2, "col": "F"}, "source": "'Sheet1'!A3:E3"}
   ]
 }
 ```
@@ -122,8 +122,8 @@ lark-cli sheets +sparkline-create --url "..." --sheet-id "$SID" --properties @sp
 # 假设 +sparkline-list 已返回 group_id=grpA，组内 sparkline_id=sl_1 / sl_2
 lark-cli sheets +sparkline-update --url "..." --sheet-id "$SID" --group-id "grpA" --properties '{
   "sparklines": [
-    {"sparkline_id":"sl_1","source":"Sheet1!A2:A20"},
-    {"sparkline_id":"sl_2","source":"Sheet1!B2:B20"}
+    {"sparkline_id":"sl_1","source":"'Sheet1'!A2:A20"},
+    {"sparkline_id":"sl_2","source":"'Sheet1'!B2:B20"}
   ]
 }'
 ```

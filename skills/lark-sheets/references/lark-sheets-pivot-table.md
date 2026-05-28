@@ -121,7 +121,7 @@ lark-cli sheets +pivot-list --url "..." --sheet-id "$SID"
 > 数据源 `--source` 必须从表头行开始；空行 / 汇总行会被当作数据参与聚合，需提前用 `+csv-get` 确认起止边界。`--source` 和 `--range` 是独立 flag（不要再放 `--properties`）；`rows` / `columns` / `values` 等数组字段走 `--properties`。
 >
 > **先理清 `+pivot-create` 上 4 个位置类入参（语义不同，别混）**：
-> - `--source`（**必填**）：**源数据**区域，须自带 `Sheet!` 前缀（如 `Sheet1!A1:D100`）。源 sheet 的名字在 `--source` 字符串里，**不**通过单独 flag 传。
+> - `--source`（**必填**）：**源数据**区域，须自带 `Sheet!` 前缀（如 `'Sheet1'!A1:D100`，sheet 名按 A1 标准单引号包裹）。源 sheet 的名字在 `--source` 字符串里，**不**通过单独 flag 传。
 > - `--sheet-id` / `--sheet-name`：**透视表的落点 sheet**（即产物放哪张子表）。两个互斥（最多传一个），都不传时后端自动新建子表存放产物（强烈推荐）。**注意：跟其它 shortcut 不同，这里 `--sheet-id` / `--sheet-name` 表达的不是"数据源所在 sheet"而是"产物落点 sheet"**。
 > - `--target-position`（可选，A1 表示法，默认 `A1`）：落点 sheet 内的起始 cell，映射到顶层 `target_position`。
 > - `--range`（可选，A1 单值，仅 create 生效）：跟 `--target-position` 表达同一意图但映射到 `properties.range`，**两者不要同时给**。
@@ -136,12 +136,17 @@ lark-cli sheets +pivot-list --url "..." --sheet-id "$SID"
 ```bash
 # 策略 1（强烈推荐）：不传任何落点 flag → 后端自动新建子表，零覆盖风险
 lark-cli sheets +pivot-create --url "..." \
-  --source "Sheet1!A1:D100" --properties @pivot.json
+  --source "'Sheet1'!A1:D100" --properties @pivot.json
 
 # 策略 2：落进指定的已有目标子表（注意目标 sheet ≠ 源 sheet，否则要配 --target-position 避开源数据）
 lark-cli sheets +pivot-create --url "..." \
-  --source "Sheet1!A1:D100" --sheet-id "$DEST_SID" --target-position "A1" --properties @pivot.json
+  --source "'Sheet1'!A1:D100" --sheet-id "$DEST_SID" --target-position "A1" --properties @pivot.json
 ```
+
+> ⚠️ 上面 bash 示例的 `--source` 用了双引号，在 interactive bash（含豆包 ShellExec）下 `!` 会触发 history expansion 报 `bash: !A1: event not found`。**实际跑命令时**用以下任一种写法：
+> - **首选**：命令最前面加 `set +H;` 关掉 history expansion，全程 double-quote 不踩坑
+> - **次选**：`--source` 整体改 shell single-quote，但 sheet 名内的 A1 单引号需要 `'\''` 转义：`--source ''\''Sheet1'\''!A1:D100'`
+> - **应急**：先 `+sheet-rename --title <ASCII 名>` 把含 `-` / 空格的 sheet 名改成 plain 名（U046 模型最终走通的兜底路径）
 
 ### `+pivot-update`
 

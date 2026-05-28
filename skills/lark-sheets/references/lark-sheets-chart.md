@@ -53,7 +53,7 @@
 > **正确做法**：
 > 1. 在 `data` 下显式设置 `"headerMode": "detached"`；
 > 2. `refs` **只覆盖该子集的纯数据**，不要向上/向左多带 1 行/列，也不要把全局表头整段并进来（否则会把其它分组的数据混进图）；
-> 3. **`nameRef` 必填**：给 `dim1.serie.nameRef` 写真正表头中"类别名"那一格的 A1 引用（如 `Sheet2!A1`），给每个 `dim2.series[i].nameRef` 写对应数值列的 A1 引用（如 `Sheet2!C1`、`Sheet2!D1`）。任一缺失会被校验拦下并报 `headerMode=detached requires ... nameRef`；
+> 3. **`nameRef` 必填**：给 `dim1.serie.nameRef` 写真正表头中"类别名"那一格的 A1 引用（如 `'Sheet2'!A1`，sheet 名按 A1 标准单引号包裹），给每个 `dim2.series[i].nameRef` 写对应数值列的 A1 引用（如 `'Sheet2'!C1`、`'Sheet2'!D1`）。任一缺失会被校验拦下并报 `headerMode=detached requires ... nameRef`；
 > 4. `refs[i].value` 必须是单元格或普通矩形范围（CELL / NORMAL），不接受整行/整列/开区间；`direction='column'` 时起始行必须 > 0，`direction='row'` 时起始列必须 > 0；
 > 5. `index` 仍按 `refs` 内的列/行号填，从 1 开始。
 >
@@ -173,7 +173,7 @@ lark-cli sheets +chart-create --url "https://example.feishu.cn/sheets/shtXXX" \
     "size":{"width":600,"height":400},
     "snapshot":{
       "data":{
-        "refs":[{"value":"Sheet1!A1:B10"}],
+        "refs":[{"value":"'Sheet1'!A1:B10"}],
         "dim1":{"serie":{"index":1}},
         "dim2":{"series":[{"index":2}]}
       },
@@ -203,7 +203,7 @@ lark-cli sheets +chart-create --url "..." --sheet-name "Sheet1" --properties '{
       }]
     }},
     "data":{
-      "refs":[{"value":"Sheet1!A1:B11"}],
+      "refs":[{"value":"'Sheet1'!A1:B11"}],
       "dim1":{"serie":{"index":1,"aggregate":true}},
       "dim2":{"series":[{"index":2,"aggregateType":"sum"}]}
     }
@@ -225,11 +225,11 @@ lark-cli sheets +chart-create --url "..." --sheet-name "Sheet2" --properties '{
     "data":{
       "headerMode":"detached",
       "direction":"column",
-      "refs":[{"value":"Sheet2!A11:D17"}],
-      "dim1":{"serie":{"index":1,"nameRef":"Sheet2!A1"}},
+      "refs":[{"value":"'Sheet2'!A11:D17"}],
+      "dim1":{"serie":{"index":1,"nameRef":"'Sheet2'!A1"}},
       "dim2":{"series":[
-        {"index":3,"nameRef":"Sheet2!C1"},
-        {"index":4,"nameRef":"Sheet2!D1"}
+        {"index":3,"nameRef":"'Sheet2'!C1"},
+        {"index":4,"nameRef":"'Sheet2'!D1"}
       ]}
     }
   }
@@ -250,9 +250,9 @@ lark-cli sheets +chart-create --url "..." --sheet-name "Sheet2" --properties '{
 
 ```jsonc
 // 错误 1：refs 含全局表头但跨段 —— 多个区域被混进同一张图
-{"data":{"refs":[{"value":"Sheet!A1:E17"}], ... }}   // 华东图混进华北 8 行
+{"data":{"refs":[{"value":"'Sheet'!A1:E17"}], ... }}   // 华东图混进华北 8 行
 // 错误 2：inline + refs 只取数据段、不写 detached/nameRef —— 图例显示成具体数据值
-{"data":{"refs":[{"value":"Sheet!A10:E17"}],"dim1":{"serie":{"index":1}}, ... }}
+{"data":{"refs":[{"value":"'Sheet'!A10:E17"}],"dim1":{"serie":{"index":1}}, ... }}
 ```
 
 ✅ 正确模式：3 张图各自 detached、refs 干净不重叠：
@@ -261,15 +261,15 @@ lark-cli sheets +chart-create --url "..." --sheet-name "Sheet2" --properties '{
 // 图 1：华北
 {"data":{
   "headerMode":"detached","direction":"column",
-  "refs":[{"value":"Sheet!A2:E9"}],
-  "dim1":{"serie":{"index":1,"nameRef":"Sheet!A1"}},
+  "refs":[{"value":"'Sheet'!A2:E9"}],
+  "dim1":{"serie":{"index":1,"nameRef":"'Sheet'!A1"}},
   "dim2":{"series":[
-    {"index":3,"nameRef":"Sheet!C1"},
-    {"index":4,"nameRef":"Sheet!D1"}
+    {"index":3,"nameRef":"'Sheet'!C1"},
+    {"index":4,"nameRef":"'Sheet'!D1"}
   ]}
 }}
-// 图 2：华东 —— refs 改 Sheet!A10:E17，其余同上
-// 图 3：华南 —— refs 改 Sheet!A18:E25，其余同上
+// 图 2：华东 —— refs 改 'Sheet'!A10:E17，其余同上
+// 图 3：华南 —— refs 改 'Sheet'!A18:E25，其余同上
 ```
 
 > `--properties` JSON 关键字段：

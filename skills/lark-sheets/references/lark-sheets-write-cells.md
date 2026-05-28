@@ -143,9 +143,9 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 | flag | 选项来源 | 适用场景 |
 |---|---|---|
 | `--options '["a","b","c"]'` | 写在命令里的固定列表 | 选项集是常量、不需要事后维护 |
-| `--source-range 'Sheet1!T1:T3'` | 已有单元格里的值 | 选项要跟数据动态同步；想维护一张「枚举值」列后多处引用 |
+| `--source-range '''Sheet1''!T1:T3'` | 已有单元格里的值 | 选项要跟数据动态同步；想维护一张「枚举值」列后多处引用 |
 
-两个 flag **必须传一个、且只能传一个**——同时传或都不传，CLI 会立刻报错。`--source-range` 用 A1 + sheet 前缀写法（如 `Sheet1!T1:T3`），可以指同 sheet 也可以指其它 sheet（如 `Refs!A1:A10`）。
+两个 flag **必须传一个、且只能传一个**——同时传或都不传，CLI 会立刻报错。`--source-range` 用 A1 + sheet 前缀写法（如 `'Sheet1'!T1:T3`，sheet 名按 A1 标准单引号包裹），可以指同 sheet 也可以指其它 sheet（如 `'Refs'!A1:A10`）。
 
 ### 配色：默认即上色，三种意图三条线
 
@@ -182,15 +182,17 @@ lark-cli sheets +dropdown-set \
   --colors '["#bff7d9","#FFE699","#bacefd"]'
 ```
 
-**`--source-range` 模式**（先在 `Sheet1!T1:T3` 维护「男/女/保密」三行，再让 `B2:B21` 引用它）：
+**`--source-range` 模式**（先在 `'Sheet1'!T1:T3` 维护「男/女/保密」三行，再让 `B2:B21` 引用它）：
 
 ```
 lark-cli sheets +dropdown-set \
   --url https://... --sheet-id <id> \
   --range B2:B21 \
-  --source-range 'Sheet1!T1:T3' \
+  --source-range ''\''Sheet1'\''!T1:T3' \
   --colors '["#cce8ff","#ffd6e7","#e6e6e6"]'
 ```
+
+> ⚠️ `--source-range` 的 shell 包法：上面用 `''\''Sheet1'\''!T1:T3'` 是为了在 shell single-quote 外层中嵌入 A1 内部 single-quote（防 bash 历史展开 `!T1`）。等效更简单写法：命令最前加 `set +H;` 关 history expansion，然后 `--source-range "'Sheet1'!T1:T3"`。详见 SKILL.md「Shell 调用注意事项」。
 
 **纯白下拉**（明确告诉用户"不要彩色"时才用）：
 
