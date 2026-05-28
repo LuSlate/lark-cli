@@ -88,6 +88,23 @@ func TestMountTyped_HelpFuncInstalled(t *testing.T) {
 	}
 }
 
+// TestTypedShortcut_Mount verifies the no-context convenience Mount API still
+// works after migration, mirroring legacy Shortcut.Mount so existing tests of
+// migrated shortcuts don't need to switch to MountWithContext.
+func TestTypedShortcut_Mount(t *testing.T) {
+	root := &cobra.Command{Use: "root"}
+	ts := TypedShortcut[*adapterArgs]{
+		Service: "x", Command: "+demo", AuthTypes: []string{"user"},
+		Risk:    "read",
+		Execute: func(ctx context.Context, args *adapterArgs, rt *RuntimeContext) error { return nil },
+	}
+	ts.Mount(root, &cmdutil.Factory{})
+	sub, _, err := root.Find([]string{"+demo"})
+	if err != nil || sub == nil {
+		t.Fatalf("find subcommand: %v (sub=%v)", err, sub)
+	}
+}
+
 func TestTypedShortcut_GetAuthTypes(t *testing.T) {
 	ts := TypedShortcut[*stubArgs]{AuthTypes: []string{"user", "bot"}}
 	if got := ts.GetAuthTypes(); !slices.Equal(got, []string{"user", "bot"}) {

@@ -29,6 +29,7 @@ func buildTypedHelp(specs []fieldSpec, examples []HelpExample) func(*cobra.Comma
 		fmt.Fprintf(w, "%s — %s\n\n", cmd.Use, cmd.Short)
 		rendered := map[string]struct{}{}
 		renderOneOfSections(w, specs, rendered)
+		renderRequiredSection(w, specs, rendered)
 		renderOptionalSection(w, specs, rendered)
 		renderExamples(w, examples)
 		renderGlobalFlags(w, cmd, rendered)
@@ -39,6 +40,18 @@ func buildTypedHelp(specs []fieldSpec, examples []HelpExample) func(*cobra.Comma
 			fmt.Fprintf(w, "Tips: %s\n", tip)
 		}
 	}
+}
+
+// formatLeafLine renders one leaf flag line — "--name    description" with an
+// optional `(default "x")` suffix when the field declares a default. Reused by
+// every section renderer so REQUIRED / OPTIONAL / CHOOSE ONE all surface the
+// same information density as cobra's legacy default help.
+func formatLeafLine(indent string, s fieldSpec) string {
+	line := fmt.Sprintf("%s--%s    %s", indent, s.FlagName, s.Description)
+	if s.DefaultValue != "" {
+		line += fmt.Sprintf(" (default %q)", s.DefaultValue)
+	}
+	return line
 }
 
 // renderOneOfSections walks each OneOf bucket and prints "CHOOSE ONE <FIELD>:"
@@ -76,7 +89,7 @@ func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered
 				if leaf.FlagName == "" {
 					continue
 				}
-				fmt.Fprintf(w, "%s--%s    %s\n", indent, leaf.FlagName, leaf.Description)
+				fmt.Fprintln(w, formatLeafLine(indent, leaf))
 				rendered[leaf.FlagName] = struct{}{}
 			}
 			continue
@@ -84,28 +97,54 @@ func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered
 		if child.FlagName == "" {
 			continue
 		}
-		fmt.Fprintf(w, "%s--%s    %s\n", indent, child.FlagName, child.Description)
+		fmt.Fprintln(w, formatLeafLine(indent, child))
 		rendered[child.FlagName] = struct{}{}
 	}
 }
 
+// renderRequiredSection prints top-level leaf flags that carry the `required`
+// tag under a "REQUIRED:" header so users can see at a glance which flags they
+// must supply. Sub-struct fields are skipped here because they're surfaced
+// under the CHOOSE ONE sections above.
+func renderRequiredSection(w io.Writer, specs []fieldSpec, rendered map[string]struct{}) {
+	anyFlag := false
+	for _, s := range specs {
+		if s.IsOneOfBkt || s.IsGroup {
+			continue
+		}
+		if s.FlagName == "" || !s.Required {
+			continue
+		}
+		if !anyFlag {
+			fmt.Fprintln(w, "REQUIRED:")
+			anyFlag = true
+		}
+		fmt.Fprintln(w, formatLeafLine("  ", s))
+		rendered[s.FlagName] = struct{}{}
+	}
+	if anyFlag {
+		fmt.Fprintln(w)
+	}
+}
+
 // renderOptionalSection prints top-level leaf flags that don't belong to any
-// OneOf bucket. Sub-struct fields are skipped here because they live under
-// CHOOSE ONE sections above.
+// OneOf bucket and aren't tagged required (those are handled by
+// renderRequiredSection above). Sub-struct fields are skipped here because
+// they live under CHOOSE ONE sections above.
 func renderOptionalSection(w io.Writer, specs []fieldSpec, rendered map[string]struct{}) {
 	anyFlag := false
 	for _, s := range specs {
 		if s.IsOneOfBkt || s.IsGroup {
 			continue
 		}
-		if s.FlagName == "" {
+		if s.FlagName == "" || s.Required {
 			continue
 		}
 		if !anyFlag {
 			fmt.Fprintln(w, "OPTIONAL:")
 			anyFlag = true
 		}
-		fmt.Fprintf(w, "  --%s    %s\n", s.FlagName, s.Description)
+		fmt.Fprintln(w, formatLeafLine("  ", s))
 		rendered[s.FlagName] = struct{}{}
 	}
 	if anyFlag {
