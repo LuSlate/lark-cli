@@ -58,14 +58,11 @@ func renderOneOfSections(w io.Writer, specs []fieldSpec, rendered map[string]str
 }
 
 // renderFlagsInBucket renders bucket inner flags, recursing into nested group
-// / OneOf sub-structs. The printed shape is FLATTENED so a oneof_trigger leaf
-// inside a nested group renders at the parent's indent (it IS the variant
-// selector, not a companion). Non-trigger leaves with a default value also
-// render at parent indent (a default makes them "optional companions" rather
-// than required follow-ons — e.g. an enum flag with a default). Only
-// non-trigger leaves WITHOUT a default render at parent+2 indent, signaling
-// "you must supply this together with the trigger" (e.g. a required companion
-// flag under its trigger flag).
+// / OneOf sub-structs. The structure is FLATTENED — every leaf flag of an
+// inner variant renders at the parent's indent. The framework treats any
+// inner flag of a group variant equally (providing any of them counts as
+// selecting that variant), so the help no longer visually distinguishes a
+// "trigger" from a "companion".
 func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered map[string]struct{}) {
 	for _, child := range specs {
 		if child.IsGroup || child.IsOneOfBkt {
@@ -79,11 +76,7 @@ func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered
 				if leaf.FlagName == "" {
 					continue
 				}
-				leafIndent := indent
-				if !leaf.OneOfTrig && leaf.DefaultValue == "" {
-					leafIndent = indent + "  "
-				}
-				fmt.Fprintf(w, "%s--%s    %s\n", leafIndent, leaf.FlagName, leaf.Description)
+				fmt.Fprintf(w, "%s--%s    %s\n", indent, leaf.FlagName, leaf.Description)
 				rendered[leaf.FlagName] = struct{}{}
 			}
 			continue

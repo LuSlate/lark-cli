@@ -232,6 +232,76 @@ func TestBindGroups_TopLevelPtrGroup_NilWhenAbsent(t *testing.T) {
 	}
 }
 
+// --- OneOf with a nested group variant (no oneof_trigger; any inner flag
+// counts as attempting that variant) ---
+
+type vidGroup struct {
+	File  string `flag:"vid-file"`
+	Cover string `flag:"vid-cover"`
+}
+type contentBucket struct {
+	Text  *string   `flag:"ct"`
+	Video *vidGroup
+}
+
+func (contentBucket) OneOf() {}
+
+type contentBucketArgs struct {
+	Bucket contentBucket
+}
+
+func TestCheckOneOf_GroupCompanionAloneTriggersVariant(t *testing.T) {
+	// Companion --vid-cover alone (no --vid-file) should count as attempting
+	// the Video variant; OneOf check passes (1 variant attempted) and the
+	// group completeness check then surfaces shortcut_group_incomplete with
+	// the specific missing flag, not a misleading shortcut_oneof_missing.
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&contentBucketArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags([]string{"--vid-cover", "c.png"})
+	out := &contentBucketArgs{}
+	_ = bindFlags(cmd, reflect.ValueOf(out).Elem(), specs)
+	err := runFrameworkRules(cmd, reflect.ValueOf(out).Elem(), specs)
+	if err == nil {
+		t.Fatal("expected group_incomplete error")
+	}
+	ve := mustValidationError(t, err)
+	if ve.Subtype != errs.SubtypeShortcutGroupIncomplete {
+		t.Errorf("Subtype = %q, want shortcut_group_incomplete", ve.Subtype)
+	}
+}
+
+func TestCheckOneOf_GroupVariantBothFieldsOK(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&contentBucketArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags([]string{"--vid-file", "v.mp4", "--vid-cover", "c.png"})
+	out := &contentBucketArgs{}
+	_ = bindFlags(cmd, reflect.ValueOf(out).Elem(), specs)
+	if err := runFrameworkRules(cmd, reflect.ValueOf(out).Elem(), specs); err != nil {
+		t.Errorf("expected OK, got %v", err)
+	}
+}
+
+func TestCheckOneOf_SimpleAndGroupBothAttempted_Multiple(t *testing.T) {
+	// Text variant set AND Video group's companion set → both variants are
+	// attempted; expect shortcut_oneof_multiple.
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&contentBucketArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags([]string{"--ct", "hi", "--vid-cover", "c.png"})
+	out := &contentBucketArgs{}
+	_ = bindFlags(cmd, reflect.ValueOf(out).Elem(), specs)
+	err := runFrameworkRules(cmd, reflect.ValueOf(out).Elem(), specs)
+	if err == nil {
+		t.Fatal("expected oneof_multiple error")
+	}
+	ve := mustValidationError(t, err)
+	if ve.Subtype != errs.SubtypeShortcutOneOfMultiple {
+		t.Errorf("Subtype = %q, want shortcut_oneof_multiple", ve.Subtype)
+	}
+}
+
 func mustValidationError(t *testing.T, err error) *errs.ValidationError {
 	t.Helper()
 	var ve *errs.ValidationError

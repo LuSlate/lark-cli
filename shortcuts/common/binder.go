@@ -29,7 +29,6 @@ type fieldSpec struct {
 	IsGroup      bool
 	IsMaybe      bool
 	IsPtr        bool
-	OneOfTrig    bool
 	FieldType    reflect.Type
 	StructType   reflect.Type
 }
@@ -78,9 +77,6 @@ func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
 	}
 	if _, has := f.Tag.Lookup("required"); has {
 		spec.Required = true
-	}
-	if f.Tag.Get("oneof_trigger") == "true" {
-		spec.OneOfTrig = true
 	}
 	ft := f.Type
 	spec.FieldType = ft
@@ -585,8 +581,14 @@ func runFrameworkRules(cmd *cobra.Command, argsVal reflect.Value, specs []fieldS
 	return nil
 }
 
-// checkOneOf counts how many variant trigger flags the user set inside the
-// bucket struct. Exactly one is required.
+// checkOneOf counts how many variants the user attempted inside the OneOf
+// bucket; exactly one must be attempted. A variant counts as "attempted" if:
+//   - it's a simple pointer leaf (e.g. *string, *ChatID) and its own flag was
+//     explicitly provided, or
+//   - it's a nested group / bucket and ANY of its inner flags was explicitly
+//     provided. No "trigger" field is required — supplying any flag of a
+//     group is enough to mark the variant as attempted, and a follow-up
+//     checkGroup catches the partial-fill case with shortcut_group_incomplete.
 func checkOneOf(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
 	inner, err := walkArgs(reflect.PointerTo(s.StructType))
 	if err != nil {
@@ -594,16 +596,18 @@ func checkOneOf(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
 	}
 	var triggered []string
 	for _, child := range inner {
-		if isTrigger(child) {
-			if cmd.Flags().Changed(child.FlagName) {
+		// Simple pointer leaf variant: its own flag is the signal.
+		if child.IsPtr && !child.IsOneOfBkt && !child.IsGroup {
+			if child.FlagName != "" && cmd.Flags().Changed(child.FlagName) {
 				triggered = append(triggered, "--"+child.FlagName)
 			}
 			continue
 		}
+		// Nested group / bucket variant: any inner flag Changed counts.
 		if child.IsGroup || child.IsOneOfBkt {
 			grand, _ := walkArgs(reflect.PointerTo(child.StructType))
 			for _, g := range grand {
-				if g.OneOfTrig && cmd.Flags().Changed(g.FlagName) {
+				if g.FlagName != "" && cmd.Flags().Changed(g.FlagName) {
 					triggered = append(triggered, "--"+g.FlagName)
 					break
 				}
@@ -632,15 +636,6 @@ func checkOneOf(cmd *cobra.Command, _ reflect.Value, s fieldSpec) error {
 			Param: s.GoFieldName,
 		}
 	}
-}
-
-// isTrigger reports whether the field is a top-level pointer-variant in a
-// OneOf bucket (i.e. its flag itself decides selection).
-func isTrigger(s fieldSpec) bool {
-	if s.OneOfTrig {
-		return true
-	}
-	return s.IsPtr && !s.IsOneOfBkt && !s.IsGroup
 }
 
 // checkGroup ensures all fields of a group sub-struct were provided when
