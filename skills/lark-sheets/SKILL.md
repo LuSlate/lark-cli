@@ -127,35 +127,3 @@ lark-cli sheets +cells-set --url "..." --sheet-name "Sheet1" --range "A1:B2" --c
 ```
 
 **`@file` 接绝对路径会被拒，且被拒后不要照报错提示做。** `@file` 出于安全只接受 cwd 下的相对路径，传 `@/tmp/cells.json` 这类绝对路径或 cwd 之外的路径会被拒。此时报错会建议"先 cd 到目标目录，或改用相对路径"——**两条都不要照做**：cd 过去、或把临时文件写进用户项目目录，都会污染工作目录。正解是改用 stdin（`--<flag> - < 文件`）。
-
-## Shell 调用注意事项：A1 reference 含 `!` 的引号选择
-
-A1 表示法的 sheet 前缀（`Sheet1!A1`）里那个 `!` 在 interactive bash（豆包 ShellExec / 任何带 history 的 shell）下是**历史展开触发字符**。`!Word` 形式会被 bash 当成"展开最近以 Word 开头的历史命令"，如果没有匹配就报：
-
-```
-bash: !A1: event not found
-```
-
-——命令根本到不了 lark-cli。**double-quote 内 `!` 仍会触发 histexpand**；只有 single-quote 或显式关闭 history expansion 才能让 `!` 字面通过。
-
-**对 agent 的可执行规则**：
-
-| 场景 | 推荐写法 | 说明 |
-|---|---|---|
-| 一次性调用，sheet 名无特殊字符 | `--source 'Sheet1!A1:D100'` | shell single-quote 整段包住，A1 内部不带单引号也合法 |
-| 一次性调用，sheet 名含 `-` / 空格 / 非 ASCII | `set +H; lark-cli sheets … --source "'Sales-Q1'!A1:D100"` | 先 `set +H` 关 histexpand，然后 double-quote 外层 + A1 内部 single-quote 包裹 sheet 名 |
-| 该 shell session 后续会跑大量 lark-cli 命令 | 在 session 第一行执行 `set +H`，后续全程 double-quote 即可 | 一次性配置，减少每条命令的引号心智 |
-| 实在写不对 | `+sheet-rename --title <ASCII 名>` 先把含特殊字符的 sheet 改成 plain 名 | U046 模型走通的兜底路径，但要权衡是否会破坏其它引用 |
-
-**反模式**：
-
-- ❌ `--source "Sheet1!A1:D100"`（double-quote + 未关 histexpand）—— `!A1` 被吃掉，命令不达 lark-cli
-- ❌ `--source 'Sales-Q1'\''!A1:D100'`（缺一节 `'\''`）—— shell 把 `Sales-Q1` 当字符串、`!A1` 又触发 histexpand
-- ❌ `--source "'Sheet1'!A1"`（未 `set +H` 的 double-quote）—— A1 内部包是对的、但 shell 层的 `!A1` 还会被展开
-
-**注意区分两层引号**：
-
-- **shell 层引号**（bash 的 `"..."` / `'...'`）：决定 bash 是否做参数展开、变量替换、history expansion
-- **A1 层引号**（A1 reference 字符串里的 `'Sheet name'!A1`）：Excel/Sheets 标准，sheet 名含 `-` / 空格 / 非 ASCII 字符时**必须**单引号包裹；plain 名时可选（建议总是包裹以保持一致）
-
-bash single-quote 不可嵌套，要在 single-quote 中再放 single-quote，用序列 `'\''`（关闭外层 single-quote → 转义一个 single-quote → 重开外层 single-quote）；嫌麻烦就用 `set +H` 方案。

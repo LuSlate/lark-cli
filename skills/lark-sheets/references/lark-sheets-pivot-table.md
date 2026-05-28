@@ -143,11 +143,6 @@ lark-cli sheets +pivot-create --url "..." \
   --source "'Sheet1'!A1:D100" --sheet-id "$DEST_SID" --target-position "A1" --properties @pivot.json
 ```
 
-> ⚠️ 上面 bash 示例的 `--source` 用了双引号，在 interactive bash（含豆包 ShellExec）下 `!` 会触发 history expansion 报 `bash: !A1: event not found`。**实际跑命令时**用以下任一种写法：
-> - **首选**：命令最前面加 `set +H;` 关掉 history expansion，全程 double-quote 不踩坑
-> - **次选**：`--source` 整体改 shell single-quote，但 sheet 名内的 A1 单引号需要 `'\''` 转义：`--source ''\''Sheet1'\''!A1:D100'`
-> - **应急**：先 `+sheet-rename --title <ASCII 名>` 把含 `-` / 空格的 sheet 名改成 plain 名（U046 模型最终走通的兜底路径）
-
 ### `+pivot-update`
 
 > 不允许改 `--source` / `--range`（透视表创建后位置/数据源固定）；只能用 `--properties` 改 rows / columns / values / filters 等。先 `+pivot-list --pivot-table-id <id>` 回读再 patch，避免漏字段。
