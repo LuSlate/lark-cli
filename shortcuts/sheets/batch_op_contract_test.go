@@ -214,8 +214,12 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 		{
 			shortcut: "+pivot-create",
 			sc:       PivotCreate,
-			args:     []string{"--sheet-id", "sh1", "--properties", `{"rows":[]}`, "--source", "Sheet1!A1:D100"},
-			subInput: `{"sheet-id":"sh1","properties":{"rows":[]},"source":"Sheet1!A1:D100"}`,
+			// +pivot-create renamed --sheet-id / --sheet-name → --target-sheet-id /
+			// --target-sheet-name to flag the placement-sheet semantics (the data
+			// source is in --source). Both standalone args and the +batch-update
+			// sub-op input must use the new names.
+			args:     []string{"--target-sheet-id", "sh1", "--properties", `{"rows":[]}`, "--source", "Sheet1!A1:D100"},
+			subInput: `{"target-sheet-id":"sh1","properties":{"rows":[]},"source":"Sheet1!A1:D100"}`,
 		},
 		{
 			shortcut: "+cond-format-create",
@@ -292,10 +296,13 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 				t.Fatalf("bad subInput JSON: %v", err)
 			}
 			fv := newMapFlagViewForCommand(tc.shortcut, subInput)
-			sid := subInput["sheet-id"]
-			sname := subInput["sheet-name"]
-			sidStr, _ := sid.(string)
-			snameStr, _ := sname.(string)
+			// Match what translateBatchOp does — read the sheet selector
+			// via the shortcut-specific flag names so +pivot-create
+			// (target-sheet-id / target-sheet-name) and the rest
+			// (sheet-id / sheet-name) both resolve correctly.
+			sidFlag, snameFlag := sheetSelectorFlagsForSubOp(tc.shortcut)
+			sidStr, _ := subInput[sidFlag].(string)
+			snameStr, _ := subInput[snameFlag].(string)
 			batchBody, err := mapping.translate(fv, testToken, sidStr, snameStr)
 			if err != nil {
 				t.Fatalf("batch translate failed: %v", err)

@@ -43,6 +43,21 @@ type batchOpMapping struct {
 	translate batchTranslateFn
 }
 
+// sheetSelectorFlagsForSubOp returns the (id, name) flag names a +batch-update
+// sub-op uses to express its placement / context sheet. Defaults are
+// `sheet-id` / `sheet-name`; +pivot-create deviates because its create
+// shortcut renamed the placement selector to `target-sheet-id` /
+// `target-sheet-name` (the data-source sheet is encoded in --source as
+// `'SheetName'!Range`, not in a sheet selector flag). Update / delete on
+// pivot still use the default names — only the create create-side
+// shortcut was renamed.
+func sheetSelectorFlagsForSubOp(shortcut string) (string, string) {
+	if shortcut == "+pivot-create" {
+		return "target-sheet-id", "target-sheet-name"
+	}
+	return "sheet-id", "sheet-name"
+}
+
 // objCreateTranslate / objUpdateTranslate / objDeleteTranslate bind an object
 // CRUD spec to the shared object_crud builders.
 func objCreateTranslate(spec objectCRUDSpec) batchTranslateFn {
@@ -278,8 +293,9 @@ func translateBatchOp(raw interface{}, token string, index int) (map[string]inte
 		}
 	}
 	fv := newMapFlagViewForCommand(sc, input)
-	sheetID := strings.TrimSpace(fv.Str("sheet-id"))
-	sheetName := strings.TrimSpace(fv.Str("sheet-name"))
+	sheetIDFlag, sheetNameFlag := sheetSelectorFlagsForSubOp(sc)
+	sheetID := strings.TrimSpace(fv.Str(sheetIDFlag))
+	sheetName := strings.TrimSpace(fv.Str(sheetNameFlag))
 	body, err := mapping.translate(fv, token, sheetID, sheetName)
 	if err != nil {
 		return nil, common.FlagErrorf("operations[%d] (%s): %v", index, sc, err)

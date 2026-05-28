@@ -142,18 +142,24 @@ func requireSheetSelector(sheetID, sheetName string) error {
 // Used by shortcuts whose backend tool treats sheet_id/sheet_name as the
 // placement target rather than the operation context (currently only
 // +pivot-create). Other shortcuts continue to use requireSheetSelector.
-func optionalSheetSelector(sheetID, sheetName string) error {
+//
+// idFlagName / nameFlagName parameterize the flag names quoted back in
+// the mutex / control-char errors — +pivot-create exposes the placement
+// selector as `--target-sheet-id` / `--target-sheet-name`, not the
+// generic `--sheet-id` / `--sheet-name`, and the error wording must
+// match what the user actually typed.
+func optionalSheetSelector(sheetID, sheetName, idFlagName, nameFlagName string) error {
 	sheetID = strings.TrimSpace(sheetID)
 	sheetName = strings.TrimSpace(sheetName)
 	if sheetID != "" && sheetName != "" {
-		return common.FlagErrorf("--sheet-id and --sheet-name are mutually exclusive")
+		return common.FlagErrorf("--%s and --%s are mutually exclusive", idFlagName, nameFlagName)
 	}
 	if sheetID != "" {
-		if err := validate.RejectControlChars(sheetID, "sheet-id"); err != nil {
+		if err := validate.RejectControlChars(sheetID, idFlagName); err != nil {
 			return common.FlagErrorf("%v", err)
 		}
 	} else if sheetName != "" {
-		if err := validate.RejectControlChars(sheetName, "sheet-name"); err != nil {
+		if err := validate.RejectControlChars(sheetName, nameFlagName); err != nil {
 			return common.FlagErrorf("%v", err)
 		}
 	}

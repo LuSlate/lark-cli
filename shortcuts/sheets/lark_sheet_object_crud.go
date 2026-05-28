@@ -62,6 +62,32 @@ type objectCRUDSpec struct {
 	// rejected. Update/delete continue to require an explicit selector.
 	// Today only pivotSpec opts in.
 	allowEmptySheetSelectorOnCreate bool
+	// createSheetIDFlag / createSheetNameFlag override the default
+	// `sheet-id` / `sheet-name` flag names on the *create* shortcut and
+	// its +batch-update sub-op. Used by pivot to expose
+	// `target-sheet-id` / `target-sheet-name` — the placement target,
+	// semantically distinct from the data-source sheet (which is encoded
+	// in --source as `'SheetName'!Range`). Empty = default names.
+	// Update/delete continue to use `sheet-id` / `sheet-name`.
+	createSheetIDFlag   string
+	createSheetNameFlag string
+}
+
+// sheetIDFlagOnCreate / sheetNameFlagOnCreate return the cobra flag name
+// used to read the placement-sheet selector on this spec's create
+// shortcut. Defaults to `sheet-id` / `sheet-name`.
+func (s objectCRUDSpec) sheetIDFlagOnCreate() string {
+	if s.createSheetIDFlag != "" {
+		return s.createSheetIDFlag
+	}
+	return "sheet-id"
+}
+
+func (s objectCRUDSpec) sheetNameFlagOnCreate() string {
+	if s.createSheetNameFlag != "" {
+		return s.createSheetNameFlag
+	}
+	return "sheet-name"
 }
 
 func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
@@ -80,15 +106,15 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			if err != nil {
 				return err
 			}
-			sheetID := strings.TrimSpace(runtime.Str("sheet-id"))
-			sheetName := strings.TrimSpace(runtime.Str("sheet-name"))
+			sheetID := strings.TrimSpace(runtime.Str(spec.sheetIDFlagOnCreate()))
+			sheetName := strings.TrimSpace(runtime.Str(spec.sheetNameFlagOnCreate()))
 			_, err = objectCreateInput(runtime, token, sheetID, sheetName, spec)
 			return err
 		},
 		DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 			token, _ := resolveSpreadsheetToken(runtime)
-			sheetID := strings.TrimSpace(runtime.Str("sheet-id"))
-			sheetName := strings.TrimSpace(runtime.Str("sheet-name"))
+			sheetID := strings.TrimSpace(runtime.Str(spec.sheetIDFlagOnCreate()))
+			sheetName := strings.TrimSpace(runtime.Str(spec.sheetNameFlagOnCreate()))
 			input, _ := objectCreateInput(runtime, token, sheetID, sheetName, spec)
 			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
 		},
@@ -97,8 +123,8 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			if err != nil {
 				return err
 			}
-			sheetID := strings.TrimSpace(runtime.Str("sheet-id"))
-			sheetName := strings.TrimSpace(runtime.Str("sheet-name"))
+			sheetID := strings.TrimSpace(runtime.Str(spec.sheetIDFlagOnCreate()))
+			sheetName := strings.TrimSpace(runtime.Str(spec.sheetNameFlagOnCreate()))
 			input, err := objectCreateInput(runtime, token, sheetID, sheetName, spec)
 			if err != nil {
 				return err
@@ -116,7 +142,7 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 func objectCreateInput(runtime flagView, token, sheetID, sheetName string, spec objectCRUDSpec) (map[string]interface{}, error) {
 	var err error
 	if spec.allowEmptySheetSelectorOnCreate {
-		err = optionalSheetSelector(sheetID, sheetName)
+		err = optionalSheetSelector(sheetID, sheetName, spec.sheetIDFlagOnCreate(), spec.sheetNameFlagOnCreate())
 	} else {
 		err = requireSheetSelector(sheetID, sheetName)
 	}
@@ -312,6 +338,8 @@ var pivotSpec = objectCRUDSpec{
 	idFlag:                          "pivot-table-id",
 	idField:                         "pivot_table_id",
 	allowEmptySheetSelectorOnCreate: true,
+	createSheetIDFlag:               "target-sheet-id",
+	createSheetNameFlag:             "target-sheet-name",
 	enhanceCreateInput: func(rt flagView, input map[string]interface{}) {
 		if v := strings.TrimSpace(rt.Str("target-position")); v != "" && v != "A1" {
 			input["target_position"] = v

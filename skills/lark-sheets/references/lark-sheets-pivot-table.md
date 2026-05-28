@@ -20,19 +20,19 @@
 创建透视表前先识别用户需求中的分组维度和聚合指标，**不要搞反**：
 
 - **rows（行字段）** = 分组维度，即"按什么分组"。例：部门、地区、医生、产品类别
-- **values（值字段）** = 聚合指标，即"统计什么数值"。例：SUM(销售额)、COUNT(订单数)
+- **values（值字段）** = 聚合指标，即"统计什么数值"。例：销售额（聚合方式 `sum`）、订单数（聚合方式 `count`）
 - **columns（列字段）** = 交叉维度（可选），即"再按什么横向展开"。例：月份、性别
 
 | 用户说 | rows | values | columns |
 |--------|------|--------|---------|
-| "按部门统计人数" | 部门 | COUNT(姓名) | — |
-| "按医生统计费用和结余" | 主管医生 | SUM(费用), SUM(结余) | — |
-| "各部门男女人数" | 部门 | COUNT(姓名) | 性别 |
+| "按部门统计人数" | 部门 | 姓名（`summarize_by: "count"`） | — |
+| "按医生统计费用和结余" | 主管医生 | 费用（`"sum"`）、结余（`"sum"`） | — |
+| "各部门男女人数" | 部门 | 姓名（`"count"`） | 性别 |
 
 **常见配置错误（必须注意）**：
 - **数据源范围必须精确**：透视表的数据源范围必须包含表头行，且精确覆盖全部数据行列。范围过大（包含空行/空列）或过小（遗漏数据列）都会导致透视表结果错误
-- **行列字段选择要匹配用户意图**：用户说"按商品统计金额"→ 行字段=商品，值字段=金额（SUM）。不要把行列字段搞反
-- **聚合类型要匹配**：用户说"统计数量"→ COUNT；"统计总额"→ SUM；"统计平均"→ AVERAGE。默认不要用 COUNT 替代 SUM
+- **行列字段选择要匹配用户意图**：用户说"按商品统计金额"→ 行字段=商品，值字段=金额（`summarize_by: "sum"`）。不要把行列字段搞反
+- **聚合类型要匹配**：用户说"统计数量"→ `summarize_by: "count"`；"统计总额"→ `"sum"`；"统计平均"→ `"average"`。完整合法值：`sum` / `count` / `average` / `max` / `min` / `product` / `countNums` / `stdDev` / `stdDevp` / `var` / `varp` / `distinct` / `median`。默认不要用 `count` 替代 `sum`
 - **参数长度限制**：如果透视表配置 JSON 过长（数据源范围跨越大量行列），可能导致工具调用失败。此时应先确认数据范围的精确边界，避免传入过大的 range
 - **创建后必须验证**：调用 `+pivot-list` 确认透视表结构正确
 
@@ -57,13 +57,15 @@ _公共四件套 · 系统：`--dry-run`_
 
 ### `+pivot-create`
 
-_公共四件套 · 系统：`--dry-run`_
+_公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--properties` | string + File + Stdin（复合 JSON） | required | JSON：{"rows":[...],"columns":[...],"values":[...],"filters":[...],"show_row_grand_total":true,"show_col_grand_total":true}（数据源走 --source，不要再放进 properties.source） |
 | `--target-position` | string | optional | 透视表落点子表内的起始 cell（A1 格式，如 `A1`），映射到顶层 `target_position`，默认 `A1`（值为 A1 时不下发）。它与 `--range` 都表达落点但落在不同 wire 字段，避免两者同时给冲突值 |
-| `--source` | string | required | 透视表源数据区域（A1 表示法，格式 `SheetName!StartCell:EndCell`，如 `Sheet1!A1:D100`） |
+| `--target-sheet-id` | string | xor | 透视表落点目标子表的 reference_id（与 `--target-sheet-name` 互斥，优先于 --target-sheet-name；都不传时自动新建一张子表放置透视表——推荐）。与数据源 sheet 区分：数据源 sheet 写在 --source 的 A1 引用里（带 sheet 前缀，形如 `'Sheet1'!A1:D100`）。 |
+| `--target-sheet-name` | string | xor | 透视表落点目标子表的名称（与 `--target-sheet-id` 互斥；都不传时自动新建一张子表放置透视表——推荐）。与数据源 sheet 区分：数据源 sheet 写在 --source 的 A1 引用里（带 sheet 前缀，形如 `'Sheet1'!A1:D100`）。 |
+| `--source` | string | required | 透视表源数据区域（A1 表示法，格式 `'SheetName'!StartCell:EndCell`，如 `'Sheet1'!A1:D100`） |
 | `--range` | string | optional | 透视表左上角放置位置（A1 单值，如 `F1`，仅 create 生效），映射到 `properties.range`；省略时放在落点子表（默认新建子表）的左上角。它与 `--target-position` 都表达落点但落在不同 wire 字段，避免两者同时给冲突值 |
 
 ### `+pivot-update`
@@ -108,7 +110,9 @@ _创建/更新的透视表属性_
 
 ## Examples
 
-公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`。其中 `--sheet-id` / `--sheet-name` 在 `+pivot-update` / `+pivot-delete` / `+pivot-list` 上是公共四件套语义（定位透视表所在 sheet，XOR 必传一个）；但在 **`+pivot-create` 上是透视表的"落点"语义**——两个都不传时后端自动新建子表存放产物（强烈推荐，绝不碰源数据）。
+公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`，其中 `--sheet-id` / `--sheet-name` 在 `+pivot-update` / `+pivot-delete` / `+pivot-list` 上是公共四件套语义（定位透视表所在 sheet，XOR 必传一个）。
+
+**`+pivot-create` 例外**：placement 选择器用 `--target-sheet-id` / `--target-sheet-name`（XOR，两个都不传时后端自动新建子表存放产物，强烈推荐，绝不碰源数据）。数据源 sheet 写在 `--source` 的 `'SheetName'!Range` 里，不靠 sheet 选择器 flag。
 
 ### `+pivot-list`
 
@@ -121,26 +125,26 @@ lark-cli sheets +pivot-list --url "..." --sheet-id "$SID"
 > 数据源 `--source` 必须从表头行开始；空行 / 汇总行会被当作数据参与聚合，需提前用 `+csv-get` 确认起止边界。`--source` 和 `--range` 是独立 flag（不要再放 `--properties`）；`rows` / `columns` / `values` 等数组字段走 `--properties`。
 >
 > **先理清 `+pivot-create` 上 4 个位置类入参（语义不同，别混）**：
-> - `--source`（**必填**）：**源数据**区域，须自带 `Sheet!` 前缀（如 `Sheet1!A1:D100`）。源 sheet 的名字在 `--source` 字符串里，**不**通过单独 flag 传。
-> - `--sheet-id` / `--sheet-name`：**透视表的落点 sheet**（即产物放哪张子表）。两个互斥（最多传一个），都不传时后端自动新建子表存放产物（强烈推荐）。**注意：跟其它 shortcut 不同，这里 `--sheet-id` / `--sheet-name` 表达的不是"数据源所在 sheet"而是"产物落点 sheet"**。
+> - `--source`（**必填**）：**源数据**区域，须自带 `Sheet!` 前缀（如 `'Sheet1'!A1:D100`，sheet 名按 A1 标准单引号包裹）。源 sheet 的名字在 `--source` 字符串里，**不**通过单独 flag 传。
+> - `--target-sheet-id` / `--target-sheet-name`：**透视表的落点 sheet**（即产物放哪张子表）。两个互斥（最多传一个），都不传时后端自动新建子表存放产物（强烈推荐）。
 > - `--target-position`（可选，A1 表示法，默认 `A1`）：落点 sheet 内的起始 cell，映射到顶层 `target_position`。
 > - `--range`（可选，A1 单值，仅 create 生效）：跟 `--target-position` 表达同一意图但映射到 `properties.range`，**两者不要同时给**。
 >
 > **落点 3 种策略（互斥，选其一）**：
-> 1. **默认（强烈推荐）**：`--sheet-id` / `--sheet-name` / `--target-position` / `--range` **全都不传** → 服务端**自动新建子表**存放产物，绝不碰任何已有数据。
-> 2. **放进指定的已有子表**：传 `--sheet-id <落点子表 id>`（或 `--sheet-name`），可选 `--target-position <子表内起点 cell>`。⚠️ **若落点子表就是源数据所在的 sheet**，必须配 `--target-position` 或 `--range` 指向源数据范围**之外**的位置，否则产物默认从 A1 起会盖在源数据上。
-> 3. **`--range`**：跟策略 2 等价（同样需要 `--sheet-id` / `--sheet-name` 指定落点子表，不然落到自动新建子表），只是用 `properties.range` 那条 wire 路径表达位置。同样的覆盖风险，同样需要避开源数据范围。
+> 1. **默认（强烈推荐）**：`--target-sheet-id` / `--target-sheet-name` / `--target-position` / `--range` **全都不传** → 服务端**自动新建子表**存放产物，绝不碰任何已有数据。
+> 2. **放进指定的已有子表**：传 `--target-sheet-id <落点子表 id>`（或 `--target-sheet-name`），可选 `--target-position <子表内起点 cell>`。⚠️ **若落点子表就是源数据所在的 sheet**，必须配 `--target-position` 或 `--range` 指向源数据范围**之外**的位置，否则产物默认从 A1 起会盖在源数据上。
+> 3. **`--range`**：跟策略 2 等价（同样需要 `--target-sheet-id` / `--target-sheet-name` 指定落点子表，不然落到自动新建子表），只是用 `properties.range` 那条 wire 路径表达位置。同样的覆盖风险，同样需要避开源数据范围。
 >
-> 一般用策略 1（默认新建子表）即可，零覆盖风险，无需任何 `--sheet-*` / `--range` / `--target-*` flag。
+> 一般用策略 1（默认新建子表）即可，零覆盖风险，无需任何 `--target-*` / `--range` flag。
 
 ```bash
 # 策略 1（强烈推荐）：不传任何落点 flag → 后端自动新建子表，零覆盖风险
 lark-cli sheets +pivot-create --url "..." \
-  --source "Sheet1!A1:D100" --properties @pivot.json
+  --source "'Sheet1'!A1:D100" --properties @pivot.json
 
 # 策略 2：落进指定的已有目标子表（注意目标 sheet ≠ 源 sheet，否则要配 --target-position 避开源数据）
 lark-cli sheets +pivot-create --url "..." \
-  --source "Sheet1!A1:D100" --sheet-id "$DEST_SID" --target-position "A1" --properties @pivot.json
+  --source "'Sheet1'!A1:D100" --target-sheet-id "$DEST_SID" --target-position "A1" --properties @pivot.json
 ```
 
 ### `+pivot-update`
@@ -155,7 +159,7 @@ lark-cli sheets +pivot-delete --url "..." --sheet-id "$SID" --pivot-table-id "$P
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：`--url` / `--spreadsheet-token` XOR 必填；`+pivot-{update,delete,list}` 的 `--sheet-id` / `--sheet-name` XOR 必填一个，`+pivot-create` 例外（两个都可空，触发 backend auto-create 子表）；`+pivot-create` 的 `--source` 必填且必须含表头行；`--properties` 中 `rows` / `columns` / `values` 至少非空之一；`+pivot-delete` 强制 `--yes` 或 `--dry-run`。
+- `Validate`：`--url` / `--spreadsheet-token` XOR 必填；`+pivot-{update,delete,list}` 的 `--sheet-id` / `--sheet-name` XOR 必填一个；`+pivot-create` 例外（用 `--target-sheet-id` / `--target-sheet-name` 表达落点，两个都可空时触发 backend auto-create 子表，两个都给则报 mutually exclusive）；`+pivot-create` 的 `--source` 必填且必须含表头行；`--properties` 中 `rows` / `columns` / `values` 至少非空之一；`+pivot-delete` 强制 `--yes` 或 `--dry-run`。
 - `DryRun`：写操作输出"将要 POST/PATCH/DELETE 的 pivot 请求模板"+ 预估输出尺寸（行数 × 列数）。
 - `Execute`：写后不自动回读；如需确认，自行调用 `+pivot-list --pivot-table-id <id>` 并用 `+csv-get` 抽样读透视产物核对输出尺寸 + 总计行位置。
 

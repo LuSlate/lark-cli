@@ -52,16 +52,20 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		// pivot — has extra create flags incl. required --source.
-		// --sheet-id is the placement target (where the pivot lands);
-		// pivotSpec.allowEmptySheetSelectorOnCreate lets both --sheet-id
-		// and --sheet-name be omitted so the backend auto-creates a
-		// sub-sheet — covered separately in the +pivot-create empty-
-		// selector / mutex tests below.
+		// --target-sheet-id is the placement target (where the pivot lands);
+		// the placement selector is renamed from the generic --sheet-id /
+		// --sheet-name to --target-sheet-id / --target-sheet-name to keep
+		// it semantically distinct from the data-source sheet (which is
+		// encoded inside --source as `'SheetName'!Range`).
+		// pivotSpec.allowEmptySheetSelectorOnCreate lets both target
+		// selectors be omitted so the backend auto-creates a sub-sheet —
+		// covered separately in the +pivot-create empty-selector / mutex
+		// tests below.
 		{
 			name: "+pivot-create with placement / source / range flags",
 			sc:   PivotCreate,
 			args: []string{
-				"--url", testURL, "--sheet-id", testSheetID,
+				"--url", testURL, "--target-sheet-id", testSheetID,
 				"--properties", `{"rows":[{"field":"A"}]}`,
 				"--source", "Sheet1!A1:F1000",
 				"--range", "F1",
@@ -80,10 +84,10 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 				},
 			},
 		},
-		// +pivot-create accepts both sheet selectors empty — backend
+		// +pivot-create accepts both target selectors empty — backend
 		// auto-creates a placement sub-sheet.
 		{
-			name: "+pivot-create empty --sheet-id / --sheet-name omits sheet from input",
+			name: "+pivot-create empty --target-sheet-id / --target-sheet-name omits sheet from input",
 			sc:   PivotCreate,
 			args: []string{
 				"--url", testURL,
@@ -349,9 +353,9 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 }
 
 // TestPivotCreate_SheetSelectorSemantics locks in the "at most one"
-// semantics for +pivot-create (and only +pivot-create): both --sheet-id
-// and --sheet-name may be omitted (backend auto-creates a placement
-// sub-sheet), but passing both is rejected.
+// semantics for +pivot-create (and only +pivot-create): both
+// --target-sheet-id and --target-sheet-name may be omitted (backend
+// auto-creates a placement sub-sheet), but passing both is rejected.
 //
 // Companion regression — TestObjectCreate_RequiresSheetSelector below —
 // confirms every other *-create still rejects empty selector.
@@ -378,25 +382,30 @@ func TestPivotCreate_SheetSelectorSemantics(t *testing.T) {
 		t.Parallel()
 		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
 			"--url", testURL,
-			"--sheet-id", testSheetID,
-			"--sheet-name", "Sheet1",
+			"--target-sheet-id", testSheetID,
+			"--target-sheet-name", "Sheet1",
 			"--properties", `{"rows":[{"field":"A"}]}`,
 			"--source", "Sheet1!A1:F1000",
 		})
 		if err == nil {
-			t.Fatalf("expected CLI to reject both --sheet-id and --sheet-name set; stderr=%s", stderr)
+			t.Fatalf("expected CLI to reject both --target-sheet-id and --target-sheet-name set; stderr=%s", stderr)
 		}
 		combined := stderr + err.Error()
 		if !strings.Contains(combined, "mutually exclusive") {
 			t.Errorf("expected error to say 'mutually exclusive'; got=%s|%v", stderr, err)
 		}
+		// 错误信息必须用真实的 flag 名（target-*），否则模型按消息提示去
+		// 改 --sheet-id 还是错的。
+		if !strings.Contains(combined, "--target-sheet-id") {
+			t.Errorf("expected error to quote --target-sheet-id flag name; got=%s|%v", stderr, err)
+		}
 	})
 
-	t.Run("only sheet-id is accepted", func(t *testing.T) {
+	t.Run("only target-sheet-id is accepted", func(t *testing.T) {
 		t.Parallel()
 		body := parseDryRunBody(t, PivotCreate, []string{
 			"--url", testURL,
-			"--sheet-id", testSheetID,
+			"--target-sheet-id", testSheetID,
 			"--properties", `{"rows":[{"field":"A"}]}`,
 			"--source", "Sheet1!A1:F1000",
 		})
