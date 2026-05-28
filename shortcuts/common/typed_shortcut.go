@@ -97,12 +97,6 @@ func (s TypedShortcut[T]) DeclaredScopesForIdentity(identity string) []string {
 	return out
 }
 
-// Mount registers the typed shortcut on a parent command. Delegates to
-// MountWithContext using a background context.
-func (s TypedShortcut[T]) Mount(parent *cobra.Command, f *cmdutil.Factory) {
-	s.MountWithContext(context.Background(), parent, f)
-}
-
 // MountWithContext is implemented in Task 16's adapter section.
 func (s TypedShortcut[T]) MountWithContext(ctx context.Context, parent *cobra.Command, f *cmdutil.Factory) {
 	mountTyped[T](ctx, parent, f, s)

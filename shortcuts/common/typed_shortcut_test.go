@@ -5,6 +5,7 @@ package common
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -84,5 +85,78 @@ func TestMountTyped_HelpFuncInstalled(t *testing.T) {
 	sub, _, _ := root.Find([]string{"+demo"})
 	if sub == nil || sub.HelpFunc() == nil {
 		t.Fatal("expected typed help func installed on subcommand")
+	}
+}
+
+func TestTypedShortcut_GetAuthTypes(t *testing.T) {
+	ts := TypedShortcut[*stubArgs]{AuthTypes: []string{"user", "bot"}}
+	if got := ts.GetAuthTypes(); !slices.Equal(got, []string{"user", "bot"}) {
+		t.Errorf("GetAuthTypes=%v", got)
+	}
+	if got := (TypedShortcut[*stubArgs]{}).GetAuthTypes(); got != nil {
+		t.Errorf("empty GetAuthTypes=%v, want nil", got)
+	}
+}
+
+func TestTypedShortcut_ScopesForIdentity(t *testing.T) {
+	ts := TypedShortcut[*stubArgs]{
+		Scopes:     []string{"base"},
+		UserScopes: []string{"u"},
+		BotScopes:  []string{"b"},
+	}
+	cases := []struct {
+		identity string
+		want     []string
+	}{
+		{"user", []string{"u"}},
+		{"bot", []string{"b"}},
+		{"other", []string{"base"}},
+		{"", []string{"base"}},
+	}
+	for _, c := range cases {
+		if got := ts.ScopesForIdentity(c.identity); !slices.Equal(got, c.want) {
+			t.Errorf("ScopesForIdentity(%q)=%v, want %v", c.identity, got, c.want)
+		}
+	}
+	// Falls back to Scopes when the identity-specific list is empty.
+	fallback := TypedShortcut[*stubArgs]{Scopes: []string{"base"}}
+	if got := fallback.ScopesForIdentity("user"); !slices.Equal(got, []string{"base"}) {
+		t.Errorf("fallback user=%v", got)
+	}
+}
+
+func TestTypedShortcut_ConditionalScopesForIdentity(t *testing.T) {
+	ts := TypedShortcut[*stubArgs]{
+		ConditionalScopes:     []string{"cbase"},
+		ConditionalUserScopes: []string{"cu"},
+		ConditionalBotScopes:  []string{"cb"},
+	}
+	cases := []struct {
+		identity string
+		want     []string
+	}{
+		{"user", []string{"cu"}},
+		{"bot", []string{"cb"}},
+		{"other", []string{"cbase"}},
+	}
+	for _, c := range cases {
+		if got := ts.ConditionalScopesForIdentity(c.identity); !slices.Equal(got, c.want) {
+			t.Errorf("ConditionalScopesForIdentity(%q)=%v, want %v", c.identity, got, c.want)
+		}
+	}
+}
+
+func TestTypedShortcut_DeclaredScopesForIdentity(t *testing.T) {
+	// Merges base + conditional, dedupes overlap, drops empty strings.
+	ts := TypedShortcut[*stubArgs]{
+		UserScopes:            []string{"a", "b", ""},
+		ConditionalUserScopes: []string{"b", "c"},
+	}
+	if got := ts.DeclaredScopesForIdentity("user"); !slices.Equal(got, []string{"a", "b", "c"}) {
+		t.Errorf("merge+dedupe got %v", got)
+	}
+	// Returns nil when nothing is declared on either side.
+	if got := (TypedShortcut[*stubArgs]{}).DeclaredScopesForIdentity("user"); got != nil {
+		t.Errorf("empty got %v, want nil", got)
 	}
 }
