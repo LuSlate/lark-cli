@@ -240,7 +240,7 @@ type vidGroup struct {
 	Cover string `flag:"vid-cover"`
 }
 type contentBucket struct {
-	Text  *string   `flag:"ct"`
+	Text  *string `flag:"ct"`
 	Video *vidGroup
 }
 
