@@ -3634,7 +3634,7 @@
           },
           "rules": {
             "type": "array",
-            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。update 为整组覆盖（PUT 语义）：传入的 rules 即更新后的完整规则集，会先清空所有现有列的旧规则再应用，未列出的列其旧规则会被清除（不与旧规则合并）；传空数组 [] 即清空所有列的规则。",
+            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。update 时传空数组 [] 表示清空所有现有列的规则。",
             "items": {
               "type": "object",
               "description": "单列筛选规则。",
@@ -3879,7 +3879,7 @@
           },
           "rules": {
             "type": "array",
-            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。update 为整组覆盖（PUT 语义）：传入的 rules 即更新后的完整规则集，会先清空所有现有列的旧规则再应用，未列出的列其旧规则会被清除（不与旧规则合并）；传空数组 [] 即清空所有列的规则。",
+            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。update 时传空数组 [] 表示清空所有现有列的规则。",
             "items": {
               "type": "object",
               "description": "单列筛选规则。",
@@ -4128,7 +4128,7 @@
           },
           "rules": {
             "type": "array",
-            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。结构与 manage_filter_object.properties.rules 完全一致。update 同样为整组覆盖（PUT 语义）：传入的 rules 整组替换该视图所有列的规则，未列出的列其旧规则会被清除（不与旧规则合并），传空数组 [] 即清空全部。",
+            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。结构与 manage_filter_object.properties.rules 完全一致。",
             "items": {
               "type": "object",
               "description": "单列筛选规则。",
@@ -4373,7 +4373,7 @@
           },
           "rules": {
             "type": "array",
-            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。结构与 manage_filter_object.properties.rules 完全一致。update 同样为整组覆盖（PUT 语义）：传入的 rules 整组替换该视图所有列的规则，未列出的列其旧规则会被清除（不与旧规则合并），传空数组 [] 即清空全部。",
+            "description": "列级筛选规则列表，每一项对应一个具体列的筛选条件。结构与 manage_filter_object.properties.rules 完全一致。",
             "items": {
               "type": "object",
               "description": "单列筛选规则。",

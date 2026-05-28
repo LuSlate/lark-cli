@@ -63,7 +63,7 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--properties` | string + File + Stdin（复合 JSON） | required | JSON：{"rows":[...],"columns":[...],"values":[...],"filters":[...],"show_row_grand_total":true,"show_col_grand_total":true}（数据源走 --source，不要再放进 properties.source） |
 | `--target-position` | string | optional | 透视表落点子表内的起始 cell（A1 格式，如 `A1`），映射到顶层 `target_position`，默认 `A1`（值为 A1 时不下发）。它与 `--range` 都表达落点但落在不同 wire 字段，避免两者同时给冲突值 |
-| `--source` | string | required | 透视表源数据区域（A1 表示法，格式 `SheetName!StartCell:EndCell`，如 `Sheet1!A1:D100`） |
+| `--source` | string | required | 透视表源数据区域（A1 表示法，格式 `'SheetName'!StartCell:EndCell`，如 `'Sheet1'!A1:D100`） |
 | `--range` | string | optional | 透视表左上角放置位置（A1 单值，如 `F1`，仅 create 生效），映射到 `properties.range`；省略时放在落点子表（默认新建子表）的左上角。它与 `--target-position` 都表达落点但落在不同 wire 字段，避免两者同时给冲突值 |
 
 ### `+pivot-update`
