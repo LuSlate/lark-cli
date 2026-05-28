@@ -27,7 +27,6 @@ type fieldSpec struct {
 	Required     bool
 	IsOneOfBkt   bool
 	IsGroup      bool
-	IsMaybe      bool
 	IsPtr        bool
 	FieldType    reflect.Type
 	StructType   reflect.Type
@@ -85,12 +84,6 @@ func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
 		ft = ft.Elem()
 	}
 	if ft.Kind() == reflect.Struct {
-		if maybeSet, ok := ft.FieldByName("Set"); ok && maybeSet.Type.Kind() == reflect.Bool {
-			if _, ok := ft.FieldByName("Value"); ok {
-				spec.IsMaybe = true
-				return spec, nil
-			}
-		}
 		spec.StructType = ft
 		ptr := reflect.PointerTo(ft)
 		marker := reflect.TypeOf((*OneOfMarker)(nil)).Elem()
@@ -113,17 +106,6 @@ func registerFlags(cmd *cobra.Command, specs []fieldSpec) error {
 				return err
 			}
 			if err := registerFlags(cmd, inner); err != nil {
-				return err
-			}
-			continue
-		}
-		if s.IsMaybe {
-			inner := s.FieldType
-			if inner.Kind() == reflect.Ptr {
-				inner = inner.Elem()
-			}
-			valType, _ := inner.FieldByName("Value")
-			if err := registerLeaf(cmd, s, valType.Type); err != nil {
 				return err
 			}
 			continue
@@ -169,12 +151,6 @@ func bindFlags(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) err
 		if s.IsOneOfBkt || s.IsGroup {
 			continue
 		}
-		if s.IsMaybe {
-			if err := bindMaybe(cmd, argsVal, s); err != nil {
-				return err
-			}
-			continue
-		}
 		if s.FlagName == "" {
 			continue
 		}
@@ -188,6 +164,14 @@ func bindFlags(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) err
 func bindLeaf(cmd *cobra.Command, argsVal reflect.Value, s fieldSpec) error {
 	fv := argsVal.FieldByName(s.GoFieldName)
 	if !fv.CanSet() {
+		return nil
+	}
+	// Pointer leaves preserve "nil = not given" semantics: only allocate when
+	// the user explicitly set the flag. This mirrors the OneOf bucket
+	// convention (`Chat *ChatID` — nil means the variant wasn't selected) and
+	// lets typed shortcuts express tri-state bool / int / string flags using
+	// plain Go pointers instead of a separate Maybe[T] wrapper type.
+	if s.IsPtr && !cmd.Flags().Changed(s.FlagName) {
 		return nil
 	}
 	leafType := s.FieldType
@@ -388,32 +372,6 @@ func bucketLeafValue(cmd *cobra.Command, flagName string, targetType reflect.Typ
 		v, _ := cmd.Flags().GetString(flagName)
 		return reflect.ValueOf(v).Convert(targetType)
 	}
-}
-
-func bindMaybe(cmd *cobra.Command, argsVal reflect.Value, s fieldSpec) error {
-	fv := argsVal.FieldByName(s.GoFieldName)
-	if !fv.CanSet() {
-		return nil
-	}
-	changed := cmd.Flags().Changed(s.FlagName)
-	setField := fv.FieldByName("Set")
-	valField := fv.FieldByName("Value")
-	setField.SetBool(changed)
-	if !changed {
-		return nil
-	}
-	switch valField.Kind() {
-	case reflect.Bool:
-		v, _ := cmd.Flags().GetBool(s.FlagName)
-		valField.SetBool(v)
-	case reflect.Int, reflect.Int64:
-		v, _ := cmd.Flags().GetInt(s.FlagName)
-		valField.SetInt(int64(v))
-	default:
-		v, _ := cmd.Flags().GetString(s.FlagName)
-		valField.SetString(v)
-	}
-	return nil
 }
 
 // runNormalize invokes the Normalize method (via reflection) on every field

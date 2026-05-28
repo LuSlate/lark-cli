@@ -21,17 +21,6 @@ func TestOneOfMarker_Detection(t *testing.T) {
 	}
 }
 
-func TestMaybe_UnsetVsZero(t *testing.T) {
-	var unset Maybe[bool]
-	if unset.Set {
-		t.Errorf("unset.Set should be false")
-	}
-	set := Maybe[bool]{Set: true, Value: false}
-	if !set.Set || set.Value {
-		t.Errorf("set should have Set==true and Value==false")
-	}
-}
-
 // dummyValidatable implements Validatable.
 type dummyValidatable struct{}
 

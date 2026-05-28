@@ -68,14 +68,6 @@ type ArgsValidator interface {
 	Validate(ctx context.Context, rt *RuntimeContext) error
 }
 
-// Maybe[T] distinguishes "unset" from "explicit zero value", needed for
-// PATCH-style commands. The binder sets Set=true iff cobra.Flag.Changed
-// reports the flag was explicitly provided.
-type Maybe[T any] struct {
-	Set   bool
-	Value T
-}
-
 // HelpExample appears in TypedShortcut.Examples and is rendered by
 // typed_help under an "EXAMPLES:" section.
 type HelpExample struct {

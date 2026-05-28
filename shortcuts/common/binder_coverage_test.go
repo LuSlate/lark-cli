@@ -15,52 +15,55 @@ import (
 	"github.com/larksuite/cli/errs"
 )
 
-// --- bindMaybe: Set/Value tracking across bool/int/string ---------------------
+// --- top-level pointer leaf: nil = not given (mirrors OneOf bucket convention) ---
 
-type bcMaybeArgs struct {
-	Name  Maybe[string] `flag:"m-name"`
-	Count Maybe[int]    `flag:"m-count"`
-	On    Maybe[bool]   `flag:"m-on"`
+type ptrLeafArgs struct {
+	Notify *bool   `flag:"notify"`
+	Limit  *int    `flag:"limit"`
+	Name   *string `flag:"name"`
 }
 
-func TestBindMaybe_SetAndUnset(t *testing.T) {
+func TestBindLeaf_PtrNilWhenAbsent(t *testing.T) {
 	cmd := &cobra.Command{Use: "test"}
-	specs, _ := walkArgs(reflect.TypeOf(&bcMaybeArgs{}))
+	specs, _ := walkArgs(reflect.TypeOf(&ptrLeafArgs{}))
 	if err := registerFlags(cmd, specs); err != nil {
 		t.Fatalf("registerFlags: %v", err)
 	}
-	// Only --m-name and --m-count provided; --m-on left unset.
-	if err := cmd.ParseFlags([]string{"--m-name", "alice", "--m-count", "9"}); err != nil {
+	if err := cmd.ParseFlags(nil); err != nil {
 		t.Fatalf("ParseFlags: %v", err)
 	}
-	out := &bcMaybeArgs{}
+	out := &ptrLeafArgs{}
 	if err := bindFlags(cmd, reflect.ValueOf(out).Elem(), specs); err != nil {
 		t.Fatalf("bindFlags: %v", err)
 	}
-	if !out.Name.Set || out.Name.Value != "alice" {
-		t.Errorf("Name = %+v, want Set=true Value=alice", out.Name)
-	}
-	if !out.Count.Set || out.Count.Value != 9 {
-		t.Errorf("Count = %+v, want Set=true Value=9", out.Count)
-	}
-	if out.On.Set {
-		t.Errorf("On.Set = true, want false (flag not provided)")
+	if out.Notify != nil || out.Limit != nil || out.Name != nil {
+		t.Errorf("expected all pointer leaves nil when no flag given; got Notify=%v Limit=%v Name=%v",
+			out.Notify, out.Limit, out.Name)
 	}
 }
 
-func TestBindMaybe_BoolValue(t *testing.T) {
+// TestBindLeaf_PtrSetWhenChanged covers the tri-state contract that previously
+// required Maybe[T]: a pointer leaf set to its zero value (e.g. --notify=false)
+// MUST come back non-nil so business code can tell it apart from "not given".
+func TestBindLeaf_PtrSetWhenChanged(t *testing.T) {
 	cmd := &cobra.Command{Use: "test"}
-	specs, _ := walkArgs(reflect.TypeOf(&bcMaybeArgs{}))
+	specs, _ := walkArgs(reflect.TypeOf(&ptrLeafArgs{}))
 	_ = registerFlags(cmd, specs)
-	if err := cmd.ParseFlags([]string{"--m-on"}); err != nil {
+	if err := cmd.ParseFlags([]string{"--notify=false", "--limit", "5", "--name", "alice"}); err != nil {
 		t.Fatalf("ParseFlags: %v", err)
 	}
-	out := &bcMaybeArgs{}
+	out := &ptrLeafArgs{}
 	if err := bindFlags(cmd, reflect.ValueOf(out).Elem(), specs); err != nil {
 		t.Fatalf("bindFlags: %v", err)
 	}
-	if !out.On.Set || out.On.Value != true {
-		t.Errorf("On = %+v, want Set=true Value=true", out.On)
+	if out.Notify == nil || *out.Notify != false {
+		t.Errorf("Notify = %v, want non-nil false (tri-state: zero value is still 'set')", out.Notify)
+	}
+	if out.Limit == nil || *out.Limit != 5 {
+		t.Errorf("Limit = %v, want non-nil 5", out.Limit)
+	}
+	if out.Name == nil || *out.Name != "alice" {
+		t.Errorf("Name = %v, want non-nil alice", out.Name)
 	}
 }
 
