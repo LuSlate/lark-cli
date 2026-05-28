@@ -161,6 +161,9 @@ func mountTyped[T any](ctx context.Context, parent *cobra.Command, f *cmdutil.Fa
 			if err := bindBuckets(rt.Cmd, argsVal, specs); err != nil {
 				return err
 			}
+			if err := bindGroups(rt.Cmd, argsVal, specs); err != nil {
+				return err
+			}
 			if err := runNormalize(c, rt, argsVal, specs); err != nil {
 				return err
 			}

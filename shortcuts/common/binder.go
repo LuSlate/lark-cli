@@ -265,6 +265,57 @@ func bindBuckets(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) e
 	return nil
 }
 
+// bindGroups is the top-level counterpart to bindBuckets for IsGroup fields
+// (regular nested structs without an OneOf() marker). A group's inner flags
+// are registered and validated for completeness, but bindFlags above skips
+// the field; this function fills the binding gap so an Args struct can place
+// a group directly at the top level (not just nested inside an OneOf bucket).
+//
+// Conventions mirror bindBuckets / bindBucketInner:
+//   - Value-type group: always populated; inner fields receive cobra flag
+//     values (including defaults).
+//   - Pointer-type group: allocated iff at least one inner flag was Changed,
+//     so a nil group still signals "user did not engage this group at all".
+func bindGroups(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
+	for _, s := range specs {
+		if !s.IsGroup {
+			continue
+		}
+		fv := argsVal.FieldByName(s.GoFieldName)
+		if !fv.IsValid() || !fv.CanSet() {
+			continue
+		}
+		inner, err := walkArgs(reflect.PointerTo(s.StructType))
+		if err != nil {
+			return err
+		}
+		if fv.Kind() == reflect.Ptr {
+			anyChanged := false
+			for _, g := range inner {
+				if g.FlagName != "" && cmd.Flags().Changed(g.FlagName) {
+					anyChanged = true
+					break
+				}
+			}
+			if !anyChanged {
+				continue
+			}
+			if fv.IsNil() {
+				fv.Set(reflect.New(s.StructType))
+			}
+			if err := bindBucketInner(cmd, fv.Elem(), inner); err != nil {
+				return err
+			}
+			continue
+		}
+		// Value-type group: populate inner fields directly.
+		if err := bindBucketInner(cmd, fv, inner); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func bindBucketInner(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpec) error {
 	for _, s := range specs {
 		if s.IsOneOfBkt || s.IsGroup {

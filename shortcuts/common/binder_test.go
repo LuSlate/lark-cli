@@ -139,6 +139,99 @@ func TestFrameworkRules_OneOfMultiple(t *testing.T) {
 	}
 }
 
+// --- top-level group binding (bindGroups) ---
+
+type dateRange struct {
+	From string `flag:"from"`
+	To   string `flag:"to"`
+}
+type groupValueArgs struct {
+	Range dateRange
+}
+
+func TestBindGroups_TopLevelValueGroup(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&groupValueArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags([]string{"--from", "2026-01-01", "--to", "2026-12-31"})
+	out := &groupValueArgs{}
+	argsVal := reflect.ValueOf(out).Elem()
+	_ = bindFlags(cmd, argsVal, specs)
+	if err := bindGroups(cmd, argsVal, specs); err != nil {
+		t.Fatalf("bindGroups: %v", err)
+	}
+	if out.Range.From != "2026-01-01" || out.Range.To != "2026-12-31" {
+		t.Errorf("Range = %+v", out.Range)
+	}
+}
+
+type defaultedGroup struct {
+	Port string `flag:"port" default:"8080"`
+	Host string `flag:"host" default:"localhost"`
+}
+type groupDefaultArgs struct {
+	Conf defaultedGroup
+}
+
+func TestBindGroups_TopLevelValueGroup_AppliesDefaults(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&groupDefaultArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags(nil)
+	out := &groupDefaultArgs{}
+	argsVal := reflect.ValueOf(out).Elem()
+	_ = bindFlags(cmd, argsVal, specs)
+	if err := bindGroups(cmd, argsVal, specs); err != nil {
+		t.Fatalf("bindGroups: %v", err)
+	}
+	if out.Conf.Port != "8080" || out.Conf.Host != "localhost" {
+		t.Errorf("defaults not applied: Conf = %+v", out.Conf)
+	}
+}
+
+type proxyConf struct {
+	Host string `flag:"proxy-host"`
+	Port string `flag:"proxy-port"`
+}
+type groupPtrArgs struct {
+	Proxy *proxyConf
+}
+
+func TestBindGroups_TopLevelPtrGroup_AllocatedWhenChanged(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&groupPtrArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags([]string{"--proxy-host", "p.example.com"})
+	out := &groupPtrArgs{}
+	argsVal := reflect.ValueOf(out).Elem()
+	_ = bindFlags(cmd, argsVal, specs)
+	if err := bindGroups(cmd, argsVal, specs); err != nil {
+		t.Fatalf("bindGroups: %v", err)
+	}
+	if out.Proxy == nil {
+		t.Fatal("expected Proxy to be allocated when an inner flag was changed")
+	}
+	if out.Proxy.Host != "p.example.com" {
+		t.Errorf("Proxy.Host = %q", out.Proxy.Host)
+	}
+}
+
+func TestBindGroups_TopLevelPtrGroup_NilWhenAbsent(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	specs, _ := walkArgs(reflect.TypeOf(&groupPtrArgs{}))
+	_ = registerFlags(cmd, specs)
+	_ = cmd.ParseFlags(nil)
+	out := &groupPtrArgs{}
+	argsVal := reflect.ValueOf(out).Elem()
+	_ = bindFlags(cmd, argsVal, specs)
+	if err := bindGroups(cmd, argsVal, specs); err != nil {
+		t.Fatalf("bindGroups: %v", err)
+	}
+	if out.Proxy != nil {
+		t.Errorf("expected Proxy nil when no inner flag set, got %+v", out.Proxy)
+	}
+}
+
 func mustValidationError(t *testing.T, err error) *errs.ValidationError {
 	t.Helper()
 	var ve *errs.ValidationError
