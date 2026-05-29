@@ -14,6 +14,8 @@ metadata:
 
 **user 身份和 bot 身份是两条完全独立的路径**。先确定当前身份,再按下表选命令:
 
+**CRITICAL — 执行任何命令之前，MUST 先用 Read 工具读取下表中对应的说明文档；没有文档链接的命令须执行 -h 了解用法。禁止盲调。**
+
 | 想做什么 | user 身份 | bot 身份 |
 |---|---|---|
 | 按姓名 / 邮箱搜员工拿 open_id | [`+search-user`](references/lark-contact-search-user.md) | 不支持 |

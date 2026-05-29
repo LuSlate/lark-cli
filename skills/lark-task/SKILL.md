@@ -33,6 +33,8 @@ metadata:
 > Task OpenAPI 中用于更新/操作任务的 `guid` 是任务的全局唯一标识（GUID），不是客户端展示的任务编号（例如 `t104121` / `suite_entity_num`）。
 > 对于 Feishu 的任务 applink（例如 `.../client/todo/task?guid=...`），必须使用 URL query 里的 `guid` 参数作为 task guid。
 
+**CRITICAL — 执行任何 Shortcut 之前，MUST 先用 Read 工具读取下表中对应的说明文档；没有文档链接的命令须执行 -h 了解用法。禁止盲调。**
+
 | Shortcut | 说明 |
 |----------|------|
 | [`+create`](references/lark-task-create.md) | create a task |
