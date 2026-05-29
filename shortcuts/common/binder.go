@@ -27,6 +27,8 @@ type fieldSpec struct {
 	EnumValues   []string
 	Input        []string
 	Required     bool
+	Hidden       bool
+	NoSplit      bool
 	IsOneOfBkt   bool
 	IsGroup      bool
 	IsPtr        bool
@@ -91,6 +93,17 @@ func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
 			}
 		}
 	}
+	if _, has := f.Tag.Lookup("hidden"); has {
+		spec.Hidden = true
+	}
+	switch split := strings.TrimSpace(f.Tag.Get("split")); split {
+	case "", "comma":
+		// default: cobra StringSlice (comma-separated, also repeatable)
+	case "none":
+		spec.NoSplit = true // cobra StringArray: repeatable, no comma split
+	default:
+		return spec, fmt.Errorf("field %s: unknown split mode %q (allowed: comma, none)", f.Name, split)
+	}
 	ft := f.Type
 	spec.FieldType = ft
 	if ft.Kind() == reflect.Ptr {
@@ -108,11 +121,18 @@ func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
 		}
 		return spec, nil
 	}
-	// Leaf field: enum / input tags only make sense on string-kinded leaves
-	// (plain string or string-alias types like ChatID). Reject them on
-	// int / bool / other kinds at Mount time instead of silently skipping the
-	// check at runtime — enum validation reads the flag via GetString and
-	// @file resolution requires a string flag.
+	// Leaf field validation. Multi-value flags are []string (cobra
+	// StringSlice / StringArray); any other slice element type is unsupported.
+	// enum / input only make sense on plain string leaves (string or a
+	// string-alias like ChatID); split only on []string. Reject mismatches at
+	// Mount time instead of silently skipping or panicking at runtime.
+	isStringSlice := ft.Kind() == reflect.Slice && ft.Elem().Kind() == reflect.String
+	if ft.Kind() == reflect.Slice && !isStringSlice {
+		return spec, fmt.Errorf("field %s: only []string slices are supported, got %s", f.Name, ft)
+	}
+	if spec.NoSplit && !isStringSlice {
+		return spec, fmt.Errorf("field %s: split tag is only supported on []string fields", f.Name)
+	}
 	if ft.Kind() != reflect.String {
 		if len(spec.EnumValues) > 0 {
 			return spec, fmt.Errorf("field %s: enum tag is only supported on string fields", f.Name)
@@ -163,11 +183,22 @@ func registerLeaf(cmd *cobra.Command, s fieldSpec, t reflect.Type) error {
 			def, _ = strconv.Atoi(s.DefaultValue)
 		}
 		cmd.Flags().Int(s.FlagName, def, s.Description)
+	case reflect.Slice:
+		// []string (validated at parse time). NoSplit → StringArray
+		// (repeatable, literal); default → StringSlice (comma-separated).
+		if s.NoSplit {
+			cmd.Flags().StringArray(s.FlagName, nil, s.Description)
+		} else {
+			cmd.Flags().StringSlice(s.FlagName, nil, s.Description)
+		}
 	default:
 		cmd.Flags().String(s.FlagName, s.DefaultValue, s.Description)
 	}
 	if s.Required {
 		_ = cmd.MarkFlagRequired(s.FlagName)
+	}
+	if s.Hidden {
+		_ = cmd.Flags().MarkHidden(s.FlagName)
 	}
 	if len(s.EnumValues) > 0 {
 		vals := s.EnumValues
@@ -253,6 +284,14 @@ func bindLeaf(cmd *cobra.Command, argsVal reflect.Value, s fieldSpec) error {
 	case reflect.Int, reflect.Int64:
 		v, _ := cmd.Flags().GetInt(s.FlagName)
 		setLeaf(fv, reflect.ValueOf(int64(v)).Convert(leafType))
+	case reflect.Slice:
+		if s.NoSplit {
+			v, _ := cmd.Flags().GetStringArray(s.FlagName)
+			setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
+		} else {
+			v, _ := cmd.Flags().GetStringSlice(s.FlagName)
+			setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
+		}
 	default:
 		v, _ := cmd.Flags().GetString(s.FlagName)
 		setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
@@ -410,11 +449,11 @@ func bindBucketInner(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpe
 			}
 			elemType := fv.Type().Elem()
 			ptr := reflect.New(elemType)
-			ptr.Elem().Set(bucketLeafValue(cmd, s.FlagName, elemType))
+			ptr.Elem().Set(bucketLeafValue(cmd, s.FlagName, elemType, s.NoSplit))
 			fv.Set(ptr)
 			continue
 		}
-		fv.Set(bucketLeafValue(cmd, s.FlagName, fv.Type()))
+		fv.Set(bucketLeafValue(cmd, s.FlagName, fv.Type(), s.NoSplit))
 	}
 	return nil
 }
@@ -424,7 +463,7 @@ func bindBucketInner(cmd *cobra.Command, argsVal reflect.Value, specs []fieldSpe
 // bucket/group leaves typed as bool or int bind correctly instead of being
 // force-read through GetString (which would panic on reflect conversion of a
 // string into a numeric/bool type).
-func bucketLeafValue(cmd *cobra.Command, flagName string, targetType reflect.Type) reflect.Value {
+func bucketLeafValue(cmd *cobra.Command, flagName string, targetType reflect.Type, noSplit bool) reflect.Value {
 	kind := targetType.Kind()
 	if kind == reflect.Ptr {
 		kind = targetType.Elem().Kind()
@@ -436,6 +475,13 @@ func bucketLeafValue(cmd *cobra.Command, flagName string, targetType reflect.Typ
 	case reflect.Int, reflect.Int64:
 		v, _ := cmd.Flags().GetInt(flagName)
 		return reflect.ValueOf(int64(v)).Convert(targetType)
+	case reflect.Slice:
+		if noSplit {
+			v, _ := cmd.Flags().GetStringArray(flagName)
+			return reflect.ValueOf(v).Convert(targetType)
+		}
+		v, _ := cmd.Flags().GetStringSlice(flagName)
+		return reflect.ValueOf(v).Convert(targetType)
 	default:
 		v, _ := cmd.Flags().GetString(flagName)
 		return reflect.ValueOf(v).Convert(targetType)

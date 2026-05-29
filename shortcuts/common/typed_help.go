@@ -51,6 +51,18 @@ func formatLeafLine(indent string, s fieldSpec) string {
 	if len(s.EnumValues) > 0 {
 		line += fmt.Sprintf(" (one of: %s)", strings.Join(s.EnumValues, "|"))
 	}
+	if len(s.Input) > 0 {
+		var srcs []string
+		for _, src := range s.Input {
+			switch src {
+			case File:
+				srcs = append(srcs, "@file")
+			case Stdin:
+				srcs = append(srcs, "- for stdin")
+			}
+		}
+		line += fmt.Sprintf(" (supports %s)", strings.Join(srcs, ", "))
+	}
 	if s.DefaultValue != "" {
 		line += fmt.Sprintf(" (default %q)", s.DefaultValue)
 	}
@@ -89,7 +101,7 @@ func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered
 					renderFlagsInBucket(w, grand, indent+"  ", rendered)
 					continue
 				}
-				if leaf.FlagName == "" {
+				if leaf.FlagName == "" || leaf.Hidden {
 					continue
 				}
 				fmt.Fprintln(w, formatLeafLine(indent, leaf))
@@ -97,7 +109,7 @@ func renderFlagsInBucket(w io.Writer, specs []fieldSpec, indent string, rendered
 			}
 			continue
 		}
-		if child.FlagName == "" {
+		if child.FlagName == "" || child.Hidden {
 			continue
 		}
 		fmt.Fprintln(w, formatLeafLine(indent, child))
@@ -115,7 +127,7 @@ func renderRequiredSection(w io.Writer, specs []fieldSpec, rendered map[string]s
 		if s.IsOneOfBkt || s.IsGroup {
 			continue
 		}
-		if s.FlagName == "" || !s.Required {
+		if s.FlagName == "" || !s.Required || s.Hidden {
 			continue
 		}
 		if !anyFlag {
@@ -140,7 +152,7 @@ func renderOptionalSection(w io.Writer, specs []fieldSpec, rendered map[string]s
 		if s.IsOneOfBkt || s.IsGroup {
 			continue
 		}
-		if s.FlagName == "" || s.Required {
+		if s.FlagName == "" || s.Required || s.Hidden {
 			continue
 		}
 		if !anyFlag {
