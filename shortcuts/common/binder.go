@@ -285,18 +285,31 @@ func bindLeaf(cmd *cobra.Command, argsVal reflect.Value, s fieldSpec) error {
 		v, _ := cmd.Flags().GetInt(s.FlagName)
 		setLeaf(fv, reflect.ValueOf(int64(v)).Convert(leafType))
 	case reflect.Slice:
+		var vals []string
 		if s.NoSplit {
-			v, _ := cmd.Flags().GetStringArray(s.FlagName)
-			setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
+			vals, _ = cmd.Flags().GetStringArray(s.FlagName)
 		} else {
-			v, _ := cmd.Flags().GetStringSlice(s.FlagName)
-			setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
+			vals, _ = cmd.Flags().GetStringSlice(s.FlagName)
 		}
+		setLeaf(fv, stringsToSlice(vals, leafType))
 	default:
 		v, _ := cmd.Flags().GetString(s.FlagName)
 		setLeaf(fv, reflect.ValueOf(v).Convert(leafType))
 	}
 	return nil
+}
+
+// stringsToSlice builds a slice value of type t (kind Slice with string-kinded
+// elements) from raw strings, element-by-element via SetString. This handles a
+// plain []string, a named slice type (type IDs []string), AND a named element
+// type (type ID string → []ID) — reflect.Convert would panic on the last case
+// because []string is not convertible to []ID.
+func stringsToSlice(vals []string, t reflect.Type) reflect.Value {
+	out := reflect.MakeSlice(t, len(vals), len(vals))
+	for i, v := range vals {
+		out.Index(i).SetString(v)
+	}
+	return out
 }
 
 func setLeaf(dst reflect.Value, src reflect.Value) {
@@ -476,12 +489,13 @@ func bucketLeafValue(cmd *cobra.Command, flagName string, targetType reflect.Typ
 		v, _ := cmd.Flags().GetInt(flagName)
 		return reflect.ValueOf(int64(v)).Convert(targetType)
 	case reflect.Slice:
+		var vals []string
 		if noSplit {
-			v, _ := cmd.Flags().GetStringArray(flagName)
-			return reflect.ValueOf(v).Convert(targetType)
+			vals, _ = cmd.Flags().GetStringArray(flagName)
+		} else {
+			vals, _ = cmd.Flags().GetStringSlice(flagName)
 		}
-		v, _ := cmd.Flags().GetStringSlice(flagName)
-		return reflect.ValueOf(v).Convert(targetType)
+		return stringsToSlice(vals, targetType)
 	default:
 		v, _ := cmd.Flags().GetString(flagName)
 		return reflect.ValueOf(v).Convert(targetType)

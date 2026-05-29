@@ -129,6 +129,13 @@ func (s TypedShortcut[T]) MountWithContext(ctx context.Context, parent *cobra.Co
 //  7. high-risk-write confirmation   — when Risk == "high-risk-write"
 //  8. shell.Execute                  — reads typed args from rt
 func mountTyped[T any](ctx context.Context, parent *cobra.Command, f *cmdutil.Factory, s TypedShortcut[T]) {
+	// Mirror legacy Shortcut.MountWithContext: a shortcut with no Execute is
+	// not a runnable command, so it is not mounted at all (rather than mounted
+	// and erroring at invocation time). Keeps the command tree identical to
+	// legacy after migration.
+	if s.Execute == nil {
+		return
+	}
 	var zero T
 	argsType := reflect.TypeOf(zero)
 	if argsType == nil || argsType.Kind() != reflect.Ptr {
