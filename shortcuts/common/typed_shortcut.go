@@ -118,9 +118,12 @@ func (s TypedShortcut[T]) MountWithContext(ctx context.Context, parent *cobra.Co
 //
 //  1. identity / scopes / runtime    — handled by Shortcut.runShortcut
 //  2. validateEnumFlags              — Shortcut machinery
-//  3. resolveInputFlags              — @file / stdin
+//  3. resolveInputFlags              — @file / stdin (legacy shell only; the
+//     synthesized shell's Flags slice is empty, so this is a no-op for typed —
+//     typed flags declare inputs via the `input` tag, resolved in step 5)
 //  4. ValidateJqFlags                — --jq
-//  5. shell.Validate                 — binds T, runs Normalize / ValidateValue /
+//  5. shell.Validate                 — resolveTypedInputs (@file / stdin for
+//     `input`-tagged flags), binds T, runs Normalize / ValidateValue /
 //     framework rules / ArgsValidator / user-typed Validate
 //  6. --dry-run gate                 — shell.DryRun reads typed args from rt
 //  7. high-risk-write confirmation   — when Risk == "high-risk-write"
@@ -161,6 +164,12 @@ func mountTyped[T any](ctx context.Context, parent *cobra.Command, f *cmdutil.Fa
 			}
 		},
 		Validate: func(c context.Context, rt *RuntimeContext) error {
+			// @file / stdin resolution for flags that declared an `input` tag.
+			// Runs before bindFlags so the resolved file/stdin content is what
+			// gets bound into the Args struct.
+			if err := resolveTypedInputs(rt, specs); err != nil {
+				return err
+			}
 			args := reflect.New(argsType.Elem()).Interface().(T)
 			argsVal := reflect.ValueOf(args).Elem()
 			if err := bindFlags(rt.Cmd, argsVal, specs); err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/larksuite/cli/errs"
+	"github.com/larksuite/cli/internal/cmdutil"
 )
 
 // fieldSpec is the binder's intermediate representation of one Args field.
@@ -24,6 +25,7 @@ type fieldSpec struct {
 	Description  string
 	DefaultValue string
 	EnumValues   []string
+	Input        []string
 	Required     bool
 	IsOneOfBkt   bool
 	IsGroup      bool
@@ -77,6 +79,18 @@ func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
 	if _, has := f.Tag.Lookup("required"); has {
 		spec.Required = true
 	}
+	if input := f.Tag.Get("input"); input != "" {
+		for _, src := range strings.Split(input, ",") {
+			switch src = strings.TrimSpace(src); src {
+			case "":
+				// tolerate stray commas
+			case File, Stdin:
+				spec.Input = append(spec.Input, src)
+			default:
+				return spec, fmt.Errorf("field %s: unknown input source %q (allowed: %q, %q)", f.Name, src, File, Stdin)
+			}
+		}
+	}
 	ft := f.Type
 	spec.FieldType = ft
 	if ft.Kind() == reflect.Ptr {
@@ -91,6 +105,20 @@ func parseFieldSpec(f reflect.StructField) (fieldSpec, error) {
 			spec.IsOneOfBkt = true
 		} else {
 			spec.IsGroup = true
+		}
+		return spec, nil
+	}
+	// Leaf field: enum / input tags only make sense on string-kinded leaves
+	// (plain string or string-alias types like ChatID). Reject them on
+	// int / bool / other kinds at Mount time instead of silently skipping the
+	// check at runtime — enum validation reads the flag via GetString and
+	// @file resolution requires a string flag.
+	if ft.Kind() != reflect.String {
+		if len(spec.EnumValues) > 0 {
+			return spec, fmt.Errorf("field %s: enum tag is only supported on string fields", f.Name)
+		}
+		if len(spec.Input) > 0 {
+			return spec, fmt.Errorf("field %s: input tag is only supported on string fields", f.Name)
 		}
 	}
 	return spec, nil
@@ -140,6 +168,46 @@ func registerLeaf(cmd *cobra.Command, s fieldSpec, t reflect.Type) error {
 	}
 	if s.Required {
 		_ = cmd.MarkFlagRequired(s.FlagName)
+	}
+	if len(s.EnumValues) > 0 {
+		vals := s.EnumValues
+		cmdutil.RegisterFlagCompletion(cmd, s.FlagName, func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+			return vals, cobra.ShellCompDirectiveNoFileComp
+		})
+	}
+	return nil
+}
+
+// resolveTypedInputs applies @file / stdin resolution to every leaf flag that
+// declared an `input:"file,stdin"` tag, recursing into OneOf buckets and groups
+// (cobra flags are flat, so a nested variant's flag resolves the same way). It
+// runs before bindFlags so the file/stdin content is read back into the cobra
+// flag and then bound into the Args struct. This is the typed counterpart of
+// runShortcut's resolveInputFlags, which only sees the legacy shell's (empty)
+// Flags slice — both ultimately call resolveInputForFlag.
+func resolveTypedInputs(rctx *RuntimeContext, specs []fieldSpec) error {
+	stdinUsed := false
+	return resolveTypedInputsRec(rctx, specs, &stdinUsed)
+}
+
+func resolveTypedInputsRec(rctx *RuntimeContext, specs []fieldSpec, stdinUsed *bool) error {
+	for _, s := range specs {
+		if s.IsOneOfBkt || s.IsGroup {
+			inner, err := walkArgs(reflect.PointerTo(s.StructType))
+			if err != nil {
+				return err
+			}
+			if err := resolveTypedInputsRec(rctx, inner, stdinUsed); err != nil {
+				return err
+			}
+			continue
+		}
+		if s.FlagName == "" || len(s.Input) == 0 {
+			continue
+		}
+		if err := resolveInputForFlag(rctx, s.FlagName, s.Input, stdinUsed); err != nil {
+			return err
+		}
 	}
 	return nil
 }

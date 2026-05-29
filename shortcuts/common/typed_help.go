@@ -48,6 +48,9 @@ func buildTypedHelp(specs []fieldSpec, examples []HelpExample) func(*cobra.Comma
 // same information density as cobra's legacy default help.
 func formatLeafLine(indent string, s fieldSpec) string {
 	line := fmt.Sprintf("%s--%s    %s", indent, s.FlagName, s.Description)
+	if len(s.EnumValues) > 0 {
+		line += fmt.Sprintf(" (one of: %s)", strings.Join(s.EnumValues, "|"))
+	}
 	if s.DefaultValue != "" {
 		line += fmt.Sprintf(" (default %q)", s.DefaultValue)
 	}
