@@ -100,6 +100,20 @@ func TestProfileAddRun_Lang(t *testing.T) {
 			t.Fatalf("expected ExitValidation, got %T: %v", err, err)
 		}
 	})
+
+	t.Run("dropped code ko errors", func(t *testing.T) {
+		setupProfileConfigDir(t)
+		f, _, _, _ := cmdutil.TestFactory(t, nil)
+		f.IOStreams.In = strings.NewReader("secret\n")
+		err := profileAddRun(f, "p", "app-p", true, "feishu", "ko", false)
+		if err == nil {
+			t.Fatal("expected validation error for --lang ko, got nil")
+		}
+		exitErr, ok := err.(*output.ExitError)
+		if !ok || exitErr.Code != output.ExitValidation {
+			t.Fatalf("expected ExitValidation, got %T: %v", err, err)
+		}
+	})
 }
 
 func TestProfileAddRun_UseAfterUpdatesCurrentAndPrevious(t *testing.T) {

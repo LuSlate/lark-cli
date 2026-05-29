@@ -225,6 +225,8 @@ func TestConfigInitCmd_InvalidLang(t *testing.T) {
 		{"removed code ar", "ar"},
 		{"unknown xx", "xx"},
 		{"hyphen form zh-CN", "zh-CN"},
+		{"dropped short code ko", "ko"},
+		{"dropped locale ko_kr", "ko_kr"},
 	}
 
 	for _, tc := range cases {
@@ -507,6 +509,18 @@ func TestValidateInitLang(t *testing.T) {
 			if opts.Lang != string(i18n.LangJaJP) {
 				t.Errorf("--lang %q normalized to %q, want %q", in, opts.Lang, i18n.LangJaJP)
 			}
+		}
+	})
+	t.Run("dropped short code ko errors", func(t *testing.T) {
+		opts := &ConfigInitOptions{Lang: "ko", langExplicit: true}
+		if err := validateInitLang(opts); err == nil {
+			t.Fatal("expected validation error for --lang ko, got nil")
+		}
+	})
+	t.Run("dropped locale ko_kr errors", func(t *testing.T) {
+		opts := &ConfigInitOptions{Lang: "ko_kr", langExplicit: true}
+		if err := validateInitLang(opts); err == nil {
+			t.Fatal("expected validation error for --lang ko_kr, got nil")
 		}
 	})
 }

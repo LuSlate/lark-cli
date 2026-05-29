@@ -152,6 +152,8 @@ func TestConfigBindRun_InvalidLang(t *testing.T) {
 		{"removed code ar", "ar"},
 		{"unknown xx", "xx"},
 		{"hyphen form zh-CN", "zh-CN"},
+		{"dropped short code ko", "ko"},
+		{"dropped locale ko_kr", "ko_kr"},
 	}
 
 	for _, tc := range cases {
