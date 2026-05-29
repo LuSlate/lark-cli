@@ -622,10 +622,10 @@ var DimMove = common.Shortcut{
 
 // dimMovePlan is the parsed form of --source-range / --target.
 type dimMovePlan struct {
-	dimension  string // "row" / "column"
-	startIdx   int    // 0-based inclusive
-	endIdx     int    // 0-based inclusive
-	targetIdx  int    // 0-based; destination position (move inserts before this)
+	dimension string // "row" / "column"
+	startIdx  int    // 0-based inclusive
+	endIdx    int    // 0-based inclusive
+	targetIdx int    // 0-based; destination position (move inserts before this)
 }
 
 // buildDimMovePlan parses --source-range + --target and enforces that the

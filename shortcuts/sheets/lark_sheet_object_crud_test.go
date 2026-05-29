@@ -29,26 +29,34 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 		{
 			name:     "+chart-create",
 			sc:       ChartCreate,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--properties", `{"type":"line"}`},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--properties", `{"type":"line","position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}`},
 			toolName: "manage_chart_object",
 			wantInput: map[string]interface{}{
-				"excel_id":   testToken,
-				"sheet_id":   testSheetID,
-				"operation":  "create",
-				"properties": map[string]interface{}{"type": "line"},
+				"excel_id":  testToken,
+				"sheet_id":  testSheetID,
+				"operation": "create",
+				"properties": map[string]interface{}{
+					"type":     "line",
+					"position": map[string]interface{}{"row": float64(0), "col": "A"},
+					"size":     map[string]interface{}{"width": float64(400), "height": float64(300)},
+				},
 			},
 		},
 		{
 			name:     "+chart-update",
 			sc:       ChartUpdate,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--chart-id", "chartXYZ", "--properties", `{"type":"bar"}`},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--chart-id", "chartXYZ", "--properties", `{"type":"bar","position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}`},
 			toolName: "manage_chart_object",
 			wantInput: map[string]interface{}{
-				"excel_id":   testToken,
-				"sheet_id":   testSheetID,
-				"operation":  "update",
-				"chart_id":   "chartXYZ",
-				"properties": map[string]interface{}{"type": "bar"},
+				"excel_id":  testToken,
+				"sheet_id":  testSheetID,
+				"operation": "update",
+				"chart_id":  "chartXYZ",
+				"properties": map[string]interface{}{
+					"type":     "bar",
+					"position": map[string]interface{}{"row": float64(0), "col": "A"},
+					"size":     map[string]interface{}{"width": float64(400), "height": float64(300)},
+				},
 			},
 		},
 		// pivot — has extra create flags incl. required --source.
@@ -149,24 +157,34 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 		{
 			name:     "+filter-create without --properties sends properties.range only",
 			sc:       FilterCreate,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:F1000"},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:F1000", "--properties", `{"rules":[]}`},
 			toolName: "manage_filter_object",
 			wantInput: map[string]interface{}{
-				"excel_id":   testToken,
-				"sheet_id":   testSheetID,
-				"operation":  "create",
-				"properties": map[string]interface{}{"range": "A1:F1000"},
+				"excel_id":  testToken,
+				"sheet_id":  testSheetID,
+				"operation": "create",
+				"properties": map[string]interface{}{
+					"range": "A1:F1000",
+					"rules": []interface{}{},
+				},
 			},
 		},
 		{
 			name:     "+filter-create with --properties merges rules",
 			sc:       FilterCreate,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:F1000", "--properties", `{"rules":[{"col":"B"}]}`},
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:F1000", "--properties", `{"rules":[{"column_index":"B","conditions":[{"type":"text","compare_type":"contains","values":["x"]}]}]}`},
 			toolName: "manage_filter_object",
 			wantInput: map[string]interface{}{
 				"properties": map[string]interface{}{
 					"range": "A1:F1000",
-					"rules": []interface{}{map[string]interface{}{"col": "B"}},
+					"rules": []interface{}{map[string]interface{}{
+						"column_index": "B",
+						"conditions": []interface{}{map[string]interface{}{
+							"type":         "text",
+							"compare_type": "contains",
+							"values":       []interface{}{"x"},
+						}},
+					}},
 				},
 			},
 		},
@@ -194,7 +212,7 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 			args: []string{
 				"--url", testURL, "--sheet-id", testSheetID,
 				"--range", "A1:F1000",
-				"--properties", `{"rules":[{"col":"B"}]}`,
+				"--properties", `{"rules":[{"column_index":"B","conditions":[{"type":"text","compare_type":"contains","values":["x"]}]}]}`,
 			},
 			toolName: "manage_filter_object",
 			wantInput: map[string]interface{}{
@@ -204,7 +222,14 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 				"operation": "update",
 				"properties": map[string]interface{}{
 					"range": "A1:F1000",
-					"rules": []interface{}{map[string]interface{}{"col": "B"}},
+					"rules": []interface{}{map[string]interface{}{
+						"column_index": "B",
+						"conditions": []interface{}{map[string]interface{}{
+							"type":         "text",
+							"compare_type": "contains",
+							"values":       []interface{}{"x"},
+						}},
+					}},
 				},
 			},
 		},
@@ -416,6 +441,59 @@ func TestPivotCreate_SheetSelectorSemantics(t *testing.T) {
 	})
 }
 
+// TestPivotCreate_SchemaValidates exercises the schema-driven
+// validator wired into objectCreateInput. The pivot create schema
+// doesn't constrain rows/columns/values to be present (the backend
+// just creates an empty shell), but it does pin types and enums —
+// confirm both kinds of misuse are surfaced as CLI-side errors and
+// that schema-conformant input is accepted.
+func TestPivotCreate_SchemaValidates(t *testing.T) {
+	t.Parallel()
+
+	t.Run("rejects wrong type for rows", func(t *testing.T) {
+		t.Parallel()
+		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+			"--url", testURL,
+			"--properties", `{"rows":"not-an-array"}`,
+			"--source", "Sheet1!A1:F1000",
+			"--dry-run",
+		})
+		if err == nil {
+			t.Fatalf("expected schema validator to reject rows=string; stderr=%s", stderr)
+		}
+		combined := stderr + err.Error()
+		if !strings.Contains(combined, "rows") || !strings.Contains(combined, "array") {
+			t.Errorf("expected error to mention rows/array; got=%s|%v", stderr, err)
+		}
+	})
+
+	t.Run("rejects out-of-enum summarize_by", func(t *testing.T) {
+		t.Parallel()
+		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+			"--url", testURL,
+			"--properties", `{"values":[{"field":"A","summarize_by":"BOGUS"}]}`,
+			"--source", "Sheet1!A1:F1000",
+			"--dry-run",
+		})
+		if err == nil {
+			t.Fatalf("expected schema validator to reject summarize_by=BOGUS; stderr=%s", stderr)
+		}
+		if !strings.Contains(stderr+err.Error(), "summarize_by") {
+			t.Errorf("expected error to mention summarize_by; got=%s|%v", stderr, err)
+		}
+	})
+
+	t.Run("schema-conformant input is accepted", func(t *testing.T) {
+		t.Parallel()
+		body := parseDryRunBody(t, PivotCreate, []string{
+			"--url", testURL,
+			"--properties", `{"values":[{"field":"A","summarize_by":"sum"}]}`,
+			"--source", "Sheet1!A1:F1000",
+		})
+		decodeToolInput(t, body, "manage_pivot_table_object")
+	})
+}
+
 // TestObjectCreate_RequiresSheetSelector regresses the non-pivot create
 // shortcuts: pivot-create is the only one whose spec sets
 // allowEmptySheetSelectorOnCreate=true. Every other *-create must still
@@ -428,7 +506,7 @@ func TestObjectCreate_RequiresSheetSelector(t *testing.T) {
 		sc   common.Shortcut
 		args []string // omit sheet selector flags on purpose
 	}{
-		{"chart", ChartCreate, []string{"--url", testURL, "--properties", `{"type":"line"}`}},
+		{"chart", ChartCreate, []string{"--url", testURL, "--properties", `{"type":"line","position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}`}},
 		{"cond-format", CondFormatCreate, []string{"--url", testURL, "--properties", `{"attrs":[]}`, "--rule-type", "cellIs", "--ranges", `["A1:A10"]`}},
 		{"sparkline", SparklineCreate, []string{"--url", testURL, "--properties", `{"sparklines":[]}`}},
 		{"filter-view", FilterViewCreate, []string{"--url", testURL, "--properties", `{}`, "--range", "A1:F10"}},

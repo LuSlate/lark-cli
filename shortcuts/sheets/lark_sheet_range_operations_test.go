@@ -221,11 +221,12 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 	}
 }
 
-// TestRangeSort_RejectsMalformedKeys verifies the pre-check that each
-// --sort-keys entry has both `column` (string) and `ascending` (bool);
-// previously the CLI passed any JSON through and the server bounced
-// with a terse "required property X missing" that didn't name the bad
-// entry.
+// TestRangeSort_RejectsMalformedKeys verifies the schema-driven check
+// that each --sort-keys entry has both `column` (string) and
+// `ascending` (bool). The schema validator (loaded from
+// data/flag-schemas.json) reports the offending JSON path; previously
+// the CLI passed any JSON through and the server bounced with a terse
+// "required property X missing" that didn't name the bad entry.
 func TestRangeSort_RejectsMalformedKeys(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -233,10 +234,10 @@ func TestRangeSort_RejectsMalformedKeys(t *testing.T) {
 		keys string
 		want string
 	}{
-		{"missing column", `[{"ascending":true}]`, "missing required string field `column`"},
-		{"missing ascending", `[{"column":"B"}]`, "missing required bool field `ascending`"},
-		{"old vocab col/order", `[{"col":"B","order":"asc"}]`, "missing required string field `column`"},
-		{"non-object item", `["B"]`, "must be an object"},
+		{"missing column", `[{"ascending":true}]`, `required property "column" is missing at [0]`},
+		{"missing ascending", `[{"column":"B"}]`, `required property "ascending" is missing at [0]`},
+		{"old vocab col/order", `[{"col":"B","order":"asc"}]`, `required property "column" is missing at [0]`},
+		{"non-object item", `["B"]`, `[0]: expected type "object"`},
 	}
 	for _, c := range cases {
 		c := c

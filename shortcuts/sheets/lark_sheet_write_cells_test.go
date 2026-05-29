@@ -179,11 +179,11 @@ func TestDropdownSet_CellsShape(t *testing.T) {
 // the flag" apart from "user passed --highlight=false":
 //
 //   - omitted          → no enable_highlight key in body (server applies its
-//                        new default = true)
+//     new default = true)
 //   - --highlight      → enable_highlight=true  (presence-only cobra form)
 //   - --highlight=true → enable_highlight=true  (explicit form)
 //   - --highlight=false → enable_highlight=false (the only way to opt out;
-//                         the documented "plain dropdown" path)
+//     the documented "plain dropdown" path)
 func TestDropdownSet_HighlightTriState(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -382,7 +382,7 @@ func TestCellsSetStyle_FlatFlags(t *testing.T) {
 		"--font-weight", "bold",
 		"--background-color", "#ffff00",
 		"--horizontal-alignment", "center",
-		"--border-styles", `{"top":{"style":"thick"}}`,
+		"--border-styles", `{"top":{"style":"solid"}}`,
 	})
 	input := decodeToolInput(t, body, "set_cell_range")
 	cells, _ := input["cells"].([]interface{})
@@ -420,8 +420,12 @@ func TestCellsSet_RequiresJSONArray(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected validation error; stdout=%s stderr=%s", stdout, stderr)
 	}
-	if !strings.Contains(stdout+stderr+err.Error(), "must be a JSON array") {
-		t.Errorf("expected JSON-array guard; got=%s|%s|%v", stdout, stderr, err)
+	// Schema validator fires first now: "--cells: expected type \"array\", got \"object\"".
+	// Either the schema phrasing or the legacy requireJSONArray phrasing is
+	// acceptable — both pin the same contract.
+	combined := stdout + stderr + err.Error()
+	if !strings.Contains(combined, `expected type "array"`) && !strings.Contains(combined, "must be a JSON array") {
+		t.Errorf("expected array-type guard; got=%s|%s|%v", stdout, stderr, err)
 	}
 }
 

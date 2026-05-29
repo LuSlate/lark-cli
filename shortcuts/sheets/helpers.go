@@ -199,6 +199,13 @@ func parseJSONFlag(runtime flagView, name string) (interface{}, error) {
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
 		return nil, common.FlagErrorf("--%s: invalid JSON: %v", name, err)
 	}
+	// Schema-driven flag validation at the user-input boundary. Skips
+	// --properties (validated at the input-builder tail after enhance
+	// hooks fill in flat-flag-derived fields) and any flag without an
+	// embedded schema entry.
+	if err := validateParsedJSONFlag(runtime, name, out); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 

@@ -98,6 +98,9 @@ func cellsSetInput(runtime flagView, token, sheetID, sheetName string) (map[stri
 	if copyTo := strings.TrimSpace(runtime.Str("copy-to-range")); copyTo != "" {
 		input["copy_to_range"] = copyTo
 	}
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
+	}
 	return input, nil
 }
 
@@ -186,6 +189,9 @@ func cellsSetStyleInput(runtime flagView, token, sheetID, sheetName string) (map
 		"cells":    cells,
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
+	}
 	return input, nil
 }
 
@@ -329,6 +335,9 @@ func dropdownSetInput(runtime flagView, token, sheetID, sheetName string) (map[s
 		"cells":    cells,
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
+	}
 	return input, nil
 }
 

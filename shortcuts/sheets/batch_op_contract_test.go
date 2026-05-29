@@ -196,14 +196,14 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 		{
 			shortcut: "+chart-create",
 			sc:       ChartCreate,
-			args:     []string{"--sheet-id", "sh1", "--properties", `{"position":{"start":"A1"}}`},
-			subInput: `{"sheet-id":"sh1","properties":{"position":{"start":"A1"}}}`,
+			args:     []string{"--sheet-id", "sh1", "--properties", `{"position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}`},
+			subInput: `{"sheet-id":"sh1","properties":{"position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}}`,
 		},
 		{
 			shortcut: "+chart-update",
 			sc:       ChartUpdate,
-			args:     []string{"--sheet-id", "sh1", "--chart-id", "c1", "--properties", `{"title":"T"}`},
-			subInput: `{"sheet-id":"sh1","chart-id":"c1","properties":{"title":"T"}}`,
+			args:     []string{"--sheet-id", "sh1", "--chart-id", "c1", "--properties", `{"position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}`},
+			subInput: `{"sheet-id":"sh1","chart-id":"c1","properties":{"position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}}`,
 		},
 		{
 			shortcut: "+chart-delete",
@@ -598,6 +598,73 @@ func TestBatchOp_RejectsBadSubOpInput(t *testing.T) {
 			_, err := translateBatchOp(rawOp, testToken, 0)
 			if err == nil {
 				t.Fatalf("translator accepted bad input — expected error containing %q", tc.wantContains)
+			}
+			if !strings.Contains(err.Error(), tc.wantContains) {
+				t.Errorf("error = %q, want substring %q", err.Error(), tc.wantContains)
+			}
+		})
+	}
+}
+
+// TestBatchOp_SchemaValidatesSubOps confirms the schema-driven
+// validator fires on +batch-update sub-operations the same way it
+// fires on standalone shortcuts. mapFlagView.Command() returns the
+// sub-op's shortcut name, so validateInputAgainstSchema (called at
+// each input builder's tail) routes through the same (command, flag)
+// lookup pipeline a standalone invocation would. This regression
+// pins that wiring — without it, agents could slip past CLI-side
+// schema checks by wrapping a bad input in +batch-update.
+func TestBatchOp_SchemaValidatesSubOps(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name         string
+		subShortcut  string
+		subInput     string
+		wantContains string
+	}{
+		// +pivot-create properties.values items enforce summarize_by
+		// enum — schema rejects an out-of-enum value as a sub-op too.
+		{
+			"+pivot-create summarize_by out of enum",
+			"+pivot-create",
+			`{"sheet-id":"sh1","source":"Sheet1!A1:D100","properties":{"values":[{"field":"A","summarize_by":"BOGUS"}]}}`,
+			"summarize_by",
+		},
+		// +chart-create properties.position.row has minimum:0 — P0
+		// addition; validator must catch -1 even in the batch path.
+		{
+			"+chart-create position.row below minimum",
+			"+chart-create",
+			`{"sheet-id":"sh1","properties":{"position":{"row":-1,"col":"A"},"size":{"width":400,"height":300}}}`,
+			"below minimum",
+		},
+		// +cells-set --cells is a 2D array of objects per the
+		// upstream-fixed schema; sub-op passing an object must be
+		// rejected at the schema layer (not "expected JSON array").
+		{
+			"+cells-set cells wrong shape",
+			"+cells-set",
+			`{"sheet-id":"sh1","range":"A1","cells":{"foo":"bar"}}`,
+			`expected type "array"`,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			var subInput map[string]interface{}
+			if err := json.Unmarshal([]byte(tc.subInput), &subInput); err != nil {
+				t.Fatalf("bad subInput JSON: %v", err)
+			}
+			rawOp := map[string]interface{}{
+				"shortcut": tc.subShortcut,
+				"input":    subInput,
+			}
+			_, err := translateBatchOp(rawOp, testToken, 0)
+			if err == nil {
+				t.Fatalf("translator accepted schema-violating sub-op — expected error containing %q", tc.wantContains)
 			}
 			if !strings.Contains(err.Error(), tc.wantContains) {
 				t.Errorf("error = %q, want substring %q", err.Error(), tc.wantContains)

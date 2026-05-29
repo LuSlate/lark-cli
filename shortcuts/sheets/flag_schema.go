@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"sync"
 )
 
 // ─── --print-schema runtime introspection ─────────────────────────────
@@ -38,25 +39,28 @@ type flagSchemaIndex struct {
 	Flags         map[string]map[string]json.RawMessage `json:"flags"`
 }
 
+// loadFlagSchemas is sync.Once-guarded so concurrent first access from
+// parallel goroutines (e.g. parallel unit tests, parallel shortcut
+// invocations) doesn't race on the lazy parse.
 var (
+	flagSchemasOnce   sync.Once
 	parsedFlagSchemas *flagSchemaIndex
 	parseFlagErr      error
 )
 
 func loadFlagSchemas() (*flagSchemaIndex, error) {
-	if parsedFlagSchemas != nil || parseFlagErr != nil {
-		return parsedFlagSchemas, parseFlagErr
-	}
-	var idx flagSchemaIndex
-	if err := json.Unmarshal(flagSchemasJSON, &idx); err != nil {
-		parseFlagErr = fmt.Errorf("flag-schemas.json: %w", err)
-		return nil, parseFlagErr
-	}
-	if idx.Flags == nil {
-		idx.Flags = map[string]map[string]json.RawMessage{}
-	}
-	parsedFlagSchemas = &idx
-	return parsedFlagSchemas, nil
+	flagSchemasOnce.Do(func() {
+		var idx flagSchemaIndex
+		if err := json.Unmarshal(flagSchemasJSON, &idx); err != nil {
+			parseFlagErr = fmt.Errorf("flag-schemas.json: %w", err)
+			return
+		}
+		if idx.Flags == nil {
+			idx.Flags = map[string]map[string]json.RawMessage{}
+		}
+		parsedFlagSchemas = &idx
+	})
+	return parsedFlagSchemas, parseFlagErr
 }
 
 // commandsWithFlagSchema returns the set of shortcut commands that have

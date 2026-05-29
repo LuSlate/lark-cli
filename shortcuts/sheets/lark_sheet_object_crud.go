@@ -49,11 +49,13 @@ type objectCRUDSpec struct {
 	enhanceCreateInput func(rt flagView, input map[string]interface{})
 	enhanceUpdateInput func(rt flagView, input map[string]interface{})
 	// validateUpdateInput, when set, runs after enhanceUpdateInput to
-	// enforce constraints that span across input fields (e.g. sparkline
-	// requires properties.sparklines[i] to carry sparkline_id on update —
-	// a server contract the CLI now surfaces with a pointer to
-	// +sparkline-list instead of letting the caller hit an opaque
-	// server-side rejection).
+	// enforce *cross-field, update-only* constraints JSON Schema can't
+	// express (e.g. sparkline requires properties.sparklines[i] to
+	// carry sparkline_id on update — same schema is shared with create
+	// where the id is server-assigned). Type / enum / required /
+	// nested-shape checks are not handled here: they run automatically
+	// against data/flag-schemas.json in objectCreateInput /
+	// objectUpdateInput via validatePropertiesAgainstSchema.
 	validateUpdateInput func(input map[string]interface{}) error
 	// allowEmptySheetSelectorOnCreate, when true, makes the *create*
 	// shortcut accept empty --sheet-id / --sheet-name (backend then picks
@@ -162,6 +164,9 @@ func objectCreateInput(runtime flagView, token, sheetID, sheetName string, spec 
 	if spec.enhanceCreateInput != nil {
 		spec.enhanceCreateInput(runtime, input)
 	}
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
+	}
 	return input, nil
 }
 
@@ -237,6 +242,9 @@ func objectUpdateInput(runtime flagView, token, sheetID, sheetName string, spec 
 	}
 	if spec.enhanceUpdateInput != nil {
 		spec.enhanceUpdateInput(runtime, input)
+	}
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
 	}
 	if spec.validateUpdateInput != nil {
 		if err := spec.validateUpdateInput(input); err != nil {
@@ -811,6 +819,9 @@ func filterCreateInput(runtime flagView, token, sheetID, sheetName string) (map[
 		"properties": props,
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
+	}
 	return input, nil
 }
 
@@ -878,6 +889,9 @@ func filterUpdateInput(runtime flagView, token, sheetID, sheetName string) (map[
 		"properties": props,
 	}
 	sheetSelectorForToolInput(input, sheetID, sheetName)
+	if err := validateInputAgainstSchema(runtime, input); err != nil {
+		return nil, err
+	}
 	return input, nil
 }
 

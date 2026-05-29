@@ -287,11 +287,11 @@ func TestDimMove_MismatchedDimension(t *testing.T) {
 func TestParseA1Range(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		in       string
-		dim      string
-		start    int
-		end      int
-		wantErr  bool
+		in      string
+		dim     string
+		start   int
+		end     int
+		wantErr bool
 	}{
 		{"3:7", "row", 2, 6, false},
 		{"5", "row", 4, 4, false},

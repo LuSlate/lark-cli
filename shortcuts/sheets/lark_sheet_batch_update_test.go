@@ -290,13 +290,14 @@ func TestBatchUpdate_ValidationGuards(t *testing.T) {
 	}
 
 	// dropdown-update with non-array --options (object instead) → array guard
+	// (now via schema validator at parseJSONFlag time)
 	stdout, stderr, err = runShortcutCapturingErr(t, DropdownUpdate, []string{
 		"--url", testURL,
 		"--ranges", `["sheet1!A1:A2"]`,
 		"--options", `{"not":"array"}`,
 		"--dry-run",
 	})
-	if err == nil || !strings.Contains(stdout+stderr+err.Error(), "must be a JSON array") {
+	if err == nil || !strings.Contains(stdout+stderr+err.Error(), `expected type "array"`) {
 		t.Errorf("expected JSON array guard; got=%s|%s|%v", stdout, stderr, err)
 	}
 }

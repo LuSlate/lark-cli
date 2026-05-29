@@ -27,6 +27,12 @@ type flagView interface {
 	StrArray(name string) []string
 	StrSlice(name string) []string
 	Changed(name string) bool
+	// Command returns the shortcut command this view feeds (e.g.
+	// "+pivot-create"). Used to look up the schema entry for
+	// schema-driven flag validation; both standalone and batch sub-op
+	// paths populate it so a sub-op gets validated against the same
+	// schema as the standalone shortcut.
+	Command() string
 }
 
 // mapFlagView adapts a +batch-update sub-op input object (decoded JSON) to the
@@ -47,13 +53,16 @@ type flagView interface {
 type mapFlagView struct {
 	raw      map[string]interface{} // user-supplied sub-op input (drives Changed)
 	defaults map[string]interface{} // flag defaults (value fallback only)
+	command  string                 // shortcut command (e.g. "+chart-create"); used by schema validator
 }
+
+func (m mapFlagView) Command() string { return m.command }
 
 // newMapFlagViewForCommand wraps a sub-op input and seeds the value-fallback
 // defaults declared for `command` in flag-defs.json, so an absent flag resolves
 // to the same value the standalone cobra command would carry.
 func newMapFlagViewForCommand(command string, input map[string]interface{}) mapFlagView {
-	fv := mapFlagView{raw: input, defaults: map[string]interface{}{}}
+	fv := mapFlagView{raw: input, defaults: map[string]interface{}{}, command: command}
 	defs, err := loadFlagDefs()
 	if err != nil {
 		return fv

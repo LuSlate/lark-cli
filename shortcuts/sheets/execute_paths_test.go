@@ -217,7 +217,7 @@ func TestExecute_FilterCreate(t *testing.T) {
 	out, err := runShortcutWithStubs(t, FilterCreate, []string{
 		"--url", testURL, "--sheet-id", testSheetID,
 		"--range", "A1:F100",
-		"--properties", `{"rules":[{"col":"B","filter_type":"multiValue","expected":["x"]}]}`,
+		"--properties", `{"rules":[{"column_index":"B","conditions":[{"type":"multiValue","compare_type":"equal","values":["x"]}]}]}`,
 	}, stub)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
@@ -354,7 +354,7 @@ func TestExecute_ChartCreate(t *testing.T) {
 	stub := toolOutputStub(testToken, "write", `{"chart_id":"chartNEW"}`)
 	out, err := runShortcutWithStubs(t, ChartCreate, []string{
 		"--url", testURL, "--sheet-id", testSheetID,
-		"--properties", `{"type":"line"}`,
+		"--properties", `{"type":"line","position":{"row":0,"col":"A"},"size":{"width":400,"height":300}}`,
 	}, stub)
 	if err != nil {
 		t.Fatalf("execute failed: %v", err)

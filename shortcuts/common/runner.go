@@ -70,6 +70,16 @@ func (ctx *RuntimeContext) IsBot() bool {
 	return ctx.As().IsBot()
 }
 
+// Command returns the shortcut command name as cobra knows it (e.g.
+// "+pivot-create"). Used by per-service helpers (e.g. sheets schema
+// validation) that key off the shortcut identity.
+func (ctx *RuntimeContext) Command() string {
+	if ctx.Cmd == nil {
+		return ""
+	}
+	return ctx.Cmd.Name()
+}
+
 // UserOpenId returns the current user's open_id from config.
 func (ctx *RuntimeContext) UserOpenId() string { return ctx.Config.UserOpenId }
 
