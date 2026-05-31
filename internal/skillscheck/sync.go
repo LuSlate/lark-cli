@@ -4,6 +4,7 @@
 package skillscheck
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -14,8 +15,9 @@ import (
 )
 
 var (
-	skillNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_:-]*(@[^\s]+)?$`)
-	ansiPattern      = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
+	skillNamePattern         = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_:-]*(@[^\s]+)?$`)
+	officialSkillNamePattern = regexp.MustCompile(`^lark-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`)
+	ansiPattern              = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 )
 
 type SyncInput struct {
@@ -41,6 +43,10 @@ func stripANSI(s string) string {
 
 func ParseSkillsList(text string) []string {
 	text = stripANSI(text)
+	if skills := parseOfficialSkillsIndex(text); skills != nil {
+		return skills
+	}
+
 	lines := strings.Split(text, "\n")
 
 	// Detect format type
@@ -55,6 +61,40 @@ func ParseSkillsList(text string) []string {
 		return parseOfficialSkillsList(lines)
 	}
 	return nil
+}
+
+type officialSkillsIndex struct {
+	Skills []map[string]interface{} `json:"skills"`
+}
+
+func parseOfficialSkillsIndex(text string) []string {
+	trimmed := strings.TrimSpace(text)
+	if trimmed == "" || !strings.HasPrefix(trimmed, "{") {
+		return nil
+	}
+
+	var index officialSkillsIndex
+	if err := json.Unmarshal([]byte(trimmed), &index); err != nil {
+		return nil
+	}
+	if index.Skills == nil {
+		return nil
+	}
+
+	seen := map[string]bool{}
+	for _, skill := range index.Skills {
+		name, ok := skill["name"].(string)
+		if !ok {
+			continue
+		}
+		name = strings.TrimSpace(name)
+		if !officialSkillNamePattern.MatchString(name) {
+			continue
+		}
+		seen[name] = true
+	}
+
+	return sortedKeys(seen)
 }
 
 // parseGlobalSkillsList parses the output of "npx -y skills ls -g"

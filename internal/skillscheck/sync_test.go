@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -64,6 +65,56 @@ func TestParseGlobalSkillsListWithANSI(t *testing.T) {
 	want := []string{"dogfood", "lark-calendar"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("ParseSkillsList() (ANSI Global Skills) = %#v, want %#v", got, want)
+	}
+}
+
+func TestParseSkillsListOfficialJSONIndex(t *testing.T) {
+	input := `{
+		"skills": [
+			{"name": "lark-mail", "description": "Mail", "files": ["SKILL.md"]},
+			{"name": "lark-calendar", "description": "Calendar", "files": ["SKILL.md"]},
+			{"name": "lark-mail", "description": "Duplicate", "files": ["SKILL.md"]}
+		]
+	}`
+
+	got := ParseSkillsList(input)
+	want := []string{"lark-calendar", "lark-mail"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ParseSkillsList() JSON index = %#v, want %#v", got, want)
+	}
+}
+
+func TestParseSkillsListOfficialJSONIndexIgnoresInvalidNames(t *testing.T) {
+	input := `{
+		"skills": [
+			{"name": " lark-calendar "},
+			{"name": "custom-skill"},
+			{"name": "lark-bad name"},
+			{"name": "lark-../../evil"},
+			{"name": "lark-calendar@evil"},
+			{"name": "lark-calendar:evil"},
+			{"name": "lark-calendar/evil"},
+			{"name": "lark-calendar..evil"},
+			{"name": "lark-calendar_evil"},
+			{"name": ""},
+			{"description": "missing name"},
+			{"name": 42}
+		]
+	}`
+
+	got := ParseSkillsList(input)
+	want := []string{"lark-calendar"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ParseSkillsList() JSON index invalid names = %#v, want %#v", got, want)
+	}
+}
+
+func TestParseOfficialSkillsListLegacyAvailableSkills(t *testing.T) {
+	input := "Available Skills\n │    lark-calendar\n │    lark-mail\n"
+	got := ParseSkillsList(input)
+	want := []string{"lark-calendar", "lark-mail"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ParseSkillsList() legacy Available Skills = %#v, want %#v", got, want)
 	}
 }
 
@@ -125,12 +176,16 @@ type fakeSkillsRunner struct {
 
 func officialSkillsOutput(names ...string) string {
 	var b strings.Builder
-	b.WriteString("Available Skills\n")
-	for _, name := range names {
-		b.WriteString("│    ")
-		b.WriteString(name)
-		b.WriteString("\n")
+	b.WriteString(`{"skills":[`)
+	for i, name := range names {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		b.WriteString(`{"name":`)
+		b.WriteString(strconv.Quote(name))
+		b.WriteString(`,"description":"","files":["SKILL.md"]}`)
 	}
+	b.WriteString(`]}`)
 	return b.String()
 }
 

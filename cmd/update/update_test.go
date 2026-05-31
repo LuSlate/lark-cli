@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os/exec"
 	"strings"
 	"testing"
@@ -28,6 +30,22 @@ func newTestFactory(t *testing.T) (*cmdutil.Factory, *bytes.Buffer, *bytes.Buffe
 	return f, stdout, stderr
 }
 
+func officialSkillsIndexURLForTest(t *testing.T) string {
+	t.Helper()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("method = %s, want GET", r.Method)
+		}
+		if r.URL.Path != "/.well-known/skills/index.json" {
+			t.Fatalf("path = %s, want /.well-known/skills/index.json", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"skills":[{"name":"lark-calendar"},{"name":"lark-mail"}]}`))
+	}))
+	t.Cleanup(server.Close)
+	return server.URL + "/.well-known/skills/index.json"
+}
+
 // mockDetect sets up newUpdater to return an Updater with the given DetectResult.
 func mockDetect(t *testing.T, result selfupdate.DetectResult) {
 	t.Helper()
@@ -35,6 +53,8 @@ func mockDetect(t *testing.T, result selfupdate.DetectResult) {
 	newUpdater = func() *selfupdate.Updater {
 		u := selfupdate.New()
 		u.DetectOverride = func() selfupdate.DetectResult { return result }
+		u.OfficialSkillsIndexURL = officialSkillsIndexURLForTest(t)
+		u.SkillsCommandOverride = successfulSkillsCommand()
 		return u
 	}
 	t.Cleanup(func() { newUpdater = origNew })
@@ -49,6 +69,7 @@ func mockDetectAndNpm(t *testing.T, result selfupdate.DetectResult, npmFn func(s
 		u.DetectOverride = func() selfupdate.DetectResult { return result }
 		u.NpmInstallOverride = npmFn
 		u.VerifyOverride = func(string) error { return nil }
+		u.OfficialSkillsIndexURL = officialSkillsIndexURLForTest(t)
 		u.SkillsCommandOverride = successfulSkillsCommand()
 		return u
 	}
@@ -59,10 +80,14 @@ func successfulSkillsCommand() func(args ...string) *selfupdate.NpmResult {
 	return func(args ...string) *selfupdate.NpmResult {
 		r := &selfupdate.NpmResult{}
 		switch strings.Join(args, " ") {
-		case "-y skills add https://open.feishu.cn --list":
-			r.Stdout.WriteString("Available Skills\n │    lark-calendar\n │    lark-mail\n")
 		case "-y skills ls -g":
 			r.Stdout.WriteString("Global Skills\nlark-calendar /tmp/lark-calendar\ncustom-skill /tmp/custom-skill\n")
+		case "-y skills add https://open.feishu.cn -s lark-calendar lark-mail -g -y":
+			// incremental install succeeds
+		case "-y skills add https://open.feishu.cn -g -y":
+			// full install succeeds
+		case "-y skills add larksuite/cli -g -y":
+			// fallback full install succeeds
 		default:
 		}
 		return r

@@ -5,6 +5,8 @@ package selfupdate
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -175,13 +177,6 @@ func TestSkillsCommandsUseExpectedArgs(t *testing.T) {
 		want string
 	}{
 		{
-			name: "list official primary",
-			run: func(u *Updater) *NpmResult {
-				return u.runSkillsListOfficial("https://open.feishu.cn")
-			},
-			want: "-y skills add https://open.feishu.cn --list",
-		},
-		{
 			name: "list global",
 			run: func(u *Updater) *NpmResult {
 				return u.runSkillsListGlobal()
@@ -225,29 +220,90 @@ func TestSkillsCommandsUseExpectedArgs(t *testing.T) {
 	}
 }
 
-func TestListOfficialSkillsFallsBack(t *testing.T) {
-	called := []string{}
-	updater := &Updater{
-		SkillsCommandOverride: func(args ...string) *NpmResult {
-			called = append(called, strings.Join(args, " "))
-			r := &NpmResult{}
-			if strings.Contains(strings.Join(args, " "), "https://open.feishu.cn") {
-				r.Err = fmt.Errorf("primary failed")
-				return r
-			}
-			r.Stdout.WriteString("lark-calendar\n")
-			return r
-		},
-	}
+func TestListOfficialSkillsFetchesIndexJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("method = %s, want GET", r.Method)
+		}
+		if r.URL.Path != "/.well-known/skills/index.json" {
+			t.Fatalf("path = %s, want /.well-known/skills/index.json", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"skills":[{"name":"lark-calendar"}]}`))
+	}))
+	defer server.Close()
 
-	result := updater.ListOfficialSkills()
+	oldURL := officialSkillsIndexURL
+	officialSkillsIndexURL = server.URL + "/.well-known/skills/index.json"
+	defer func() { officialSkillsIndexURL = oldURL }()
+
+	u := New()
+	result := u.ListOfficialSkills()
 	if result.Err != nil {
 		t.Fatalf("ListOfficialSkills() err = %v, want nil", result.Err)
 	}
-	if len(called) != 2 {
-		t.Fatalf("called %d commands, want 2: %#v", len(called), called)
+	if got := result.Stdout.String(); !strings.Contains(got, `"lark-calendar"`) {
+		t.Fatalf("ListOfficialSkills() stdout = %q, want index JSON", got)
 	}
-	if !strings.Contains(called[1], "larksuite/cli --list") {
-		t.Fatalf("fallback call = %q, want larksuite/cli --list", called[1])
+}
+
+func TestListOfficialSkillsNon2xxFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "nope", http.StatusBadGateway)
+	}))
+	defer server.Close()
+
+	oldURL := officialSkillsIndexURL
+	officialSkillsIndexURL = server.URL + "/.well-known/skills/index.json"
+	defer func() { officialSkillsIndexURL = oldURL }()
+
+	u := New()
+	result := u.ListOfficialSkills()
+	if result.Err == nil {
+		t.Fatal("ListOfficialSkills() err = nil, want error")
+	}
+	if !strings.Contains(result.Err.Error(), "502") {
+		t.Fatalf("ListOfficialSkills() err = %v, want HTTP status", result.Err)
+	}
+}
+
+func TestListOfficialSkillsTooLargeFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(strings.Repeat("x", officialSkillsIndexMaxBytes+1)))
+	}))
+	defer server.Close()
+
+	oldURL := officialSkillsIndexURL
+	officialSkillsIndexURL = server.URL + "/.well-known/skills/index.json"
+	defer func() { officialSkillsIndexURL = oldURL }()
+
+	u := New()
+	result := u.ListOfficialSkills()
+	if result.Err == nil {
+		t.Fatal("ListOfficialSkills() err = nil, want error")
+	}
+	if !strings.Contains(result.Err.Error(), "exceeds") {
+		t.Fatalf("ListOfficialSkills() err = %v, want size limit error", result.Err)
+	}
+}
+
+func TestInstallSkillRejectsInvalidOfficialNames(t *testing.T) {
+	called := false
+	u := &Updater{
+		SkillsCommandOverride: func(args ...string) *NpmResult {
+			called = true
+			return &NpmResult{}
+		},
+	}
+
+	result := u.InstallSkill([]string{"lark-calendar", "lark-calendar@evil"})
+	if result.Err == nil {
+		t.Fatal("InstallSkill() err = nil, want invalid name error")
+	}
+	if !strings.Contains(result.Err.Error(), "invalid official skill name") {
+		t.Fatalf("InstallSkill() err = %v, want invalid name error", result.Err)
+	}
+	if called {
+		t.Fatal("InstallSkill() called skills command for invalid name")
 	}
 }

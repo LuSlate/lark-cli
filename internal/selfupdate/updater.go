@@ -10,7 +10,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -23,6 +26,8 @@ import (
 //
 // Tests that mutate execLookPath must not call t.Parallel().
 var execLookPath = exec.LookPath
+
+var officialSkillNamePattern = regexp.MustCompile(`^lark-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`)
 
 // InstallMethod describes how the CLI was installed.
 type InstallMethod int
@@ -41,6 +46,13 @@ const (
 	skillsUpdateTimeout = 2 * time.Minute
 	verifyTimeout       = 10 * time.Second
 )
+
+const (
+	officialSkillsIndexDefaultURL = "https://open.feishu.cn/.well-known/skills/index.json"
+	officialSkillsIndexMaxBytes   = 2 << 20
+)
+
+var officialSkillsIndexURL = officialSkillsIndexDefaultURL
 
 // DetectResult holds installation detection results.
 type DetectResult struct {
@@ -86,6 +98,7 @@ type Updater struct {
 	SkillsCommandOverride    func(args ...string) *NpmResult
 	VerifyOverride           func(expectedVersion string) error
 	RestoreAvailableOverride func() bool
+	OfficialSkillsIndexURL   string
 
 	// backupCreated is set to true by PrepareSelfReplace (Windows) when the
 	// running binary is successfully renamed to .old. Used by
@@ -154,10 +167,53 @@ func (u *Updater) RunNpmInstall(version string) *NpmResult {
 }
 
 func (u *Updater) ListOfficialSkills() *NpmResult {
-	r := u.runSkillsListOfficial("https://open.feishu.cn")
-	if r.Err != nil {
-		r = u.runSkillsListOfficial("larksuite/cli")
+	return u.fetchOfficialSkillsIndex()
+}
+
+func (u *Updater) fetchOfficialSkillsIndex() *NpmResult {
+	r := &NpmResult{}
+	indexURL := officialSkillsIndexURL
+	if u.OfficialSkillsIndexURL != "" {
+		indexURL = u.OfficialSkillsIndexURL
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), skillsUpdateTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, indexURL, nil)
+	if err != nil {
+		r.Err = fmt.Errorf("create official skills index request %s: %w", indexURL, err)
+		return r
+	}
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			r.Err = fmt.Errorf("official skills index fetch timed out after %s: %s", skillsUpdateTimeout, indexURL)
+			return r
+		}
+		r.Err = fmt.Errorf("fetch official skills index %s: %w", indexURL, err)
+		return r
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		r.Err = fmt.Errorf("fetch official skills index %s: HTTP %s", indexURL, resp.Status)
+		return r
+	}
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, officialSkillsIndexMaxBytes+1))
+	if err != nil {
+		r.Err = fmt.Errorf("read official skills index %s: %w", indexURL, err)
+		return r
+	}
+	if len(body) > officialSkillsIndexMaxBytes {
+		r.Err = fmt.Errorf("official skills index %s exceeds %d bytes", indexURL, officialSkillsIndexMaxBytes)
+		return r
+	}
+
+	_, _ = r.Stdout.Write(body)
 	return r
 }
 
@@ -166,11 +222,24 @@ func (u *Updater) ListGlobalSkills() *NpmResult {
 }
 
 func (u *Updater) InstallSkill(nameList []string) *NpmResult {
+	if err := validateOfficialSkillNames(nameList); err != nil {
+		return &NpmResult{Err: err}
+	}
+
 	r := u.runSkillsInstall("https://open.feishu.cn", nameList)
 	if r.Err != nil {
 		r = u.runSkillsInstall("larksuite/cli", nameList)
 	}
 	return r
+}
+
+func validateOfficialSkillNames(nameList []string) error {
+	for _, name := range nameList {
+		if !officialSkillNamePattern.MatchString(name) {
+			return fmt.Errorf("invalid official skill name %q", name)
+		}
+	}
+	return nil
 }
 
 func (u *Updater) InstallAllSkills() *NpmResult {
@@ -183,10 +252,6 @@ func (u *Updater) InstallAllSkills() *NpmResult {
 
 func (u *Updater) runSkillsAdd(source string) *NpmResult {
 	return u.runSkillsCommand("-y", "skills", "add", source, "-g", "-y")
-}
-
-func (u *Updater) runSkillsListOfficial(source string) *NpmResult {
-	return u.runSkillsCommand("-y", "skills", "add", source, "--list")
 }
 
 func (u *Updater) runSkillsListGlobal() *NpmResult {
