@@ -275,7 +275,7 @@ var CellsBatchClear = common.Shortcut{
 		}
 		out, err := callTool(ctx, runtime, token, ToolKindWrite, "batch_update", input)
 		if err != nil {
-			return err
+			return annotateEmbeddedBlockClearErr(err)
 		}
 		runtime.Out(out, nil)
 		return nil
@@ -283,6 +283,7 @@ var CellsBatchClear = common.Shortcut{
 	Tips: []string{
 		"high-risk-write — always preview with --dry-run; clear is not undoable.",
 		"Every --ranges item must carry a sheet prefix (e.g. \"Sheet1!A1:A10\"); all ranges are cleared with the same --scope.",
+		"Can't delete an embedded pivot/chart by clearing cells — remove the object itself with +pivot-delete / +chart-delete.",
 	},
 }
 

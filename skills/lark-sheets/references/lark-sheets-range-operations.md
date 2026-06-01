@@ -100,6 +100,8 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 | `--range` | string | required | 清除范围（A1 格式） |
 | `--scope` | string | optional | 清除范围 enum：`content`（默认，仅清内容）/ `formats`（仅清格式）/ `all`（清内容 + 格式）（可选值：`content` / `formats` / `all`） |
 
+> **删不掉嵌入对象**：`+cells-clear`（任何 `--scope`，含 `all`）只清单元格的值 / 格式，**删不掉**压在范围内的透视表 / 图表等嵌入对象——后端会报 `can not find embedded block`。删透视表用 `+pivot-delete`、删图表用 `+chart-delete`（先用 `+pivot-list` / `+chart-list` 拿对象 id）。
+
 ### `+cells-merge`
 
 _公共四件套 · 系统：`--dry-run`_

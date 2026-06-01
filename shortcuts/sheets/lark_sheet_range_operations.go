@@ -5,8 +5,10 @@ package sheets
 
 import (
 	"context"
+	"errors"
 	"strings"
 
+	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -58,13 +60,14 @@ var CellsClear = common.Shortcut{
 		}
 		out, err := callTool(ctx, runtime, token, ToolKindWrite, "clear_cell_range", input)
 		if err != nil {
-			return err
+			return annotateEmbeddedBlockClearErr(err)
 		}
 		runtime.Out(out, nil)
 		return nil
 	},
 	Tips: []string{
 		"high-risk-write — always preview with --dry-run; clear is not undoable.",
+		"Can't delete an embedded pivot/chart by clearing cells — remove the object itself with +pivot-delete / +chart-delete.",
 	},
 }
 
@@ -95,6 +98,32 @@ func normalizeClearType(scope string) string {
 	default: // "content" or unset
 		return "contents"
 	}
+}
+
+// annotateEmbeddedBlockClearErr augments the backend's "embedded block" clear
+// failure with the concrete fix. clear_cell_range only clears cell values /
+// formats — it cannot delete an embedded object (pivot table / chart) that
+// overlaps the range, which is what the backend's "can not find embedded block"
+// actually means. Trajectories burned dozens of commands trying to recover a
+// pivot-occupied A1 with cells-clear; point the agent at the object's own
+// delete command instead. Non-matching errors pass through untouched.
+func annotateEmbeddedBlockClearErr(err error) error {
+	var ee *output.ExitError
+	if !errors.As(err, &ee) || ee.Detail == nil {
+		return err
+	}
+	if !strings.Contains(strings.ToLower(ee.Detail.Message), "embedded block") {
+		return err
+	}
+	const hint = "the range overlaps an embedded object (pivot table / chart); " +
+		"cells-clear only clears cell values/formats and cannot delete it — " +
+		"delete the object with its own command (+pivot-delete / +chart-delete; find the id via +pivot-list / +chart-list)"
+	if ee.Detail.Hint == "" {
+		ee.Detail.Hint = hint
+	} else {
+		ee.Detail.Hint += "; " + hint
+	}
+	return ee
 }
 
 // CellsMerge / CellsUnmerge share the merge_cells tool, dispatched by the

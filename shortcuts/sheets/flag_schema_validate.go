@@ -303,6 +303,20 @@ func validateAgainstSchema(value interface{}, schema *schemaProperty, path strin
 				if !present {
 					continue
 				}
+				// Case-insensitive enum tolerance: when the value matches an
+				// allowed enum entry except for casing, rewrite it in place to
+				// the canonical spelling. The schema lists enums in their
+				// canonical (lower-case) form, so "SUM" / "COUNTA" would
+				// otherwise be rejected right here before the request is even
+				// sent; normalizing kills the whole pivot summarize_by "SUM vs
+				// sum" class. Genuinely-unknown values still fail below, with
+				// their own did-you-mean hint.
+				if sub != nil && len(sub.Enum) > 0 {
+					if canon := suggestEnumMatch(v, sub.Enum); canon != "" {
+						obj[key] = canon
+						v = canon
+					}
+				}
 				child := key
 				if path != "" {
 					child = path + "." + key

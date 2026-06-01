@@ -10,6 +10,73 @@ import (
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
+// TestPivotPlacementWarn pins the advisory that fires only on the risky
+// +pivot-create combination — an explicit placement sheet with no offset —
+// and stays silent (or only conditionally reminds) everywhere else.
+func TestPivotPlacementWarn(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		raw  map[string]interface{}
+		want string // "" none | "definite" names the sheet | "conditional" generic reminder
+	}{
+		{"no placement target → silent (default sub-sheet)",
+			map[string]interface{}{"source": "'Sheet1'!A1:D100"}, ""},
+		{"target-position offset → silent",
+			map[string]interface{}{"target-sheet-name": "Sheet1", "source": "'Sheet1'!A1:D100", "target-position": "H1"}, ""},
+		{"range offset → silent",
+			map[string]interface{}{"target-sheet-id": "sht_x", "range": "H1"}, ""},
+		{"target name == source sheet, no offset → definite",
+			map[string]interface{}{"target-sheet-name": "Sheet1", "source": "'Sheet1'!A1:D100"}, "definite"},
+		{"case-insensitive name match → definite",
+			map[string]interface{}{"target-sheet-name": "sheet1", "source": "'Sheet1'!A1:D100"}, "definite"},
+		{"target name != source sheet → silent (distinct sheet is safe)",
+			map[string]interface{}{"target-sheet-name": "PivotOut", "source": "'Sheet1'!A1:D100"}, ""},
+		{"target by id, no offset → conditional",
+			map[string]interface{}{"target-sheet-id": "sht_abc", "source": "'Sheet1'!A1:D100"}, "conditional"},
+		{"target name but source lacks prefix → conditional",
+			map[string]interface{}{"target-sheet-name": "Sheet1", "source": "A1:D100"}, "conditional"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := pivotPlacementWarn(mapFlagView{raw: tc.raw})
+			switch tc.want {
+			case "":
+				if got != "" {
+					t.Errorf("expected no warning, got %q", got)
+				}
+			case "definite":
+				if !strings.Contains(got, "--target-sheet-name") {
+					t.Errorf("expected definite warning citing --target-sheet-name, got %q", got)
+				}
+			case "conditional":
+				if !strings.Contains(got, "a placement sheet is set") {
+					t.Errorf("expected conditional reminder, got %q", got)
+				}
+			}
+		})
+	}
+}
+
+// TestSheetNameFromA1 covers the source-sheet extraction used by the placement
+// warning: prefix detection, single-quote stripping, and the no-prefix case.
+func TestSheetNameFromA1(t *testing.T) {
+	t.Parallel()
+	tests := []struct{ in, want string }{
+		{"'Sheet1'!A1:D100", "Sheet1"},
+		{"Data!A1", "Data"},
+		{"'My Sheet'!A1:B2", "My Sheet"},
+		{"A1:D100", ""},
+		{"", ""},
+		{"  'X'!A1  ", "X"},
+	}
+	for _, tc := range tests {
+		if got := sheetNameFromA1(tc.in); got != tc.want {
+			t.Errorf("sheetNameFromA1(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
 // TestObjectCRUDShortcuts_DryRun walks the create / update / delete trio
 // for each object skill. Together these cover all 21 CRUD shortcuts plus
 // the per-object id flag renames (rule-id, group-id, view-id, etc.).

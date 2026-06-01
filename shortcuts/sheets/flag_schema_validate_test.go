@@ -33,6 +33,63 @@ func parseValue(t *testing.T, raw string) interface{} {
 	return v
 }
 
+// TestValidateAgainstSchema_EnumCaseNormalization pins the case-insensitive
+// enum tolerance: a value matching an allowed enum entry except for casing is
+// rewritten in place to the canonical spelling (so the case-sensitive backend
+// accepts it), while genuinely-unknown values still fail. Only fires for enum
+// fields nested in an object/array — the pivot values[].summarize_by path.
+func TestValidateAgainstSchema_EnumCaseNormalization(t *testing.T) {
+	t.Parallel()
+
+	schema := parseSchema(t, `{"type":"object","properties":{"summarize_by":{"type":"string","enum":["sum","count","average"]}}}`)
+
+	t.Run("rewrites case-only mismatch in place", func(t *testing.T) {
+		obj := map[string]interface{}{"summarize_by": "SUM"}
+		if err := validateAgainstSchema(obj, schema, ""); err != nil {
+			t.Fatalf("case-only value should pass after normalization, got: %v", err)
+		}
+		if got := obj["summarize_by"]; got != "sum" {
+			t.Errorf("summarize_by = %q, want normalized %q", got, "sum")
+		}
+	})
+
+	t.Run("leaves exact match untouched", func(t *testing.T) {
+		obj := map[string]interface{}{"summarize_by": "count"}
+		if err := validateAgainstSchema(obj, schema, ""); err != nil {
+			t.Fatalf("exact match should pass: %v", err)
+		}
+		if got := obj["summarize_by"]; got != "count" {
+			t.Errorf("exact value mutated to %q", got)
+		}
+	})
+
+	t.Run("unknown value still fails", func(t *testing.T) {
+		obj := map[string]interface{}{"summarize_by": "COUNTA"}
+		if err := validateAgainstSchema(obj, schema, ""); err == nil {
+			t.Fatal("unknown enum value should fail")
+		} else if !strings.Contains(err.Error(), "not in enum") {
+			t.Errorf("want enum error, got: %v", err)
+		}
+	})
+
+	t.Run("normalizes inside array-of-objects (values[] shape)", func(t *testing.T) {
+		arrSchema := parseSchema(t, `{"type":"array","items":{"type":"object","properties":{"summarize_by":{"type":"string","enum":["sum","count"]}}}}`)
+		arr := []interface{}{
+			map[string]interface{}{"summarize_by": "Sum"},
+			map[string]interface{}{"summarize_by": "COUNT"},
+		}
+		if err := validateAgainstSchema(arr, arrSchema, ""); err != nil {
+			t.Fatalf("array case normalization failed: %v", err)
+		}
+		if got := arr[0].(map[string]interface{})["summarize_by"]; got != "sum" {
+			t.Errorf("arr[0] summarize_by = %q, want sum", got)
+		}
+		if got := arr[1].(map[string]interface{})["summarize_by"]; got != "count" {
+			t.Errorf("arr[1] summarize_by = %q, want count", got)
+		}
+	})
+}
+
 // TestValidateAgainstSchema is the validator's contract test: every
 // supported keyword (type, enum, oneOf, required, nested properties,
 // array items, nullable, minimum/maximum, minItems/maxItems) gets a
@@ -280,26 +337,27 @@ func TestValidateAgainstSchema_EnumErrorEnhancements(t *testing.T) {
 	})
 }
 
-// TestValidateInputAgainstSchema_RealEnumDidYouMean exercises the
-// did-you-mean path against the real embedded schema for the most
-// common real-world miscue — pivot summarize_by upper-cased.
-func TestValidateInputAgainstSchema_RealEnumDidYouMean(t *testing.T) {
+// TestValidateInputAgainstSchema_RealEnumCaseNormalized confirms the
+// case-insensitive enum tolerance fires against the real embedded schema for
+// the most common real-world miscue — pivot summarize_by upper-cased. "SUM" is
+// rewritten to "sum" in place and the input passes; previously this surfaced a
+// did-you-mean error, but P0-4 canonicalizes it so the agent's first try wins.
+func TestValidateInputAgainstSchema_RealEnumCaseNormalized(t *testing.T) {
 	t.Parallel()
 	fv := mapFlagView{command: "+pivot-create"}
-	bad := map[string]interface{}{
+	in := map[string]interface{}{
 		"properties": map[string]interface{}{
 			"values": []interface{}{
 				map[string]interface{}{"field": "A", "summarize_by": "SUM"},
 			},
 		},
 	}
-	err := validateInputAgainstSchema(fv, bad)
-	if err == nil {
-		t.Fatal("expected enum violation")
+	if err := validateInputAgainstSchema(fv, in); err != nil {
+		t.Fatalf("upper-case summarize_by should be normalized and pass, got: %v", err)
 	}
-	msg := err.Error()
-	if !strings.Contains(msg, `did you mean "sum"?`) {
-		t.Errorf("expected did-you-mean hint pointing at \"sum\"; got %q", msg)
+	vals := in["properties"].(map[string]interface{})["values"].([]interface{})
+	if got := vals[0].(map[string]interface{})["summarize_by"]; got != "sum" {
+		t.Errorf("summarize_by = %q, want normalized to %q", got, "sum")
 	}
 }
 
@@ -411,11 +469,12 @@ func TestValidateInputAgainstSchema_RealSchema(t *testing.T) {
 		t.Errorf("good input rejected: %v", err)
 	}
 
-	// Schema-violating: summarize_by="SUM" upper-case is not in enum.
+	// Schema-violating: a value with no case-only match still fails loudly
+	// (case normalization only rescues casing mistakes, not unknown words).
 	bad := map[string]interface{}{
 		"properties": map[string]interface{}{
 			"values": []interface{}{
-				map[string]interface{}{"field": "A", "summarize_by": "SUM"},
+				map[string]interface{}{"field": "A", "summarize_by": "bogus"},
 			},
 		},
 	}

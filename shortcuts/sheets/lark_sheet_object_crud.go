@@ -5,6 +5,7 @@ package sheets
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -73,6 +74,17 @@ type objectCRUDSpec struct {
 	// Update/delete continue to use `sheet-id` / `sheet-name`.
 	createSheetIDFlag   string
 	createSheetNameFlag string
+	// createTips, when set, populates the create shortcut's --help TIPS
+	// section. Used by pivot to make "omit --target-* → backend auto-creates
+	// a sub-sheet, zero overwrite" a hard, can't-miss note at the point of
+	// use (the most-stepped-on #REF! trap in real trajectories).
+	createTips []string
+	// createWarn, when set, is evaluated on the create shortcut's dry-run and
+	// execute paths; a non-empty return is surfaced as a `placement_warning`
+	// field in the output. Used by pivot to flag a likely source-data overwrite
+	// before it happens, without blocking the call. Local-only (no network), so
+	// it stays safe to call from dry-run.
+	createWarn func(rt flagView) string
 }
 
 // sheetIDFlagOnCreate / sheetNameFlagOnCreate return the cobra flag name
@@ -103,6 +115,7 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 		AuthTypes:   []string{"user", "bot"},
 		HasFormat:   true,
 		Flags:       flags,
+		Tips:        spec.createTips,
 		Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 			token, err := resolveSpreadsheetToken(runtime)
 			if err != nil {
@@ -118,7 +131,13 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			sheetID := strings.TrimSpace(runtime.Str(spec.sheetIDFlagOnCreate()))
 			sheetName := strings.TrimSpace(runtime.Str(spec.sheetNameFlagOnCreate()))
 			input, _ := objectCreateInput(runtime, token, sheetID, sheetName, spec)
-			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
+			dr := invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
+			if spec.createWarn != nil {
+				if w := spec.createWarn(runtime); w != "" {
+					dr = dr.Set("placement_warning", w)
+				}
+			}
+			return dr
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 			token, err := resolveSpreadsheetToken(runtime)
@@ -134,6 +153,13 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			out, err := callTool(ctx, runtime, token, ToolKindWrite, spec.toolName, input)
 			if err != nil {
 				return err
+			}
+			if spec.createWarn != nil {
+				if w := spec.createWarn(runtime); w != "" {
+					if m, ok := out.(map[string]interface{}); ok {
+						m["placement_warning"] = w
+					}
+				}
 			}
 			runtime.Out(out, nil)
 			return nil
@@ -348,6 +374,12 @@ var pivotSpec = objectCRUDSpec{
 	allowEmptySheetSelectorOnCreate: true,
 	createSheetIDFlag:               "target-sheet-id",
 	createSheetNameFlag:             "target-sheet-name",
+	createTips: []string{
+		"Placement: omit --target-sheet-id / --target-sheet-name and the backend auto-creates a fresh sub-sheet for the pivot — zero overwrite risk. This is the default and the recommended path.",
+		"Only pass --target-sheet-id/-name to land in an existing sheet; if that sheet holds the source data you MUST set --target-position (or --range) outside the data, else the pivot overwrites it and the anchor shows #REF!.",
+		"Removing a stray pivot is +pivot-delete (get its id from +pivot-list); +cells-clear / +cells-batch-clear only clear cell values/formats and cannot delete the pivot object.",
+	},
+	createWarn: pivotPlacementWarn,
 	enhanceCreateInput: func(rt flagView, input map[string]interface{}) {
 		if v := strings.TrimSpace(rt.Str("target-position")); v != "" && v != "A1" {
 			input["target_position"] = v
@@ -367,6 +399,60 @@ var pivotSpec = objectCRUDSpec{
 var PivotCreate = newObjectCreateShortcut(pivotSpec)
 var PivotUpdate = newObjectUpdateShortcut(pivotSpec)
 var PivotDelete = newObjectDeleteShortcut(pivotSpec)
+
+// pivotPlacementWarn flags the one +pivot-create combination that silently
+// overwrites data: an explicit placement sheet (--target-sheet-id/-name) with
+// no offset (--target-position unset or A1, and no --range), so the pivot lands
+// at A1 of an existing sheet. When that sheet is demonstrably the source-data
+// sheet — target given by name, source carries a sheet prefix, names match —
+// the warning is definite. When placement is by id (or the source has no
+// prefix) the two can't be compared without a workbook lookup, which dry-run
+// must avoid, so a conditional reminder is emitted instead. Returns "" when
+// placement is safe (no target, or an offset was given). Advisory only: it is
+// surfaced as placement_warning and never blocks the call.
+func pivotPlacementWarn(rt flagView) string {
+	tgtID := strings.TrimSpace(rt.Str("target-sheet-id"))
+	tgtName := strings.TrimSpace(rt.Str("target-sheet-name"))
+	if tgtID == "" && tgtName == "" {
+		return "" // default path — backend auto-creates a sub-sheet, zero overwrite.
+	}
+	if pos := strings.TrimSpace(rt.Str("target-position")); pos != "" && pos != "A1" {
+		return "" // caller steered the pivot off A1.
+	}
+	if strings.TrimSpace(rt.Str("range")) != "" {
+		return "" // --range offset given.
+	}
+	srcSheet := sheetNameFromA1(rt.Str("source"))
+	if tgtName != "" && srcSheet != "" {
+		if strings.EqualFold(tgtName, srcSheet) {
+			return fmt.Sprintf("--target-sheet-name %q is the source-data sheet and no --target-position is set: "+
+				"the pivot lands at A1 and overwrites the source (the anchor then shows #REF!). Set --target-position "+
+				"to a blank cell outside the data, or omit --target-* to auto-create a sub-sheet.", tgtName)
+		}
+		return "" // distinct named sheet — safe.
+	}
+	return "a placement sheet is set without --target-position: if it is the source-data sheet, the pivot lands " +
+		"at A1 and overwrites the source (the anchor then shows #REF!). Set --target-position to a blank cell " +
+		"outside the data, or omit --target-* to auto-create a sub-sheet."
+}
+
+// sheetNameFromA1 extracts the sheet name from a sheet-prefixed A1 reference,
+// stripping the single quotes Lark wraps around names that contain spaces:
+// "'Sheet 1'!A1:D100" → "Sheet 1", "Data!A1" → "Data". Returns "" when there
+// is no sheet prefix. (splitSheetPrefixedRange keeps the quotes; this one drops
+// them, which is what name comparison needs.)
+func sheetNameFromA1(ref string) string {
+	ref = strings.TrimSpace(ref)
+	idx := strings.Index(ref, "!")
+	if idx <= 0 {
+		return ""
+	}
+	name := strings.TrimSpace(ref[:idx])
+	if len(name) >= 2 && strings.HasPrefix(name, "'") && strings.HasSuffix(name, "'") {
+		name = name[1 : len(name)-1]
+	}
+	return name
+}
 
 // conditional format — CLI surface uses --rule-id (short), wired to the
 // tool's conditional_format_id on the wire. --rule-type and --ranges are
