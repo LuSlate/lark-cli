@@ -32,6 +32,29 @@ metadata:
 | 透视表 pivot | `--pivot-table-id` | 迷你图（按组） | `--group-id` |
 | 浮动图片 | `--float-image-id` | | |
 
+## 场景 → 命令速查（拿不准命令名先查这里，别按直觉拼）
+
+把高频意图映射到**真实存在**的 shortcut / flag。agent 常从 Excel / Google Sheets / 飞书 OpenAPI 误迁移命令名或 flag，先对照本表，避免一次必然失败的试错。完整 shortcut 见各工具参考。
+
+| 你要做的事 | ✅ 正确写法 | ❌ 不存在（会被 cobra 拒） |
+| --- | --- | --- |
+| 读数据（纯值 / CSV） | `+csv-get`（范围用 `--range`） | — |
+| 读值 + 公式 / 样式 / 批注 | `+cells-get --include value,formula,style,comment,data_validation` | `--value-render-option`、`--with-styles`、`--with-merges`、`--include-merged-cells` |
+| 写纯值（整块 CSV 平铺） | `+csv-put`（定位用 `--start-cell`，单个左上角锚点格；也接受 `--range` 别名，区间自动取左上角） | — |
+| 写值 / 公式 / 样式 | `+cells-set`（定位用 `--range`） | — |
+| 查找单元格 | `+cells-search`（关键字用 `--find`） | `+cells-find`、`+find`、`--query` |
+| 查找并替换 | `+cells-replace` | — |
+| 看子表结构（合并 / 行高列宽 / 冻结 / 隐藏） | `+sheet-info` | `+sheet-get`、`+structure-get`、`+sheet-structure-get` |
+| 看工作簿 / 子表清单 | `+workbook-info` | — |
+| 导出 xlsx / 单表 csv | `+workbook-export` | — |
+| 清除内容 / 格式 | `+cells-clear`（范围维度用 `--scope`，取值 content / formats / all） | `--type` |
+| 批量清除多区域 | `+cells-batch-clear`（`--scope`） | `--target` |
+| 调整列宽 / 行高 | `+cols-resize` / `+rows-resize`（行、列是两个独立命令） | `--dimension`（无此 flag） |
+| 分组汇总 / 透视 | `+pivot-create`（默认不传落点 flag → 自动新建子表，零覆盖） | 用 SUMIF / 本地脚本拼一张假透视表 |
+
+> ⚠️ **定位 flag**：`+cells-get` / `+cells-set` / `+csv-get` 用 `--range`；`+csv-put` 规范用 `--start-cell`（单个左上角锚点格），也接受 `--range` 别名（区间自动取左上角），二者择一即可。
+> ⚠️ **读取附加信息**一律走 `+cells-get --include …`，**没有** `--value-render-option` / `--with-styles` 这类 flag；**看合并单元格**用 `+sheet-info` 的 `merged_cells`，不要在 `+cells-get` 里找 merge flag。
+
 ## References
 
 本 skill 的 reference 分两组：先读**通用方法与规范**（横切所有任务的工作流、铁律、样式、公式规则，不含具体 shortcut），它们规定了"怎么做对"；再按操作对象进入**工具参考**查具体 shortcut 与调用细节。编辑类任务务必先过一遍通用方法与规范，其中的铁律对所有工具参考一律生效。

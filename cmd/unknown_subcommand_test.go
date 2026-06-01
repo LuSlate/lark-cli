@@ -113,11 +113,11 @@ func TestUnknownSubcommandRunE_UnknownReturnsStructuredError(t *testing.T) {
 	if !strings.Contains(exitErr.Detail.Message, `"+bogus"`) {
 		t.Errorf("message should echo the unknown token, got %q", exitErr.Detail.Message)
 	}
-	if !strings.Contains(exitErr.Detail.Hint, "+search") || !strings.Contains(exitErr.Detail.Hint, "+upload") {
-		t.Errorf("hint should list available shortcuts, got %q", exitErr.Detail.Hint)
-	}
-	if strings.Contains(exitErr.Detail.Hint, "+secret") {
-		t.Error("hidden commands must not appear in the hint")
+	// "+bogus" has no close neighbor among drive's subcommands, so the hint falls
+	// back to pointing at --help; the full machine-readable list lives in
+	// detail.available below (which also excludes hidden commands).
+	if !strings.Contains(exitErr.Detail.Hint, "--help") {
+		t.Errorf("hint should guide to --help when there is no suggestion, got %q", exitErr.Detail.Hint)
 	}
 
 	detail, ok := exitErr.Detail.Detail.(map[string]any)

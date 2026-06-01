@@ -301,6 +301,7 @@ _公共四件套 · 系统：`--dry-run`_
 | `--start-cell` | string | required | 目标区域起点 A1（如 `A1`、`B5`，不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet）；必须是单个单元格，不接受范围写法；终点按 CSV 实际行列数自动推断 |
 | `--csv` | string + File + Stdin（非 JSON 文本） | required | RFC 4180 CSV 文本；只写纯值，不带公式/样式/批注 |
 | `--allow-overwrite` | bool | optional | 允许覆盖（默认 true）；设为 false 时若目标非空报错 |
+| `--range` | string | optional | --start-cell 的别名（与 +csv-get / +cells-set 一致，用 --range 定位）；传区间（如 A1:H17）时自动取其左上角单元格（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 
 ## Schemas
 
@@ -422,6 +423,12 @@ lark-cli sheets +csv-put --spreadsheet-token shtXXX --sheet-id "$SID" \
 >   --csv $'name,score\nalice,=SUM(B2:B10)'
 > # ↑ A2 实际写入字符串 "=SUM(B2:B10)"，**不是公式**。需要写公式请用 +cells-set。
 > ```
+
+> **定位 + 写入边界（关键，避免误覆盖）**：
+> - 定位用 `--start-cell`（锚点 = 左上角单元格）；也接受 `--range` 别名（与 `+csv-get` / `+cells-set` 一致，传区间会自动取左上角）。
+> - ⚠️ `--start-cell` / `--range` **只定左上角、不限制写入大小**：CSV 从锚点按自身行列数 auto-expand 铺开。给一个"小 range"**不会**截断数据——超出部分照写，且默认覆盖。这与 `+cells-set --range`（精确矩形、`--cells` 必须与 range 同维）语义相反，别把那套心智搬过来。
+> - dry-run 与成功响应都回显 `writes_range`（实际落区，如 `B2:D4`）：**写前先 `--dry-run` 看一眼落区**，确认不会盖到相邻数据。
+> - 要保护非空 cell：`--allow-overwrite=false`（落区内出现非空 cell 即报错）。
 
 ### Validate / DryRun / Execute 约束
 

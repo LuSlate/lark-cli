@@ -1877,6 +1877,14 @@
         "default": "true"
       },
       {
+        "name": "range",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "alias for --start-cell (parity with +csv-get / +cells-set, which locate with --range); a range like A1:H17 collapses to its top-left cell",
+        "hidden": true
+      },
+      {
         "name": "dry-run",
         "kind": "system",
         "type": "bool",

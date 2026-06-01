@@ -32,7 +32,7 @@
 
    | 用户需求语义 | 路径 |
    |---|---|
-   | "完善 / 补齐 / 填空 / 修正所有 XX" / 数据分析 / 清洗 / 大数据集 | **A：分批 `+csv-get` 导出到本地 + pandas 处理 + 分批回写**（默认覆盖所有对应数据行，不以用户选区为准） |
+   | "完善 / 补齐 / 填空 / 修正所有 XX" / 数据分析 / 清洗 / 大数据集 | **A：先判能否用原生**（公式 / `+pivot` / `+filter`，见第 5 步）；确需代码再**分批 `+csv-get` 导出 + 本地脚本处理 + 分批回写**（默认覆盖所有对应数据行，不以用户选区为准；动代码前先过下方「运行环境前提」） |
    | "查一下 / 看看 / 统计 / 汇总" 等只读 | B：`+csv-get` 读到上下文 |
    | 需要公式 / 样式 / 批注 | C：`+cells-get` |
    | 续写 / 扩展 / 完善已有内容 | D：`+csv-get` 看结构 + `+cells-get` 读源区样式 + `+sheet-info --include row_heights,merges`（见铁律 5） |
@@ -58,6 +58,15 @@
 6. **写入与修改（细节见 `lark-sheets-write-cells`）**：`+cells-set` 的 `range` 必须落在已有行列范围内、`cells` 二维数组与 `range` 严格同维；表尾追加先用 `+dim-insert` 插行列再写；整列 / 整行同结构的值 / 公式 / 格式用模板单元格 + `--copy-to-range`，禁止逐行 `+cells-set`；多步写入合并为 `+batch-update`；改尺寸先读相邻可见行列当前尺寸再决定 `pixel` / `standard` / `auto`，不要猜数值。
 
 7. **验证**：重新读取受影响区域确认值 / 公式 / 样式 / 批注符合预期；对象类（图表 / 透视表 / 条件格式 / 筛选 / 迷你图 / 浮动图片）重新读对象配置确认；出错先定位错误类型 / 受影响区域 / 根因再修复重验。
+
+## 运行环境前提（动用本地代码 / 脚本前必读）
+
+铁律是**原生工具优先、代码兜底**（见上）。一旦确需本地 `python` / `node`（多步清洗、统计建模、公式试错 3 次降级），先过这几条——实测大量失败绕路都源于此：
+
+- **解释器不一定存在**：目标环境常是 Windows + Git Bash，**`python3` 往往指向 Microsoft Store 占位符（不可用）**。动手前一次性探测 `python --version 2>&1 || python3 --version 2>&1 || py --version 2>&1 || node --version 2>&1`，选可用的那个；同一条命令失败后别原样重发。能不写代码就不写——优先飞书公式 / `+pivot` / `+csv-put`。
+- **临时文件路径**：Windows 上 `/tmp` 不等于系统临时目录，写进去外部 `python` / `node` 读不到。用 `$TEMP`（或脚本内 `tempfile.gettempdir()` / `os.tmpdir()`）取真实临时目录，不要硬编码 `/tmp`；仍放在用户项目目录之外。
+- **解析 CLI 输出别用 `2>&1`**：`[WARN] proxy …` 等提示走 stderr，`2>&1` 会把它混进 stdout 的 JSON，导致 `json.load` / `ConvertFrom-Json` 解析失败。要解析就直接管道 stdout（`lark-cli … | jq …`），或先 `> file`（只重定向 stdout）再读；需要诊断时把 stderr 单独导到另一个文件。
+- **文件编码**：喂给 CLI 的 CSV / JSON 用 **UTF-8 无 BOM**（BOM 会污染首格或触发 `invalid character` 解析错）；读 CLI 输出的脚本显式指定 `encoding='utf-8'`。
 
 ## 公式策略
 

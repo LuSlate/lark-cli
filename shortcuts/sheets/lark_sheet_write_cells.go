@@ -5,6 +5,7 @@ package sheets
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -17,6 +18,7 @@ import (
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
+	"github.com/spf13/cobra"
 )
 
 // ─── lark_sheet_write_cells ───────────────────────────────────────────
@@ -205,13 +207,28 @@ var CsvPut = common.Shortcut{
 	Scopes:      []string{"sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
 	HasFormat:   true,
-	Flags:       flagsFor("+csv-put"),
-	Validate:    validateViaInput(csvPutInput),
+	Flags:       flagsFor("+csv-put"), // includes the hidden --range alias (defined in the base flags table)
+	PostMount: func(cmd *cobra.Command) {
+		// --range is an accepted alias for --start-cell (see csvPutInput).
+		// Neither is individually required; exactly one must be set. flag-defs
+		// marks --start-cell required, so clear that annotation and switch to a
+		// one-required group — otherwise cobra rejects `--range A1` for a
+		// missing --start-cell before the handler ever runs.
+		if fl := cmd.Flags().Lookup("start-cell"); fl != nil {
+			delete(fl.Annotations, cobra.BashCompOneRequiredFlag)
+		}
+		cmd.MarkFlagsOneRequired("start-cell", "range")
+	},
+	Validate: validateViaInput(csvPutInput),
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := resolveSpreadsheetToken(runtime)
 		sheetID, sheetName, _ := resolveSheetSelector(runtime)
 		input, _ := csvPutInput(runtime, token, sheetID, sheetName)
-		return invokeToolDryRun(token, ToolKindWrite, "set_range_from_csv", input)
+		dr := invokeToolDryRun(token, ToolKindWrite, "set_range_from_csv", input)
+		if rng, ok := csvPutWriteRangeFromInput(input); ok {
+			dr = dr.Set("writes_range", rng)
+		}
+		return dr
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		token, err := resolveSpreadsheetToken(runtime)
@@ -230,9 +247,52 @@ var CsvPut = common.Shortcut{
 		if err != nil {
 			return err
 		}
+		if rng, ok := csvPutWriteRangeFromInput(input); ok {
+			if m, isMap := out.(map[string]interface{}); isMap {
+				m["writes_range"] = rng
+			}
+		}
 		runtime.Out(out, nil)
 		return nil
 	},
+}
+
+// csvPutWriteRangeFromInput computes the rectangle +csv-put will actually write,
+// from the built tool input (start_cell + csv). +csv-put pastes from the anchor
+// and auto-expands to the CSV's own row/column count — the footprint is the
+// result, not a user-set boundary. Surfacing it (e.g. "B2:D4") in dry-run and in
+// the success envelope lets agents see how far a paste reaches before it
+// silently overwrites neighbouring cells (use --allow-overwrite=false to block
+// that). Returns ok=false when the anchor is not a single cell or the CSV has no
+// parseable fields.
+func csvPutWriteRangeFromInput(input map[string]interface{}) (string, bool) {
+	anchor, _ := input["start_cell"].(string)
+	csvText, _ := input["csv"].(string)
+	if anchor == "" || csvText == "" {
+		return "", false
+	}
+	col0, row0, ok := splitCellRef(anchor)
+	if !ok {
+		return "", false
+	}
+	r := csv.NewReader(strings.NewReader(csvText))
+	r.FieldsPerRecord = -1 // tolerate ragged rows; we only need the max width
+	records, err := r.ReadAll()
+	if err != nil || len(records) == 0 {
+		return "", false
+	}
+	cols := 0
+	for _, rec := range records {
+		if len(rec) > cols {
+			cols = len(rec)
+		}
+	}
+	if cols == 0 {
+		return "", false
+	}
+	endCol := columnIndexToLetter(col0 + cols - 1)
+	endRow := row0 + len(records) // row0 is 0-based; +len(records) is the 1-based bottom row
+	return fmt.Sprintf("%s:%s%d", anchor, endCol, endRow), true
 }
 
 func csvPutInput(runtime flagView, token, sheetID, sheetName string) (map[string]interface{}, error) {
@@ -243,6 +303,18 @@ func csvPutInput(runtime flagView, token, sheetID, sheetName string) (map[string
 		return nil, common.FlagErrorf("--csv is required")
 	}
 	anchor := strings.TrimSpace(runtime.Str("start-cell"))
+	// --range is accepted as an alias for --start-cell. +csv-get and +cells-set
+	// locate with --range, so agents routinely carry --range over to +csv-put and
+	// hit a guaranteed first-try failure. Honor it when --start-cell was not
+	// explicitly set — guard on Changed, not emptiness, because --start-cell
+	// defaults to "A1" and is therefore never empty. A range like "A1:H17"
+	// collapses to its top-left cell; +csv-put pastes from the anchor and
+	// auto-expands, so the range's lower-right bound is irrelevant.
+	if !runtime.Changed("start-cell") {
+		if rng := strings.TrimSpace(runtime.Str("range")); rng != "" {
+			anchor = strings.TrimSpace(strings.SplitN(rng, ":", 2)[0])
+		}
+	}
 	if anchor == "" {
 		return nil, common.FlagErrorf("--start-cell is required")
 	}

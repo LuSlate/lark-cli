@@ -26,8 +26,10 @@ import (
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/registry"
 	"github.com/larksuite/cli/internal/skillscheck"
+	"github.com/larksuite/cli/internal/suggest"
 	"github.com/larksuite/cli/internal/update"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const rootLong = `lark-cli — Lark/Feishu CLI tool.
@@ -297,6 +299,12 @@ func writeSecurityPolicyError(w io.Writer, spErr *internalauth.SecurityPolicyErr
 func installUnknownSubcommandGuard(cmd *cobra.Command) {
 	if cmd.HasSubCommands() && cmd.Run == nil && cmd.RunE == nil {
 		cmd.RunE = unknownSubcommandRunE
+		// Route an unknown subcommand to unknownSubcommandRunE even when flags
+		// are also present (e.g. `sheets +cells-find --url ...`). A pure group
+		// consumes no flags itself, so unknown flags belong to the (missing)
+		// subcommand; whitelisting them here prevents cobra from erroring on the
+		// flag first and printing usage instead of our structured suggestion.
+		cmd.FParseErrWhitelist.UnknownFlags = true
 		if cmd.Annotations == nil {
 			cmd.Annotations = map[string]string{}
 		}
@@ -313,10 +321,12 @@ func unknownSubcommandRunE(cmd *cobra.Command, args []string) error {
 	}
 	unknown := args[0]
 	available := availableSubcommandNames(cmd)
+	suggestions := suggest.Closest(unknown, available, 6)
 	msg := fmt.Sprintf("unknown subcommand %q for %q", unknown, cmd.CommandPath())
 	hint := fmt.Sprintf("run `%s --help` to see available subcommands", cmd.CommandPath())
-	if len(available) > 0 {
-		hint = fmt.Sprintf("available subcommands: %s", strings.Join(available, ", "))
+	if len(suggestions) > 0 {
+		hint = fmt.Sprintf("did you mean one of: %s? (run `%s --help` for the full list)",
+			strings.Join(suggestions, ", "), cmd.CommandPath())
 	}
 	return &output.ExitError{
 		Code: output.ExitValidation,
@@ -327,6 +337,7 @@ func unknownSubcommandRunE(cmd *cobra.Command, args []string) error {
 			Detail: map[string]any{
 				"unknown":      unknown,
 				"command_path": cmd.CommandPath(),
+				"suggestions":  suggestions,
 				"available":    available,
 			},
 		},
@@ -347,6 +358,81 @@ func availableSubcommandNames(cmd *cobra.Command) []string {
 	}
 	sort.Strings(subs)
 	return subs
+}
+
+// flagDidYouMean is the root FlagErrorFunc (inherited by all subcommands). It
+// converts cobra's flag-parse errors into the structured ErrorEnvelope: an
+// unknown flag gets a focused "did you mean" hint plus the full valid-flag list
+// in detail (so agents recover even when the typo is semantic, e.g. --query vs
+// --find, where edit distance alone finds nothing). Other flag errors stay
+// structured but generic.
+func flagDidYouMean(c *cobra.Command, ferr error) error {
+	name, isUnknown := unknownFlagName(ferr)
+	if !isUnknown {
+		return &output.ExitError{
+			Code: output.ExitValidation,
+			Detail: &output.ErrDetail{
+				Type:    "flag_error",
+				Message: ferr.Error(),
+				Hint:    fmt.Sprintf("run `%s --help` for valid flags", c.CommandPath()),
+			},
+		}
+	}
+	valid := visibleFlagNames(c)
+	suggestions := suggest.Closest(name, valid, 3)
+	hint := fmt.Sprintf("run `%s --help` to see valid flags", c.CommandPath())
+	if len(suggestions) > 0 {
+		for i := range suggestions {
+			suggestions[i] = "--" + suggestions[i]
+		}
+		hint = fmt.Sprintf("did you mean %s? (run `%s --help` for all flags)",
+			strings.Join(suggestions, ", "), c.CommandPath())
+	}
+	return &output.ExitError{
+		Code: output.ExitValidation,
+		Detail: &output.ErrDetail{
+			Type:    "unknown_flag",
+			Message: fmt.Sprintf("unknown flag %q for %q", "--"+name, c.CommandPath()),
+			Hint:    hint,
+			Detail: map[string]any{
+				"unknown":      "--" + name,
+				"command_path": c.CommandPath(),
+				"suggestions":  suggestions,
+				"valid_flags":  valid,
+			},
+		},
+	}
+}
+
+// unknownFlagName extracts the offending long-flag name from cobra's flag-parse
+// error text ("unknown flag: --query" → "query"). Returns ok=false for anything
+// else (missing argument, invalid value, unknown shorthand) so the caller keeps
+// those structured but generic — hallucinated flags are essentially always long.
+func unknownFlagName(err error) (string, bool) {
+	const p = "unknown flag: --"
+	msg := err.Error()
+	i := strings.Index(msg, p)
+	if i < 0 {
+		return "", false
+	}
+	rest := msg[i+len(p):]
+	if j := strings.IndexAny(rest, " \t"); j >= 0 {
+		rest = rest[:j]
+	}
+	return rest, true
+}
+
+// visibleFlagNames lists the non-hidden flag names of c (for suggestions and
+// the valid_flags detail).
+func visibleFlagNames(c *cobra.Command) []string {
+	var names []string
+	c.Flags().VisitAll(func(f *pflag.Flag) {
+		if !f.Hidden {
+			names = append(names, f.Name)
+		}
+	})
+	sort.Strings(names)
+	return names
 }
 
 // installTipsHelpFunc wraps the default help function to append a TIPS section
