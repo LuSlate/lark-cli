@@ -384,7 +384,6 @@ func TestBatchUpdate_TranslatorRejects(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			stdout, stderr, err := runShortcutCapturingErr(t, BatchUpdate, []string{

@@ -160,7 +160,6 @@ func TestSheetStructureShortcuts_DryRun(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			body := parseDryRunBody(t, tt.sc, tt.args)
@@ -197,7 +196,6 @@ func TestDimRange_Validation(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			stdout, stderr, err := runShortcutCapturingErr(t, DimHide, tt.args)
@@ -306,7 +304,6 @@ func TestParseA1Range(t *testing.T) {
 		{"0", "", 0, 0, true}, // rows are 1-based
 	}
 	for _, c := range cases {
-		c := c
 		t.Run(c.in, func(t *testing.T) {
 			t.Parallel()
 			dim, start, end, err := parseA1Range(c.in)

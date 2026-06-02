@@ -117,7 +117,7 @@ func printFlagSchemaFor(command string) func(flagName string) ([]byte, error) {
 		// Reformat for readability — schema files store compact JSON.
 		var pretty interface{}
 		if err := json.Unmarshal(schema, &pretty); err != nil {
-			return schema, nil
+			return nil, err
 		}
 		return json.MarshalIndent(pretty, "", "  ")
 	}

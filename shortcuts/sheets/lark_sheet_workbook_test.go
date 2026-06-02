@@ -142,7 +142,6 @@ func TestWorkbookShortcuts_DryRun(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			body := parseDryRunBody(t, tt.sc, tt.args)
@@ -184,7 +183,6 @@ func TestSheetMove_DryRunResolvePlaceholders(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			body := parseDryRunBody(t, SheetMove, tt.args)
@@ -260,7 +258,6 @@ func TestWorkbook_Validation(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			stdout, stderr, err := runShortcutCapturingErr(t, tt.sc, append(tt.args, "--dry-run"))
@@ -332,7 +329,6 @@ func TestWorkbookCreate_DataValidation(t *testing.T) {
 		{"values not 2D", []string{"--title", "X", "--values", `["a","b"]`}, "must be an array"},
 	}
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			stdout, stderr, err := runShortcutCapturingErr(t, WorkbookCreate, append(tt.args, "--dry-run"))

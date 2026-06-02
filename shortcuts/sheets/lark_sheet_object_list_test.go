@@ -101,7 +101,6 @@ func TestObjectListShortcuts_DryRun(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			body := parseDryRunBody(t, tt.sc, tt.args)

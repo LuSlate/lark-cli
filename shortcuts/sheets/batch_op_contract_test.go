@@ -278,7 +278,6 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.shortcut, func(t *testing.T) {
 			t.Parallel()
 
@@ -424,7 +423,6 @@ func TestBatchOp_ErrorEquivalence(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -584,7 +582,6 @@ func TestBatchOp_RejectsBadSubOpInput(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			var subInput map[string]interface{}
@@ -651,7 +648,6 @@ func TestBatchOp_SchemaValidatesSubOps(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			var subInput map[string]interface{}

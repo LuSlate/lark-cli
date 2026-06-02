@@ -321,12 +321,3 @@ func translateBatchOperations(rawOps []interface{}, token string) ([]interface{}
 	}
 	return out, nil
 }
-
-// 仅供测试 / 调试：暴露已知 shortcut 列表，便于做 enum 漂移对账。
-func batchOpDispatchKeys() []string {
-	keys := make([]string, 0, len(batchOpDispatch))
-	for k := range batchOpDispatch {
-		keys = append(keys, k)
-	}
-	return keys
-}

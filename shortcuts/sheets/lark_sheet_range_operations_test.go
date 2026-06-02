@@ -256,7 +256,6 @@ func TestRangeOperationsShortcuts_DryRun(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			body := parseDryRunBody(t, tt.sc, tt.args)
@@ -285,7 +284,6 @@ func TestRangeSort_RejectsMalformedKeys(t *testing.T) {
 		{"non-object item", `["B"]`, `[0]: expected type "object"`},
 	}
 	for _, c := range cases {
-		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			stdout, stderr, err := runShortcutCapturingErr(t, RangeSort, []string{
@@ -348,7 +346,6 @@ func TestResize_TypeAndSizeGuards(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			stdout, stderr, err := runShortcutCapturingErr(t, tt.sc, append(tt.args, "--dry-run"))

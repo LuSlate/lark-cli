@@ -75,8 +75,8 @@ func validateValueAgainstSchema(fv flagView, name string, value interface{}) err
 	if command == "" {
 		return nil
 	}
-	idx, err := loadFlagSchemas()
-	if err != nil || idx == nil {
+	idx, _ := loadFlagSchemas()
+	if idx == nil {
 		return nil
 	}
 	entry, ok := idx.Flags[command]
@@ -88,9 +88,7 @@ func validateValueAgainstSchema(fv flagView, name string, value interface{}) err
 		return nil
 	}
 	var schema schemaProperty
-	if err := json.Unmarshal(raw, &schema); err != nil {
-		return nil
-	}
+	json.Unmarshal(raw, &schema)
 	if vErr := validateAgainstSchema(value, &schema, ""); vErr != nil {
 		return common.FlagErrorf("--%s: %s", name, vErr.Error())
 	}
@@ -113,8 +111,8 @@ func validateInputAgainstSchema(fv flagView, input map[string]interface{}) error
 	if command == "" {
 		return nil
 	}
-	idx, err := loadFlagSchemas()
-	if err != nil || idx == nil {
+	idx, _ := loadFlagSchemas()
+	if idx == nil {
 		return nil
 	}
 	entry, ok := idx.Flags[command]
