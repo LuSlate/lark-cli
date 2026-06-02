@@ -183,9 +183,6 @@ func csvGetInput(runtime *common.RuntimeContext, token, sheetID, sheetName strin
 	if r := strings.TrimSpace(runtime.Str("range")); r != "" {
 		input["range"] = r
 	}
-	if v := runtime.Str("value-render-option"); v != "" {
-		input["value_render_option"] = v
-	}
 	if runtime.Bool("skip-hidden") {
 		input["skip_hidden"] = true
 	}

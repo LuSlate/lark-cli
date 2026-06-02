@@ -39,7 +39,7 @@ metadata:
 | 你要做的事 | ✅ 正确写法 | ❌ 不存在（会被 cobra 拒） |
 | --- | --- | --- |
 | 读数据（纯值 / CSV） | `+csv-get`（范围用 `--range`） | — |
-| 读值 + 公式 / 样式 / 批注 | `+cells-get --include value,formula,style,comment,data_validation` | `--value-render-option`、`--with-styles`、`--with-merges`、`--include-merged-cells` |
+| 读值 + 公式 / 样式 / 批注 | `+cells-get --include value,formula,style,comment,data_validation` | `--with-styles`、`--with-merges`、`--include-merged-cells` |
 | 写纯值（整块 CSV 平铺） | `+csv-put`（定位用 `--start-cell`，单个左上角锚点格；也接受 `--range` 别名，区间自动取左上角） | — |
 | 写值 / 公式 / 样式 | `+cells-set`（定位用 `--range`） | — |
 | 查找单元格 | `+cells-search`（关键字用 `--find`） | `+cells-find`、`+find`、`--query` |
@@ -53,7 +53,7 @@ metadata:
 | 分组汇总 / 透视 | `+pivot-create`（默认不传落点 flag → 自动新建子表，零覆盖） | 用 SUMIF / 本地脚本拼一张假透视表 |
 
 > ⚠️ **定位 flag**：`+cells-get` / `+cells-set` / `+csv-get` 用 `--range`；`+csv-put` 规范用 `--start-cell`（单个左上角锚点格），也接受 `--range` 别名（区间自动取左上角），二者择一即可。
-> ⚠️ **读取附加信息**一律走 `+cells-get --include …`，**没有** `--value-render-option` / `--with-styles` 这类 flag；**看合并单元格**用 `+sheet-info` 的 `merged_cells`，不要在 `+cells-get` 里找 merge flag。
+> ⚠️ **读取附加信息**一律走 `+cells-get --include …`，**没有** `--with-styles` 这类 flag；**看合并单元格**用 `+sheet-info` 的 `merged_cells`，不要在 `+cells-get` 里找 merge flag。
 
 ## References
 

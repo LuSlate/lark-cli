@@ -35,19 +35,6 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name:     "+csv-get with value-render-option",
-			sc:       CsvGet,
-			args:     []string{"--url", testURL, "--sheet-id", testSheetID, "--range", "A1:C10", "--value-render-option", "formula"},
-			toolName: "get_range_as_csv",
-			wantInput: map[string]interface{}{
-				"excel_id":            testToken,
-				"sheet_id":            testSheetID,
-				"range":               "A1:C10",
-				"value_render_option": "formula",
-				"max_rows":            float64(unboundedReadLimit), // pinned high; --max-chars is the only cap
-			},
-		},
-		{
 			// Canonical form: --sheet-id + bare --range. Aligned with
 			// +cells-get / +csv-get; before the e2e BUG-019 fix this
 			// shortcut was the odd one out (range-prefix required).

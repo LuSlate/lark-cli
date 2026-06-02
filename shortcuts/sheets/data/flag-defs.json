@@ -1188,19 +1188,6 @@
         "desc": "A1 range, e.g. `A1:F30` (no sheet prefix — use `--sheet-id` / `--sheet-name` to select the sheet)"
       },
       {
-        "name": "value-render-option",
-        "kind": "own",
-        "type": "string",
-        "required": "optional",
-        "desc": "Cell value render mode",
-        "default": "formatted_value",
-        "enum": [
-          "formatted_value",
-          "raw_value",
-          "formula"
-        ]
-      },
-      {
         "name": "max-chars",
         "kind": "own",
         "type": "int",

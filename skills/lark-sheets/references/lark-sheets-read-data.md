@@ -112,7 +112,6 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `A1:F30`（不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet） |
-| `--value-render-option` | string | optional | 单元格取值模式（可选值：`formatted_value` / `raw_value` / `formula`）（默认 `formatted_value`） |
 | `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
