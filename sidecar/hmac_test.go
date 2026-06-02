@@ -272,9 +272,9 @@ func TestValidateProxyAddr_RejectsUserinfo(t *testing.T) {
 // integrity/auth, so cross-machine https is supported.
 func TestValidateProxyAddr_HTTPSAllowed(t *testing.T) {
 	for _, addr := range []string{
-		"https://127.0.0.1:16384",       // same-host over TLS
+		"https://127.0.0.1:16384", // same-host over TLS
 		"https://sidecar.corp.internal:443",
-		"https://sidecar.mycorp.com",    // remote, no explicit port
+		"https://sidecar.mycorp.com", // remote, no explicit port
 		"https://sidecar.mycorp.com:8443",
 	} {
 		if err := ValidateProxyAddr(addr); err != nil {
