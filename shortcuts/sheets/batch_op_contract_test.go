@@ -467,6 +467,57 @@ func TestBatchOp_ErrorEquivalence(t *testing.T) {
 	}
 }
 
+// TestBatchOp_RejectsWrongScalarType locks the type-check that closes the
+// silent-coercion gap: `operations` skips parse-time schema validation, and
+// mapFlagView coerces a mismatched scalar to its zero value, so a sub-op field
+// whose JSON type contradicts its flag-defs type must be rejected up front
+// rather than landing as 0 / false in the wrong place.
+func TestBatchOp_RejectsWrongScalarType(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name         string
+		subShortcut  string
+		subInput     string
+		wantContains string
+	}{
+		{
+			name:         "int flag given a string",
+			subShortcut:  "+sheet-move",
+			subInput:     `{"sheet-id":"sh1","source-index":2,"index":"abc"}`,
+			wantContains: "--index must be a number",
+		},
+		{
+			name:         "int flag given a boolean",
+			subShortcut:  "+sheet-move",
+			subInput:     `{"sheet-id":"sh1","source-index":true,"index":0}`,
+			wantContains: "--source-index must be a number",
+		},
+		{
+			name:         "bool flag given a string",
+			subShortcut:  "+cells-set",
+			subInput:     `{"sheet-id":"sh1","range":"A1","cells":[[{"value":1}]],"allow-overwrite":"true"}`,
+			wantContains: "--allow-overwrite must be a boolean",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			var subInput map[string]interface{}
+			if err := json.Unmarshal([]byte(tc.subInput), &subInput); err != nil {
+				t.Fatalf("bad subInput JSON: %v", err)
+			}
+			rawOp := map[string]interface{}{"shortcut": tc.subShortcut, "input": subInput}
+			_, err := translateBatchOp(rawOp, testToken, 0)
+			if err == nil {
+				t.Fatalf("translateBatchOp accepted wrong-typed field; want error containing %q", tc.wantContains)
+			}
+			if !strings.Contains(err.Error(), tc.wantContains) {
+				t.Errorf("error = %q, want substring %q", err.Error(), tc.wantContains)
+			}
+		})
+	}
+}
+
 // TestBatchOp_GuardsBeyondCobra locks the two batch sub-ops whose standalone
 // required-flag enforcement lives OUTSIDE the shared *Input builder — so it is
 // invisible to TestBatchOp_ErrorEquivalence and was missed by the refactor:

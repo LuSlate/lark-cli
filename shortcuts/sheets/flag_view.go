@@ -254,3 +254,76 @@ func (m mapFlagView) Changed(name string) bool {
 	_, ok := m.lookupRaw(name)
 	return ok
 }
+
+// validateRawTypes rejects sub-op input fields whose JSON type contradicts the
+// flag's declared type in flag-defs. +batch-update skips parse-time schema
+// validation for `operations`, and Int/Int64/Float64/Bool silently fall back to
+// the zero value on a type mismatch — so without this guard a wrong-typed scalar
+// (e.g. "index":"abc" or "multiple":"true") would land as 0 / false instead of
+// erroring, writing to the wrong place. Only numeric and boolean flags are
+// checked; string and composite (array/object) flags stay permissive because
+// Str() intentionally coerces them and the translator/schema validates shape.
+//
+// Returns a bare error; the +batch-update translator wraps it with the
+// operations[i] (<shortcut>) context.
+func (m mapFlagView) validateRawTypes() error {
+	if len(m.raw) == 0 {
+		return nil
+	}
+	defs, err := loadFlagDefs()
+	if err != nil {
+		return nil
+	}
+	spec, ok := defs[m.command]
+	if !ok {
+		return nil
+	}
+	declaredType := make(map[string]string, len(spec.Flags))
+	for _, df := range spec.Flags {
+		declaredType[df.Name] = df.Type
+	}
+	for rawKey, val := range m.raw {
+		name := rawKey
+		typ, ok := declaredType[name]
+		if !ok {
+			// flag-defs use hyphen names; tolerate the underscore form users send.
+			name = strings.ReplaceAll(rawKey, "_", "-")
+			typ, ok = declaredType[name]
+		}
+		if !ok {
+			continue // unknown key — leave it for the translator / schema layer
+		}
+		switch typ {
+		case "int", "int64", "float64":
+			if _, isNum := val.(float64); !isNum {
+				return fmt.Errorf("--%s must be a number, got %s", name, jsonTypeName(val))
+			}
+		case "bool":
+			if _, isBool := val.(bool); !isBool {
+				return fmt.Errorf("--%s must be a boolean, got %s", name, jsonTypeName(val))
+			}
+		}
+	}
+	return nil
+}
+
+// jsonTypeName names the JSON kind of a value decoded by encoding/json, for
+// type-mismatch error messages.
+func jsonTypeName(v interface{}) string {
+	switch v.(type) {
+	case nil:
+		return "null"
+	case bool:
+		return "boolean"
+	case float64:
+		return "number"
+	case string:
+		return "string"
+	case []interface{}:
+		return "array"
+	case map[string]interface{}:
+		return "object"
+	default:
+		return fmt.Sprintf("%T", v)
+	}
+}

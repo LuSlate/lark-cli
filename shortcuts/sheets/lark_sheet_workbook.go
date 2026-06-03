@@ -598,8 +598,7 @@ var WorkbookCreate = common.Shortcut{
 			POST("/open-apis/sheets/v3/spreadsheets").
 			Desc("create spreadsheet").
 			Body(body)
-		if runtime.Str("headers") != "" || runtime.Str("values") != "" {
-			fill, _ := buildInitialFillInput(runtime)
+		if fill, _ := buildInitialFillInput(runtime); fill != nil {
 			fill["excel_id"] = "<new-token>"
 			fill["sheet_id"] = "<first-sheet-id>" // resolved from the workbook at execute time
 			wireBody, _ := buildToolBody("set_cell_range", fill)
@@ -629,24 +628,27 @@ var WorkbookCreate = common.Shortcut{
 
 		result := map[string]interface{}{"spreadsheet": ss}
 
-		if runtime.Str("headers") != "" || runtime.Str("values") != "" {
-			fill, err := buildInitialFillInput(runtime)
-			if err != nil {
-				return err
-			}
+		// --headers / --values are optional. buildInitialFillInput returns
+		// (nil, nil) when both are absent or empty, in which case we skip the
+		// fill entirely rather than dereferencing a nil map.
+		fill, err := buildInitialFillInput(runtime)
+		if err != nil {
+			return err
+		}
+		if fill != nil {
 			fill["excel_id"] = token
 			// set_cell_range needs a concrete sheet selector; the create
 			// response doesn't echo the default sheet's id, so read it back.
 			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
 			if err != nil {
-				return fmt.Errorf("spreadsheet %s created but resolving its first sheet for initial fill failed: %w", token, err)
+				return workbookCreatedButFillFailed(token, ss,
+					fmt.Sprintf("resolving its first sheet for initial fill failed: %v", err))
 			}
 			fill["sheet_id"] = firstSheetID
 			fillOut, err := callTool(ctx, runtime, token, ToolKindWrite, "set_cell_range", fill)
 			if err != nil {
-				// Spreadsheet exists; surface the fill failure but keep the new
-				// token in the envelope so the caller can recover or retry.
-				return fmt.Errorf("spreadsheet %s created but initial fill failed: %w", token, err)
+				return workbookCreatedButFillFailed(token, ss,
+					fmt.Sprintf("initial fill failed: %v", err))
 			}
 			result["initial_fill"] = fillOut
 		}
@@ -656,6 +658,26 @@ var WorkbookCreate = common.Shortcut{
 	Tips: []string{
 		"--headers and --values are optional follow-up writes. They use the same set_cell_range tool as +cells-set; partial failure leaves the spreadsheet created but empty.",
 	},
+}
+
+// workbookCreatedButFillFailed builds a structured partial-success error for the
+// window where the spreadsheet POST succeeded but the follow-up initial fill did
+// not. The new spreadsheet_token is surfaced in the error detail so callers can
+// retry the fill (+cells-set / +csv-put) or delete the orphan, instead of only
+// finding the token interpolated into a bare error string.
+func workbookCreatedButFillFailed(token string, spreadsheet interface{}, reason string) error {
+	return &output.ExitError{
+		Code: output.ExitAPI,
+		Detail: &output.ErrDetail{
+			Type:    "partial_success",
+			Message: fmt.Sprintf("spreadsheet %s created but %s", token, reason),
+			Hint:    "the spreadsheet exists; retry the fill with the returned spreadsheet_token, or delete it",
+			Detail: map[string]interface{}{
+				"spreadsheet_token": token,
+				"spreadsheet":       spreadsheet,
+			},
+		},
+	}
 }
 
 // buildInitialFillInput zips --headers + --values into a single set_cell_range
@@ -691,6 +713,13 @@ func buildInitialFillInput(runtime *common.RuntimeContext) (map[string]interface
 		if len(r) > maxCols {
 			maxCols = len(r)
 		}
+	}
+	if maxCols == 0 {
+		// --headers '[]' / --values '[]' parse to rows that carry no cells.
+		// There is nothing to write and a 0-width range ("A1:1") would be
+		// illegal, so treat it as "no initial fill" — same contract as the
+		// len(rows)==0 case above — and let the caller skip the write.
+		return nil, nil
 	}
 	// Normalize rows to the same length so cells matrix is rectangular.
 	for i := range rows {

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/larksuite/cli/internal/httpmock"
+	"github.com/larksuite/cli/internal/output"
 )
 
 // TestExecute_WorkbookInfo_Happy stubs the invoke_read endpoint and
@@ -359,6 +360,82 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 	fillInput := decodeToolInput(t, decodeRawEnvelopeBody(t, fill.CapturedBody), "set_cell_range")
 	if fillInput["sheet_id"] != "shtFirst" {
 		t.Errorf("fill sheet_id = %v, want shtFirst (resolved from workbook structure)", fillInput["sheet_id"])
+	}
+}
+
+// TestExecute_WorkbookCreate_EmptyArraysSkipFill locks the fix for the nil-map
+// panic / illegal-range bug: --values '[]' or --headers '[]' must short-circuit
+// the initial fill (no structure/fill calls fire) and finish with the
+// spreadsheet created but no initial_fill — never panic on a nil fill map.
+func TestExecute_WorkbookCreate_EmptyArraysSkipFill(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct{ name, flag, val string }{
+		{"empty values", "--values", "[]"},
+		{"empty headers", "--headers", "[]"},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			create := &httpmock.Stub{
+				Method: "POST",
+				URL:    "/open-apis/sheets/v3/spreadsheets",
+				Body: map[string]interface{}{
+					"code": 0, "msg": "success",
+					"data": map[string]interface{}{
+						"spreadsheet": map[string]interface{}{"spreadsheet_token": "shtNEW", "title": "X"},
+					},
+				},
+			}
+			// Only the create stub is provided: an empty array must skip the fill
+			// entirely, so no structure/fill call fires (and no nil-map panic).
+			out, err := runShortcutWithStubs(t, WorkbookCreate, []string{"--title", "X", tc.flag, tc.val}, create)
+			if err != nil {
+				t.Fatalf("execute failed: %v\nout=%s", err, out)
+			}
+			data := decodeEnvelopeData(t, out)
+			if data["initial_fill"] != nil {
+				t.Errorf("initial_fill should be absent for %s %s; got %#v", tc.flag, tc.val, data["initial_fill"])
+			}
+			if ss, _ := data["spreadsheet"].(map[string]interface{}); ss["spreadsheet_token"] != "shtNEW" {
+				t.Errorf("spreadsheet_token = %v, want shtNEW", ss["spreadsheet_token"])
+			}
+		})
+	}
+}
+
+// TestExecute_WorkbookCreate_FillFailureKeepsToken locks the partial-success
+// contract: when the spreadsheet is created but the follow-up fill can't resolve
+// its first sheet, the error must be structured and retain spreadsheet_token so
+// the caller can recover instead of orphaning the new workbook.
+func TestExecute_WorkbookCreate_FillFailureKeepsToken(t *testing.T) {
+	t.Parallel()
+	create := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/sheets/v3/spreadsheets",
+		Body: map[string]interface{}{
+			"code": 0, "msg": "success",
+			"data": map[string]interface{}{
+				"spreadsheet": map[string]interface{}{"spreadsheet_token": "shtNEW", "title": "X"},
+			},
+		},
+	}
+	// Structure comes back with no sheets, so lookupFirstSheetID fails AFTER the
+	// spreadsheet already exists — exercising the partial-success path.
+	structure := toolOutputStub("shtNEW", "read", `{"sheets":[]}`)
+	out, err := runShortcutWithStubs(t, WorkbookCreate, []string{"--title", "X", "--values", `[["a"]]`}, create, structure)
+	if err == nil {
+		t.Fatalf("expected a partial-success error; got nil\nout=%s", out)
+	}
+	exitErr, ok := err.(*output.ExitError)
+	if !ok {
+		t.Fatalf("error type = %T, want *output.ExitError (structured)", err)
+	}
+	if exitErr.Detail == nil {
+		t.Fatal("ExitError.Detail is nil; want structured detail carrying the token")
+	}
+	detail, _ := exitErr.Detail.Detail.(map[string]interface{})
+	if detail["spreadsheet_token"] != "shtNEW" {
+		t.Errorf("detail.spreadsheet_token = %v, want shtNEW (must survive the fill failure)", detail["spreadsheet_token"])
 	}
 }
 

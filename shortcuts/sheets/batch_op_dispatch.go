@@ -306,6 +306,12 @@ func translateBatchOp(raw interface{}, token string, index int) (map[string]inte
 		}
 	}
 	fv := newMapFlagViewForCommand(sc, input)
+	// operations is skipped by parse-time schema validation, so type-check the
+	// sub-op's scalar fields here before the translator reads them via
+	// Int/Bool/Float64 (which would otherwise coerce a wrong type to zero).
+	if err := fv.validateRawTypes(); err != nil {
+		return nil, common.FlagErrorf("operations[%d] (%s): %v", index, sc, err)
+	}
 	sheetIDFlag, sheetNameFlag := sheetSelectorFlagsForSubOp(sc)
 	sheetID := strings.TrimSpace(fv.Str(sheetIDFlag))
 	sheetName := strings.TrimSpace(fv.Str(sheetNameFlag))
