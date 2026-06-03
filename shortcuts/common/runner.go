@@ -30,6 +30,7 @@ import (
 	"github.com/larksuite/cli/internal/i18n"
 	"github.com/larksuite/cli/internal/output"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // RuntimeContext provides helpers for shortcut execution.
@@ -70,6 +71,16 @@ func (ctx *RuntimeContext) As() core.Identity {
 // IsBot returns true if current identity is bot.
 func (ctx *RuntimeContext) IsBot() bool {
 	return ctx.As().IsBot()
+}
+
+// Command returns the shortcut command name as cobra knows it (e.g.
+// "+pivot-create"). Used by per-service helpers (e.g. sheets schema
+// validation) that key off the shortcut identity.
+func (ctx *RuntimeContext) Command() string {
+	if ctx.Cmd == nil {
+		return ""
+	}
+	return ctx.Cmd.Name()
 }
 
 // UserOpenId returns the current user's open_id from config.
@@ -197,6 +208,12 @@ func (ctx *RuntimeContext) Bool(name string) bool {
 // Int returns an int flag value.
 func (ctx *RuntimeContext) Int(name string) int {
 	v, _ := ctx.Cmd.Flags().GetInt(name)
+	return v
+}
+
+// Float64 returns a float64 flag value (non-integer numbers).
+func (ctx *RuntimeContext) Float64(name string) float64 {
+	v, _ := ctx.Cmd.Flags().GetFloat64(name)
 	return v
 }
 
@@ -938,6 +955,29 @@ func (s Shortcut) mountDeclarative(ctx context.Context, parent *cobra.Command, f
 			return runShortcut(cmd, f, &shortcut, botOnly)
 		},
 	}
+	if shortcut.PrintFlagSchema != nil || shortcut.OnInvoke != nil {
+		onInvoke := shortcut.OnInvoke
+		relaxRequiredForSchema := shortcut.PrintFlagSchema != nil
+		// PreRunE runs before cobra's ValidateRequiredFlags. Two opt-in uses:
+		//   - OnInvoke: fire a side effect (e.g. a deprecation notice) that must
+		//     surface even when the call later fails on a missing required flag.
+		//   - --print-schema: pure local introspection; relax the required-flag
+		//     gate so callers don't fill in unrelated flags just to ask for a
+		//     schema (clearing the annotation here is the supported opt-out).
+		cmd.PreRunE = func(c *cobra.Command, _ []string) error {
+			if onInvoke != nil {
+				onInvoke()
+			}
+			if relaxRequiredForSchema {
+				if want, _ := c.Flags().GetBool("print-schema"); want {
+					c.Flags().VisitAll(func(fl *pflag.Flag) {
+						delete(fl.Annotations, cobra.BashCompOneRequiredFlag)
+					})
+				}
+			}
+			return nil
+		}
+	}
 	cmdutil.SetSupportedIdentities(cmd, shortcut.AuthTypes)
 	registerShortcutFlagsWithContext(ctx, cmd, f, &shortcut)
 	cmdutil.SetTips(cmd, shortcut.Tips)
@@ -951,6 +991,31 @@ func (s Shortcut) mountDeclarative(ctx context.Context, parent *cobra.Command, f
 // runShortcut is the execution pipeline for a declarative shortcut.
 // Each step is a clear phase: identity → config → scopes → context → validate → execute.
 func runShortcut(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bool) error {
+	// --print-schema short-circuits everything below: it's pure local
+	// introspection, no identity / scope / network needed. The flag is
+	// only registered when the shortcut opts in via PrintFlagSchema.
+	if s.PrintFlagSchema != nil {
+		if want, _ := cmd.Flags().GetBool("print-schema"); want {
+			flagName, _ := cmd.Flags().GetString("flag-name")
+			out, err := s.PrintFlagSchema(strings.TrimSpace(flagName))
+			if err != nil {
+				// PrintFlagSchema implementations return bare errors; wrap as a
+				// structured ExitError so --print-schema (an agent-facing
+				// introspection path) yields a parseable envelope, not a plain
+				// string.
+				if _, ok := err.(*output.ExitError); !ok {
+					err = output.Errorf(output.ExitValidation, "print_schema_error", "%s", err.Error())
+				}
+				return err
+			}
+			if len(out) == 0 {
+				return nil
+			}
+			fmt.Fprintln(f.IOStreams.Out, string(out))
+			return nil
+		}
+	}
+
 	as, err := resolveShortcutIdentity(cmd, f, s)
 	if err != nil {
 		return err
@@ -1055,6 +1120,16 @@ func newRuntimeContext(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, conf
 	return rctx, nil
 }
 
+// stripUTF8BOM removes a leading UTF-8 byte-order mark from content read from a
+// file or stdin. A BOM that survives into a CSV cell corrupts the first value
+// (e.g. "\ufeffNorth", which then makes a MAXIFS/lookup miss it), and a BOM at the
+// head of a JSON payload makes json.Unmarshal fail with "invalid character 'ï'".
+// Some editors and exporters add it silently. Only a leading BOM is removed; interior
+// occurrences are left untouched.
+func stripUTF8BOM(s string) string {
+	return strings.TrimPrefix(s, "\uFEFF")
+}
+
 // resolveInputFlags resolves @file and - (stdin) for flags with Input sources.
 // Must be called before Validate/DryRun/Execute so that runtime.Str() returns resolved content.
 func resolveInputFlags(rctx *RuntimeContext, flags []Flag) error {
@@ -1089,7 +1164,9 @@ func resolveInputFlags(rctx *RuntimeContext, flags []Flag) error {
 					WithParam("--" + fl.Name).
 					WithCause(err)
 			}
-			rctx.Cmd.Flags().Set(fl.Name, string(data))
+			// strip a leading UTF-8 BOM so it can't corrupt the first CSV
+			// cell or break JSON parsing downstream.
+			rctx.Cmd.Flags().Set(fl.Name, stripUTF8BOM(string(data)))
 			continue
 		}
 
@@ -1116,7 +1193,9 @@ func resolveInputFlags(rctx *RuntimeContext, flags []Flag) error {
 					WithParam("--" + fl.Name).
 					WithCause(err)
 			}
-			rctx.Cmd.Flags().Set(fl.Name, string(data))
+			// strip a leading UTF-8 BOM so it
+			// can't corrupt the first CSV cell or break JSON parsing downstream.
+			rctx.Cmd.Flags().Set(fl.Name, stripUTF8BOM(string(data)))
 			continue
 		}
 	}
@@ -1203,6 +1282,10 @@ func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f
 			var d int
 			fmt.Sscanf(fl.Default, "%d", &d)
 			cmd.Flags().Int(fl.Name, d, desc)
+		case "float64":
+			var d float64
+			fmt.Sscanf(fl.Default, "%g", &d)
+			cmd.Flags().Float64(fl.Name, d, desc)
 		case "string_array":
 			cmd.Flags().StringArray(fl.Name, nil, desc)
 		case "string_slice":
@@ -1236,6 +1319,17 @@ func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f
 	}
 	if s.Risk == "high-risk-write" {
 		cmd.Flags().Bool("yes", false, "confirm high-risk operation")
+	}
+	if s.PrintFlagSchema != nil {
+		// Guard against a shortcut that already declares these reserved
+		// introspection flags: pflag panics on a duplicate registration.
+		// Mirrors the Lookup guard on --format above.
+		if cmd.Flags().Lookup("print-schema") == nil {
+			cmd.Flags().Bool("print-schema", false, "print JSON Schema for a composite flag instead of executing")
+		}
+		if cmd.Flags().Lookup("flag-name") == nil {
+			cmd.Flags().String("flag-name", "", "flag whose schema to print (omit to list introspectable flags); used with --print-schema")
+		}
 	}
 	cmd.Flags().StringP("jq", "q", "", "jq expression to filter JSON output")
 	cmdutil.AddShortcutIdentityFlag(ctx, cmd, f, s.AuthTypes)
