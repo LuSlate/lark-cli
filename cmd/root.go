@@ -184,6 +184,9 @@ func composePendingNotice() map[string]interface{} {
 		if dep.Replacement != "" {
 			entry["replacement"] = dep.Replacement
 		}
+		if dep.Skill != "" {
+			entry["skill"] = dep.Skill
+		}
 		notice["deprecated_command"] = entry
 	}
 	if len(notice) == 0 {

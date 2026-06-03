@@ -37,6 +37,9 @@ func TestComposePendingNoticeDeprecatedCommand(t *testing.T) {
 	if entry["replacement"] != "+cells-get" {
 		t.Errorf("replacement = %v, want +cells-get", entry["replacement"])
 	}
+	if entry["skill"] != "lark-sheets" {
+		t.Errorf("skill = %v, want lark-sheets", entry["skill"])
+	}
 	if msg, _ := entry["message"].(string); !strings.Contains(msg, "update your lark-sheets skill") {
 		t.Errorf("message missing skill-update hint: %q", msg)
 	}
