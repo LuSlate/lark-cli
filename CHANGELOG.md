@@ -2,6 +2,135 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.46] - 2026-06-02
+
+### Features
+
+- **im**: Add card message format support (#1218)
+- **im**: Resolve markdown blank-line formatting inconsistency in post messages (#1216)
+- **vc**: Inline transcript from artifacts API and add keywords (#1206)
+- **transport**: Add proxy plugin mode for CLI HTTP transport (#1181)
+- **agent**: Increase agent trace max length to 1024 (#1211)
+- **shortcuts**: Unconditionally inject `--format` flag for all shortcuts (#1156)
+
+### Bug Fixes
+
+- **cli**: Remove FLAGS section from root `--help` (#1226)
+- **cli**: Stop root `--help` listing per-command flags as global (#1223)
+
+### Refactor
+
+- **transport**: Own all HTTP transport in `internal/transport`, fix util layering inversion (#1213)
+
+### Documentation
+
+- **base**: Optimize base skill references (#1171)
+- **drive**: Add Lark Drive knowledge organization workflow (#1028)
+
+## [v1.0.45] - 2026-06-01
+
+### Features
+
+- **errors**: Add typed envelope contract for auth-domain errors (#1135)
+- **platform**: Support multiple policy rules per plugin (#1182)
+
+### Bug Fixes
+
+- **vc**: Add domain boundaries and enrich `+notes` (#1172)
+- **whiteboard**: Fix whiteboard skill (#1180)
+
+### Refactor
+
+- **auth**: Update login hint and split-flow docs (#1201)
+
+## [v1.0.44] - 2026-05-29
+
+### Features
+
+- **base**: Add dashboard block data shortcut and workflow docs (#1067)
+- **im**: Support `--types` flag for listing p2p single chats in `chat-list` (#1077)
+- **agent**: Add agent header support (#1158)
+
+### Bug Fixes
+
+- **im**: Correct 64-bit MP4 box size handling to prevent panic on crafted media (#1165)
+- **install**: Detect curl version before using `--ssl-revoke-best-effort` (#1124)
+- **vc**: Correct `--minute-token` to `--minute-tokens` in recording reference (#1170)
+- **whiteboard**: Fix whiteboard skill (#1166)
+
+## [v1.0.43] - 2026-05-28
+
+### Features
+
+- **event**: Support `note` generated event (#1159)
+- **config**: Decouple `--lang` preference from TUI display language (#1132)
+- **mail**: Add HTML lint library with Larksuite-native autofix for `lark-mail` (#1019)
+
+### Bug Fixes
+
+- **config**: Propagate `Lang` across credential boundary; respect `CurrentApp` in priorLang (#1157)
+- **config**: Allow lark-channel bind source override (#1154)
+- **im**: Clarify `messages-send` dry-run chat membership (#1150)
+- **base**: Include `log_id` in attachment media errors (#1133)
+
+### Performance
+
+- **im**: Parallelize reactions, thread_replies, and merge_forward fetches (#1146)
+
+### Documentation
+
+- **im**: Update IM skill urgent APIs (#1153)
+
+## [v1.0.42] - 2026-05-27
+
+### Features
+
+- **mail**: Add `+draft-send` shortcut for batch draft sending (#1017)
+- **im**: Enrich messages with reactions and output `update_time` (#1095)
+- **schema**: Output JSON spec envelope for all API commands (#1048)
+- **event**: Support `vc` / `note` / `minute` events (#1113)
+- **drive**: Add secure label shortcuts (#985)
+- **affordance**: Use description and command in affordance example schema (#1126)
+
+### Bug Fixes
+
+- **docs**: Remove unsupported `fetch` text format (#1109)
+
+### Refactor
+
+- **auth**: Drop duplicate top-level user fields in `status` (#1128)
+
+### Documentation
+
+- **doc**: Document block anchor URLs in `lark-doc` skill (#1120)
+- **whiteboard**: Improve SVG/Mermaid instructions (#1097)
+
+## [v1.0.41] - 2026-05-26
+
+### Features
+
+- **minutes**: Add minutes edit shortcuts (#1036)
+- **minutes**: Get minutes keywords (#1079)
+- **slides**: Support importing pptx as slides (#1068)
+- **config**: Add `keychain-downgrade` subcommand (macOS) (#1085)
+- **errors**: Add structured CLI error contract (#984)
+- **apps**: Replace `+html-publish` cwd hard-reject with credential-file scan (#1072)
+
+### Bug Fixes
+
+- **drive**: Support doubao drive inspect URL variants (#1106)
+- **skills**: Sync skills incrementally during update (#1042)
+- **apps**: Read app object from `data.app` for `+create` and `+update` (#1087)
+- **common**: Escape special chars in multipart form filenames (#1037)
+- **auth**: Remove fenced code block guidance from auth URL output hints (#1088)
+
+### Documentation
+
+- **skills**: Fix agent routing for doubao.com URLs (#1082)
+- **task**: Require `--complete=false` for pending standup summaries (#1101)
+- **base**: Document UI-only field settings (#1078)
+- **contributing**: Clarify contributor guidance (#1096)
+
 ## [v1.0.40] - 2026-05-25
 
 ### Features
@@ -860,6 +989,12 @@ Bundled AI agent skills for intelligent assistance:
 - Bilingual documentation (English & Chinese).
 - CI/CD pipelines: linting, testing, coverage reporting, and automated releases.
 
+[v1.0.46]: https://github.com/larksuite/cli/releases/tag/v1.0.46
+[v1.0.45]: https://github.com/larksuite/cli/releases/tag/v1.0.45
+[v1.0.44]: https://github.com/larksuite/cli/releases/tag/v1.0.44
+[v1.0.43]: https://github.com/larksuite/cli/releases/tag/v1.0.43
+[v1.0.42]: https://github.com/larksuite/cli/releases/tag/v1.0.42
+[v1.0.41]: https://github.com/larksuite/cli/releases/tag/v1.0.41
 [v1.0.40]: https://github.com/larksuite/cli/releases/tag/v1.0.40
 [v1.0.39]: https://github.com/larksuite/cli/releases/tag/v1.0.39
 [v1.0.38]: https://github.com/larksuite/cli/releases/tag/v1.0.38

@@ -11,6 +11,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -514,7 +515,7 @@ func TestBaseObjectJSONShortcutsRejectArrayInDryRun(t *testing.T) {
 			if !strings.Contains(err.Error(), "--json must be a JSON object") {
 				t.Fatalf("err=%v", err)
 			}
-			if !strings.Contains(err.Error(), "lark-base skill") {
+			if !strings.Contains(err.Error(), "match the documented shape") {
 				t.Fatalf("err=%v", err)
 			}
 			if strings.Contains(err.Error(), "array") {
@@ -973,7 +974,7 @@ func TestBaseRecordExecuteReadCreateDelete(t *testing.T) {
 				"+record-search",
 				"--base-token", "app_x",
 				"--table-id", "tbl_x",
-				"--json", `{"view_id":"vew_x","keyword":"Created","search_fields":["Title","fld_owner"],"select_fields":["Title","fld_owner"],"offset":0,"limit":2}`,
+				"--json", `{"view_id":"vew_x","keyword":"Created","search_fields":["Title","fld_owner"],"select_fields":["Title","fld_owner"],"filter":{"logic":"and","conditions":[["Status","!=","Done"]]},"sort":{"sort_config":[{"field":"Updated At","desc":true},{"field":"Title","desc":false}]},"offset":0,"limit":2}`,
 				"--format", "json",
 			},
 			factory,
@@ -989,8 +990,117 @@ func TestBaseRecordExecuteReadCreateDelete(t *testing.T) {
 			!strings.Contains(body, `"keyword":"Created"`) ||
 			!strings.Contains(body, `"search_fields":["Title","fld_owner"]`) ||
 			!strings.Contains(body, `"select_fields":["Title","fld_owner"]`) ||
+			!strings.Contains(body, `"filter":{"conditions":[["Status","!=","Done"]],"logic":"and"}`) ||
+			!strings.Contains(body, `"sort":[{"desc":true,"field":"Updated At"},{"desc":false,"field":"Title"}]`) ||
 			!strings.Contains(body, `"offset":0`) ||
 			!strings.Contains(body, `"limit":2`) {
+			t.Fatalf("captured body=%s", body)
+		}
+	})
+
+	t.Run("search with flag filter sort and projection", func(t *testing.T) {
+		factory, stdout, reg := newExecuteFactory(t)
+		searchStub := &httpmock.Stub{
+			Method: "POST",
+			URL:    "/open-apis/base/v3/bases/app_x/tables/tbl_x/records/search",
+			Body: map[string]interface{}{
+				"code": 0,
+				"data": map[string]interface{}{
+					"fields":         []interface{}{"Title", "Status"},
+					"field_id_list":  []interface{}{"fld_title", "fld_status"},
+					"record_id_list": []interface{}{"rec_1"},
+					"data":           []interface{}{[]interface{}{"Created by AI", "Todo"}},
+					"has_more":       false,
+				},
+			},
+		}
+		reg.Register(searchStub)
+		if err := runShortcut(
+			t,
+			BaseRecordSearch,
+			[]string{
+				"+record-search",
+				"--base-token", "app_x",
+				"--table-id", "tbl_x",
+				"--keyword", "Created",
+				"--search-field", "Title",
+				"--field-id", "Title",
+				"--field-id", "Status",
+				"--filter-json", `{"logic":"and","conditions":[["Status","==","Todo"],["Score",">=",80]]}`,
+				"--sort-json", `[{"field":"Updated At","desc":true},{"field":"Title","desc":false}]`,
+				"--limit", "20",
+				"--format", "json",
+			},
+			factory,
+			stdout,
+		); err != nil {
+			t.Fatalf("err=%v", err)
+		}
+		var body map[string]interface{}
+		if err := json.Unmarshal(searchStub.CapturedBody, &body); err != nil {
+			t.Fatalf("captured body json err=%v body=%s", err, string(searchStub.CapturedBody))
+		}
+		if body["keyword"] != "Created" || body["limit"].(float64) != 20 {
+			t.Fatalf("captured body=%#v", body)
+		}
+		filter := body["filter"].(map[string]interface{})
+		if filter["logic"] != "and" {
+			t.Fatalf("filter=%#v", filter)
+		}
+		conditions := filter["conditions"].([]interface{})
+		if len(conditions) != 2 {
+			t.Fatalf("conditions=%#v", conditions)
+		}
+		sortConfig := body["sort"].([]interface{})
+		if len(sortConfig) != 2 {
+			t.Fatalf("sort=%#v", sortConfig)
+		}
+		firstSort := sortConfig[0].(map[string]interface{})
+		if firstSort["field"] != "Updated At" || firstSort["desc"] != true {
+			t.Fatalf("sort=%#v", sortConfig)
+		}
+	})
+
+	t.Run("search with filter json file", func(t *testing.T) {
+		factory, stdout, reg := newExecuteFactory(t)
+		tmp := t.TempDir()
+		withBaseWorkingDir(t, tmp)
+		if err := os.WriteFile(filepath.Join(tmp, "filter.json"), []byte(`{"logic":"or","conditions":[["Status","==","Todo"]]}`), 0600); err != nil {
+			t.Fatalf("write filter err=%v", err)
+		}
+		searchStub := &httpmock.Stub{
+			Method: "POST",
+			URL:    "/open-apis/base/v3/bases/app_x/tables/tbl_x/records/search",
+			Body: map[string]interface{}{
+				"code": 0,
+				"data": map[string]interface{}{
+					"fields":         []interface{}{"Title"},
+					"record_id_list": []interface{}{"rec_1"},
+					"data":           []interface{}{[]interface{}{"A"}},
+					"has_more":       false,
+				},
+			},
+		}
+		reg.Register(searchStub)
+		if err := runShortcut(
+			t,
+			BaseRecordSearch,
+			[]string{
+				"+record-search",
+				"--base-token", "app_x",
+				"--table-id", "tbl_x",
+				"--keyword", "A",
+				"--search-field", "Title",
+				"--filter-json", "@filter.json",
+				"--format", "json",
+			},
+			factory,
+			stdout,
+		); err != nil {
+			t.Fatalf("err=%v", err)
+		}
+		body := string(searchStub.CapturedBody)
+		if !strings.Contains(body, `"filter":{"conditions":[["Status","==","Todo"]],"logic":"or"}`) {
 			t.Fatalf("captured body=%s", body)
 		}
 	})
@@ -2200,7 +2310,7 @@ func TestBaseRecordExecuteReadCreateDelete(t *testing.T) {
 		}
 	})
 
-	t.Run("download reports progress when later attachment fails", func(t *testing.T) {
+	t.Run("download reports progress and log_id when later attachment fails", func(t *testing.T) {
 		factory, stdout, reg := newExecuteFactory(t)
 		reg.Register(&httpmock.Stub{
 			Method: "POST",
@@ -2228,8 +2338,9 @@ func TestBaseRecordExecuteReadCreateDelete(t *testing.T) {
 		reg.Register(&httpmock.Stub{
 			Method:  "GET",
 			URL:     "/open-apis/drive/v1/medias/box_b/download",
-			Status:  500,
+			Status:  403,
 			RawBody: []byte("server error"),
+			Headers: http.Header{"X-Tt-Logid": []string{"202605270001"}},
 		})
 
 		tmpDir := t.TempDir()
@@ -2257,6 +2368,9 @@ func TestBaseRecordExecuteReadCreateDelete(t *testing.T) {
 		failed, _ := detail["failed"].([]map[string]interface{})
 		if len(downloaded) != 1 || downloaded[0]["file_token"] != "box_a" || len(failed) != 1 || failed[0]["file_token"] != "box_b" {
 			t.Fatalf("detail=%#v", exitErr.Detail.Detail)
+		}
+		if detail["log_id"] != "202605270001" {
+			t.Fatalf("detail=%#v, want log_id", exitErr.Detail.Detail)
 		}
 		if _, err := os.Stat(filepath.Join(tmpDir, "downloads", "a.txt")); err != nil {
 			t.Fatalf("expected first file to remain: %v", err)

@@ -31,9 +31,14 @@ const (
 	LarkErrUserNotAuthorized     = 230027   // user not authorized
 
 	// App credential / status.
-	LarkErrAppCredInvalid  = 99991543 // app_id or app_secret is incorrect
-	LarkErrAppNotInUse     = 99991662 // app is disabled or not installed in this tenant
+	LarkErrAppCredInvalid  = 99991543 // app_id or app_secret is incorrect (Open API)
+	LarkErrAppNotInUse     = 99991662 // app is disabled in this tenant
 	LarkErrAppUnauthorized = 99991673 // app status unavailable; check installation
+
+	// TAT-endpoint variant of the "wrong app credentials" condition.
+	// /open-apis/auth/v3/tenant_access_token/internal returns code 10014
+	// ("app secret invalid") instead of 99991543 when the secret is wrong.
+	LarkErrTATInvalidSecret = 10014
 
 	// Rate limit.
 	LarkErrRateLimit = 99991400 // request frequency limit exceeded
@@ -66,6 +71,19 @@ const (
 
 	// IM resource ownership mismatch.
 	LarkErrOwnershipMismatch = 231205
+
+	// Mail send: account / mailbox-level failures returned by
+	// POST /open-apis/mail/v1/user_mailboxes/:user_mailbox_id/drafts/:draft_id/send.
+	// Mail v1 uses service-scoped 123xxxx codes; keep the full upstream code
+	// because ErrAPI preserves Detail.Code exactly as returned by the server.
+	// These codes indicate the entire batch will keep failing identically and
+	// are consumed by shortcuts/mail.isFatalSendErr to abort early.
+	LarkErrMailboxNotFound        = 1234013 // mailbox not found or not active
+	LarkErrMailSendQuotaUser      = 1236007 // user daily send count exceeded
+	LarkErrMailSendQuotaUserExt   = 1236008 // user daily external recipient count exceeded
+	LarkErrMailSendQuotaTenantExt = 1236009 // tenant daily external recipient count exceeded
+	LarkErrMailQuota              = 1236010 // mail quota limit
+	LarkErrTenantStorageLimit     = 1236013 // tenant storage limit exceeded
 )
 
 // legacyHints supplies the per-code actionable hint string for the legacy
@@ -81,14 +99,15 @@ var legacyHints = map[int]string{
 	LarkErrATInvalid:    "run: lark-cli auth login to re-authorize",
 	LarkErrTokenExpired: "run: lark-cli auth login to re-authorize",
 
-	LarkErrAppScopeNotEnabled:    "check app permissions or re-authorize: lark-cli auth login",
-	LarkErrTokenNoPermission:     "check app permissions or re-authorize: lark-cli auth login",
-	LarkErrUserScopeInsufficient: "check app permissions or re-authorize: lark-cli auth login",
-	LarkErrUserNotAuthorized:     "check app permissions or re-authorize: lark-cli auth login",
+	LarkErrAppScopeNotEnabled:    "the app developer must apply for the required scope(s) at the developer console",
+	LarkErrTokenNoPermission:     "check the token's granted scopes; run `lark-cli auth login` to refresh if the scope was added after the token was issued",
+	LarkErrUserScopeInsufficient: "run `lark-cli auth login` to re-authorize the user with the updated scope set",
+	LarkErrUserNotAuthorized:     "run `lark-cli auth login` to re-authorize this user; if re-auth does not help, the operation may be blocked by external-chat or admin policy",
 
-	LarkErrAppCredInvalid:  "check app_id / app_secret: lark-cli config set",
-	LarkErrAppNotInUse:     "app is disabled or not installed — check developer console",
-	LarkErrAppUnauthorized: "app is disabled or not installed — check developer console",
+	LarkErrAppCredInvalid:   "run `lark-cli config init` to set valid app_id and app_secret",
+	LarkErrTATInvalidSecret: "run `lark-cli config init` to set valid app_id and app_secret",
+	LarkErrAppNotInUse:      "ask the tenant admin to re-enable the app in the Lark admin console",
+	LarkErrAppUnauthorized:  "ask the tenant admin to check the app's install status in the Lark admin console",
 
 	LarkErrRateLimit:               "please try again later",
 	LarkErrDriveResourceContention: "please retry later and avoid concurrent duplicate requests",
@@ -104,32 +123,18 @@ var legacyHints = map[int]string{
 // ClassifyLarkError maps a Lark API error code + message to the legacy
 // (exitCode, errType, hint) tuple consumed by the *ExitError path.
 //
-// Classification (Category / Subtype) is sourced from
-// errclass.LookupCodeMeta — the single source of truth shipped for both
-// this legacy adapter and the stage-2+ typed pipeline (errclass.BuildAPIError,
-// not yet invoked in production). This function adapts that result back to
-// the legacy tuple shape for callers that still go through *ExitError:
+// Classification is sourced from errclass.LookupCodeMeta (the single source
+// of truth). exitCode follows legacyExitCode below, which differs from
+// ExitCodeForCategory in two preserved-legacy quirks: Authorization +
+// permission subtypes return ExitAPI (legacy treated "permission" as
+// exit 1), and Config returns ExitAuth (legacy bundled "check
+// app_id/secret" under exit 3). errType maps to a legacy short string;
+// unknown subtypes fall back to "api_error". Unknown codes classify as
+// (ExitAPI, "api_error", "").
 //
-//   - exitCode: derived from (Category, Subtype) via legacyExitCode below.
-//     Note this differs from the typed pipeline's ExitCodeForCategory in
-//     two preserved-legacy-quirks: Authorization+permission subtypes return
-//     ExitAPI (legacy treats "permission" as exit 1) and Config returns
-//     ExitAuth (legacy bundles "check app_id/secret" under exit 3).
-//   - errType: legacy short string per (Category, Subtype), mapped by
-//     legacyErrType. Subtypes not present in the legacy taxonomy fall back
-//     to "api_error".
-//   - hint: per-code lookup in legacyHints; "" when absent.
-//
-// Unknown codes (LookupCodeMeta returns false) classify as
-// (ExitAPI, "api_error", "") — matching the prior default.
-//
-// Deprecated: ClassifyLarkError belongs to the legacy *output.ExitError
-// surface that predates the typed error contract introduced by errs/. New
-// code MUST NOT use it — classify Lark API responses via
-// internal/errclass.BuildAPIError, which emits a typed *errs.XxxError with
-// Category, Subtype, and identity-aware extension fields populated at the
-// source. This helper is retained only while existing call sites are
-// migrated; it will be removed once they have moved to the typed surface.
+// Deprecated: route Lark API responses through errclass.BuildAPIError,
+// which emits a typed *errs.XxxError with Category, Subtype, and
+// identity-aware extension fields populated at the source.
 func ClassifyLarkError(code int, msg string) (int, string, string) {
 	meta, ok := errclass.LookupCodeMeta(code)
 	if !ok {
@@ -167,7 +172,7 @@ func legacyExitCode(cat errs.Category, sub errs.Subtype) int {
 			errs.SubtypeTokenScopeInsufficient:
 			return ExitAPI
 		case errs.SubtypeAppUnavailable,
-			errs.SubtypeAppNotInstalled:
+			errs.SubtypeAppDisabled:
 			return ExitAuth
 		}
 		return ExitAPI
@@ -193,7 +198,7 @@ func legacyErrType(cat errs.Category, sub errs.Subtype) string {
 			errs.SubtypeTokenScopeInsufficient:
 			return "permission"
 		case errs.SubtypeAppUnavailable,
-			errs.SubtypeAppNotInstalled:
+			errs.SubtypeAppDisabled:
 			return "app_status"
 		}
 		return "permission"

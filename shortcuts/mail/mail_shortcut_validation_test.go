@@ -4,11 +4,13 @@
 package mail
 
 import (
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/shortcuts/common"
 )
 
 // assertValidationError fails the test unless err carries the validation
@@ -47,6 +49,57 @@ func assertValidatePasses(t *testing.T, err error) {
 		t.Fatalf("Validate callback should have passed but returned validation error: %v", err)
 	}
 	// Non-validation errors (auth/API failures) are expected without HTTP mocks.
+}
+
+func TestRequiredBodyRejectsWhitespaceBodyFile(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		shortcut common.Shortcut
+		args     []string
+	}{
+		{
+			name:     "send",
+			shortcut: MailSend,
+			args: []string{
+				"+send", "--as", "user", "--to", "alice@example.com",
+				"--subject", "blank body-file", "--body-file", "blank.html",
+			},
+		},
+		{
+			name:     "draft-create",
+			shortcut: MailDraftCreate,
+			args: []string{
+				"+draft-create", "--as", "user",
+				"--subject", "blank body-file", "--body-file", "blank.html",
+			},
+		},
+		{
+			name:     "reply",
+			shortcut: MailReply,
+			args: []string{
+				"+reply", "--as", "user", "--message-id", "msg_001",
+				"--body-file", "blank.html",
+			},
+		},
+		{
+			name:     "reply-all",
+			shortcut: MailReplyAll,
+			args: []string{
+				"+reply-all", "--as", "user", "--message-id", "msg_001",
+				"--body-file", "blank.html",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			chdirTemp(t)
+			if err := os.WriteFile("blank.html", []byte("  \n\t"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			f, stdout, _, _ := mailShortcutTestFactory(t)
+			err := runMountedMailShortcut(t, tc.shortcut, tc.args, f, stdout)
+			assertValidationError(t, err, "--body or --body-file is required")
+		})
+	}
 }
 
 // TC-1: +message --as bot --mailbox me → ErrValidation

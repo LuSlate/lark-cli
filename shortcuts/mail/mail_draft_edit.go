@@ -35,7 +35,9 @@ var MailDraftEdit = common.Shortcut{
 		{Name: "set-to", Desc: "Replace the entire To recipient list with the addresses provided here. Separate multiple addresses with commas. Display-name format is supported."},
 		{Name: "set-cc", Desc: "Replace the entire Cc recipient list with the addresses provided here. Separate multiple addresses with commas. Display-name format is supported."},
 		{Name: "set-bcc", Desc: "Replace the entire Bcc recipient list with the addresses provided here. Separate multiple addresses with commas. Display-name format is supported."},
-		{Name: "patch-file", Desc: "Edit entry point for body edits, incremental recipient changes, header edits, attachment changes, or inline-image changes. All body edits MUST go through --patch-file. Two body ops: set_body (full replacement including quote) and set_reply_body (replaces only user-authored content, auto-preserves quote block). Run --inspect first to check has_quoted_content, then --print-patch-template for the JSON structure. Relative path only."},
+		{Name: "body", Desc: "Full email body for a complete replacement (set_body). Prefer HTML for rich formatting (bold, lists, links); plain text is also supported. Body type is auto-detected. Use --patch-file with set_reply_body when you need to preserve an existing reply/forward quote block; use --body when you want a full body replacement. Mutually exclusive with --body-file. Cannot be combined with --patch-file body ops."},
+		bodyFileFlag,
+		{Name: "patch-file", Desc: "Advanced edit entry point for body edits, incremental recipient changes, header edits, attachment changes, or inline-image changes. Use --body/--body-file for quick full-body replacement; use --patch-file with set_body/set_reply_body when you need typed body ops, especially set_reply_body to preserve an existing reply/forward quote block. Run --inspect first to check has_quoted_content, then --print-patch-template for the JSON structure. Relative path only."},
 		{Name: "print-patch-template", Type: "bool", Desc: "Print the JSON template and supported operations for the --patch-file flag. Recommended first step before generating a patch file. No draft read or write is performed."},
 		{Name: "set-priority", Desc: "Set email priority: high, normal, low. Setting 'normal' removes any existing priority header."},
 		{Name: "set-event-summary", Desc: "Set calendar event title. Must be used together with --set-event-start and --set-event-end."},
@@ -45,6 +47,7 @@ var MailDraftEdit = common.Shortcut{
 		{Name: "remove-event", Type: "bool", Desc: "Remove the calendar event from the draft."},
 		{Name: "inspect", Type: "bool", Desc: "Inspect the draft without modifying it. Returns the draft projection including subject, recipients, body summary, has_quoted_content (whether the draft contains a reply/forward quote block), attachments_summary (with part_id and cid for each attachment), and inline_summary. Run this BEFORE editing body to check has_quoted_content: if true, use set_reply_body in --patch-file to preserve the quote; if false, use set_body."},
 		{Name: "request-receipt", Type: "bool", Desc: "Request a read receipt (Message Disposition Notification, RFC 3798) addressed to the draft's sender. Recipient mail clients may prompt the user, send automatically, or silently ignore — delivery of a receipt is not guaranteed. Adds the Disposition-Notification-To header; existing value is overwritten."},
+		showLintDetailsFlag,
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		if runtime.Bool("print-patch-template") {
@@ -68,7 +71,7 @@ var MailDraftEdit = common.Shortcut{
 			return common.NewDryRunAPI().Set("error", err.Error())
 		}
 		return common.NewDryRunAPI().
-			Desc("Edit an existing draft without sending it: first call drafts.get(format=raw) to fetch the current EML, parse it into MIME structure, apply either direct flags or the typed patch from patch-file, re-serialize the updated draft, and then call drafts.update. This is a minimal-edit pipeline rather than a full rebuild, so unchanged headers, attachments, and MIME subtrees are preserved where possible. Body edits must go through --patch-file using set_body or set_reply_body ops. It also has no optimistic locking, so concurrent edits to the same draft are last-write-wins.").
+			Desc("Edit an existing draft without sending it: first call drafts.get(format=raw) to fetch the current EML, parse it into MIME structure, apply either direct flags or the typed patch from patch-file, re-serialize the updated draft, and then call drafts.update. This is a minimal-edit pipeline rather than a full rebuild, so unchanged headers, attachments, and MIME subtrees are preserved where possible. Quick full-body replacement can use --body/--body-file; advanced body edits can use --patch-file with set_body or set_reply_body ops. It also has no optimistic locking, so concurrent edits to the same draft are last-write-wins.").
 			GET(mailboxPath(mailboxID, "drafts", draftID)).
 			Params(map[string]interface{}{"format": "raw"}).
 			PUT(mailboxPath(mailboxID, "drafts", draftID)).
@@ -174,6 +177,32 @@ var MailDraftEdit = common.Shortcut{
 		if err != nil {
 			return err
 		}
+		// Writing-path lint for body ops only: set_body / set_reply_body
+		// rewrite the body field; other ops (set_subject / set_recipients /
+		// add_attachment / etc.) operate on non-HTML fields and MUST NOT be
+		// linted. Lint runs after loadPatchFile parses JSON and BEFORE
+		// draftpkg.Apply writes into the snapshot. Each op's `value` is
+		// replaced with the cleaned HTML in place; findings accumulate across
+		// ops into a single per-patch report.
+		lintApplied, lintBlocked := emptyLintEnvelopeFields()
+		for i := range patch.Ops {
+			op := &patch.Ops[i]
+			if op.Op != "set_body" && op.Op != "set_reply_body" {
+				continue
+			}
+			if op.Value == "" {
+				continue
+			}
+			if !bodyIsHTML(op.Value) {
+				// Plain-text body op — no lint pass needed (the HTML rule set
+				// is irrelevant), but the envelope still surfaces empty arrays.
+				continue
+			}
+			cleaned, rep := runWritePathLint(op.Value)
+			op.Value = cleaned
+			lintApplied = append(lintApplied, rep.Applied...)
+			lintBlocked = append(lintBlocked, rep.Blocked...)
+		}
 		dctx := &draftpkg.DraftCtx{FIO: runtime.FileIO()}
 		if len(patch.Ops) > 0 {
 			if err := draftpkg.Apply(dctx, snapshot, patch); err != nil {
@@ -197,6 +226,10 @@ var MailDraftEdit = common.Shortcut{
 		if updateResult.Reference != "" {
 			out["reference"] = updateResult.Reference
 		}
+		// Writing-path lint envelope: counts always present; full Finding
+		// arrays only when the caller asked for them via --show-lint-details.
+		applyLintToEnvelope(out, lintApplied, lintBlocked, runtime.Bool("show-lint-details"))
+		addComposeHint(out)
 		runtime.OutFormat(out, nil, func(w io.Writer) {
 			fmt.Fprintln(w, "Draft updated.")
 			fmt.Fprintf(w, "draft_id: %s\n", updateResult.DraftID)
@@ -370,6 +403,31 @@ func buildDraftEditPatch(runtime *common.RuntimeContext) (draftpkg.Patch, error)
 	setRecipients("cc", runtime.Str("set-cc"))
 	setRecipients("bcc", runtime.Str("set-bcc"))
 
+	// --body / --body-file are convenience shorthands for a set_body patch
+	// op. They cannot be combined with --patch-file body ops
+	// (set_body / set_reply_body) to avoid ambiguous ordering.
+	bodyFlag := runtime.Str("body")
+	bodyFile := strings.TrimSpace(runtime.Str("body-file"))
+	if err := validateBodyFileMutex(bodyFlag, bodyFile, runtime.ValidatePath); err != nil {
+		return patch, err
+	}
+	bodyVal := bodyFlag
+	if bodyVal == "" && bodyFile != "" {
+		loaded, err := readBodyFile(runtime.FileIO(), bodyFile)
+		if err != nil {
+			return patch, err
+		}
+		bodyVal = loaded
+	}
+	if bodyVal != "" {
+		for _, op := range patch.Ops {
+			if op.Op == "set_body" || op.Op == "set_reply_body" {
+				return patch, output.ErrValidation("--body / --body-file and --patch-file body ops (set_body/set_reply_body) are mutually exclusive; use one or the other")
+			}
+		}
+		patch.Ops = append(patch.Ops, draftpkg.PatchOp{Op: "set_body", Value: bodyVal})
+	}
+
 	// --set-priority → inject set_header / remove_header op
 	if setPriority := runtime.Str("set-priority"); setPriority != "" {
 		headerVal, pErr := parsePriority(setPriority)
@@ -531,7 +589,7 @@ func buildDraftEditPatchTemplate() map[string]interface{} {
 		},
 		"recommended_usage": []string{
 			"Use direct flags (--set-subject, --set-to, --set-cc, --set-bcc) for simple metadata edits",
-			"Use --patch-file for ALL body edits and advanced changes (recipients, headers, attachments, inline images)",
+			"Use --body/--body-file for quick full-body replacement; use --patch-file for advanced body edits and advanced changes (recipients, headers, attachments, inline images)",
 			"Before editing body, run --inspect to check has_quoted_content; if true, use set_reply_body instead of set_body",
 		},
 		"body_edit_decision_guide": []map[string]interface{}{
@@ -544,7 +602,7 @@ func buildDraftEditPatchTemplate() map[string]interface{} {
 			"`add_inline` is an advanced op for precise CID control only — in most cases, use <img src=\"./path\"> in `set_body`/`set_reply_body` instead",
 			"`ops` is executed in order",
 			"all file paths (--patch-file and `path` fields in ops) must be relative — no absolute paths or .. traversal",
-			"all body edits MUST go through --patch-file; there is no --set-body flag",
+			"use --body <html> for a quick full-body replacement (equivalent to a set_body op); use --patch-file with set_body/set_reply_body for advanced body edits; --body and --patch-file body ops are mutually exclusive",
 			"`set_body` replaces the user-authored content. It does NOT auto-preserve the old quote block (include one in value if needed, or use `set_reply_body`). Signature, large attachment card, and normal attachment MIME parts are auto-preserved. When the draft has both text/plain and text/html, it updates the HTML body and regenerates the plain-text summary, so the input should be HTML.",
 			"`set_reply_body` replaces only the user-authored portion of the body and automatically re-appends the trailing reply/forward quote block, signature, and large attachment card; the value you pass should contain ONLY the new user-authored content (no quote, no signature, no attachment card). If the user wants to modify content INSIDE the quote block, use `set_body` instead. If the draft has no quote block, it behaves identically to `set_body`.",
 			"`body_kind` only supports text/plain and text/html",

@@ -109,6 +109,45 @@ func TestDriveInspectValidate_ValidWikiURL(t *testing.T) {
 	}
 }
 
+func TestDriveInspectValidate_ValidDoubaoDriveFileURL(t *testing.T) {
+	cmd := &cobra.Command{Use: "drive +inspect"}
+	cmd.Flags().String("url", "", "")
+	cmd.Flags().String("type", "", "")
+	_ = cmd.Flags().Set("url", "https://feishu.doubao.com/drive/file/boxcnABC")
+
+	runtime := common.TestNewRuntimeContext(cmd, &core.CliConfig{})
+	err := DriveInspect.Validate(context.Background(), runtime)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+func TestDriveInspectValidate_ValidDoubaoChatDriveFolderURL(t *testing.T) {
+	cmd := &cobra.Command{Use: "drive +inspect"}
+	cmd.Flags().String("url", "", "")
+	cmd.Flags().String("type", "", "")
+	_ = cmd.Flags().Set("url", "https://feishu.doubao.com/chat/drive/fldcnABC")
+
+	runtime := common.TestNewRuntimeContext(cmd, &core.CliConfig{})
+	err := DriveInspect.Validate(context.Background(), runtime)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+func TestDriveInspectValidate_ValidDoubaoDriveShareFolderURL(t *testing.T) {
+	cmd := &cobra.Command{Use: "drive +inspect"}
+	cmd.Flags().String("url", "", "")
+	cmd.Flags().String("type", "", "")
+	_ = cmd.Flags().Set("url", "https://feishu.doubao.com/drive/shr/fldcnABC")
+
+	runtime := common.TestNewRuntimeContext(cmd, &core.CliConfig{})
+	err := DriveInspect.Validate(context.Background(), runtime)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
 // --- DryRun tests ---
 
 func TestDriveInspectDryRun_DocxURL(t *testing.T) {
@@ -235,10 +274,85 @@ func TestDriveInspectDryRun_BareTokenWithType(t *testing.T) {
 	}
 }
 
+func TestDriveInspectDryRun_DoubaoDriveFileURL(t *testing.T) {
+	cmd := &cobra.Command{Use: "drive +inspect"}
+	cmd.Flags().String("url", "", "")
+	cmd.Flags().String("type", "", "")
+	_ = cmd.Flags().Set("url", "https://feishu.doubao.com/drive/file/boxcnABC")
+
+	runtime := common.TestNewRuntimeContext(cmd, &core.CliConfig{})
+	dry := DriveInspect.DryRun(context.Background(), runtime)
+	if dry == nil {
+		t.Fatal("DryRun returned nil")
+	}
+
+	data, err := json.Marshal(dry)
+	if err != nil {
+		t.Fatalf("marshal dry run: %v", err)
+	}
+
+	var got struct {
+		API []struct {
+			Body map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("unmarshal dry run: %v", err)
+	}
+	reqDocs, ok := got.API[0].Body["request_docs"].([]interface{})
+	if !ok || len(reqDocs) != 1 {
+		t.Fatalf("expected request_docs with 1 entry, got %v", got.API[0].Body["request_docs"])
+	}
+	doc, _ := reqDocs[0].(map[string]interface{})
+	if doc["doc_token"] != "boxcnABC" {
+		t.Errorf("doc_token = %v, want boxcnABC", doc["doc_token"])
+	}
+	if doc["doc_type"] != "file" {
+		t.Errorf("doc_type = %v, want file", doc["doc_type"])
+	}
+}
+
+func TestDriveInspectDryRun_DoubaoDriveShareFolderURL(t *testing.T) {
+	cmd := &cobra.Command{Use: "drive +inspect"}
+	cmd.Flags().String("url", "", "")
+	cmd.Flags().String("type", "", "")
+	_ = cmd.Flags().Set("url", "https://feishu.doubao.com/drive/shr/fldcnABC")
+
+	runtime := common.TestNewRuntimeContext(cmd, &core.CliConfig{})
+	dry := DriveInspect.DryRun(context.Background(), runtime)
+	if dry == nil {
+		t.Fatal("DryRun returned nil")
+	}
+
+	data, err := json.Marshal(dry)
+	if err != nil {
+		t.Fatalf("marshal dry run: %v", err)
+	}
+
+	var got struct {
+		API []struct {
+			Body map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("unmarshal dry run: %v", err)
+	}
+	reqDocs, ok := got.API[0].Body["request_docs"].([]interface{})
+	if !ok || len(reqDocs) != 1 {
+		t.Fatalf("expected request_docs with 1 entry, got %v", got.API[0].Body["request_docs"])
+	}
+	doc, _ := reqDocs[0].(map[string]interface{})
+	if doc["doc_token"] != "fldcnABC" {
+		t.Errorf("doc_token = %v, want fldcnABC", doc["doc_token"])
+	}
+	if doc["doc_type"] != "folder" {
+		t.Errorf("doc_type = %v, want folder", doc["doc_type"])
+	}
+}
+
 // --- Execute tests ---
 
 func TestDriveInspectExecute_DocxURL(t *testing.T) {
-	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	cfg := driveTestConfig()
 	f, stdout, _, reg := cmdutil.TestFactory(t, cfg)
 
@@ -280,7 +394,6 @@ func TestDriveInspectExecute_DocxURL(t *testing.T) {
 }
 
 func TestDriveInspectExecute_WikiURL(t *testing.T) {
-	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	cfg := driveTestConfig()
 	f, stdout, _, reg := cmdutil.TestFactory(t, cfg)
 
@@ -343,7 +456,6 @@ func TestDriveInspectExecute_WikiURL(t *testing.T) {
 }
 
 func TestDriveInspectExecute_WikiGetNodeIncompleteData(t *testing.T) {
-	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	cfg := driveTestConfig()
 	f, stdout, _, reg := cmdutil.TestFactory(t, cfg)
 
@@ -372,7 +484,6 @@ func TestDriveInspectExecute_WikiGetNodeIncompleteData(t *testing.T) {
 }
 
 func TestDriveInspectExecute_BareTokenWithType(t *testing.T) {
-	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	cfg := driveTestConfig()
 	f, stdout, _, reg := cmdutil.TestFactory(t, cfg)
 
@@ -409,7 +520,6 @@ func TestDriveInspectExecute_BareTokenWithType(t *testing.T) {
 }
 
 func TestDriveInspectExecute_BatchQueryError(t *testing.T) {
-	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	cfg := driveTestConfig()
 	f, stdout, _, reg := cmdutil.TestFactory(t, cfg)
 
@@ -433,7 +543,6 @@ func TestDriveInspectExecute_BatchQueryError(t *testing.T) {
 }
 
 func TestDriveInspectExecute_PrettyFormat(t *testing.T) {
-	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	cfg := driveTestConfig()
 	f, stdout, _, reg := cmdutil.TestFactory(t, cfg)
 
