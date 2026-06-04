@@ -13,7 +13,7 @@ metadata:
 
 > [!IMPORTANT]
 > - 运行 `lark-cli --version`，确认可用，无需询问用户。
-> - 运行 `npx -y @larksuite/whiteboard-cli@^0.2.11 -v`，确认可用，无需询问用户。
+> - 运行 `npx -y @larksuite/whiteboard-cli@^0.1.1-beta -v`，确认可用，无需询问用户。
 
 **CRITICAL — 开始前 MUST 先用 Read 工具读取 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)，其中包含认证、权限处理**
 
@@ -24,6 +24,7 @@ metadata:
 | 用户需求 | 行动 |
 |---|---|
 | 查看画板内容 / 导出图片 | [`+query --output_as image`](references/lark-whiteboard-query.md) |
+| 导出画板并编辑后回写（有损） | [`routes/svg-edit.md`](routes/svg-edit.md) |
 | 获取画板的 Mermaid/PlantUML 代码 | [`+query --output_as code`](references/lark-whiteboard-query.md) |
 | 检查画板是否由代码绘制 | [`+query --output_as code`](references/lark-whiteboard-query.md) |
 | 修改节点文字/颜色（简单改动）| `+query --output_as raw` → 手动改 JSON → `+update --input_format raw` |
@@ -69,9 +70,12 @@ metadata:
 +query --output_as code
   ├─ 返回 Mermaid/PlantUML 代码
   │   → 在原代码上修改 → +update --input_format mermaid/plantuml
-  ├─ 无代码（DSL 或其他方式绘制的画板）
-  │   ├─ 只改文字/颜色 → +query --output_as raw → 手动改 JSON → +update --input_format raw
-  │   └─ 重绘/结构调整 → +query --output_as image → 看图后进入 [§ 渲染 & 写入画板]
+  ├─ 无代码（SVG/DSL 或其他方式绘制的画板）
+  │   ├─ 仅限文字/颜色且不涉及布局变更 → +query --output_as raw → 手动改 JSON → +update --input_format raw（无损）
+  │   ├─ 需要保留/重建语义结构（如思维导图关系、连线绑定）
+  │   │    → +query --output_as image → 看图后进入 [§ 渲染 & 写入画板]
+  │   └─ 其他改动（几何变动/增删元素/结构调整/混合编辑等）
+  │       → [routes/svg-edit.md](routes/svg-edit.md)（视觉高保真还原，部分语义有损，需告知用户）
   └─ 用户有明确要求 → 以用户要求优先
 ```
 
@@ -88,8 +92,8 @@ metadata:
 | 图表类型                   | 身份                                  | 路径                                       |
 |------------------------|-------------------------------------|------------------------------------------|
 | 思维导图、流程图、时序图、类图、饼图、甘特图 | 任何身份                                | [`routes/mermaid.md`](routes/mermaid.md) |
-| 其他图表                   | `Claude` / `Gemini` / `GPT` / `GLM` | [`routes/svg.md`](routes/svg.md)         |
-| 其他图表                   | `Doubao` / `Seed` / `Other`         | [`routes/dsl.md`](routes/dsl.md)         |
+| 其他图表                   | `Claude` / `Gemini` / `GPT` / `GLM` / `Doubao` / `Seed` | [`routes/svg.md`](routes/svg.md)         |
+| 其他图表                   |  `Other`         | [`routes/dsl.md`](routes/dsl.md)         |
 
 > **⚠️ SVG 路径失败回退**：走 `routes/svg.md` 时，碰到以下情况之一 → **丢弃当前 SVG，改读 `routes/dsl.md` 从零重画，不要逐行修补**：
 > - 渲染命令直接报错（语法级崩溃，不是 `--check` 的 warn/error）
@@ -119,7 +123,7 @@ diagram.png           ← 渲染结果
 > 因此，若需要整体更新画板内容，需携带 --overwrite flag 覆盖式更新。
 
 ```bash
-npx -y @larksuite/whiteboard-cli@^0.2.11 -i <产物文件> --to openapi --format json \
+npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <产物文件> --to openapi --format json \
   | lark-cli whiteboard +update \
     --whiteboard-token <Token> \
     --source - --input_format raw \
