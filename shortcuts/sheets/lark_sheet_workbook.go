@@ -540,6 +540,18 @@ var SheetSetTabColor = common.Shortcut{
 	},
 }
 
+// SheetShowGridline / SheetHideGridline toggle a sub-sheet's gridline display.
+// Gridline show/hide is the same two-state-via-operation shape as
+// +sheet-hide/+sheet-unhide (no --visible flag), so they reuse
+// newSheetVisibilityShortcut; only the operation enum differs.
+var SheetShowGridline = newSheetVisibilityShortcut(
+	"+sheet-show-gridline", "Show gridlines on a sub-sheet.", "show_gridline",
+)
+
+var SheetHideGridline = newSheetVisibilityShortcut(
+	"+sheet-hide-gridline", "Hide gridlines on a sub-sheet.", "hide_gridline",
+)
+
 // ─── +workbook-create (legacy OAPI, cli_status: cli-only) ────────────
 //
 // Creates a brand-new spreadsheet via POST /sheets/v3/spreadsheets, then

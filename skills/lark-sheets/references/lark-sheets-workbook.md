@@ -41,6 +41,8 @@
 | `+sheet-hide` | write | 工作簿 |
 | `+sheet-unhide` | write | 工作簿 |
 | `+sheet-set-tab-color` | write | 工作簿 |
+| `+sheet-hide-gridline` | write | 工作簿 |
+| `+sheet-show-gridline` | write | 工作簿 |
 | `+workbook-create` | write | 工作簿 |
 | `+workbook-export` | read | 工作簿 |
 
@@ -115,6 +117,18 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--color` | string | required | Hex 色值如 `#FF0000`，传空 `""` 清除 |
 
+### `+sheet-hide-gridline`
+
+_公共四件套 · 系统：`--dry-run`_
+
+_仅含公共 / 系统 flag。_
+
+### `+sheet-show-gridline`
+
+_公共四件套 · 系统：`--dry-run`_
+
+_仅含公共 / 系统 flag。_
+
 ### `+workbook-create`
 
 _系统：`--dry-run`_
@@ -188,6 +202,14 @@ lark-cli sheets +sheet-unhide --url "..." --sheet-id "$SID"
 ```bash
 # Hex 色值；传空字符串 "" 清除标签色
 lark-cli sheets +sheet-set-tab-color --url "..." --sheet-id "$SID" --color "#FF0000"
+```
+
+### `+sheet-show-gridline` / `+sheet-hide-gridline`
+
+```bash
+# 切换子表网格线显隐；二态语义在命令名里，无需额外参数（同 +sheet-hide/+sheet-unhide）
+lark-cli sheets +sheet-show-gridline --url "..." --sheet-id "$SID"
+lark-cli sheets +sheet-hide-gridline --url "..." --sheet-id "$SID"
 ```
 
 ### Validate / DryRun / Execute 约束

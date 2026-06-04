@@ -140,6 +140,28 @@ func TestWorkbookShortcuts_DryRun(t *testing.T) {
 				"tab_color": "",
 			},
 		},
+		{
+			name:     "+sheet-show-gridline",
+			sc:       SheetShowGridline,
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID},
+			toolName: "modify_workbook_structure",
+			wantInput: map[string]interface{}{
+				"excel_id":  testToken,
+				"operation": "show_gridline",
+				"sheet_id":  testSheetID,
+			},
+		},
+		{
+			name:     "+sheet-hide-gridline",
+			sc:       SheetHideGridline,
+			args:     []string{"--url", testURL, "--sheet-id", testSheetID},
+			toolName: "modify_workbook_structure",
+			wantInput: map[string]interface{}{
+				"excel_id":  testToken,
+				"operation": "hide_gridline",
+				"sheet_id":  testSheetID,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

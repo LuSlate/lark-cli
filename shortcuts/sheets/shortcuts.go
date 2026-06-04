@@ -38,6 +38,8 @@ func shortcutList() []common.Shortcut {
 		SheetHide,
 		SheetUnhide,
 		SheetSetTabColor,
+		SheetShowGridline,
+		SheetHideGridline,
 		WorkbookCreate,
 		WorkbookExport,
 

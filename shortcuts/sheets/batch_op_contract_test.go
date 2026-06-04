@@ -178,6 +178,18 @@ func TestBatchOp_BodyMatchesStandalone(t *testing.T) {
 			subInput: `{"sheet-id":"sh1","color":"#FF0000"}`,
 		},
 		{
+			shortcut: "+sheet-show-gridline",
+			sc:       SheetShowGridline,
+			args:     []string{"--sheet-id", "sh1"},
+			subInput: `{"sheet-id":"sh1"}`,
+		},
+		{
+			shortcut: "+sheet-hide-gridline",
+			sc:       SheetHideGridline,
+			args:     []string{"--sheet-id", "sh1"},
+			subInput: `{"sheet-id":"sh1"}`,
+		},
+		{
 			shortcut: "+dropdown-set",
 			sc:       DropdownSet,
 			args:     []string{"--sheet-id", "sh1", "--range", "A2:A4", "--options", `["x","y"]`, "--multiple"},
