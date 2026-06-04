@@ -5,6 +5,7 @@ package whiteboard
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,6 +24,7 @@ import (
 
 const (
 	WhiteboardQueryAsImage = "image"
+	WhiteboardQueryAsSvg   = "svg"
 	WhiteboardQueryAsCode  = "code"
 	WhiteboardQueryAsRaw   = "raw"
 )
@@ -65,8 +67,8 @@ var WhiteboardQuery = common.Shortcut{
 	AuthTypes:   []string{"user", "bot"},
 	Flags: []common.Flag{
 		{Name: "whiteboard-token", Desc: "whiteboard token of the whiteboard. You will need read permission to download preview image.", Required: true},
-		{Name: "output_as", Desc: "output whiteboard as: image | code | raw.", Required: true},
-		{Name: "output", Desc: "output directory. It is required when output as image. If not specified when --output_as code/raw, it will output directly.", Required: false},
+		{Name: "output_as", Desc: "output whiteboard as: image | svg | code | raw.", Required: true},
+		{Name: "output", Desc: "output directory. It is required when output as image. If not specified when --output_as svg/code/raw, it will output directly.", Required: false},
 		{Name: "overwrite", Desc: "overwrite existing file if it exists", Required: false, Type: "bool"},
 	},
 	HasFormat: true,
@@ -87,8 +89,8 @@ var WhiteboardQuery = common.Shortcut{
 		}
 
 		as := runtime.Str("output_as")
-		if as != WhiteboardQueryAsImage && as != WhiteboardQueryAsCode && as != WhiteboardQueryAsRaw {
-			return common.FlagErrorf("--output_as flag must be one of: image | code | raw")
+		if as != WhiteboardQueryAsImage && as != WhiteboardQueryAsSvg && as != WhiteboardQueryAsCode && as != WhiteboardQueryAsRaw {
+			return common.FlagErrorf("--output_as flag must be one of: image | svg | code | raw")
 		}
 		return nil
 	},
@@ -108,8 +110,13 @@ var WhiteboardQuery = common.Shortcut{
 			return common.NewDryRunAPI().
 				GET(fmt.Sprintf("/open-apis/board/v1/whiteboards/%s/nodes", common.MaskToken(url.PathEscape(token)))).
 				Desc("Extract raw nodes structure from given whiteboard")
+		case WhiteboardQueryAsSvg:
+			return common.NewDryRunAPI().
+				POST(fmt.Sprintf("/open-apis/board/v1/whiteboards/%s/export", common.MaskToken(url.PathEscape(token)))).
+				Body(map[string]string{"export_type": "svg"}).
+				Desc("Export SVG of given whiteboard")
 		default:
-			return common.NewDryRunAPI().Desc("invalid --output_as flag, must be one of: image | code | raw")
+			return common.NewDryRunAPI().Desc("invalid --output_as flag, must be one of: image | svg | code | raw")
 		}
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
@@ -120,15 +127,84 @@ var WhiteboardQuery = common.Shortcut{
 		switch as {
 		case WhiteboardQueryAsImage:
 			return exportWhiteboardPreview(ctx, runtime, token, outDir)
+		case WhiteboardQueryAsSvg:
+			return exportWhiteboardSvg(runtime, token, outDir)
 		case WhiteboardQueryAsCode:
 			return exportWhiteboardCode(runtime, token, outDir)
 		case WhiteboardQueryAsRaw:
 			return exportWhiteboardRaw(runtime, token, outDir)
 		default:
-			return output.ErrValidation("--as flag must be one of: image | code | raw")
+			return output.ErrValidation("--output_as flag must be one of: image | svg | code | raw")
 		}
 
 	},
+}
+
+type exportReq struct {
+	ExportType string `json:"export_type"`
+}
+
+type exportResp struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data struct {
+		Content  string `json:"content"`
+		MimeType string `json:"mime_type"`
+	} `json:"data"`
+}
+
+func exportWhiteboardSvg(runtime *common.RuntimeContext, wbToken, outDir string) error {
+	reqBody := exportReq{ExportType: "svg"}
+	req := &larkcore.ApiReq{
+		HttpMethod: http.MethodPost,
+		ApiPath:    fmt.Sprintf("/open-apis/board/v1/whiteboards/%s/export", url.PathEscape(wbToken)),
+		Body:       reqBody,
+	}
+
+	resp, err := runtime.DoAPI(req)
+	if err != nil {
+		return output.ErrNetwork(fmt.Sprintf("export whiteboard svg failed: %v", err))
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return output.ErrAPI(resp.StatusCode, string(resp.RawBody), nil)
+	}
+
+	var exportData exportResp
+	if err := json.Unmarshal(resp.RawBody, &exportData); err != nil {
+		return output.Errorf(output.ExitInternal, "parsing", "parse export response failed: %v", err)
+	}
+	if exportData.Code != 0 {
+		return output.ErrAPI(exportData.Code, "export whiteboard svg failed", exportData.Msg)
+	}
+
+	svgBytes, err := base64.StdEncoding.DecodeString(exportData.Data.Content)
+	if err != nil {
+		return output.Errorf(output.ExitInternal, "parsing", "decode svg base64 failed: %v", err)
+	}
+
+	if outDir == "" {
+		runtime.OutFormat(map[string]interface{}{
+			"svg_content": string(svgBytes),
+		}, nil, func(w io.Writer) {
+			fmt.Fprintf(w, "%s\n", string(svgBytes))
+		})
+		return nil
+	}
+
+	finalPath, size, err := saveOutputFile(outDir, ".svg", wbToken, runtime, bytes.NewReader(svgBytes))
+	if err != nil {
+		return err
+	}
+
+	runtime.OutFormat(map[string]interface{}{
+		"svg_path":   finalPath,
+		"size_bytes": size,
+	}, nil, func(w io.Writer) {
+		fmt.Fprintf(w, "SVG saved to %s\n", finalPath)
+		fmt.Fprintf(w, "File size: %d bytes", size)
+	})
+	return nil
 }
 
 func exportWhiteboardPreview(ctx context.Context, runtime *common.RuntimeContext, wbToken, outDir string) error {
@@ -359,6 +435,8 @@ func saveOutputFile(outPath, ext, token string, runtime *common.RuntimeContext, 
 	switch ext {
 	case ".png":
 		contentType = "image/png"
+	case ".svg":
+		contentType = "image/svg+xml"
 	case ".json":
 		contentType = "application/json"
 	case ".mmd", ".puml":
