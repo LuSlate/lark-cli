@@ -140,10 +140,10 @@ func NewCmdServiceMethod(f *cmdutil.Factory, spec, method map[string]interface{}
 }
 
 func NewCmdServiceMethodWithContext(ctx context.Context, f *cmdutil.Factory, spec, method map[string]interface{}, name, resName string, runF func(*ServiceMethodOptions) error) *cobra.Command {
-	desc := registry.GetStrFromMap(method, "description")
+	specName := registry.GetStrFromMap(spec, "name")
+	desc := registry.GetMethodDescription(specName, resName, name, method)
 	httpMethod := registry.GetStrFromMap(method, "httpMethod")
 	risk := registry.GetStrFromMap(method, "risk")
-	specName := registry.GetStrFromMap(spec, "name")
 	schemaPath := fmt.Sprintf("%s.%s.%s", specName, resName, name)
 
 	opts := &ServiceMethodOptions{

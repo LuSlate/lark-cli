@@ -70,7 +70,7 @@ func printResourceList(w io.Writer, spec map[string]interface{}, mode core.Stric
 		for _, methodName := range sortedKeys(methods) {
 			m, _ := methods[methodName].(map[string]interface{})
 			httpMethod := registry.GetStrFromMap(m, "httpMethod")
-			desc := registry.GetStrFromMap(m, "description")
+			desc := registry.GetMethodDescription(name, resName, methodName, m)
 			danger := ""
 			if d, _ := m["danger"].(bool); d {
 				danger = fmt.Sprintf(" %s[danger]%s", output.Red, output.Reset)
@@ -94,7 +94,7 @@ func printMethodDetail(w io.Writer, spec map[string]interface{}, resName, method
 	methodPath := registry.GetStrFromMap(method, "path")
 	fullPath := servicePath + "/" + methodPath
 	httpMethod := registry.GetStrFromMap(method, "httpMethod")
-	desc := registry.GetStrFromMap(method, "description")
+	desc := registry.GetMethodDescription(specName, resName, methodName, method)
 	isFileUpload, fileFieldNames := hasFileFields(method)
 
 	fmt.Fprintf(w, "%s%s.%s.%s%s\n\n", output.Bold, specName, resName, methodName, output.Reset)
@@ -679,7 +679,7 @@ func runPrettyMode(out io.Writer, parts []string, mode core.StrictMode) error {
 		for _, mName := range sortedKeys(methods) {
 			m, _ := methods[mName].(map[string]interface{})
 			httpMethod := registry.GetStrFromMap(m, "httpMethod")
-			desc := registry.GetStrFromMap(m, "description")
+			desc := registry.GetMethodDescription(serviceName, resName, mName, m)
 			fmt.Fprintf(out, "  %-7s %s%s%s  %s%s%s\n", httpMethod, output.Bold, mName, output.Reset, output.Dim, desc, output.Reset)
 		}
 		fmt.Fprintf(out, "\n%sUsage: lark-cli schema %s.%s.<method>%s\n", output.Dim, serviceName, resName, output.Reset)

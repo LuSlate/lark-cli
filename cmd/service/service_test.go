@@ -166,6 +166,19 @@ func TestNewCmdServiceMethod_POSTHasDataFlag(t *testing.T) {
 	}
 }
 
+func TestNewCmdServiceMethod_UsesDescriptionOverrideWhenMetadataIsEmpty(t *testing.T) {
+	f := &cmdutil.Factory{}
+	cmd := NewCmdServiceMethod(f, driveSpec(),
+		map[string]interface{}{"description": "", "httpMethod": "PATCH"}, "patch", "files", nil)
+
+	if cmd.Short != "修改文件标题" {
+		t.Fatalf("Short = %q, want %q", cmd.Short, "修改文件标题")
+	}
+	if !strings.Contains(cmd.Long, "修改文件标题") {
+		t.Fatalf("Long = %q, want to contain %q", cmd.Long, "修改文件标题")
+	}
+}
+
 func TestNewCmdServiceMethod_RunFCallback(t *testing.T) {
 	f, _, _, _ := cmdutil.TestFactory(t, testConfig)
 

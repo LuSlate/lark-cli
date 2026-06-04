@@ -223,6 +223,24 @@ func TestFilterScopes_TooFewParts(t *testing.T) {
 	}
 }
 
+func TestGetMethodDescription_UsesOverrideWhenMetadataIsEmpty(t *testing.T) {
+	got := GetMethodDescription("drive", "files", "patch", map[string]interface{}{
+		"description": "   ",
+	})
+	if got != "修改文件标题" {
+		t.Fatalf("GetMethodDescription() = %q, want %q", got, "修改文件标题")
+	}
+}
+
+func TestGetMethodDescription_PrefersMetadataDescription(t *testing.T) {
+	got := GetMethodDescription("drive", "files", "patch", map[string]interface{}{
+		"description": "Rename a file",
+	})
+	if got != "Rename a file" {
+		t.Fatalf("GetMethodDescription() = %q, want %q", got, "Rename a file")
+	}
+}
+
 // --- Auto-approve functions ---
 
 func TestLoadAutoApproveSet(t *testing.T) {

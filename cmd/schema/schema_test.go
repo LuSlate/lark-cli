@@ -196,6 +196,25 @@ func TestSchemaCmd_PrettyUnchanged_KeyTextPresent(t *testing.T) {
 	}
 }
 
+func TestPrintMethodDetail_UsesDescriptionOverrideWhenMetadataIsEmpty(t *testing.T) {
+	spec := map[string]interface{}{
+		"name":        "drive",
+		"servicePath": "/open-apis/drive/v1",
+	}
+	method := map[string]interface{}{
+		"httpMethod":  "PATCH",
+		"path":        "files/{file_token}",
+		"description": "",
+	}
+
+	var out bytes.Buffer
+	printMethodDetail(&out, spec, "files", "patch", method)
+
+	if !strings.Contains(out.String(), "修改文件标题") {
+		t.Fatalf("pretty output = %q, want to contain %q", out.String(), "修改文件标题")
+	}
+}
+
 func TestSchemaCmd_UnknownService(t *testing.T) {
 	f, _, _, _ := cmdutil.TestFactory(t, &core.CliConfig{
 		AppID: "test-app", AppSecret: "test-secret", Brand: core.BrandFeishu,
