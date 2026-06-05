@@ -1,0 +1,713 @@
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
+
+package slides
+
+import (
+	"encoding/json"
+	"fmt"
+	"path/filepath"
+	"regexp"
+	"strings"
+
+	"github.com/larksuite/cli/internal/cmdutil"
+	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/shortcuts/common"
+)
+
+const maxSVGFileSizeBytes int64 = 2 * 1024 * 1024
+
+type RewrittenSVGPage struct {
+	Content string
+	Tokens  []string
+}
+
+var (
+	svgRootOpenTagRegex = regexp.MustCompile(`(?s)\A(\s*(?:<\?[^?]*(?:\?[^>][^?]*)*\?>\s*)?(?:<!DOCTYPE[^>]*>\s*)?(?:<!--.*?-->\s*)*)<([A-Za-z_][\w.:-]*)((?:\s[^>]*?)?)(/?>)`)
+	svgImageTagRegex    = regexp.MustCompile(`(?is)<image\b[^>]*>`)
+	svgImageHrefRegex   = regexp.MustCompile(`(?is)(^|\s)(xlink:href|href)\s*=\s*(["'])([^"']*)(["'])`)
+	svgMetadataRegex    = regexp.MustCompile(`(?is)<metadata\b[^>]*\bdata-svglide-assets\s*=\s*(["'])true(["'])[^>]*>.*?</metadata>`)
+	svgMetadataEndRegex = regexp.MustCompile(`(?is)</metadata\s*>`)
+	svgMetadataImgRegex = regexp.MustCompile(`(?is)<img\b[^>]*\bsrc\s*=\s*(["'])([^"']+)(["'])`)
+	svgNumberRegex      = regexp.MustCompile(`^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?:px)?$`)
+	svgPathNumberRegex  = regexp.MustCompile(`[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?`)
+	svgTransformRegex   = regexp.MustCompile(`(?is)([a-zA-Z]+)\(([^)]*)\)`)
+	svgShapeTags        = map[string]bool{
+		"circle":        true,
+		"ellipse":       true,
+		"foreignObject": true,
+		"line":          true,
+		"path":          true,
+		"rect":          true,
+	}
+	svgRequiredAttrsByTag = map[string][]string{
+		"circle":        {"cx", "cy", "r"},
+		"ellipse":       {"cx", "cy", "rx", "ry"},
+		"foreignObject": {"x", "y", "width", "height"},
+		"image":         {"x", "y", "width", "height"},
+		"line":          {"x1", "y1", "x2", "y2"},
+		"path":          {"d"},
+		"rect":          {"x", "y", "width", "height"},
+	}
+	svgGeometryAttrsByTag = map[string][]string{
+		"circle":        {"cx", "cy", "r"},
+		"ellipse":       {"cx", "cy", "rx", "ry"},
+		"foreignObject": {"x", "y", "width", "height"},
+		"image":         {"x", "y", "width", "height"},
+		"line":          {"x1", "y1", "x2", "y2"},
+		"rect":          {"x", "y", "width", "height"},
+	}
+	svgContainerTags = map[string]bool{
+		"g":   true,
+		"svg": true,
+	}
+	svgIgnoredSubtreeTags = map[string]bool{
+		"defs":  true,
+		"style": true,
+	}
+)
+
+type svgValidationMode int
+
+const (
+	svgValidationDescend svgValidationMode = iota
+	svgValidationSkipSubtree
+	svgValidationStop
+)
+
+func validateSVGFileInputs(runtime *common.RuntimeContext, paths []string) error {
+	if len(paths) == 0 {
+		return common.FlagErrorf("--file is required")
+	}
+	for _, path := range paths {
+		if strings.TrimSpace(path) == "" {
+			return common.FlagErrorf("--file cannot be empty")
+		}
+		stat, err := runtime.FileIO().Stat(path)
+		if err != nil {
+			return common.WrapInputStatError(err, fmt.Sprintf("--file %s: file not found", path))
+		}
+		if !stat.Mode().IsRegular() {
+			return output.ErrValidation("--file %s: must be a regular file", path)
+		}
+		if stat.Size() == 0 {
+			return output.ErrValidation("--file %s: SVG file is empty", path)
+		}
+		if stat.Size() > maxSVGFileSizeBytes {
+			return output.ErrValidation("--file %s: SVG file size %s exceeds %s limit",
+				path, common.FormatSize(stat.Size()), common.FormatSize(maxSVGFileSizeBytes))
+		}
+	}
+	return nil
+}
+
+func readSVGFiles(runtime *common.RuntimeContext, paths []string) ([]string, error) {
+	svgs := make([]string, 0, len(paths))
+	for _, path := range paths {
+		data, err := cmdutil.ReadInputFile(runtime.FileIO(), path)
+		if err != nil {
+			return nil, common.WrapInputStatError(err, fmt.Sprintf("--file %s", path))
+		}
+		if strings.TrimSpace(string(data)) == "" {
+			return nil, output.ErrValidation("--file %s: SVG file is empty", path)
+		}
+		svg := string(data)
+		if err := validateSVGlideSVG(svg, path); err != nil {
+			return nil, err
+		}
+		svgs = append(svgs, svg)
+	}
+	return svgs, nil
+}
+
+func validateSVGlideSVG(svg, path string) error {
+	m := svgRootOpenTagRegex.FindStringSubmatchIndex(svg)
+	if m == nil {
+		return output.ErrValidation("--file %s: SVG root element not found", path)
+	}
+	tagName := svg[m[4]:m[5]]
+	if tagName != "svg" {
+		return output.ErrValidation("--file %s: root element must be non-namespaced <svg>", path)
+	}
+	attrs := svg[m[6]:m[7]]
+	if !hasXMLAttr(attrs, "xmlns:slide", "https://slides.bytedance.com/ns") {
+		return output.ErrValidation("--file %s: root <svg> must declare xmlns:slide=\"https://slides.bytedance.com/ns\"", path)
+	}
+	if !hasXMLAttr(attrs, "slide:role", "slide") {
+		return output.ErrValidation("--file %s: root <svg> must include slide:role=\"slide\"", path)
+	}
+	if svg[m[8]:m[9]] == "/>" {
+		return nil
+	}
+	return validateSVGlideChildren(svg[m[9]:], path)
+}
+
+func hasXMLAttr(attrs, name, want string) bool {
+	return xmlAttrValue(attrs, name) == want
+}
+
+func xmlAttrValue(attrs, name string) string {
+	re := regexp.MustCompile(`(?is)(?:^|\s)` + regexp.QuoteMeta(name) + `\s*=\s*(["'])([^"']*)(["'])`)
+	for _, m := range re.FindAllStringSubmatch(attrs, -1) {
+		if len(m) >= 4 && m[1] == m[3] {
+			return m[2]
+		}
+	}
+	return ""
+}
+
+func validateSVGlideChildren(svgAfterRootOpen, path string) error {
+	depth := 0
+	skipDepth := -1
+	for i := 0; i < len(svgAfterRootOpen); {
+		rel := strings.IndexByte(svgAfterRootOpen[i:], '<')
+		if rel < 0 {
+			return nil
+		}
+		i += rel
+
+		switch {
+		case strings.HasPrefix(svgAfterRootOpen[i:], "<!--"):
+			end := strings.Index(svgAfterRootOpen[i+4:], "-->")
+			if end < 0 {
+				return output.ErrValidation("--file %s: malformed SVG comment", path)
+			}
+			i += 4 + end + 3
+			continue
+		case strings.HasPrefix(svgAfterRootOpen[i:], "<![CDATA["):
+			end := strings.Index(svgAfterRootOpen[i+9:], "]]>")
+			if end < 0 {
+				return output.ErrValidation("--file %s: malformed SVG CDATA", path)
+			}
+			i += 9 + end + 3
+			continue
+		case strings.HasPrefix(svgAfterRootOpen[i:], "<?"):
+			end := strings.Index(svgAfterRootOpen[i+2:], "?>")
+			if end < 0 {
+				return output.ErrValidation("--file %s: malformed SVG processing instruction", path)
+			}
+			i += 2 + end + 2
+			continue
+		case strings.HasPrefix(svgAfterRootOpen[i:], "</"):
+			end := findSVGTagEnd(svgAfterRootOpen, i)
+			if end < 0 {
+				return output.ErrValidation("--file %s: malformed SVG closing tag", path)
+			}
+			name := parseSVGClosingTagName(svgAfterRootOpen[i+2 : end])
+			if depth == 0 && name == "svg" {
+				return nil
+			}
+			if depth > 0 {
+				depth--
+			}
+			if skipDepth >= 0 && depth < skipDepth {
+				skipDepth = -1
+			}
+			i = end + 1
+			continue
+		case strings.HasPrefix(svgAfterRootOpen[i:], "<!"):
+			end := findSVGTagEnd(svgAfterRootOpen, i)
+			if end < 0 {
+				return output.ErrValidation("--file %s: malformed SVG declaration", path)
+			}
+			i = end + 1
+			continue
+		}
+
+		end := findSVGTagEnd(svgAfterRootOpen, i)
+		if end < 0 {
+			return output.ErrValidation("--file %s: malformed SVG element", path)
+		}
+		name, attrs, selfClosing := parseSVGStartTag(svgAfterRootOpen[i+1 : end])
+		if name == "" {
+			i = end + 1
+			continue
+		}
+		if skipDepth < 0 {
+			mode, err := validateSVGlideElement(path, name, attrs)
+			if err != nil {
+				return err
+			}
+			if mode == svgValidationSkipSubtree && !selfClosing {
+				skipDepth = depth + 1
+			}
+		}
+		if !selfClosing {
+			depth++
+		}
+		i = end + 1
+	}
+	return output.ErrValidation("--file %s: malformed SVG root: missing </svg>", path)
+}
+
+func findSVGTagEnd(svg string, start int) int {
+	var quote byte
+	for i := start + 1; i < len(svg); i++ {
+		c := svg[i]
+		if quote != 0 {
+			if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		if c == '"' || c == '\'' {
+			quote = c
+			continue
+		}
+		if c == '>' {
+			return i
+		}
+	}
+	return -1
+}
+
+func parseSVGClosingTagName(raw string) string {
+	raw = strings.TrimSpace(raw)
+	for i, r := range raw {
+		if r == '>' || r == '/' || isXMLSpace(r) {
+			return raw[:i]
+		}
+	}
+	return raw
+}
+
+func parseSVGStartTag(raw string) (name, attrs string, selfClosing bool) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || strings.HasPrefix(raw, "/") {
+		return "", "", false
+	}
+	if strings.HasSuffix(raw, "/") {
+		selfClosing = true
+		raw = strings.TrimSpace(strings.TrimSuffix(raw, "/"))
+	}
+	nameEnd := len(raw)
+	for i, r := range raw {
+		if isXMLSpace(r) || r == '/' {
+			nameEnd = i
+			break
+		}
+	}
+	name = raw[:nameEnd]
+	attrs = strings.TrimSpace(raw[nameEnd:])
+	return name, attrs, selfClosing
+}
+
+func isXMLSpace(r rune) bool {
+	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
+}
+
+func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, error) {
+	if svgIgnoredSubtreeTags[tagName] {
+		return svgValidationSkipSubtree, nil
+	}
+	if tagName == "metadata" && hasXMLAttr(attrs, "data-svglide-assets", "true") {
+		return svgValidationSkipSubtree, nil
+	}
+	if err := validateSVGlideTransform(path, tagName, attrs); err != nil {
+		return svgValidationStop, err
+	}
+	if svgContainerTags[tagName] {
+		return svgValidationDescend, nil
+	}
+
+	role := xmlAttrValue(attrs, "slide:role")
+	if role == "" {
+		return svgValidationStop, output.ErrValidation("--file %s: <%s> must include slide:role=\"shape\" or slide:role=\"image\" for SVGlide", path, tagName)
+	}
+
+	switch role {
+	case "shape":
+		if !svgShapeTags[tagName] {
+			return svgValidationStop, output.ErrValidation("--file %s: <%s slide:role=\"shape\"> is not supported by SVGlide; use rect, ellipse, circle, line, path, or foreignObject", path, tagName)
+		}
+		if tagName == "foreignObject" && !hasXMLAttr(attrs, "slide:shape-type", "text") {
+			return svgValidationStop, output.ErrValidation("--file %s: <foreignObject slide:role=\"shape\"> must include slide:shape-type=\"text\"", path)
+		}
+		if err := validateSVGlideRequiredAttrs(path, tagName, role, attrs); err != nil {
+			return svgValidationStop, err
+		}
+		return svgValidationSkipSubtree, nil
+	case "image":
+		if tagName != "image" {
+			return svgValidationStop, output.ErrValidation("--file %s: <%s slide:role=\"image\"> is not supported by SVGlide; use <image>", path, tagName)
+		}
+		href := xmlAttrValue(attrs, "href")
+		if href == "" {
+			href = xmlAttrValue(attrs, "xlink:href")
+		}
+		if href == "" {
+			return svgValidationStop, output.ErrValidation("--file %s: <image slide:role=\"image\"> must include href", path)
+		}
+		if isExternalSVGHref(href) {
+			return svgValidationStop, output.ErrValidation("--file %s: <image slide:role=\"image\"> must not use external http(s) or data href; download the image and use href=\"@./path\" or provide a file token", path)
+		}
+		if err := validateSVGlideRequiredAttrs(path, tagName, role, attrs); err != nil {
+			return svgValidationStop, err
+		}
+		return svgValidationSkipSubtree, nil
+	default:
+		return svgValidationStop, output.ErrValidation("--file %s: <%s> has unsupported slide:role=%q; use \"shape\" or \"image\"", path, tagName, role)
+	}
+}
+
+func validateSVGlideRequiredAttrs(path, tagName, role, attrs string) error {
+	for _, attr := range svgRequiredAttrsByTag[tagName] {
+		if strings.TrimSpace(xmlAttrValue(attrs, attr)) == "" {
+			return output.ErrValidation("--file %s: <%s slide:role=\"%s\"> missing required attribute %q for SVGlide", path, tagName, role, attr)
+		}
+	}
+	for _, attr := range svgGeometryAttrsByTag[tagName] {
+		value := xmlAttrValue(attrs, attr)
+		if !isSVGlideNumber(value) {
+			return output.ErrValidation("--file %s: <%s slide:role=\"%s\"> attribute %q must be a number or px length, got %q", path, tagName, role, attr, value)
+		}
+	}
+	if tagName == "path" {
+		if err := validateSVGlidePathData(path, attrs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func isSVGlideNumber(value string) bool {
+	value = strings.TrimSpace(value)
+	return value != "" && svgNumberRegex.MatchString(value)
+}
+
+func validateSVGlideTransform(path, tagName, attrs string) error {
+	transform := strings.TrimSpace(xmlAttrValue(attrs, "transform"))
+	if transform == "" {
+		return nil
+	}
+	for _, m := range svgTransformRegex.FindAllStringSubmatch(transform, -1) {
+		if len(m) < 3 {
+			continue
+		}
+		fn := strings.TrimSpace(m[1])
+		for _, arg := range strings.FieldsFunc(m[2], func(r rune) bool {
+			return r == ',' || isXMLSpace(r)
+		}) {
+			arg = strings.TrimSpace(arg)
+			if arg == "" {
+				continue
+			}
+			if !isSVGlideNumber(arg) {
+				return output.ErrValidation("--file %s: <%s> transform %s() argument must be a number or px length, got %q", path, tagName, fn, arg)
+			}
+		}
+	}
+	return nil
+}
+
+func validateSVGlidePathData(path, attrs string) error {
+	d := strings.TrimSpace(xmlAttrValue(attrs, "d"))
+	withoutNumbers := svgPathNumberRegex.ReplaceAllString(d, "")
+	hasCommand := false
+	for _, r := range withoutNumbers {
+		switch {
+		case r == ',' || isXMLSpace(r):
+			continue
+		case strings.ContainsRune("MLHVZCQmlhvzcq", r):
+			hasCommand = true
+		default:
+			return output.ErrValidation("--file %s: <path slide:role=\"shape\"> unsupported path command or character %q; use only M/L/H/V/C/Q/Z commands", path, string(r))
+		}
+	}
+	if !hasCommand {
+		return output.ErrValidation("--file %s: <path slide:role=\"shape\"> attribute \"d\" must include at least one M/L/H/V/C/Q/Z path command", path)
+	}
+	return nil
+}
+
+func isExternalSVGHref(value string) bool {
+	lower := strings.ToLower(strings.TrimSpace(value))
+	return strings.HasPrefix(lower, "http://") ||
+		strings.HasPrefix(lower, "https://") ||
+		strings.HasPrefix(lower, "data:")
+}
+
+func parseSVGAssets(runtime *common.RuntimeContext, path string) (map[string]string, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, nil
+	}
+	data, err := cmdutil.ReadInputFile(runtime.FileIO(), path)
+	if err != nil {
+		return nil, common.WrapInputStatError(err, fmt.Sprintf("--assets %s", path))
+	}
+	var assets map[string]string
+	if err := json.Unmarshal(data, &assets); err != nil {
+		return nil, output.ErrValidation("--assets %s: invalid JSON object: %v", path, err)
+	}
+	for k, v := range assets {
+		if strings.TrimSpace(k) == "" || strings.TrimSpace(v) == "" {
+			return nil, output.ErrValidation("--assets %s: keys and file tokens must be non-empty strings", path)
+		}
+	}
+	return assets, nil
+}
+
+func validateSVGAssetsPath(runtime *common.RuntimeContext, path string) error {
+	if strings.TrimSpace(path) == "" {
+		return nil
+	}
+	stat, err := runtime.FileIO().Stat(path)
+	if err != nil {
+		return common.WrapInputStatError(err, fmt.Sprintf("--assets %s: file not found", path))
+	}
+	if !stat.Mode().IsRegular() {
+		return output.ErrValidation("--assets %s: must be a regular file", path)
+	}
+	if stat.Size() == 0 {
+		return output.ErrValidation("--assets %s: file is empty", path)
+	}
+	return nil
+}
+
+func rewriteSVGImagePlaceholders(runtime *common.RuntimeContext, presentationID string, svgs []string, assets map[string]string) ([]RewrittenSVGPage, int, error) {
+	paths := extractSVGImagePlaceholderPaths(svgs, assets)
+	localTokens, uploaded, err := uploadSlidesPlaceholders(runtime, presentationID, paths)
+	if err != nil {
+		return nil, uploaded, err
+	}
+	tokens := mergedSVGAssetTokens(assets, localTokens)
+	pages := make([]RewrittenSVGPage, 0, len(svgs))
+	for _, svg := range svgs {
+		content, usedTokens := rewriteSVGImagePlaceholdersWithTokens(svg, tokens)
+		pages = append(pages, RewrittenSVGPage{Content: content, Tokens: usedTokens})
+	}
+	return pages, uploaded, nil
+}
+
+func dryRunRewriteSVGImagePlaceholders(svgs []string, assets map[string]string) ([]RewrittenSVGPage, []string) {
+	paths := extractSVGImagePlaceholderPaths(svgs, assets)
+	localTokens := make(map[string]string, len(paths))
+	for _, path := range paths {
+		localTokens[path] = "<uploaded_file_token:" + filepath.Base(path) + ">"
+	}
+	tokens := mergedSVGAssetTokens(assets, localTokens)
+	pages := make([]RewrittenSVGPage, 0, len(svgs))
+	for _, svg := range svgs {
+		content, usedTokens := rewriteSVGImagePlaceholdersWithTokens(svg, tokens)
+		pages = append(pages, RewrittenSVGPage{Content: content, Tokens: usedTokens})
+	}
+	return pages, paths
+}
+
+func mergedSVGAssetTokens(assets, localTokens map[string]string) map[string]string {
+	tokens := map[string]string{}
+	for k, v := range assets {
+		key := strings.TrimSpace(k)
+		token := strings.TrimSpace(v)
+		if strings.HasPrefix(key, "@") {
+			key = strings.TrimSpace(strings.TrimPrefix(key, "@"))
+		}
+		if key != "" && token != "" {
+			tokens[key] = token
+		}
+	}
+	for k, v := range localTokens {
+		tokens[k] = v
+	}
+	return tokens
+}
+
+func extractSVGImagePlaceholderPaths(svgs []string, assets map[string]string) []string {
+	var paths []string
+	seen := map[string]bool{}
+	for _, svg := range svgs {
+		for _, tag := range svgImageTagRegex.FindAllString(svg, -1) {
+			for _, m := range svgImageHrefRegex.FindAllStringSubmatch(tag, -1) {
+				if len(m) < 6 || m[3] != m[5] || !strings.HasPrefix(m[4], "@") {
+					continue
+				}
+				path := strings.TrimSpace(strings.TrimPrefix(m[4], "@"))
+				if path == "" || seen[path] || svgAssetTokenForPath(assets, path) != "" {
+					continue
+				}
+				seen[path] = true
+				paths = append(paths, path)
+			}
+		}
+	}
+	return paths
+}
+
+func rewriteSVGImagePlaceholdersWithTokens(svg string, tokens map[string]string) (string, []string) {
+	var used []string
+	seen := map[string]bool{}
+	remember := func(token string) {
+		if token == "" || seen[token] {
+			return
+		}
+		seen[token] = true
+		used = append(used, token)
+	}
+
+	out := svgImageTagRegex.ReplaceAllStringFunc(svg, func(tag string) string {
+		return svgImageHrefRegex.ReplaceAllStringFunc(tag, func(attr string) string {
+			m := svgImageHrefRegex.FindStringSubmatch(attr)
+			if len(m) < 6 || m[3] != m[5] {
+				return attr
+			}
+			prefix := m[1]
+			name := m[2]
+			value := strings.TrimSpace(m[4])
+			if strings.HasPrefix(value, "@") {
+				path := strings.TrimSpace(strings.TrimPrefix(value, "@"))
+				token := tokens[path]
+				if token == "" {
+					return attr
+				}
+				remember(token)
+				return fmt.Sprintf(`%shref="%s"`, prefix, xmlEscape(token))
+			}
+			if strings.EqualFold(name, "xlink:href") {
+				if shouldTreatAsFileToken(value) {
+					remember(value)
+				}
+				return fmt.Sprintf(`%shref="%s"`, prefix, xmlEscape(value))
+			}
+			if shouldTreatAsFileToken(value) {
+				remember(value)
+			}
+			return attr
+		})
+	})
+	return out, used
+}
+
+func svgAssetTokenForPath(assets map[string]string, path string) string {
+	if len(assets) == 0 {
+		return ""
+	}
+	if token := strings.TrimSpace(assets["@"+path]); token != "" {
+		return token
+	}
+	return strings.TrimSpace(assets[path])
+}
+
+func shouldTreatAsFileToken(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" || strings.HasPrefix(value, "@") || strings.HasPrefix(value, "#") {
+		return false
+	}
+	lower := strings.ToLower(value)
+	return !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") && !strings.HasPrefix(lower, "data:")
+}
+
+func injectSVGTransportAssetMetadata(svg string, tokens []string) (string, error) {
+	tokens = dedupeStrings(tokens)
+	if len(tokens) == 0 {
+		return svg, nil
+	}
+	m := svgRootOpenTagRegex.FindStringSubmatchIndex(svg)
+	if m == nil {
+		return "", fmt.Errorf("SVG root element not found")
+	}
+	tagName := svg[m[4]:m[5]]
+	if tagName != "svg" {
+		return "", fmt.Errorf("root element must be <svg>")
+	}
+
+	if existing := svgMetadataRegex.FindStringIndex(svg); existing != nil {
+		block := svg[existing[0]:existing[1]]
+		existingTokens := metadataImgTokens(block)
+		var missing []string
+		for _, token := range tokens {
+			if !existingTokens[token] {
+				missing = append(missing, token)
+			}
+		}
+		if len(missing) == 0 {
+			return svg, nil
+		}
+		addition := renderSVGTransportImgs(missing)
+		rewritten := svgMetadataEndRegex.ReplaceAllStringFunc(block, func(end string) string {
+			return addition + end
+		})
+		return svg[:existing[0]] + rewritten + svg[existing[1]:], nil
+	}
+
+	metadata := `<metadata data-svglide-assets="true">` + renderSVGTransportImgs(tokens) + `</metadata>`
+	prefix := svg[:m[8]]
+	closer := svg[m[8]:m[9]]
+	after := svg[m[9]:]
+	if closer == "/>" {
+		return prefix + ">" + metadata + "</svg>" + after, nil
+	}
+	return svg[:m[9]] + metadata + after, nil
+}
+
+func metadataImgTokens(metadata string) map[string]bool {
+	out := map[string]bool{}
+	for _, m := range svgMetadataImgRegex.FindAllStringSubmatch(metadata, -1) {
+		if len(m) >= 4 && m[1] == m[3] {
+			out[m[2]] = true
+		}
+	}
+	return out
+}
+
+func renderSVGTransportImgs(tokens []string) string {
+	var b strings.Builder
+	for _, token := range tokens {
+		b.WriteString(`<img src="`)
+		b.WriteString(xmlEscape(token))
+		b.WriteString(`" />`)
+	}
+	return b.String()
+}
+
+func dedupeStrings(in []string) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, item := range in {
+		item = strings.TrimSpace(item)
+		if item == "" || seen[item] {
+			continue
+		}
+		seen[item] = true
+		out = append(out, item)
+	}
+	return out
+}
+
+func buildCreateSVGBody(svg string) map[string]interface{} {
+	return map[string]interface{}{
+		"slide": map[string]interface{}{"content": svg},
+	}
+}
+
+func extractSVGlideErrorJSON(err error) map[string]interface{} {
+	if err == nil {
+		return nil
+	}
+	const marker = "SVGLIDE_ERROR_JSON:"
+	msg := err.Error()
+	idx := strings.Index(msg, marker)
+	if idx < 0 {
+		return nil
+	}
+	raw := strings.TrimSpace(msg[idx+len(marker):])
+	if end := strings.IndexAny(raw, "\r\n"); end >= 0 {
+		raw = raw[:end]
+	}
+	var parsed map[string]interface{}
+	if json.Unmarshal([]byte(raw), &parsed) != nil {
+		return nil
+	}
+	return parsed
+}
+
+func formatSVGlideErrorSuffix(err error) string {
+	parsed := extractSVGlideErrorJSON(err)
+	if len(parsed) == 0 {
+		return ""
+	}
+	data, jsonErr := json.Marshal(parsed)
+	if jsonErr != nil {
+		return ""
+	}
+	return " svglide_error=" + string(data)
+}

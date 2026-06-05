@@ -124,35 +124,19 @@ var SlidesCreate = common.Shortcut{
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		title := effectiveTitle(runtime.Str("title"))
-		content := buildPresentationXML(title)
 		slidesStr := runtime.Str("slides")
 
-		// Step 1: Create presentation
-		data, err := runtime.CallAPITyped(
-			"POST",
-			"/open-apis/slides_ai/v1/xml_presentations",
-			nil,
-			map[string]interface{}{
-				"xml_presentation": map[string]interface{}{
-					"content": content,
-				},
-			},
-		)
+		presentationID, revisionID, err := createEmptyPresentation(runtime, title)
 		if err != nil {
 			return err
-		}
-
-		presentationID := common.GetString(data, "xml_presentation_id")
-		if presentationID == "" {
-			return errs.NewInternalError(errs.SubtypeInvalidResponse, "slides create returned no xml_presentation_id")
 		}
 
 		result := map[string]interface{}{
 			"xml_presentation_id": presentationID,
 			"title":               title,
 		}
-		if revisionID := common.GetFloat(data, "revision_id"); revisionID > 0 {
-			result["revision_id"] = int(revisionID)
+		if revisionID > 0 {
+			result["revision_id"] = revisionID
 		}
 
 		// Step 2: Add slides if provided
@@ -197,6 +181,9 @@ var SlidesCreate = common.Shortcut{
 					if sid := common.GetString(slideData, "slide_id"); sid != "" {
 						slideIDs = append(slideIDs, sid)
 					}
+					if latest := common.GetFloat(slideData, "revision_id"); latest > 0 {
+						result["revision_id"] = int(latest)
+					}
 				}
 
 				result["slide_ids"] = slideIDs
@@ -204,19 +191,7 @@ var SlidesCreate = common.Shortcut{
 			}
 		}
 
-		// Build the presentation URL locally from the token. The brand-standard
-		// host transparently redirects to the tenant domain (same fallback used by
-		// drive +upload / wiki +node-create). This avoids the prior best-effort
-		// drive metas/batch_query call, which needed an extra drive scope and 403'd
-		// for users who only authorized slides scopes — without ever blocking an
-		// otherwise-successful creation.
-		if url := common.BuildResourceURL(runtime.Config.Brand, "slides", presentationID); url != "" {
-			result["url"] = url
-		}
-
-		if grant := common.AutoGrantCurrentUserDrivePermission(runtime, presentationID, "slides"); grant != nil {
-			result["permission_grant"] = grant
-		}
+		fillPresentationResult(runtime, presentationID, result)
 
 		runtime.Out(result, nil)
 		return nil
@@ -241,6 +216,44 @@ func buildPresentationXML(title string) string {
 		`<presentation xmlns="http://www.larkoffice.com/sml/2.0" width="%d" height="%d"><title>%s</title></presentation>`,
 		defaultPresentationWidth, defaultPresentationHeight, escapedTitle,
 	)
+}
+
+func createEmptyPresentation(runtime *common.RuntimeContext, title string) (string, int, error) {
+	data, err := runtime.CallAPI(
+		"POST",
+		"/open-apis/slides_ai/v1/xml_presentations",
+		nil,
+		map[string]interface{}{
+			"xml_presentation": map[string]interface{}{
+				"content": buildPresentationXML(title),
+			},
+		},
+	)
+	if err != nil {
+		return "", 0, err
+	}
+
+	presentationID := common.GetString(data, "xml_presentation_id")
+	if presentationID == "" {
+		return "", 0, errs.NewInternalError(errs.SubtypeInvalidResponse, "slides create returned no xml_presentation_id")
+	}
+	revisionID := 0
+	if rev := common.GetFloat(data, "revision_id"); rev > 0 {
+		revisionID = int(rev)
+	}
+	return presentationID, revisionID, nil
+}
+
+func fillPresentationResult(runtime *common.RuntimeContext, presentationID string, result map[string]interface{}) {
+	// Build the presentation URL locally from the token. The brand-standard
+	// host transparently redirects to the tenant domain. This avoids the prior
+	// best-effort drive metas/batch_query call, which needed an extra drive scope.
+	if url := common.BuildResourceURL(runtime.Config.Brand, "slides", presentationID); url != "" {
+		result["url"] = url
+	}
+	if grant := common.AutoGrantCurrentUserDrivePermission(runtime, presentationID, "slides"); grant != nil {
+		result["permission_grant"] = grant
+	}
 }
 
 // uploadSlidesPlaceholders uploads each unique placeholder path against the
