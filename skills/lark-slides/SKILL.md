@@ -29,7 +29,7 @@ metadata:
 
 **CRITICAL — 走 `slides +create-svg` 时，输入必须是 SVGlide SVG：root `<svg>` 声明 `xmlns:slide` 且 `slide:role="slide"`；可渲染 SVG 元素必须用 `slide:role="shape"` 或 `slide:role="image"` 表达；`g` / 嵌套 `svg` 可作为容器，但容器内实际渲染元素仍必须各自声明 role。CLI 只读取文件、上传/替换图片占位符、注入 transport metadata 和调用现有 `/slide` 路由，不会把普通 SVG 自动补齐成协议 SVG。**
 
-**CRITICAL — 高质量 SVG deck 生成时，MUST 同时读取 [lark-slides-create-svg.md](references/lark-slides-create-svg.md)：先定义布局盒，给 `foreignObject` 文本留足安全高度，图片必须先下载成本地 `@./path` 或上传为 file token，相邻页面要显著换版式；这些是生成技巧，不替代 [svg-protocol.md](references/svg-protocol.md) 的硬协议约束。**
+**CRITICAL — 高质量 SVG deck 生成时，MUST 同时读取 [lark-slides-create-svg.md](references/lark-slides-create-svg.md)：先做 deck-level density plan，再定义布局盒，给 `foreignObject` 文本留足安全高度，图片必须先下载成本地 `@./path` 或上传为 file token，相邻页面要显著换版式；这些是生成技巧，不替代 [svg-protocol.md](references/svg-protocol.md) 的硬协议约束。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，再生成 XML。先创建对应目录，规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
 
