@@ -36,7 +36,7 @@
   - **默认情况（inline 模式）**：`refs` 范围**应包含表头行**（首行/首列即系列名），且范围要精确覆盖目标数据，不要多选或少选。
   - **合并标题行要跳过**：如果表格在表头上方存在合并的标题行（如"员工统计表"横跨多列的大标题），`refs` 必须跳过标题行、从真正的列标题行开始。例如表头在第 3 行、数据在第 4-20 行，则 `refs` 应为 `A3:G20` 而非 `A1:G20`。包含合并标题行会导致列名识别错误、表头被当作数据参与聚合计算。
   - **数据与表头分离时必须用 detached 模式**：当 `refs` 只覆盖完整数据的一个子集（按筛选/分组只画其中一段），而真正的语义表头在该子集之外时，**必须**设置 `snapshot.data.headerMode='detached'`：refs 仅传纯数据范围，维度名/系列名通过 `snapshot.data.dim1.serie.nameRef` / `snapshot.data.dim2.series[].nameRef` 指向真正的表头单元格。详见下文"硬性规则：数据与表头分离场景必须使用 detached 模式"。
-- **axes[].label 不接受 `format` / `number_format` 字段**：想给坐标轴数值加千分位、百分号等格式化时，不要在 `axes[i].label` 里传 `format` 或 `number_format`（schema 未定义，会报 `unexpected property "format" is not defined in schema`）。数值格式化统一在源数据单元格的 `cell_styles.number_format` 里设置（写 `+cells-set` 时），图表会沿用单元格格式。
+- **axes[].label 不接受 `format` / `number_format` 字段**：想给坐标轴数值加千分位、百分号等格式化时，不要在 `axes[i].label` 里传 `format` 或 `number_format`（schema 未定义，会报 `unexpected property "format" is not defined in schema`）。数值格式化统一在源数据单元格的 `cell_styles.number_format` 里设置（写 `+cells-set` 时），图表会沿用单元格格式。**日期轴同理**：横轴显示成 `45297` 这类 Excel 序列号，是因为源日期列没设日期格式——给源列设 `number_format="yyyy-mm-dd"` 后横轴才会显示成日期（反例：折线图横轴日期显示为序列号）。大数值轴显示科学计数法同理，给源列设整数 / 千分位格式（反例：透视表数值轴显示科学计数法）。
 - **创建后必须验证**：图表创建后必须调用 `+chart-list` 验证配置是否正确
 
 > **⚠️ 硬性规则：当用户通过列标题名称（而非列索引）指定横轴/纵轴系列时，必须先读取表格首行（表头）来确定列名与列索引的对应关系，再设置 `dim1`/`dim2` 的 `index`。**
@@ -88,6 +88,8 @@
 4. **不够就先扩表**，二选一，禁止硬塞越界位置：
    - **优先**放数据下方空区：`position = {row: data_end_row + 2, col: "A"}`；
    - 否则先调 `+dim-insert`（`lark-sheets-sheet-structure`）扩行/列，再 create。
+
+⚠️ **图表落点禁止压在已有数据矩形内**——必须落在数据区**右侧或下方的空白**，否则图表浮层会遮挡原始数据被判失败（反例：折线图落在数据区中间，遮挡了下方原始数据）。
 
 **示例**：21 列 sheet 放 600×400 图 → `needCols=6, needRows=15`
 - ❌ `{row: 0, col: "W"}` — col=22 越界
