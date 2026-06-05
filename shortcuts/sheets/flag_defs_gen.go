@@ -308,7 +308,6 @@ var flagDefs = map[string]commandDef{
 			{Name: "max-chars", Kind: "own", Type: "int", Required: "optional", Desc: "Safety cap; default 200000", Default: "200000", Hidden: true},
 			{Name: "include-row-prefix", Kind: "own", Type: "bool", Required: "optional", Desc: "Whether to prefix each row with `[row=N]`; default `true`", Default: "true"},
 			{Name: "skip-hidden", Kind: "own", Type: "bool", Required: "optional", Desc: "Skip hidden rows and columns; default `false`"},
-			{Name: "rows-json", Kind: "own", Type: "bool", Required: "optional", Desc: "Return structured rows ({row_number, values:{col→cell}}) instead of CSV text; default false", Default: "false"},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional", Desc: "Print the request path and parameters without executing"},
 		},
 	},
@@ -915,6 +914,28 @@ var flagDefs = map[string]commandDef{
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
+	"+table-get": {
+		Risk: "read",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
+			{Name: "sheet-id", Kind: "own", Type: "string", Required: "optional", Desc: "Read only this sheet (by id); omit to read all sheets"},
+			{Name: "sheet-name", Kind: "own", Type: "string", Required: "optional", Desc: "Read only this sheet (by name); omit to read all sheets"},
+			{Name: "range", Kind: "own", Type: "string", Required: "optional", Desc: "A1 range to read; omit to read each sheet current region"},
+			{Name: "no-header", Kind: "own", Type: "bool", Required: "optional", Desc: "Treat the first row as data instead of a header (columns get positional names col1, col2, ...)"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
+	"+table-put": {
+		Risk: "write",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL to write into (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token to write into (XOR with `--url`)"},
+			{Name: "sheets", Kind: "own", Type: "string", Required: "required", Desc: "Typed table payload as JSON: a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool", Input: []string{"file", "stdin"}},
+			{Name: "header-style", Kind: "own", Type: "bool", Required: "optional", Desc: "Bold the header row written from column names (default true)", Default: "true"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
 	"+workbook-create": {
 		Risk: "write",
 		Flags: []flagDef{
@@ -922,6 +943,8 @@ var flagDefs = map[string]commandDef{
 			{Name: "folder-token", Kind: "own", Type: "string", Required: "optional", Desc: "Target folder token; placed at the drive root when omitted"},
 			{Name: "headers", Kind: "own", Type: "string", Required: "optional", Desc: "Header row as a JSON array: `[\"Col A\",\"Col B\"]`", Input: []string{"file", "stdin"}},
 			{Name: "values", Kind: "own", Type: "string", Required: "optional", Desc: "Initial data as a 2D JSON array: `[[\"alice\",95]]`", Input: []string{"file", "stdin"}},
+			{Name: "sheets", Kind: "own", Type: "string", Required: "optional", Desc: "Typed table payload as JSON (same shape as `+table-put`): a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool. Mutually exclusive with --headers/--values. Creates the workbook, then writes typed type-faithful data (dates land as real dates, numbers keep precision).", Input: []string{"file", "stdin"}},
+			{Name: "header-style", Kind: "own", Type: "bool", Required: "optional", Desc: "Bold the typed header row (only with --sheets; default true)", Default: "true"},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},

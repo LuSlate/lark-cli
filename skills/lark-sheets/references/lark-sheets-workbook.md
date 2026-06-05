@@ -139,6 +139,8 @@ _系统：`--dry-run`_
 | `--folder-token` | string | optional | 目标文件夹 token；省略时放在云空间根目录 |
 | `--headers` | string + File + Stdin（简单 JSON） | optional | 表头行 JSON 数组：`["列A","列B"]` |
 | `--values` | string + File + Stdin（简单 JSON） | optional | 初始数据 JSON 二维数组：`[["alice",95]]` |
+| `--sheets` | string + File + Stdin（复合 JSON） | optional | 建表后写入的 typed 表格协议 JSON（同 +table-put）：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool。与 --headers/--values 互斥；新表默认子表复用为第一个子表，日期/数字类型保真。 |
+| `--header-style` | bool | optional | 把 typed 表头行加粗（仅 --sheets 时生效，默认 true） |
 
 ### `+workbook-export`
 
@@ -150,6 +152,23 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 | `--sheet-id` | string | optional | 仅 csv 模式必填：指定要导出哪张 sheet 为 CSV。这是 `+workbook-export` 专有 flag，与公共四件套的 sheet 定位无关（本 shortcut 不接受公共 sheet 定位） |
 | `--output-path` | string | optional | 本地保存路径；省略时只触发导出不下载 |
 
+## Schemas
+
+> 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
+
+### `+workbook-create` `--sheets`
+
+_一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入_
+
+**数组项**（类型 object）：
+- `name` (string) — 目标子表名
+- `start_cell` (string?) — 写入起点单元格（A1 记法，如 "B2"），默认 "A1"
+- `mode` (enum?) — overwrite（默认）：从 start_cell 起写「表头 + 数据」块；append：把数据追加到子表已有数据下方（默认不重复表头） [overwrite / append]
+- `header` (boolean?) — 是否写一行列名表头
+- `allow_overwrite` (boolean?) — 为 false 时，若写入会落在非空单元格则拒写以保护原数据（返回 partial_success）
+- `columns` (array<object>) — 列定义，顺序与 rows 中每行的取值一一对应 each: { name: string, type: enum, format?: string }
+- `rows` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 columns 数
+
 ## Examples
 
 公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`（XOR）。`+workbook-info` 只用前两者；`+sheet-*` 系列对单个工作表操作，需 `--sheet-id` 或 `--sheet-name`。
@@ -157,6 +176,29 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 ### `+workbook-info`
 
 输出契约：返回 `sheets[]`，每个含 `sheet_id` / `title`（工作表显示名；旧 payload 用 `sheet_name`，读取时优先取 `title`、缺失再回退 `sheet_name`）/ `row_count` / `column_count` / `index` / `is_hidden`，以及计数字段 `merged_cells_count` / `chart_count` / `pivot_table_count` / `float_image_count`（无 `frozen_*` 字段，冻结信息请用 `+sheet-info` 读取）。是操作飞书表格的第一步——任何后续 sheet 级动作都需要先拿这里的 sheet_id。
+
+### `+workbook-create`
+
+新建电子表格，可选预填数据。两种数据入口**互斥**，按需二选一：
+
+```bash
+# 1) untyped：--headers + --values（纯值；类型由飞书自动识别，日期会落成文本）
+lark-cli sheets +workbook-create --title "销售" \
+  --headers '["门店","销售额"]' --values '[["北京",259874]]'
+
+# 2) typed：--sheets（一步建表 + 类型保真）。date 列落成真日期（可排序/透视）、
+#    number 不丢精度、string 列保前导零（如订单号 00123）；多子表一次建。
+lark-cli sheets +workbook-create --title "交易" --sheets '{
+  "sheets":[
+    {"name":"明细","columns":[
+      {"name":"日期","type":"date"},
+      {"name":"金额","type":"number","format":"#,##0.00"},
+      {"name":"单号","type":"string"}
+    ],"rows":[["2024-01-15",1234.5,"00123"]]}
+  ]}'
+```
+
+`--sheets` 协议与 `+table-put` 完全同构（字段含义见 lark-sheets-write-cells 的 `+table-put`，大 payload 走 stdin / `@file`）。关键差异：**新建工作簿的默认子表会被复用为第一个子表**（重命名后承载数据），不会残留空 `Sheet1`；其余子表按需新建。它把 `+table-put` 单独做不到的"建表 + typed 写入"合到一条命令，是「pandas 算完直接落地一张带真日期的新表」的首选。回读校验用 `+table-get`（与 `--sheets` 同构、可 round-trip）。
 
 ### `+sheet-create`
 
@@ -214,6 +256,6 @@ lark-cli sheets +sheet-hide-gridline --url "..." --sheet-id "$SID"
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`+sheet-create` 校验 `--title` 非空、`--row-count` ≤ 50000、`--col-count` ≤ 200；`+sheet-delete` 必须 `--yes` 或 `--dry-run`。
+- `Validate`：XOR 公共四件套；`+sheet-create` 校验 `--title` 非空、`--row-count` ≤ 50000、`--col-count` ≤ 200；`+sheet-delete` 必须 `--yes` 或 `--dry-run`；`+workbook-create` 的 `--sheets` 与 `--headers`/`--values` **互斥**，给了 `--sheets` 则按 typed 协议校验 payload（其余约束同 `+table-put`）。
 - `DryRun`：`+sheet-*` 写操作输出"将要 PATCH 的 sheet metadata"；`--sheet-name` 在 dry-run 输出里生成为 `<resolve:Sheet1>` 占位符，不实际解析为 sheet-id。
 - `Execute`：写操作不自动回读；如需确认目标 sheet 的新状态，自行调用 `+workbook-info`。

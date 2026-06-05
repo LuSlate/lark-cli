@@ -58,6 +58,7 @@ func shortcutList() []common.Shortcut {
 		CellsGet,
 		CsvGet,
 		DropdownGet,
+		TableGet,
 
 		// lark_sheet_search_replace
 		CellsSearch,
@@ -69,6 +70,7 @@ func shortcutList() []common.Shortcut {
 		CellsSetImage,
 		CsvPut,
 		DropdownSet,
+		TablePut,
 
 		// lark_sheet_range_operations
 		CellsClear,

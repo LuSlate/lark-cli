@@ -533,6 +533,25 @@
         ]
       },
       {
+        "name": "sheets",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Typed table payload as JSON (same shape as `+table-put`): a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool. Mutually exclusive with --headers/--values. Creates the workbook, then writes typed type-faithful data (dates land as real dates, numbers keep precision).",
+        "input": [
+          "file",
+          "stdin"
+        ]
+      },
+      {
+        "name": "header-style",
+        "kind": "own",
+        "type": "bool",
+        "required": "optional",
+        "desc": "Bold the typed header row (only with --sheets; default true)",
+        "default": "true"
+      },
+      {
         "name": "dry-run",
         "kind": "system",
         "type": "bool",
@@ -1292,19 +1311,65 @@
         "desc": "Skip hidden rows and columns; default `false`"
       },
       {
-        "name": "rows-json",
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": "Print the request path and parameters without executing"
+      }
+    ]
+  },
+  "+table-get": {
+    "risk": "read",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "sheet-id",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Read only this sheet (by id); omit to read all sheets"
+      },
+      {
+        "name": "sheet-name",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Read only this sheet (by name); omit to read all sheets"
+      },
+      {
+        "name": "range",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "A1 range to read; omit to read each sheet current region"
+      },
+      {
+        "name": "no-header",
         "kind": "own",
         "type": "bool",
         "required": "optional",
-        "desc": "Return structured rows ({row_number, values:{col→cell}}) instead of CSV text; default false",
-        "default": "false"
+        "desc": "Treat the first row as data instead of a header (columns get positional names col1, col2, ...)"
       },
       {
         "name": "dry-run",
         "kind": "system",
         "type": "bool",
         "required": "optional",
-        "desc": "Print the request path and parameters without executing"
+        "desc": ""
       }
     ]
   },
@@ -1950,6 +2015,51 @@
         "required": "optional",
         "desc": "alias for --start-cell (parity with +csv-get / +cells-set, which locate with --range); a range like A1:H17 collapses to its top-left cell",
         "hidden": true
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
+  "+table-put": {
+    "risk": "write",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL to write into (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token to write into (XOR with `--url`)"
+      },
+      {
+        "name": "sheets",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Typed table payload as JSON: a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool",
+        "input": [
+          "file",
+          "stdin"
+        ]
+      },
+      {
+        "name": "header-style",
+        "kind": "own",
+        "type": "bool",
+        "required": "optional",
+        "desc": "Bold the header row written from column names (default true)",
+        "default": "true"
       },
       {
         "name": "dry-run",

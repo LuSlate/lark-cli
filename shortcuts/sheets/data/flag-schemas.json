@@ -1787,11 +1787,7 @@
               "data"
             ]
           }
-        },
-        "required": [
-          "position",
-          "size"
-        ]
+        }
       }
     },
     "+chart-update": {
@@ -2826,11 +2822,7 @@
               "data"
             ]
           }
-        },
-        "required": [
-          "position",
-          "size"
-        ]
+        }
       }
     },
     "+cond-format-create": {
@@ -6243,6 +6235,190 @@
                   "required": [
                     "range"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "+table-put": {
+      "sheets": {
+        "type": "array",
+        "minItems": 1,
+        "description": "一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入。可由 pandas DataFrame 经薄 helper 生成（NaN→null、Timestamp→ISO、numpy 标量→原生）。",
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "columns",
+            "rows"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "目标子表名。按名匹配已有子表；不存在则新建该子表。同一次调用内子表名不可重复。"
+            },
+            "start_cell": {
+              "type": "string",
+              "default": "A1",
+              "description": "写入起点单元格（A1 记法，如 \"B2\"），默认 \"A1\"。mode=append 时忽略其行号、仅沿用其列。"
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "overwrite",
+                "append"
+              ],
+              "default": "overwrite",
+              "description": "overwrite（默认）：从 start_cell 起写「表头 + 数据」块；append：把数据追加到子表已有数据下方（默认不重复表头）。"
+            },
+            "header": {
+              "type": "boolean",
+              "description": "是否写一行列名表头。省略时按 mode 取默认：overwrite→true、append→false（避免在已有表头下重复）；显式给值可覆盖。"
+            },
+            "allow_overwrite": {
+              "type": "boolean",
+              "default": true,
+              "description": "为 false 时，若写入会落在非空单元格则拒写以保护原数据（返回 partial_success）。默认 true。"
+            },
+            "columns": {
+              "type": "array",
+              "minItems": 1,
+              "description": "列定义，顺序与 rows 中每行的取值一一对应。",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "列名（写入表头行的文本）。"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "date",
+                      "bool"
+                    ],
+                    "description": "列的声明类型，显式声明、不由 CLI 猜测（避免邮编 / 订单号 / 手机号等「像数字的文本」被误判为数字）。string 列由 +table-put 自动套文本格式（number_format `@`），数字样字符串（含前导零，如「00123」）读写两侧都保真——+table-get 读回时仍判为 string、不会塌缩成数字。date 列取 ISO yyyy-mm-dd 字符串，CLI 转成 Excel 序列号 + 日期 number_format（真日期，可排序 / 透视 / 筛选）。"
+                  },
+                  "format": {
+                    "type": "string",
+                    "description": "可选的单元格 number_format，如 \"yyyy-mm-dd\" / \"0.00%\" / \"#,##0.00\"。percent 列的数值尺度由调用方负责（0.0469 配 \"0.00%\"，helper 不自动乘 100）。"
+                  }
+                }
+              }
+            },
+            "rows": {
+              "type": "array",
+              "description": "数据行；每行是一个数组，长度必须等于 columns 数。元素按对应列的类型取值，null 表示空单元格。",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "单元格值，按所在列的 type 取值（string→文本 / number→数值 / date→ISO yyyy-mm-dd 文本 / bool→布尔）；null 表示空单元格。具体类型由该列在 columns 里声明的 type 决定，故此处仅约束为标量或 null。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "+workbook-create": {
+      "sheets": {
+        "type": "array",
+        "minItems": 1,
+        "description": "一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入。可由 pandas DataFrame 经薄 helper 生成（NaN→null、Timestamp→ISO、numpy 标量→原生）。",
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "columns",
+            "rows"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "目标子表名。按名匹配已有子表；不存在则新建该子表。同一次调用内子表名不可重复。"
+            },
+            "start_cell": {
+              "type": "string",
+              "default": "A1",
+              "description": "写入起点单元格（A1 记法，如 \"B2\"），默认 \"A1\"。mode=append 时忽略其行号、仅沿用其列。"
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "overwrite",
+                "append"
+              ],
+              "default": "overwrite",
+              "description": "overwrite（默认）：从 start_cell 起写「表头 + 数据」块；append：把数据追加到子表已有数据下方（默认不重复表头）。"
+            },
+            "header": {
+              "type": "boolean",
+              "description": "是否写一行列名表头。省略时按 mode 取默认：overwrite→true、append→false（避免在已有表头下重复）；显式给值可覆盖。"
+            },
+            "allow_overwrite": {
+              "type": "boolean",
+              "default": true,
+              "description": "为 false 时，若写入会落在非空单元格则拒写以保护原数据（返回 partial_success）。默认 true。"
+            },
+            "columns": {
+              "type": "array",
+              "minItems": 1,
+              "description": "列定义，顺序与 rows 中每行的取值一一对应。",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "列名（写入表头行的文本）。"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "date",
+                      "bool"
+                    ],
+                    "description": "列的声明类型，显式声明、不由 CLI 猜测（避免邮编 / 订单号 / 手机号等「像数字的文本」被误判为数字）。string 列由 +table-put 自动套文本格式（number_format `@`），数字样字符串（含前导零，如「00123」）读写两侧都保真——+table-get 读回时仍判为 string、不会塌缩成数字。date 列取 ISO yyyy-mm-dd 字符串，CLI 转成 Excel 序列号 + 日期 number_format（真日期，可排序 / 透视 / 筛选）。"
+                  },
+                  "format": {
+                    "type": "string",
+                    "description": "可选的单元格 number_format，如 \"yyyy-mm-dd\" / \"0.00%\" / \"#,##0.00\"。percent 列的数值尺度由调用方负责（0.0469 配 \"0.00%\"，helper 不自动乘 100）。"
+                  }
+                }
+              }
+            },
+            "rows": {
+              "type": "array",
+              "description": "数据行；每行是一个数组，长度必须等于 columns 数。元素按对应列的类型取值，null 表示空单元格。",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "单元格值，按所在列的 type 取值（string→文本 / number→数值 / date→ISO yyyy-mm-dd 文本 / bool→布尔）；null 表示空单元格。具体类型由该列在 columns 里声明的 type 决定，故此处仅约束为标量或 null。"
                 }
               }
             }

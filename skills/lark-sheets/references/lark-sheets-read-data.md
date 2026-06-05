@@ -15,17 +15,18 @@
 
 ## 使用场景
 
-读取。从飞书表格中读取单元格数据。本 reference 覆盖 3 个 shortcut，按读取目的选择：
+读取。从飞书表格中读取单元格数据。本 reference 覆盖 4 个 shortcut，按读取目的选择：
 
 | 读取目的 | 用这个 shortcut | 数据去向 | 说明 |
 |---------|----------------|---------|------|
-| 快速查看纯值数据、批量处理 | `+csv-get` | 对话上下文 | 返回 CSV 文本（加 `--rows-json` 改为结构化 rows `{row_number, values:{列字母→值}}`）；大表请按 `--range` 行窗口分批读（截断时看 `has_more`） |
+| 快速查看纯值数据、批量处理 | `+csv-get` | 对话上下文 | 返回 CSV 文本（每行带 `[row=N]` 前缀）；大表请按 `--range` 行窗口分批读（截断时看 `has_more`） |
+| 按列类型结构化读出（喂 DataFrame / round-trip 回 `+table-put`） | `+table-get` | 对话上下文 | 返回 typed 协议（`columns:[{name,type}]` + `rows`），列类型由 `number_format` 推断、混合列无损降 `string`；类型保真往返 |
 | 查看公式、样式、批注、数据验证 | `+cells-get` | 对话上下文 | 返回单元格完整信息，token 开销较大 |
 | 查看某区域的下拉框（数据验证）选项 | `+dropdown-get` | 对话上下文 | 返回该 A1 范围已配置的下拉列表选项 |
 
 **选择原则**：
 - 只看值或做数据处理 → `+csv-get`；大表分批读取，避免一次拉全表撑爆上下文
-- 要结构化、按 `row_number` / 列字母定位的输出 → `+csv-get --rows-json`（默认 CSV 串更省 token，超大表批量仍用默认）
+- 要按列类型结构化读出（喂 DataFrame / round-trip 回 `+table-put`）→ `+table-get`
 - 需要公式/样式/批注 → `+cells-get`
 - 只想知道某区域下拉框有哪些选项 → `+dropdown-get`
 
@@ -83,6 +84,7 @@
 | `+cells-get` | read | 单元格 |
 | `+dropdown-get` | read | 对象 |
 | `+csv-get` | read | 单元格 |
+| `+table-get` | read | 单元格 |
 
 ## Flags
 
@@ -115,7 +117,17 @@ _公共四件套 · 系统：`--dry-run`_
 | `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
-| `--rows-json` | bool | optional | 返回结构化 rows（`{row_number, values:{列字母→值}}`）而非 CSV 文本，默认 `false` |
+
+### `+table-get`
+
+_公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
+
+| Flag | Type | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `--sheet-id` | string | optional | 只读该子表（按 id）；省略则读所有子表 |
+| `--sheet-name` | string | optional | 只读该子表（按名）；省略则读所有子表 |
+| `--range` | string | optional | 读取的 A1 范围；省略则读每个子表的当前数据区 |
+| `--no-header` | bool | optional | 把第一行当数据而非表头（列名取 col1/col2 …） |
 
 ## Examples
 
@@ -140,17 +152,7 @@ lark-cli sheets +csv-get --spreadsheet-token shtXXX --sheet-name "销售明细" 
 - `current_region` — 自动扩展到非空连续区域的 A1 范围。它是**真实数据边界**，**优先于 `+workbook-info` 的 `row_count`**（`row_count` 是网格物理行数，常是 200 / 1000 等默认值、远大于实际数据；按它盲读会拉回大片空行）
 - `has_more` — 是否截断；截断后续读用 `--range` 接着读
 
-**加 `--rows-json`：返回结构化 rows（而非 CSV 字符串）**
-
-```bash
-lark-cli sheets +csv-get --url "https://example.feishu.cn/sheets/shtXXX" --sheet-name "Sheet1" --range "A1:G20" --rows-json
-```
-
-`--rows-json` 下的输出契约（替换 `annotated_csv` / `col_indices` / `row_indices`）：
-
-- `rows` — 数组，每元素 `{row_number, values}`。`row_number` 是真实表格行号（整数，下游需要行号的操作直接取它）；`values` 按**列字母** key（如 `values["D"]`，绝对列字母）。**所有逻辑行都在 `rows` 里**。引号内换行已解析进单元格值，无需自己按 RFC-4180 拆行。
-- `data_not_fully_read` — **仅当没读全时出现**：`{read_through_row, data_extends_through_row, unread_rows, reread_range}`。出现即表示真实数据超出本次读取范围；批量写入前必须按 `reread_range` 重读全区，否则漏行。
-- 其余字段（`current_region` / `actual_range` / `has_more`）同上。
+> 要按列类型结构化读出（喂 DataFrame、或 round-trip 回 `+table-put`）用 `+table-get`（见下）；`+csv-get` 给的是带 `[row=N]` 前缀的纯值快照，下游需要行号/列坐标时直接从前缀与 `col_indices` 取。
 
 ### `+cells-get`
 
@@ -163,6 +165,27 @@ lark-cli sheets +cells-get --url "https://example.feishu.cn/sheets/shtXXX" --she
 ```
 
 > ⚠️ 调用方在 `cells[i][j]` 中**不能**用下标推真实行列：必须读 `ranges[n].row_indices[i]` / `ranges[n].col_indices[j]`。
+
+### `+table-get`（飞书 → DataFrame，类型保真读出）
+
+`+table-put`（写入侧，见 write-cells reference）的镜像：把表格读回与 `--sheets` 同构的 typed 协议（`sheets[]` + `columns:[{name,type}]` + `rows`），可直接喂回 `+table-put` 或转 DataFrame。列 `type` 从每列 `number_format` 推断（日期格式→`date`、数值→`number`），`date` 列的序列号转回 ISO `yyyy-mm-dd`——日期、数字往返不丢类型。**列类型只在该列所有非空值一致时才定（`number` / `date` / `bool`）；一列混了类型（如数字列混入「暂无」、日期列混入裸数字）会降为 `string`，让 `columns[].type` 与 `rows` 里每个值自洽——能 round-trip 回 `+table-put`、不让 pandas 崩。降级是无损的（脏值原样保留为文本）；若要把零星脏值转成数值列，交给调用方在 pandas 侧做（`to_numeric(errors='coerce')`），那里原始值仍在、可追溯。** 底层复用 `get_cell_ranges` / `get_range_as_csv`。默认读所有子表、第一行当表头（`--no-header` 把首行当数据、列名取 `col1` / `col2` …）。
+
+```bash
+# 默认读所有子表 → sheets[]（与 +table-put 的 --sheets 同构，可喂回或转 DataFrame）
+lark-cli sheets +table-get --url "<表URL>"
+# 可选：--sheet-name / --sheet-id 限定只读某一个子表（不给则读全部）
+lark-cli sheets +table-get --url "<表URL>" --sheet-name "销售"
+```
+
+`+table-get` 输出 → DataFrame（按读回的 `type` 还原 dtype）：
+
+```python
+sheet = out["data"]["sheets"][0]
+df = pd.DataFrame(sheet["rows"], columns=[c["name"] for c in sheet["columns"]])
+for c in sheet["columns"]:
+    if c["type"] == "date":     df[c["name"]] = pd.to_datetime(df[c["name"]])
+    elif c["type"] == "number": df[c["name"]] = pd.to_numeric(df[c["name"]])
+```
 
 ### Validate / DryRun / Execute 约束
 

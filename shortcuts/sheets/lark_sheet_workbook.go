@@ -565,7 +565,7 @@ var SheetHideGridline = newSheetVisibilityShortcut(
 var WorkbookCreate = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+workbook-create",
-	Description: "Create a new spreadsheet (optionally pre-filled with --headers and --values).",
+	Description: "Create a new spreadsheet, optionally pre-filled with untyped --headers/--values or typed --sheets (type-faithful one-step create + write).",
 	Risk:        "write",
 	Scopes:      []string{"sheets:spreadsheet:create", "sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
@@ -574,6 +574,20 @@ var WorkbookCreate = common.Shortcut{
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		if strings.TrimSpace(runtime.Str("title")) == "" {
 			return common.FlagErrorf("--title is required")
+		}
+		// --sheets (typed) is an alternative, mutually exclusive data entry to the
+		// untyped --headers/--values. Gated on Changed (not just non-empty): an
+		// explicitly-given but empty --sheets (e.g. empty stdin / file) is an
+		// error, not a silent fall-through to creating an empty workbook.
+		if runtime.Changed("sheets") {
+			if strings.TrimSpace(runtime.Str("sheets")) == "" {
+				return common.FlagErrorf("--sheets was given but resolved to empty (empty stdin/file?); pass a typed payload, or drop --sheets to create an empty workbook")
+			}
+			if runtime.Str("headers") != "" || runtime.Str("values") != "" {
+				return common.FlagErrorf("--sheets is mutually exclusive with --headers/--values")
+			}
+			_, err := parseTablePutPayload(runtime)
+			return err
 		}
 		if runtime.Str("headers") != "" {
 			v, err := parseJSONFlag(runtime, "headers")
@@ -610,6 +624,29 @@ var WorkbookCreate = common.Shortcut{
 			POST("/open-apis/sheets/v3/spreadsheets").
 			Desc("create spreadsheet").
 			Body(body)
+		// Typed --sheets path: preview the create POST, then one set_cell_range
+		// write per sheet (the first adopts the new workbook's default sheet).
+		// Mirrors +table-put's dry-run, against a placeholder token.
+		if runtime.Changed("sheets") {
+			if payload, err := parseTablePutPayload(runtime); err == nil {
+				headerStyle := runtime.Bool("header-style")
+				for i := range payload.Sheets {
+					s := &payload.Sheets[i]
+					matrix, _ := buildSheetMatrix(s, headerStyle, headerOn(s))
+					input := map[string]interface{}{
+						"excel_id":   "<new-token>",
+						"sheet_name": s.Name,
+						"range":      tablePutFullRange(s, len(matrix)),
+						"cells":      matrix,
+					}
+					wireBody, _ := buildToolBody("set_cell_range", input)
+					dry.POST("/open-apis/sheet_ai/v2/spreadsheets/<new-token>/tools/invoke_write").
+						Desc(fmt.Sprintf("write typed sheet %q (%d data rows × %d cols) via set_cell_range", s.Name, len(s.Rows), len(s.Columns))).
+						Body(wireBody)
+				}
+			}
+			return dry
+		}
 		if fill, _ := buildInitialFillInput(runtime); fill != nil {
 			fill["excel_id"] = "<new-token>"
 			fill["sheet_id"] = "<first-sheet-id>" // resolved from the workbook at execute time
@@ -640,6 +677,30 @@ var WorkbookCreate = common.Shortcut{
 
 		result := map[string]interface{}{"spreadsheet": ss}
 
+		// Typed --sheets path: write type-faithful data into the brand-new
+		// workbook, adopting its default sheet as the first payload sheet so no
+		// empty "Sheet1" is left behind. Mutually exclusive with --headers/--values
+		// (enforced in Validate).
+		if runtime.Changed("sheets") {
+			payload, err := parseTablePutPayload(runtime)
+			if err != nil {
+				return err // already validated; defensive
+			}
+			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
+			if err != nil {
+				return workbookCreatedButFillFailed(token, ss,
+					fmt.Sprintf("resolving its default sheet for the typed write failed: %v", err))
+			}
+			written, err := writeTypedSheets(ctx, runtime, token, payload, runtime.Bool("header-style"), firstSheetID)
+			if err != nil {
+				return workbookCreatedButFillFailed(token, ss,
+					fmt.Sprintf("typed write failed: %v", err))
+			}
+			result["sheets"] = written
+			runtime.Out(result, nil)
+			return nil
+		}
+
 		// --headers / --values are optional. buildInitialFillInput returns
 		// (nil, nil) when both are absent or empty, in which case we skip the
 		// fill entirely rather than dereferencing a nil map.
@@ -669,6 +730,7 @@ var WorkbookCreate = common.Shortcut{
 	},
 	Tips: []string{
 		"--headers and --values are optional follow-up writes. They use the same set_cell_range tool as +cells-set; partial failure leaves the spreadsheet created but empty.",
+		"--sheets writes typed, type-faithful data (dates → real dates, numbers keep precision) in one step — the create + typed write that +table-put can't do on its own. Mutually exclusive with --headers/--values; the new workbook's default sheet becomes the first typed sheet (no empty Sheet1 left behind).",
 	},
 }
 

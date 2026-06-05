@@ -147,9 +147,9 @@ _公共四件套 · 系统：`--yes`、`--dry-run`_
 _创建/更新的图表属性_
 
 **顶层字段**：
-- `position` (object) — 必填 { row: number, col: string }
+- `position` (object?) — 必填 { row: number, col: string }
 - `offset` (object?) — 可选 { row_offset?: number, col_offset?: number }
-- `size` (object) — 必填 { width: number, height: number }
+- `size` (object?) — 必填 { width: number, height: number }
 - `snapshot` (object?) — 图表快照配置 { title?: object, subTitle?: object, style?: object, legend?: oneOf, plotArea: object, …共 6 项 }
 
 ## Examples

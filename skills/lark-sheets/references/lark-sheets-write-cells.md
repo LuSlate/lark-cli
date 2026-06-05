@@ -44,7 +44,30 @@
 
 ## 使用场景
 
-写入。为一块单元格区域设置值、公式、批注/备注和/或格式。也支持通过 `rich_text` 中 `type: "embed-image"` 在单元格内嵌入图片（单元格图片）。关键：数组维度必须严格匹配——`cells` 二维数组必须与 `range` 的行列维度完全一致，range 是闭区间，否则会触发 `InvalidCellRangeError`。计算示例：区域 `A1:D3` = 3 行 × 4 列 = `[[r1c1,r1c2,r1c3,r1c4],[r2c1,r2c2,r2c3,r2c4],[r3c1,r3c2,r3c3,r3c4]]`；区域 `A41:N48` = 8 行 × 14 列 = 8 个数组且每个数组 14 个单元；单个单元格 `A1` = `[[cell]]`；单列区域 `B5:B7` = `[[cell1],[cell2],[cell3]]`。空单元请使用 `{}`。**如果填写的区域存在大量重复内容，务必优先使用 `--copy-to-range` 字段复制，可大幅减少 `cells` 长度。**
+写入。向飞书表格的单元格区域写入值、公式、样式、批注、图片或下拉，也可批量写入 CSV / DataFrame。本 reference 覆盖 6 个 shortcut，按数据来源 + 内容形态选：
+
+| 场景 | 用这个 shortcut | 原因 |
+|------|----------------|------|
+| 模型手里已经有 CSV 文本（小规模手动构造、从 `+csv-get` 取到后简单加工） | `+csv-put` | 直接传 CSV 文本 + `--start-cell`，不用自己拼二维 cells 数组；必要时自动扩容行列 |
+| 带类型的结构化数据（DataFrame）→ 飞书，要类型保真 | `+table-put` | 列显式声明 `type`：date 落真日期、**金额 / 百分比 / 计数等数值列保精度且带 `number_format`（可排序 / 求和 / 入图表）**、string 保前导零，多 sheet 一次写。**只要列有数值语义就走这里**，不要在本地把数字拼成带 `$` / `%` 的字符串再走 `+csv-put` |
+| 写入含公式、样式、批注、图片、数据校验等任意富写入 | `+cells-set` | 唯一支持完整字段的 shortcut |
+| 只改已有 cell 的样式，不动 value/formula | `+cells-set-style` | 拍平 10 个样式字段为独立 flag；不触发不必要的值写入 |
+| 单 cell 嵌入图片 | `+cells-set-image` | 比 `+cells-set` 参数更简短 |
+| 大量纯值 + 需要表头样式/边框 | 先用 `+csv-put` 写值，再用 `+cells-set-style` 补样式 | 分工配合，入参最短 |
+
+**优先级**：常规纯值写入优先 `+csv-put`（最短入参，直接传 CSV 文本）；含公式/样式/批注/图片才用 `+cells-set`。⚠️ 这里"纯值"特指**已是文本、无需保留数值语义**的内容；只要列里是金额 / 百分比 / 日期 / 计数等有数值语义的数据，应优先 `+table-put`（声明 `number` / `date` 类型 + `number_format`），而不是 `+csv-put`。
+
+⚠️ `+csv-put` 只写纯值，**不会**携带公式/样式/批注/图片；公式字符串以 `=` 开头会被当作字面量文本落地。如果数据里需要公式或样式，**必须**用 `+cells-set`（或"写值 + 补样式"两步法）。
+
+⚠️ **别把本该是数值的列格式化成字符串用 `+csv-put` 写入**（高频反模式）：金额 / 百分比 / 市值 / 计数等列，若在本地拼成带 `$` / `%` / 千分位的字符串（如 `"$1,234.50"` / `"+30.5%"`）再 `+csv-put` 灌进去，单元格会变成**文本**——丢失排序 / 求和 / 图表 / 透视能力，且与 `number` 列混排时无法参与计算。正解是 `+table-put` 声明该列 `type:"number"`（百分比存小数，如 `0.305`）+ `format`（如 `"$#,##0.00"` / `"0.0%"` / `"#,##0"`），**显示效果完全相同、数值无损**。判断信号：**当你准备把一个数字 format 成字符串再写时，几乎总该用 `+table-put` 而非 `+csv-put`**。
+
+⚠️ 大数据回写走"`+csv-get` 按 `--range` 行窗口分批读到本地 + 本地脚本处理 + `+csv-put` 分批回写"。
+
+## `+cells-set` 写入要点（高频模式 / 公式 / 样式）
+
+> 以下是用 `+cells-set`（及 `+cells-set-style`）做富写入时的高频模式与铁律；选哪个 shortcut 见上方「使用场景」。
+
+`+cells-set` 为一块区域设置值 / 公式 / 批注 / 样式，也支持 `rich_text` 的 `type: "embed-image"` 嵌入单元格图片。**关键：`cells` 二维数组的行列维度必须与 `range`（闭区间）严格一致，否则触发 `InvalidCellRangeError`**——维度计算示例见文末 `## Schemas` 的 `--cells`。
 
 > **单元格图片 vs 浮动图片**：
 > - **单元格图片**（本工具）：图片嵌入在单元格内部，属于单元格内容，随单元格移动。通过 `rich_text` 中 `type: "embed-image"` 写入。
@@ -208,24 +231,6 @@ lark-cli sheets +dropdown-set \
 
 `+dropdown-update`（多 range 批量更新）的所有 flag 语义与 `+dropdown-set` 完全一致；只是目标 `--ranges` 由单值变成 JSON 数组（每项带 sheet 前缀），同一份选项 + 配色应用到所有 range。
 
-## 工具选择
-
-本 skill 提供以下 CLI shortcut，按数据来源 + 内容形态选：
-
-| 场景 | 用这个 shortcut | 原因 |
-|------|----------------|------|
-| 模型手里已经有 CSV 文本（小规模手动构造、从 `+csv-get` 取到后简单加工） | `+csv-put` | 直接传 CSV 文本 + `--start-cell`，不用自己拼二维 cells 数组；必要时自动扩容行列 |
-| 写入含公式、样式、批注、图片、数据校验等任意富写入 | `+cells-set` | 唯一支持完整字段的 shortcut |
-| 只改已有 cell 的样式，不动 value/formula | `+cells-set-style` | 拍平 10 个样式字段为独立 flag；不触发不必要的值写入 |
-| 单 cell 嵌入图片 | `+cells-set-image` | 比 `+cells-set` 参数更简短 |
-| 大量纯值 + 需要表头样式/边框 | 先用 `+csv-put` 写值，再用 `+cells-set-style` 补样式 | 分工配合，入参最短 |
-
-**优先级**：常规纯值写入优先 `+csv-put`（最短入参，直接传 CSV 文本）；含公式/样式/批注/图片才用 `+cells-set`。
-
-⚠️ `+csv-put` 只写纯值，**不会**携带公式/样式/批注/图片；公式字符串以 `=` 开头会被当作字面量文本落地。如果数据里需要公式或样式，**必须**用 `+cells-set`（或"写值 + 补样式"两步法）。
-
-⚠️ 大数据回写走"`+csv-get` 按 `--range` 行窗口分批读到本地 + 本地脚本处理 + `+csv-put` 分批回写"。
-
 ## Shortcuts
 
 | Shortcut | Risk | 分组 |
@@ -235,6 +240,7 @@ lark-cli sheets +dropdown-set \
 | `+cells-set-image` | write | 单元格 |
 | `+dropdown-set` | write | 对象 |
 | `+csv-put` | write | 单元格 |
+| `+table-put` | write | 单元格 |
 
 ## Flags
 
@@ -303,6 +309,15 @@ _公共四件套 · 系统：`--dry-run`_
 | `--allow-overwrite` | bool | optional | 允许覆盖（默认 true）；设为 false 时若目标非空报错 |
 | `--range` | string | optional | --start-cell 的别名（与 +csv-get / +cells-set 一致，用 --range 定位）；传区间（如 A1:H17）时自动取其左上角单元格（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 
+### `+table-put`
+
+_公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
+
+| Flag | Type | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `--sheets` | string + File + Stdin（复合 JSON） | required | typed 表格协议 JSON：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool |
+| `--header-style` | bool | optional | 把列名表头行加粗（默认 true） |
+
 ## Schemas
 
 > 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
@@ -337,6 +352,19 @@ _列表选项_
 
 **数组项**（类型 string）：
 - 标量：string
+
+### `+table-put` `--sheets`
+
+_一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入_
+
+**数组项**（类型 object）：
+- `name` (string) — 目标子表名
+- `start_cell` (string?) — 写入起点单元格（A1 记法，如 "B2"），默认 "A1"
+- `mode` (enum?) — overwrite（默认）：从 start_cell 起写「表头 + 数据」块；append：把数据追加到子表已有数据下方（默认不重复表头） [overwrite / append]
+- `header` (boolean?) — 是否写一行列名表头
+- `allow_overwrite` (boolean?) — 为 false 时，若写入会落在非空单元格则拒写以保护原数据（返回 partial_success）
+- `columns` (array<object>) — 列定义，顺序与 rows 中每行的取值一一对应 each: { name: string, type: enum, format?: string }
+- `rows` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 columns 数
 
 ## Examples
 
@@ -429,6 +457,44 @@ lark-cli sheets +csv-put --spreadsheet-token shtXXX --sheet-id "$SID" \
 > - ⚠️ `--start-cell` / `--range` **只定左上角、不限制写入大小**：CSV 从锚点按自身行列数 auto-expand 铺开。给一个"小 range"**不会**截断数据——超出部分照写，且默认覆盖。这与 `+cells-set --range`（精确矩形、`--cells` 必须与 range 同维）语义相反，别把那套心智搬过来。
 > - dry-run 与成功响应都回显 `writes_range`（实际落区，如 `B2:D4`）：**写前先 `--dry-run` 看一眼落区**，确认不会盖到相邻数据。
 > - 要保护非空 cell：`--allow-overwrite=false`（落区内出现非空 cell 即报错）。
+
+### `+table-put`（DataFrame → 飞书，类型保真写入）
+
+把带类型的结构化数据（DataFrame）类型保真地写入**已有**表，底层复用 `set_cell_range`（同 `+cells-set`）。typed 协议：顶层 `sheets[]`，每 sheet 带 `columns:[{name,type,format?}]` + `rows`（二维数组，`null`=空单元格），列 `type` ∈ `string` / `number` / `date` / `bool`（**显式声明**，不让 CLI 猜，避免邮编 / 订单号等"像数字的文本"被误判）。`date` 列的 ISO `yyyy-mm-dd` 字符串会转成 Excel 序列号 + 日期 `number_format`（真日期，可排序 / 透视 / 筛选）。
+
+只写入**已有**表（`--url` / `--spreadsheet-token` 二选一必填），不新建工作簿——要新表先 `+workbook-create` 拿 token 再写。读回用镜像命令 `+table-get`（见 read-data reference），输出与 `--sheets` 同构、可 round-trip。
+
+```bash
+# sheet 按 name 匹配、缺则新建；多 DataFrame 经 stdin 一次写多 sheet
+python export.py | lark-cli sheets +table-put --url "<表URL>" --sheets -
+# 某 sheet 带 "mode":"append" 追加到已有数据末尾、默认不重复表头
+lark-cli sheets +table-put --spreadsheet-token "<token>" --sheets @payload.json
+```
+
+每个 sheet 还可带 `"allow_overwrite": false`（遇非空拒写、保护原数据）、`"header": false`（只写数据不写表头）。完整字段跑 `+table-put --print-schema --flag-name sheets`。
+
+**前提：此 helper 需 pandas。** 注意一台机器常装多个 Python，`python3` 未必指向装了 pandas 的那个——撞 `ModuleNotFoundError` 就换个解释器（如 `/usr/bin/python3`）再试。**不想依赖 pandas 也行**：typed 协议就是纯 JSON，直接手写 `columns` + `rows`（不经 helper）一样喂给 `--sheets -`。DataFrame → 协议 的薄 helper（一次清洗：`NaN→null`、`Timestamp→ISO`、`numpy 标量→原生`）：
+
+```python
+import pandas as pd, numpy as np
+def df_to_sheet(df, name, formats=None):
+    formats = formats or {}
+    def coltype(s):
+        if pd.api.types.is_datetime64_any_dtype(s): return "date"
+        if pd.api.types.is_bool_dtype(s):           return "bool"
+        if pd.api.types.is_numeric_dtype(s):        return "number"
+        return "string"
+    def cell(v):
+        if pd.isna(v):                  return None
+        if isinstance(v, pd.Timestamp): return v.date().isoformat()
+        if isinstance(v, np.generic):   return v.item()
+        return v
+    columns = [{"name": str(c), "type": coltype(df[c]),
+                **({"format": formats[c]} if c in formats else {})} for c in df.columns]
+    rows = [[cell(v) for v in r] for r in df.itertuples(index=False, name=None)]
+    return {"name": name, "columns": columns, "rows": rows}
+# payload = {"sheets": [df_to_sheet(df, "销售", {"日期": "yyyy-mm-dd"})]}；json.dump 经 stdin 喂给 +table-put --sheets -
+```
 
 ### Validate / DryRun / Execute 约束
 
