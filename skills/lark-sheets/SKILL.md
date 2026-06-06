@@ -40,7 +40,9 @@ metadata:
 | --- | --- | --- |
 | 读数据（纯值 / CSV） | `+csv-get`（范围用 `--range`） | — |
 | 读值 + 公式 / 样式 / 批注 | `+cells-get --include value,formula,style,comment,data_validation` | `--with-styles`、`--with-merges`、`--include-merged-cells` |
-| 写纯值（整块 CSV 平铺） | `+csv-put`（定位用 `--start-cell`，单个左上角锚点格；也接受 `--range` 别名，区间自动取左上角） | — |
+| 写纯文本值（整块 CSV 平铺，列里没有需保留的数值 / 日期语义） | `+csv-put`（定位用 `--start-cell`，单个左上角锚点格；也接受 `--range` 别名，区间自动取左上角） | — |
+| 写带类型的数据到**已有**表（列里有数字 / 金额 / 百分比 / 日期 / 计数，要可排序 / 求和 / 入图表 / 透视） | `+table-put`（列显式声明 `type` + `format`，类型保真；来源不限 DataFrame——Counter / dict / list 同理，详见 write-cells） | 在本地把数字拼成 `"$1,234"` / `"30.5%"` 字符串再 `+csv-put`（会落成文本、丢失计算能力） |
+| **新建**电子表格并写带类型的数据（类型保真需求同上，但目标表还不存在） | `+workbook-create --sheets`（协议与 `+table-put` 同构、一步建表 + typed 写入，无需先建空表再 `+table-put`；date / number 不丢，详见 workbook） | 用 `--headers` / `--values` 灌日期 / 数字（会落成文本、丢类型） |
 | 写值 / 公式 / 样式 | `+cells-set`（定位用 `--range`） | — |
 | 查找单元格 | `+cells-search`（关键字用 `--find`） | `+cells-find`、`+find`、`--query` |
 | 查找并替换 | `+cells-replace` | — |
@@ -52,6 +54,7 @@ metadata:
 | 调整列宽 / 行高 | `+cols-resize` / `+rows-resize`（行、列是两个独立命令） | `--dimension`（无此 flag） |
 | 分组汇总 / 透视 | `+pivot-create`（默认不传落点 flag → 自动新建子表，零覆盖） | 用 SUMIF / 本地脚本拼一张假透视表 |
 
+> ⚠️ **纯文本还是数值语义**：要写的列里有数字 / 金额 / 百分比 / 日期 / 计数 → `+table-put`（写入已有表；声明 `type` + `format`，保留排序 / 求和 / 图表 / 透视能力；**目标表还不存在就用 `+workbook-create --sheets`**，同 typed 协议、一步建表 + 写入，别先建空表再 `+table-put`）；只有纯文本才用 `+csv-put`。两者写完显示可以完全相同，但 `+csv-put` 落的是文本、不能参与计算——别把数值在本地拼成带 `$` / `%` 的字符串再走 `+csv-put`。
 > ⚠️ **定位 flag**：`+cells-get` / `+cells-set` / `+csv-get` 用 `--range`；`+csv-put` 规范用 `--start-cell`（单个左上角锚点格），也接受 `--range` 别名（区间自动取左上角），二者择一即可。
 > ⚠️ **读取附加信息**一律走 `+cells-get --include …`，**没有** `--with-styles` 这类 flag；**看合并单元格**用 `+sheet-info` 的 `merged_cells`，不要在 `+cells-get` 里找 merge flag。
 

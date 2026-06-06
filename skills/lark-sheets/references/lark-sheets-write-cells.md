@@ -49,7 +49,7 @@
 | 场景 | 用这个 shortcut | 原因 |
 |------|----------------|------|
 | 模型手里已经有 CSV 文本（小规模手动构造、从 `+csv-get` 取到后简单加工） | `+csv-put` | 直接传 CSV 文本 + `--start-cell`，不用自己拼二维 cells 数组；必要时自动扩容行列 |
-| 带类型的结构化数据（DataFrame）→ 飞书，要类型保真 | `+table-put` | 列显式声明 `type`：date 落真日期、**金额 / 百分比 / 计数等数值列保精度且带 `number_format`（可排序 / 求和 / 入图表）**、string 保前导零，多 sheet 一次写。**只要列有数值语义就走这里**，不要在本地把数字拼成带 `$` / `%` 的字符串再走 `+csv-put` |
+| 列里有数值语义的数据（数字 / 金额 / 百分比 / 日期 / 计数）→ 飞书，要类型保真（来源不限：DataFrame、Counter、dict、list 都算） | `+table-put` | 列显式声明 `type`：date 落真日期、**金额 / 百分比 / 计数等数值列保精度且带 `number_format`（可排序 / 求和 / 入图表）**、string 保前导零，多 sheet 一次写。**只要列有数值语义就走这里**，不要在本地把数字拼成带 `$` / `%` 的字符串再走 `+csv-put` |
 | 写入含公式、样式、批注、图片、数据校验等任意富写入 | `+cells-set` | 唯一支持完整字段的 shortcut |
 | 只改已有 cell 的样式，不动 value/formula | `+cells-set-style` | 拍平 10 个样式字段为独立 flag；不触发不必要的值写入 |
 | 单 cell 嵌入图片 | `+cells-set-image` | 比 `+cells-set` 参数更简短 |
@@ -462,7 +462,7 @@ lark-cli sheets +csv-put --spreadsheet-token shtXXX --sheet-id "$SID" \
 
 把带类型的结构化数据（DataFrame）类型保真地写入**已有**表，底层复用 `set_cell_range`（同 `+cells-set`）。typed 协议：顶层 `sheets[]`，每 sheet 带 `columns:[{name,type,format?}]` + `rows`（二维数组，`null`=空单元格），列 `type` ∈ `string` / `number` / `date` / `bool`（**显式声明**，不让 CLI 猜，避免邮编 / 订单号等"像数字的文本"被误判）。`date` 列的 ISO `yyyy-mm-dd` 字符串会转成 Excel 序列号 + 日期 `number_format`（真日期，可排序 / 透视 / 筛选）。
 
-只写入**已有**表（`--url` / `--spreadsheet-token` 二选一必填），不新建工作簿——要新表先 `+workbook-create` 拿 token 再写。读回用镜像命令 `+table-get`（见 read-data reference），输出与 `--sheets` 同构、可 round-trip。
+只写入**已有**表（`--url` / `--spreadsheet-token` 二选一必填），不新建工作簿——**要新建表格直接用 `+workbook-create --sheets`**（同 typed 协议、一步建表 + 类型保真写入，无需先建空表再回来，详见 workbook reference）。读回用镜像命令 `+table-get`（见 read-data reference），输出与 `--sheets` 同构、可 round-trip。
 
 ```bash
 # sheet 按 name 匹配、缺则新建；多 DataFrame 经 stdin 一次写多 sheet
