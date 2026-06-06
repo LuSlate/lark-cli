@@ -47,7 +47,7 @@ var ImFeedGroupQueryItem = common.Shortcut{
 			return err
 		}
 
-		data, err := runtime.DoAPIJSON("POST", feedGroupQueryItemPath(runtime), nil, body)
+		data, err := runtime.DoAPIJSONTyped("POST", feedGroupQueryItemPath(runtime), nil, body)
 		if err != nil {
 			return err
 		}

@@ -54,7 +54,7 @@ var ImFeedGroupListItem = common.Shortcut{
 			return executeFeedGroupListAllPages(runtime)
 		}
 
-		data, err := runtime.DoAPIJSON("GET", feedGroupListItemPath(runtime), feedGroupListQuery(runtime), nil)
+		data, err := runtime.DoAPIJSONTyped("GET", feedGroupListItemPath(runtime), feedGroupListQuery(runtime), nil)
 		if err != nil {
 			return err
 		}
@@ -163,7 +163,7 @@ func executeFeedGroupListAllPages(rt *common.RuntimeContext) error {
 			params["end_time"] = []string{end}
 		}
 
-		data, err := rt.DoAPIJSON("GET", feedGroupListItemPath(rt), params, nil)
+		data, err := rt.DoAPIJSONTyped("GET", feedGroupListItemPath(rt), params, nil)
 		if err != nil {
 			return err
 		}
