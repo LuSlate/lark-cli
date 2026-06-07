@@ -6,6 +6,7 @@ package doc
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/larksuite/cli/internal/cmdutil"
 	"github.com/larksuite/cli/internal/httpmock"
+	"github.com/larksuite/cli/internal/output"
 )
 
 func TestDocsCreateV2HTML5BlockResources(t *testing.T) {
@@ -101,6 +103,51 @@ func TestDocsUpdateV2HTML5BlockResources(t *testing.T) {
 	doc, _ := data["document"].(map[string]interface{})
 	if blocks, _ := doc["new_blocks"].([]interface{}); len(blocks) != 1 {
 		t.Fatalf("new_blocks not preserved in stdout: %#v", doc)
+	}
+}
+
+func TestDocsUpdateV2FailedResultExitsNonZeroWithRawOutput(t *testing.T) {
+	f, stdout, _, reg := cmdutil.TestFactory(t, docsTestConfigWithAppID("docs-html5-update-failed"))
+	registerDocsAIStub(reg, "PUT", "/open-apis/docs_ai/v1/documents/doxcn_doc", map[string]interface{}{
+		"result": "failed",
+		"warnings": []interface{}{
+			map[string]interface{}{
+				"code":    float64(1011),
+				"message": "Instruction produced no document changes for <html5-block data-ref=\"html5_1\"></html5-block>",
+			},
+		},
+	})
+
+	err := mountAndRunDocs(t, DocsUpdate, []string{
+		"+update",
+		"--api-version", "v2",
+		"--doc", "doxcn_doc",
+		"--command", "block_delete",
+		"--block-id", "stale_block_id",
+		"--as", "user",
+	}, f, stdout)
+	var pfErr *output.PartialFailureError
+	if !errors.As(err, &pfErr) || pfErr.Code != output.ExitAPI {
+		t.Fatalf("expected API partial-failure exit, got %T: %v", err, err)
+	}
+
+	var envelope map[string]interface{}
+	if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
+		t.Fatalf("decode stdout: %v\n%s", err, stdout.String())
+	}
+	if ok, _ := envelope["ok"].(bool); ok {
+		t.Fatalf("stdout envelope should mark failed docs_ai result as ok=false: %s", stdout.String())
+	}
+	data, _ := envelope["data"].(map[string]interface{})
+	if got, _ := data["result"].(string); got != "failed" {
+		t.Fatalf("data.result = %q, stdout: %s", got, stdout.String())
+	}
+	warnings, _ := data["warnings"].([]interface{})
+	if len(warnings) != 1 {
+		t.Fatalf("warnings not preserved in stdout: %#v", data)
+	}
+	if !strings.Contains(stdout.String(), `<html5-block data-ref=\"html5_1\"></html5-block>`) {
+		t.Fatalf("raw XML/HTML should not be escaped in failed output: %s", stdout.String())
 	}
 }
 

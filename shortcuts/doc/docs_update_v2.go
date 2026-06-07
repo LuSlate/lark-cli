@@ -144,8 +144,7 @@ func executeUpdateV2(_ context.Context, runtime *common.RuntimeContext) error {
 		return err
 	}
 
-	runtime.OutRaw(data, nil)
-	return nil
+	return outDocsAIResult(runtime, data)
 }
 
 func buildUpdateBody(runtime *common.RuntimeContext) map[string]interface{} {

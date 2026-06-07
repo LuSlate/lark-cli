@@ -751,6 +751,16 @@ func (ctx *RuntimeContext) OutPartialFailure(data interface{}, meta *output.Meta
 	return output.PartialFailure(output.ExitAPI)
 }
 
+// OutRawPartialFailure is OutPartialFailure with HTML escaping disabled.
+// Use it when the machine-readable failure payload contains XML/HTML.
+func (ctx *RuntimeContext) OutRawPartialFailure(data interface{}, meta *output.Meta) error {
+	ctx.emit(data, meta, true, false)
+	if ctx.outputErr != nil {
+		return ctx.outputErr
+	}
+	return output.PartialFailure(output.ExitAPI)
+}
+
 // emit is the shared stdout envelope emitter; ok sets the envelope's ok field
 // (true for success, false for a partial-failure result). raw=true disables JSON
 // HTML escaping so XML/HTML payloads (e.g. DocxXML bodies) are preserved

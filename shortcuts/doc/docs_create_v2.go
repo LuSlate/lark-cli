@@ -68,8 +68,7 @@ func executeCreateV2(_ context.Context, runtime *common.RuntimeContext) error {
 
 	augmentDocsCreatePermission(runtime, data)
 	fallbackDocsCreateURLV2(runtime, data)
-	runtime.OutRaw(data, nil)
-	return nil
+	return outDocsAIResult(runtime, data)
 }
 
 func buildCreateBody(runtime *common.RuntimeContext) map[string]interface{} {
