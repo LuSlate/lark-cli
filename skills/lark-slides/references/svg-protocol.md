@@ -90,6 +90,10 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 
 ## 图片与 Metadata
 
+SVG deck 默认应使用真实图片资产，不要为了规避上传链路而全程用纯矢量 shape 冒充配图。宣传、产品、品牌、案例和视觉展示型 deck 至少应包含封面/半出血主视觉/案例场景/产品截图等图片使用；只有用户明确要求纯矢量，或图片获取、上传链路不可用时，才退回纯矢量方案，并在结果中说明原因。
+
+图片资产还必须规避版权风险：只使用用户提供、公司/项目自有、明确可商用授权图库，或授权条件清晰的 AI 生成资产。推荐来源包括 Unsplash、Pexels、Pixabay、Openverse、Wikimedia Commons、The Met Open Access、Smithsonian Open Access 和 NASA Image and Video Library，但每张图都必须检查具体 license。不要使用版权状态不明的搜索图片、新闻配图、第三方 logo、竞品官网截图或素材站预览图。生成 deck 时应在素材清单或 README 中记录图片来源、授权/许可类型、下载 URL 或生成方式、是否需要署名；无法确认授权时不得使用该图片。
+
 `slides +create-svg` 会把 `<image href="@./image.png">` 上传为 file token，并注入：
 
 ```xml

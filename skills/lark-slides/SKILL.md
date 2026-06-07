@@ -15,7 +15,7 @@ metadata:
 | 用户需求 | 优先动作 | 关键文档 / 命令 |
 |----------|----------|-----------------|
 | 新建 PPT | 先规划 `slide_plan.json`，再按复杂度选择一步或两步创建 | `planning-layer.md`、`visual-planning.md`、`asset-planning.md`、`slides +create` |
-| AI 生成 SVG 创建 PPT | 生成 SVGlide SVG 后调用 `slides +create-svg` | `lark-slides-create-svg.md`、`svg-protocol.md` |
+| AI 生成 SVG 创建 PPT | 复用 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 规划，生成 SVGlide SVG 后调用 `slides +create-svg` | `lark-slides-create-svg.md`、`svg-protocol.md` |
 | 大幅改写页面 | 先回读现有 XML，写入新 plan，再替换或重建相关页面 | `xml_presentations.get`、`+replace-slide`、`lark-slides-edit-workflows.md` |
 | 编辑单个标题、文本块、图片或局部元素 | 优先块级替换/插入，不改页序 | `slides +replace-slide`、`lark-slides-replace-slide.md` |
 | 读取或分析已有 PPT | 解析 slides/wiki token，回读全文或单页 XML，保存 `xml_presentation_id`、`slide_id`、`revision_id` | `xml_presentations.get`、`xml_presentation.slide.get` |
@@ -32,15 +32,15 @@ metadata:
 
 **CRITICAL — 走 `slides +create-svg` 时，输入必须是 SVGlide SVG：root `<svg>` 声明 `xmlns:slide` 且 `slide:role="slide"`；可渲染 SVG 元素必须用 `slide:role="shape"` 或 `slide:role="image"` 表达；`g` / 嵌套 `svg` 可作为容器，但容器内实际渲染元素仍必须各自声明 role。CLI 只读取文件、上传/替换图片占位符、注入 transport metadata 和调用现有 `/slide` 路由，不会把普通 SVG 自动补齐成协议 SVG。**
 
-**CRITICAL — 高质量 SVG deck 生成时，MUST 同时读取 [lark-slides-create-svg.md](references/lark-slides-create-svg.md)：先做 deck-level density plan，再定义布局盒，给 `foreignObject` 文本留足安全高度，图片必须先下载成本地 `@./path` 或上传为 file token，相邻页面要显著换版式；这些是生成技巧，不替代 [svg-protocol.md](references/svg-protocol.md) 的硬协议约束。**
+**CRITICAL — 高质量 SVG deck 生成时，MUST 同时读取 [lark-slides-create-svg.md](references/lark-slides-create-svg.md)：复用现有 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 作为设计状态，先做 deck-level density plan，再定义布局盒，给 `foreignObject` 文本留足安全高度，默认必须使用真实图片资产（本地 `@./path` 或 file token），相邻页面要显著换版式；调用 API 前必须跑本地 preflight（优先使用 [`scripts/svg_preflight.py`](scripts/svg_preflight.py)），live 创建后必须 readback 校验。这些是生成技巧，不替代 [svg-protocol.md](references/svg-protocol.md) 的硬协议约束。**
 
-**CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，再生成 XML。先创建对应目录，规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
+**CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，再生成 XML 或 SVGlide SVG。先创建对应目录，规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，生成 XML 前 MUST 读取 [visual-planning.md](references/visual-planning.md)，确保 `layout_type`、`visual_focus`、`text_density` 实际改变页面几何、主视觉和文本量。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，规划 `asset_need` MUST 遵循 [asset-planning.md](references/asset-planning.md)：只做元数据规划，必须有 `fallback_if_missing`，不得要求真实搜索、下载或上传素材。**
 
-**CRITICAL — 创建或大幅改写后，MUST 按 [validation-checklist.md](references/validation-checklist.md) 做显式验证：回读全文 XML、核对页数和关键元素、检查空白/破损页、明显溢出、布局风险；XML 语法和文本重叠静态检查优先使用 [`scripts/xml_text_overlap_lint.py`](scripts/xml_text_overlap_lint.py)。**
+**CRITICAL — 创建或大幅改写后，MUST 按 [validation-checklist.md](references/validation-checklist.md) 做显式验证：回读全文 XML、核对页数和关键元素、检查空白/破损页、明显溢出、布局风险；XML 语法和文本重叠静态检查优先使用 [`scripts/xml_text_overlap_lint.py`](scripts/xml_text_overlap_lint.py)，SVG 创建前的本地 preflight 优先使用 [`scripts/svg_preflight.py`](scripts/svg_preflight.py)。**
 
 **CRITICAL — 创建前自检或失败排障时，MUST 按 [troubleshooting.md](references/troubleshooting.md) 检查 XML 转义、结构、shell 截断、图片 token、3350001 和布局风险。**
 
@@ -109,7 +109,7 @@ lark-cli auth login --domain slides
 - **背景一致性**：先确定全 deck 的背景策略，默认保持同一明暗基调和底色体系；只有分节、转场或强调页才有意改变背景，并必须通过相同主色、纹理、边栏或 motif 让变化看起来属于同一套设计。无论深浅，都要保证正文、图标和线条对比充足。
 - **统一 motif**：选择一个可复用视觉母题贯穿全文，例如粗侧边栏、圆形图标底、半出血图片区、编号节点、卡片左上角色块或大号数字。不要每页换一套装饰语言。
 
-每页至少要有一个视觉元素：图片、图标、图表、表格、流程、对比结构、大号数字、示意图或由 shape 组成的抽象视觉。文本框本身不算主视觉。
+每页至少要有一个视觉元素：图片、图标、图表、表格、流程、对比结构、大号数字、示意图或由 shape 组成的抽象视觉。文本框本身不算主视觉。展示型、宣传型、产品型和案例型 deck 不能全程纯矢量，必须包含真实图片资产作为封面、半出血主视觉、案例场景、产品截图或材质背景。
 
 可优先考虑这些页面形态：
 
@@ -133,7 +133,8 @@ lark-cli auth login --domain slides
 - 不要所有页面复用同一种标题 + 三 bullets 版式。
 - 不要用低对比文字或低对比图标，例如浅灰字压在浅色背景上。
 - 不要让装饰线穿过文字，或让页脚、来源、编号挤压主体内容。
-- 不要把素材缺失表现为空白图片框；必须按 `fallback_if_missing` 生成 XML-native 视觉。
+- 不要使用版权状态不明的图片、logo、截图或素材；图片必须来自用户提供、公司/项目自有、明确可商用授权图库，或授权条件清晰的 AI 生成资产，并在产物说明或素材清单中记录来源、授权/许可类型、原始 URL 和是否需要署名。
+- 不要把素材缺失表现为空白图片框；必须先尝试获取或生成可用图片资产。只有用户明确要求纯矢量、网络/权限不可用，或主题确实不适合图片时，才按 `fallback_if_missing` 生成 XML-native 视觉，并在结果中说明。
 - 不要留下模板占位文案、示例公司名、示例日期或与用户主题无关的原模板内容。
 
 ### 创建方式选择
@@ -174,7 +175,7 @@ Step 2: 生成大纲 → 用户确认 → 写入 slide_plan.json
 Step 3: 按 slide_plan.json 生成 XML 或 SVGlide SVG → 创建
   - 逐页消费 plan：key_message 定主结论，layout_type 定几何，visual_focus 定主视觉，text_density 定文本量
   - 缺少真实素材时必须用 `fallback_if_missing` 生成 XML-native 兜底视觉；不要留空
-  - XML 路径按 lark-slides-create.md、media-upload.md、troubleshooting.md 执行；SVG 路径按 lark-slides-create-svg.md 和 svg-protocol.md 执行，产物是 `.svg` 文件而不是 Slides XML
+  - XML 路径按 lark-slides-create.md、media-upload.md、troubleshooting.md 执行；SVG 路径按 lark-slides-create-svg.md 和 svg-protocol.md 执行，产物是 `.svg` 文件而不是 Slides XML，仍复用同一个 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`
 
 Step 4: 审查 & 交付
   - 创建完成后，必须用 xml_presentations.get 读取全文 XML，并按 validation-checklist.md 做显式验证记录，包括 XML 文本重叠检查
