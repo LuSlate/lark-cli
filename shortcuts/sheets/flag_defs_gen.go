@@ -959,6 +959,14 @@ var flagDefs = map[string]commandDef{
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
+	"+workbook-import": {
+		Risk: "write",
+		Flags: []flagDef{
+			{Name: "file", Kind: "own", Type: "string", Required: "required", Desc: "Local file path (.xlsx / .xls / .csv)"},
+			{Name: "folder-token", Kind: "own", Type: "string", Required: "optional", Desc: "Target folder token; imported to the cloud drive root when omitted"},
+			{Name: "name", Kind: "own", Type: "string", Required: "optional", Desc: "Imported spreadsheet name; defaults to the local file name without its extension"},
+		},
+	},
 	"+workbook-info": {
 		Risk: "read",
 		Flags: []flagDef{

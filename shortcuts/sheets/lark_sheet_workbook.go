@@ -19,6 +19,7 @@ import (
 	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
+	"github.com/larksuite/cli/shortcuts/drive"
 )
 
 // ─── lark_sheet_workbook ──────────────────────────────────────────────
@@ -1106,4 +1107,46 @@ func lookupFirstSheetID(ctx context.Context, runtime *common.RuntimeContext, tok
 		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned no sheets")
 	}
 	return bestID, nil
+}
+
+// ─── +workbook-import (reuses drive import core, cli_status: cli-only) ──
+//
+// Imports a local xlsx/xls/csv file as a brand-new spreadsheet. The full
+// upload → create-task → poll flow is the shared drive import core
+// (drive.RunImport); this shortcut only pins the target type to "sheet" and
+// omits the bitable-only --target-token. Symmetric with +workbook-export.
+// Not exposed as an MCP tool.
+
+// WorkbookImport imports a local spreadsheet file as a new Feishu spreadsheet
+// by delegating to the shared drive import core with type fixed to "sheet".
+var WorkbookImport = common.Shortcut{
+	Service:     "sheets",
+	Command:     "+workbook-import",
+	Description: "Import a local xlsx/xls/csv file as a new spreadsheet (async + poll). Reuses the drive import core with type fixed to sheet.",
+	Risk:        "write",
+	Scopes:      []string{"docs:document.media:upload", "docs:document:import"},
+	AuthTypes:   []string{"user", "bot"},
+	HasFormat:   true,
+	Flags:       flagsFor("+workbook-import"),
+	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
+		return drive.ValidateImport(workbookImportParams(runtime))
+	},
+	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
+		return drive.PlanImportDryRun(runtime, workbookImportParams(runtime))
+	},
+	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
+		return drive.RunImport(ctx, runtime, workbookImportParams(runtime))
+	},
+}
+
+// workbookImportParams builds the drive import request for +workbook-import,
+// pinning DocType to "sheet". The bitable-only --target-token is intentionally
+// not exposed here — use drive +import for non-sheet import targets.
+func workbookImportParams(runtime *common.RuntimeContext) drive.ImportParams {
+	return drive.ImportParams{
+		File:        runtime.Str("file"),
+		DocType:     "sheet",
+		FolderToken: runtime.Str("folder-token"),
+		Name:        runtime.Str("name"),
+	}
 }

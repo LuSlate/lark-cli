@@ -10,7 +10,7 @@
 
 ## 使用场景
 
-读写。管理工作簿结构。本 reference 覆盖 11 个 shortcut：
+读写。管理工作簿结构。本 reference 覆盖 14 个 shortcut：
 
 | 操作需求 | 使用工具 | 说明 |
 |---------|---------|------|
@@ -45,6 +45,7 @@
 | `+sheet-show-gridline` | write | 工作簿 |
 | `+workbook-create` | write | 工作簿 |
 | `+workbook-export` | read | 工作簿 |
+| `+workbook-import` | write | 工作簿 |
 
 ## Flags
 
@@ -152,6 +153,14 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 | `--sheet-id` | string | optional | 仅 csv 模式必填：指定要导出哪张 sheet 为 CSV。这是 `+workbook-export` 专有 flag，与公共四件套的 sheet 定位无关（本 shortcut 不接受公共 sheet 定位） |
 | `--output-path` | string | optional | 本地保存路径；省略时只触发导出不下载 |
 
+### `+workbook-import`
+
+| Flag | Type | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `--file` | string | required | 本地文件路径（.xlsx / .xls / .csv） |
+| `--folder-token` | string | optional | 目标文件夹 token；省略则导入到云空间根目录 |
+| `--name` | string | optional | 导入后表格名称；省略则用本地文件名（去掉扩展名） |
+
 ## Schemas
 
 > 复合 JSON flag 字段速查（只列顶层 + 一层嵌套）。深层结构看下方 `## Examples`，或用 `--print-schema` 读完整 JSON Schema（用法见 SKILL.md「公共 flag 速查」与「Agent 使用提示」）。
@@ -199,6 +208,24 @@ lark-cli sheets +workbook-create --title "交易" --sheets '{
 ```
 
 `--sheets` 协议与 `+table-put` 完全同构（字段含义见 lark-sheets-write-cells 的 `+table-put`，大 payload 走 stdin / `@file`）。关键差异：**新建工作簿的默认子表会被复用为第一个子表**（重命名后承载数据），不会残留空 `Sheet1`；其余子表按需新建。它把 `+table-put` 单独做不到的"建表 + typed 写入"合到一条命令，是「pandas 算完直接落地一张带真日期的新表」的首选。回读校验用 `+table-get`（与 `--sheets` 同构、可 round-trip）。
+
+> ⚠️ **`+workbook-create` 是把内存里的数据写成新表；要把已有的本地 Excel/CSV 文件原样导入成新表，用 `+workbook-import`**（见下），不要先在本地读出文件再 `+workbook-create` 重灌。
+
+### `+workbook-import`
+
+把已有的本地 `.xlsx` / `.xls` / `.csv` 文件导入为一个**新的**飞书电子表格（异步任务 + 内置轮询），与 `+workbook-export`（导出）对称。底层复用 drive 的导入实现，固定导入为电子表格类型。
+
+```bash
+# 导入到云空间根目录；表格名默认取本地文件名（去掉扩展名）
+lark-cli sheets +workbook-import --file ./data.xlsx
+
+# 指定目标文件夹与导入后表格名
+lark-cli sheets +workbook-import --file ./report.csv --folder-token <FOLDER_TOKEN> --name "月度报表"
+```
+
+- **不接受任何 spreadsheet / sheet 定位 flag**（它是新建，不操作已有表）：只有 `--file`（必填）/ `--folder-token` / `--name`。
+- 仅导入为电子表格（sheet）。若要把本地表格导入成多维表格（bitable），改用 `lark-cli drive +import --type bitable`。
+- 返回 `token` / `url`（导入完成的新表格）/ `ticket` / `ready` / `job_status`；未在内置轮询窗口内完成时返回 `timed_out=true` 与续查命令 `next_command`。
 
 ### `+sheet-create`
 

@@ -42,6 +42,7 @@ func shortcutList() []common.Shortcut {
 		SheetHideGridline,
 		WorkbookCreate,
 		WorkbookExport,
+		WorkbookImport,
 
 		// lark_sheet_sheet_structure
 		SheetInfo,

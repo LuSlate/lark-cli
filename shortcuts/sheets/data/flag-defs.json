@@ -612,6 +612,32 @@
       }
     ]
   },
+  "+workbook-import": {
+    "risk": "write",
+    "flags": [
+      {
+        "name": "file",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Local file path (.xlsx / .xls / .csv)"
+      },
+      {
+        "name": "folder-token",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Target folder token; imported to the cloud drive root when omitted"
+      },
+      {
+        "name": "name",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Imported spreadsheet name; defaults to the local file name without its extension"
+      }
+    ]
+  },
   "+sheet-info": {
     "risk": "read",
     "flags": [
