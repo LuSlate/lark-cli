@@ -1,4 +1,45 @@
 {
+  "+undo": {
+    "risk": "write",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "steps",
+        "kind": "own",
+        "type": "int",
+        "required": "optional",
+        "desc": "Undo the most recent N edits made through this CLI link (default 1); XOR with `--op`",
+        "default": "1"
+      },
+      {
+        "name": "op",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Undo a specific operation by its operation_id (from a prior write's undo handle); XOR with `--steps`"
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
   "+workbook-info": {
     "risk": "read",
     "flags": [

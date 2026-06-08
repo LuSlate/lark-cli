@@ -61,6 +61,9 @@ func shortcutList() []common.Shortcut {
 		DropdownGet,
 		TableGet,
 
+		// lark_sheet_undo
+		Undo,
+
 		// lark_sheet_search_replace
 		CellsSearch,
 		CellsReplace,

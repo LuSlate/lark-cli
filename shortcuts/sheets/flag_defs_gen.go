@@ -936,6 +936,16 @@ var flagDefs = map[string]commandDef{
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
+	"+undo": {
+		Risk: "write",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
+			{Name: "steps", Kind: "own", Type: "int", Required: "optional", Desc: "Undo the most recent N edits made through this CLI link (default 1); XOR with `--op`", Default: "1"},
+			{Name: "op", Kind: "own", Type: "string", Required: "optional", Desc: "Undo a specific operation by its operation_id (from a prior write's undo handle); XOR with `--steps`"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
 	"+workbook-create": {
 		Risk: "write",
 		Flags: []flagDef{

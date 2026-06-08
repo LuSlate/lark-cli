@@ -7,12 +7,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
+
+// sheetTxnIDEnv is the env var carrying a caller-provided, session-stable
+// transaction id for sheet tool calls.
+const sheetTxnIDEnv = "LARK_CLI_SHEET_TRANSACTION_ID"
+
+// sheetTransactionID returns the session-stable transaction id from the
+// environment, or "" when unset.
+//
+// Sheet write tools persist their reverse ("undo") changeset keyed by the
+// request's transaction id; the server mints a fresh uuid per request when the
+// caller supplies none, which isolates every CLI invocation into its own
+// single-call undo stack. Threading one stable id across a group of edits (and
+// a later +undo) is what lets +undo find and reverse those edits. An agent
+// driving lark-cli sets this once per session; empty preserves today's
+// per-request behavior.
+func sheetTransactionID() string {
+	return strings.TrimSpace(os.Getenv(sheetTxnIDEnv))
+}
 
 // ToolKind selects the One-OpenAPI endpoint and its rate-limit bucket.
 //
@@ -44,10 +64,17 @@ func buildToolBody(toolName string, input map[string]interface{}) (map[string]in
 	if err != nil {
 		return nil, fmt.Errorf("encode tool input: %w", err)
 	}
-	return map[string]interface{}{
+	body := map[string]interface{}{
 		"tool_name": toolName,
 		"input":     string(inputJSON),
-	}, nil
+	}
+	// Thread a session-stable transaction id (when provided) so a group of
+	// edits and a later +undo share one undo stack. Omitted when unset, leaving
+	// the server to mint a per-request id as before.
+	if txID := sheetTransactionID(); txID != "" {
+		body["extra"] = map[string]interface{}{"transaction_id": txID}
+	}
+	return body, nil
 }
 
 // callTool invokes a sheet-ai tool via the One-OpenAPI endpoint and decodes
