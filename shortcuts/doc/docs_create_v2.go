@@ -15,6 +15,8 @@ import (
 func v2CreateFlags() []common.Flag {
 	return []common.Flag{
 		{Name: "content", Desc: "document body; XML by default or Markdown when --doc-format markdown. " + docsContentSkillHelp + "; use --help for the latest command flags", Input: []string{common.File, common.Stdin}},
+		{Name: "input", Desc: "hidden: fetch JSON envelope/data/document input; extracts document.content and document.reference_map", Hidden: true, Input: []string{common.File, common.Stdin}},
+		{Name: "reference-map", Desc: "hidden: reference_map JSON object for external html5-block data", Hidden: true, Input: []string{common.File, common.Stdin}},
 		{Name: "doc-format", Desc: "content format; xml is default and supports richer DocxXML blocks, markdown imports plain Markdown", Default: "xml", Enum: []string{"xml", "markdown"}},
 		{Name: "parent-token", Desc: "parent folder token or wiki node token; mutually exclusive with --parent-position"},
 		{Name: "parent-position", Desc: "parent position such as my_library; mutually exclusive with --parent-token"},
@@ -25,8 +27,8 @@ func validateCreateV2(_ context.Context, runtime *common.RuntimeContext) error {
 	if err := validateDocsV2Only(runtime, "+create", docsCreateLegacyFlags()); err != nil {
 		return err
 	}
-	if runtime.Str("content") == "" {
-		return errs.NewValidationError(errs.SubtypeInvalidArgument, "--content is required").WithParam("--content")
+	if err := validateDocsV2WriteInputFlags(runtime); err != nil {
+		return err
 	}
 	if runtime.Str("parent-token") != "" && runtime.Str("parent-position") != "" {
 		return errs.NewValidationError(errs.SubtypeInvalidArgument, "--parent-token and --parent-position are mutually exclusive").WithParams(
@@ -34,14 +36,20 @@ func validateCreateV2(_ context.Context, runtime *common.RuntimeContext) error {
 			errs.InvalidParam{Name: "--parent-position", Reason: "mutually exclusive with --parent-token"},
 		)
 	}
-	if err := validateHTML5BlockWriteContent(runtime, runtime.Str("doc-format"), runtime.Str("content")); err != nil {
+	if !runtime.Changed("input") && runtime.Str("content") == "" {
+		return errs.NewValidationError(errs.SubtypeInvalidArgument, "--content or --input is required").WithParams(
+			errs.InvalidParam{Name: "--content", Reason: "required when --input is absent"},
+			errs.InvalidParam{Name: "--input", Reason: "required when --content is absent"},
+		)
+	}
+	if _, err := resolveDocsV2WriteInput(runtime); err != nil {
 		return err
 	}
 	return nil
 }
 
 func dryRunCreateV2(_ context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
-	body, err := buildCreateBodyWithHTML5Resources(runtime)
+	body, err := buildCreateBodyWithHTML5ReferenceMap(runtime)
 	if err != nil {
 		body = buildCreateBody(runtime)
 	}
@@ -56,7 +64,7 @@ func dryRunCreateV2(_ context.Context, runtime *common.RuntimeContext) *common.D
 }
 
 func executeCreateV2(_ context.Context, runtime *common.RuntimeContext) error {
-	body, err := buildCreateBodyWithHTML5Resources(runtime)
+	body, err := buildCreateBodyWithHTML5ReferenceMap(runtime)
 	if err != nil {
 		return err
 	}

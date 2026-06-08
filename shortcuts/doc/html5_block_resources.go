@@ -20,11 +20,13 @@ import (
 )
 
 const (
-	html5BlockTag          = "html5-block"
-	html5BlockPathAttr     = "path"
-	html5BlockDataRefAttr  = "data-ref"
-	html5BlockRefDataAttr  = "ref-data"
-	html5BlockResourceRoot = "doc-fetch-resources"
+	html5BlockTag             = "html5-block"
+	html5BlockPathAttr        = "path"
+	html5BlockDataRefAttr     = "data-ref"
+	html5BlockDataAttr        = "data"
+	html5BlockReferenceRoot   = "doc-fetch-resources"
+	html5BlockReferenceMaxRaw = 1024
+	html5BlockSuggestionRead  = "must_read_html_code"
 )
 
 var (
@@ -33,11 +35,18 @@ var (
 	html5BlockSafeNamePattern = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 )
 
-type html5BlockResourceEntry struct {
-	Data string `json:"data"`
+type html5BlockReferenceEntry struct {
+	Data   string `json:"data,omitempty"`
+	Path   string `json:"path,omitempty"`
+	UserID string `json:"user_id,omitempty"`
 }
 
-type html5BlockResourceMap map[string]map[string]html5BlockResourceEntry
+type html5BlockReferenceMap map[string]map[string]html5BlockReferenceEntry
+
+type docsV2WriteInput struct {
+	Content      string
+	ReferenceMap html5BlockReferenceMap
+}
 
 type html5BlockAttr struct {
 	Name  string
@@ -49,81 +58,204 @@ type html5BlockStartTag struct {
 	SelfClosing bool
 }
 
-func buildCreateBodyWithHTML5Resources(runtime *common.RuntimeContext) (map[string]interface{}, error) {
+func buildCreateBodyWithHTML5ReferenceMap(runtime *common.RuntimeContext) (map[string]interface{}, error) {
 	body := buildCreateBody(runtime)
-	content, resources, err := prepareHTML5BlockWriteContent(runtime, runtime.Str("doc-format"), runtime.Str("content"))
+	input, err := resolveDocsV2WriteInput(runtime)
 	if err != nil {
 		return nil, err
 	}
-	body["content"] = content
-	if resources != "" {
-		body["resources"] = resources
+	body["content"] = input.Content
+	if len(input.ReferenceMap) > 0 {
+		body["reference_map"] = input.ReferenceMap
 	}
 	return body, nil
 }
 
-func buildUpdateBodyWithHTML5Resources(runtime *common.RuntimeContext) (map[string]interface{}, error) {
+func buildUpdateBodyWithHTML5ReferenceMap(runtime *common.RuntimeContext) (map[string]interface{}, error) {
 	body := buildUpdateBody(runtime)
-	content, resources, err := prepareHTML5BlockWriteContent(runtime, runtime.Str("doc-format"), runtime.Str("content"))
+	input, err := resolveDocsV2WriteInput(runtime)
 	if err != nil {
 		return nil, err
 	}
-	if content != "" {
-		body["content"] = content
+	if input.Content != "" {
+		body["content"] = input.Content
 	}
-	if resources != "" {
-		body["resources"] = resources
+	if len(input.ReferenceMap) > 0 {
+		body["reference_map"] = input.ReferenceMap
 	}
 	return body, nil
+}
+
+func validateDocsV2WriteInputFlags(runtime *common.RuntimeContext) error {
+	if runtime.Changed("input") && (runtime.Changed("content") || runtime.Changed("reference-map")) {
+		return common.FlagErrorf("--input is mutually exclusive with --content and --reference-map")
+	}
+	if runtime.Changed("reference-map") && runtime.Str("content") == "" {
+		return common.FlagErrorf("--reference-map requires --content")
+	}
+	return nil
 }
 
 func validateHTML5BlockWriteContent(runtime *common.RuntimeContext, format string, content string) error {
-	_, _, err := prepareHTML5BlockWriteContent(runtime, format, content)
+	_, _, err := prepareHTML5BlockWriteContent(runtime, format, content, nil)
 	return err
 }
 
-func prepareHTML5BlockWriteContent(runtime *common.RuntimeContext, format string, content string) (string, string, error) {
-	if !strings.Contains(content, "<html5-block") {
-		return content, "", nil
-	}
-	if err := validateHTML5BlockWriteElementBodies(format, content); err != nil {
-		return "", "", err
+func resolveDocsV2WriteInput(runtime *common.RuntimeContext) (docsV2WriteInput, error) {
+	var input docsV2WriteInput
+	if runtime.Changed("input") {
+		parsed, err := parseDocsV2Input(runtime.Str("input"))
+		if err != nil {
+			return docsV2WriteInput{}, err
+		}
+		input = parsed
+	} else {
+		input.Content = runtime.Str("content")
+		if raw := runtime.Str("reference-map"); strings.TrimSpace(raw) != "" {
+			refMap, err := parseHTML5BlockReferenceMap(raw, "--reference-map")
+			if err != nil {
+				return docsV2WriteInput{}, err
+			}
+			input.ReferenceMap = refMap
+		}
 	}
 
-	resources := html5BlockResourceMap{html5BlockTag: map[string]html5BlockResourceEntry{}}
-	nextRef := 1
+	content, refMap, err := prepareHTML5BlockWriteContent(runtime, runtime.Str("doc-format"), input.Content, input.ReferenceMap)
+	if err != nil {
+		return docsV2WriteInput{}, err
+	}
+	if err := resolveReferenceMapPaths(runtime, refMap); err != nil {
+		return docsV2WriteInput{}, err
+	}
+	return docsV2WriteInput{
+		Content:      content,
+		ReferenceMap: compactReferenceMap(refMap),
+	}, nil
+}
+
+func parseDocsV2Input(raw string) (docsV2WriteInput, error) {
+	if strings.TrimSpace(raw) == "" {
+		return docsV2WriteInput{}, common.ValidationErrorf("--input cannot be empty").WithParam("--input")
+	}
+	root, err := decodeJSONObject([]byte(raw), "--input")
+	if err != nil {
+		return docsV2WriteInput{}, err
+	}
+
+	if dataRaw, ok := root["data"]; ok {
+		root, err = decodeJSONObject(dataRaw, "--input.data")
+		if err != nil {
+			return docsV2WriteInput{}, err
+		}
+	}
+
+	docRaw, hasDoc := root["document"]
+	var doc map[string]json.RawMessage
+	if hasDoc {
+		doc, err = decodeJSONObject(docRaw, "--input.document")
+		if err != nil {
+			return docsV2WriteInput{}, err
+		}
+	} else {
+		doc = root
+	}
+
+	contentRaw, ok := doc["content"]
+	if !ok {
+		return docsV2WriteInput{}, common.ValidationErrorf("--input document.content is required").WithParam("--input")
+	}
+	var content string
+	if err := json.Unmarshal(contentRaw, &content); err != nil {
+		return docsV2WriteInput{}, common.ValidationErrorf("--input document.content must be a string: %v", err).WithParam("--input").WithCause(err)
+	}
+
+	var refMap html5BlockReferenceMap
+	if refRaw, ok := doc["reference_map"]; ok && len(bytes.TrimSpace(refRaw)) > 0 && string(bytes.TrimSpace(refRaw)) != "null" {
+		refMap, err = parseHTML5BlockReferenceMapBytes(refRaw, "--input document.reference_map")
+		if err != nil {
+			return docsV2WriteInput{}, err
+		}
+	}
+	return docsV2WriteInput{Content: content, ReferenceMap: refMap}, nil
+}
+
+func decodeJSONObject(raw []byte, label string) (map[string]json.RawMessage, error) {
+	var out map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, common.ValidationErrorf("%s must be a JSON object: %v", label, err).WithParam(label).WithCause(err)
+	}
+	if out == nil {
+		return nil, common.ValidationErrorf("%s must be a JSON object").WithParam(label)
+	}
+	return out, nil
+}
+
+func parseHTML5BlockReferenceMap(raw string, label string) (html5BlockReferenceMap, error) {
+	return parseHTML5BlockReferenceMapBytes([]byte(raw), label)
+}
+
+func parseHTML5BlockReferenceMapBytes(raw []byte, label string) (html5BlockReferenceMap, error) {
+	if len(bytes.TrimSpace(raw)) == 0 || string(bytes.TrimSpace(raw)) == "null" {
+		return nil, nil
+	}
+	var refMap html5BlockReferenceMap
+	if err := json.Unmarshal(raw, &refMap); err != nil {
+		return nil, common.ValidationErrorf("%s is not valid reference_map JSON: %v", label, err).WithParam(label).WithCause(err)
+	}
+	return compactReferenceMap(refMap), nil
+}
+
+func prepareHTML5BlockWriteContent(runtime *common.RuntimeContext, format string, content string, refMap html5BlockReferenceMap) (string, html5BlockReferenceMap, error) {
+	if !strings.Contains(content, "<html5-block") {
+		return content, compactReferenceMap(refMap), nil
+	}
+	if err := validateHTML5BlockWriteElementBodies(format, content); err != nil {
+		return "", nil, err
+	}
+
+	refMap = cloneReferenceMap(refMap)
+	if refMap == nil {
+		refMap = html5BlockReferenceMap{}
+	}
+	ensureReferenceGroup(refMap, html5BlockTag)
+	nextRef := nextHTML5BlockRef(refMap)
+
 	rewrite := func(segment string) (string, error) {
 		return rewriteHTML5BlockStartTags(segment, func(raw string) (string, error) {
 			tag, err := parseHTML5BlockStartTag(raw)
 			if err != nil {
 				return "", common.ValidationErrorf("invalid html5-block tag: %v", err).WithParam("html5-block")
 			}
+			if tag.hasAttr(html5BlockDataAttr) {
+				return "", common.ValidationErrorf("html5-block data is reserved for SDK internals; use data-ref with reference_map or path=\"@relative.html\"").WithParam("html5-block")
+			}
 
 			pathValue, hasPath := tag.attr(html5BlockPathAttr)
-			if tag.hasAttr(html5BlockDataRefAttr) || tag.hasAttr(html5BlockRefDataAttr) {
-				return "", common.ValidationErrorf("html5-block in lark-cli input must use path=\"@relative.html\"; data-ref/ref-data is reserved for API and SDK internals").WithParam("html5-block")
+			dataRef, hasDataRef := tag.attr(html5BlockDataRefAttr)
+			if hasPath && hasDataRef {
+				return "", common.ValidationErrorf("html5-block cannot contain both path and data-ref").WithParam("html5-block")
+			}
+			if hasDataRef {
+				ref := strings.TrimSpace(dataRef)
+				if ref == "" {
+					return "", common.ValidationErrorf("html5-block data-ref cannot be empty").WithParam("data-ref")
+				}
+				if _, ok := refMap[html5BlockTag][ref]; !ok {
+					return "", common.ValidationErrorf("reference_map.%s.%s is required for html5-block data-ref", html5BlockTag, ref).WithParam("reference_map")
+				}
+				return tag.render(false), nil
 			}
 			if !hasPath {
-				return "", common.ValidationErrorf("html5-block requires path=\"@relative.html\" in lark-cli input").WithParam("html5-block")
+				return "", common.ValidationErrorf("html5-block requires path=\"@relative.html\" or data-ref with reference_map").WithParam("html5-block")
 			}
 
-			pathRaw := strings.TrimSpace(pathValue)
-			if !strings.HasPrefix(pathRaw, "@") {
-				return "", common.ValidationErrorf("html5-block path %q must start with @, for example path=\"@./widget.html\"", pathValue).WithParam("path")
-			}
-			relPath := strings.TrimSpace(strings.TrimPrefix(pathRaw, "@"))
-			if relPath == "" {
-				return "", common.ValidationErrorf("html5-block path cannot be empty after @").WithParam("path")
-			}
-			data, err := cmdutil.ReadInputFile(runtime.FileIO(), relPath)
+			data, err := readHTML5BlockPath(runtime, pathValue, "html5-block path")
 			if err != nil {
-				return "", common.ValidationErrorf("html5-block path %q cannot be read from the current working directory; check that the file exists relative to where lark-cli is running: %v", relPath, err).WithParam("path").WithCause(err)
+				return "", err
 			}
-
-			ref := fmt.Sprintf("html5_%d", nextRef)
-			nextRef++
-			resources[html5BlockTag][ref] = html5BlockResourceEntry{Data: string(data)}
-			tag.removeAttrs(html5BlockPathAttr, html5BlockDataRefAttr, html5BlockRefDataAttr)
+			ref := nextRef()
+			refMap[html5BlockTag][ref] = html5BlockReferenceEntry{Data: data}
+			tag.removeAttrs(html5BlockPathAttr, html5BlockDataRefAttr, html5BlockDataAttr)
 			tag.Attrs = append(tag.Attrs, html5BlockAttr{Name: html5BlockDataRefAttr, Value: ref})
 			return tag.render(false), nil
 		})
@@ -149,17 +281,9 @@ func prepareHTML5BlockWriteContent(runtime *common.RuntimeContext, format string
 		out, err = rewrite(content)
 	}
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
-	if len(resources[html5BlockTag]) == 0 {
-		return out, "", nil
-	}
-
-	rawResources, err := marshalHTML5BlockResources(resources)
-	if err != nil {
-		return "", "", err
-	}
-	return out, rawResources, nil
+	return out, compactReferenceMap(refMap), nil
 }
 
 func validateHTML5BlockWriteElementBodies(format string, content string) error {
@@ -170,7 +294,7 @@ func validateHTML5BlockWriteElementBodies(format string, content string) error {
 				continue
 			}
 			if strings.TrimSpace(segment[match[2]:match[3]]) != "" {
-				return common.ValidationErrorf("html5-block content must be loaded from path=\"@relative.html\"; remove content between <html5-block> and </html5-block> and put the HTML in the referenced file").WithParam("html5-block")
+				return common.ValidationErrorf("html5-block content must be loaded from path=\"@relative.html\" or reference_map; remove content between <html5-block> and </html5-block>").WithParam("html5-block")
 			}
 		}
 		return nil
@@ -191,7 +315,7 @@ func validateHTML5BlockWriteElementBodies(format string, content string) error {
 	return validateErr
 }
 
-func materializeHTML5BlockResources(runtime *common.RuntimeContext, format string, docToken string, data map[string]interface{}) error {
+func processHTML5BlockReferenceMapForFetch(runtime *common.RuntimeContext, format string, docToken string, data map[string]interface{}) error {
 	doc, _ := data["document"].(map[string]interface{})
 	if doc == nil {
 		return nil
@@ -200,70 +324,168 @@ func materializeHTML5BlockResources(runtime *common.RuntimeContext, format strin
 	if !hasProcessableHTML5Block(format, content) {
 		return nil
 	}
-	resourcesRaw, _ := doc["resources"].(string)
-	resources, err := parseHTML5BlockResources(resourcesRaw)
+
+	refMap, err := referenceMapFromDocument(doc)
 	if err != nil {
 		return err
 	}
-
-	wrote := false
-	rewrite := func(segment string) (string, error) {
-		return rewriteHTML5BlockStartTags(segment, func(raw string) (string, error) {
-			return materializeHTML5BlockResourceTag(resources, docToken, raw, func() { wrote = true })
-		})
+	group := refMap[html5BlockTag]
+	if group == nil {
+		return common.ValidationErrorf("document.reference_map.%s is required for fetched html5-block content", html5BlockTag).WithParam("reference_map")
 	}
 
-	var (
-		rewritten  string
-		rewriteErr error
-	)
-	if strings.TrimSpace(format) == "markdown" {
-		rewritten = applyOutsideCodeFences(content, func(segment string) string {
-			if rewriteErr != nil {
-				return segment
+	if err := validateFetchedHTML5BlockRefs(format, content, refMap); err != nil {
+		return err
+	}
+
+	changed := false
+	for ref, entry := range group {
+		if entry.Data == "" || len([]byte(entry.Data)) <= html5BlockReferenceMaxRaw {
+			continue
+		}
+		relPath, err := writeHTML5BlockReferenceFile(docToken, ref, entry.Data)
+		if err != nil {
+			return err
+		}
+		entry.Data = ""
+		entry.Path = "@" + filepath.ToSlash(relPath)
+		group[ref] = entry
+		changed = true
+	}
+	if changed {
+		doc["reference_map"] = refMap
+	}
+	ensureHTML5BlockSuggestion(data)
+	return nil
+}
+
+func referenceMapFromDocument(doc map[string]interface{}) (html5BlockReferenceMap, error) {
+	raw, ok := doc["reference_map"]
+	if !ok || raw == nil {
+		return nil, common.ValidationErrorf("document.reference_map is required for fetched html5-block content").WithParam("reference_map")
+	}
+	refMap, err := referenceMapFromValue(raw, "document.reference_map")
+	if err != nil {
+		return nil, err
+	}
+	if len(refMap) == 0 {
+		return nil, common.ValidationErrorf("document.reference_map is required for fetched html5-block content").WithParam("reference_map")
+	}
+	return refMap, nil
+}
+
+func referenceMapFromValue(value interface{}, label string) (html5BlockReferenceMap, error) {
+	if typed, ok := value.(html5BlockReferenceMap); ok {
+		return compactReferenceMap(typed), nil
+	}
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return nil, common.ValidationErrorf("%s is not valid reference_map JSON: %v", label, err).WithParam("reference_map").WithCause(err)
+	}
+	return parseHTML5BlockReferenceMapBytes(raw, label)
+}
+
+func validateFetchedHTML5BlockRefs(format string, content string, refMap html5BlockReferenceMap) error {
+	validateSegment := func(segment string) error {
+		var validateErr error
+		_, _ = rewriteHTML5BlockStartTags(segment, func(raw string) (string, error) {
+			if validateErr != nil {
+				return raw, nil
 			}
-			outSegment, err := rewrite(segment)
+			tag, err := parseHTML5BlockStartTag(raw)
 			if err != nil {
-				rewriteErr = err
-				return segment
+				validateErr = common.ValidationErrorf("invalid html5-block tag in fetched content: %v", err).WithParam("html5-block")
+				return raw, nil
 			}
-			return outSegment
+			ref, ok := tag.attr(html5BlockDataRefAttr)
+			if !ok || strings.TrimSpace(ref) == "" {
+				validateErr = common.ValidationErrorf("fetched html5-block is missing data-ref; cannot resolve HTML reference").WithParam("html5-block")
+				return raw, nil
+			}
+			ref = strings.TrimSpace(ref)
+			if _, ok := refMap[html5BlockTag][ref]; !ok {
+				validateErr = common.ValidationErrorf("document.reference_map.%s.%s is missing; cannot resolve html5-block. Re-run fetch or check that the upstream document.reference_map field includes this ref.", html5BlockTag, ref).WithParam("reference_map")
+			}
+			return raw, nil
 		})
-	} else {
-		rewritten, rewriteErr = rewrite(content)
+		return validateErr
 	}
-	if rewriteErr != nil {
-		return rewriteErr
+
+	if strings.TrimSpace(format) != "markdown" {
+		return validateSegment(content)
 	}
-	if wrote {
-		doc["content"] = rewritten
-		delete(doc, "resources")
+	var validateErr error
+	_ = applyOutsideCodeFences(content, func(segment string) string {
+		if validateErr != nil {
+			return segment
+		}
+		validateErr = validateSegment(segment)
+		return segment
+	})
+	return validateErr
+}
+
+func ensureHTML5BlockSuggestion(data map[string]interface{}) {
+	var suggestions []interface{}
+	switch existing := data["suggestions"].(type) {
+	case []interface{}:
+		suggestions = existing
+	case []string:
+		suggestions = make([]interface{}, 0, len(existing))
+		for _, item := range existing {
+			suggestions = append(suggestions, item)
+		}
+	}
+	for _, item := range suggestions {
+		if s, _ := item.(string); s == html5BlockSuggestionRead {
+			return
+		}
+	}
+	data["suggestions"] = append(suggestions, html5BlockSuggestionRead)
+}
+
+func resolveReferenceMapPaths(runtime *common.RuntimeContext, refMap html5BlockReferenceMap) error {
+	for typ, group := range refMap {
+		for ref, entry := range group {
+			if strings.TrimSpace(entry.Path) == "" {
+				continue
+			}
+			if entry.Data != "" {
+				return common.ValidationErrorf("reference_map.%s.%s must use either data or path, not both", typ, ref).WithParam("reference_map")
+			}
+			data, err := readHTML5BlockPath(runtime, entry.Path, fmt.Sprintf("reference_map.%s.%s.path", typ, ref))
+			if err != nil {
+				return err
+			}
+			entry.Data = data
+			entry.Path = ""
+			group[ref] = entry
+		}
 	}
 	return nil
 }
 
-func materializeHTML5BlockResourceTag(resources html5BlockResourceMap, docToken string, raw string, markWrote func()) (string, error) {
-	tag, err := parseHTML5BlockStartTag(raw)
+func readHTML5BlockPath(runtime *common.RuntimeContext, pathValue string, label string) (string, error) {
+	pathRaw := strings.TrimSpace(pathValue)
+	if !strings.HasPrefix(pathRaw, "@") {
+		return "", common.ValidationErrorf("%s %q must start with @, for example @widget.html", label, pathValue).WithParam("path")
+	}
+	relPath := strings.TrimSpace(strings.TrimPrefix(pathRaw, "@"))
+	if relPath == "" {
+		return "", common.ValidationErrorf("%s cannot be empty after @", label).WithParam("path")
+	}
+	clean := filepath.Clean(relPath)
+	if filepath.IsAbs(clean) || clean == "." || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", common.ValidationErrorf("%s %q must be a relative path within the current working directory", label, pathValue).WithParam("path")
+	}
+	if strings.ToLower(filepath.Ext(clean)) != ".html" {
+		return "", common.ValidationErrorf("%s %q must point to a .html file", label, pathValue).WithParam("path")
+	}
+	data, err := cmdutil.ReadInputFile(runtime.FileIO(), clean)
 	if err != nil {
-		return "", common.ValidationErrorf("invalid html5-block tag in fetched content: %v", err).WithParam("html5-block")
+		return "", common.ValidationErrorf("%s %q cannot be read from the current working directory; check that the file exists relative to where lark-cli is running: %v", label, clean, err).WithParam("path").WithCause(err)
 	}
-	ref, ok := tag.attr(html5BlockDataRefAttr)
-	if !ok || strings.TrimSpace(ref) == "" {
-		return "", common.ValidationErrorf("fetched html5-block is missing data-ref; cannot materialize HTML resource").WithParam("html5-block")
-	}
-	entry, err := lookupHTML5BlockResource(resources, ref)
-	if err != nil {
-		return "", err
-	}
-	relPath, err := writeHTML5BlockResourceFile(docToken, ref, entry.Data)
-	if err != nil {
-		return "", err
-	}
-
-	tag.removeAttrs(html5BlockDataRefAttr, html5BlockRefDataAttr, html5BlockPathAttr)
-	tag.Attrs = append(tag.Attrs, html5BlockAttr{Name: html5BlockPathAttr, Value: "@./" + filepath.ToSlash(relPath)})
-	markWrote()
-	return tag.render(false), nil
+	return string(data), nil
 }
 
 func hasProcessableHTML5Block(format string, content string) bool {
@@ -283,47 +505,111 @@ func hasProcessableHTML5Block(format string, content string) bool {
 	return found
 }
 
-func parseHTML5BlockResources(raw string) (html5BlockResourceMap, error) {
-	if strings.TrimSpace(raw) == "" {
-		return nil, common.ValidationErrorf("document.resources is required for fetched html5-block content").WithParam("resources")
+func applyOutsideCodeFences(content string, fn func(segment string) string) string {
+	var out strings.Builder
+	var segment strings.Builder
+	inFence := false
+
+	flush := func() {
+		if segment.Len() == 0 {
+			return
+		}
+		out.WriteString(fn(segment.String()))
+		segment.Reset()
 	}
-	var resources html5BlockResourceMap
-	if err := json.Unmarshal([]byte(raw), &resources); err != nil {
-		return nil, common.ValidationErrorf("document.resources is not valid html5-block JSON: %v", err).WithParam("resources").WithCause(err)
+
+	for _, line := range strings.SplitAfter(content, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			if !inFence {
+				flush()
+				inFence = true
+			} else {
+				inFence = false
+			}
+			out.WriteString(line)
+			continue
+		}
+		if inFence {
+			out.WriteString(line)
+		} else {
+			segment.WriteString(line)
+		}
 	}
-	if resources[html5BlockTag] == nil {
-		return nil, common.ValidationErrorf("document.resources.%s is required for fetched html5-block content", html5BlockTag).WithParam("resources")
-	}
-	return resources, nil
+	flush()
+	return out.String()
 }
 
-func lookupHTML5BlockResource(resources html5BlockResourceMap, ref string) (html5BlockResourceEntry, error) {
-	ref = strings.TrimSpace(ref)
-	group := resources[html5BlockTag]
-	entry, ok := group[ref]
-	if !ok {
-		return html5BlockResourceEntry{}, common.ValidationErrorf("document.resources.%s.%s is missing; cannot materialize html5-block. Re-run fetch or check that the upstream document.resources field includes this ref.", html5BlockTag, ref).WithParam("resources")
+func cloneReferenceMap(refMap html5BlockReferenceMap) html5BlockReferenceMap {
+	if len(refMap) == 0 {
+		return nil
 	}
-	return entry, nil
+	out := make(html5BlockReferenceMap, len(refMap))
+	for typ, group := range refMap {
+		if len(group) == 0 {
+			continue
+		}
+		outGroup := make(map[string]html5BlockReferenceEntry, len(group))
+		for ref, entry := range group {
+			outGroup[ref] = entry
+		}
+		out[typ] = outGroup
+	}
+	return out
 }
 
-func writeHTML5BlockResourceFile(docToken string, ref string, html string) (string, error) {
+func compactReferenceMap(refMap html5BlockReferenceMap) html5BlockReferenceMap {
+	if len(refMap) == 0 {
+		return nil
+	}
+	out := make(html5BlockReferenceMap, len(refMap))
+	for typ, group := range refMap {
+		if len(group) == 0 {
+			continue
+		}
+		out[typ] = group
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func ensureReferenceGroup(refMap html5BlockReferenceMap, typ string) {
+	if refMap[typ] == nil {
+		refMap[typ] = map[string]html5BlockReferenceEntry{}
+	}
+}
+
+func nextHTML5BlockRef(refMap html5BlockReferenceMap) func() string {
+	next := 1
+	return func() string {
+		for {
+			ref := fmt.Sprintf("html5_%d", next)
+			next++
+			if _, exists := refMap[html5BlockTag][ref]; !exists {
+				return ref
+			}
+		}
+	}
+}
+
+func writeHTML5BlockReferenceFile(docToken string, ref string, html string) (string, error) {
 	if !html5BlockSafeNamePattern.MatchString(docToken) {
 		return "", common.ValidationErrorf("document_id %q cannot be used as a resource directory name", docToken).WithParam("document_id")
 	}
 	if !html5BlockSafeNamePattern.MatchString(ref) {
 		return "", common.ValidationErrorf("html5-block data-ref %q cannot be used as a file name", ref).WithParam("data-ref")
 	}
-	relPath := filepath.Join(html5BlockResourceRoot, docToken, ref+".html")
+	relPath := filepath.Join(html5BlockReferenceRoot, docToken, ref+".html")
 	safePath, err := validate.SafeOutputPath(relPath)
 	if err != nil {
-		return "", common.ValidationErrorf("cannot write html5-block resource %q: %v", relPath, err).WithParam("resources").WithCause(err)
+		return "", common.ValidationErrorf("cannot write html5-block reference %q: %v", relPath, err).WithParam("reference_map").WithCause(err)
 	}
 	if err := vfs.MkdirAll(filepath.Dir(safePath), 0o700); err != nil {
-		return "", common.ValidationErrorf("cannot create html5-block resource directory %q: %v", filepath.Dir(relPath), err).WithParam("resources").WithCause(err)
+		return "", common.ValidationErrorf("cannot create html5-block reference directory %q: %v", filepath.Dir(relPath), err).WithParam("reference_map").WithCause(err)
 	}
 	if err := vfs.WriteFile(safePath, []byte(html), 0o600); err != nil {
-		return "", common.ValidationErrorf("cannot write html5-block resource file %q: %v", relPath, err).WithParam("resources").WithCause(err)
+		return "", common.ValidationErrorf("cannot write html5-block reference file %q: %v", relPath, err).WithParam("reference_map").WithCause(err)
 	}
 	return relPath, nil
 }
@@ -449,12 +735,12 @@ func escapeXMLAttr(value string) string {
 	return b.String()
 }
 
-func marshalHTML5BlockResources(resources html5BlockResourceMap) (string, error) {
+func marshalHTML5BlockReferenceMap(refMap html5BlockReferenceMap) (string, error) {
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
-	if err := enc.Encode(resources); err != nil {
-		return "", common.ValidationErrorf("failed to encode html5-block resources: %v", err).WithCause(err)
+	if err := enc.Encode(refMap); err != nil {
+		return "", common.ValidationErrorf("failed to encode html5-block reference_map: %v", err).WithCause(err)
 	}
 	return strings.TrimRight(b.String(), "\n"), nil
 }
