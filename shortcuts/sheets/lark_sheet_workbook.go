@@ -6,18 +6,12 @@ package sheets
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"path/filepath"
 	"strings"
-	"time"
-
-	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 
 	"github.com/larksuite/cli/extension/fileio"
-	"github.com/larksuite/cli/internal/client"
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/util"
-	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 	"github.com/larksuite/cli/shortcuts/drive"
 )
@@ -845,178 +839,62 @@ var WorkbookExport = common.Shortcut{
 		return nil
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
-		token, _ := resolveSpreadsheetToken(runtime)
-		ext := runtime.Str("file-extension")
-		if ext == "" {
-			ext = "xlsx"
-		}
-		body := map[string]interface{}{
-			"token":          token,
-			"type":           "sheet",
-			"file_extension": ext,
-		}
-		if sid := strings.TrimSpace(runtime.Str("sheet-id")); sid != "" {
-			body["sub_id"] = sid
-		}
-		dry := common.NewDryRunAPI().
-			POST("/open-apis/drive/v1/export_tasks").
-			Desc("create export task").
-			Body(body).
-			GET("/open-apis/drive/v1/export_tasks/<ticket>").
-			Desc("poll task status").
-			Params(map[string]interface{}{"token": token})
-		if strings.TrimSpace(runtime.Str("output-path")) != "" {
-			dry.GET("/open-apis/drive/v1/export_tasks/file/<file_token>/download").
-				Desc("download exported file")
-		}
-		return dry
+		p, _ := workbookExportParams(runtime)
+		p.OutputDir = strings.TrimSpace(runtime.Str("output-path"))
+		return drive.PlanExportDryRun(runtime, p)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		p, err := workbookExportParams(runtime)
 		if err != nil {
 			return err
 		}
-		ext := runtime.Str("file-extension")
-		if ext == "" {
-			ext = "xlsx"
-		}
-		body := map[string]interface{}{
-			"token":          token,
-			"type":           "sheet",
-			"file_extension": ext,
-		}
-		if sid := strings.TrimSpace(runtime.Str("sheet-id")); sid != "" {
-			body["sub_id"] = sid
-		}
-		taskData, err := runtime.CallAPI("POST", "/open-apis/drive/v1/export_tasks", nil, body)
-		if err != nil {
-			return err
-		}
-		ticket := common.GetString(taskData, "ticket")
-		if ticket == "" {
-			return output.Errorf(output.ExitAPI, "api_error", "export task created but ticket missing")
-		}
-
-		result := map[string]interface{}{
-			"ticket":         ticket,
-			"file_extension": ext,
-		}
-
-		// Poll up to ~30s for completion.
-		var fileToken, fileName string
-		for attempt := 0; attempt < 15; attempt++ {
-			status, err := pollExportTask(runtime, token, ticket)
-			if err != nil {
-				return err
-			}
-			switch status.JobStatus {
-			case 0: // success
-				fileToken = status.FileToken
-				fileName = status.FileName
-				result["file_token"] = fileToken
-				result["file_name"] = fileName
-				result["file_size"] = status.FileSize
-				attempt = 999 // break outer loop
-			case 1, 2: // pending / in progress
-				time.Sleep(2 * time.Second)
-				continue
-			default: // any non-zero status outside the in-progress window is a failure
-				if status.JobErrorMsg != "" {
-					return output.Errorf(output.ExitAPI, "api_error", "export task %s failed: %s", ticket, status.JobErrorMsg)
-				}
-				return output.Errorf(output.ExitAPI, "api_error", "export task %s failed with job_status=%d", ticket, status.JobStatus)
-			}
-		}
-		if fileToken == "" {
-			result["status"] = "polling_timeout"
-			runtime.Out(result, nil)
-			return nil
-		}
-
-		outPath := strings.TrimSpace(runtime.Str("output-path"))
-		if outPath == "" {
-			runtime.Out(result, nil)
-			return nil
-		}
-
-		saved, err := downloadExportFile(ctx, runtime, fileToken, outPath, fileName)
-		if err != nil {
-			return err
-		}
-		result["saved_path"] = saved
-		runtime.Out(result, nil)
-		return nil
+		applyWorkbookOutputPath(&p, runtime.FileIO(), runtime.Str("output-path"))
+		return drive.RunExport(ctx, runtime, p)
 	},
 	Tips: []string{
-		"Polls up to ~30s (15 × 2s). For very large workbooks rerun and pass --output-path to capture the file once status flips to success.",
+		"Polls for a bounded window; if the export is still running it returns a resume reference instead of blocking. Pass --output-path to download the file once ready (omit it to only create the export task and get the file token back).",
 	},
 }
 
-type exportTaskStatus struct {
-	JobStatus     int
-	JobErrorMsg   string
-	FileToken     string
-	FileName      string
-	FileSize      int64
-	FileExtension string
-}
-
-func pollExportTask(runtime *common.RuntimeContext, token, ticket string) (exportTaskStatus, error) {
-	data, err := runtime.CallAPI(
-		"GET",
-		fmt.Sprintf("/open-apis/drive/v1/export_tasks/%s", validate.EncodePathSegment(ticket)),
-		map[string]interface{}{"token": token},
-		nil,
-	)
+// workbookExportParams builds the shared drive export request for
+// +workbook-export: spreadsheet token + sheet locator, pinned to type=sheet.
+// workbook-export has always overwritten the target, so Overwrite is set. The
+// --output-path → OutputDir/FileName split (which needs a Stat) is applied
+// separately by applyWorkbookOutputPath so Validate/DryRun stay I/O-free.
+func workbookExportParams(runtime *common.RuntimeContext) (drive.ExportParams, error) {
+	token, err := resolveSpreadsheetToken(runtime)
 	if err != nil {
-		return exportTaskStatus{}, err
+		return drive.ExportParams{}, err
 	}
-	result := common.GetMap(data, "result")
-	if result == nil {
-		return exportTaskStatus{}, output.Errorf(output.ExitAPI, "api_error", "export task %s: empty result", ticket)
+	ext := runtime.Str("file-extension")
+	if ext == "" {
+		ext = "xlsx"
 	}
-	js, _ := util.ToFloat64(result["job_status"])
-	fs, _ := util.ToFloat64(result["file_size"])
-	return exportTaskStatus{
-		JobStatus:     int(js),
-		JobErrorMsg:   common.GetString(result, "job_error_msg"),
-		FileToken:     common.GetString(result, "file_token"),
-		FileName:      common.GetString(result, "file_name"),
-		FileSize:      int64(fs),
-		FileExtension: common.GetString(result, "file_extension"),
+	return drive.ExportParams{
+		Token:         token,
+		DocType:       "sheet",
+		FileExtension: ext,
+		SubID:         strings.TrimSpace(runtime.Str("sheet-id")),
+		Overwrite:     true,
 	}, nil
 }
 
-func downloadExportFile(ctx context.Context, runtime *common.RuntimeContext, fileToken, outPath, preferredName string) (string, error) {
-	apiResp, err := runtime.DoAPI(&larkcore.ApiReq{
-		HttpMethod: http.MethodGet,
-		ApiPath:    fmt.Sprintf("/open-apis/drive/v1/export_tasks/file/%s/download", validate.EncodePathSegment(fileToken)),
-	}, larkcore.WithFileDownload())
-	if err != nil {
-		return "", output.ErrNetwork("download failed: %s", err)
+// applyWorkbookOutputPath maps the single --output-path flag onto the drive
+// export OutputDir/FileName pair, preserving the legacy behavior: empty = no
+// download (return the ready file token only); an existing directory = download
+// into it under the server-provided name; otherwise treat it as a file path and
+// split into dir + base name.
+func applyWorkbookOutputPath(p *drive.ExportParams, fio fileio.FileIO, outputPath string) {
+	outputPath = strings.TrimSpace(outputPath)
+	if outputPath == "" {
+		return
 	}
-	if apiResp.StatusCode >= 400 {
-		return "", output.ErrNetwork("download failed: HTTP %d: %s", apiResp.StatusCode, string(apiResp.RawBody))
+	if info, err := fio.Stat(outputPath); err == nil && info.IsDir() {
+		p.OutputDir = outputPath
+		return
 	}
-	target := outPath
-	if info, statErr := runtime.FileIO().Stat(outPath); statErr == nil && info.IsDir() {
-		name := strings.TrimSpace(preferredName)
-		if name == "" {
-			name = client.ResolveFilename(apiResp)
-		}
-		target = filepath.Join(outPath, name)
-	}
-	if _, err := runtime.FileIO().Save(target, fileio.SaveOptions{
-		ContentType:   apiResp.Header.Get("Content-Type"),
-		ContentLength: int64(len(apiResp.RawBody)),
-	}, strings.NewReader(string(apiResp.RawBody))); err != nil {
-		return "", common.WrapSaveErrorByCategory(err, "io")
-	}
-	resolved, _ := runtime.FileIO().ResolvePath(target)
-	if resolved == "" {
-		resolved = target
-	}
-	return resolved, nil
+	p.OutputDir = filepath.Dir(outputPath)
+	p.FileName = filepath.Base(outputPath)
 }
 
 // lookupSheetIndex finds a sub-sheet by id or name and returns its canonical
