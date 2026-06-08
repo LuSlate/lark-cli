@@ -1219,29 +1219,38 @@ func minuteGetErrStub(token string, code int, msg string) *httpmock.Stub {
 	}
 }
 
-// TestMinutesReadError_ProblemOf_EnrichesMessage pins that minutesReadError
-// mutates the typed error's Message and Hint in-place via errs.ProblemOf when
-// the server returns code 2091005 (minutes no-read-permission).
-func TestMinutesReadError_ProblemOf_EnrichesMessage(t *testing.T) {
+// TestMinutesReadError_AllFailed_OutPartialFailure verifies that a failing
+// minute-token lookup is treated as a failed item even though the result keeps
+// the input minute_token for caller correlation.
+func TestMinutesReadError_AllFailed_OutPartialFailure(t *testing.T) {
 	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	f, stdout, _, reg := cmdutil.TestFactory(t, defaultConfig())
 	reg.Register(minuteGetErrStub("tokperm", minutesNoReadPermissionCode, "no permission"))
 	// artifactsStub not needed: we never reach it on error
 
-	// A single minute-token that fails on a no-read-permission code still
-	// produces a note carrying minute_token, so the batch exits 0 with the
-	// enriched error surfaced inline rather than becoming an all-fail.
-	if err := mountAndRun(t, VCNotes, []string{"+notes", "--minute-tokens", "tokperm", "--as", "user"}, f, stdout); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	err := mountAndRun(t, VCNotes, []string{"+notes", "--minute-tokens", "tokperm", "--as", "user"}, f, stdout)
+	if err == nil {
+		t.Fatal("expected all-failed minute-token query to return an error")
+	}
+	var pfErr *output.PartialFailureError
+	if !errors.As(err, &pfErr) {
+		t.Fatalf("expected *output.PartialFailureError, got %T: %v", err, err)
+	}
+	if pfErr.Code != output.ExitAPI {
+		t.Errorf("PartialFailureError.Code = %d, want ExitAPI (%d)", pfErr.Code, output.ExitAPI)
 	}
 
-	// stdout carries the note with the enriched error/hint
-	var resp map[string]any
+	var resp struct {
+		OK   bool           `json:"ok"`
+		Data map[string]any `json:"data"`
+	}
 	if parseErr := json.Unmarshal(stdout.Bytes(), &resp); parseErr != nil {
 		t.Fatalf("unmarshal stdout: %v\n%s", parseErr, stdout.String())
 	}
-	data, _ := resp["data"].(map[string]any)
-	notes, _ := data["notes"].([]any)
+	if resp.OK {
+		t.Errorf("ok must be false on all-failed minute-token query, got ok:true")
+	}
+	notes, _ := resp.Data["notes"].([]any)
 	if len(notes) != 1 {
 		t.Fatalf("expected 1 note, got %d", len(notes))
 	}

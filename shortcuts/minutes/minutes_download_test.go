@@ -588,6 +588,34 @@ func TestDownload_OutputDirFlag_SingleToken(t *testing.T) {
 	}
 }
 
+func TestDownload_Validation_OutputDirIsExistingFile(t *testing.T) {
+	chdir(t, t.TempDir())
+	if err := os.WriteFile("not-a-dir", []byte("x"), 0644); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	f, _, _, _ := cmdutil.TestFactory(t, defaultConfig())
+	err := mountAndRun(t, MinutesDownload, []string{
+		"+download", "--minute-tokens", "tok001", "--output-dir", "not-a-dir", "--as", "user",
+	}, f, nil)
+	if err == nil {
+		t.Fatal("expected validation error for --output-dir pointing at a file")
+	}
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected *errs.ValidationError, got %T: %v", err, err)
+	}
+	if ve.Subtype != errs.SubtypeInvalidArgument {
+		t.Errorf("Subtype = %q, want %q", ve.Subtype, errs.SubtypeInvalidArgument)
+	}
+	if ve.Param != "--output-dir" {
+		t.Errorf("Param = %q, want --output-dir", ve.Param)
+	}
+	if !strings.Contains(err.Error(), "must be a directory") {
+		t.Errorf("expected directory validation message, got: %v", err)
+	}
+}
+
 func TestDownload_Batch_OutputNonExistentPath(t *testing.T) {
 	// Batch mode with --output pointing at a path that doesn't exist yet:
 	// auto-upgrade to --output-dir semantics and create the directory.

@@ -80,6 +80,11 @@ var MinutesDownload = common.Shortcut{
 			if err := common.ValidateSafePathTyped(runtime.FileIO(), outDir); err != nil {
 				return err
 			}
+			if fi, statErr := runtime.FileIO().Stat(outDir); statErr == nil && !fi.IsDir() {
+				return errs.NewValidationError(errs.SubtypeInvalidArgument, "--output-dir %q must be a directory", outDir).WithParam("--output-dir")
+			} else if statErr != nil && !errors.Is(statErr, fs.ErrNotExist) {
+				return errs.NewInternalError(errs.SubtypeFileIO, "cannot access --output-dir %q: %s", outDir, statErr).WithCause(statErr)
+			}
 		}
 		return nil
 	},

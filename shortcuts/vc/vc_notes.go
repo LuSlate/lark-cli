@@ -76,9 +76,11 @@ func minutesReadError(err error, minuteToken string) error {
 	if !ok || p.Code != minutesNoReadPermissionCode {
 		return err
 	}
-	p.Message = fmt.Sprintf("No read permission for minute %s: cannot query the minute.", minuteToken)
-	p.Hint = "Ask the minute owner for minute file read permission"
-	return err
+	return errs.NewPermissionError(errs.SubtypePermissionDenied,
+		"No read permission for minute %s: cannot query the minute.", minuteToken).
+		WithCode(minutesNoReadPermissionCode).
+		WithHint("Ask the minute owner for minute file read permission").
+		WithCause(err)
 }
 
 // validMinuteToken matches the server's minute-token format and blocks any
@@ -367,18 +369,28 @@ func joinErrors(msgs ...string) string {
 	return strings.Join(parts, "; ")
 }
 
-// hasNotesPayload reports whether a result map carries any usable note or
-// minute payload, irrespective of partial failures surfaced via `error`.
+// hasNotesPayload reports whether a result map carries usable note or minute
+// payload. An echoed --minute-tokens input alone is not treated as payload when
+// that item also carries an error; a meeting/calendar-derived minute_token is.
 func hasNotesPayload(m map[string]any) bool {
 	if m == nil {
 		return false
 	}
-	for _, k := range []string{"note_doc_token", "verbatim_doc_token", "minute_token", "meeting_notes", "shared_doc_tokens", "artifacts"} {
+	for _, k := range []string{"note_doc_token", "verbatim_doc_token", "meeting_notes", "shared_doc_tokens", "artifacts"} {
 		if v, ok := m[k]; ok && v != nil && v != "" {
 			return true
 		}
 	}
-	return false
+	minuteToken, _ := m["minute_token"].(string)
+	if minuteToken == "" {
+		return false
+	}
+	if errMsg, _ := m["error"].(string); errMsg == "" {
+		return true
+	}
+	_, fromMeeting := m["meeting_id"]
+	_, fromCalendarEvent := m["calendar_event_id"]
+	return fromMeeting || fromCalendarEvent
 }
 
 // fetchNoteByMinuteToken queries notes via minute_token.
