@@ -41,3 +41,17 @@ func TestBuildToolBody_OmitsTransactionIDWhenUnset(t *testing.T) {
 		t.Errorf("extra should be absent when %s is unset: %#v", sheetTxnIDEnv, body)
 	}
 }
+
+// TestBuildToolBody_OmitsTransactionIDForReads verifies that read tools never
+// carry a transaction id even when one is set: a read scoped to a transaction
+// resolves against that transaction's snapshot (often empty) instead of the
+// live document, so threading it would make reads return blank cells.
+func TestBuildToolBody_OmitsTransactionIDForReads(t *testing.T) {
+	t.Setenv(sheetTxnIDEnv, "tx_test_123")
+	body := parseDryRunBody(t, CellsGet, []string{
+		"--url", testURL, "--sheet-id", testSheetID, "--range", "A1",
+	})
+	if _, ok := body["extra"]; ok {
+		t.Errorf("read tool must not carry extra.transaction_id: %#v", body)
+	}
+}

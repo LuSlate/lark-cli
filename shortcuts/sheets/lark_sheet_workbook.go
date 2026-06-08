@@ -634,7 +634,7 @@ var WorkbookCreate = common.Shortcut{
 						"range":      tablePutFullRange(s, len(matrix)),
 						"cells":      matrix,
 					}
-					wireBody, _ := buildToolBody("set_cell_range", input)
+					wireBody, _ := buildToolBody(ToolKindWrite, "set_cell_range", input)
 					dry.POST("/open-apis/sheet_ai/v2/spreadsheets/<new-token>/tools/invoke_write").
 						Desc(fmt.Sprintf("write typed sheet %q (%d data rows × %d cols) via set_cell_range", s.Name, len(s.Rows), len(s.Columns))).
 						Body(wireBody)
@@ -645,7 +645,7 @@ var WorkbookCreate = common.Shortcut{
 		if fill, _ := buildInitialFillInput(runtime); fill != nil {
 			fill["excel_id"] = "<new-token>"
 			fill["sheet_id"] = "<first-sheet-id>" // resolved from the workbook at execute time
-			wireBody, _ := buildToolBody("set_cell_range", fill)
+			wireBody, _ := buildToolBody(ToolKindWrite, "set_cell_range", fill)
 			dry.POST("/open-apis/sheet_ai/v2/spreadsheets/<new-token>/tools/invoke_write").
 				Desc("fill headers + data via set_cell_range (sheet_id resolved after create)").
 				Body(wireBody)

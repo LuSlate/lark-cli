@@ -727,7 +727,7 @@ var CellsSetImage = common.Shortcut{
 		if fileName == "" {
 			fileName = filepath.Base(imgPath)
 		}
-		setCellBody, _ := buildToolBody("set_cell_range", map[string]interface{}{
+		setCellBody, _ := buildToolBody(ToolKindWrite, "set_cell_range", map[string]interface{}{
 			"excel_id": token,
 			"range":    strings.TrimSpace(runtime.Str("range")),
 			"sheet_id": sheetSelectorPlaceholder(sheetID, sheetName),

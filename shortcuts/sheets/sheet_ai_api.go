@@ -59,7 +59,7 @@ func toolInvokePath(token string, kind ToolKind) string {
 // buildToolBody constructs the One-OpenAPI request body for a tool invocation.
 // `input` is serialized to a JSON string per the API contract; callers pass
 // a typed Go map and never need to handle JSON encoding themselves.
-func buildToolBody(toolName string, input map[string]interface{}) (map[string]interface{}, error) {
+func buildToolBody(kind ToolKind, toolName string, input map[string]interface{}) (map[string]interface{}, error) {
 	inputJSON, err := json.Marshal(input)
 	if err != nil {
 		return nil, fmt.Errorf("encode tool input: %w", err)
@@ -70,9 +70,14 @@ func buildToolBody(toolName string, input map[string]interface{}) (map[string]in
 	}
 	// Thread a session-stable transaction id (when provided) so a group of
 	// edits and a later +undo share one undo stack. Omitted when unset, leaving
-	// the server to mint a per-request id as before.
-	if txID := sheetTransactionID(); txID != "" {
-		body["extra"] = map[string]interface{}{"transaction_id": txID}
+	// the server to mint a per-request id as before. Only write tools join the
+	// undo transaction; reads must never carry it — a read scoped to a
+	// transaction id resolves against that transaction's (often empty) snapshot
+	// instead of the live document, so it would read back blank.
+	if kind == ToolKindWrite {
+		if txID := sheetTransactionID(); txID != "" {
+			body["extra"] = map[string]interface{}{"transaction_id": txID}
+		}
 	}
 	return body, nil
 }
@@ -92,7 +97,7 @@ func callTool(
 	toolName string,
 	input map[string]interface{},
 ) (interface{}, error) {
-	body, err := buildToolBody(toolName, input)
+	body, err := buildToolBody(kind, toolName, input)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +141,7 @@ func invokeToolDryRun(
 	toolName string,
 	input map[string]interface{},
 ) *common.DryRunAPI {
-	wireBody, _ := buildToolBody(toolName, input)
+	wireBody, _ := buildToolBody(kind, toolName, input)
 	return common.NewDryRunAPI().
 		POST(toolInvokePath(token, kind)).
 		Body(wireBody).

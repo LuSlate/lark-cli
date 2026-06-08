@@ -688,7 +688,7 @@ func newFloatImageWriteShortcut(command, description, op string, withIDFlag, isH
 			// With a local --image, Execute first uploads the file; surface that
 			// extra step in the preview (mirrors +cells-set-image's dry-run).
 			if img := strings.TrimSpace(runtime.Str("image")); img != "" {
-				manageBody, _ := buildToolBody("manage_float_image_object", input)
+				manageBody, _ := buildToolBody(ToolKindWrite, "manage_float_image_object", input)
 				return common.NewDryRunAPI().
 					POST("/open-apis/drive/v1/medias/upload_all").
 					Desc("upload local image to drive (parent_type=sheet_image)").

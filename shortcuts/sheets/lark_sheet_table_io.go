@@ -740,7 +740,7 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 		if s.AllowOverwrite != nil && !*s.AllowOverwrite {
 			input["allow_overwrite"] = false
 		}
-		wireBody, _ := buildToolBody("set_cell_range", input)
+		wireBody, _ := buildToolBody(ToolKindWrite, "set_cell_range", input)
 		dry.POST(toolInvokePath(token, ToolKindWrite)).Desc(desc).Body(wireBody)
 	}
 	return dry
@@ -777,14 +777,14 @@ var TableGet = common.Shortcut{
 		token, _ := resolveSpreadsheetToken(runtime)
 		dry := common.NewDryRunAPI()
 		if strings.TrimSpace(runtime.Str("sheet-id")) == "" && strings.TrimSpace(runtime.Str("sheet-name")) == "" {
-			body, _ := buildToolBody("get_workbook_structure", map[string]interface{}{"excel_id": token})
+			body, _ := buildToolBody(ToolKindRead, "get_workbook_structure", map[string]interface{}{"excel_id": token})
 			dry.POST(toolInvokePath(token, ToolKindRead)).Desc("list sub-sheets via get_workbook_structure").Body(body)
 		}
 		rng := strings.TrimSpace(runtime.Str("range"))
 		if rng == "" {
 			rng = "<each sheet's current region>"
 		}
-		body, _ := buildToolBody("get_cell_ranges", map[string]interface{}{
+		body, _ := buildToolBody(ToolKindRead, "get_cell_ranges", map[string]interface{}{
 			"excel_id": token, "ranges": []string{rng},
 			"include_styles": true, "value_render_option": "raw_value",
 		})
