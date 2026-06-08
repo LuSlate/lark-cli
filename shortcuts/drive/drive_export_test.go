@@ -488,6 +488,72 @@ func TestDriveExportAsyncSuccess(t *testing.T) {
 	}
 }
 
+// TestDriveExportEmptyOutputDirDownloadsToCwd guards the export refactor: an
+// explicit empty --output-dir must still download to the current directory
+// (normalized to "."), not trigger the export-only no-download path that the
+// shared RunExport core uses for sheets +workbook-export.
+func TestDriveExportEmptyOutputDirDownloadsToCwd(t *testing.T) {
+	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/drive/v1/export_tasks",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"ticket": "tk_e"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/drive/v1/export_tasks/tk_e",
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
+			"result": map[string]interface{}{
+				"job_status": 0, "file_token": "box_e", "file_name": "report",
+				"file_extension": "pdf", "type": "docx", "file_size": 3,
+			},
+		}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method:  "GET",
+		URL:     "/open-apis/drive/v1/export_tasks/file/box_e/download",
+		Status:  200,
+		RawBody: []byte("pdf"),
+		Headers: http.Header{
+			"Content-Type":        []string{"application/pdf"},
+			"Content-Disposition": []string{`attachment; filename="report.pdf"`},
+		},
+	})
+
+	tmpDir := t.TempDir()
+	withDriveWorkingDir(t, tmpDir)
+
+	prevAttempts, prevInterval := driveExportPollAttempts, driveExportPollInterval
+	driveExportPollAttempts, driveExportPollInterval = 1, 0
+	t.Cleanup(func() {
+		driveExportPollAttempts, driveExportPollInterval = prevAttempts, prevInterval
+	})
+
+	err := mountAndRunDrive(t, DriveExport, []string{
+		"+export",
+		"--token", "docx123",
+		"--doc-type", "docx",
+		"--file-extension", "pdf",
+		"--output-dir", "",
+		"--as", "bot",
+	}, f, stdout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Empty --output-dir must still write to cwd, not skip the download.
+	data, err := os.ReadFile(filepath.Join(tmpDir, "report.pdf"))
+	if err != nil {
+		t.Fatalf("empty --output-dir should still download to cwd: %v", err)
+	}
+	if string(data) != "pdf" {
+		t.Fatalf("downloaded content = %q", string(data))
+	}
+	if strings.Contains(stdout.String(), `"downloaded": false`) {
+		t.Fatalf("export-only path must not trigger for drive +export: %s", stdout.String())
+	}
+}
+
 func TestDriveExportAsyncUsesProvidedFileName(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, driveTestConfig())
 	reg.Register(&httpmock.Stub{

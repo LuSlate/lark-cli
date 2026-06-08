@@ -361,21 +361,21 @@ func TestWorkbookCreate_DataValidation(t *testing.T) {
 	}
 }
 
-// TestWorkbookExport_DryRun checks the 2-or-3 step plan depending on
-// --output-path. The order should be: POST → GET (poll) → optional GET
-// (download).
+// TestWorkbookExport_DryRun verifies the export dry-run now delegates to the
+// shared drive export core: a single create-task POST (poll + download are
+// described inline rather than as separate api entries).
 func TestWorkbookExport_DryRun(t *testing.T) {
 	t.Parallel()
 
-	t.Run("xlsx without --output-path → 2 steps", func(t *testing.T) {
+	t.Run("xlsx create-task body pins type=sheet", func(t *testing.T) {
 		t.Parallel()
 		calls := parseDryRunAPI(t, WorkbookExport, []string{"--url", testURL, "--file-extension", "xlsx"})
-		if len(calls) != 2 {
-			t.Fatalf("api calls = %d, want 2 (create + poll)", len(calls))
+		if len(calls) != 1 {
+			t.Fatalf("api calls = %d, want 1 (create export task)", len(calls))
 		}
 		create := calls[0].(map[string]interface{})
 		if create["url"] != "/open-apis/drive/v1/export_tasks" {
-			t.Errorf("first url = %v", create["url"])
+			t.Errorf("url = %v", create["url"])
 		}
 		body, _ := create["body"].(map[string]interface{})
 		if body["type"] != "sheet" || body["file_extension"] != "xlsx" || body["token"] != testToken {
@@ -383,22 +383,18 @@ func TestWorkbookExport_DryRun(t *testing.T) {
 		}
 	})
 
-	t.Run("csv → 3 steps, with sub_id", func(t *testing.T) {
+	t.Run("csv includes sub_id from --sheet-id", func(t *testing.T) {
 		t.Parallel()
 		calls := parseDryRunAPI(t, WorkbookExport, []string{
 			"--url", testURL, "--file-extension", "csv", "--sheet-id", "sh1",
 			"--output-path", "/tmp/out.csv",
 		})
-		if len(calls) != 3 {
-			t.Fatalf("api calls = %d, want 3", len(calls))
+		if len(calls) != 1 {
+			t.Fatalf("api calls = %d, want 1", len(calls))
 		}
 		body, _ := calls[0].(map[string]interface{})["body"].(map[string]interface{})
-		if body["sub_id"] != "sh1" {
-			t.Errorf("csv export missing sub_id: %#v", body)
-		}
-		dl := calls[2].(map[string]interface{})
-		if !strings.Contains(dl["url"].(string), "/export_tasks/file/") {
-			t.Errorf("download url = %v", dl["url"])
+		if body["type"] != "sheet" || body["sub_id"] != "sh1" {
+			t.Errorf("csv export body = %#v (want type=sheet, sub_id=sh1)", body)
 		}
 	})
 
