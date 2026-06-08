@@ -153,7 +153,77 @@ func (c *APIClient) DoSDKRequest(ctx context.Context, req *larkcore.ApiReq, as c
 	if err != nil {
 		return nil, WrapDoAPIError(err)
 	}
+	c.logAPIResponse(req, resp)
 	return resp, nil
+}
+
+func (c *APIClient) logAPIResponse(req *larkcore.ApiReq, resp *larkcore.ApiResp) {
+	if resp == nil {
+		return
+	}
+	logID := strings.TrimSpace(resp.LogId())
+	if logID == "" {
+		return
+	}
+	method, path := apiReqLogFields(req, "")
+	fmt.Fprintf(c.errOut(), "[lark-cli] api-response: method=%s path=%s status=%d log_id=%s\n", method, path, resp.StatusCode, logID)
+}
+
+func (c *APIClient) logStreamResponse(req *larkcore.ApiReq, requestURL string, resp *http.Response) {
+	if resp == nil {
+		return
+	}
+	logID := streamLogID(resp.Header)
+	if logID == "" {
+		return
+	}
+	method, path := apiReqLogFields(req, requestURL)
+	fmt.Fprintf(c.errOut(), "[lark-cli] api-response: method=%s path=%s status=%d log_id=%s\n", method, path, resp.StatusCode, logID)
+}
+
+func (c *APIClient) errOut() io.Writer {
+	if c != nil && c.ErrOut != nil {
+		return c.ErrOut
+	}
+	return io.Discard
+}
+
+func apiReqLogFields(req *larkcore.ApiReq, fallbackURL string) (string, string) {
+	method := ""
+	path := ""
+	if req != nil {
+		method = req.HttpMethod
+		path = req.ApiPath
+	}
+	method = strings.ToUpper(strings.TrimSpace(method))
+	if method == "" {
+		method = "UNKNOWN"
+	}
+	path = requestLogPath(path)
+	if path == "missing" {
+		path = requestLogPath(fallbackURL)
+	}
+	return method, path
+}
+
+func requestLogPath(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "missing"
+	}
+	if u, err := url.Parse(raw); err == nil && u.IsAbs() {
+		if u.EscapedPath() != "" {
+			return u.EscapedPath()
+		}
+		return "/"
+	}
+	if i := strings.Index(raw, "?"); i >= 0 {
+		raw = raw[:i]
+	}
+	if raw == "" {
+		return "missing"
+	}
+	return raw
 }
 
 // DoStream executes a streaming HTTP request against the Lark OpenAPI endpoint.
@@ -224,6 +294,7 @@ func (c *APIClient) DoStream(ctx context.Context, req *larkcore.ApiReq, as core.
 		return nil, errs.NewNetworkError(classifyNetworkSubtype(err), "stream request failed: %s", err).WithCause(err)
 	}
 	resp.Body = &cancelOnCloseBody{ReadCloser: resp.Body, cancel: cancel}
+	c.logStreamResponse(req, requestURL, resp)
 
 	// Handle HTTP errors internally
 	if resp.StatusCode >= 400 {

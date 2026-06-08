@@ -28,8 +28,14 @@ const (
 	HeaderShortcut    = "X-Cli-Shortcut"
 	HeaderExecutionId = "X-Cli-Execution-Id"
 	HeaderAgentTrace  = "X-Agent-Trace"
+	HeaderTTEnv       = "X-Tt-Env"
+	HeaderUsePPE      = "X-Use-Ppe"
+	HeaderRPCAppID    = "Rpc-Persist-Cli-Req-App-Id"
 
 	SourceValue = "lark-cli"
+	TTEnvValue  = "ppe_wwm_dev"
+	UsePPEValue = "1"
+	RPCAppID    = "497858"
 
 	HeaderUserAgent = "User-Agent"
 
@@ -75,6 +81,9 @@ func BaseSecurityHeaders() http.Header {
 	h.Set(HeaderVersion, build.Version)
 	h.Set(HeaderBuild, DetectBuildKind())
 	h.Set(HeaderUserAgent, UserAgentValue())
+	h.Set(HeaderTTEnv, TTEnvValue)
+	h.Set(HeaderUsePPE, UsePPEValue)
+	h.Set(HeaderRPCAppID, RPCAppID)
 	if v := AgentTraceValue(); v != "" {
 		h.Set(HeaderAgentTrace, v)
 	}

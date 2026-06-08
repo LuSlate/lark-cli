@@ -256,10 +256,23 @@ func TestBaseSecurityHeaders_IncludesBuildHeader(t *testing.T) {
 
 func TestBaseSecurityHeaders_AllRequiredHeaders(t *testing.T) {
 	h := BaseSecurityHeaders()
-	for _, key := range []string{HeaderSource, HeaderVersion, HeaderBuild, HeaderUserAgent} {
+	for _, key := range []string{HeaderSource, HeaderVersion, HeaderBuild, HeaderUserAgent, HeaderTTEnv, HeaderUsePPE, HeaderRPCAppID} {
 		if h.Get(key) == "" {
 			t.Errorf("BaseSecurityHeaders missing %s", key)
 		}
+	}
+}
+
+func TestBaseSecurityHeaders_IncludesPersistentRequestHeaders(t *testing.T) {
+	h := BaseSecurityHeaders()
+	if got := h.Get(HeaderTTEnv); got != TTEnvValue {
+		t.Fatalf("BaseSecurityHeaders()[%s] = %q, want %q", HeaderTTEnv, got, TTEnvValue)
+	}
+	if got := h.Get(HeaderUsePPE); got != UsePPEValue {
+		t.Fatalf("BaseSecurityHeaders()[%s] = %q, want %q", HeaderUsePPE, got, UsePPEValue)
+	}
+	if got := h.Get(HeaderRPCAppID); got != RPCAppID {
+		t.Fatalf("BaseSecurityHeaders()[%s] = %q, want %q", HeaderRPCAppID, got, RPCAppID)
 	}
 }
 

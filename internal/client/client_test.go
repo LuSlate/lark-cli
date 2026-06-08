@@ -464,6 +464,48 @@ func TestDoStream_TransportFailureSplitsSubtype(t *testing.T) {
 	}
 }
 
+func TestDoStream_LogsLogIDToErrOut(t *testing.T) {
+	errBuf := &bytes.Buffer{}
+	rt := roundTripFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header: http.Header{
+				"Content-Type":              []string{"application/octet-stream"},
+				larkcore.HttpHeaderKeyLogId: []string{"stream-log-123"},
+			},
+			Body: io.NopCloser(strings.NewReader("ok")),
+		}, nil
+	})
+	ac := &APIClient{
+		HTTP:       &http.Client{Transport: rt},
+		ErrOut:     errBuf,
+		Credential: credential.NewCredentialProvider(nil, nil, &staticTokenResolver{}, nil),
+		Config:     &core.CliConfig{AppID: "test-app", AppSecret: "test-secret", Brand: core.BrandFeishu},
+	}
+
+	resp, err := ac.DoStream(context.Background(), &larkcore.ApiReq{
+		HttpMethod: http.MethodGet,
+		ApiPath:    "/open-apis/drive/v1/medias/file_token/download",
+	}, core.AsBot)
+	if err != nil {
+		t.Fatalf("DoStream() error = %v", err)
+	}
+	defer resp.Body.Close()
+
+	got := errBuf.String()
+	for _, want := range []string{
+		"[lark-cli] api-response:",
+		"method=GET",
+		"path=/open-apis/drive/v1/medias/file_token/download",
+		"status=200",
+		"log_id=stream-log-123",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("log missing %q; got:\n%s", want, got)
+		}
+	}
+}
+
 // failingTokenResolver always returns TokenUnavailableError, exercising the
 // auth/credential failure path through resolveAccessToken.
 type failingTokenResolver struct{}
@@ -615,6 +657,41 @@ func TestDoSDKRequest_TransportFailureWrapsAsNetwork(t *testing.T) {
 	// any of the specific cause checks; subtype falls back to transport.
 	if output.ExitCodeOf(err) != output.ExitNetwork {
 		t.Errorf("ExitCodeOf = %d, want %d (network)", output.ExitCodeOf(err), output.ExitNetwork)
+	}
+}
+
+func TestDoSDKRequest_LogsLogIDToErrOut(t *testing.T) {
+	rt := roundTripFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header: http.Header{
+				"Content-Type":              []string{"application/json"},
+				larkcore.HttpHeaderKeyLogId: []string{"sdk-log-123"},
+			},
+			Body: io.NopCloser(strings.NewReader(`{"code":0,"msg":"ok","data":{}}`)),
+		}, nil
+	})
+	ac, errBuf := newTestAPIClient(t, rt)
+
+	_, err := ac.DoSDKRequest(context.Background(), &larkcore.ApiReq{
+		HttpMethod: http.MethodGet,
+		ApiPath:    "/open-apis/contact/v3/users/me",
+	}, core.AsBot)
+	if err != nil {
+		t.Fatalf("DoSDKRequest() error = %v", err)
+	}
+
+	got := errBuf.String()
+	for _, want := range []string{
+		"[lark-cli] api-response:",
+		"method=GET",
+		"path=/open-apis/contact/v3/users/me",
+		"status=200",
+		"log_id=sdk-log-123",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("log missing %q; got:\n%s", want, got)
+		}
 	}
 }
 
