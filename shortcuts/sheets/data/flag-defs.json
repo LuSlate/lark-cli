@@ -2020,7 +2020,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "RFC 4180 CSV text; plain values only (no formulas / styles / comments)",
+        "desc": "RFC 4180 CSV text; values or formulas (a leading = is evaluated as a formula); no styles / comments / images (use +cells-set for those).",
         "input": [
           "file",
           "stdin"

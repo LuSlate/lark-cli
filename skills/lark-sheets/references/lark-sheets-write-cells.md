@@ -51,14 +51,14 @@
 |------|----------------|------|
 | 模型手里已经有 CSV 文本（小规模手动构造、从 `+csv-get` 取到后简单加工） | `+csv-put` | 直接传 CSV 文本 + `--start-cell`，不用自己拼二维 cells 数组；必要时自动扩容行列 |
 | 列里有数值语义的数据（数字 / 金额 / 百分比 / 日期 / 计数）→ 飞书，要类型保真（来源不限：DataFrame、Counter、dict、list 都算） | `+table-put` | 列显式声明 `type`：date 落真日期、**金额 / 百分比 / 计数等数值列保精度且带 `number_format`（可排序 / 求和 / 入图表）**、string 保前导零，多 sheet 一次写。**只要列有数值语义就走这里**，不要在本地把数字拼成带 `$` / `%` 的字符串再走 `+csv-put` |
-| 写入含公式、样式、批注、图片、数据校验等任意富写入 | `+cells-set` | 唯一支持完整字段的 shortcut |
+| 写入含样式、批注、图片、数据校验等任意富写入 | `+cells-set` | 唯一支持完整富字段的 shortcut（公式 `+csv-put` 也能写） |
 | 只改已有 cell 的样式，不动 value/formula | `+cells-set-style` | 拍平 10 个样式字段为独立 flag；不触发不必要的值写入 |
 | 单 cell 嵌入图片 | `+cells-set-image` | 比 `+cells-set` 参数更简短 |
 | 大量纯值 + 需要表头样式/边框 | 先用 `+csv-put` 写值，再用 `+cells-set-style` 补样式 | 分工配合，入参最短 |
 
-**优先级**：常规纯值写入优先 `+csv-put`（最短入参，直接传 CSV 文本）；含公式/样式/批注/图片才用 `+cells-set`。⚠️ 这里"纯值"特指**已是文本、无需保留数值语义**的内容；只要列里是金额 / 百分比 / 日期 / 计数等有数值语义的数据，应优先 `+table-put`（声明 `number` / `date` 类型 + `number_format`），而不是 `+csv-put`。
+**优先级**：常规批量写入（纯值或公式）优先 `+csv-put`（最短入参，直接传 CSV 文本）；含样式/批注/图片才用 `+cells-set`。⚠️ 这里"纯值"特指**已是文本、无需保留数值语义**的内容；只要列里是金额 / 百分比 / 日期 / 计数等有数值语义的数据，应优先 `+table-put`（声明 `number` / `date` 类型 + `number_format`），而不是 `+csv-put`。
 
-⚠️ `+csv-put` 只写纯值，**不会**携带公式/样式/批注/图片；公式字符串以 `=` 开头会被当作字面量文本落地。如果数据里需要公式或样式，**必须**用 `+cells-set`（或"写值 + 补样式"两步法）。
+⚠️ `+csv-put` 可写值或公式：以 `=` 开头的单元格会被当作公式计算（读回时 `formula` 字段保留、`value` 为计算结果；含逗号的公式按 RFC 4180 用双引号包裹整列，如 `"=SUM(B2,C2)"`）。但**不会**携带样式/批注/图片，也无法把 `=` 开头的内容当字面量文本写入；需要样式/批注/图片用 `+cells-set`（或"写值 + 补样式"两步法）。
 
 ⚠️ **别把本该是数值的列格式化成字符串用 `+csv-put` 写入**（高频反模式）：金额 / 百分比 / 市值 / 计数等列，若在本地拼成带 `$` / `%` / 千分位的字符串（如 `"$1,234.50"` / `"+30.5%"`）再 `+csv-put` 灌进去，单元格会变成**文本**——丢失排序 / 求和 / 图表 / 透视能力，且与 `number` 列混排时无法参与计算。正解是 `+table-put` 声明该列 `type:"number"`（百分比存小数，如 `0.305`）+ `format`（如 `"$#,##0.00"` / `"0.0%"` / `"#,##0"`），**显示效果完全相同、数值无损**。判断信号：**当你准备把一个数字 format 成字符串再写时，几乎总该用 `+table-put` 而非 `+csv-put`**。
 
@@ -307,7 +307,7 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--start-cell` | string | required | 目标区域起点 A1（如 `A1`、`B5`，不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet）；必须是单个单元格，不接受范围写法；终点按 CSV 实际行列数自动推断 |
-| `--csv` | string + File + Stdin（非 JSON 文本） | required | RFC 4180 CSV 文本；只写纯值，不带公式/样式/批注 |
+| `--csv` | string + File + Stdin（非 JSON 文本） | required | RFC 4180 CSV 文本；可写值或公式（以 = 开头的单元格按公式计算）；不带样式 / 批注 / 图片，需要这些用 +cells-set。 |
 | `--allow-overwrite` | bool | optional | 允许覆盖（默认 true）；设为 false 时若目标非空报错 |
 | `--range` | string | optional | --start-cell 的别名（与 +csv-get / +cells-set 一致，用 --range 定位）；传区间（如 A1:H17）时自动取其左上角单元格（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 
@@ -443,15 +443,16 @@ lark-cli sheets +csv-put --spreadsheet-token shtXXX --sheet-id "$SID" \
   --start-cell "A1" --csv @data.csv
 ```
 
-> `+csv-put` 比 `+cells-set` 短得多——只想批量灌纯值时优先用它。需要公式/样式才换 `+cells-set`。
+> `+csv-put` 比 `+cells-set` 短得多——批量灌值或公式时优先用它。需要样式/批注/图片才换 `+cells-set`。
 >
-> ⚠️ `=` 开头的字符串会被当字面量写入（**不会变公式**）：
+> ✅ `=` 开头的单元格会被当作公式计算（不是字面量文本）：
 >
 > ```bash
 > lark-cli sheets +csv-put --url "..." --sheet-name "Sheet1" \
 >   --start-cell "A1" \
 >   --csv $'name,score\nalice,=SUM(B2:B10)'
-> # ↑ A2 实际写入字符串 "=SUM(B2:B10)"，**不是公式**。需要写公式请用 +cells-set。
+> # ↑ B2 写入公式 =SUM(B2:B10)，读回 formula 保留、value 为计算结果。
+> # 反过来：无法用 +csv-put 写「= 开头的字面量文本」（会被当公式）；样式/批注/图片仍用 +cells-set。
 > ```
 
 > **定位 + 写入边界（关键，避免误覆盖）**：

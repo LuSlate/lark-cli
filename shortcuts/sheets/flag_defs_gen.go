@@ -319,7 +319,7 @@ var flagDefs = map[string]commandDef{
 			{Name: "sheet-id", Kind: "public", Type: "string", Required: "xor", Desc: "Sheet reference_id (XOR with `--sheet-name`)"},
 			{Name: "sheet-name", Kind: "public", Type: "string", Required: "xor", Desc: "Sheet name (XOR with `--sheet-id`)"},
 			{Name: "start-cell", Kind: "own", Type: "string", Required: "required", Desc: "Top-left A1 anchor (e.g. `A1`, `B5`; no sheet prefix — use `--sheet-id` / `--sheet-name` to select the sheet); must be a single cell, range notation not accepted; the bottom-right is inferred from CSV row/column counts", Default: "A1"},
-			{Name: "csv", Kind: "own", Type: "string", Required: "required", Desc: "RFC 4180 CSV text; plain values only (no formulas / styles / comments)", Input: []string{"file", "stdin"}},
+			{Name: "csv", Kind: "own", Type: "string", Required: "required", Desc: "RFC 4180 CSV text; values or formulas (a leading = is evaluated as a formula); no styles / comments / images (use +cells-set for those).", Input: []string{"file", "stdin"}},
 			{Name: "allow-overwrite", Kind: "own", Type: "bool", Required: "optional", Desc: "Allow overwriting (default true); set false to error if any target cell is non-empty", Default: "true"},
 			{Name: "range", Kind: "own", Type: "string", Required: "optional", Desc: "alias for --start-cell (parity with +csv-get / +cells-set, which locate with --range); a range like A1:H17 collapses to its top-left cell", Hidden: true},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},

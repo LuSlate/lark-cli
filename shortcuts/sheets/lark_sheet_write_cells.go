@@ -197,12 +197,12 @@ func cellsSetStyleInput(runtime flagView, token, sheetID, sheetName string) (map
 	return input, nil
 }
 
-// CsvPut wraps set_range_from_csv: dump a CSV blob into a sheet, only writing
-// plain values. Use +cells-set for anything richer (formula / style / note).
+// CsvPut wraps set_range_from_csv: dump a CSV blob into a sheet. A cell whose
+// text starts with = is evaluated as a formula; use +cells-set for styles / notes / images.
 var CsvPut = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+csv-put",
-	Description: "Paste RFC-4180 CSV into a sheet at --start-cell (plain values only, auto-expands sheet if needed).",
+	Description: "Paste RFC-4180 CSV into a sheet at --start-cell (values or formulas: a leading = is evaluated as a formula; no styles / comments; auto-expands sheet if needed).",
 	Risk:        "write",
 	Scopes:      []string{"sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
