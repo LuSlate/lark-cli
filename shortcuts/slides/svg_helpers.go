@@ -466,6 +466,14 @@ func declaresNativeSVGlideContent(svg string) bool {
 			if tagName == "image" {
 				return true
 			}
+		case "line":
+			if tagName == "line" {
+				return true
+			}
+		case "text":
+			if tagName == "foreignObject" {
+				return true
+			}
 		}
 	}
 	return false
@@ -831,7 +839,7 @@ func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, err
 
 	role := xmlAttrValue(attrs, "slide:role")
 	if role == "" {
-		return svgValidationStop, output.ErrValidation("--file %s: <%s> must include slide:role=\"shape\" or slide:role=\"image\" for SVGlide", path, tagName)
+		return svgValidationStop, output.ErrValidation("--file %s: <%s> must include slide:role=\"shape\", \"image\", \"line\", or \"text\" for SVGlide", path, tagName)
 	}
 
 	switch role {
@@ -864,8 +872,24 @@ func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, err
 			return svgValidationStop, err
 		}
 		return svgValidationSkipSubtree, nil
+	case "line":
+		if tagName != "line" {
+			return svgValidationStop, output.ErrValidation("--file %s: <%s slide:role=\"line\"> is not supported by SVGlide; use <line>", path, tagName)
+		}
+		if err := validateSVGlideRequiredAttrs(path, tagName, role, attrs); err != nil {
+			return svgValidationStop, err
+		}
+		return svgValidationSkipSubtree, nil
+	case "text":
+		if tagName != "foreignObject" {
+			return svgValidationStop, output.ErrValidation("--file %s: <%s slide:role=\"text\"> is not supported by SVGlide; use <foreignObject>", path, tagName)
+		}
+		if err := validateSVGlideRequiredAttrs(path, tagName, role, attrs); err != nil {
+			return svgValidationStop, err
+		}
+		return svgValidationSkipSubtree, nil
 	default:
-		return svgValidationStop, output.ErrValidation("--file %s: <%s> has unsupported slide:role=%q; use \"shape\" or \"image\"", path, tagName, role)
+		return svgValidationStop, output.ErrValidation("--file %s: <%s> has unsupported slide:role=%q; use \"shape\", \"image\", \"line\", or \"text\"", path, tagName, role)
 	}
 }
 

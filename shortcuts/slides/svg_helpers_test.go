@@ -111,8 +111,30 @@ func TestClassifySVGlideSVGPageRoutes(t *testing.T) {
 			wantMode: svgClassifyNative,
 		},
 		{
+			name:     "native supported server line role",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><line slide:role="line" x1="0" y1="0" x2="100" y2="60" stroke="#112233"/></svg>`,
+			wantMode: svgClassifyNative,
+		},
+		{
+			name:     "native supported server text role",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><foreignObject slide:role="text" x="0" y="0" width="300" height="80"><p xmlns="http://www.w3.org/1999/xhtml">SVGlide</p></foreignObject></svg>`,
+			wantMode: svgClassifyNative,
+		},
+		{
+			name:     "marked svg text still falls back",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><text slide:role="text" x="20" y="40">render me</text></svg>`,
+			wantMode: svgClassifyFallback,
+			wantCode: svgDiagNativeUnsupported,
+		},
+		{
 			name:     "wrong contract native rejects",
 			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v0" viewBox="0 0 1280 720"><rect slide:role="shape" x="0" y="0" width="100" height="60"/></svg>`,
+			wantMode: svgClassifyReject,
+			wantCode: svgDiagContractVersion,
+		},
+		{
+			name:     "wrong contract server text role rejects",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v0" viewBox="0 0 1280 720"><foreignObject slide:role="text" x="0" y="0" width="300" height="80"><p xmlns="http://www.w3.org/1999/xhtml">SVGlide</p></foreignObject></svg>`,
 			wantMode: svgClassifyReject,
 			wantCode: svgDiagContractVersion,
 		},
@@ -289,6 +311,14 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><foreignObject slide:role="shape" slide:shape-type="text" x="0" y="0" width="200" height="80"><p xmlns="http://www.w3.org/1999/xhtml">hello</p></foreignObject></svg>`,
 		},
 		{
+			name: "supported server text foreignObject",
+			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><foreignObject slide:role="text" x="0" y="0" width="200" height="80"><p xmlns="http://www.w3.org/1999/xhtml">hello</p></foreignObject></svg>`,
+		},
+		{
+			name: "supported server line role",
+			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><line slide:role="line" x1="0" y1="0" x2="100" y2="60"/></svg>`,
+		},
+		{
 			name: "supported image href",
 			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><image slide:role="image" href="boxcn_img" x="0" y="0" width="100" height="60"/></svg>`,
 		},
@@ -344,12 +374,12 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 		{
 			name:    "root child missing role",
 			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><rect x="0" y="0" width="100" height="60"/></svg>`,
-			wantErr: `<rect> must include slide:role="shape" or slide:role="image"`,
+			wantErr: `<rect> must include slide:role="shape", "image", "line", or "text"`,
 		},
 		{
 			name:    "group child missing role is rejected",
 			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><g><rect x="0" y="0" width="100" height="60"/></g></svg>`,
-			wantErr: `<rect> must include slide:role="shape" or slide:role="image"`,
+			wantErr: `<rect> must include slide:role="shape", "image", "line", or "text"`,
 		},
 		{
 			name:    "unsupported text element remains rejected",
@@ -394,12 +424,27 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 		{
 			name:    "plain metadata remains rejected",
 			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><metadata><desc>not transport metadata</desc></metadata></svg>`,
-			wantErr: `<metadata> must include slide:role="shape" or slide:role="image"`,
+			wantErr: `<metadata> must include slide:role="shape", "image", "line", or "text"`,
 		},
 		{
 			name:    "foreignObject shape requires text type",
 			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><foreignObject slide:role="shape"><p xmlns="http://www.w3.org/1999/xhtml">hello</p></foreignObject></svg>`,
 			wantErr: `<foreignObject slide:role="shape"> must include slide:shape-type="text"`,
+		},
+		{
+			name:    "line role must be line tag",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><rect slide:role="line" x="0" y="0" width="100" height="60"/></svg>`,
+			wantErr: `<rect slide:role="line"> is not supported`,
+		},
+		{
+			name:    "text role must be foreignObject tag",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><rect slide:role="text" x="0" y="0" width="100" height="60"/></svg>`,
+			wantErr: `<rect slide:role="text"> is not supported`,
+		},
+		{
+			name:    "svg text role is not native yet",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><text slide:role="text" x="0" y="20">later</text></svg>`,
+			wantErr: `<text slide:role="text"> is not supported`,
 		},
 		{
 			name:    "image role must be image tag",
