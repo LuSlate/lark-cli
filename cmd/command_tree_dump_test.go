@@ -1,12 +1,11 @@
 // Copyright (c) 2026 Lark Technologies Pte. Ltd.
 // SPDX-License-Identifier: MIT
 
-// Regression gate for the static-meta migration: dumps the full command tree
-// (paths, flags, descriptions, annotations) in a canonical, line-stable form so
-// the JSON-built tree (current) and the typed/static-built tree (-tags larkmeta,
-// post-migration) can be diffed byte-for-byte. Set LARK_TREE_DUMP=<path> to
-// write the dump; otherwise the test is a no-op. Not a committed golden (the
-// meta data is fetched/gitignored and drifts), it's a before/after diff tool.
+// Tree-dump tool: dumps the full command tree (paths, flags, descriptions,
+// annotations) in a canonical, line-stable form so two builds can be diffed
+// byte-for-byte (e.g. before/after a registry change). Set LARK_TREE_DUMP=<path>
+// to write the dump; otherwise the test is a no-op. Not a committed golden — the
+// meta data is fetched/gitignored and drifts.
 package cmd_test
 
 import (

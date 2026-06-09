@@ -6,9 +6,8 @@ OUT_DIR="$ROOT_DIR/.pkg-pr-new"
 
 cd "$ROOT_DIR"
 
+# fetch_meta.py also regenerates the static Go registry (meta_data_gen.go).
 python3 scripts/fetch_meta.py
-# Compile meta_data.json into static Go consumed under -tags larkmeta.
-go run internal/registry/metastatic/gen.go
 
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR/bin" "$OUT_DIR/scripts"
@@ -28,7 +27,7 @@ build_target() {
 
   local output="$OUT_DIR/bin/lark-cli-${goos}-${goarch}${ext}"
   echo "Building ${goos}/${goarch} -> ${output}"
-  CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -tags larkmeta -trimpath -ldflags "$LDFLAGS" -o "$output" ./main.go
+  CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$output" ./main.go
 }
 
 build_target darwin arm64

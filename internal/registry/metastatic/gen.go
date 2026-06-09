@@ -169,12 +169,17 @@ func main() {
 	}
 
 	var b strings.Builder
-	b.WriteString("//go:build larkmeta\n\n")
-	b.WriteString("// Code generated from meta_data.json by gen.go. DO NOT EDIT.\n\n")
+	b.WriteString("// Code generated from meta_data.json by gen.go. DO NOT EDIT.\n")
+	b.WriteString("// Gitignored; produced at build time by `make fetch_meta`.\n\n")
 	b.WriteString("package metastatic\n\n")
 	b.WriteString("import \"github.com/larksuite/cli/internal/registry/metaschema\"\n\n")
-	b.WriteString("// Registry is the embedded command spec as static Go data.\n")
-	b.WriteString("var Registry = metaschema.Registry{\n")
+	b.WriteString("// registryData holds the command spec as static Go data. It is a\n")
+	b.WriteString("// package-level var, so its backing arrays live in the binary's static\n")
+	b.WriteString("// section (zero heap alloc on read). init() wires it into the Registry\n")
+	b.WriteString("// declared by stub.go with a single struct-header copy. No build tag is\n")
+	b.WriteString("// needed: when this generated file is absent (fresh checkout) stub.go's\n")
+	b.WriteString("// empty Registry stands alone; when present, init() augments it.\n")
+	b.WriteString("var registryData = metaschema.Registry{\n")
 	fmt.Fprintf(&b, "Version: %q,\n", gs(reg, "version"))
 	b.WriteString("Services: []metaschema.Service{\n")
 	svcs, _ := reg["services"].([]any)
@@ -200,8 +205,9 @@ func main() {
 		b.WriteString("},\n") // Resources
 		b.WriteString("},\n") // Service
 	}
-	b.WriteString("},\n") // Services
-	b.WriteString("}\n")   // Registry
+	b.WriteString("},\n")  // Services
+	b.WriteString("}\n\n") // registryData literal
+	b.WriteString("func init() { Registry = registryData }\n")
 
 	src, err := format.Source([]byte(b.String()))
 	if err != nil {

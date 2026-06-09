@@ -16,6 +16,7 @@ import (
 
 	"github.com/larksuite/cli/internal/core"
 	"github.com/larksuite/cli/internal/registry/metaschema"
+	"github.com/larksuite/cli/internal/registry/metastatic"
 )
 
 // waitBackgroundRefresh blocks until any in-flight background refresh started by
@@ -55,16 +56,10 @@ func TestResetInitClearsEmbeddedVersion(t *testing.T) {
 	}
 }
 
-// hasEmbeddedServices returns true if meta_data.json with real services is compiled in.
+// hasEmbeddedServices returns true if the static registry has services compiled
+// in (generated from meta_data.json at build time).
 func hasEmbeddedServices() bool {
-	if len(embeddedMetaJSON) == 0 {
-		return false
-	}
-	var reg MergedRegistry
-	if err := json.Unmarshal(embeddedMetaJSON, &reg); err != nil {
-		return false
-	}
-	return len(reg.Services) > 0
+	return len(metastatic.Registry.Services) > 0
 }
 
 // testRegistry returns a minimal MergedRegistry with one service.

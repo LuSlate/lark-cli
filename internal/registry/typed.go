@@ -15,9 +15,10 @@ import (
 
 // This file is the typed registry layer for the static-meta migration.
 //
-//   - The embedded baseline is metastatic.Registry: static Go data, parsed and
-//     allocated at compile time (zero startup cost). Empty under builds without
-//     -tags larkmeta (the stub); real data under it.
+//   - The embedded baseline is metastatic.Registry: static Go data laid out in
+//     the binary at compile time (zero startup cost). It is empty on a fresh
+//     checkout (stub.go) until the generated meta_data_gen.go is produced by
+//     `make fetch_meta`; no build tag is involved.
 //   - The remote overlay (~/.lark-cli/cache/remote_meta.json) is still fetched
 //     and refreshed at runtime, decoded into the same typed shape, and merged
 //     over the baseline as per-service overrides.
@@ -43,11 +44,10 @@ func resetTyped() {
 	typedInitialized = false
 }
 
-// baselineServices returns the embedded baseline service specs. With -tags
-// larkmeta this is the static compile-time data (metastatic.Registry: zero
-// parse, zero alloc). Without it (dev/test builds, stub Registry) it falls back
-// to parsing the always-embedded meta_data.json into the typed shape once. The
-// product release build uses -tags larkmeta and never hits the parse path.
+// baselineServices returns the embedded baseline service specs: the static
+// compile-time data in metastatic.Registry (zero parse, zero alloc). It is
+// empty only on a fresh checkout where meta_data_gen.go has not been generated
+// yet (see stub.go).
 var (
 	baselineOnce sync.Once
 	baselineSvcs []metaschema.Service
@@ -56,20 +56,8 @@ var (
 
 func loadBaseline() {
 	baselineOnce.Do(func() {
-		if len(metastatic.Registry.Services) > 0 {
-			baselineSvcs = metastatic.Registry.Services
-			baselineVer = metastatic.Registry.Version
-			return
-		}
-		var reg wireRegistry
-		if err := json.Unmarshal(embeddedMetaJSON, &reg); err != nil {
-			return
-		}
-		baselineVer = reg.Version
-		baselineSvcs = make([]metaschema.Service, 0, len(reg.Services))
-		for _, ws := range reg.Services {
-			baselineSvcs = append(baselineSvcs, wireToService(ws))
-		}
+		baselineSvcs = metastatic.Registry.Services
+		baselineVer = metastatic.Registry.Version
 	})
 }
 
@@ -175,7 +163,8 @@ func TypedServices() []metaschema.Service {
 }
 
 // hasTypedData reports whether any typed spec is available (static baseline or
-// remote overlay). False only in a stub build (no -tags larkmeta) with no cache.
+// remote overlay). False only when the static registry has not been generated
+// (fresh checkout) and there is no cache.
 func hasTypedData() bool {
 	if len(baselineServices()) > 0 {
 		return true

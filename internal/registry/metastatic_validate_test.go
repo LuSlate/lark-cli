@@ -1,55 +1,19 @@
-//go:build larkmeta
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
 
-// Phase-1 validation for the static-meta migration: proves the generated
-// metastatic.Registry carries the same services/resources/methods/fields as the
-// embedded JSON, and that reading it costs zero allocation (vs the JSON parse).
+// Validation for the static-meta registry: the generated metastatic.Registry is
+// the sole embedded baseline (no JSON parsed at runtime), and a deep read of it
+// allocates nothing. The data is generated from meta_data.json at build time
+// (`make fetch_meta`) and is gitignored, so these tests skip on a bare checkout
+// where it has not been generated yet.
 package registry
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/larksuite/cli/internal/registry/metaschema"
 	"github.com/larksuite/cli/internal/registry/metastatic"
 )
-
-// --- equivalence: counts must match so no service/resource/method/field is lost ---
-
-func countFieldsJSON(v interface{}) int {
-	fm, _ := v.(map[string]interface{})
-	n := 0
-	for _, fv := range fm {
-		n++
-		if f, ok := fv.(map[string]interface{}); ok {
-			n += countFieldsJSON(f["properties"])
-		}
-	}
-	return n
-}
-
-func countJSON(data []byte) (svc, res, meth, fld int) {
-	var reg map[string]interface{}
-	if err := json.Unmarshal(data, &reg); err != nil {
-		return
-	}
-	svcs, _ := reg["services"].([]interface{})
-	svc = len(svcs)
-	for _, sv := range svcs {
-		s, _ := sv.(map[string]interface{})
-		rs, _ := s["resources"].(map[string]interface{})
-		for _, rv := range rs {
-			res++
-			r, _ := rv.(map[string]interface{})
-			ms, _ := r["methods"].(map[string]interface{})
-			for _, mv := range ms {
-				meth++
-				m, _ := mv.(map[string]interface{})
-				fld += countFieldsJSON(m["parameters"]) + countFieldsJSON(m["requestBody"]) + countFieldsJSON(m["responseBody"])
-			}
-		}
-	}
-	return
-}
 
 func countFieldsStatic(fs []metaschema.Field) int {
 	n := 0
@@ -74,24 +38,19 @@ func countStatic() (svc, res, meth, fld int) {
 	return
 }
 
-func TestStaticEquivalence(t *testing.T) {
-	if len(embeddedMetaJSON) == 0 {
-		t.Skip("no embedded meta_data.json")
+// TestStaticRegistryPopulated checks the generated registry carries data. It
+// skips on a bare checkout where meta_data_gen.go has not been generated yet.
+func TestStaticRegistryPopulated(t *testing.T) {
+	if len(metastatic.Registry.Services) == 0 {
+		t.Skip("static registry empty; run `make fetch_meta` to generate it")
 	}
-	js, jr, jm, jf := countJSON(embeddedMetaJSON)
-	ss, sr, sm, sf := countStatic()
-	t.Logf("JSON   : services=%d resources=%d methods=%d fields=%d", js, jr, jm, jf)
-	t.Logf("static : services=%d resources=%d methods=%d fields=%d", ss, sr, sm, sf)
-	if js != ss || jr != sr || jm != sm || jf != sf {
-		t.Fatalf("count mismatch: static vs JSON (svc %d/%d, res %d/%d, meth %d/%d, fld %d/%d)",
-			ss, js, sr, jr, sm, jm, sf, jf)
+	svc, res, meth, fld := countStatic()
+	t.Logf("static: services=%d resources=%d methods=%d fields=%d", svc, res, meth, fld)
+	if svc == 0 || res == 0 || meth == 0 || fld == 0 {
+		t.Fatalf("static registry incomplete: svc=%d res=%d meth=%d fld=%d", svc, res, meth, fld)
 	}
-	if metastatic.Registry.Version != "" {
-		var reg map[string]interface{}
-		_ = json.Unmarshal(embeddedMetaJSON, &reg)
-		if v, _ := reg["version"].(string); v != metastatic.Registry.Version {
-			t.Errorf("version mismatch: static=%q json=%q", metastatic.Registry.Version, v)
-		}
+	if metastatic.Registry.Version == "" {
+		t.Error("static registry has empty Version")
 	}
 }
 
@@ -113,23 +72,13 @@ func deepReadStatic() int {
 }
 
 func TestStaticReadZeroAlloc(t *testing.T) {
+	if len(metastatic.Registry.Services) == 0 {
+		t.Skip("static registry empty; run `make fetch_meta` to generate it")
+	}
 	avg := testing.AllocsPerRun(50, func() { sinkInt = deepReadStatic() })
 	t.Logf("static deep-read: %.1f allocs/op", avg)
 	if avg > 0 {
 		t.Errorf("static read allocates %.1f/op, want 0 (data should be in the binary, not heap)", avg)
-	}
-}
-
-// --- benchmarks: contrast the current JSON parse vs static read ---
-
-func BenchmarkParseEmbeddedJSONBaseline(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var reg map[string]interface{}
-		if err := json.Unmarshal(embeddedMetaJSON, &reg); err != nil {
-			b.Fatal(err)
-		}
-		sinkInt = len(reg)
 	}
 }
 

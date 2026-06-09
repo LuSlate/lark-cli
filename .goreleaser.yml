@@ -2,16 +2,14 @@ version: 2
 
 before:
   hooks:
+    # fetch_meta.py also regenerates the static Go registry (meta_data_gen.go),
+    # the sole source of the embedded command tree.
     - python3 scripts/fetch_meta.py
-    # Compile meta_data.json into static Go consumed under -tags larkmeta.
-    - go run internal/registry/metastatic/gen.go
 
 builds:
   - binary: lark-cli
     env:
       - CGO_ENABLED=0
-    flags:
-      - -tags=larkmeta
     ldflags:
       - -s -w -X github.com/larksuite/cli/internal/build.Version={{ .Version }} -X github.com/larksuite/cli/internal/build.Date={{ .Date }}
     goos:

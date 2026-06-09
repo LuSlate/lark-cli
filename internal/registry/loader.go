@@ -19,69 +19,31 @@ import (
 //go:embed scope_priorities.json scope_overrides.json
 var registryFS embed.FS
 
-// embeddedMetaJSON is set by loader_embedded.go when meta_data.json is compiled in.
-var embeddedMetaJSON []byte
-
-// EmbeddedMetaJSON returns the raw embedded meta_data.json bytes for callers
-// that need to parse key order or other JSON-level structure not exposed by
-// LoadFromMeta (which loses map insertion order).
-func EmbeddedMetaJSON() []byte {
-	return embeddedMetaJSON
-}
-
-var (
-	embeddedServicesMap  map[string]map[string]interface{} // service name -> spec
-	embeddedServiceNames []string                          // sorted
-	embeddedParseOnce    sync.Once
-)
-
-// parseEmbeddedServices parses embeddedMetaJSON into a service name → spec map
-// without touching mergedServices. Safe to call multiple times (sync.Once).
-func parseEmbeddedServices() {
-	embeddedParseOnce.Do(func() {
-		embeddedServicesMap = make(map[string]map[string]interface{})
-		if len(embeddedMetaJSON) == 0 {
-			return
-		}
-		var wrapper struct {
-			Services []map[string]interface{} `json:"services"`
-		}
-		if err := json.Unmarshal(embeddedMetaJSON, &wrapper); err != nil {
-			return
-		}
-		for _, svc := range wrapper.Services {
-			name, _ := svc["name"].(string)
-			if name == "" {
-				continue
-			}
-			embeddedServicesMap[name] = svc
-		}
-		embeddedServiceNames = make([]string, 0, len(embeddedServicesMap))
-		for name := range embeddedServicesMap {
-			embeddedServiceNames = append(embeddedServiceNames, name)
-		}
-		sort.Strings(embeddedServiceNames)
-	})
-}
-
-// EmbeddedSpec returns the embedded spec for one service, or nil if unknown.
-// Bypasses remote overlay — used for deterministic envelope output.
+// EmbeddedSpec returns the embedded baseline spec for one service as a map, or
+// nil if the service is unknown. It reads the static compile-time registry
+// (metastatic.Registry) and bypasses the remote overlay, so envelope output is
+// deterministic across machines.
 func EmbeddedSpec(serviceName string) map[string]interface{} {
-	parseEmbeddedServices()
-	return embeddedServicesMap[serviceName]
+	if svc, ok := baselineServiceByName(serviceName); ok {
+		return ServiceToMap(svc)
+	}
+	return nil
 }
 
-// EmbeddedServiceNames returns sorted embedded service names (no overlay).
-// Returns a defensive copy — callers must not mutate the package-level slice.
+// EmbeddedServiceNames returns the embedded baseline service names, sorted
+// (no remote overlay).
 func EmbeddedServiceNames() []string {
-	parseEmbeddedServices()
-	out := make([]string, len(embeddedServiceNames))
-	copy(out, embeddedServiceNames)
+	svcs := baselineServices()
+	out := make([]string, 0, len(svcs))
+	for _, s := range svcs {
+		out = append(out, s.Name)
+	}
+	sort.Strings(out)
 	return out
 }
 
 var (
-	embeddedVersion string // baseline data version (static under larkmeta, else parsed)
+	embeddedVersion string // baseline data version (from the static registry)
 	initOnce        sync.Once
 )
 
@@ -99,8 +61,7 @@ func Init() {
 func InitWithBrand(brand core.LarkBrand) {
 	initOnce.Do(func() {
 		configuredBrand = brand
-		// 1. Baseline version: static compile-time data under -tags larkmeta,
-		//    else parsed once from the embedded meta_data.json (dev/test builds).
+		// 1. Baseline version: the static compile-time registry (metastatic).
 		embeddedVersion = baselineVersion()
 		// 2. Remote overlay — still fetched/refreshed at runtime, decoded into
 		//    the same typed shape and merged over the baseline.
