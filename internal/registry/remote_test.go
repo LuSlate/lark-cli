@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/larksuite/cli/internal/core"
+	"github.com/larksuite/cli/internal/registry/metaschema"
 )
 
 // waitBackgroundRefresh blocks until any in-flight background refresh started by
@@ -30,8 +31,7 @@ func resetInit() {
 	// reads globals this function mutates (see CI race: TestComputeMinimumScopeSet → Tenant).
 	waitBackgroundRefresh()
 	initOnce = sync.Once{}
-	mergedServices = make(map[string]map[string]interface{})
-	mergedProjectList = nil
+	resetTyped()
 	embeddedVersion = ""
 	cachedAllScopes = nil
 	cachedScopePriorities = nil
@@ -302,50 +302,36 @@ func TestMetaTTL(t *testing.T) {
 	}
 }
 
-func TestOverlayMergedServices(t *testing.T) {
+func TestRemoteOverlayTyped(t *testing.T) {
 	resetInit()
-	mergedServices = make(map[string]map[string]interface{})
-	mergedServices["existing"] = map[string]interface{}{"name": "existing", "version": "v1"}
+	setRemoteOverrides([]metaschema.Service{
+		{Name: "existing", Version: "v2"},
+		{Name: "brand_new", Version: "v1"},
+	})
 
-	reg := &MergedRegistry{
-		Services: []map[string]interface{}{
-			{"name": "existing", "version": "v2"},
-			{"name": "brand_new", "version": "v1"},
-		},
+	// override present
+	if s, ok := typedServiceByName("existing"); !ok || s.Version != "v2" {
+		t.Errorf("expected existing override v2, got %+v ok=%v", s, ok)
 	}
-	overlayMergedServices(reg)
-
-	// existing should be overridden
-	if v := mergedServices["existing"]["version"].(string); v != "v2" {
-		t.Errorf("expected existing to be overridden to v2, got %s", v)
-	}
-	// brand_new should be added
-	if _, ok := mergedServices["brand_new"]; !ok {
+	// new service added
+	if _, ok := typedServiceByName("brand_new"); !ok {
 		t.Error("expected brand_new to be added")
 	}
 }
 
-func TestOverlayMergedServicesDoesNotPolluteFollowingInit(t *testing.T) {
+func TestRemoteOverlayDoesNotPolluteFollowingInit(t *testing.T) {
 	resetInit()
 	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	t.Setenv("LARKSUITE_CLI_REMOTE_META", "off")
 
-	const leakedExisting = "test_isolation_existing_sentinel"
-	const leakedOverlay = "test_isolation_overlay_sentinel"
-
-	mergedServices = map[string]map[string]interface{}{
-		leakedExisting: {"name": leakedExisting, "version": "v1"},
-	}
-	overlayMergedServices(&MergedRegistry{Services: []map[string]interface{}{{"name": leakedOverlay, "version": "v1"}}})
+	const leaked = "test_isolation_overlay_sentinel"
+	setRemoteOverrides([]metaschema.Service{{Name: leaked, Version: "v1"}})
 
 	resetInit()
 	Init()
 
-	if spec := LoadFromMeta(leakedExisting); spec != nil {
-		t.Fatalf("polluted service %q survived resetInit", leakedExisting)
-	}
-	if spec := LoadFromMeta(leakedOverlay); spec != nil {
-		t.Fatalf("polluted service %q survived resetInit", leakedOverlay)
+	if spec := LoadFromMeta(leaked); spec != nil {
+		t.Fatalf("polluted service %q survived resetInit", leaked)
 	}
 }
 
@@ -425,8 +411,8 @@ func TestCorruptedCache_SelfHeals(t *testing.T) {
 	metaData, _ := json.Marshal(meta)
 	os.WriteFile(filepath.Join(cDir, "remote_meta.meta.json"), metaData, 0644)
 
-	// loadCachedMerged should fail and remove the corrupted files
-	_, err := loadCachedMerged()
+	// loadCachedTyped should fail and remove the corrupted files
+	err := loadCachedTyped()
 	if err == nil {
 		t.Fatal("expected error for corrupted cache")
 	}

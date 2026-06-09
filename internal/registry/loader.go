@@ -81,10 +81,8 @@ func EmbeddedServiceNames() []string {
 }
 
 var (
-	mergedServices    = make(map[string]map[string]interface{}) // project name → parsed spec
-	mergedProjectList []string                                  // sorted project names
-	embeddedVersion   string                                    // version from embedded meta_data.json
-	initOnce          sync.Once
+	embeddedVersion string // baseline data version (static under larkmeta, else parsed)
+	initOnce        sync.Once
 )
 
 // Init initializes the registry with default brand (feishu).
@@ -101,53 +99,26 @@ func Init() {
 func InitWithBrand(brand core.LarkBrand) {
 	initOnce.Do(func() {
 		configuredBrand = brand
-		// 1. Load embedded meta_data.json as baseline (no-op if not compiled in)
-		loadEmbeddedIntoMerged()
-		// 2. Remote overlay
+		// 1. Baseline version: static compile-time data under -tags larkmeta,
+		//    else parsed once from the embedded meta_data.json (dev/test builds).
+		embeddedVersion = baselineVersion()
+		// 2. Remote overlay — still fetched/refreshed at runtime, decoded into
+		//    the same typed shape and merged over the baseline.
 		if remoteEnabled() && cacheWritable() {
-			// Check if brand changed since last cache
 			meta, metaErr := loadCacheMeta()
 			brandChanged := metaErr == nil && meta.Brand != "" && meta.Brand != string(brand)
 
 			if !brandChanged {
-				if cached, err := loadCachedMerged(); err == nil {
-					overlayMergedServices(cached)
-				}
+				_ = loadCachedTyped()
 			}
-			if len(mergedServices) == 0 || brandChanged {
-				// No data at all or brand changed — must sync fetch
+			if !hasTypedData() || brandChanged {
+				// No data at all (e.g. stub build, no cache) or brand changed.
 				doSyncFetch()
 			} else if shouldRefresh(meta) || metaErr != nil {
-				// Have embedded/cached data; refresh in background if TTL expired or first run
 				triggerBackgroundRefresh()
 			}
 		}
-		// 3. Build sorted project list
-		rebuildProjectList()
 	})
-}
-
-// loadEmbeddedIntoMerged parses the embedded meta_data.json and populates
-// mergedServices. No-op if meta_data.json is not compiled in.
-func loadEmbeddedIntoMerged() {
-	if len(embeddedMetaJSON) == 0 {
-		return
-	}
-	var reg MergedRegistry
-	if err := json.Unmarshal(embeddedMetaJSON, &reg); err != nil {
-		return
-	}
-	embeddedVersion = reg.Version
-	overlayMergedServices(&reg)
-}
-
-// rebuildProjectList rebuilds the sorted list of project names from mergedServices.
-func rebuildProjectList() {
-	mergedProjectList = make([]string, 0, len(mergedServices))
-	for name := range mergedServices {
-		mergedProjectList = append(mergedProjectList, name)
-	}
-	sort.Strings(mergedProjectList)
 }
 
 var cachedAllScopes map[string][]string
@@ -226,7 +197,11 @@ func CollectAllScopesFromMeta(identity string) []string {
 // It returns data from the merged registry (embedded + cached remote overlay).
 func LoadFromMeta(project string) map[string]interface{} {
 	Init()
-	return mergedServices[project]
+	svc, ok := typedServiceByName(project)
+	if !ok {
+		return nil
+	}
+	return ServiceToMap(svc)
 }
 
 // ListFromMetaProjects lists available service project names (sorted).
@@ -234,7 +209,7 @@ func LoadFromMeta(project string) map[string]interface{} {
 //go:noinline
 func ListFromMetaProjects() []string {
 	Init()
-	return mergedProjectList
+	return typedServiceNames()
 }
 
 // DefaultScopeScore is the score assigned to scopes not in the priorities table.
