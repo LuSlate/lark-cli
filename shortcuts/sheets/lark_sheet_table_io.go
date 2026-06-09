@@ -923,7 +923,7 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 		columns[c] = col
 	}
 
-	rows := make([]interface{}, 0, len(dataRows))
+	rows := make([][]interface{}, 0, len(dataRows))
 	for _, r := range dataRows {
 		row := make([]interface{}, ncols)
 		for c := 0; c < ncols; c++ {
