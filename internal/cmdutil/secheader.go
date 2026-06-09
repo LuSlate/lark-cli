@@ -33,7 +33,7 @@ const (
 	HeaderRPCAppID    = "Rpc-Persist-Cli-Req-App-Id"
 
 	SourceValue = "lark-cli"
-	TTEnvValue  = "ppe_wwm_dev"
+	TTEnvValue  = "ppe_doubao_office_local"
 	UsePPEValue = "1"
 	RPCAppID    = "497858"
 
