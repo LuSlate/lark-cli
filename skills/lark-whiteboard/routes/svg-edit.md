@@ -72,10 +72,10 @@ lark-cli whiteboard +query \
 
 ```bash
 # 渲染 PNG 预览
-npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <dir>/edited.svg -o <dir>/edited.png -f svg
+npx -y @larksuite/whiteboard-cli@0.1.1-beta -i <dir>/edited.svg -o <dir>/edited.png -f svg
 
 # 几何检查（text-overflow / node-overlap）
-npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <dir>/edited.svg -f svg --check
+npx -y @larksuite/whiteboard-cli@0.1.1-beta -i <dir>/edited.svg -f svg --check
 ```
 
 结合 PNG 视觉效果和 `--check` 报告进行调整，有问题则修改 SVG 后重新渲染（最多 2 轮）。
@@ -84,7 +84,7 @@ npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <dir>/edited.svg -f svg --check
 
 ```bash
 # dry-run 探测（输出含 "XX nodes will be deleted" 时需再次向用户确认）
-npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <dir>/edited.svg -f svg --to openapi --format json \
+npx -y @larksuite/whiteboard-cli@0.1.1-beta -i <dir>/edited.svg -f svg --to openapi --format json \
   | lark-cli whiteboard +update \
     --whiteboard-token <TOKEN> \
     --source - --input_format raw \
@@ -92,7 +92,7 @@ npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <dir>/edited.svg -f svg --to ope
     --overwrite --dry-run --as user
 
 # 用户确认后执行
-npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <dir>/edited.svg -f svg --to openapi --format json \
+npx -y @larksuite/whiteboard-cli@0.1.1-beta -i <dir>/edited.svg -f svg --to openapi --format json \
   | lark-cli whiteboard +update \
     --whiteboard-token <TOKEN> \
     --source - --input_format raw \

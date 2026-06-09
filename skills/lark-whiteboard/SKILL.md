@@ -13,7 +13,7 @@ metadata:
 
 > [!IMPORTANT]
 > - 运行 `lark-cli --version`，确认可用，无需询问用户。
-> - 运行 `npx -y @larksuite/whiteboard-cli@^0.1.1-beta -v`，确认可用，无需询问用户。
+> - 运行 `npx -y @larksuite/whiteboard-cli@0.1.1-beta -v`，确认可用，无需询问用户。
 
 **CRITICAL — 开始前 MUST 先用 Read 工具读取 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)，其中包含认证、权限处理**
 
@@ -123,7 +123,7 @@ diagram.png           ← 渲染结果
 > 因此，若需要整体更新画板内容，需携带 --overwrite flag 覆盖式更新。
 
 ```bash
-npx -y @larksuite/whiteboard-cli@^0.1.1-beta -i <产物文件> --to openapi --format json \
+npx -y @larksuite/whiteboard-cli@0.1.1-beta -i <产物文件> --to openapi --format json \
   | lark-cli whiteboard +update \
     --whiteboard-token <Token> \
     --source - --input_format raw \
