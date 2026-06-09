@@ -49,6 +49,7 @@ lark-cli docs +update --api-version v2 --doc "文档URL或token" --command appen
 - 拿到 spreadsheet URL/token 后 → 切到 `lark-sheets` 做对象内部操作
 - 用户说"给文档加评论""查看评论""回复评论""给评论加/删除表情 reaction" → 切到 `lark-drive` 处理
 - 文档内容中出现嵌入的 `<sheet>`、`<bitable>` 或 `<cite file-type="sheets|bitable">` 标签时 → **必须主动提取 token 并切到对应技能下钻读取内部数据**，不能只呈现标签本身
+- fetch 结果中出现 `<html5-block data-ref="...">`，或 `suggestions` 包含 `must_read_html_code` 时 → **必须读取 `document.reference_map["html5-block"]` 对应 HTML**；若 entry 是 `path`，读取该 `@doc-fetch-resources/...html` 文件后再总结、修改或回灌，不能只看正文里的占位标签
 
 | 标签 / 属性 | 提取字段 | 切到技能 |
 |-|-|-|

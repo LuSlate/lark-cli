@@ -46,7 +46,32 @@ p, h1-h9, ul, ol, li, table, thead, tbody, tr, th, td, blockquote, pre, code, hr
 - `<task>` — `<task task-id="GUID"></task>`，必传 task-id（任务 guid）
 - `<chat_card>` — `<chat_card chat-id="CHAT_ID"></chat_card>`，必传 chat-id
 - `<sub-page-list>` — `<sub-page-list></sub-page-list>` 子页面列表块；仅 wiki 文档可插入
+- `<html5-block>` — HTML5 / ISV H5 内容块。写入时优先把 HTML 保存为本地 `.html` 文件，再在 XML 中引用：`<html5-block path="@widget.html"></html5-block>`；路径必须是 `@` 开头的相对路径，不能用绝对路径或 `..` 越界。CLI 会读取文件并把请求改写为 `<html5-block data-ref="html5_1"></html5-block>` + `reference_map`。不要把 HTML 代码写在标签内部，也不要手写 `data="..."`。
 - bitable、base_ref、synced_reference、synced_source、okr — 不可创建，仅支持移动
+
+### HTML5 block / 外部 HTML
+
+当需要在文档中放入完整 HTML 小组件、可视化或交互内容时，用 `html5-block`。推荐输入形态：
+
+```xml
+<html5-block path="@widget.html"></html5-block>
+```
+
+`widget.html` 与执行命令时的当前目录相对。CLI 会自动生成引用映射并发送给 API，正文结构保持为：
+
+```xml
+<html5-block data-ref="html5_1"></html5-block>
+```
+
+高级脚本也可以显式传 `data-ref` + `--reference-map`：
+
+```bash
+lark-cli docs +create --api-version v2 \
+  --content '<html5-block data-ref="html5_1"></html5-block>' \
+  --reference-map '{"html5-block":{"html5_1":{"data":"<html></html>"}}}'
+```
+
+`reference_map` 只承载 HTML 数据或 CLI 本地 `path`，不要使用旧字段 `resources`。`data` 属性是 SDK 内部保留形态，Agent 不应写入 `<html5-block data="...">`。
 
 # 四、块级复制与移动
 

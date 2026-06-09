@@ -93,6 +93,40 @@ lark-cli docs +fetch --api-version v2 --doc Z1Fj...tnAc \
 
 `content` 的格式由 `--doc-format` 决定。设置 `--scope` 时会被 `<fragment>` 包裹，详见上文"局部读取的输出结构"。
 
+## HTML5 block / 外部 HTML
+
+fetch 到 `<html5-block data-ref="html5_1"></html5-block>` 时，正文只是占位结构，HTML 内容在 `document.reference_map["html5-block"]["html5_1"]`。如果响应顶层 `data.suggestions` 包含 `must_read_html_code`，必须读取这些 HTML 后再回答或编辑。
+
+返回可能直接包含短 HTML：
+
+```json
+{
+  "data": {
+    "document": {
+      "content": "<html5-block data-ref=\"html5_1\"></html5-block>",
+      "reference_map": {
+        "html5-block": {
+          "html5_1": {
+            "data": "<html>...</html>"
+          }
+        }
+      }
+    },
+    "suggestions": ["must_read_html_code"]
+  }
+}
+```
+
+当 HTML 大于 1024 bytes 时，CLI 会把它落盘到当前目录下的 `doc-fetch-resources/{doc_token}/{ref}.html`，`reference_map` entry 会变成本地路径：
+
+```json
+{
+  "path": "@doc-fetch-resources/doxcnXXXX/html5_1.html"
+}
+```
+
+此时必须读取该相对路径文件；不要把正文改成 `path`，正文应继续保持 `data-ref`。fetch 输出可以直接用于下一次 `docs +create --input @fetch.json` 或 `docs +update --input @fetch.json` 回灌。
+
 ## 参数
 
 | 参数 | 必填 | 说明 |
