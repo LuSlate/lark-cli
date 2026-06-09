@@ -4,10 +4,14 @@
 package slides
 
 import (
+	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestExtractSVGImagePlaceholderPaths(t *testing.T) {
@@ -89,6 +93,182 @@ func TestInjectSVGTransportAssetMetadataMergesExisting(t *testing.T) {
 	}
 	if !strings.Contains(got, `src="boxcn_b"`) {
 		t.Fatalf("boxcn_b should be appended, got: %s", got)
+	}
+}
+
+func TestClassifySVGlideSVGPageRoutes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		svg      string
+		wantMode svgClassifyMode
+		wantCode string
+	}{
+		{
+			name:     "native supported shape",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><rect slide:role="shape" x="0" y="0" width="100" height="60"/></svg>`,
+			wantMode: svgClassifyNative,
+		},
+		{
+			name:     "wrong contract native rejects",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v0" viewBox="0 0 1280 720"><rect slide:role="shape" x="0" y="0" width="100" height="60"/></svg>`,
+			wantMode: svgClassifyReject,
+			wantCode: svgDiagContractVersion,
+		},
+		{
+			name:     "unsupported but renderable text falls back",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><text x="20" y="40">render me</text></svg>`,
+			wantMode: svgClassifyFallback,
+			wantCode: svgDiagNativeUnsupported,
+		},
+		{
+			name:     "wrong contract fallback-only svg still falls back",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v0" viewBox="0 0 1280 720"><text x="20" y="40">render me</text></svg>`,
+			wantMode: svgClassifyFallback,
+			wantCode: svgDiagNativeUnsupported,
+		},
+		{
+			name:     "table defaults to fallback",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><foreignObject x="20" y="40" width="400" height="240"><table xmlns="http://www.w3.org/1999/xhtml"><tr><td>a</td></tr></table></foreignObject></svg>`,
+			wantMode: svgClassifyFallback,
+			wantCode: svgDiagNativeUnsupported,
+		},
+		{
+			name:     "script rejects before create",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><script>alert(1)</script></svg>`,
+			wantMode: svgClassifyReject,
+			wantCode: svgDiagDisallowedScript,
+		},
+		{
+			name:     "external href rejects before create",
+			svg:      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><image href="https://example.com/a.png" x="0" y="0" width="10" height="10"/></svg>`,
+			wantMode: svgClassifyReject,
+			wantCode: svgDiagExternalReference,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := classifySVGlideSVGPage(tt.svg, "page.svg", 0)
+			if got.Mode != tt.wantMode {
+				t.Fatalf("mode = %s, want %s; diagnostics=%v", got.Mode, tt.wantMode, got.Diagnostics)
+			}
+			if tt.wantCode == "" {
+				return
+			}
+			if len(got.Diagnostics) == 0 || got.Diagnostics[0].Code != tt.wantCode {
+				t.Fatalf("diagnostics = %v, want first code %s", got.Diagnostics, tt.wantCode)
+			}
+		})
+	}
+}
+
+func TestBuildSVGFallbackImageOnlyPage(t *testing.T) {
+	t.Parallel()
+
+	source := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><text x="20" y="40">fallback</text></svg>`
+	got, err := buildSVGFallbackImageOnlyPage(source, "boxcn_full_page")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, want := range []string{
+		`xmlns:slide="https://slides.bytedance.com/ns"`,
+		`slide:role="slide"`,
+		`slide:contract-version="svglide-authoring-contract/v1"`,
+		`viewBox="0 0 1280 720"`,
+		`<image slide:role="image" href="boxcn_full_page" x="0" y="0" width="1280" height="720" preserveAspectRatio="none"/>`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("image-only SVG missing %s: %s", want, got)
+		}
+	}
+	if err := validateSVGlideSVG(got, "fallback.svg"); err != nil {
+		t.Fatalf("image-only SVG should be native-valid: %v", err)
+	}
+}
+
+func TestEnsureSVGlideContractRootAttrsInjectsMissingVersion(t *testing.T) {
+	t.Parallel()
+
+	source := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><rect slide:role="shape" x="0" y="0" width="100" height="60"/></svg>`
+	got, err := ensureSVGlideContractRootAttrs(source)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(got, `slide:contract-version="svglide-authoring-contract/v1"`) {
+		t.Fatalf("contract version missing: %s", got)
+	}
+	if strings.Contains(got, `slide:contract-version="svglide-authoring-contract/v1" slide:contract-version`) {
+		t.Fatalf("contract version duplicated: %s", got)
+	}
+}
+
+func TestCommandSVGRasterizerUnavailableDiagnostic(t *testing.T) {
+	t.Parallel()
+
+	r := commandSVGRasterizer{
+		command: "missing-svglide-renderer",
+		lookPath: func(string) (string, error) {
+			return "", os.ErrNotExist
+		},
+	}
+	err := r.CheckAvailable(context.Background())
+	if err == nil {
+		t.Fatal("expected renderer unavailable error")
+	}
+	diags := svglideDiagnosticsFromError(err)
+	if len(diags) != 1 || diags[0].Code != svgDiagRendererUnavailable {
+		t.Fatalf("diagnostics = %v, want renderer_unavailable", diags)
+	}
+}
+
+func TestCommandSVGRasterizerArgvAndOutputSize(t *testing.T) {
+	dir := t.TempDir()
+	script := filepath.Join(dir, "fake-resvg")
+	argvFile := filepath.Join(dir, "argv.txt")
+	if err := os.WriteFile(script, []byte("#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$ARGV_FILE\"\nprintf png > \"$2\"\n"), 0o755); err != nil {
+		t.Fatalf("write fake renderer: %v", err)
+	}
+	in := filepath.Join(dir, "page.svg")
+	if err := os.WriteFile(in, []byte(`<svg/>`), 0o644); err != nil {
+		t.Fatalf("write svg: %v", err)
+	}
+	r := commandSVGRasterizer{
+		command:       script,
+		timeout:       time.Second,
+		maxOutputSize: 20,
+		env:           []string{"ARGV_FILE=" + argvFile},
+	}
+
+	out, size, err := r.Rasterize(context.Background(), in)
+	if err != nil {
+		t.Fatalf("unexpected rasterize error: %v", err)
+	}
+	if size != int64(len("png")) {
+		t.Fatalf("size = %d, want %d", size, len("png"))
+	}
+	if _, err := os.Stat(out); err != nil {
+		t.Fatalf("output file missing: %v", err)
+	}
+	argv, err := os.ReadFile(argvFile)
+	if err != nil {
+		t.Fatalf("read argv: %v", err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(argv)), "\n")
+	if len(lines) != 2 || lines[0] != in || lines[1] != out {
+		t.Fatalf("argv = %q, want input and output path", string(argv))
+	}
+
+	r.maxOutputSize = 2
+	_, _, err = r.Rasterize(context.Background(), in)
+	if err == nil {
+		t.Fatal("expected output-size validation error")
+	}
+	diags := svglideDiagnosticsFromError(err)
+	if len(diags) == 0 || diags[0].Code != svgDiagRasterOutputTooLarge {
+		t.Fatalf("diagnostics = %v, want raster_output_too_large", diags)
 	}
 }
 

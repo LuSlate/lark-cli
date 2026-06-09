@@ -5,6 +5,7 @@ package slides
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"strings"
@@ -139,8 +140,10 @@ func TestSlidesCreateSVGExecuteCreatesSlidesInFileOrder(t *testing.T) {
 		t.Fatalf("slide_ids = %v, want [slide_1 slide_2]", data["slide_ids"])
 	}
 
-	assertSlideCreateBodyContains(t, slideStub1, testSVGlidePage1)
-	assertSlideCreateBodyContains(t, slideStub2, testSVGlidePage2)
+	assertSlideCreateBodyContains(t, slideStub1, `slide:contract-version="svglide-authoring-contract/v1"`)
+	assertSlideCreateBodyContains(t, slideStub1, `<rect slide:role="shape" x="80" y="80" width="320" height="180"/>`)
+	assertSlideCreateBodyContains(t, slideStub2, `slide:contract-version="svglide-authoring-contract/v1"`)
+	assertSlideCreateBodyContains(t, slideStub2, `<foreignObject slide:role="shape" slide:shape-type="text" x="80" y="80" width="320" height="80">`)
 }
 
 func TestSlidesCreateSVGPartialFailureIncludesRecoveryContext(t *testing.T) {
@@ -404,6 +407,218 @@ func TestSlidesCreateSVGUploadsLocalImagesAndInjectsMetadata(t *testing.T) {
 		if !strings.Contains(content, want) {
 			t.Fatalf("content missing %s: %s", want, content)
 		}
+	}
+}
+
+func TestSlidesCreateSVGFallbackRendersUploadsAndAddsImageOnlySVG(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><text x="80" y="120">render me</text></svg>`
+	if err := os.WriteFile("fallback.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write fallback.svg: %v", err)
+	}
+
+	fake := &fakeSVGFallbackRasterizer{pngPath: "fallback.png", pngBytes: []byte("png-bytes")}
+	restore := setTestSVGFallbackRasterizer(fake)
+	defer restore()
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"xml_presentation_id": "pres_fallback", "revision_id": 1}},
+	})
+	uploadStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/drive/v1/medias/upload_all",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"file_token": "boxcn_fallback"}},
+	}
+	reg.Register(uploadStub)
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_fallback/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_fallback", "revision_id": 2}},
+	}
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_fallback", "https://x.feishu.cn/slides/pres_fallback")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "fallback.svg",
+		"--title", "fallback",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(fake.calls) != 1 || fake.calls[0] != "fallback.svg" {
+		t.Fatalf("rasterizer calls = %v, want [fallback.svg]", fake.calls)
+	}
+	data := decodeSlidesCreateEnvelope(t, stdout)
+	if data["fallback_pages"] != float64(1) {
+		t.Fatalf("fallback_pages = %v, want 1", data["fallback_pages"])
+	}
+	if data["images_uploaded"] != float64(1) {
+		t.Fatalf("images_uploaded = %v, want 1", data["images_uploaded"])
+	}
+
+	var body map[string]interface{}
+	if err := json.Unmarshal(slideStub.CapturedBody, &body); err != nil {
+		t.Fatalf("decode slide body: %v", err)
+	}
+	content := body["slide"].(map[string]interface{})["content"].(string)
+	for _, want := range []string{
+		`slide:contract-version="svglide-authoring-contract/v1"`,
+		`<image slide:role="image" href="boxcn_fallback" x="0" y="0" width="1280" height="720" preserveAspectRatio="none"/>`,
+		`<metadata data-svglide-assets="true"><img src="boxcn_fallback" /></metadata>`,
+	} {
+		if !strings.Contains(content, want) {
+			t.Fatalf("fallback slide content missing %s: %s", want, content)
+		}
+	}
+	if strings.Contains(content, "<text") {
+		t.Fatalf("fallback slide content should not contain original text node: %s", content)
+	}
+}
+
+func TestSlidesCreateSVGRejectsUnsafeBeforePresentationCreate(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><script>alert(1)</script></svg>`
+	if err := os.WriteFile("unsafe.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write unsafe.svg: %v", err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "unsafe.svg",
+		"--title", "unsafe",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected preflight reject")
+	}
+	for _, want := range []string{"disallowed_script", "unsafe.svg"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("err = %v, want %q", err, want)
+		}
+	}
+}
+
+func TestSlidesCreateSVGRendererUnavailableBeforePresentationCreate(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><text x="80" y="120">needs fallback</text></svg>`
+	if err := os.WriteFile("fallback.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write fallback.svg: %v", err)
+	}
+
+	fake := &fakeSVGFallbackRasterizer{
+		availableErr: newSVGlideDiagnosticsError("renderer unavailable", []SVGlideDiagnostic{{
+			Code:     svgDiagRendererUnavailable,
+			Severity: svgDiagSeverityError,
+			Path:     "fallback.svg",
+			Message:  "renderer missing",
+		}}),
+	}
+	restore := setTestSVGFallbackRasterizer(fake)
+	defer restore()
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "fallback.svg",
+		"--title", "renderer unavailable",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected renderer unavailable error")
+	}
+	if !strings.Contains(err.Error(), svgDiagRendererUnavailable) {
+		t.Fatalf("err = %v, want renderer_unavailable", err)
+	}
+	if len(fake.calls) != 0 {
+		t.Fatalf("rasterizer should not render when availability check fails, calls=%v", fake.calls)
+	}
+	if fake.checkCalls != 1 {
+		t.Fatalf("renderer availability checks = %d, want 1", fake.checkCalls)
+	}
+}
+
+func TestSlidesCreateSVGRasterFailureBeforePresentationCreate(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><text x="80" y="120">needs fallback</text></svg>`
+	if err := os.WriteFile("fallback.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write fallback.svg: %v", err)
+	}
+
+	fake := &fakeSVGFallbackRasterizer{
+		renderErr: newSVGlideDiagnosticsError("render failed", []SVGlideDiagnostic{{
+			Code:     svgDiagRendererFailed,
+			Severity: svgDiagSeverityError,
+			Path:     "fallback.svg",
+			Message:  "render failed",
+		}}),
+	}
+	restore := setTestSVGFallbackRasterizer(fake)
+	defer restore()
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "fallback.svg",
+		"--title", "render failure",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected raster failure error")
+	}
+	if !strings.Contains(err.Error(), svgDiagRendererFailed) {
+		t.Fatalf("err = %v, want renderer_failed", err)
+	}
+	if len(fake.calls) != 1 {
+		t.Fatalf("rasterizer calls = %v, want one render attempt", fake.calls)
+	}
+}
+
+type fakeSVGFallbackRasterizer struct {
+	availableErr error
+	renderErr    error
+	pngPath      string
+	pngBytes     []byte
+	checkCalls   int
+	calls        []string
+}
+
+func (f *fakeSVGFallbackRasterizer) CheckAvailable(context.Context) error {
+	f.checkCalls++
+	return f.availableErr
+}
+
+func (f *fakeSVGFallbackRasterizer) Rasterize(_ context.Context, svgPath string) (string, int64, error) {
+	f.calls = append(f.calls, svgPath)
+	if f.renderErr != nil {
+		return "", 0, f.renderErr
+	}
+	if f.pngPath == "" {
+		f.pngPath = "fallback.png"
+	}
+	if len(f.pngBytes) == 0 {
+		f.pngBytes = []byte("png")
+	}
+	if err := os.WriteFile(f.pngPath, f.pngBytes, 0o644); err != nil {
+		return "", 0, err
+	}
+	return f.pngPath, int64(len(f.pngBytes)), nil
+}
+
+func setTestSVGFallbackRasterizer(r svgRasterizer) func() {
+	old := svgFallbackRasterizer
+	svgFallbackRasterizer = r
+	return func() {
+		svgFallbackRasterizer = old
 	}
 }
 

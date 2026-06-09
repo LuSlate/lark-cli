@@ -44,7 +44,8 @@ var SlidesCreateSVG = common.Shortcut{
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		title := effectiveTitle(runtime.Str("title"))
-		svgs, err := readSVGFiles(runtime, runtime.StrArray("file"))
+		filePaths := runtime.StrArray("file")
+		svgs, err := readSVGFiles(runtime, filePaths)
 		if err != nil {
 			return common.NewDryRunAPI().Set("error", err.Error())
 		}
@@ -52,7 +53,15 @@ var SlidesCreateSVG = common.Shortcut{
 		if err != nil {
 			return common.NewDryRunAPI().Set("error", err.Error())
 		}
-		pages, uploadPaths := dryRunRewriteSVGImagePlaceholders(svgs, assets)
+		classified, err := classifySVGlideSVGPages(filePaths, svgs)
+		if err != nil {
+			return common.NewDryRunAPI().Set("error", err.Error())
+		}
+		rewriteResult, uploadPaths, err := dryRunRewriteClassifiedSVGPages(classified, assets)
+		if err != nil {
+			return common.NewDryRunAPI().Set("error", err.Error())
+		}
+		pages := rewriteResult.Pages
 
 		dry := common.NewDryRunAPI()
 		total := 1 + len(uploadPaths) + len(pages)
@@ -90,7 +99,8 @@ var SlidesCreateSVG = common.Shortcut{
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		title := effectiveTitle(runtime.Str("title"))
-		svgs, err := readSVGFiles(runtime, runtime.StrArray("file"))
+		filePaths := runtime.StrArray("file")
+		svgs, err := readSVGFiles(runtime, filePaths)
 		if err != nil {
 			return err
 		}
@@ -98,6 +108,20 @@ var SlidesCreateSVG = common.Shortcut{
 		if err != nil {
 			return err
 		}
+		classified, err := classifySVGlideSVGPages(filePaths, svgs)
+		if err != nil {
+			return err
+		}
+		if hasFallbackPages(classified) {
+			if err := svgFallbackRasterizer.CheckAvailable(ctx); err != nil {
+				return err
+			}
+		}
+		renderedFallbacks, err := renderSVGFallbackPages(ctx, classified, svgFallbackRasterizer)
+		if err != nil {
+			return err
+		}
+		defer cleanupRenderedSVGFallbacks(renderedFallbacks)
 
 		presentationID, revisionID, err := createEmptyPresentation(runtime, title)
 		if err != nil {
@@ -111,15 +135,19 @@ var SlidesCreateSVG = common.Shortcut{
 			result["revision_id"] = revisionID
 		}
 
-		pages, uploaded, err := rewriteSVGImagePlaceholders(runtime, presentationID, svgs, assets)
+		rewriteResult, err := rewriteClassifiedSVGPages(runtime, presentationID, classified, assets, renderedFallbacks)
 		if err != nil {
 			return output.Errorf(output.ExitAPI, "api_error",
 				"image upload failed: %v (presentation %s was created; %d image(s) uploaded before failure)",
-				err, presentationID, uploaded)
+				err, presentationID, rewriteResult.ImagesUploaded)
 		}
-		if uploaded > 0 {
-			result["images_uploaded"] = uploaded
+		if rewriteResult.ImagesUploaded > 0 {
+			result["images_uploaded"] = rewriteResult.ImagesUploaded
 		}
+		if rewriteResult.FallbackPages > 0 {
+			result["fallback_pages"] = rewriteResult.FallbackPages
+		}
+		pages := rewriteResult.Pages
 
 		slideURL := fmt.Sprintf(
 			"/open-apis/slides_ai/v1/xml_presentations/%s/slide",
