@@ -301,6 +301,16 @@ func (p *CredentialProvider) doResolveIdentityHint(ctx context.Context) (*Identi
 }
 
 // ResolveToken resolves an access token.
+//
+// For bot identity this is the runtime TAT entry point used across the CLI:
+//  1. an active credential source (for example env or sidecar) gets first
+//     chance to return a token;
+//  2. extension providers are tried next;
+//  3. the built-in default provider falls back to FetchTAT(app_id, app_secret)
+//     and caches that tenant access token with sync.Once for the process.
+//
+// The env provider may supply a real TAT directly; the sidecar provider returns
+// a sentinel token that the transport layer rewrites into a proxied request.
 func (p *CredentialProvider) ResolveToken(ctx context.Context, req TokenSpec) (*TokenResult, error) {
 	source, err := p.selectedCredentialSource(ctx)
 	if err != nil {

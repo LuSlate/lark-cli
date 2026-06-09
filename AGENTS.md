@@ -65,6 +65,14 @@ Both notices recommend the same fix command: `lark-cli update`. The skills notic
 | `internal/vfs/` | Filesystem abstraction (use `vfs.*` instead of `os.*`) |
 | `internal/validate/path.go` | Path safety validation |
 
+## Auth / TAT operator notes
+
+- The current TAT path is documented inline in `internal/credential/`, `cmd/config/init_probe.go`, `cmd/auth/status.go`, and `internal/identitydiag/diagnostics.go`. Historical materials that talk about `SEC_AUTH` or `cmd/sec/*` should be treated as drift, not as current-tree entry points.
+- `config init` only performs a best-effort post-save probe. A typed auth error means the credentials were deterministically rejected; transport / timeout / parse failures are intentionally treated as ambiguous noise and do not prove the config is bad.
+- `auth status --verify` and runtime bot commands share the same credential chain. A successful bot verify confirms the current token source can call `/open-apis/bot/v3/info`, but it does not prove every downstream bot scope or API path will work.
+- Historical reports still matter: sandboxed runners may fail to read OS keychain state, and users can complete browser authorization while local state remains missing or stale. Treat those as environment / local-state risks to inspect, not proof that the remote authorization page never succeeded.
+- The notes above are derived from current mainline code plus historical reports. They are intentionally not a live verification guarantee; real token usability still depends on valid app config, local state, and network reachability.
+
 ## Who Uses This CLI
 
 This CLI's primary consumers include AI agents (Claude Code, Cursor, Gemini CLI). Your code is read by machines — error messages, output format, and flag design all directly affect agent success rates.

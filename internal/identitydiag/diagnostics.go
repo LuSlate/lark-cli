@@ -217,6 +217,10 @@ func diagnoseUser(ctx context.Context, f *cmdutil.Factory, cfg *core.CliConfig, 
 	return id
 }
 
+// resolveBotToken is the bot-verification consumer of the shared credential
+// chain. It intentionally reuses ResolveToken(core.AsBot, appID) so auth
+// diagnostics observe the same env-provider, sidecar, strict-mode, and
+// built-in FetchTAT behavior as normal runtime bot commands.
 func resolveBotToken(ctx context.Context, f *cmdutil.Factory, cfg *core.CliConfig) (string, error) {
 	if f == nil || f.Credential == nil {
 		return "", &credential.TokenUnavailableError{Type: credential.TokenTypeTAT}

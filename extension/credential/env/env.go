@@ -94,6 +94,9 @@ func (p *Provider) ResolveAccount(ctx context.Context) (*credential.Account, err
 	return acct, nil
 }
 
+// ResolveToken returns a token directly from environment variables. For bot
+// identity this is a straight TAT override that bypasses the built-in
+// app_id/app_secret mint path entirely.
 func (p *Provider) ResolveToken(ctx context.Context, req credential.TokenSpec) (*credential.Token, error) {
 	var envKey string
 	switch req.Type {

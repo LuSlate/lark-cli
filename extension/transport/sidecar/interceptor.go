@@ -64,6 +64,9 @@ type Interceptor struct {
 // Supports two auth patterns:
 //   - Standard OpenAPI: Authorization: Bearer <sentinel>
 //   - MCP protocol:     X-Lark-MCP-UAT/TAT: <sentinel>
+//
+// For bot traffic the sentinel stands in for TAT only long enough for the
+// proxy hop; the real tenant access token is injected by the sidecar.
 func (i *Interceptor) PreRoundTrip(req *http.Request) func(resp *http.Response, err error) {
 	identity, authHeader := detectSentinel(req)
 	if identity == "" {

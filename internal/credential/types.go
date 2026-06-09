@@ -97,6 +97,10 @@ type AccountProvider interface {
 }
 
 // TokenType distinguishes UAT from TAT.
+// In this repository, TAT always means "tenant access token" for bot identity:
+// either minted from app_id + app_secret by the built-in provider, supplied
+// directly by an extension provider, or proxied through authsidecar. There is
+// no app_ticket -> tenant_access_token exchange implementation in this tree.
 // Uses string constants matching extension/credential.TokenType for zero-cost conversion.
 type TokenType string
 

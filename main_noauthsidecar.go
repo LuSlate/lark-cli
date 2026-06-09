@@ -8,6 +8,8 @@
 // compiled in under that tag; deploying the plain build into an environment
 // that expects sidecar isolation would silently fall back to direct env
 // credential use — exactly the failure mode the feature is meant to prevent.
+// Without the authsidecar build tag, the binary cannot safely proxy either UAT
+// or TAT through the sidecar contract at all.
 //
 // When LARKSUITE_CLI_AUTH_PROXY is set, we refuse to run rather than ignore
 // the variable. The operator either rebuilt without realizing (wrong

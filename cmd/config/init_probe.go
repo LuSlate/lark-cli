@@ -28,6 +28,10 @@ const probeTimeout = 3 * time.Second
 // so that valid configurations and transient/upstream noise never block the
 // command.
 //
+// This is one of the repository's three main TAT entry points: config init
+// validates freshly-saved app credentials here, while runtime bot calls and
+// `auth status --verify` go through credential.ResolveToken.
+//
 // The function performs up to two HTTP calls in series, bounded by
 // probeTimeout:
 //

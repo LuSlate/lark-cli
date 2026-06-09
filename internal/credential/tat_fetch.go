@@ -18,6 +18,11 @@ import (
 // that already hold plaintext credentials (e.g. the post-`config init` probe)
 // can validate them without a second keychain round-trip.
 //
+// This is the built-in TAT mint path for the current repository:
+// app_id + app_secret -> /open-apis/auth/v3/tenant_access_token/internal.
+// It is reused by both the post-config probe and the default runtime bot-token
+// resolver. The tree does not contain a separate app_ticket-based TAT exchange.
+//
 // A non-zero TAT response code means the server inspected the payload and
 // rejected the credentials; FetchTAT returns the canonical typed error from
 // classifyTATResponseCode — the SAME classification doResolveTAT (and thus

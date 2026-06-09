@@ -40,6 +40,10 @@ func NewCmdAuthStatus(f *cmdutil.Factory, runF func(*StatusOptions) error) *cobr
 	return cmd
 }
 
+// authStatusRun reports the configured identities. When --verify is enabled,
+// the bot branch does not mint a token independently — it reuses the shared
+// credential resolution path, so `auth status --verify` exercises the same TAT
+// source selection logic as normal bot API calls.
 func authStatusRun(opts *StatusOptions) error {
 	f := opts.Factory
 

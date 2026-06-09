@@ -322,7 +322,10 @@ func sanitizeOutputDir(dir string) (string, error) {
 	return safe, nil
 }
 
-// resolveTenantToken fetches the app's tenant access token.
+// resolveTenantToken fetches the app's tenant access token for event consume.
+// This is a concrete runtime consumer of the shared bot-token path: event
+// consume does not own a separate exchange flow, it asks the credential layer
+// for the same TAT that other bot-mode commands use.
 func resolveTenantToken(ctx context.Context, f *cmdutil.Factory, appID string) (string, error) {
 	if ctx == nil {
 		ctx = context.Background()

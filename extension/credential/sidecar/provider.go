@@ -103,6 +103,8 @@ func (p *Provider) ResolveAccount(ctx context.Context) (*credential.Account, err
 // ResolveToken returns a sentinel token whose value encodes the token type.
 // The transport interceptor reads this sentinel to determine the identity
 // (user vs bot), strips it, and the sidecar injects the real token.
+// In other words, sidecar mode proxies the normal UAT/TAT contract; it does
+// not introduce a new open-platform token-exchange protocol inside this repo.
 // Returns nil, nil when sidecar mode is not active.
 func (p *Provider) ResolveToken(ctx context.Context, req credential.TokenSpec) (*credential.Token, error) {
 	if os.Getenv(envvars.CliAuthProxy) == "" {

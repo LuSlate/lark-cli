@@ -147,6 +147,8 @@ func (p *DefaultTokenProvider) resolveUAT(ctx context.Context) (*TokenResult, er
 }
 
 // resolveTAT resolves a tenant access token. Result is cached after first call.
+// This is the built-in runtime path behind bot token resolution when no
+// external credential source overrides it.
 // NOTE: Uses sync.Once — only the context from the first call is used.
 func (p *DefaultTokenProvider) resolveTAT(ctx context.Context) (*TokenResult, error) {
 	p.tatOnce.Do(func() {
