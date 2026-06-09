@@ -135,6 +135,7 @@ lark-cli vc meeting get --params '{"meeting_id":"<meeting_id>","with_participant
 | 参会人快照（谁参加过、何时入/离会，任意时点）| `vc meeting get --with-participants` | 本 skill |
 | 已结束会议的发言内容 | `vc +notes` 取 `verbatim_doc_token` 再 `docs +fetch --api-version v2` | 本 skill |
 | **进行中会议**的实时事件流（转写、聊天、共享、会中加入/离开）| `vc +meeting-events` | [`lark-vc-agent`](../lark-vc-agent/SKILL.md) |
+| **当前在会列表**（我正在哪些会 / 用户与 bot 共同在会）| `vc +meeting-list-active` | [`lark-vc-agent`](../lark-vc-agent/SKILL.md) |
 | **Agent 真实入会 / 离会** | `vc +meeting-join` / `vc +meeting-leave` | [`lark-vc-agent`](../lark-vc-agent/SKILL.md) |
 
 ## 资源关系

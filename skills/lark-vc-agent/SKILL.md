@@ -34,6 +34,7 @@ metadata:
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | "帮我入会 123456789"、"代我参会"、"让机器人进会旁听"                         | **本 skill** `+meeting-join`                                                                                                                           |
 | "会议现在还开着，谁刚加入了"、"会议里谁在发言"、"有人共享屏幕吗"（**进行中会议**，且**机器人已入会**） | **本 skill** `+meeting-events`                                                                                                                         |
+| "我现在在哪些会里"、"这个用户正在开的会有哪些"、"机器人和某用户共同在哪些会"（**当前在会列表**）         | **本 skill** `+meeting-list-active`                                                                                                                    |
 | "退出会议"、"让机器人离开"                                            | **本 skill** `+meeting-leave`                                                                                                                          |
 | "昨天那场会有谁参加过"、"搜昨天的会"、"查纪要/逐字稿/录制"                          | [`lark-vc`](../lark-vc/SKILL.md)                                                                                                                      |
 | "帮我参会，结束后把纪要发到群" 等跨阶段场景                                    | 按序编排：本 skill（入会 → 读事件）→ 会议结束后用 [`lark-vc`](../lark-vc/SKILL.md) / [`lark-minutes`](../lark-minutes/SKILL.md) 拉纪要 → [`lark-im`](../lark-im/SKILL.md) 发群 |
@@ -97,10 +98,12 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 | --------------------------------------------------------------- | -- | -------------------------------------------------------------------------- |
 | [`+meeting-join`](references/lark-vc-agent-meeting-join.md)     | 写  | Join an in-progress meeting by 9-digit meeting number                      |
 | [`+meeting-events`](references/lark-vc-agent-meeting-events.md) | 读  | List bot meeting events (participant joined/left, transcript, chat, share) |
+| [`+meeting-list-active`](references/lark-vc-agent-meeting-list-active.md) | 读 | List ongoing meetings for current identity (UAT: self; TAT: target user + bot in meeting) |
 | [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)   | 写  | Leave a meeting by meeting\_id                                             |
 
 - 使用 `+meeting-join` 前**必须**阅读 [references/lark-vc-agent-meeting-join.md](references/lark-vc-agent-meeting-join.md)，了解入参格式与写操作可见性风险。
 - 使用 `+meeting-events` 前**必须**阅读 [references/lark-vc-agent-meeting-events.md](references/lark-vc-agent-meeting-events.md)，了解 `meeting_id` 来源、分页、错误码（10005 / 20001 / 20002）与 "bot 仍在会中" 硬约束。
+- 使用 `+meeting-list-active` 前**必须**阅读 [references/lark-vc-agent-meeting-list-active.md](references/lark-vc-agent-meeting-list-active.md)，了解 UAT/TAT 两种身份的语义差异：`--as user` 查自己当前在会列表（无需 `--user-id`）；`--as bot` 查目标用户（`--user-id ou_...`）与 bot 共同在会的会议；返回 `meeting_no` / `meeting_id` / `meeting_title`，覆盖无/单/多会议语义，可把 `meeting_id` 直接喂给 `+meeting-events`。
 - 使用 `+meeting-leave` 前**必须**阅读 [references/lark-vc-agent-meeting-leave.md](references/lark-vc-agent-meeting-leave.md)，了解 `meeting_id` 的来源与写操作可见性。
 
 ## 权限表
@@ -109,6 +112,7 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 | ----------------- | ------------------------------ |
 | `+meeting-join`   | `vc:meeting.bot.join:write`    |
 | `+meeting-events` | `vc:meeting.meetingevent:read` |
+| `+meeting-list-active` | `vc:meeting.active:read` |
 | `+meeting-leave`  | `vc:meeting.bot.join:write`    |
 
 ## 延伸

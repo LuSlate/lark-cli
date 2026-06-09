@@ -14,5 +14,6 @@ func Shortcuts() []common.Shortcut {
 		VCMeetingJoin,
 		VCMeetingLeave,
 		VCMeetingEvents,
+		VCMeetingListActive,
 	}
 }
