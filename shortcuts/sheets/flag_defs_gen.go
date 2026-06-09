@@ -765,7 +765,7 @@ var flagDefs = map[string]commandDef{
 			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
 			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
 			{Name: "title", Kind: "own", Type: "string", Required: "required", Desc: "New sheet title"},
-			{Name: "index", Kind: "own", Type: "int", Required: "optional", Desc: "Insert position; appended to the end when omitted", Default: "-1"},
+			{Name: "index", Kind: "own", Type: "int", Required: "optional", Desc: "Insert position (0-based); appended to the end when omitted", Default: "-1"},
 			{Name: "row-count", Kind: "own", Type: "int", Required: "optional", Desc: "Initial row count (default 200, max 50000)", Default: "200"},
 			{Name: "col-count", Kind: "own", Type: "int", Required: "optional", Desc: "Initial column count (default 20, max 200)", Default: "20"},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
