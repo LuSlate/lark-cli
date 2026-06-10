@@ -5,12 +5,9 @@ package sheets
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/larksuite/cli/internal/output"
@@ -23,65 +20,18 @@ import (
 // transaction id for sheet tool calls.
 const sheetTxnIDEnv = "LARK_CLI_SHEET_TRANSACTION_ID"
 
-// sheetTransactionID returns the session-stable transaction id threaded into a
-// write tool call's extra.transaction_id.
+// sheetTransactionID returns the session-stable transaction id from the
+// environment, or "" when unset.
 //
 // Sheet write tools persist their reverse ("undo") changeset keyed by the
 // request's transaction id; the server mints a fresh uuid per request when the
-// caller supplies none, which would isolate every CLI invocation into its own
-// single-call undo stack. Sharing one stable id across a group of edits (and a
-// later +undo) is what lets +undo find and reverse those edits.
-//
-// Resolution order:
-//  1. $LARK_CLI_SHEET_TRANSACTION_ID — explicit caller override (highest).
-//  2. else a value derived from this shell session (see
-//     deriveSessionTransactionID) so a group of edits and a later +undo group
-//     by default, with no env var to set.
-//  3. else "" — the server mints a per-request id as before.
+// caller supplies none, which isolates every CLI invocation into its own
+// single-call undo stack. Threading one stable id across a group of edits (and
+// a later +undo) is what lets +undo find and reverse those edits. An agent
+// driving lark-cli sets this once per session; empty preserves today's
+// per-request behavior.
 func sheetTransactionID() string {
-	if v := strings.TrimSpace(os.Getenv(sheetTxnIDEnv)); v != "" {
-		return v
-	}
-	return deriveSessionTransactionID()
-}
-
-// deriveSessionTransactionID builds a transaction id that is stable across the
-// lark-cli invocations of one shell session and distinct across sessions, so a
-// group of edits and a later +undo share an undo stack without the caller
-// exporting LARK_CLI_SHEET_TRANSACTION_ID.
-//
-// Each lark-cli run is a fresh process and cannot mutate its parent's
-// environment, so a *generated* id can't survive to the next command. Instead
-// every run independently *recomputes* the same id from its own OS session —
-// nothing is persisted between invocations.
-//
-// Returns "" when no trustworthy session signal exists (e.g. the process was
-// reparented to init); the server then mints a per-request id and a
-// missing-grouping +undo surfaces undone:0 rather than silently grouping
-// unrelated callers. The grouping signal is a per-shell-session token
-// (sessionSignal, platform-specific) salted with the uid and boot/host so a
-// session id recycled after a reboot, or reused by a different user, can't
-// collide with a stale undo stack.
-func deriveSessionTransactionID() string {
-	sig, ok := sessionSignal()
-	if !ok {
-		return ""
-	}
-	seed := strings.Join([]string{sig, strconv.Itoa(os.Getuid()), sessionSalt()}, "|")
-	sum := sha256.Sum256([]byte(seed))
-	return "larkcli-" + hex.EncodeToString(sum[:16])
-}
-
-// sessionSalt pins the derived id to this boot (Linux boot_id) or, failing
-// that, this host, so a session id recycled after a reboot can't address a
-// pre-reboot undo stack. Best-effort: an empty salt only weakens collision
-// resistance across reboots, never correctness within a session.
-func sessionSalt() string {
-	if b, err := os.ReadFile("/proc/sys/kernel/random/boot_id"); err == nil {
-		return strings.TrimSpace(string(b))
-	}
-	h, _ := os.Hostname()
-	return h
+	return strings.TrimSpace(os.Getenv(sheetTxnIDEnv))
 }
 
 // ToolKind selects the One-OpenAPI endpoint and its rate-limit bucket.
