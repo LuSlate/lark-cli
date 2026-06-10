@@ -4,8 +4,13 @@
 package auth
 
 import (
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/internal/core"
 	"github.com/smartystreets/goconvey/convey"
 )
 
@@ -30,4 +35,101 @@ func Test_BuildVerificationURL(t *testing.T) {
 			convey.So(result, convey.ShouldNotContainSubstring, "?lpv=")
 		})
 	})
+}
+
+// captureClient returns an http.Client that records the last request's form body
+// and replies with the given JSON payload.
+func captureClient(gotBody *url.Values, respJSON string) *http.Client {
+	return &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if req.Body != nil {
+				b, _ := io.ReadAll(req.Body)
+				v, _ := url.ParseQuery(string(b))
+				*gotBody = v
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(respJSON)),
+			}, nil
+		}),
+	}
+}
+
+func TestRequestAppRegistrationInit_ParsesNonceAndMethods(t *testing.T) {
+	var body url.Values
+	hc := captureClient(&body, `{"nonce":"n-123","supported_auth_methods":["client_secret","private_key_jwt"]}`)
+
+	out, err := RequestAppRegistrationInit(hc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Nonce != "n-123" {
+		t.Errorf("nonce = %q, want n-123", out.Nonce)
+	}
+	if len(out.SupportedAuthMethods) != 2 || out.SupportedAuthMethods[1] != "private_key_jwt" {
+		t.Errorf("methods = %v", out.SupportedAuthMethods)
+	}
+	if body.Get("action") != "init" {
+		t.Errorf("action = %q, want init", body.Get("action"))
+	}
+}
+
+func TestRequestAppRegistrationInit_ErrorOnMissingNonce(t *testing.T) {
+	var body url.Values
+	hc := captureClient(&body, `{"supported_auth_methods":["client_secret"]}`)
+	if _, err := RequestAppRegistrationInit(hc); err == nil {
+		t.Fatal("expected error when server returns no nonce")
+	}
+}
+
+const beginRespJSON = `{"device_code":"dc","user_code":"uc","verification_uri":"https://example/verify","expires_in":300,"interval":5}`
+
+func TestRequestAppRegistration_BeginDefaultsToClientSecret(t *testing.T) {
+	var body url.Values
+	hc := captureClient(&body, beginRespJSON)
+
+	if _, err := RequestAppRegistration(hc, core.BrandFeishu, AppRegistrationBeginOptions{}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if body.Get("action") != "begin" {
+		t.Errorf("action = %q", body.Get("action"))
+	}
+	if body.Get("auth_method") != "client_secret" {
+		t.Errorf("auth_method = %q, want client_secret (default)", body.Get("auth_method"))
+	}
+	if body.Has("auth_attestation") {
+		t.Errorf("auth_attestation should be absent for client_secret, got %q", body.Get("auth_attestation"))
+	}
+}
+
+func TestParseAuthMethods(t *testing.T) {
+	if got := parseAuthMethods([]interface{}{"private_key_jwt", "client_secret"}); len(got) != 2 || got[0] != "private_key_jwt" {
+		t.Errorf("array form = %v", got)
+	}
+	if got := parseAuthMethods("client_secret private_key_jwt"); len(got) != 2 || got[1] != "private_key_jwt" {
+		t.Errorf("string form = %v", got)
+	}
+	if got := parseAuthMethods(nil); got != nil {
+		t.Errorf("nil form = %v, want nil", got)
+	}
+}
+
+func TestRequestAppRegistration_BeginPrivateKeyJWT(t *testing.T) {
+	var body url.Values
+	hc := captureClient(&body, beginRespJSON)
+
+	opts := AppRegistrationBeginOptions{
+		AuthMethod:      core.AuthMethodPrivateKeyJWT,
+		AuthAttestation: "header.claims.sig",
+	}
+	if _, err := RequestAppRegistration(hc, core.BrandFeishu, opts, nil); err != nil {
+		t.Fatal(err)
+	}
+	if body.Get("auth_method") != "private_key_jwt" {
+		t.Errorf("auth_method = %q, want private_key_jwt", body.Get("auth_method"))
+	}
+	if body.Get("auth_attestation") != "header.claims.sig" {
+		t.Errorf("auth_attestation = %q", body.Get("auth_attestation"))
+	}
 }

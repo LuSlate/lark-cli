@@ -265,7 +265,7 @@ func authLoginRun(opts *LoginOptions) error {
 	if err != nil {
 		return err
 	}
-	authResp, err := larkauth.RequestDeviceAuthorization(httpClient, config.AppID, config.AppSecret, config.Brand, finalScope, f.IOStreams.ErrOut)
+	authResp, err := larkauth.RequestDeviceAuthorization(opts.Ctx, httpClient, larkauth.ClientAuthFromConfig(config), config.Brand, finalScope, f.IOStreams.ErrOut)
 	if err != nil {
 		return errs.NewAuthenticationError(errs.SubtypeUnknown, "device authorization failed: %v", err).WithCause(err)
 	}
@@ -325,7 +325,7 @@ func authLoginRun(opts *LoginOptions) error {
 
 	// Step 3: Poll for token
 	log(msg.WaitingAuth)
-	result := pollDeviceToken(opts.Ctx, httpClient, config.AppID, config.AppSecret, config.Brand,
+	result := pollDeviceToken(opts.Ctx, httpClient, larkauth.ClientAuthFromConfig(config), config.Brand,
 		authResp.DeviceCode, authResp.Interval, authResp.ExpiresIn, f.IOStreams.ErrOut)
 
 	if !result.OK {
@@ -415,7 +415,7 @@ func authLoginPollDeviceCode(opts *LoginOptions, config *core.CliConfig, msg *lo
 		fmt.Fprintln(f.IOStreams.ErrOut, msg.AgentTimeoutHint)
 	}
 	log(msg.WaitingAuth)
-	result := pollDeviceToken(opts.Ctx, httpClient, config.AppID, config.AppSecret, config.Brand,
+	result := pollDeviceToken(opts.Ctx, httpClient, larkauth.ClientAuthFromConfig(config), config.Brand,
 		opts.DeviceCode, 5, 600, f.IOStreams.ErrOut)
 
 	if !result.OK {

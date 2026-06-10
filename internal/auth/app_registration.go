@@ -31,6 +31,11 @@ type AppRegistrationResult struct {
 	ClientID     string
 	ClientSecret string
 	UserInfo     *AppRegUserInfo
+	// AuthMethods is the authoritative auth method(s) the app must use, as
+	// decided by the user/admin at confirmation (20260409 `auth_method` field).
+	// It may differ from what the client requested — e.g. selecting an existing
+	// client_secret app. Empty on older servers.
+	AuthMethods []string
 }
 
 // AppRegUserInfo contains user info returned from app registration.
@@ -39,8 +44,80 @@ type AppRegUserInfo struct {
 	TenantBrand string // "feishu" or "lark"
 }
 
-// RequestAppRegistration initiates the app registration device flow.
-func RequestAppRegistration(httpClient *http.Client, brand core.LarkBrand, errOut io.Writer) (*AppRegistrationResponse, error) {
+// AppRegistrationInit is the response from the app registration init endpoint.
+type AppRegistrationInit struct {
+	Nonce                string
+	SupportedAuthMethods []string // e.g. ["client_secret", "private_key_jwt"]
+}
+
+// AppRegistrationBeginOptions parametrizes the registration begin request.
+// A zero value selects the legacy client_secret flow, preserving prior behavior.
+type AppRegistrationBeginOptions struct {
+	AuthMethod      string // "" => client_secret; core.AuthMethodPrivateKeyJWT
+	AuthAttestation string // private_key_jwt: the TEE-signed attestation JWT
+}
+
+// RequestAppRegistrationInit performs the init step of the registration flow,
+// returning a server nonce (to be embedded in a TEE-signed attestation JWT) and
+// the auth methods the server supports for this archetype.
+func RequestAppRegistrationInit(httpClient *http.Client) (*AppRegistrationInit, error) {
+	// Registration always begins against the feishu accounts host (mirrors begin).
+	endpoint := core.ResolveEndpoints(core.BrandFeishu).Accounts + PathAppRegistration
+
+	form := url.Values{}
+	form.Set("action", "init")
+	form.Set("archetype", "PersonalAgent")
+
+	req, err := http.NewRequest("POST", endpoint, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	logHTTPResponse(resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("app registration init failed: read body: %v", err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, fmt.Errorf("app registration init failed: HTTP %d – response not JSON", resp.StatusCode)
+	}
+
+	if _, hasError := data["error"]; resp.StatusCode >= 400 || hasError {
+		msg := getStr(data, "error_description")
+		if msg == "" {
+			msg = getStr(data, "error")
+		}
+		if msg == "" {
+			msg = "Unknown error"
+		}
+		return nil, fmt.Errorf("app registration init failed: %s", msg)
+	}
+
+	out := &AppRegistrationInit{Nonce: getStr(data, "nonce")}
+	if methods, ok := data["supported_auth_methods"].([]interface{}); ok {
+		for _, m := range methods {
+			if s, ok := m.(string); ok {
+				out.SupportedAuthMethods = append(out.SupportedAuthMethods, s)
+			}
+		}
+	}
+	if out.Nonce == "" {
+		return nil, fmt.Errorf("app registration init failed: server returned no nonce")
+	}
+	return out, nil
+}
+
+// RequestAppRegistration initiates the app registration device flow (begin step).
+func RequestAppRegistration(httpClient *http.Client, brand core.LarkBrand, opts AppRegistrationBeginOptions, errOut io.Writer) (*AppRegistrationResponse, error) {
 	if errOut == nil {
 		errOut = io.Discard
 	}
@@ -49,11 +126,19 @@ func RequestAppRegistration(httpClient *http.Client, brand core.LarkBrand, errOu
 	regEp := core.ResolveEndpoints(core.BrandFeishu) // registration begin always uses feishu
 	endpoint := regEp.Accounts + PathAppRegistration
 
+	authMethod := opts.AuthMethod
+	if authMethod == "" {
+		authMethod = core.AuthMethodClientSecret
+	}
+
 	form := url.Values{}
 	form.Set("action", "begin")
 	form.Set("archetype", "PersonalAgent")
-	form.Set("auth_method", "client_secret")
+	form.Set("auth_method", authMethod)
 	form.Set("request_user_info", "open_id tenant_brand")
+	if opts.AuthAttestation != "" {
+		form.Set("auth_attestation", opts.AuthAttestation)
+	}
 
 	req, err := http.NewRequest("POST", endpoint, strings.NewReader(form.Encode()))
 	if err != nil {
@@ -95,7 +180,17 @@ func RequestAppRegistration(httpClient *http.Client, brand core.LarkBrand, errOu
 
 	userCode := getStr(data, "user_code")
 	verificationUri := getStr(data, "verification_uri")
-	verificationUriComplete := fmt.Sprintf("%s/page/cli?user_code=%s", ep.Open, userCode)
+	// Prefer the server-provided complete URL (currently /page/launcher); fall
+	// back to building it from verification_uri, then to /page/launcher. The old
+	// hard-coded /page/cli is stale — the server now returns /page/launcher.
+	verificationUriComplete := getStr(data, "verification_uri_complete")
+	if verificationUriComplete == "" {
+		base := verificationUri
+		if base == "" {
+			base = ep.Open + "/page/launcher"
+		}
+		verificationUriComplete = fmt.Sprintf("%s?user_code=%s", base, userCode)
+	}
 
 	return &AppRegistrationResponse{
 		DeviceCode:              getStr(data, "device_code"),
@@ -105,6 +200,26 @@ func RequestAppRegistration(httpClient *http.Client, brand core.LarkBrand, errOu
 		ExpiresIn:               expiresIn,
 		Interval:                interval,
 	}, nil
+}
+
+// parseAuthMethods normalizes the poll response `auth_method` field, which the
+// server returns as a JSON array of strings (e.g. ["private_key_jwt"]) — or, on
+// some variants, a single space-separated string.
+func parseAuthMethods(v interface{}) []string {
+	switch t := v.(type) {
+	case []interface{}:
+		out := make([]string, 0, len(t))
+		for _, m := range t {
+			if s, ok := m.(string); ok && s != "" {
+				out = append(out, s)
+			}
+		}
+		return out
+	case string:
+		return strings.Fields(t)
+	default:
+		return nil
+	}
 }
 
 // BuildVerificationURL appends CLI tracking parameters to the verification URL.
@@ -187,6 +302,7 @@ func PollAppRegistration(ctx context.Context, httpClient *http.Client, brand cor
 			result := &AppRegistrationResult{
 				ClientID:     getStr(data, "client_id"),
 				ClientSecret: getStr(data, "client_secret"),
+				AuthMethods:  parseAuthMethods(data["auth_method"]),
 			}
 			if userInfoRaw, ok := data["user_info"].(map[string]interface{}); ok {
 				result.UserInfo = &AppRegUserInfo{

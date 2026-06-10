@@ -33,6 +33,7 @@ type ConfigInitOptions struct {
 	AppSecretStdin bool   // read app-secret from stdin (avoids process list exposure)
 	Brand          string
 	New            bool
+	AuthMethod     string // --auth-method for --new: "" (default client_secret) | private_key_jwt
 
 	Lang         string // raw --lang (string for cobra); normalized to canonical/"" in validateInitLang
 	langExplicit bool   // true when --lang was explicitly passed
@@ -83,6 +84,7 @@ if the user explicitly wants a separate app inside the Agent workspace.`,
 	}
 
 	cmd.Flags().BoolVar(&opts.New, "new", false, "create a new app directly (skip mode selection)")
+	cmd.Flags().StringVar(&opts.AuthMethod, "auth-method", "", "auth method for --new: client_secret (default) or private_key_jwt (TEE-signed, no app secret)")
 	cmd.Flags().StringVar(&opts.AppID, "app-id", "", "App ID (non-interactive)")
 	cmd.Flags().BoolVar(&opts.AppSecretStdin, "app-secret-stdin", false, "Read App Secret from stdin to avoid process list exposure")
 	cmd.Flags().StringVar(&opts.Brand, "brand", "feishu", "feishu or lark (non-interactive, default feishu)")
@@ -156,11 +158,21 @@ func cleanupOldConfig(existing *core.MultiAppConfig, f *cmdutil.Factory, skipApp
 	}
 }
 
+// keyRefFromResult builds the TEE key reference to persist for a private_key_jwt
+// registration result, or nil for client_secret.
+func keyRefFromResult(r *configInitResult) *core.SecretRef {
+	if r != nil && r.AuthMethod == core.AuthMethodPrivateKeyJWT && r.KeyLabel != "" {
+		return &core.SecretRef{Source: "tee", ID: r.KeyLabel}
+	}
+	return nil
+}
+
 // saveAsOnlyApp overwrites config.json with a single-app config.
-func saveAsOnlyApp(appId string, secret core.SecretInput, brand core.LarkBrand, lang string) error {
+func saveAsOnlyApp(appId string, secret core.SecretInput, brand core.LarkBrand, lang, authMethod string, keyRef *core.SecretRef) error {
 	config := &core.MultiAppConfig{
 		Apps: []core.AppConfig{{
 			AppId: appId, AppSecret: secret, Brand: brand, Lang: i18n.Lang(lang), Users: []core.AppUser{},
+			AuthMethod: authMethod, KeyRef: keyRef,
 		}},
 	}
 	return core.SaveMultiAppConfig(config)
@@ -169,9 +181,11 @@ func saveAsOnlyApp(appId string, secret core.SecretInput, brand core.LarkBrand, 
 // saveInitConfig saves a new/updated app config, respecting --profile mode.
 // With profileName: appends or updates the named profile (preserves other profiles).
 // Without profileName: cleans up old config and saves as the only app.
-func saveInitConfig(profileName string, existing *core.MultiAppConfig, f *cmdutil.Factory, appId string, secret core.SecretInput, brand core.LarkBrand, lang string) error {
+// authMethod/keyRef carry the credential type: ("", nil) for client_secret,
+// (private_key_jwt, &{tee,label}) for the secretless TEE flow.
+func saveInitConfig(profileName string, existing *core.MultiAppConfig, f *cmdutil.Factory, appId string, secret core.SecretInput, brand core.LarkBrand, lang, authMethod string, keyRef *core.SecretRef) error {
 	if profileName != "" {
-		return saveAsProfile(existing, f.Keychain, profileName, appId, secret, brand, lang)
+		return saveAsProfile(existing, f.Keychain, profileName, appId, secret, brand, lang, authMethod, keyRef)
 	}
 	cleanupOldConfig(existing, f, appId)
 	var prior i18n.Lang
@@ -180,13 +194,13 @@ func saveInitConfig(profileName string, existing *core.MultiAppConfig, f *cmduti
 			prior = app.Lang
 		}
 	}
-	return saveAsOnlyApp(appId, secret, brand, string(preferredLang(i18n.Lang(lang), prior)))
+	return saveAsOnlyApp(appId, secret, brand, string(preferredLang(i18n.Lang(lang), prior)), authMethod, keyRef)
 }
 
 // saveAsProfile appends or updates a named profile in the config.
 // If a profile with the same name exists, it updates it; otherwise appends.
 // When updating, cleans up old keychain secrets if AppId changed.
-func saveAsProfile(existing *core.MultiAppConfig, kc keychain.KeychainAccess, profileName, appId string, secret core.SecretInput, brand core.LarkBrand, lang string) error {
+func saveAsProfile(existing *core.MultiAppConfig, kc keychain.KeychainAccess, profileName, appId string, secret core.SecretInput, brand core.LarkBrand, lang, authMethod string, keyRef *core.SecretRef) error {
 	multi := existing
 	if multi == nil {
 		multi = &core.MultiAppConfig{}
@@ -205,18 +219,22 @@ func saveAsProfile(existing *core.MultiAppConfig, kc keychain.KeychainAccess, pr
 		multi.Apps[idx].AppSecret = secret
 		multi.Apps[idx].Brand = brand
 		multi.Apps[idx].Lang = preferredLang(i18n.Lang(lang), multi.Apps[idx].Lang)
+		multi.Apps[idx].AuthMethod = authMethod
+		multi.Apps[idx].KeyRef = keyRef
 	} else {
 		if findAppIndexByAppID(multi, profileName) >= 0 {
 			return fmt.Errorf("profile name %q conflicts with existing appId", profileName)
 		}
 		// Append new profile
 		multi.Apps = append(multi.Apps, core.AppConfig{
-			Name:      profileName,
-			AppId:     appId,
-			AppSecret: secret,
-			Brand:     brand,
-			Lang:      i18n.Lang(lang),
-			Users:     []core.AppUser{},
+			Name:       profileName,
+			AppId:      appId,
+			AppSecret:  secret,
+			Brand:      brand,
+			Lang:       i18n.Lang(lang),
+			Users:      []core.AppUser{},
+			AuthMethod: authMethod,
+			KeyRef:     keyRef,
 		})
 	}
 	return core.SaveMultiAppConfig(multi)
@@ -335,7 +353,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 		if err != nil {
 			return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 		}
-		if err := saveInitConfig(opts.ProfileName, existing, f, opts.AppID, secret, brand, opts.Lang); err != nil {
+		if err := saveInitConfig(opts.ProfileName, existing, f, opts.AppID, secret, brand, opts.Lang, "", nil); err != nil {
 			return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
 		}
 		output.PrintSuccess(f.IOStreams.ErrOut, fmt.Sprintf("Configuration saved to %s", core.GetConfigPath()))
@@ -366,7 +384,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 
 	// Mode 3: Create new app directly (--new)
 	if opts.New {
-		result, err := runCreateAppFlow(opts.Ctx, f, parseBrand(opts.Brand), msg)
+		result, err := runCreateAppFlow(opts.Ctx, f, parseBrand(opts.Brand), opts.AuthMethod, msg)
 		if err != nil {
 			return err
 		}
@@ -374,11 +392,24 @@ func configInitRun(opts *ConfigInitOptions) error {
 			return errs.NewInternalError(errs.SubtypeSDKError, "app creation returned no result")
 		}
 		existing, _ := core.LoadMultiAppConfig()
+
+		// private_key_jwt apps have no secret: persist auth method + TEE key ref.
+		// Registration success already validated the key (server bound the public
+		// key), so the app_secret probe is skipped.
+		if result.AuthMethod == core.AuthMethodPrivateKeyJWT {
+			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, core.SecretInput{}, result.Brand, opts.Lang, result.AuthMethod, keyRefFromResult(result)); err != nil {
+				return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+			}
+			printLangPreferenceConfirmation(opts)
+			output.PrintJson(f.IOStreams.Out, map[string]interface{}{"appId": result.AppID, "authMethod": result.AuthMethod, "brand": result.Brand})
+			return nil
+		}
+
 		secret, err := core.ForStorage(result.AppID, core.PlainSecret(result.AppSecret), f.Keychain)
 		if err != nil {
 			return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 		}
-		if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, secret, result.Brand, opts.Lang); err != nil {
+		if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, secret, result.Brand, opts.Lang, "", nil); err != nil {
 			return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
 		}
 		printLangPreferenceConfirmation(opts)
@@ -391,7 +422,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 
 	// Mode 4: Interactive TUI (terminal)
 	if !opts.hasAnyNonInteractiveFlag() && f.IOStreams.IsTerminal {
-		result, err := runInteractiveConfigInit(opts.Ctx, f, msg)
+		result, err := runInteractiveConfigInit(opts.Ctx, f, opts.AuthMethod, msg)
 		if err != nil {
 			return err
 		}
@@ -402,13 +433,18 @@ func configInitRun(opts *ConfigInitOptions) error {
 
 		existing, _ := core.LoadMultiAppConfig()
 
-		if result.AppSecret != "" {
+		if result.AuthMethod == core.AuthMethodPrivateKeyJWT {
+			// Secretless create: persist auth method + TEE key ref, no secret.
+			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, core.SecretInput{}, result.Brand, opts.Lang, result.AuthMethod, keyRefFromResult(result)); err != nil {
+				return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+			}
+		} else if result.AppSecret != "" {
 			// New secret provided (either from "create" or "existing" with input)
 			secret, err := core.ForStorage(result.AppID, core.PlainSecret(result.AppSecret), f.Keychain)
 			if err != nil {
 				return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 			}
-			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, secret, result.Brand, opts.Lang); err != nil {
+			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, secret, result.Brand, opts.Lang, "", nil); err != nil {
 				return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
 			}
 		} else if result.Mode == "existing" && result.AppID != "" {
@@ -513,7 +549,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 	if err != nil {
 		return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 	}
-	if err := saveInitConfig(opts.ProfileName, existing, f, resolvedAppId, storedSecret, parseBrand(resolvedBrand), opts.Lang); err != nil {
+	if err := saveInitConfig(opts.ProfileName, existing, f, resolvedAppId, storedSecret, parseBrand(resolvedBrand), opts.Lang, "", nil); err != nil {
 		return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
 	}
 	output.PrintSuccess(f.IOStreams.ErrOut, fmt.Sprintf("Configuration saved to %s", core.GetConfigPath()))

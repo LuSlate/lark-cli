@@ -19,6 +19,7 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/larksuite/cli/errs"
+	"github.com/larksuite/cli/extension/keysigner"
 	"github.com/larksuite/cli/internal/core"
 	"github.com/larksuite/cli/internal/errclass"
 	"github.com/larksuite/cli/internal/vfs"
@@ -37,7 +38,10 @@ type UATCallOptions struct {
 	AppId      string
 	AppSecret  string
 	Domain     core.LarkBrand
-	ErrOut     io.Writer // diagnostic/status output (caller injects f.IOStreams.ErrOut)
+	AuthMethod string           // "" == client_secret; core.AuthMethodPrivateKeyJWT
+	KeyLabel   string           // TEE key handle for private_key_jwt
+	Signer     keysigner.Signer // active signer for private_key_jwt
+	ErrOut     io.Writer        // diagnostic/status output (caller injects f.IOStreams.ErrOut)
 }
 
 // UATStatus represents the status of a user access token.
@@ -61,6 +65,9 @@ func NewUATCallOptions(cfg *core.CliConfig, errOut io.Writer) UATCallOptions {
 		AppId:      cfg.AppID,
 		AppSecret:  cfg.AppSecret,
 		Domain:     cfg.Brand,
+		AuthMethod: cfg.AuthMethod,
+		KeyLabel:   cfg.KeyLabel,
+		Signer:     keysigner.Active(),
 		ErrOut:     errOut,
 	}
 }
@@ -193,7 +200,14 @@ func doRefreshToken(httpClient *http.Client, opts UATCallOptions, stored *Stored
 		form.Set("grant_type", "refresh_token")
 		form.Set("refresh_token", stored.RefreshToken)
 		form.Set("client_id", opts.AppId)
-		form.Set("client_secret", opts.AppSecret)
+		ca := ClientAuth{AppID: opts.AppId, AppSecret: opts.AppSecret, AuthMethod: opts.AuthMethod, Signer: opts.Signer, KeyLabel: opts.KeyLabel}
+		usedAssertion, caErr := ca.applyClientAssertion(context.Background(), form, core.OpenAPIAudience(opts.Domain))
+		if caErr != nil {
+			return nil, caErr
+		}
+		if !usedAssertion {
+			form.Set("client_secret", opts.AppSecret)
+		}
 
 		req, err := http.NewRequest("POST", endpoints.Token, strings.NewReader(form.Encode()))
 		if err != nil {

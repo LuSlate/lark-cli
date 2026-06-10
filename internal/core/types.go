@@ -3,6 +3,8 @@
 
 package core
 
+import "strings"
+
 // LarkBrand represents the Lark platform brand.
 // "feishu" targets China-mainland, "lark" targets international.
 // Any other string is treated as a custom base URL.
@@ -53,4 +55,11 @@ func ResolveEndpoints(brand LarkBrand) Endpoints {
 // ResolveOpenBaseURL returns the Open API base URL for the given brand.
 func ResolveOpenBaseURL(brand LarkBrand) string {
 	return ResolveEndpoints(brand).Open
+}
+
+// OpenAPIAudience returns the client_assertion `aud` value for the brand: the
+// bare Open API host per the App Authentication JWT spec — "open.feishu.cn" or
+// "open.larksuite.com" — not the full token endpoint URL.
+func OpenAPIAudience(brand LarkBrand) string {
+	return strings.TrimPrefix(ResolveOpenBaseURL(brand), "https://")
 }
