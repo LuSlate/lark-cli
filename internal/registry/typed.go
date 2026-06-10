@@ -29,10 +29,9 @@ import (
 // whole spec at startup.
 
 var (
-	typedMu          sync.RWMutex
-	remoteOverrides  map[string]metaschema.Service // service name -> remote override
-	typedNamesCache  []string
-	typedInitialized bool
+	typedMu         sync.RWMutex
+	remoteOverrides map[string]metaschema.Service // service name -> remote override
+	typedNamesCache []string
 )
 
 // resetTyped clears the typed overlay state (test/teardown helper).
@@ -41,7 +40,6 @@ func resetTyped() {
 	defer typedMu.Unlock()
 	remoteOverrides = nil
 	typedNamesCache = nil
-	typedInitialized = false
 }
 
 // baselineServices returns the embedded baseline service specs: the static
