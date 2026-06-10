@@ -7,6 +7,7 @@
   xmlns="http://www.w3.org/2000/svg"
   xmlns:slide="https://slides.bytedance.com/ns"
   slide:role="slide"
+  slide:contract-version="svglide-authoring-contract/v1"
   width="960"
   height="540"
   viewBox="0 0 960 540"
@@ -24,6 +25,7 @@
 - root 必须是非 namespaced 的 `<svg>`，不能是 `<svg:svg>`。
 - root 必须声明 `xmlns:slide="https://slides.bytedance.com/ns"`。
 - root 必须包含 `slide:role="slide"`。
+- root 应包含 `slide:contract-version="svglide-authoring-contract/v1"`，用于标识这是 SVGlide authoring contract 输入，而不是普通 SVG。
 - 可渲染元素必须有对应 `slide:role`：shape 使用 `slide:role="shape"`，图片使用 `slide:role="image"`。
 - `<g>` 和嵌套 `<svg>` 可以作为容器，用于继承样式和 transform；容器内真正渲染的元素仍必须声明 `slide:role`。
 - `slide:role="shape"` 目前只支持 `rect`、`ellipse`、`circle`、`line`、`path`、`foreignObject`。
@@ -74,7 +76,35 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 - Path: 只使用 `M/L/H/V/C/Q/Z`；CLI 会拒绝 arc `A`、smooth curve `S/T` 和其他未知命令。
 - Text: `foreignObject slide:shape-type="text"` 内支持常见 XHTML 文本标签、`br` 和基础文字样式。
 
+## SVG-native 效果的 SVGlide-safe 写法
+
+视觉参考图、浏览器 SVG demo 或 `svglide-visual-effects-gallery.html` 只能作为效果方向，不能直接当作 `slides +create-svg` 输入。生成器必须把浏览器 SVG 能力改写为当前 SVGlide 支持面：
+
+| 浏览器 SVG 常见写法 | SVGlide-safe 写法 |
+|---|---|
+| 根级 `<text>` / 普通 SVG text | `foreignObject slide:role="shape" slide:shape-type="text"`，并显式写 `font-size`、`font-weight`、`color`、`line-height` |
+| `<polygon>` / `<polyline>` | 改成 `path slide:role="shape"`，只使用 `M/L/H/V/C/Q/Z` |
+| `<marker>` 箭头 | 用独立三角形 `path` 或短 line + arrowhead path 显式绘制 |
+| `<pattern>` 网格、点阵、纹理 | 用重复的 `line`、`circle`、`rect` 显式铺排；不要依赖 pattern 展开 |
+| `mask` / `clipPath` 大字裁切 | 用大字描边、深色/渐变背板、半透明 shape overlay 或裁切后的本地图片替代 |
+| 多层 `filter`、blur、glow | 用多层半透明 circle/rect/path 模拟光晕；仅把简单 drop-shadow 当增强，不当核心表达 |
+| `stroke-dasharray` 关键路线 | 用短 line segment 或 filled dot markers 手工排布；关键流程不要只靠虚线；带 `route` / `path` / `flow` / `loop` / `timeline` / `rail` 等语义的虚线会被 preflight 视为错误 |
+| `<image opacity="...">` | MVP preflight 只 warning；高保真场景应预合成到图片，或在图片上方加半透明 `rect slide:role="shape"` |
+| iconfont / 外链 SVG 图标 | 用 SVGlide-safe path/line/rect/circle 组合本地绘制，或先转成受支持的本地图片资产 |
+
+每个 SVG 页面应通过 `visual_recipe` 证明自己值得使用 SVG：要么有强视觉主标题，要么有路径/流向/隐喻/标注/图标系统/微图表/纹理/仪表盘等 SVG-native 结构。只有 `rect + foreignObject` 的普通卡片页应优先走 XML/SXSD。
+
 文本样式应使用 parser 友好的显式 CSS 属性，例如 `font-size`、`font-weight`、`font-family`、`color`、`line-height`、`text-align`、`letter-spacing`。不要依赖 `font:` shorthand、复杂 flex 布局或浏览器默认样式来表达关键字号、加粗和行距；这些在转换到 SXSD/XML 时可能降级为默认样式。
+
+白色或接近白色的文字必须完整落在深色 shape 承载底上；如果标题跨到浅色图片、白色蒙层或白底，生成器应扩大深色底、加背板/遮罩，或改用深色文字。圆形/椭圆节点内只放短标签，解释句、指标和说明放到独立 callout、legend 或机制表中。
+
+生成 live smoke 或跨 lane 验证用 SVG 时，颜色优先写成 hex/rgb 加独立透明度属性，例如 `fill="#0F172A" opacity="0.72"`、`stroke="#38BDF8" stroke-opacity="0.8"`。不要在首轮验证里大量依赖 `rgba(...)` 作为 SVG leaf 的 `fill` / `stroke` 值；不同 server lane 的 paint 解析能力可能不一致，hex + opacity 更容易定位问题。渐变仍按 XML 协议要求使用 `rgba(...)` 停靠点。
+
+图片透明度当前不是稳定协议面：`<image opacity="...">` 在 SVG 输入中会通过 CLI 传给服务端，但转换后的 Slides XML `<img>` 不一定保留 alpha。MVP 阶段 preflight 只 warning；生成器不得在高保真页面依赖 image opacity，要么把淡化效果预合成到本地图片文件，要么用一个半透明 `rect slide:role="shape"` 覆盖在图片上方。shape opacity 会转换为 Slides XML `alpha`，比 image opacity 更稳定。
+
+圆形和椭圆描边宽度也不是稳定协议面：`circle` / `ellipse` 的 `stroke-width` 可能在 readback 中降级。关键圆环请用两层填充圆/椭圆模拟，或改用 path/rect；普通细描边可以保留但需要视觉回读确认。
+
+虚线描边也不是稳定协议面：`stroke-dasharray`，尤其是自定义 path 上的虚线闭环，可能在 readback 中降级。关键流程线、路线图和闭环图用短 line segment 或 filled dot markers 显式绘制；带 `route`、`path`、`flow`、`loop`、`timeline`、`rail` 等语义的 dashed path 会被 `svg_preflight.py` 作为 error 拦截。普通装饰虚线也需要 live readback 复核。
 
 ## 不支持
 
@@ -83,16 +113,41 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 - 不要把 `<g>` 当作可渲染 shape；`<g>` 只是容器，实际 `rect`、`path`、`foreignObject`、`image` 等子元素仍需各自声明 `slide:role`。
 - 不支持根级 `<text slide:role="text">`；用 `foreignObject + slide:shape-type="text"`。
 - 不要在 `<image>` 上保留 `xlink:href`；CLI 会统一输出 canonical `href`。
-- 不要用 http(s) 或 data URL 外链图片；先下载到本地并让 CLI 上传，或用 `--assets` 提供已上传 file token。
+- Preview/MVP 阶段允许 http(s) 或 data URL 图片通过 preflight warning，用于快速验证丰富视觉；live 转换和 readback 可见性不保证，必须回读确认。正式交付优先下载到本地并让 CLI 上传，或用 `--assets` 提供已上传 file token。
 - `slides +create-svg` MVP 不支持指定 `beforeSlideBlockID` 插入到某一页前；它创建新 presentation 后按 `--file` 顺序追加。
 
 这些能力依赖 slide server SVGlide parser 新版本。如果 BOE/线上未部署对应 server 分支，CLI 放行后仍可能收到服务端 `SVGLIDE_ERROR_JSON` 或 generic invalid param。
 
 ## 图片与 Metadata
 
-SVG deck 默认应使用真实图片资产，不要为了规避上传链路而全程用纯矢量 shape 冒充配图。宣传、产品、品牌、案例和视觉展示型 deck 至少应包含封面/半出血主视觉/案例场景/产品截图等图片使用；只有用户明确要求纯矢量，或图片获取、上传链路不可用时，才退回纯矢量方案，并在结果中说明原因。
+SVG deck 默认应使用真实图片资产，不要为了规避上传链路而全程用纯矢量 shape 冒充配图。Preview 阶段图片是拉开 SVGlide 和 XML 生成差距的关键能力：宣传、产品、品牌、案例、教学和视觉展示型 deck 应优先根据用户 query、deck 主题和页面标题去网络检索并拉取强相关图片，再包含封面/半出血主视觉/案例场景/产品截图/材质纹理/图鉴图等图片使用；只有用户明确要求纯矢量，或图片获取、上传链路完全不可用时，才退回纯矢量方案，并在结果中说明原因。
 
-图片资产还必须规避版权风险：只使用用户提供、公司/项目自有、明确可商用授权图库，或授权条件清晰的 AI 生成资产。推荐来源包括 Unsplash、Pexels、Pixabay、Openverse、Wikimedia Commons、The Met Open Access、Smithsonian Open Access 和 NASA Image and Video Library，但每张图都必须检查具体 license。不要使用版权状态不明的搜索图片、新闻配图、第三方 logo、竞品官网截图或素材站预览图。生成 deck 时应在素材清单或 README 中记录图片来源、授权/许可类型、下载 URL 或生成方式、是否需要署名；无法确认授权时不得使用该图片。
+图片资产采用双模式：
+
+- **Preview mode**：版权/授权不是阻断项。SHOULD 先从用户 query、deck 标题、章节标题和 page takeaway 生成图片检索词，去网络检索并拉取主题强相关图片；也可以使用公开可访问图片 URL、搜索图片、新闻/历史/艺术/科普图片、官网截图、产品截图、网页截图、材质纹理或 AI 生成图作为视觉占位。必须记录 `retrieval_query`、`source_url` 或生成方式，并把 `license` 写成 `preview_unverified`。不要使用明显不适当素材、敏感肖像，或会造成商业背书误导的 logo/商标。
+- **Production mode**：正式交付必须替换为用户提供、公司/项目自有、明确可商用授权图库，或授权条件清晰的 AI 生成资产。推荐来源包括 Unsplash、Pexels、Pixabay、Openverse、Wikimedia Commons、The Met Open Access、Smithsonian Open Access 和 NASA Image and Video Library，但每张图都应检查具体 license、署名和第三方权利。
+
+MVP 阶段素材清单不完整只作为 warning，但生成 deck 时仍应在素材清单或 README 中记录图片检索词、图片来源、授权/许可类型、下载 URL 或生成方式、是否需要署名；无法确认授权时应显式标记风险并在正式交付前替换。
+
+当 SVG source 使用 `<image>` 时，对应 slide plan 应尽量有 `asset_contract`，并至少包含：
+
+```json
+{
+  "mode": "preview",
+  "source_type": "public_url | web_search_preview | screenshot | Unsplash | Pexels | procedural | ai_generated | user_provided | owned",
+  "retrieval_query": "topic-specific image query derived from user query and page topic",
+  "license": "preview_unverified",
+  "local_path": "@./assets/hero.jpg",
+  "href": "https://example.com/hero.jpg",
+  "usage_page": 1,
+  "source_url": "https://...",
+  "retrieved_at": "2026-06-08",
+  "generated_by": "optional when source_type is procedural/ai_generated",
+  "replacement_required": true
+}
+```
+
+无图片页可以写 `"asset_contract": "none_required"`。如果 SVG source 检测到 image primitive，但 `asset_contract` 缺少检索词、来源、许可、本地路径或使用页，MVP 阶段 preflight 只 warning；preview 中可用 `license=preview_unverified` 明确标记，正式交付仍应补齐或替换为来源清晰的图片资产。
 
 `slides +create-svg` 会把 `<image href="@./image.png">` 上传为 file token，并注入：
 

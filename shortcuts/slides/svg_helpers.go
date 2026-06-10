@@ -15,7 +15,11 @@ import (
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
-const maxSVGFileSizeBytes int64 = 2 * 1024 * 1024
+const (
+	maxSVGFileSizeBytes    int64 = 2 * 1024 * 1024
+	svglideSlideNS               = "https://slides.bytedance.com/ns"
+	svglideContractVersion       = "svglide-authoring-contract/v1"
+)
 
 type RewrittenSVGPage struct {
 	Content string
@@ -112,6 +116,11 @@ func readSVGFiles(runtime *common.RuntimeContext, paths []string) ([]string, err
 			return nil, output.ErrValidation("--file %s: SVG file is empty", path)
 		}
 		svg := string(data)
+		var normalizeErr error
+		svg, normalizeErr = ensureSVGlideRootContractVersion(svg, path)
+		if normalizeErr != nil {
+			return nil, normalizeErr
+		}
 		if err := validateSVGlideSVG(svg, path); err != nil {
 			return nil, err
 		}
@@ -130,16 +139,39 @@ func validateSVGlideSVG(svg, path string) error {
 		return output.ErrValidation("--file %s: root element must be non-namespaced <svg>", path)
 	}
 	attrs := svg[m[6]:m[7]]
-	if !hasXMLAttr(attrs, "xmlns:slide", "https://slides.bytedance.com/ns") {
-		return output.ErrValidation("--file %s: root <svg> must declare xmlns:slide=\"https://slides.bytedance.com/ns\"", path)
+	if !hasXMLAttr(attrs, "xmlns:slide", svglideSlideNS) {
+		return output.ErrValidation("--file %s: root <svg> must declare xmlns:slide=\"%s\"", path, svglideSlideNS)
 	}
 	if !hasXMLAttr(attrs, "slide:role", "slide") {
 		return output.ErrValidation("--file %s: root <svg> must include slide:role=\"slide\"", path)
+	}
+	if version := xmlAttrValue(attrs, "slide:contract-version"); version != svglideContractVersion {
+		return output.ErrValidation("--file %s: root <svg> must include slide:contract-version=\"%s\"", path, svglideContractVersion)
 	}
 	if svg[m[8]:m[9]] == "/>" {
 		return nil
 	}
 	return validateSVGlideChildren(svg[m[9]:], path)
+}
+
+func ensureSVGlideRootContractVersion(svg, path string) (string, error) {
+	m := svgRootOpenTagRegex.FindStringSubmatchIndex(svg)
+	if m == nil {
+		return svg, nil
+	}
+	tagName := svg[m[4]:m[5]]
+	if tagName != "svg" {
+		return svg, nil
+	}
+	attrs := svg[m[6]:m[7]]
+	version := xmlAttrValue(attrs, "slide:contract-version")
+	if version == svglideContractVersion {
+		return svg, nil
+	}
+	if strings.TrimSpace(version) != "" {
+		return "", output.ErrValidation("--file %s: root <svg> must include slide:contract-version=\"%s\"", path, svglideContractVersion)
+	}
+	return svg[:m[8]] + fmt.Sprintf(` slide:contract-version="%s"`, svglideContractVersion) + svg[m[8]:], nil
 }
 
 func hasXMLAttr(attrs, name, want string) bool {

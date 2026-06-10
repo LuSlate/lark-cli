@@ -139,8 +139,10 @@ func TestSlidesCreateSVGExecuteCreatesSlidesInFileOrder(t *testing.T) {
 		t.Fatalf("slide_ids = %v, want [slide_1 slide_2]", data["slide_ids"])
 	}
 
-	assertSlideCreateBodyContains(t, slideStub1, testSVGlidePage1)
-	assertSlideCreateBodyContains(t, slideStub2, testSVGlidePage2)
+	assertSlideCreateBodyContains(t, slideStub1, `slide:contract-version="svglide-authoring-contract/v1"`)
+	assertSlideCreateBodyContains(t, slideStub1, `<rect slide:role="shape" x="80" y="80" width="320" height="180"/>`)
+	assertSlideCreateBodyContains(t, slideStub2, `slide:contract-version="svglide-authoring-contract/v1"`)
+	assertSlideCreateBodyContains(t, slideStub2, `<foreignObject slide:role="shape" slide:shape-type="text" x="80" y="80" width="320" height="80">`)
 }
 
 func TestSlidesCreateSVGPartialFailureIncludesRecoveryContext(t *testing.T) {

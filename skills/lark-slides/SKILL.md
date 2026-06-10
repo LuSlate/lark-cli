@@ -1,6 +1,6 @@
 ---
 name: lark-slides
-version: 1.0.0
+version: 1.0.2
 description: "飞书幻灯片：创建和编辑幻灯片，接口通过 XML 协议通信。创建演示文稿、读取幻灯片内容、管理幻灯片页面（创建、删除、读取、局部替换）。当用户需要创建或编辑幻灯片、读取或修改单个页面时使用。当用户给出 doubao.com 的 /slides/ URL/token 时，也应直接使用本 skill，不要因为域名不是飞书而回退到 WebFetch；路由依据是 URL 路径模式和 token，而不是域名。"
 metadata:
   requires:
@@ -15,11 +15,11 @@ metadata:
 | 用户需求 | 优先动作 | 关键文档 / 命令 |
 |----------|----------|-----------------|
 | 新建 PPT | 先规划 `slide_plan.json`，再按复杂度选择一步或两步创建 | `planning-layer.md`、`visual-planning.md`、`asset-planning.md`、`slides +create` |
-| AI 生成 SVG 创建 PPT | 复用 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 规划，生成 SVGlide SVG 后调用 `slides +create-svg` | `lark-slides-create-svg.md`、`svg-protocol.md` |
+| AI 生成 SVG 创建 PPT | 复用 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 规划，生成 SVGlide SVG 后调用 `slides +create-svg` | `lark-slides-create-svg.md`、`svg-protocol.md`、`svg-visual-recipes.md`、`svg-aesthetic-review.md` |
 | 大幅改写页面 | 先回读现有 XML，写入新 plan，再替换或重建相关页面 | `xml_presentations.get`、`+replace-slide`、`lark-slides-edit-workflows.md` |
 | 编辑单个标题、文本块、图片或局部元素 | 优先块级替换/插入，不改页序 | `slides +replace-slide`、`lark-slides-replace-slide.md` |
 | 读取或分析已有 PPT | 解析 slides/wiki token，回读全文或单页 XML，保存 `xml_presentation_id`、`slide_id`、`revision_id` | `xml_presentations.get`、`xml_presentation.slide.get` |
-| 上传或使用图片 | 先上传为 `file_token`，禁止直接写 http(s) 外链 | `slides +media-upload`，或 `+create --slides` 的 `@./path` 占位符 |
+| 上传或使用图片 | Preview 阶段优先多用真实图片增强视觉冲击；可先用公开可访问 http(s)/data 图片或本地 `@./path`，来源/授权只 warning 不阻断；正式交付再替换为授权清晰的 file token / 本地资产 | `slides +media-upload`，或 `+create --slides` / `+create-svg` 的 `@./path` 占位符 |
 | 用户提到模板、主题、版式 | 先检索模板，再摘要，必要时裁切骨架 | `template_tool.py search → summarize → extract` |
 | 创建失败、空白页、3350001、布局异常 | 先回读状态，再按排障清单修复，不假设原操作原子成功 | `troubleshooting.md`、`validation-checklist.md` |
 
@@ -29,7 +29,11 @@ metadata:
 
 **CRITICAL — 走 `slides +create-svg` 时，输入必须是 SVGlide SVG：root `<svg>` 声明 `xmlns:slide` 且 `slide:role="slide"`；可渲染 SVG 元素必须用 `slide:role="shape"` 或 `slide:role="image"` 表达；`g` / 嵌套 `svg` 可作为容器，但容器内实际渲染元素仍必须各自声明 role。CLI 只读取文件、上传/替换图片占位符、注入 transport metadata 和调用现有 `/slide` 路由，不会把普通 SVG 自动补齐成协议 SVG。**
 
-**CRITICAL — 高质量 SVG deck 生成时，MUST 同时读取 [lark-slides-create-svg.md](references/lark-slides-create-svg.md)：复用现有 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 作为设计状态，先做 deck-level density plan，再定义布局盒，给 `foreignObject` 文本留足安全高度，默认必须使用真实图片资产（本地 `@./path` 或 file token），相邻页面要显著换版式；调用 API 前必须跑本地 preflight（优先使用 [`scripts/svg_preflight.py`](scripts/svg_preflight.py)），live 创建后必须 readback 校验。这些是生成技巧，不替代 [svg-protocol.md](references/svg-protocol.md) 的硬协议约束。**
+**CRITICAL — SVGlide deck 页数默认值：当用户要求生成 SVG/SVGlide 幻灯片但未说明页数，或使用“一份 slide / 一份 PPT / 做个 slide / 生成一个 slide”这类模糊表达时，默认生成 `10` 页，不要仅因页数缺失而停下来追问。只有用户明确说“一页 / 单页 / onepage / one slide / 只要封面”等单页意图时，才生成 `1` 页；用户给出明确页数时始终服从用户要求。默认 10 页时必须在 `slide_plan.json` 写入 `page_count` 或 `target_slide_count=10`，并包含明确 closing slide。**
+
+**CRITICAL — 高质量 SVG deck 生成时，MUST 同时读取 [lark-slides-create-svg.md](references/lark-slides-create-svg.md) 和 [svg-visual-recipes.md](references/svg-visual-recipes.md)：复用现有 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 作为设计状态，先做 deck-level density plan，再为每页选择 `visual_recipe`、声明 `svg_primitives` / `visual_focal_point` / `xml_like_risk`，然后定义布局盒，给 `foreignObject` 文本留足安全高度。生成器必须在写 SVG 前做 preflight-aware 自检：由实际组件 manifest 反推出 primitives，按 `content_density_contract` 计数，检查主体元素 safe area / text bbox，不要只靠最终 `svg_preflight.py` 兜底。Preview 阶段默认必须使用丰富真实图片资产，并 SHOULD 优先根据用户 query / deck 主题 / 章节标题去网络检索和拉取强相关图片；公开图、场景图、产品图、截图、纹理/材质、图鉴图均可作为占位视觉。版权/授权不作为 preview 阻断，但要在 `asset_contract` 里标记 `retrieval_query`、`source_url` 和 `preview_unverified`；正式交付再替换为授权清晰的本地 `@./path` / file token。相邻页面要显著换版式且 8 页以上至少使用 5 种 visual recipe family；如果 agent 支持本地浏览器预览，SHOULD 生成并打开 `preview.html`，并按 [svg-aesthetic-review.md](references/svg-aesthetic-review.md) 检查明显视觉问题；调用 API 前必须跑本地 preflight（优先使用 [`scripts/svg_preflight.py`](scripts/svg_preflight.py)），live 创建后必须 readback 校验。这些是生成技巧，不替代 [svg-protocol.md](references/svg-protocol.md) 的硬协议约束。**
+
+**CRITICAL — SVGlide 高质量生成必须读取 [style-presets.md](references/style-presets.md)，并从 [style-presets.json](references/style-presets.json) 选择一个 deck-level `style_preset`。`style_preset` 只表达视觉语言，不替代 `visual_recipe`；`visual_recipe` 的选择和安全效果边界以 [svg-visual-recipes.md](references/svg-visual-recipes.md) 为准。生成顺序是 semantic plan -> visual_recipe -> style_preset/style_system -> layout boxes -> SVG。每页必须声明 `visual_signature` 和 `svg_effects`，说明这一页相对普通 XML/PPT 模板的 SVG 视觉优势。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，再生成 XML 或 SVGlide SVG。先创建对应目录，规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
 
@@ -37,7 +41,7 @@ metadata:
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，规划 `asset_need` MUST 遵循 [asset-planning.md](references/asset-planning.md)：只做元数据规划，必须有 `fallback_if_missing`，不得要求真实搜索、下载或上传素材。**
 
-**CRITICAL — 创建或大幅改写后，MUST 按 [validation-checklist.md](references/validation-checklist.md) 做显式验证：回读全文 XML、核对页数和关键元素、检查空白/破损页、明显溢出、布局风险；XML 语法和文本重叠静态检查优先使用 [`scripts/xml_text_overlap_lint.py`](scripts/xml_text_overlap_lint.py)，SVG 创建前的本地 preflight 优先使用 [`scripts/svg_preflight.py`](scripts/svg_preflight.py)。**
+**CRITICAL — 创建或大幅改写后，MUST 按 [validation-checklist.md](references/validation-checklist.md) 做显式验证：回读全文 XML、核对页数和关键元素、检查空白/破损页、明显溢出、布局风险；XML 语法和文本重叠静态检查优先使用 [`scripts/xml_text_overlap_lint.py`](scripts/xml_text_overlap_lint.py)，SVG 创建前的本地 preflight 优先使用 [`scripts/svg_preflight.py`](scripts/svg_preflight.py)，SVG 本地预览后按 [svg-aesthetic-review.md](references/svg-aesthetic-review.md) 做审美和重复问题复核。**
 
 **CRITICAL — 创建前自检或失败排障时，MUST 按 [troubleshooting.md](references/troubleshooting.md) 检查 XML 转义、结构、shell 截断、图片 token、3350001 和布局风险。**
 
@@ -82,7 +86,7 @@ lark-cli auth login --domain slides
 
 按需再读：
 
-- 创建：[`lark-slides-create.md`](references/lark-slides-create.md)；SVG 创建：[`lark-slides-create-svg.md`](references/lark-slides-create-svg.md)、[`svg-protocol.md`](references/svg-protocol.md)
+- 创建：[`lark-slides-create.md`](references/lark-slides-create.md)；SVG 创建：[`lark-slides-create-svg.md`](references/lark-slides-create-svg.md)、[`svg-protocol.md`](references/svg-protocol.md)、[`style-presets.md`](references/style-presets.md)、[`svg-visual-recipes.md`](references/svg-visual-recipes.md)、[`svg-aesthetic-review.md`](references/svg-aesthetic-review.md)
 - 编辑：[`lark-slides-edit-workflows.md`](references/lark-slides-edit-workflows.md)、[`lark-slides-replace-slide.md`](references/lark-slides-replace-slide.md)
 - 图片：[`lark-slides-media-upload.md`](references/lark-slides-media-upload.md)
 - 模板：[`template-catalog.md`](references/template-catalog.md)、[`scripts/template_tool.py`](scripts/template_tool.py)
@@ -128,8 +132,9 @@ lark-cli auth login --domain slides
 - 不要所有页面复用同一种标题 + 三 bullets 版式。
 - 不要用低对比文字或低对比图标，例如浅灰字压在浅色背景上。
 - 不要让装饰线穿过文字，或让页脚、来源、编号挤压主体内容。
-- 不要使用版权状态不明的图片、logo、截图或素材；图片必须来自用户提供、公司/项目自有、明确可商用授权图库，或授权条件清晰的 AI 生成资产，并在产物说明或素材清单中记录来源、授权/许可类型、原始 URL 和是否需要署名。
+- Preview 阶段不要因为版权/授权缺失而退回纯矢量；推荐先把用户 query、deck 标题和每页章节主题拆成图片检索词，去网络拉取强相关真实图片、网页截图、产品截图或图库图做视觉占位。必须记录 `retrieval_query`、来源 URL，或标记 `license=preview_unverified`，并避免误导性商标背书、敏感肖像和明显不适当素材。正式交付时再替换为用户提供、公司/项目自有、明确可商用授权图库，或授权条件清晰的 AI 生成资产。
 - 不要把素材缺失表现为空白图片框；必须先尝试获取或生成可用图片资产。只有用户明确要求纯矢量、网络/权限不可用，或主题确实不适合图片时，才按 `fallback_if_missing` 生成 XML-native 视觉，并在结果中说明。
+- Preview/MVP 阶段图片来源/授权/外链问题不作为 `svg_preflight.py` 的 hard blocker，但必须保留 warning 并在 live readback 后检查图片是否可见；正式交付仍优先用本地 `@./path` 自动上传或 file token。
 - 不要留下模板占位文案、示例公司名、示例日期或与用户主题无关的原模板内容。
 
 ### 创建方式选择
@@ -159,7 +164,7 @@ python3 skills/lark-slides/scripts/template_tool.py extract --template <template
 
 ```text
 Step 1: 需求澄清 & 读取知识
-  - 澄清主题、受众、页数、风格；模板需求按“模板与脚本优先流程”处理
+  - 澄清主题、受众、页数、风格；SVGlide 模糊页数按默认 10 页处理，不因页数缺失单独阻塞；模板需求按“模板与脚本优先流程”处理
   - 读取 xml-schema-quick-ref.md；新建 / 大幅改写时还要读取 planning-layer.md、visual-planning.md、asset-planning.md
 
 Step 2: 生成大纲 → 用户确认 → 写入 slide_plan.json
@@ -286,7 +291,7 @@ lark-cli slides <resource> <method> [flags] # 调用 API
 5. **保存关键 ID**：后续操作需要 `xml_presentation_id`、`slide_id`、`revision_id`
 6. **删除谨慎**：删除操作不可逆，且至少保留一页幻灯片
 7. **编辑已有页面优先块级替换**：修改单个 shape/img 用 `+replace-slide`（`block_replace` / `block_insert`），不要整页重建；只有需要替换整页结构时才用 `slide.delete` + `slide.create`
-8. **图片只能用上传到飞书 drive 的 `file_token`，禁止使用 http(s) 外链 URL**：XML 路径使用 `<img src="...">`；SVG 路径使用 `<image slide:role="image" href="...">`。流程必须是「先把图存到本地 → 用 `slides +media-upload` 上传，或 `+create --slides` / `+create-svg` 的 `@./path` 占位符自动上传 → 拿 `file_token` 写进图片引用」。如果用户给了网图链接，先 `curl`/下载到 CWD 内再走上传流程，不要直接把外链 URL 塞进 `src` / `href`。**图片最大 20 MB**（slides upload API 不支持分片上传）。
+8. **Preview 阶段图片要优先丰富，不要纯矢量兜底**：XML 路径使用 `<img src="...">`；SVG 路径使用 `<image slide:role="image" href="...">`。推荐流程是「从用户 query / 页面主题生成图片检索词 → 网络拉取主题强相关图片 → 存成本地资产 → 用 `slides +media-upload` 上传，或 `+create --slides` / `+create-svg` 的 `@./path` 占位符自动上传 → 拿 `file_token` 写进图片引用」。Preview/MVP 阶段 `svg_preflight.py` 对 http(s) / data 图片、来源/授权不完整只 warning，不阻断；如果时间紧，可先保留公开可访问图片 URL 做视觉验证，并在 `asset_contract` 标记 `retrieval_query`、`source_url` 和 `preview_unverified`。正式交付再统一替换为本地 `@./path` 或 file token。**图片最大 20 MB**（slides upload API 不支持分片上传）。
 
 ## 权限速查
 
