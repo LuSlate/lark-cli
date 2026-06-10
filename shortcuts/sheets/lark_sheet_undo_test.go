@@ -9,8 +9,9 @@ import (
 )
 
 // TestUndo_DryRun asserts the undo_last body for the three selection shapes:
-// default (steps=1), explicit --steps, and --op. Numbers round-trip through
-// the wire JSON as float64, matching the other dry-run body tests.
+// default (latest, steps=1), explicit --steps, and a --rev anchor. Numbers
+// round-trip through the wire JSON as float64, matching the other dry-run
+// body tests.
 func TestUndo_DryRun(t *testing.T) {
 	t.Parallel()
 
@@ -20,7 +21,7 @@ func TestUndo_DryRun(t *testing.T) {
 		wantInput map[string]interface{}
 	}{
 		{
-			name: "default undoes last step",
+			name: "default undoes the latest edit",
 			args: []string{"--url", testURL},
 			wantInput: map[string]interface{}{
 				"excel_id": testToken,
@@ -36,11 +37,21 @@ func TestUndo_DryRun(t *testing.T) {
 			},
 		},
 		{
-			name: "--op targets a specific operation",
-			args: []string{"--spreadsheet-token", testToken, "--op", "op_5"},
+			name: "--rev anchors at a write's returned revision",
+			args: []string{"--spreadsheet-token", testToken, "--rev", "123"},
 			wantInput: map[string]interface{}{
-				"excel_id":     testToken,
-				"operation_id": "op_5",
+				"excel_id": testToken,
+				"rev":      float64(123),
+				"steps":    float64(1),
+			},
+		},
+		{
+			name: "--rev composes with --steps",
+			args: []string{"--url", testURL, "--rev", "123", "--steps", "2"},
+			wantInput: map[string]interface{}{
+				"excel_id": testToken,
+				"rev":      float64(123),
+				"steps":    float64(2),
 			},
 		},
 	}
@@ -54,8 +65,8 @@ func TestUndo_DryRun(t *testing.T) {
 	}
 }
 
-// TestUndo_Validation covers the XOR token check, the --steps/--op
-// mutual exclusion, and the --steps lower bound.
+// TestUndo_Validation covers the XOR token check, the --rev lower bound, and
+// the --steps lower bound.
 func TestUndo_Validation(t *testing.T) {
 	t.Parallel()
 
@@ -70,9 +81,9 @@ func TestUndo_Validation(t *testing.T) {
 			wantMsg: "at least one of --url or --spreadsheet-token",
 		},
 		{
-			name:    "--steps and --op are mutually exclusive",
-			args:    []string{"--url", testURL, "--steps", "2", "--op", "op_5"},
-			wantMsg: "mutually exclusive",
+			name:    "--rev must be positive",
+			args:    []string{"--url", testURL, "--rev", "0"},
+			wantMsg: "--rev must be a positive revision number",
 		},
 		{
 			name:    "--steps must be >= 1",

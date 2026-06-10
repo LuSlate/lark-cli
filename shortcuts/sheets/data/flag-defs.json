@@ -21,15 +21,15 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Undo the most recent N edits made through this CLI link (default 1); XOR with `--op`",
+        "desc": "Undo the most recent N edits made through this CLI link (default 1); one step = one prior write call",
         "default": "1"
       },
       {
-        "name": "op",
+        "name": "rev",
         "kind": "own",
-        "type": "string",
+        "type": "int",
         "required": "optional",
-        "desc": "Undo a specific operation by its operation_id (from a prior write's undo handle); XOR with `--steps`"
+        "desc": "Undo anchor: the document revision returned by a prior write's response (`data.revision`). Omit to undo the latest edit. Doubles as an optimistic-concurrency check — rejected if the document has moved past this revision"
       },
       {
         "name": "dry-run",

@@ -5,9 +5,7 @@ package sheets
 
 import (
 	"context"
-	"strings"
 
-	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -16,27 +14,32 @@ import (
 // Wraps:
 //   - undo_last (write) — powers +undo
 //
-// Reverses the most recent edits this CLI link made to a spreadsheet. The
-// backend already records an inverse changeset for every write (see the
-// undo design doc, "方案 A"); +undo asks the backend executor to read that
-// changeset back and re-apply it in reverse order on the node Workbook, then
-// push the result upstream as a collaboration change. The CLI only triggers
-// the tool — the read-back endpoint is space-internal and not reachable
-// through the /open-apis gateway, so all the heavy lifting stays server-side.
+// Reverses the most recent edits this CLI link made to a spreadsheet, addressed
+// by document revision. Every write response carries `data.revision`; that
+// number is the undo anchor. The backend records an inverse changeset for every
+// write and indexes it by the revision it produced (see the undo design doc,
+// "方案 A · rev 寻址"); +undo asks the backend executor to locate that inverse
+// data through the revision pointer, verify nobody else changed the document
+// since (tip / continuity / object-version / identity checks), re-apply it in
+// reverse order on the node Workbook, and push the result upstream as a
+// collaboration change. The CLI only triggers the tool — the read-back endpoint
+// is space-internal and not reachable through the /open-apis gateway, so all
+// the heavy lifting stays server-side.
 //
 // +undo carries no sheet selector: undo is scoped to the spreadsheet + this
-// link's edit history, not a single sub-sheet. The two selection modes are
-// XOR:
-//   - --steps N : undo the last N edits (default 1)
-//   - --op <id> : undo one specific operation_id surfaced by a prior write's
-//                 undo handle
+// link's edit history, not a single sub-sheet. Selection:
+//   - (no flags)  : undo the latest edit, if it was made by this caller
+//   - --rev N     : undo anchored at revision N (from a prior write response);
+//                   rejected when the document has moved past N
+//   - --steps N   : undo the last N edits in one atomic call (default 1)
 
 // Undo wraps undo_last: reverse the most recent edits made through this CLI
-// link, either the last N steps (--steps) or one specific operation (--op).
+// link, anchored by the revision a prior write returned (--rev), defaulting
+// to the latest edit.
 var Undo = common.Shortcut{
 	Service:     "sheets",
 	Command:     "+undo",
-	Description: "Undo the most recent edits this CLI link made to a spreadsheet (last N steps, or a specific operation).",
+	Description: "Undo the most recent edits this CLI link made to a spreadsheet (anchored by a write's returned revision).",
 	Risk:        "write",
 	Scopes:      []string{"sheets:spreadsheet:write_only"},
 	AuthTypes:   []string{"user", "bot"},
@@ -72,31 +75,28 @@ var Undo = common.Shortcut{
 		return nil
 	},
 	Tips: []string{
-		"Undo is scoped to edits made through this CLI link — it never touches changes other collaborators (or the web UI) made to the same range.",
-		"Use --dry-run to preview which steps would be undone before running it.",
+		"Every write response carries data.revision — remember it; +undo --rev <that> undoes exactly that edit, and +recover --to-revision <that-1> is the full-rollback fallback.",
+		"Without --rev, +undo targets the document's latest edit — it succeeds only when that edit was made through this CLI link by you.",
+		"Repeated +undo steps back one edit at a time; --steps N undoes the last N edits in one atomic call. Already-undone edits are skipped automatically.",
+		"If anyone else edited the document after (or between) the edits you want to undo, +undo refuses entirely and suggests +recover — it never partially undoes or overwrites others' changes.",
+		"A success response with undone:0 plus warning_message means nothing was actually undone — the targeted revision wasn't produced by this caller, or was already undone.",
+		"Use --dry-run to preview the request before running it.",
 	},
 }
 
-// undoInput builds the undo_last tool body and enforces the --steps / --op
-// XOR. --steps carries a default of 1, so the mutual-exclusion check keys off
-// Changed("steps") (whether the user actually passed it) rather than its
-// value. Network-free; shared by Validate, DryRun, and Execute.
+// undoInput builds the undo_last tool body. --rev anchors the undo at the
+// revision a prior write returned (omitted = latest); --steps selects how many
+// edits to reverse in one atomic call. Network-free; shared by Validate,
+// DryRun, and Execute.
 func undoInput(runtime flagView, token string) (map[string]interface{}, error) {
-	op := strings.TrimSpace(runtime.Str("op"))
-	stepsSet := runtime.Changed("steps")
-
-	if op != "" && stepsSet {
-		return nil, common.FlagErrorf("--steps and --op are mutually exclusive")
-	}
-
 	input := map[string]interface{}{"excel_id": token}
 
-	if op != "" {
-		if err := validate.RejectControlChars(op, "op"); err != nil {
-			return nil, common.FlagErrorf("%v", err)
+	if runtime.Changed("rev") {
+		rev := runtime.Int("rev")
+		if rev < 1 {
+			return nil, common.FlagErrorf("--rev must be a positive revision number (from a prior write's data.revision)")
 		}
-		input["operation_id"] = op
-		return input, nil
+		input["rev"] = rev
 	}
 
 	steps := runtime.Int("steps")

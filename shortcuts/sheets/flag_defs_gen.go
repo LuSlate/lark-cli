@@ -734,6 +734,15 @@ var flagDefs = map[string]commandDef{
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
+	"+recover": {
+		Risk: "write",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
+			{Name: "to-revision", Kind: "own", Type: "int", Required: "required", Desc: "Restore the whole spreadsheet to this revision (a revision number returned by a prior write)"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
 	"+rows-resize": {
 		Risk: "write",
 		Flags: []flagDef{
@@ -941,17 +950,8 @@ var flagDefs = map[string]commandDef{
 		Flags: []flagDef{
 			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
 			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
-			{Name: "steps", Kind: "own", Type: "int", Required: "optional", Desc: "Undo the most recent N edits made through this CLI link (default 1); XOR with `--op`", Default: "1"},
-			{Name: "op", Kind: "own", Type: "string", Required: "optional", Desc: "Undo a specific operation by its operation_id (from a prior write's undo handle); XOR with `--steps`"},
-			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
-		},
-	},
-	"+recover": {
-		Risk: "write",
-		Flags: []flagDef{
-			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
-			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
-			{Name: "to-revision", Kind: "own", Type: "int", Required: "required", Desc: "Restore the whole spreadsheet to this revision (a revision number returned by a prior write)"},
+			{Name: "steps", Kind: "own", Type: "int", Required: "optional", Desc: "Undo the most recent N edits made through this CLI link (default 1); one step = one prior write call", Default: "1"},
+			{Name: "rev", Kind: "own", Type: "int", Required: "optional", Desc: "Undo anchor: the document revision returned by a prior write's response (`data.revision`). Omit to undo the latest edit. Doubles as an optimistic-concurrency check — rejected if the document has moved past this revision"},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
