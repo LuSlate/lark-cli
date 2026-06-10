@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 
@@ -80,6 +81,36 @@ func TestRequestAppRegistrationInit_ErrorOnMissingNonce(t *testing.T) {
 	hc := captureClient(&body, `{"supported_auth_methods":["client_secret"]}`)
 	if _, err := RequestAppRegistrationInit(hc); err == nil {
 		t.Fatal("expected error when server returns no nonce")
+	}
+}
+
+// TestRequestAppRegistrationInit_EmptySupportedAuthMethods covers the older-server
+// back-compat path: an empty supported_auth_methods array parses to an empty
+// slice, so the init guard in cmd/config/init_interactive.go
+// (`len(SupportedAuthMethods) > 0 && !slices.Contains(...)`) stays false and does
+// NOT reject the requested private_key_jwt. This aligns with
+// resolveFinalAuthMethod(nil/[], private_key_jwt) == private_key_jwt
+// (see cmd/config TestResolveFinalAuthMethod).
+func TestRequestAppRegistrationInit_EmptySupportedAuthMethods(t *testing.T) {
+	var body url.Values
+	hc := captureClient(&body, `{"nonce":"n-1","supported_auth_methods":[]}`)
+
+	out, err := RequestAppRegistrationInit(hc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Nonce != "n-1" {
+		t.Errorf("nonce = %q, want n-1", out.Nonce)
+	}
+	if len(out.SupportedAuthMethods) != 0 {
+		t.Errorf("SupportedAuthMethods = %v, want empty", out.SupportedAuthMethods)
+	}
+	// Reproduce the init guard expression on the real parsed result: an empty
+	// slice must NOT reject private_key_jwt.
+	rejected := len(out.SupportedAuthMethods) > 0 &&
+		!slices.Contains(out.SupportedAuthMethods, core.AuthMethodPrivateKeyJWT)
+	if rejected {
+		t.Error("empty SupportedAuthMethods must allow private_key_jwt (older-server back-compat)")
 	}
 }
 

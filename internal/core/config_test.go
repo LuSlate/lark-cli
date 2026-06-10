@@ -132,6 +132,65 @@ func TestResolveConfigFromMulti_AcceptsPlainSecret(t *testing.T) {
 	}
 }
 
+// TestResolveConfigFromMulti_RejectsUnknownAuthMethod ensures an unsupported
+// authMethod fails at resolution rather than silently degrading to client_secret.
+func TestResolveConfigFromMulti_RejectsUnknownAuthMethod(t *testing.T) {
+	raw := &MultiAppConfig{
+		Apps: []AppConfig{
+			{
+				AppId:      "cli_abc",
+				AppSecret:  PlainSecret("my-secret"),
+				Brand:      BrandFeishu,
+				AuthMethod: "bogus_method",
+			},
+		},
+	}
+
+	_, err := ResolveConfigFromMulti(raw, nil, "")
+	if err == nil {
+		t.Fatal("expected error for unknown authMethod")
+	}
+	var cfgErr *ConfigError
+	if !errors.As(err, &cfgErr) {
+		t.Fatalf("expected ConfigError, got %T: %v", err, err)
+	}
+}
+
+// TestResolveConfigFromMulti_PrivateKeyJWTRequiresKeyRef ensures private_key_jwt
+// without a key handle fails at resolution rather than later at token-signing.
+func TestResolveConfigFromMulti_PrivateKeyJWTRequiresKeyRef(t *testing.T) {
+	raw := &MultiAppConfig{
+		Apps: []AppConfig{
+			{
+				AppId:      "cli_abc",
+				AppSecret:  SecretInput{}, // private_key_jwt carries no app secret
+				Brand:      BrandFeishu,
+				AuthMethod: AuthMethodPrivateKeyJWT,
+				// KeyRef intentionally nil
+			},
+		},
+	}
+
+	_, err := ResolveConfigFromMulti(raw, nil, "")
+	if err == nil {
+		t.Fatal("expected error for private_key_jwt without keyRef")
+	}
+	var cfgErr *ConfigError
+	if !errors.As(err, &cfgErr) {
+		t.Fatalf("expected ConfigError, got %T: %v", err, err)
+	}
+
+	// Control: same config WITH a keyRef resolves cleanly and sets KeyLabel.
+	raw.Apps[0].KeyRef = &SecretRef{Source: "tee", ID: "larksuite-cli-agent"}
+	cfg, err := ResolveConfigFromMulti(raw, nil, "")
+	if err != nil {
+		t.Fatalf("unexpected error with keyRef present: %v", err)
+	}
+	if cfg.KeyLabel != "larksuite-cli-agent" {
+		t.Errorf("KeyLabel = %q, want larksuite-cli-agent", cfg.KeyLabel)
+	}
+}
+
 func TestResolveConfigFromMulti_MatchingKeychainRefPassesValidation(t *testing.T) {
 	// Keychain ref matches appId, so validation passes.
 	// The subsequent ResolveSecretInput will fail (no real keychain),
