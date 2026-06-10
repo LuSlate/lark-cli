@@ -1,15 +1,14 @@
 // Copyright (c) 2026 Lark Technologies Pte. Ltd.
 // SPDX-License-Identifier: MIT
 
-//go:build unix
+//go:build !windows
 
 package sheets
 
 import (
 	"os"
 	"strconv"
-
-	"golang.org/x/sys/unix"
+	"syscall"
 )
 
 // sessionSignal returns a token that is stable across every process of one
@@ -19,13 +18,11 @@ import (
 // The POSIX session id (getsid) is preferred: every process in the same
 // terminal/login session shares it, and unlike the parent pid it survives
 // subshell wrapping (e.g. `sh -c "lark-cli ..."` spawned afresh per command),
-// which is the common way an agent drives the CLI. Getsid comes from
-// x/sys/unix because the stdlib syscall package does not expose it on Linux.
-// It falls back to the parent pid, then gives up when the process was
-// reparented to init (sid/ppid <= 1) — init is shared by unrelated processes
-// and would over-group distinct callers.
+// which is the common way an agent drives the CLI. It falls back to the parent
+// pid, then gives up when the process was reparented to init (sid/ppid <= 1) —
+// init is shared by unrelated processes and would over-group distinct callers.
 func sessionSignal() (string, bool) {
-	if sid, err := unix.Getsid(0); err == nil && sid > 1 {
+	if sid, err := syscall.Getsid(0); err == nil && sid > 1 {
 		return "sid:" + strconv.Itoa(sid), true
 	}
 	if ppid := os.Getppid(); ppid > 1 {
