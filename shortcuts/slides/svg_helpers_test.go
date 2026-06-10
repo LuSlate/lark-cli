@@ -92,6 +92,38 @@ func TestInjectSVGTransportAssetMetadataMergesExisting(t *testing.T) {
 	}
 }
 
+func TestEnsureSVGlideRootContractVersionInjectsMissingVersion(t *testing.T) {
+	t.Parallel()
+
+	in := `<?xml version="1.0"?><!DOCTYPE svg><!-- lead --><svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><rect slide:role="shape" x="0" y="0" width="100" height="60"/></svg>`
+	got, err := ensureSVGlideRootContractVersion(in, "page.svg")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(got, `slide:contract-version="svglide-authoring-contract/v1"`) {
+		t.Fatalf("contract version missing after normalization: %s", got)
+	}
+	if strings.Index(got, `slide:contract-version`) > strings.Index(got, `><rect`) {
+		t.Fatalf("contract version should be injected on the root open tag: %s", got)
+	}
+	if err := validateSVGlideSVG(got, "page.svg"); err != nil {
+		t.Fatalf("normalized SVG should pass validation: %v", err)
+	}
+}
+
+func TestEnsureSVGlideRootContractVersionRejectsWrongVersion(t *testing.T) {
+	t.Parallel()
+
+	in := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="old"><rect slide:role="shape" x="0" y="0" width="100" height="60"/></svg>`
+	_, err := ensureSVGlideRootContractVersion(in, "page.svg")
+	if err == nil {
+		t.Fatal("expected wrong contract-version to fail")
+	}
+	if !strings.Contains(err.Error(), `slide:contract-version="svglide-authoring-contract/v1"`) {
+		t.Fatalf("error = %v, want contract-version guidance", err)
+	}
+}
+
 func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 	t.Parallel()
 
@@ -251,7 +283,7 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := validateSVGlideSVG(tt.svg, "page.svg")
+			err := validateSVGlideSVG(withTestSVGlideContractVersion(tt.svg), "page.svg")
 			if tt.wantErr == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -266,6 +298,13 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 			}
 		})
 	}
+}
+
+func withTestSVGlideContractVersion(svg string) string {
+	if strings.Contains(svg, `slide:contract-version=`) {
+		return svg
+	}
+	return strings.Replace(svg, `slide:role="slide"`, `slide:role="slide" slide:contract-version="svglide-authoring-contract/v1"`, 1)
 }
 
 func TestExtractSVGlideErrorJSON(t *testing.T) {

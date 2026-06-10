@@ -20,6 +20,16 @@
 - Keep backgrounds consistent with the deck's `visual_system.background_strategy`. Normal content pages should use the same base background unless there is a clear page-role reason to change.
 - Treat text fit as a layout constraint, not a cleanup step. If a text box is too small for the intended line count, shorten the text, split it, or allocate more space before creating XML.
 
+## Title Zone Guardrails
+
+The title zone is the most common place for subtle overlap. Treat badges, decorative rules, headlines, and the first content row as one unit.
+
+- If a page uses a chapter badge, status pill, or small label above the headline, the headline text top must be at least `8` px below the badge bottom; prefer `12` px when the headline is bold or larger than `28` px.
+- If a decorative horizontal line, accent rule, or divider sits above a headline, the line bottom must be at least `16` px above the headline text top; prefer `20-28` px when the headline is larger than `48` px.
+- When a headline is moved down to create breathing room, move the subtitle, column headers, and main content start down together. Do not fix one collision by creating a new one below.
+- Do not place large headlines directly under a top border or accent stripe. The decoration should frame the title, not press on it.
+- Check the same page family across the whole deck. If one section/title page has a badge-headline collision, scan all pages with the same badge pattern before accepting the deck.
+
 ## Background And Motif Consistency
 
 Decks can vary page backgrounds, but variation must be intentional and legible:
@@ -47,6 +57,7 @@ Use these as conservative minimums on a 960 x 540 canvas. Increase height when u
 Additional rules:
 
 - Do not put long Chinese sentences or long English phrases into `height=18` or `height=22` boxes. Those heights are for short labels only.
+- Text must fit both its own text box and its nearest visible container. A card, pill, footer bar, or table band should provide enough width and height for the visible wording with padding; do not rely on clipping, browser overflow, or SVG default wrapping to hide mistakes.
 - Footer/source text should usually be one short line. If it needs more, make it a real caption block above the footer area.
 - Bottom conclusion bars should be at least `40` px tall for one emphasized line and at least `54` px tall for two lines.
 - Diagram labels should be short enough to fit the shape. Prefer two short lines over one cramped long line.

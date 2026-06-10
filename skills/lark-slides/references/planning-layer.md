@@ -6,7 +6,7 @@
 
 ## Required Flow
 
-1. 理解用户需求，必要时澄清主题、受众、页数、风格。
+1. 理解用户需求，必要时澄清主题、受众、页数、风格。SVGlide 新建 deck 如果用户未说明页数，或只说“一份 slide / 一份 PPT / 做个 slide / 生成一个 slide”等模糊表达，默认按 10 页写入 `page_count` / `target_slide_count`，不要仅因页数缺失而停下来追问；只有明确“一页 / 单页 / onepage / one slide / 只要封面”才按 1 页。
 2. 如果适合模板，先用 `template_tool.py search` 检索，锁定模板后用 `summarize` 获取主题和页型信息。
 3. 选择唯一 plan 目录：`.lark-slides/plan/<deck-or-task-id>/`。
 4. 先创建目录：`mkdir -p .lark-slides/plan/<deck-or-task-id>`。
@@ -67,6 +67,18 @@ Exception:
       "accent": "Used only for key numbers, conclusions, or focus markers."
     }
   },
+  "style_preset": "raw_grid",
+  "style_selection_reason": "raw_grid fits technical training pages that need dense but readable visual structure",
+  "style_system": {
+    "palette": {
+      "background": "#F5F5F5",
+      "text": "#0A0A0A",
+      "accent": "#F2D4CF"
+    },
+    "typography": "strong title, readable native text labels",
+    "background_strategy": "muted grid panels with one stable background family",
+    "motif": "dense grid panels with restrained accent labels"
+  },
   "typography_constraints": {
     "title_max_lines": 2,
     "body_max_lines_per_box": 2,
@@ -107,6 +119,9 @@ Top-level fields:
 - `audience`: target readers or listeners and their assumed background.
 - `theme_style`: visual tone, palette direction, and professional style.
 - `visual_system`: deck-level visual rules that must stay stable across pages, including background strategy, recurring motif, and color roles.
+- `style_preset`: required for SVGlide SVG decks. Choose one id from `references/style-presets.json`; omit only for non-SVG XML/SXSD plans.
+- `style_selection_reason`: required for SVGlide SVG decks. Explain why the preset fits the audience, topic, density, and expected tone.
+- `style_system`: required for SVGlide SVG decks. Translate the selected preset into concrete palette, typography, background strategy, and motif rules. This is separate from `visual_system`: `visual_system` describes the deck identity, while `style_system` records the executable style preset translation.
 - `typography_constraints`: deck-level limits for line count, text box density, and how to handle long text before XML generation.
 - `verification_plan`: explicit checks to perform after creation or major edits; include background consistency, text fit, visual focus, and asset rendering when relevant.
 - `slides`: ordered page plans.
@@ -121,6 +136,14 @@ Each slide must include:
 - `asset_need`: planning-only structured asset metadata; no search, download, or upload required. Follow `asset-planning.md`.
 - `text_density`: `low`, `medium`, or `high`.
 - `speaker_intent`: why the speaker needs this page and how it advances the story.
+
+SVGlide SVG slides must also include:
+
+- `visual_recipe`: the SVG-native page recipe, such as `path_flow`, `technical_texture`, or `fake_ui_dashboard`.
+- `visual_signature`: the page's distinctive SVG visual memory point compared with a normal XML/PPT template.
+- `svg_effects`: canonical effect names actually used or planned, such as `path`, `connector_flow`, `gradient`, `texture`, `chart_geometry`, or `image_overlay`.
+- `required_primitives` and `svg_primitives`: the planned SVGlide-safe primitives that must be present in the SVG source.
+- `xml_like_risk`, `content_density_contract`, `risk_flags`, and `source_policy`: quality and source-safety fields consumed by `svg_preflight.py --plan`.
 
 ## Layout Vocabulary
 
