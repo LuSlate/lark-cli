@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/larksuite/cli/internal/registry"
+	"github.com/larksuite/cli/internal/registry/metaschema"
 )
 
 // TestMain isolates registry-backed tests from any host ~/.lark-cli cache so
@@ -546,6 +547,45 @@ func TestBuildMeta_AffordanceFromMethod(t *testing.T) {
 	}
 	if len(m.Affordance.UseWhen) != 1 || m.Affordance.UseWhen[0] != "trigger" {
 		t.Errorf("UseWhen = %v", m.Affordance.UseWhen)
+	}
+}
+
+// TestBuildMeta_AffordanceThroughTypedRegistry guards the static-registry path:
+// a method's affordance must survive metaschema.Method -> registry.MethodToMap
+// -> buildMeta, so `schema --format json` keeps emitting _meta.affordance after
+// the embedded-JSON-to-typed-registry migration. Without typed-side support the
+// overlay is silently stripped whenever meta_data.json carries affordance.
+func TestBuildMeta_AffordanceThroughTypedRegistry(t *testing.T) {
+	mth := metaschema.Method{
+		Name: "primary",
+		Affordance: &metaschema.Affordance{
+			UseWhen:       []string{"用户想拿到自己默认日历的 ID"},
+			DoNotUseWhen:  []string{"已经知道某个具体日历的 ID"},
+			Prerequisites: []string{"user 身份登录"},
+			Examples: []metaschema.AffordanceExample{
+				{Description: "取主日历", Command: "lark-cli calendar calendars primary"},
+			},
+			Related: []string{"calendars.list", "calendars.get"},
+		},
+	}
+	method := registry.MethodToMap(mth)
+	m := buildMeta(method)
+	if m.Affordance == nil {
+		t.Fatal("affordance dropped through the typed registry (MethodToMap -> buildMeta)")
+	}
+	a := m.Affordance
+	if len(a.UseWhen) != 1 || a.UseWhen[0] != "用户想拿到自己默认日历的 ID" {
+		t.Errorf("UseWhen = %v", a.UseWhen)
+	}
+	if len(a.DoNotUseWhen) != 1 || len(a.Prerequisites) != 1 {
+		t.Errorf("DoNotUseWhen=%v Prerequisites=%v", a.DoNotUseWhen, a.Prerequisites)
+	}
+	if len(a.Examples) != 1 || a.Examples[0].Description != "取主日历" ||
+		a.Examples[0].Command != "lark-cli calendar calendars primary" {
+		t.Errorf("Examples = %+v", a.Examples)
+	}
+	if len(a.Related) != 2 {
+		t.Errorf("Related = %v", a.Related)
 	}
 }
 

@@ -124,6 +124,36 @@ func emitFields(b *strings.Builder, label string, fm map[string]any) {
 	b.WriteString("},\n")
 }
 
+// emitAffordance emits a metaschema.Affordance literal from a method's
+// "affordance" JSON object, or nothing when absent/empty.
+func emitAffordance(b *strings.Builder, raw map[string]any) {
+	if raw == nil {
+		return
+	}
+	useWhen := gss(raw, "use_when")
+	doNot := gss(raw, "do_not_use_when")
+	prereq := gss(raw, "prerequisites")
+	related := gss(raw, "related")
+	examples, _ := raw["examples"].([]any)
+	if len(useWhen) == 0 && len(doNot) == 0 && len(prereq) == 0 && len(related) == 0 && len(examples) == 0 {
+		return
+	}
+	b.WriteString("Affordance: &metaschema.Affordance{")
+	emitStrSlice(b, "UseWhen", useWhen)
+	emitStrSlice(b, "DoNotUseWhen", doNot)
+	emitStrSlice(b, "Prerequisites", prereq)
+	if len(examples) > 0 {
+		b.WriteString("Examples: []metaschema.AffordanceExample{")
+		for _, e := range examples {
+			ex, _ := e.(map[string]any)
+			fmt.Fprintf(b, "{Description: %q, Command: %q}, ", gs(ex, "description"), gs(ex, "command"))
+		}
+		b.WriteString("},\n")
+	}
+	emitStrSlice(b, "Related", related)
+	b.WriteString("},\n")
+}
+
 func emitMethods(b *strings.Builder, mm map[string]any) {
 	b.WriteString("Methods: []metaschema.Method{\n")
 	for _, name := range sortedKeys(mm) {
@@ -151,6 +181,7 @@ func emitMethods(b *strings.Builder, mm map[string]any) {
 		emitFields(b, "Parameters", gm(m, "parameters"))
 		emitFields(b, "RequestBody", gm(m, "requestBody"))
 		emitFields(b, "ResponseBody", gm(m, "responseBody"))
+		emitAffordance(b, gm(m, "affordance"))
 		b.WriteString("},\n")
 	}
 	b.WriteString("},\n")

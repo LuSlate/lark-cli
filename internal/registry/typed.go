@@ -259,6 +259,36 @@ func fieldsToMap(fs []metaschema.Field) map[string]interface{} {
 	return m
 }
 
+// affordanceToMap rebuilds the JSON-shaped affordance object (snake_case keys)
+// so the schema assembler's parseAffordance(method["affordance"]) keeps working
+// through the typed registry. Returns nil when the overlay carries nothing.
+func affordanceToMap(a *metaschema.Affordance) map[string]interface{} {
+	m := map[string]interface{}{}
+	if v := strList(a.UseWhen); v != nil {
+		m["use_when"] = v
+	}
+	if v := strList(a.DoNotUseWhen); v != nil {
+		m["do_not_use_when"] = v
+	}
+	if v := strList(a.Prerequisites); v != nil {
+		m["prerequisites"] = v
+	}
+	if len(a.Examples) > 0 {
+		ex := make([]interface{}, len(a.Examples))
+		for i, e := range a.Examples {
+			ex[i] = map[string]interface{}{"description": e.Description, "command": e.Command}
+		}
+		m["examples"] = ex
+	}
+	if v := strList(a.Related); v != nil {
+		m["related"] = v
+	}
+	if len(m) == 0 {
+		return nil
+	}
+	return m
+}
+
 func MethodToMap(mth metaschema.Method) map[string]interface{} {
 	m := map[string]interface{}{
 		"id":          mth.ID,
@@ -295,6 +325,11 @@ func MethodToMap(mth metaschema.Method) map[string]interface{} {
 	}
 	if v := fieldsToMap(mth.ResponseBody); v != nil {
 		m["responseBody"] = v
+	}
+	if mth.Affordance != nil {
+		if am := affordanceToMap(mth.Affordance); am != nil {
+			m["affordance"] = am
+		}
 	}
 	return m
 }

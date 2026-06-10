@@ -48,9 +48,10 @@ type Method struct {
 	AccessTokens   []string
 	ParameterOrder []string
 	RequiredScopes []string
-	Parameters     []Field // JSON "parameters" map, keyed by Field.Name
-	RequestBody    []Field // JSON "requestBody" map
-	ResponseBody   []Field // JSON "responseBody" map
+	Parameters     []Field     // JSON "parameters" map, keyed by Field.Name
+	RequestBody    []Field     // JSON "requestBody" map
+	ResponseBody   []Field     // JSON "responseBody" map
+	Affordance     *Affordance // optional AI-facing usage overlay; nil on most methods
 }
 
 // Field is one parameter / request-body / response-body entry. Nested object
@@ -77,4 +78,22 @@ type Field struct {
 type Option struct {
 	Value       string
 	Description string
+}
+
+// Affordance is the optional AI-facing usage overlay for a method, surfaced in
+// the schema envelope as _meta.affordance. Absent (nil) on most methods; it is
+// authored upstream in registry-config.yaml and merged into meta_data.json.
+type Affordance struct {
+	UseWhen       []string
+	DoNotUseWhen  []string
+	Prerequisites []string
+	Examples      []AffordanceExample
+	Related       []string
+}
+
+// AffordanceExample is one ready-to-run example: a one-line description plus a
+// complete lark-cli command string.
+type AffordanceExample struct {
+	Description string
+	Command     string
 }
