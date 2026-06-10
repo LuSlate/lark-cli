@@ -60,6 +60,9 @@ func Shortcuts() []common.Shortcut {
 		DocMediaUpload,
 		DocMediaPreview,
 		DocMediaDownload,
+		DocsCoverGet,
+		DocsCoverUpdate,
+		DocsCoverDelete,
 	}
 }
 
