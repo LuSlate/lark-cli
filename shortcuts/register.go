@@ -78,6 +78,7 @@ func init() {
 	allShortcuts = append(allShortcuts, markdown.Shortcuts()...)
 	allShortcuts = append(allShortcuts, slides.Shortcuts()...)
 	allShortcuts = append(allShortcuts, minutes.Shortcuts()...)
+	allShortcuts = append(allShortcuts, note.Shortcuts()...)
 	allShortcuts = append(allShortcuts, task.Shortcuts()...)
 	allShortcuts = append(allShortcuts, vc.Shortcuts()...)
 	allShortcuts = append(allShortcuts, note.Shortcuts()...)
