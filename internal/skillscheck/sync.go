@@ -14,6 +14,8 @@ import (
 	"github.com/larksuite/cli/internal/selfupdate"
 )
 
+const skillsStateUpdatedAtLayout = "2006-01-02T15:04:05"
+
 var (
 	skillNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_:-]*(@[^\s]+)?$`)
 	ansiPattern      = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
@@ -335,7 +337,7 @@ func SyncSkills(opts SyncOptions) *SyncResult {
 		UpdatedSkills:        plan.ToUpdate,
 		AddedOfficialSkills:  plan.Added,
 		SkippedDeletedSkills: plan.SkippedDeleted,
-		UpdatedAt:            opts.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:            opts.Now().Format(skillsStateUpdatedAtLayout),
 	}
 	if err := WriteState(state); err != nil {
 		result.Action = "failed"
@@ -428,7 +430,7 @@ func fallbackFullInstall(opts SyncOptions, reason string, official []string) *Sy
 		UpdatedSkills:        official,
 		AddedOfficialSkills:  official,
 		SkippedDeletedSkills: []string{},
-		UpdatedAt:            opts.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:            opts.Now().Format(skillsStateUpdatedAtLayout),
 	}
 	if writeErr := WriteState(state); writeErr != nil {
 		return &SyncResult{
