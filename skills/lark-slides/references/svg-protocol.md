@@ -31,7 +31,7 @@
 - `slide:role="shape"` 目前只支持 `rect`、`ellipse`、`circle`、`line`、`path`、`foreignObject`。
 - 文本使用文本型 shape：`<foreignObject slide:role="shape" slide:shape-type="text">...</foreignObject>`。
 - 图片使用 `<image slide:role="image" href="file_token">`；本地占位符写成 `href="@./image.png"`。
-- 原生 chart snapshot 可使用 root 直系 `<g slide:role="chart" slide:chart-ref="..." x="..." y="..." width="..." height="...">` marker；marker 内只能有一个 chart metadata，metadata payload 是 base64url 编码后的单根 `<chart>` XML。
+- 原生 chart 可使用 root 直系 `<g slide:role="chart" slide:chart-ref="..." x="..." y="..." width="..." height="...">` spec marker；marker 内只能有一个 chart metadata，metadata payload 是 base64url 编码后的 canonical JSON chart spec，不是 SXSD `<chart>` XML，也不是 chart snapshot/staticData。
 - `<defs>` 和 `<style>` 会被服务端解析/跳过输出；支持嵌套在 `g` / 嵌套 `svg` 容器中。
 - CLI 注入的 transport metadata `<metadata data-svglide-assets="true">` 会被跳过输出但用于传输图片元数据。
 
@@ -69,7 +69,7 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 
 - Shape: `rect`、`ellipse`、`circle`、`line`、`path`、`foreignObject`。
 - Container: `g`、嵌套 `svg`。
-- Chart marker: root 直系 `g slide:role="chart"`，用于透传已经生成好的 SXSD chart snapshot。
+- Chart marker: root 直系 `g slide:role="chart"`，用于透传 canonical JSON chart spec。
 - Definitions: `defs` 内的 `linearGradient`、`radialGradient`、`filter/feDropShadow`；支持嵌套 `defs` 和 gradient `href` / `xlink:href` 继承。
 - CSS: tag、`.class`、`#id`、`.a.b`、`tag.class` 等简单 selector；支持 specificity 和 source order；复杂 selector、media query、伪类会被忽略。
 - Paint: `fill`、`stroke`、`stroke-width`、`opacity`、`fill-opacity`、`stroke-opacity`、`stroke-dasharray`、`stroke-linecap`、`stroke-linejoin`。
@@ -109,9 +109,9 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 
 虚线描边也不是稳定协议面：`stroke-dasharray`，尤其是自定义 path 上的虚线闭环，可能在 readback 中降级。关键流程线、路线图和闭环图用短 line segment 或 filled dot markers 显式绘制；带 `route`、`path`、`flow`、`loop`、`timeline`、`rail` 等语义的 dashed path 会被 `svg_preflight.py` 作为 error 拦截。普通装饰虚线也需要 live readback 复核。
 
-## Chart Direct Snapshot Marker
+## Chart Spec Marker
 
-当 SVG 页面需要携带原生 `<chart>` snapshot 时，使用 root 直系 chart marker：
+当 SVG 页面需要创建原生 chart 时，使用 root 直系 chart marker。payload 是 canonical JSON bytes，先对这段 decoded JSON bytes 计算 `sha256`，再用无 padding base64url 写入 metadata 文本：
 
 ```xml
 <g slide:role="chart"
@@ -119,11 +119,17 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
    x="80" y="96" width="420" height="260">
   <metadata
     data-svglide-chart="svglide-chart-inline/v1"
-    data-format="sxsd-chart-v1"
-    data-encoding="base64url"
+    data-format="svglide-chart-spec-v1"
+    data-encoding="base64url-json"
     data-payload-hash="sha256:<64 hex>"
   >BASE64URL_PAYLOAD</metadata>
 </g>
+```
+
+Decoded canonical JSON shape:
+
+```json
+{"version":"svglide-chart-spec/v1","chartType":"bar","data":{"categories":["Q1","Q2"],"series":[{"name":"Revenue","values":[12.5,18]}]}}
 ```
 
 约束：
@@ -131,9 +137,10 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 - `g slide:role="chart"` 必须是 root `<svg>` 的直系子节点，不能嵌套在普通 `g` / 嵌套 `svg` 中。
 - `slide:chart-ref`、`x`、`y`、`width`、`height` 必填；bbox 数值只能是数字或 `px` 长度。
 - marker 内必须且只能有一个 `<metadata>` 子节点。
-- metadata 必须声明 `data-svglide-chart="svglide-chart-inline/v1"`、`data-format="sxsd-chart-v1"`、`data-encoding="base64url"` 和 `data-payload-hash="sha256:<64 hex>"`。
-- metadata 文本是无 padding 的 base64url payload；解码后必须是单根 `<chart>` XML。
-- CLI 只做上述轻校验和透传，不解析 chart 数据、样式、系列等业务合法性，也不会为 chart 调用任何额外 API。请求体仍是 `{ "slide": { "content": "<svg ...>" } }`。
+- metadata 必须声明 `data-svglide-chart="svglide-chart-inline/v1"`、`data-format="svglide-chart-spec-v1"`、`data-encoding="base64url-json"` 和 `data-payload-hash="sha256:<64 hex>"`。
+- metadata 文本是无 padding 的 base64url payload；解码后必须是 canonical JSON chart spec。不要把 SXSD `<chart>` XML 放入 SVGlide chart marker。
+- JSON spec 必须包含 `version="svglide-chart-spec/v1"`、`chartType`、`data.categories`、`data.series[].name` 和 `data.series[].values`。MVP 只支持 `chartType="bar"` / `"line"`；`categories` 和每个 `values` 数组长度必须一致；`values` 只能是有限 JSON number。
+- CLI 校验上述结构、hash 和基础数据合法性，不会为 chart 调用任何额外 API。请求体仍是 `{ "slide": { "content": "<svg ...>" } }`。
 - 不要把 chart marker 当成 SVG 手绘微图表的替代品；如果只是视觉小图、指标条或仪表盘装饰，仍优先用 SVGlide-safe shape/path 直接绘制。
 
 ## 不支持

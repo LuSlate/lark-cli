@@ -9,9 +9,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
-	"io"
+	"math"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -26,9 +25,26 @@ const (
 	svglideSlideNS                  = "https://slides.bytedance.com/ns"
 	svglideContractVersion          = "svglide-authoring-contract/v1"
 	svglideChartMarkerVersion       = "svglide-chart-inline/v1"
-	svglideChartFormat              = "sxsd-chart-v1"
-	svglideChartEncoding            = "base64url"
+	svglideChartFormat              = "svglide-chart-spec-v1"
+	svglideChartSpecVersion         = "svglide-chart-spec/v1"
+	svglideChartEncoding            = "base64url-json"
 )
+
+type svglideChartSpecPayload struct {
+	Version   *string               `json:"version"`
+	ChartType *string               `json:"chartType"`
+	Data      *svglideChartSpecData `json:"data"`
+}
+
+type svglideChartSpecData struct {
+	Categories []string                 `json:"categories"`
+	Series     []svglideChartSpecSeries `json:"series"`
+}
+
+type svglideChartSpecSeries struct {
+	Name   *string           `json:"name"`
+	Values []json.RawMessage `json:"values"`
+}
 
 type RewrittenSVGPage struct {
 	Content string
@@ -532,8 +548,8 @@ func validateSVGlideChartMarker(path, attrs, inner string) (string, error) {
 	if !strings.EqualFold(hash, "sha256:"+hex.EncodeToString(sum[:])) {
 		return "", output.ErrValidation("--file %s: chart marker metadata data-payload-hash does not match decoded payload", path)
 	}
-	if err := validateSVGlideChartPayloadXML(decoded); err != nil {
-		return "", output.ErrValidation("--file %s: chart marker metadata decoded payload must be a single <chart> root: %v", path, err)
+	if err := validateSVGlideChartSpecPayload(decoded); err != nil {
+		return "", output.ErrValidation("--file %s: chart marker metadata decoded payload must be valid %s JSON: %v", path, svglideChartFormat, err)
 	}
 	return chartRef, nil
 }
@@ -610,44 +626,76 @@ func decodeSVGlideChartPayload(payload string) ([]byte, error) {
 	return base64.RawURLEncoding.DecodeString(payload)
 }
 
-func validateSVGlideChartPayloadXML(payload []byte) error {
-	decoder := xml.NewDecoder(bytes.NewReader(payload))
-	rootSeen := false
-	depth := 0
-	for {
-		token, err := decoder.Token()
-		if err == io.EOF {
-			break
+func validateSVGlideChartSpecPayload(payload []byte) error {
+	var spec svglideChartSpecPayload
+	if err := json.Unmarshal(payload, &spec); err != nil {
+		return err
+	}
+	if spec.Version == nil || strings.TrimSpace(*spec.Version) == "" {
+		return fmt.Errorf("missing version")
+	}
+	if strings.TrimSpace(*spec.Version) != svglideChartSpecVersion {
+		return fmt.Errorf("version must be %q", svglideChartSpecVersion)
+	}
+	if spec.ChartType == nil || strings.TrimSpace(*spec.ChartType) == "" {
+		return fmt.Errorf("missing chartType")
+	}
+	switch strings.TrimSpace(*spec.ChartType) {
+	case "bar", "line":
+	default:
+		return fmt.Errorf("chartType must be one of bar,line")
+	}
+	if spec.Data == nil {
+		return fmt.Errorf("missing data")
+	}
+	if len(spec.Data.Categories) == 0 {
+		return fmt.Errorf("data.categories must be a non-empty array")
+	}
+	for i, category := range spec.Data.Categories {
+		if strings.TrimSpace(category) == "" {
+			return fmt.Errorf("data.categories[%d] must be a non-empty string", i)
 		}
-		if err != nil {
-			return err
+	}
+	if len(spec.Data.Series) == 0 {
+		return fmt.Errorf("data.series must be a non-empty array")
+	}
+	for i, series := range spec.Data.Series {
+		if series.Name == nil || strings.TrimSpace(*series.Name) == "" {
+			return fmt.Errorf("data.series[%d].name must be a non-empty string", i)
 		}
-		switch t := token.(type) {
-		case xml.StartElement:
-			if !rootSeen {
-				if t.Name.Local != "chart" {
-					return fmt.Errorf("got <%s>", t.Name.Local)
-				}
-				rootSeen = true
-			} else if depth == 0 {
-				return fmt.Errorf("multiple root elements")
-			}
-			depth++
-		case xml.EndElement:
-			if depth > 0 {
-				depth--
-			}
-		case xml.CharData:
-			if depth == 0 && strings.TrimSpace(string(t)) != "" {
-				return fmt.Errorf("non-whitespace text outside root")
+		if len(series.Values) != len(spec.Data.Categories) {
+			return fmt.Errorf("data.series[%d].values length must match data.categories length", i)
+		}
+		for j, value := range series.Values {
+			if err := validateSVGlideChartNumber(value); err != nil {
+				return fmt.Errorf("data.series[%d].values[%d] must be a finite number: %v", i, j, err)
 			}
 		}
 	}
-	if !rootSeen {
-		return fmt.Errorf("missing <chart> root")
+	return nil
+}
+
+func validateSVGlideChartNumber(raw json.RawMessage) error {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var value any
+	if err := decoder.Decode(&value); err != nil {
+		return err
 	}
-	if depth != 0 {
-		return fmt.Errorf("unclosed <chart> root")
+	var extra any
+	if err := decoder.Decode(&extra); err == nil {
+		return fmt.Errorf("multiple JSON values")
+	}
+	number, ok := value.(json.Number)
+	if !ok {
+		return fmt.Errorf("got %T", value)
+	}
+	n, err := number.Float64()
+	if err != nil {
+		return err
+	}
+	if math.IsNaN(n) || math.IsInf(n, 0) {
+		return fmt.Errorf("non-finite number")
 	}
 	return nil
 }

@@ -95,13 +95,21 @@ def recipe_fields(recipe: str, primitives: list[str]) -> dict[str, object]:
     }
 
 
-def chart_metadata(chart_xml: str, payload_hash: str | None = None) -> str:
-    payload = base64.urlsafe_b64encode(chart_xml.encode("utf-8")).decode("ascii").rstrip("=")
+def chart_spec(chart_type: str = "bar") -> str:
+    return (
+        '{"version":"svglide-chart-spec/v1",'
+        f'"chartType":"{chart_type}",'
+        '"data":{"categories":["Q1","Q2"],"series":[{"name":"Revenue","values":[12.5,18]}]}}'
+    )
+
+
+def chart_metadata(chart_json: str, payload_hash: str | None = None, data_format: str = "svglide-chart-spec-v1", data_encoding: str = "base64url-json") -> str:
+    payload = base64.urlsafe_b64encode(chart_json.encode("utf-8")).decode("ascii").rstrip("=")
     if payload_hash is None:
-        payload_hash = "sha256:" + hashlib.sha256(chart_xml.encode("utf-8")).hexdigest()
+        payload_hash = "sha256:" + hashlib.sha256(chart_json.encode("utf-8")).hexdigest()
     return (
         '<metadata data-svglide-chart="svglide-chart-inline/v1" '
-        'data-format="sxsd-chart-v1" data-encoding="base64url" '
+        f'data-format="{data_format}" data-encoding="{data_encoding}" '
         f'data-payload-hash="{payload_hash}">{payload}</metadata>'
     )
 
@@ -182,7 +190,7 @@ class SvgPreflightTest(unittest.TestCase):
              xmlns:slide="https://slides.bytedance.com/ns"
              slide:role="slide"
              width="960" height="540" viewBox="0 0 960 540">
-          {chart_marker(chart_metadata("<chart><chartData /></chart>"))}
+          {chart_marker(chart_metadata(chart_spec()))}
         </svg>
         """
         result = svg_preflight.lint_svg(with_contract(svg))
@@ -196,7 +204,7 @@ class SvgPreflightTest(unittest.TestCase):
              xmlns:slide="https://slides.bytedance.com/ns"
              slide:role="slide"
              width="960" height="540" viewBox="0 0 960 540">
-          <g>{chart_marker(chart_metadata("<table />", "sha256:" + "0" * 64))}</g>
+          <g>{chart_marker(chart_metadata(chart_spec(), "sha256:" + "0" * 64))}</g>
           <g slide:role="whiteboard" x="0" y="0" width="100" height="60" />
           <metadata data-svglide-whiteboard="svglide-whiteboard-inline/v1">abc</metadata>
         </svg>
@@ -207,20 +215,47 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertIn("unsupported_whiteboard_role", codes)
         self.assertIn("legacy_whiteboard_marker", codes)
 
-    def test_lint_svg_rejects_chart_marker_payload_hash_and_root(self) -> None:
+    def test_lint_svg_rejects_chart_marker_payload_hash_and_spec(self) -> None:
         svg = f"""
         <svg xmlns="http://www.w3.org/2000/svg"
              xmlns:slide="https://slides.bytedance.com/ns"
              slide:role="slide"
              width="960" height="540" viewBox="0 0 960 540">
-          {chart_marker(chart_metadata("<chart />", "sha256:" + "0" * 64))}
-          {chart_marker(chart_metadata("<table />"))}
+          {chart_marker(chart_metadata(chart_spec(), "sha256:" + "0" * 64))}
+          {chart_marker(chart_metadata('{"version":"svglide-chart-spec/v1","chartType":"pie","data":{"categories":["Q1"],"series":[{"name":"Revenue","values":[12]}]}}'))}
         </svg>
         """
         result = svg_preflight.lint_svg(with_contract(svg))
         codes = [issue["code"] for issue in result["issues"]]
         self.assertIn("chart_marker_payload_hash_mismatch", codes)
-        self.assertIn("chart_marker_payload_root", codes)
+        self.assertIn("chart_marker_payload_spec", codes)
+
+    def test_lint_svg_rejects_old_sxsd_chart_marker_format(self) -> None:
+        svg = f"""
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          {chart_marker(chart_metadata("<chart />", data_format="sxsd-chart-v1", data_encoding="base64url"))}
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("chart_marker_metadata_format", codes)
+        self.assertIn("chart_marker_metadata_encoding", codes)
+
+    def test_lint_svg_rejects_chart_marker_values_mismatch(self) -> None:
+        svg = f"""
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          {chart_marker(chart_metadata('{"version":"svglide-chart-spec/v1","chartType":"bar","data":{"categories":["Q1","Q2"],"series":[{"name":"Revenue","values":[12]}]}}'))}
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("chart_marker_payload_spec", codes)
 
     def test_lint_svg_rejects_duplicate_chart_refs(self) -> None:
         svg = f"""
@@ -228,8 +263,8 @@ class SvgPreflightTest(unittest.TestCase):
              xmlns:slide="https://slides.bytedance.com/ns"
              slide:role="slide"
              width="960" height="540" viewBox="0 0 960 540">
-          {chart_marker(chart_metadata("<chart />"))}
-          {chart_marker(chart_metadata("<chart><chartData /></chart>"))}
+          {chart_marker(chart_metadata(chart_spec()))}
+          {chart_marker(chart_metadata(chart_spec("line")))}
         </svg>
         """
         result = svg_preflight.lint_svg(with_contract(svg))

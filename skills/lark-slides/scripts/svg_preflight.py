@@ -21,8 +21,9 @@ XLINK_NS = "http://www.w3.org/1999/xlink"
 SVG_NS = "http://www.w3.org/2000/svg"
 SVG_CONTRACT_VERSION = "svglide-authoring-contract/v1"
 SVG_CHART_MARKER_VERSION = "svglide-chart-inline/v1"
-SVG_CHART_FORMAT = "sxsd-chart-v1"
-SVG_CHART_ENCODING = "base64url"
+SVG_CHART_FORMAT = "svglide-chart-spec-v1"
+SVG_CHART_SPEC_VERSION = "svglide-chart-spec/v1"
+SVG_CHART_ENCODING = "base64url-json"
 CANVAS_WIDTH = 960.0
 CANVAS_HEIGHT = 540.0
 SAFE_AREA = {"x": 48.0, "y": 40.0, "width": 864.0, "height": 460.0}
@@ -520,6 +521,53 @@ def decode_base64url_payload(payload: str) -> bytes:
         raise ValueError(str(error)) from error
 
 
+def reject_json_constant(value: str) -> None:
+    raise ValueError(f"invalid JSON number {value}")
+
+
+def validate_chart_spec_payload(decoded: bytes) -> None:
+    try:
+        spec = json.loads(decoded.decode("utf-8"), parse_constant=reject_json_constant)
+    except UnicodeDecodeError as error:
+        raise ValueError(f"payload must be UTF-8 JSON: {error}") from error
+    except json.JSONDecodeError as error:
+        raise ValueError(f"payload must be JSON: {error}") from error
+
+    if not isinstance(spec, dict):
+        raise ValueError("payload root must be a JSON object")
+    if spec.get("version") != SVG_CHART_SPEC_VERSION:
+        raise ValueError(f'version must be "{SVG_CHART_SPEC_VERSION}"')
+    chart_type = spec.get("chartType")
+    if chart_type not in {"bar", "line"}:
+        raise ValueError('chartType must be one of "bar","line"')
+    data = spec.get("data")
+    if not isinstance(data, dict):
+        raise ValueError("data must be an object")
+    categories = data.get("categories")
+    if not isinstance(categories, list) or not categories:
+        raise ValueError("data.categories must be a non-empty array")
+    for index, category in enumerate(categories):
+        if not isinstance(category, str) or not category.strip():
+            raise ValueError(f"data.categories[{index}] must be a non-empty string")
+    series = data.get("series")
+    if not isinstance(series, list) or not series:
+        raise ValueError("data.series must be a non-empty array")
+    for series_index, item in enumerate(series):
+        if not isinstance(item, dict):
+            raise ValueError(f"data.series[{series_index}] must be an object")
+        name = item.get("name")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError(f"data.series[{series_index}].name must be a non-empty string")
+        values = item.get("values")
+        if not isinstance(values, list):
+            raise ValueError(f"data.series[{series_index}].values must be an array")
+        if len(values) != len(categories):
+            raise ValueError(f"data.series[{series_index}].values length must match data.categories length")
+        for value_index, value in enumerate(values):
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"data.series[{series_index}].values[{value_index}] must be a finite number")
+
+
 def validate_chart_markers(root: ET.Element) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     direct_chart_ids = {id(element) for element in chart_marker_elements(root)}
@@ -594,12 +642,10 @@ def validate_chart_markers(root: ET.Element) -> list[dict[str, Any]]:
             issues.append(issue("error", "chart_marker_payload_hash_mismatch", "chart marker metadata data-payload-hash does not match decoded payload", metadata))
             continue
         try:
-            chart_root = ET.fromstring(decoded)
-        except ET.ParseError as error:
-            issues.append(issue("error", "chart_marker_payload_xml", f"chart marker decoded payload is not well-formed XML: {error}", metadata))
+            validate_chart_spec_payload(decoded)
+        except ValueError as error:
+            issues.append(issue("error", "chart_marker_payload_spec", f"chart marker decoded payload must be valid {SVG_CHART_FORMAT} JSON: {error}", metadata))
             continue
-        if local_name(chart_root.tag) != "chart":
-            issues.append(issue("error", "chart_marker_payload_root", "chart marker decoded payload must be a single <chart> root", metadata))
 
     return issues
 

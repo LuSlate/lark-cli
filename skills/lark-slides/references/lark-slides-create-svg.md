@@ -15,7 +15,7 @@ lark-cli slides +create-svg \
 - AI 已经能生成符合 [svg-protocol.md](svg-protocol.md) 的 SVGlide SVG。
 - 希望按文件逐页创建，避免把大段 XML/SVG 塞进 shell 参数。
 - 需要 SVG 内本地图片占位符自动上传并替换为 file token。
-- 需要把已经生成好的原生 `<chart>` snapshot 作为 root direct chart marker 透传给服务端。
+- 需要把原生 chart 的 canonical JSON spec 作为 root chart spec marker 透传给服务端。
 
 不适用：
 
@@ -59,7 +59,7 @@ body：
 
 不会新增 `/svg_slide` 路由，也不会把 `file_meta_map` 当成 CLI 到服务端的契约。
 
-chart direct snapshot 也不新增 API。CLI 不会解析 chart 业务合法性，不会上传 chart 资源，也不会调用任何 chart 创建接口；它只把通过轻校验的 marker 留在同一个 `slide.content` SVG 中。
+chart spec marker 也不新增 API。CLI 不会上传 chart 资源，也不会调用任何 chart 创建接口；它只把通过 marker 外壳、hash 和 JSON spec 基础校验的 marker 留在同一个 `slide.content` SVG 中。
 
 ## 图片处理
 
@@ -85,9 +85,9 @@ CLI 会：
 }
 ```
 
-## Chart Direct Snapshot
+## Chart Spec Marker
 
-`slides +create-svg` 支持一种最小 chart marker，用于透传已经生成好的 SXSD chart XML snapshot：
+`slides +create-svg` 支持一种最小 chart marker，用于透传 canonical JSON chart spec。payload 不是 SXSD `<chart>` XML，也不是 chart snapshot/staticData；服务端会在 SVGlide parser 内部把 spec 转成 chart 创建所需数据：
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg"
@@ -100,12 +100,18 @@ CLI 会：
      x="80" y="96" width="420" height="260">
     <metadata
       data-svglide-chart="svglide-chart-inline/v1"
-      data-format="sxsd-chart-v1"
-      data-encoding="base64url"
+      data-format="svglide-chart-spec-v1"
+      data-encoding="base64url-json"
       data-payload-hash="sha256:<64 hex>"
     >BASE64URL_PAYLOAD</metadata>
   </g>
 </svg>
+```
+
+Decoded canonical JSON shape:
+
+```json
+{"version":"svglide-chart-spec/v1","chartType":"bar","data":{"categories":["Q1","Q2"],"series":[{"name":"Revenue","values":[12.5,18]}]}}
 ```
 
 CLI 校验范围只包括：
@@ -113,11 +119,12 @@ CLI 校验范围只包括：
 - marker 必须是 root `<svg>` 直系 `<g slide:role="chart">`。
 - `slide:chart-ref` 和 `x/y/width/height` bbox 必填，bbox 只接受数字或 `px`。
 - marker 内必须且只能有一个 `<metadata>`。
-- metadata 必须使用 `data-svglide-chart="svglide-chart-inline/v1"`、`data-format="sxsd-chart-v1"`、`data-encoding="base64url"`。
-- payload 必须是无 padding base64url，`data-payload-hash` 必须匹配 decoded bytes 的 sha256。
-- decoded payload 必须是单根 `<chart>` XML。
+- metadata 必须使用 `data-svglide-chart="svglide-chart-inline/v1"`、`data-format="svglide-chart-spec-v1"`、`data-encoding="base64url-json"`。
+- payload 必须是无 padding base64url，`data-payload-hash` 必须匹配 decoded canonical JSON bytes 的 sha256；不要对 base64 文本计算 hash。
+- decoded payload 必须是 JSON object，且包含 `version="svglide-chart-spec/v1"`、`chartType`、`data.categories`、`data.series[].name` 和 `data.series[].values`。
+- MVP 只支持 `chartType="bar"` / `"line"`；`categories` 和每个 `values` 数组长度必须一致；`values` 只能是有限 JSON number。
 
-CLI 不检查 `<chart>` 内部的系列、样式、数据范围等业务合法性；这些仍由服务端 chart/snapshot 消费方负责。`slide:role="whiteboard"` 和旧的 `data-svglide-whiteboard` marker 明确不属于 `+create-svg` 协议面。
+旧 `sxsd-chart-v1` / `base64url` 的 SXSD `<chart>` XML payload 不属于 SVGlide chart marker 协议面，会被 CLI 拒绝。`slide:role="whiteboard"` 和旧的 `data-svglide-whiteboard` marker 明确不属于 `+create-svg` 协议面。
 
 ## 生成质量规则
 
@@ -617,7 +624,7 @@ Preview 阶段优先使用这些来源来快速获得丰富视觉；正式交付
 内容页可以用三种方式提高密度，不要把高密度等同于堆文字：
 
 - `text-dense`: 多解释、多证据、多注释，适合背景分析和概念讲解。
-- `chart-dense`: SVG shape 手绘矩阵、流程、时间线、微柱状、雷达、散点、标尺；如果必须保留原生 chart snapshot，使用 root direct chart marker；不要把外部图表截图当成唯一方案。
+- `chart-dense`: SVG shape 手绘矩阵、流程、时间线、微柱状、雷达、散点、标尺；如果需要原生 bar/line chart，使用 root chart spec marker；不要把外部图表截图当成唯一方案。
 - `visual-dense`: 高级视觉图案或图片上叠加标注层、数据 callout、局部标签、对比线和图例。
 
 视觉区要补足可读细节，避免只有装饰符号：

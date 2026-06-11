@@ -148,7 +148,7 @@ func TestSlidesCreateSVGExecuteCreatesSlidesInFileOrder(t *testing.T) {
 func TestSlidesCreateSVGChartMarkerPassesThroughSlideContent(t *testing.T) {
 	dir := t.TempDir()
 	withSlidesTestWorkingDir(t, dir)
-	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720">` + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart><chartData /></chart>`)) + `</svg>`
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720">` + testSVGlideChartMarker(testSVGlideChartMetadata(testSVGlideChartSpecJSON())) + `</svg>`
 	if err := os.WriteFile("chart.svg", []byte(svg), 0o644); err != nil {
 		t.Fatalf("write chart.svg: %v", err)
 	}
@@ -196,8 +196,8 @@ func TestSlidesCreateSVGChartMarkerPassesThroughSlideContent(t *testing.T) {
 		`slide:contract-version="svglide-authoring-contract/v1"`,
 		`<g slide:role="chart" slide:chart-ref="chart-1" x="80" y="96" width="420" height="260">`,
 		`data-svglide-chart="svglide-chart-inline/v1"`,
-		`data-format="sxsd-chart-v1"`,
-		`data-encoding="base64url"`,
+		`data-format="svglide-chart-spec-v1"`,
+		`data-encoding="base64url-json"`,
 		`data-payload-hash="sha256:`,
 	} {
 		if !strings.Contains(content, want) {
