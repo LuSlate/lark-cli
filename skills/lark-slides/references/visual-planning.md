@@ -57,7 +57,7 @@ Use these as conservative minimums on a 960 x 540 canvas. Increase height when u
 Additional rules:
 
 - Do not put long Chinese sentences or long English phrases into `height=18` or `height=22` boxes. Those heights are for short labels only.
-- Text must fit both its own text box and its nearest visible container. A card, pill, footer bar, or table band should provide enough width and height for the visible wording with padding; do not rely on clipping, browser overflow, or SVG default wrapping to hide mistakes.
+- Text must fit both its own text box and its nearest visible container. A card, pill, footer bar, or table band should provide enough width and height for the visible wording with padding; do not rely on clipping, browser overflow, or renderer default wrapping to hide mistakes.
 - Footer/source text should usually be one short line. If it needs more, make it a real caption block above the footer area.
 - Bottom conclusion bars should be at least `40` px tall for one emphasized line and at least `54` px tall for two lines.
 - Diagram labels should be short enough to fit the shape. Prefer two short lines over one cramped long line.

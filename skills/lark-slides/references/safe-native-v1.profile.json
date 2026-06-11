@@ -1,0 +1,33 @@
+{
+  "profile": "safe-native-v1",
+  "root_contract": "svglide-authoring-contract/v1",
+  "supported": [
+    "rect",
+    "circle",
+    "ellipse",
+    "line",
+    "path:M/L/H/V/C/Q/Z",
+    "foreignObject:text",
+    "image:file_token"
+  ],
+  "requires_fallback": [
+    "filter",
+    "mask",
+    "clipPath",
+    "pattern",
+    "symbol",
+    "use",
+    "gradient:complex",
+    "small_font:<12px",
+    "complex_transform",
+    "path:arc"
+  ],
+  "reject": [
+    "script",
+    "foreignObject:html_complex",
+    "table",
+    "javascript_url",
+    "remote_file_reference",
+    "non_identity_viewBox"
+  ]
+}

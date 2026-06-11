@@ -1,0 +1,34 @@
+{
+  "route": "svglide-svg",
+  "base_ref": "origin/main",
+  "route_admission_files": [
+    "skills/lark-slides/references/svglide-route-admission.md"
+  ],
+  "private_strategy_files": [
+    "skills/lark-slides/references/style-presets.json",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+    "skills/lark-slides/references/svglide-asset-planning.md",
+    "skills/lark-slides/references/safe-native-v1.profile.json",
+    "skills/lark-slides/references/svglide-plan.schema.json",
+    "skills/lark-slides/scripts/svg_preflight.py",
+    "skills/lark-slides/scripts/svglide_plan_lint.py",
+    "skills/lark-slides/scripts/svglide_aesthetic_lint.py",
+    "skills/lark-slides/scripts/svglide_critic_report_lint.py",
+    "skills/lark-slides/scripts/svglide_preview_build.py",
+    "shortcuts/slides/internal/svglide/**",
+    "shortcuts/slides/svg_complexity.go",
+    "shortcuts/slides/svg_raster_fallback.go",
+    "shortcuts/slides/svg_helpers.go",
+    "shortcuts/slides/svg_plan.go"
+  ],
+  "allowed_route_entrypoints": [
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/svg-protocol.md",
+    "shortcuts/slides/slides_create_svg.go"
+  ]
+}

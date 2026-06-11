@@ -44,55 +44,9 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 | `xml_not_well_formed` | XML 语法错误或文本未转义 | 修复标签闭合、属性引号、`&` / `<` / `>` 转义 |
 | `bbox_overlap` | 文本元素的估算绘制区域明显重叠 | 拉开文本坐标、缩小文本框/字号，或改成明确的分栏/分组结构 |
 
-## Automated SVGlide Plan And SVG Preflight
+## SVG Route Validation
 
-走 `slides +create-svg` 前，必须先运行 SVG plan/source preflight：
-
-```bash
-python3 skills/lark-slides/scripts/svg_preflight.py \
-  --plan .lark-slides/plan/<deck-id>/slide_plan.json \
-  --input .lark-slides/plan/<deck-id>/pages/page-001.svg
-```
-
-通过标准：
-
-- `summary.error_count == 0`，任何 error 都必须先修复再调用 live API。
-- `style_preset` 必须存在于 `references/style-presets.json`。
-- `style_selection_reason` 必须说明为什么这个 preset 适合当前 deck。
-- `style_system` 必须包含 palette、typography、background strategy 和 motif。
-- 每页必须包含 `visual_recipe`、`visual_signature`、`svg_effects`、`required_primitives`、`svg_primitives`、`xml_like_risk`、`content_density_contract`、`risk_flags`、`source_policy`。
-- declared `svg_effects` 和 `required_primitives` 必须能在对应 SVG source 中命中。
-- 可见 slide 文本不得泄漏 preset 名称、source token、prompt、tool name 或本地文件路径。
-
-常见 code 的处理方向：
-
-| code | 含义 | 处理方式 |
-|------|------|----------|
-| `plan_style_preset_unknown` | plan 引用了不存在的 35 preset | 从 `style-presets.json` 选择有效 `style_id` |
-| `plan_missing_visual_signature` | 页面没有声明 SVG 视觉记忆点 | 写清这页相对普通 PPT/XML 模板的独特视觉结构 |
-| `plan_missing_svg_effects` | 页面没有声明 SVG 表达能力 | 声明真实会绘制的 `path`、`connector_flow`、`gradient`、`texture`、`chart_geometry` 等 |
-| `plan_svg_effect_not_found` | plan 声明的 effect 没在 SVG source 中出现 | 修改 SVG source，或删除不真实的 effect 声明 |
-| `plan_style_preset_visible_leak` | 可见文本泄漏 preset 名/source token | 仅在 plan metadata 中保留 preset 信息，画面只写用户主题内容 |
-
-## SVGlide Aesthetic Preview Review
-
-`svg_preflight.py` 通过后，走 `slides +create-svg` 前还必须做本地预览审查。读取 [svg-aesthetic-review.md](svg-aesthetic-review.md)，检查 rendered preview，而不是只看 plan 字段或静态 XML。
-
-通过标准：
-
-- 所有页面都检查过，不只检查封面。
-- 无标题、正文、badge、装饰线、图片框、图表标签的明显重叠或裁切。
-- root 和主要内容遵循 `960 x 540` 画布和 safe area。
-- 每页有清晰 `visual_focal_point`，视觉焦点对应 `visual_signature`。
-- 页面不是普通卡片/bullet 页伪装成 SVG；应能看出 path、texture、chart geometry、connector flow、image overlay、icon system、dashboard frame 或其他 SVG-native 结构。
-- 多页没有重复出现同一个布局错误；如果有，必须修生成规则并重新生成相关页面。
-- 用户可见交付 deck 的审美目标默认不低于 `75/100`；低于 `65/100` 应重新生成或显式降级为草稿。
-- 验证记录包含 `preview_path`、`visual_score`、`threshold`、`issue_ids`、`action`。`action=create_live` 才能继续调用 live API；`action=repair_and_rerun` 必须先修 source SVG / plan 并重新跑 preflight。
-
-这一步和 preflight 分工如下：
-
-- `svg_preflight.py`: 负责协议、plan、枚举、必填字段、bbox、primitive 命中和确定性错误。
-- `svg-aesthetic-review.md`: 负责截图/预览视角的层级、节奏、压迫感、重复问题、可读性和 SVG 视觉优势。
+SVG route validation is loaded only after route admission. XML validation remains focused on XML schema, page count, blank page, overflow, overlap, media visibility, and readback integrity.
 
 ## Page Count And Structure
 
