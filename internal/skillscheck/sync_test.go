@@ -322,6 +322,7 @@ func (f *fakeSkillsRunner) InstallAllSkills() *selfupdate.NpmResult {
 func TestSyncSkills_WritesStateAndDoesNotWriteStamp(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	localZone := time.FixedZone("UTC+8", 8*60*60)
 	if err := WriteState(SkillsState{
 		Version:        "1.0.30",
 		OfficialSkills: []string{"lark-calendar", "lark-mail"},
@@ -339,7 +340,7 @@ func TestSyncSkills_WritesStateAndDoesNotWriteStamp(t *testing.T) {
 	result := SyncSkills(SyncOptions{
 		Version: "1.0.33",
 		Runner:  runner,
-		Now:     func() time.Time { return time.Date(2026, 5, 18, 12, 0, 0, 0, time.UTC) },
+		Now:     func() time.Time { return time.Date(2026, 5, 18, 20, 0, 0, 0, localZone) },
 	})
 
 	if result.Err != nil {
@@ -361,6 +362,9 @@ func TestSyncSkills_WritesStateAndDoesNotWriteStamp(t *testing.T) {
 	assertStrings(t, state.UpdatedSkills, []string{"lark-calendar", "lark-new"})
 	assertStrings(t, state.AddedOfficialSkills, []string{"lark-new"})
 	assertStrings(t, state.SkippedDeletedSkills, []string{"lark-mail"})
+	if state.UpdatedAt != "2026-05-18T20:00:00+08:00" {
+		t.Fatalf("UpdatedAt = %q, want local RFC3339 timestamp with offset preserved", state.UpdatedAt)
+	}
 	if _, err := os.Stat(filepath.Join(dir, "skills.stamp")); !os.IsNotExist(err) {
 		t.Fatalf("skills.stamp exists or stat failed with unexpected err: %v", err)
 	}
