@@ -1730,11 +1730,12 @@
                             },
                             "aggregateType": {
                               "type": "string",
-                              "description": "汇总方式，默认为'sum'，仅在 aggregate 为 true 时生效",
+                              "description": "汇总方式，默认为'sum'，仅在 aggregate 为 true 时生效。count 只统计数值单元格；counta 统计所有非空单元格（含文本），按文本/分类列统计出现次数（如各类别的数量、频次分布）时用 counta。",
                               "enum": [
                                 "sum",
                                 "average",
                                 "count",
+                                "counta",
                                 "min",
                                 "max",
                                 "median"
@@ -2765,11 +2766,12 @@
                             },
                             "aggregateType": {
                               "type": "string",
-                              "description": "汇总方式，默认为'sum'，仅在 aggregate 为 true 时生效",
+                              "description": "汇总方式，默认为'sum'，仅在 aggregate 为 true 时生效。count 只统计数值单元格；counta 统计所有非空单元格（含文本），按文本/分类列统计出现次数（如各类别的数量、频次分布）时用 counta。",
                               "enum": [
                                 "sum",
                                 "average",
                                 "count",
+                                "counta",
                                 "min",
                                 "max",
                                 "median"
