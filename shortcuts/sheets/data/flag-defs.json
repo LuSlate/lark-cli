@@ -1,4 +1,37 @@
 {
+  "+recover": {
+    "risk": "write",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "to-revision",
+        "kind": "own",
+        "type": "int",
+        "required": "required",
+        "desc": "Restore the whole spreadsheet to this revision (a revision number returned by a prior write)"
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
   "+workbook-info": {
     "risk": "read",
     "flags": [
@@ -54,7 +87,7 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Insert position (0-based); appended to the end when omitted",
+        "desc": "Insert position; appended to the end when omitted",
         "default": "-1"
       },
       {
@@ -2020,7 +2053,7 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "RFC 4180 CSV text; values or formulas (a leading = is evaluated as a formula); no styles / comments / images (use +cells-set for those).",
+        "desc": "RFC 4180 CSV text; plain values only (no formulas / styles / comments)",
         "input": [
           "file",
           "stdin"
