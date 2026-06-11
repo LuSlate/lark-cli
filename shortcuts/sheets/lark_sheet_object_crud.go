@@ -49,6 +49,12 @@ type objectCRUDSpec struct {
 	// right nesting level.
 	enhanceCreateInput func(rt flagView, input map[string]interface{})
 	enhanceUpdateInput func(rt flagView, input map[string]interface{})
+	// validateCreateInput, when set, runs after enhanceCreateInput to
+	// enforce *cross-flag, create-only* constraints JSON Schema can't
+	// express (e.g. pivot rejects --target-position vs --range when
+	// both carry non-default values — they map to the same wire field
+	// and conflicting values are ambiguous). Mirrors validateUpdateInput.
+	validateCreateInput func(rt flagView, input map[string]interface{}) error
 	// validateUpdateInput, when set, runs after enhanceUpdateInput to
 	// enforce *cross-field, update-only* constraints JSON Schema can't
 	// express (e.g. sparkline requires properties.sparklines[i] to
@@ -189,6 +195,11 @@ func objectCreateInput(runtime flagView, token, sheetID, sheetName string, spec 
 	sheetSelectorForToolInput(input, sheetID, sheetName)
 	if spec.enhanceCreateInput != nil {
 		spec.enhanceCreateInput(runtime, input)
+	}
+	if spec.validateCreateInput != nil {
+		if err := spec.validateCreateInput(runtime, input); err != nil {
+			return nil, err
+		}
 	}
 	if err := validateInputAgainstSchema(runtime, input); err != nil {
 		return nil, err
@@ -381,9 +392,6 @@ var pivotSpec = objectCRUDSpec{
 	},
 	createWarn: pivotPlacementWarn,
 	enhanceCreateInput: func(rt flagView, input map[string]interface{}) {
-		if v := strings.TrimSpace(rt.Str("target-position")); v != "" && v != "A1" {
-			input["target_position"] = v
-		}
 		props, _ := input["properties"].(map[string]interface{})
 		if props == nil {
 			return
@@ -391,9 +399,25 @@ var pivotSpec = objectCRUDSpec{
 		if v := strings.TrimSpace(rt.Str("source")); v != "" {
 			props["source"] = v
 		}
-		if v := strings.TrimSpace(rt.Str("range")); v != "" {
+		// --target-position 与 --range 都映射到 properties.range；
+		// --target-position 优先，未给（或为默认值 A1）时回落到 --range。
+		// 互斥校验在 validateCreateInput 里做。
+		if v := strings.TrimSpace(rt.Str("target-position")); v != "" && v != "A1" {
+			props["range"] = v
+		} else if v := strings.TrimSpace(rt.Str("range")); v != "" {
 			props["range"] = v
 		}
+	},
+	// --target-position 与 --range 落到同一 wire 字段（properties.range），
+	// 同时给非默认值时无法判断意图——按 --target-sheet-id / --target-sheet-name
+	// 的处理方式，CLI 端直接拒绝（优于静默丢弃其一）。
+	validateCreateInput: func(rt flagView, _ map[string]interface{}) error {
+		pos := strings.TrimSpace(rt.Str("target-position"))
+		rng := strings.TrimSpace(rt.Str("range"))
+		if pos != "" && pos != "A1" && rng != "" {
+			return common.FlagErrorf("--target-position and --range are mutually exclusive (both map to properties.range; pass only one)")
+		}
+		return nil
 	},
 }
 var PivotCreate = newObjectCreateShortcut(pivotSpec)
