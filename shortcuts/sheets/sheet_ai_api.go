@@ -20,16 +20,18 @@ import (
 // transaction id for sheet tool calls.
 const sheetTxnIDEnv = "LARK_CLI_SHEET_TRANSACTION_ID"
 
-// sheetTransactionID returns the session-stable transaction id from the
+// sheetTransactionID returns the optional per-session transaction id from the
 // environment, or "" when unset.
 //
-// Sheet write tools persist their reverse ("undo") changeset keyed by the
-// request's transaction id; the server mints a fresh uuid per request when the
-// caller supplies none, which isolates every CLI invocation into its own
-// single-call undo stack. Threading one stable id across a group of edits (and
-// a later +undo) is what lets +undo find and reverse those edits. An agent
-// driving lark-cli sets this once per session; empty preserves today's
-// per-request behavior.
+// NOTE: +undo does NOT use this id to locate edits — the server addresses undo
+// by document revision (the `rev` a write returns; see +undo --rev), not by
+// transaction id. This env var's only purpose is optional concurrency
+// isolation: write tools persist their reverse ("undo") changeset keyed by the
+// request's transaction id, and the server mints a fresh uuid per request when
+// none is supplied, so each invocation lands in its own undo stack by default.
+// Set a stable id across commands only to deliberately share one isolated undo
+// stack across a group of edits; empty preserves the per-request default and is
+// the norm.
 func sheetTransactionID() string {
 	return strings.TrimSpace(os.Getenv(sheetTxnIDEnv))
 }
