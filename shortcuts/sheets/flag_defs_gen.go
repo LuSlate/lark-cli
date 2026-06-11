@@ -734,15 +734,6 @@ var flagDefs = map[string]commandDef{
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
-	"+recover": {
-		Risk: "write",
-		Flags: []flagDef{
-			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
-			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
-			{Name: "to-revision", Kind: "own", Type: "int", Required: "required", Desc: "Restore the whole spreadsheet to this revision (a revision number returned by a prior write)"},
-			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
-		},
-	},
 	"+rows-resize": {
 		Risk: "write",
 		Flags: []flagDef{
