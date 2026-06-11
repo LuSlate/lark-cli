@@ -5,6 +5,9 @@
 from __future__ import annotations
 
 import json
+import base64
+import binascii
+import hashlib
 import math
 import re
 import sys
@@ -17,6 +20,9 @@ SLIDE_NS = "https://slides.bytedance.com/ns"
 XLINK_NS = "http://www.w3.org/1999/xlink"
 SVG_NS = "http://www.w3.org/2000/svg"
 SVG_CONTRACT_VERSION = "svglide-authoring-contract/v1"
+SVG_CHART_MARKER_VERSION = "svglide-chart-inline/v1"
+SVG_CHART_FORMAT = "sxsd-chart-v1"
+SVG_CHART_ENCODING = "base64url"
 CANVAS_WIDTH = 960.0
 CANVAS_HEIGHT = 540.0
 SAFE_AREA = {"x": 48.0, "y": 40.0, "width": 864.0, "height": 460.0}
@@ -26,6 +32,8 @@ TEXT_CONTAINER_TOLERANCE = 2.0
 
 NUMBER_RE = re.compile(r"^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?:px)?$")
 PATH_NUMBER_RE = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
+BASE64URL_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+SHA256_HASH_RE = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
 FONT_SHORTHAND_RE = re.compile(r"(^|;)\s*font\s*:", re.IGNORECASE)
 STYLE_IMAGE_OPACITY_RE = re.compile(r"(^|;)\s*opacity\s*:", re.IGNORECASE)
 STYLE_STROKE_WIDTH_RE = re.compile(r"(^|;)\s*stroke-width\s*:", re.IGNORECASE)
@@ -492,6 +500,107 @@ def validate_roles_and_attrs(elements: list[ET.Element]) -> list[dict[str, Any]]
                 )
         else:
             issues.append(issue("error", "unsupported_role", f'unsupported slide:role="{role}"', element))
+    return issues
+
+
+def chart_marker_elements(root: ET.Element) -> list[ET.Element]:
+    return [child for child in list(root) if local_name(child.tag) == "g" and svg_role(child) == "chart"]
+
+
+def decode_base64url_payload(payload: str) -> bytes:
+    payload = payload.strip()
+    if not payload:
+        raise ValueError("empty payload")
+    if not BASE64URL_RE.match(payload):
+        raise ValueError("payload must use unpadded URL-safe base64 characters")
+    padding = "=" * ((4 - len(payload) % 4) % 4)
+    try:
+        return base64.urlsafe_b64decode(payload + padding)
+    except (binascii.Error, ValueError) as error:
+        raise ValueError(str(error)) from error
+
+
+def validate_chart_markers(root: ET.Element) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    direct_chart_ids = {id(element) for element in chart_marker_elements(root)}
+
+    for element in root.iter():
+        if element is root:
+            continue
+        role = svg_role(element)
+        name = local_name(element.tag)
+        if role == "whiteboard":
+            issues.append(issue("error", "unsupported_whiteboard_role", 'slide:role="whiteboard" is not supported by slides +create-svg', element))
+        if role == "chart" and id(element) not in direct_chart_ids:
+            issues.append(issue("error", "chart_marker_not_root_child", '<g slide:role="chart"> must be a direct child of root <svg>', element))
+        if name == "metadata" and get_attr(element, "data-svglide-whiteboard") is not None:
+            issues.append(
+                issue(
+                    "error",
+                    "legacy_whiteboard_marker",
+                    "legacy SVGlide whiteboard marker metadata is not supported by slides +create-svg",
+                    element,
+                )
+            )
+
+    seen_refs: set[str] = set()
+    for marker in chart_marker_elements(root):
+        chart_ref = (get_attr(marker, "chart-ref", SLIDE_NS) or "").strip()
+        if not chart_ref:
+            issues.append(issue("error", "chart_marker_missing_ref", '<g slide:role="chart"> must include slide:chart-ref', marker))
+        elif chart_ref in seen_refs:
+            issues.append(issue("error", "chart_marker_duplicate_ref", f'duplicate slide:chart-ref "{chart_ref}" in SVG chart markers', marker))
+        else:
+            seen_refs.add(chart_ref)
+        for attr in ["x", "y", "width", "height"]:
+            if parse_number(get_attr(marker, attr)) is None:
+                issues.append(issue("error", "chart_marker_bad_bbox", f'<g slide:role="chart"> attribute "{attr}" must be a number or px length', marker))
+
+        children = list(marker)
+        if len(children) != 1 or local_name(children[0].tag) != "metadata":
+            issues.append(issue("error", "chart_marker_metadata_count", '<g slide:role="chart"> must contain exactly one metadata child', marker))
+            continue
+
+        metadata = children[0]
+        if get_attr(metadata, "data-svglide-chart") != SVG_CHART_MARKER_VERSION:
+            issues.append(
+                issue(
+                    "error",
+                    "chart_marker_metadata_version",
+                    f'chart marker metadata must include data-svglide-chart="{SVG_CHART_MARKER_VERSION}"',
+                    metadata,
+                )
+            )
+        if get_attr(metadata, "data-format") != SVG_CHART_FORMAT:
+            issues.append(issue("error", "chart_marker_metadata_format", f'chart marker metadata must include data-format="{SVG_CHART_FORMAT}"', metadata))
+        if get_attr(metadata, "data-encoding") != SVG_CHART_ENCODING:
+            issues.append(issue("error", "chart_marker_metadata_encoding", f'chart marker metadata must include data-encoding="{SVG_CHART_ENCODING}"', metadata))
+
+        payload_hash = get_attr(metadata, "data-payload-hash") or ""
+        if not SHA256_HASH_RE.match(payload_hash):
+            issues.append(issue("error", "chart_marker_payload_hash", 'chart marker metadata must include data-payload-hash="sha256:<64 hex>"', metadata))
+            continue
+        if list(metadata):
+            issues.append(issue("error", "chart_marker_payload_not_text", "chart marker metadata payload must be base64url text", metadata))
+            continue
+        payload = "".join(metadata.itertext()).strip()
+        try:
+            decoded = decode_base64url_payload(payload)
+        except ValueError as error:
+            issues.append(issue("error", "chart_marker_payload_base64url", f"chart marker metadata payload must be base64url: {error}", metadata))
+            continue
+        actual_hash = "sha256:" + hashlib.sha256(decoded).hexdigest()
+        if actual_hash.lower() != payload_hash.lower():
+            issues.append(issue("error", "chart_marker_payload_hash_mismatch", "chart marker metadata data-payload-hash does not match decoded payload", metadata))
+            continue
+        try:
+            chart_root = ET.fromstring(decoded)
+        except ET.ParseError as error:
+            issues.append(issue("error", "chart_marker_payload_xml", f"chart marker decoded payload is not well-formed XML: {error}", metadata))
+            continue
+        if local_name(chart_root.tag) != "chart":
+            issues.append(issue("error", "chart_marker_payload_root", "chart marker decoded payload must be a single <chart> root", metadata))
+
     return issues
 
 
@@ -1021,6 +1130,7 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         "ellipse": 0,
         "image": 0,
         "foreignObject": 0,
+        "chart_marker": 0,
         "card_like_rect": 0,
         "small_shape": 0,
         "bar_like_rect": 0,
@@ -1069,6 +1179,7 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         for element in root.iter()
         if get_attr(element, "stroke-dasharray") is not None or STYLE_STROKE_DASHARRAY_RE.search(get_attr(element, "style") or "")
     )
+    counts["chart_marker"] = len(chart_marker_elements(root))
     large_text = 0
     for item in text_boxes:
         bbox = item["bbox"]
@@ -1097,6 +1208,8 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         primitives.add("typography")
     if counts["bar_like_rect"] >= 3 or re.search(r"(chart|metric|score|kpi|bar)", root_identifiers):
         primitives.add("micro_chart")
+    if counts["chart_marker"]:
+        primitives.add("micro_chart")
     if counts["card_like_rect"] >= 3 and (counts["bar_like_rect"] >= 2 or re.search(r"(dashboard|console|panel|metric)", root_identifiers)):
         primitives.add("dashboard")
     if counts["small_shape"] >= 6 or re.search(r"(icon|glyph|capability)", root_identifiers):
@@ -1119,6 +1232,8 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
     if counts["line"] or counts["path"]:
         effects.add("connector_flow")
     if counts["bar_like_rect"] >= 3:
+        effects.add("chart_geometry")
+    if counts["chart_marker"]:
         effects.add("chart_geometry")
     if gradients:
         effects.add("gradient")
@@ -2212,11 +2327,13 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
     root_issues, width, height = validate_root(root)
     elements = walk_renderable(root)
     role_issues = validate_roles_and_attrs(elements)
+    marker_issues = validate_chart_markers(root)
     geometry_issues, text_boxes = validate_geometry(elements, width, height)
     primitive_summary = summarize_visual_primitives(root, elements, text_boxes, width, height)
     issues = (
         root_issues
         + role_issues
+        + marker_issues
         + validate_styles(root)
         + validate_paths(elements)
         + geometry_issues

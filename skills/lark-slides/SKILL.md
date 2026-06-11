@@ -20,8 +20,8 @@ metadata:
 | 编辑单个标题、文本块、图片或局部元素 | 优先块级替换/插入，不改页序 | `slides +replace-slide`、`lark-slides-replace-slide.md` |
 | 读取或分析已有 PPT | 解析 slides/wiki token，回读全文或单页 XML，保存 `xml_presentation_id`、`slide_id`、`revision_id` | `xml_presentations.get`、`xml_presentation.slide.get` |
 | 上传或使用图片 | Preview 阶段优先多用真实图片增强视觉冲击；可先用公开可访问 http(s)/data 图片或本地 `@./path`，来源/授权只 warning 不阻断；正式交付再替换为授权清晰的 file token / 本地资产 | `slides +media-upload`，或 `+create --slides` / `+create-svg` 的 `@./path` 占位符 |
-| 在 slide 中绘制柱/条/折线/面积/雷达/饼等有数据序列的图表 | 使用原生 `<chart>` 元素 | `xml-schema-quick-ref.md` |
-| 在 slide 中绘制流程图、时序图、架构图、散点图、漏斗图或装饰图案 | 必须先用 Read 工具读取参考文档，再生成 `<whiteboard>` 元素 | [`lark-slides-whiteboard.md`](references/lark-slides-whiteboard.md) |
+| 在 slide 中绘制柱/条/折线/面积/雷达/饼等有数据序列的图表 | XML 路径使用原生 `<chart>`；SVG 路径如需原生 chart snapshot，使用 `slide:role="chart"` marker | `xml-schema-quick-ref.md`、`svg-protocol.md` |
+| 在 slide 中绘制流程图、时序图、架构图、散点图、漏斗图或装饰图案 | XML 路径必须先用 Read 工具读取参考文档，再生成 `<whiteboard>` 元素；`slides +create-svg` 明确不支持 whiteboard marker | [`lark-slides-whiteboard.md`](references/lark-slides-whiteboard.md)、`svg-protocol.md` |
 | 使用语义图标 | 先检索 IconPark，再写 `<icon iconType="...">` | `iconpark_tool.py search → resolve`、`iconpark.md` |
 | 用户提到模板、主题、版式 | 先检索模板，再摘要，必要时裁切骨架 | `template_tool.py search → summarize → extract` |
 | 创建失败、空白页、3350001、布局异常 | 先回读状态，再按排障清单修复，不假设原操作原子成功 | `troubleshooting.md`、`validation-checklist.md` |
@@ -31,6 +31,8 @@ metadata:
 **CRITICAL — 走 XML 创建/编辑路径时，生成任何 XML 之前，MUST 先用 Read 工具读取 [xml-schema-quick-ref.md](references/xml-schema-quick-ref.md)，禁止凭记忆猜测 XML 结构。走 SVG 创建路径（`slides +create-svg`）时，MUST 改读 [svg-protocol.md](references/svg-protocol.md)，不要求读取 XML schema。**
 
 **CRITICAL — 走 `slides +create-svg` 时，输入必须是 SVGlide SVG：root `<svg>` 声明 `xmlns:slide` 且 `slide:role="slide"`；可渲染 SVG 元素必须用 `slide:role="shape"` 或 `slide:role="image"` 表达；`g` / 嵌套 `svg` 可作为容器，但容器内实际渲染元素仍必须各自声明 role。CLI 只读取文件、上传/替换图片占位符、注入 transport metadata 和调用现有 `/slide` 路由，不会把普通 SVG 自动补齐成协议 SVG。**
+
+**CRITICAL — `slides +create-svg` 只允许 chart direct snapshot marker，不允许 whiteboard marker。chart marker 必须是 root `<svg>` 的直系 `<g slide:role="chart" slide:chart-ref="..." x="..." y="..." width="..." height="...">`，且只包含一个 `data-svglide-chart="svglide-chart-inline/v1"` metadata；CLI 只校验 marker 外壳、base64url/hash 和 decoded 单根 `<chart>`，不解析 chart 业务合法性，也不会为 chart 调任何额外 API。`slide:role="whiteboard"` 和旧的 `data-svglide-whiteboard` marker 必须改走 XML/whiteboard 路径。**
 
 **CRITICAL — SVGlide deck 页数默认值：当用户要求生成 SVG/SVGlide 幻灯片但未说明页数，或使用“一份 slide / 一份 PPT / 做个 slide / 生成一个 slide”这类模糊表达时，默认生成 `10` 页，不要仅因页数缺失而停下来追问。只有用户明确说“一页 / 单页 / onepage / one slide / 只要封面”等单页意图时，才生成 `1` 页；用户给出明确页数时始终服从用户要求。默认 10 页时必须在 `slide_plan.json` 写入 `page_count` 或 `target_slide_count=10`，并包含明确 closing slide。**
 

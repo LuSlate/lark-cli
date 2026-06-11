@@ -15,11 +15,13 @@ lark-cli slides +create-svg \
 - AI 已经能生成符合 [svg-protocol.md](svg-protocol.md) 的 SVGlide SVG。
 - 希望按文件逐页创建，避免把大段 XML/SVG 塞进 shell 参数。
 - 需要 SVG 内本地图片占位符自动上传并替换为 file token。
+- 需要把已经生成好的原生 `<chart>` snapshot 作为 root direct chart marker 透传给服务端。
 
 不适用：
 
 - 你只有普通 SVG，且没有 `slide:role` 协议标记。
 - 复杂普通 SVG 不能直接提交；需要把实际可渲染元素标成 SVGlide role。`g` / 嵌套 `svg` 容器可以保留，但不能代替子元素 role。
+- 你想通过 SVG 路径提交 whiteboard marker；`slide:role="whiteboard"` 和旧 `data-svglide-whiteboard` marker 会被 CLI 拒绝。
 - 你需要插入到指定页前；MVP 只创建新 presentation 并按顺序追加页面。
 
 ## Flags
@@ -57,6 +59,8 @@ body：
 
 不会新增 `/svg_slide` 路由，也不会把 `file_meta_map` 当成 CLI 到服务端的契约。
 
+chart direct snapshot 也不新增 API。CLI 不会解析 chart 业务合法性，不会上传 chart 资源，也不会调用任何 chart 创建接口；它只把通过轻校验的 marker 留在同一个 `slide.content` SVG 中。
+
 ## 图片处理
 
 SVG 内本地图片写成：
@@ -80,6 +84,40 @@ CLI 会：
   "@./hero.png": "boxcn..."
 }
 ```
+
+## Chart Direct Snapshot
+
+`slides +create-svg` 支持一种最小 chart marker，用于透传已经生成好的 SXSD chart XML snapshot：
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:slide="https://slides.bytedance.com/ns"
+     slide:role="slide"
+     slide:contract-version="svglide-authoring-contract/v1"
+     width="960" height="540" viewBox="0 0 960 540">
+  <g slide:role="chart"
+     slide:chart-ref="chart-sales-001"
+     x="80" y="96" width="420" height="260">
+    <metadata
+      data-svglide-chart="svglide-chart-inline/v1"
+      data-format="sxsd-chart-v1"
+      data-encoding="base64url"
+      data-payload-hash="sha256:<64 hex>"
+    >BASE64URL_PAYLOAD</metadata>
+  </g>
+</svg>
+```
+
+CLI 校验范围只包括：
+
+- marker 必须是 root `<svg>` 直系 `<g slide:role="chart">`。
+- `slide:chart-ref` 和 `x/y/width/height` bbox 必填，bbox 只接受数字或 `px`。
+- marker 内必须且只能有一个 `<metadata>`。
+- metadata 必须使用 `data-svglide-chart="svglide-chart-inline/v1"`、`data-format="sxsd-chart-v1"`、`data-encoding="base64url"`。
+- payload 必须是无 padding base64url，`data-payload-hash` 必须匹配 decoded bytes 的 sha256。
+- decoded payload 必须是单根 `<chart>` XML。
+
+CLI 不检查 `<chart>` 内部的系列、样式、数据范围等业务合法性；这些仍由服务端 chart/snapshot 消费方负责。`slide:role="whiteboard"` 和旧的 `data-svglide-whiteboard` marker 明确不属于 `+create-svg` 协议面。
 
 ## 生成质量规则
 
@@ -579,7 +617,7 @@ Preview 阶段优先使用这些来源来快速获得丰富视觉；正式交付
 内容页可以用三种方式提高密度，不要把高密度等同于堆文字：
 
 - `text-dense`: 多解释、多证据、多注释，适合背景分析和概念讲解。
-- `chart-dense`: SVG shape 手绘矩阵、流程、时间线、微柱状、雷达、散点、标尺；不要默认依赖 Slides 原生 chart，也不要把外部图表截图当成唯一方案。
+- `chart-dense`: SVG shape 手绘矩阵、流程、时间线、微柱状、雷达、散点、标尺；如果必须保留原生 chart snapshot，使用 root direct chart marker；不要把外部图表截图当成唯一方案。
 - `visual-dense`: 高级视觉图案或图片上叠加标注层、数据 callout、局部标签、对比线和图例。
 
 视觉区要补足可读细节，避免只有装饰符号：

@@ -4,8 +4,14 @@
 package slides
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -16,9 +22,12 @@ import (
 )
 
 const (
-	maxSVGFileSizeBytes    int64 = 2 * 1024 * 1024
-	svglideSlideNS               = "https://slides.bytedance.com/ns"
-	svglideContractVersion       = "svglide-authoring-contract/v1"
+	maxSVGFileSizeBytes       int64 = 2 * 1024 * 1024
+	svglideSlideNS                  = "https://slides.bytedance.com/ns"
+	svglideContractVersion          = "svglide-authoring-contract/v1"
+	svglideChartMarkerVersion       = "svglide-chart-inline/v1"
+	svglideChartFormat              = "sxsd-chart-v1"
+	svglideChartEncoding            = "base64url"
 )
 
 type RewrittenSVGPage struct {
@@ -36,6 +45,8 @@ var (
 	svgNumberRegex      = regexp.MustCompile(`^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?:px)?$`)
 	svgPathNumberRegex  = regexp.MustCompile(`[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?`)
 	svgTransformRegex   = regexp.MustCompile(`(?is)([a-zA-Z]+)\(([^)]*)\)`)
+	svgBase64URLRegex   = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+	svgSHA256HashRegex  = regexp.MustCompile(`^sha256:[0-9a-fA-F]{64}$`)
 	svgShapeTags        = map[string]bool{
 		"circle":        true,
 		"ellipse":       true,
@@ -191,6 +202,7 @@ func xmlAttrValue(attrs, name string) string {
 func validateSVGlideChildren(svgAfterRootOpen, path string) error {
 	depth := 0
 	skipDepth := -1
+	chartRefs := map[string]bool{}
 	for i := 0; i < len(svgAfterRootOpen); {
 		rel := strings.IndexByte(svgAfterRootOpen[i:], '<')
 		if rel < 0 {
@@ -255,6 +267,28 @@ func validateSVGlideChildren(svgAfterRootOpen, path string) error {
 			i = end + 1
 			continue
 		}
+		if skipDepth < 0 && name == "g" && xmlAttrValue(attrs, "slide:role") == "chart" {
+			if depth != 0 {
+				return output.ErrValidation("--file %s: <g slide:role=\"chart\"> must be a direct child of root <svg>", path)
+			}
+			if selfClosing {
+				return output.ErrValidation("--file %s: <g slide:role=\"chart\"> must contain one chart metadata child", path)
+			}
+			closeStart, closeEnd := findSVGElementClose(svgAfterRootOpen, end+1, name)
+			if closeStart < 0 {
+				return output.ErrValidation("--file %s: malformed chart marker: missing </g>", path)
+			}
+			chartRef, err := validateSVGlideChartMarker(path, attrs, svgAfterRootOpen[end+1:closeStart])
+			if err != nil {
+				return err
+			}
+			if chartRefs[chartRef] {
+				return output.ErrValidation("--file %s: duplicate slide:chart-ref %q in SVG chart markers", path, chartRef)
+			}
+			chartRefs[chartRef] = true
+			i = closeEnd + 1
+			continue
+		}
 		if skipDepth < 0 {
 			mode, err := validateSVGlideElement(path, name, attrs)
 			if err != nil {
@@ -291,6 +325,70 @@ func findSVGTagEnd(svg string, start int) int {
 		}
 	}
 	return -1
+}
+
+func findSVGElementClose(svg string, start int, tagName string) (closeStart, closeEnd int) {
+	depth := 1
+	for i := start; i < len(svg); {
+		rel := strings.IndexByte(svg[i:], '<')
+		if rel < 0 {
+			return -1, -1
+		}
+		i += rel
+		switch {
+		case strings.HasPrefix(svg[i:], "<!--"):
+			end := strings.Index(svg[i+4:], "-->")
+			if end < 0 {
+				return -1, -1
+			}
+			i += 4 + end + 3
+			continue
+		case strings.HasPrefix(svg[i:], "<![CDATA["):
+			end := strings.Index(svg[i+9:], "]]>")
+			if end < 0 {
+				return -1, -1
+			}
+			i += 9 + end + 3
+			continue
+		case strings.HasPrefix(svg[i:], "<?"):
+			end := strings.Index(svg[i+2:], "?>")
+			if end < 0 {
+				return -1, -1
+			}
+			i += 2 + end + 2
+			continue
+		case strings.HasPrefix(svg[i:], "</"):
+			end := findSVGTagEnd(svg, i)
+			if end < 0 {
+				return -1, -1
+			}
+			if parseSVGClosingTagName(svg[i+2:end]) == tagName {
+				depth--
+				if depth == 0 {
+					return i, end
+				}
+			}
+			i = end + 1
+			continue
+		case strings.HasPrefix(svg[i:], "<!"):
+			end := findSVGTagEnd(svg, i)
+			if end < 0 {
+				return -1, -1
+			}
+			i = end + 1
+			continue
+		}
+		end := findSVGTagEnd(svg, i)
+		if end < 0 {
+			return -1, -1
+		}
+		name, _, selfClosing := parseSVGStartTag(svg[i+1 : end])
+		if name == tagName && !selfClosing {
+			depth++
+		}
+		i = end + 1
+	}
+	return -1, -1
 }
 
 func parseSVGClosingTagName(raw string) string {
@@ -332,17 +430,26 @@ func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, err
 	if svgIgnoredSubtreeTags[tagName] {
 		return svgValidationSkipSubtree, nil
 	}
+	if tagName == "metadata" && strings.TrimSpace(xmlAttrValue(attrs, "data-svglide-whiteboard")) != "" {
+		return svgValidationStop, output.ErrValidation("--file %s: legacy SVGlide whiteboard marker metadata is not supported by slides +create-svg", path)
+	}
 	if tagName == "metadata" && hasXMLAttr(attrs, "data-svglide-assets", "true") {
 		return svgValidationSkipSubtree, nil
 	}
 	if err := validateSVGlideTransform(path, tagName, attrs); err != nil {
 		return svgValidationStop, err
 	}
+	role := xmlAttrValue(attrs, "slide:role")
+	if role == "whiteboard" {
+		return svgValidationStop, output.ErrValidation("--file %s: slide:role=\"whiteboard\" is not supported by slides +create-svg", path)
+	}
+	if role == "chart" {
+		return svgValidationStop, output.ErrValidation("--file %s: <g slide:role=\"chart\"> must be a direct child of root <svg>", path)
+	}
 	if svgContainerTags[tagName] {
 		return svgValidationDescend, nil
 	}
 
-	role := xmlAttrValue(attrs, "slide:role")
 	if role == "" {
 		return svgValidationStop, output.ErrValidation("--file %s: <%s> must include slide:role=\"shape\" or slide:role=\"image\" for SVGlide", path, tagName)
 	}
@@ -380,6 +487,169 @@ func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, err
 	default:
 		return svgValidationStop, output.ErrValidation("--file %s: <%s> has unsupported slide:role=%q; use \"shape\" or \"image\"", path, tagName, role)
 	}
+}
+
+func validateSVGlideChartMarker(path, attrs, inner string) (string, error) {
+	chartRef := strings.TrimSpace(xmlAttrValue(attrs, "slide:chart-ref"))
+	if chartRef == "" {
+		return "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> missing required attribute \"slide:chart-ref\"", path)
+	}
+	for _, attr := range []string{"x", "y", "width", "height"} {
+		value := xmlAttrValue(attrs, attr)
+		if strings.TrimSpace(value) == "" {
+			return "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> missing required attribute %q", path, attr)
+		}
+		if !isSVGlideNumber(value) {
+			return "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> attribute %q must be a number or px length, got %q", path, attr, value)
+		}
+	}
+
+	metadataAttrs, payload, err := extractSingleSVGlideChartMetadata(path, inner)
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(xmlAttrValue(metadataAttrs, "data-svglide-whiteboard")) != "" {
+		return "", output.ErrValidation("--file %s: legacy SVGlide whiteboard marker metadata is not supported by slides +create-svg", path)
+	}
+	if !hasXMLAttr(metadataAttrs, "data-svglide-chart", svglideChartMarkerVersion) {
+		return "", output.ErrValidation("--file %s: chart marker metadata must include data-svglide-chart=\"%s\"", path, svglideChartMarkerVersion)
+	}
+	if !hasXMLAttr(metadataAttrs, "data-format", svglideChartFormat) {
+		return "", output.ErrValidation("--file %s: chart marker metadata must include data-format=\"%s\"", path, svglideChartFormat)
+	}
+	if !hasXMLAttr(metadataAttrs, "data-encoding", svglideChartEncoding) {
+		return "", output.ErrValidation("--file %s: chart marker metadata must include data-encoding=\"%s\"", path, svglideChartEncoding)
+	}
+	hash := xmlAttrValue(metadataAttrs, "data-payload-hash")
+	if !svgSHA256HashRegex.MatchString(hash) {
+		return "", output.ErrValidation("--file %s: chart marker metadata must include data-payload-hash=\"sha256:<64 hex>\"", path)
+	}
+	decoded, err := decodeSVGlideChartPayload(payload)
+	if err != nil {
+		return "", output.ErrValidation("--file %s: chart marker metadata payload must be base64url: %v", path, err)
+	}
+	sum := sha256.Sum256(decoded)
+	if !strings.EqualFold(hash, "sha256:"+hex.EncodeToString(sum[:])) {
+		return "", output.ErrValidation("--file %s: chart marker metadata data-payload-hash does not match decoded payload", path)
+	}
+	if err := validateSVGlideChartPayloadXML(decoded); err != nil {
+		return "", output.ErrValidation("--file %s: chart marker metadata decoded payload must be a single <chart> root: %v", path, err)
+	}
+	return chartRef, nil
+}
+
+func extractSingleSVGlideChartMetadata(path, inner string) (attrs, payload string, err error) {
+	seen := false
+	for i := 0; i < len(inner); {
+		rel := strings.IndexByte(inner[i:], '<')
+		if rel < 0 {
+			if strings.TrimSpace(inner[i:]) != "" {
+				return "", "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> may only contain one metadata child", path)
+			}
+			break
+		}
+		if strings.TrimSpace(inner[i:i+rel]) != "" {
+			return "", "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> may only contain one metadata child", path)
+		}
+		i += rel
+		switch {
+		case strings.HasPrefix(inner[i:], "<!--"):
+			end := strings.Index(inner[i+4:], "-->")
+			if end < 0 {
+				return "", "", output.ErrValidation("--file %s: malformed SVG comment", path)
+			}
+			i += 4 + end + 3
+			continue
+		case strings.HasPrefix(inner[i:], "<?"):
+			end := strings.Index(inner[i+2:], "?>")
+			if end < 0 {
+				return "", "", output.ErrValidation("--file %s: malformed SVG processing instruction", path)
+			}
+			i += 2 + end + 2
+			continue
+		case strings.HasPrefix(inner[i:], "</"), strings.HasPrefix(inner[i:], "<!"):
+			return "", "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> may only contain one metadata child", path)
+		}
+		end := findSVGTagEnd(inner, i)
+		if end < 0 {
+			return "", "", output.ErrValidation("--file %s: malformed chart marker metadata", path)
+		}
+		name, metadataAttrs, selfClosing := parseSVGStartTag(inner[i+1 : end])
+		if name != "metadata" {
+			return "", "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> may only contain one metadata child", path)
+		}
+		if seen {
+			return "", "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> must contain exactly one metadata child", path)
+		}
+		if selfClosing {
+			return "", "", output.ErrValidation("--file %s: chart marker metadata payload is empty", path)
+		}
+		closeStart, closeEnd := findSVGElementClose(inner, end+1, "metadata")
+		if closeStart < 0 {
+			return "", "", output.ErrValidation("--file %s: malformed chart marker metadata: missing </metadata>", path)
+		}
+		seen = true
+		attrs = metadataAttrs
+		payload = strings.TrimSpace(inner[end+1 : closeStart])
+		i = closeEnd + 1
+	}
+	if !seen {
+		return "", "", output.ErrValidation("--file %s: <g slide:role=\"chart\"> must contain exactly one metadata child", path)
+	}
+	return attrs, payload, nil
+}
+
+func decodeSVGlideChartPayload(payload string) ([]byte, error) {
+	payload = strings.TrimSpace(payload)
+	if payload == "" {
+		return nil, fmt.Errorf("empty payload")
+	}
+	if !svgBase64URLRegex.MatchString(payload) {
+		return nil, fmt.Errorf("payload must use unpadded URL-safe base64 characters")
+	}
+	return base64.RawURLEncoding.DecodeString(payload)
+}
+
+func validateSVGlideChartPayloadXML(payload []byte) error {
+	decoder := xml.NewDecoder(bytes.NewReader(payload))
+	rootSeen := false
+	depth := 0
+	for {
+		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		switch t := token.(type) {
+		case xml.StartElement:
+			if !rootSeen {
+				if t.Name.Local != "chart" {
+					return fmt.Errorf("got <%s>", t.Name.Local)
+				}
+				rootSeen = true
+			} else if depth == 0 {
+				return fmt.Errorf("multiple root elements")
+			}
+			depth++
+		case xml.EndElement:
+			if depth > 0 {
+				depth--
+			}
+		case xml.CharData:
+			if depth == 0 && strings.TrimSpace(string(t)) != "" {
+				return fmt.Errorf("non-whitespace text outside root")
+			}
+		}
+	}
+	if !rootSeen {
+		return fmt.Errorf("missing <chart> root")
+	}
+	if depth != 0 {
+		return fmt.Errorf("unclosed <chart> root")
+	}
+	return nil
 }
 
 func validateSVGlideRequiredAttrs(path, tagName, role, attrs string) error {

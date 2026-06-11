@@ -4,7 +4,10 @@
 package slides
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -173,6 +176,10 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><svg slide:role="shape" viewBox="0 0 100 100"><circle slide:role="shape" cx="50" cy="50" r="20"/></svg></svg>`,
 		},
 		{
+			name: "root chart marker with inline payload",
+			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart><chartData /></chart>`)) + `</svg>`,
+		},
+		{
 			name: "style and nested defs are ignored",
 			svg:  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><style>.primary{fill:#123456}</style><g><defs><linearGradient id="g"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#000"/></linearGradient></defs></g><rect slide:role="shape" class="primary" x="0" y="0" width="100" height="60" fill="url(#g)"/></svg>`,
 		},
@@ -249,6 +256,16 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 			wantErr: `<metadata> must include slide:role="shape" or slide:role="image"`,
 		},
 		{
+			name:    "whiteboard role is explicitly rejected",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><g slide:role="whiteboard" x="0" y="0" width="100" height="60"/></svg>`,
+			wantErr: `slide:role="whiteboard" is not supported`,
+		},
+		{
+			name:    "legacy whiteboard marker metadata is explicitly rejected",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><metadata data-svglide-whiteboard="svglide-whiteboard-inline/v1">abc</metadata></svg>`,
+			wantErr: `legacy SVGlide whiteboard marker metadata is not supported`,
+		},
+		{
 			name:    "foreignObject shape requires text type",
 			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><foreignObject slide:role="shape"><p xmlns="http://www.w3.org/1999/xhtml">hello</p></foreignObject></svg>`,
 			wantErr: `<foreignObject slide:role="shape"> must include slide:shape-type="text"`,
@@ -278,6 +295,46 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><rect slide:role="decor"/></svg>`,
 			wantErr: `unsupported slide:role="decor"`,
 		},
+		{
+			name:    "nested chart marker is rejected",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><g>` + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart />`)) + `</g></svg>`,
+			wantErr: `<g slide:role="chart"> must be a direct child of root <svg>`,
+		},
+		{
+			name:    "chart marker requires ref",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><g slide:role="chart" x="0" y="0" width="100" height="60">` + testSVGlideChartMetadata(`<chart />`) + `</g></svg>`,
+			wantErr: `missing required attribute "slide:chart-ref"`,
+		},
+		{
+			name:    "chart marker rejects bad bbox",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><g slide:role="chart" slide:chart-ref="chart-1" x="10%" y="0" width="100" height="60">` + testSVGlideChartMetadata(`<chart />`) + `</g></svg>`,
+			wantErr: `attribute "x" must be a number or px length`,
+		},
+		{
+			name:    "chart marker requires single metadata",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart />`)+testSVGlideChartMetadata(`<chart />`)) + `</svg>`,
+			wantErr: `must contain exactly one metadata child`,
+		},
+		{
+			name:    "chart marker rejects duplicate chart refs",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart />`)) + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart><chartData /></chart>`)) + `</svg>`,
+			wantErr: `duplicate slide:chart-ref "chart-1"`,
+		},
+		{
+			name:    "chart marker rejects bad base64url",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` + testSVGlideChartMarker(`<metadata data-svglide-chart="svglide-chart-inline/v1" data-format="sxsd-chart-v1" data-encoding="base64url" data-payload-hash="sha256:`+strings.Repeat("0", 64)+`">bad+payload</metadata>`) + `</svg>`,
+			wantErr: `payload must be base64url`,
+		},
+		{
+			name:    "chart marker rejects hash mismatch",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` + testSVGlideChartMarker(testSVGlideChartMetadataWithHash(`<chart />`, "sha256:"+strings.Repeat("0", 64))) + `</svg>`,
+			wantErr: `data-payload-hash does not match`,
+		},
+		{
+			name:    "chart marker decoded payload must be chart root",
+			svg:     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` + testSVGlideChartMarker(testSVGlideChartMetadata(`<table />`)) + `</svg>`,
+			wantErr: `decoded payload must be a single <chart> root`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -298,6 +355,24 @@ func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testSVGlideChartMarker(metadata string) string {
+	return `<g slide:role="chart" slide:chart-ref="chart-1" x="80" y="96" width="420" height="260">` + metadata + `</g>`
+}
+
+func testSVGlideChartMetadata(chartXML string) string {
+	sum := sha256.Sum256([]byte(chartXML))
+	return testSVGlideChartMetadataWithHash(chartXML, fmt.Sprintf("sha256:%x", sum))
+}
+
+func testSVGlideChartMetadataWithHash(chartXML, hash string) string {
+	payload := base64.RawURLEncoding.EncodeToString([]byte(chartXML))
+	return fmt.Sprintf(
+		`<metadata data-svglide-chart="svglide-chart-inline/v1" data-format="sxsd-chart-v1" data-encoding="base64url" data-payload-hash="%s">%s</metadata>`,
+		hash,
+		payload,
+	)
 }
 
 func withTestSVGlideContractVersion(svg string) string {

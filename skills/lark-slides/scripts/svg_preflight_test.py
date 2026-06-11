@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import tempfile
 import unittest
@@ -93,6 +95,21 @@ def recipe_fields(recipe: str, primitives: list[str]) -> dict[str, object]:
     }
 
 
+def chart_metadata(chart_xml: str, payload_hash: str | None = None) -> str:
+    payload = base64.urlsafe_b64encode(chart_xml.encode("utf-8")).decode("ascii").rstrip("=")
+    if payload_hash is None:
+        payload_hash = "sha256:" + hashlib.sha256(chart_xml.encode("utf-8")).hexdigest()
+    return (
+        '<metadata data-svglide-chart="svglide-chart-inline/v1" '
+        'data-format="sxsd-chart-v1" data-encoding="base64url" '
+        f'data-payload-hash="{payload_hash}">{payload}</metadata>'
+    )
+
+
+def chart_marker(metadata: str) -> str:
+    return f'<g slide:role="chart" slide:chart-ref="chart-1" x="80" y="96" width="420" height="260">{metadata}</g>'
+
+
 class SvgPreflightTest(unittest.TestCase):
     def test_lint_svg_accepts_valid_svglide(self) -> None:
         result = svg_preflight.lint_svg(VALID_SVG)
@@ -158,6 +175,66 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertIn("image_opacity_unsupported", codes)
         self.assertEqual(result["summary"]["error_count"], 0)
         self.assertEqual(result["summary"]["warning_count"], 1)
+
+    def test_lint_svg_accepts_chart_marker(self) -> None:
+        svg = f"""
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          {chart_marker(chart_metadata("<chart><chartData /></chart>"))}
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        self.assertEqual(result["summary"]["error_count"], 0)
+        self.assertIn("micro_chart", result["visual_primitives"]["present"])
+        self.assertIn("chart_geometry", result["visual_primitives"]["effects"])
+
+    def test_lint_svg_rejects_invalid_chart_marker(self) -> None:
+        svg = f"""
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <g>{chart_marker(chart_metadata("<table />", "sha256:" + "0" * 64))}</g>
+          <g slide:role="whiteboard" x="0" y="0" width="100" height="60" />
+          <metadata data-svglide-whiteboard="svglide-whiteboard-inline/v1">abc</metadata>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("chart_marker_not_root_child", codes)
+        self.assertIn("unsupported_whiteboard_role", codes)
+        self.assertIn("legacy_whiteboard_marker", codes)
+
+    def test_lint_svg_rejects_chart_marker_payload_hash_and_root(self) -> None:
+        svg = f"""
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          {chart_marker(chart_metadata("<chart />", "sha256:" + "0" * 64))}
+          {chart_marker(chart_metadata("<table />"))}
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("chart_marker_payload_hash_mismatch", codes)
+        self.assertIn("chart_marker_payload_root", codes)
+
+    def test_lint_svg_rejects_duplicate_chart_refs(self) -> None:
+        svg = f"""
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          {chart_marker(chart_metadata("<chart />"))}
+          {chart_marker(chart_metadata("<chart><chartData /></chart>"))}
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("chart_marker_duplicate_ref", codes)
 
     def test_lint_svg_warns_circle_stroke_width_is_unstable(self) -> None:
         svg = """

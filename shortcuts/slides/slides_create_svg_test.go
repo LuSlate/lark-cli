@@ -145,6 +145,67 @@ func TestSlidesCreateSVGExecuteCreatesSlidesInFileOrder(t *testing.T) {
 	assertSlideCreateBodyContains(t, slideStub2, `<foreignObject slide:role="shape" slide:shape-type="text" x="80" y="80" width="320" height="80">`)
 }
 
+func TestSlidesCreateSVGChartMarkerPassesThroughSlideContent(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720">` + testSVGlideChartMarker(testSVGlideChartMetadata(`<chart><chartData /></chart>`)) + `</svg>`
+	if err := os.WriteFile("chart.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write chart.svg: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"xml_presentation_id": "pres_chart", "revision_id": 1}},
+	})
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_chart/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_chart", "revision_id": 2}},
+	}
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_chart", "https://x.feishu.cn/slides/pres_chart")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "chart.svg",
+		"--title", "chart marker",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var body map[string]interface{}
+	if err := json.Unmarshal(slideStub.CapturedBody, &body); err != nil {
+		t.Fatalf("decode slide body: %v", err)
+	}
+	if len(body) != 1 {
+		t.Fatalf("slide create body should only contain slide wrapper, got: %v", body)
+	}
+	slide, ok := body["slide"].(map[string]interface{})
+	if !ok || len(slide) != 1 {
+		t.Fatalf("slide create body should be {slide:{content}}, got: %v", body)
+	}
+	content, ok := slide["content"].(string)
+	if !ok {
+		t.Fatalf("slide.content should be a string, got: %v", slide["content"])
+	}
+	for _, want := range []string{
+		`slide:contract-version="svglide-authoring-contract/v1"`,
+		`<g slide:role="chart" slide:chart-ref="chart-1" x="80" y="96" width="420" height="260">`,
+		`data-svglide-chart="svglide-chart-inline/v1"`,
+		`data-format="sxsd-chart-v1"`,
+		`data-encoding="base64url"`,
+		`data-payload-hash="sha256:`,
+	} {
+		if !strings.Contains(content, want) {
+			t.Fatalf("content missing %s: %s", want, content)
+		}
+	}
+}
+
 func TestSlidesCreateSVGPartialFailureIncludesRecoveryContext(t *testing.T) {
 	dir := t.TempDir()
 	withSlidesTestWorkingDir(t, dir)
@@ -433,4 +494,9 @@ func assertSlideCreateBodyContains(t *testing.T, stub *httpmock.Stub, want strin
 	if !strings.Contains(content, want) {
 		t.Fatalf("slide content = %s\nwant to contain %s", content, want)
 	}
+}
+
+func registerBatchQueryStub(_ *httpmock.Registry, _, _ string) {
+	// fillPresentationResult now builds presentation URLs locally, so SVG create
+	// tests keep this helper as a no-op compatibility shim for older assertions.
 }
