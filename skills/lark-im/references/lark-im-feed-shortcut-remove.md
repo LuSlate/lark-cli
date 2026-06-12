@@ -9,7 +9,7 @@ This skill maps to shortcut: `lark-cli im +feed-shortcut-remove`. Underlying API
 Removes one or more chats from the **current user's** feed shortcuts.
 
 - Only **CHAT-type** shortcuts are supported (`feed_card_id` must be an `oc_xxx`).
-- Batch up to **10 chat IDs per call**.
+- The upstream OAPI currently documents up to 50 items per write call, but this CLI intentionally enforces a stricter **30 chat IDs per call** local limit.
 - Currently only supports **user identity** (`--as user`).
 - Removing a chat that is not currently in the shortcut list is idempotent success: the call returns `ok:true`, `failure_count=0`, and no `failed_shortcuts` entry for that chat.
 
@@ -31,7 +31,7 @@ lark-cli im +feed-shortcut-remove --as user --chat-id oc_xxx --dry-run
 
 | Parameter | Required | Description |
 |------|------|------|
-| `--chat-id <oc_xxx>` | yes | open_chat_id to remove from feed shortcuts; repeatable or comma-separated; max 10 per call |
+| `--chat-id <oc_xxx>` | yes | open_chat_id to remove from feed shortcuts; repeatable or comma-separated; CLI max 30 per call |
 | `--as user` | yes | Server only accepts user_access_token for this API |
 
 ## Response
@@ -45,4 +45,4 @@ The response uses the same batch ledger as [`+feed-shortcut-create`](lark-im-fee
 
 ## Note
 
-- To see what is currently in the shortcut list before removing, run [`+feed-shortcut-list`](lark-im-feed-shortcut-list.md). Use `--no-detail` when you only need the `feed_card_id` values.
+- To see what is currently in the shortcut list before removing, run [`+feed-shortcut-list`](lark-im-feed-shortcut-list.md).

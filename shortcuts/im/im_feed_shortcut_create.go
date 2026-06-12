@@ -17,7 +17,7 @@ import (
 var ImFeedShortcutCreate = common.Shortcut{
 	Service:     "im",
 	Command:     "+feed-shortcut-create",
-	Description: "Add chats to the user's feed shortcuts; user-only; batch up to 10 chat IDs per call; --head/--tail controls insertion order",
+	Description: "Add chats to the user's feed shortcuts; user-only; CHAT only; CLI enforces up to 30 chat IDs per call; --head/--tail controls insertion order",
 	Risk:        "write",
 	UserScopes:  []string{feedShortcutWriteScope},
 	AuthTypes:   []string{"user"},
@@ -28,7 +28,7 @@ var ImFeedShortcutCreate = common.Shortcut{
 		// reported through the structured validation envelope (exit 2)
 		// instead of cobra's plain-text error.
 		{Name: "chat-id", Type: "string_slice",
-			Desc: "open_chat_id to add as a feed shortcut (oc_xxx); required; repeat the flag or pass comma-separated; max 10 per call"},
+			Desc: "open_chat_id to add as a feed shortcut (oc_xxx); required; repeat the flag or pass comma-separated; CLI max 30 per call"},
 		{Name: "head", Type: "bool",
 			Desc: "insert at the top of the shortcut list (default); mutually exclusive with --tail"},
 		{Name: "tail", Type: "bool",

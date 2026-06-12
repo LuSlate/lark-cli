@@ -6,7 +6,6 @@ package im
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -49,11 +48,6 @@ func newFeedShortcutRemoveCmd(t *testing.T) *cobra.Command {
 func newFeedShortcutListCmd(t *testing.T) *cobra.Command {
 	t.Helper()
 	cmd := &cobra.Command{Use: "test"}
-	cmd.Flags().String("page-token", "", "")
-	// Default true (skip enrichment) in tests so non-enrichment-focused tests
-	// don't trigger the batch_query path; tests that exercise detail
-	// enrichment flip this off.
-	cmd.Flags().Bool("no-detail", true, "")
 	if err := cmd.ParseFlags(nil); err != nil {
 		t.Fatalf("ParseFlags() error = %v", err)
 	}
@@ -77,10 +71,25 @@ func TestCollectChatIDs(t *testing.T) {
 		{name: "rejects empty list", input: nil, wantErr: true, errSubstr: "--chat-id is required"},
 		{name: "rejects bad prefix", input: []string{"om_abc"}, wantErr: true, errSubstr: "must be an open_chat_id"},
 		{
+			name: "accepts limit boundary",
+			input: []string{
+				"oc_1", "oc_2", "oc_3", "oc_4", "oc_5", "oc_6", "oc_7", "oc_8", "oc_9", "oc_10",
+				"oc_11", "oc_12", "oc_13", "oc_14", "oc_15", "oc_16", "oc_17", "oc_18", "oc_19", "oc_20",
+				"oc_21", "oc_22", "oc_23", "oc_24", "oc_25", "oc_26", "oc_27", "oc_28", "oc_29", "oc_30",
+			},
+			want: []string{
+				"oc_1", "oc_2", "oc_3", "oc_4", "oc_5", "oc_6", "oc_7", "oc_8", "oc_9", "oc_10",
+				"oc_11", "oc_12", "oc_13", "oc_14", "oc_15", "oc_16", "oc_17", "oc_18", "oc_19", "oc_20",
+				"oc_21", "oc_22", "oc_23", "oc_24", "oc_25", "oc_26", "oc_27", "oc_28", "oc_29", "oc_30",
+			},
+		},
+		{
 			name: "rejects over limit",
 			input: []string{
-				"oc_1", "oc_2", "oc_3", "oc_4", "oc_5",
-				"oc_6", "oc_7", "oc_8", "oc_9", "oc_10", "oc_11",
+				"oc_1", "oc_2", "oc_3", "oc_4", "oc_5", "oc_6", "oc_7", "oc_8", "oc_9", "oc_10",
+				"oc_11", "oc_12", "oc_13", "oc_14", "oc_15", "oc_16", "oc_17", "oc_18", "oc_19", "oc_20",
+				"oc_21", "oc_22", "oc_23", "oc_24", "oc_25", "oc_26", "oc_27", "oc_28", "oc_29", "oc_30",
+				"oc_31",
 			},
 			wantErr:   true,
 			errSubstr: "too many --chat-id",
@@ -549,24 +558,15 @@ func TestImFeedShortcutListDryRunRendersGet(t *testing.T) {
 			t.Fatalf("DryRun output = %s, want %q", got, want)
 		}
 	}
-	if strings.Contains(got, "page_token") {
-		t.Fatalf("DryRun output = %s, should omit page_token on first-page request", got)
+}
+
+func TestImFeedShortcutListHasNoCustomFlags(t *testing.T) {
+	if len(ImFeedShortcutList.Flags) != 0 {
+		t.Fatalf("ImFeedShortcutList.Flags = %v, want no shortcut-specific flags", ImFeedShortcutList.Flags)
 	}
 }
 
-func TestImFeedShortcutListDryRunIncludesNonEmptyPageToken(t *testing.T) {
-	cmd := newFeedShortcutListCmd(t)
-	if err := cmd.Flags().Set("page-token", "tok1"); err != nil {
-		t.Fatalf("Set page-token error = %v", err)
-	}
-	rt := &common.RuntimeContext{Cmd: cmd}
-	got := ImFeedShortcutList.DryRun(context.Background(), rt).Format()
-	if !strings.Contains(got, "page_token=tok1") {
-		t.Fatalf("DryRun output = %s, want page_token=tok1", got)
-	}
-}
-
-func TestImFeedShortcutListHelpDoesNotTreatDetailAsArgName(t *testing.T) {
+func TestImFeedShortcutListHelpShowsNoLegacyFlags(t *testing.T) {
 	f, _, _, _ := cmdutil.TestFactory(t, &core.CliConfig{
 		AppID: "app", AppSecret: "secret", Brand: core.BrandFeishu,
 	})
@@ -584,69 +584,11 @@ func TestImFeedShortcutListHelpDoesNotTreatDetailAsArgName(t *testing.T) {
 		t.Fatalf("Help() error = %v", err)
 	}
 	got := out.String()
-	if strings.Contains(got, "--no-detail detail") {
-		t.Fatalf("help output treats `detail` as a flag arg name:\n%s", got)
-	}
-	if !strings.Contains(got, "--no-detail") {
-		t.Fatalf("help output missing --no-detail:\n%s", got)
-	}
-}
-
-func TestImFeedShortcutListDryRunMentionsDetailScope(t *testing.T) {
-	cmd := newFeedShortcutListCmd(t)
-	if err := cmd.Flags().Set("no-detail", "false"); err != nil {
-		t.Fatalf("Set no-detail error = %v", err)
-	}
-	rt := &common.RuntimeContext{Cmd: cmd}
-	got := ImFeedShortcutList.DryRun(context.Background(), rt).Format()
-	for _, want := range []string{
-		"im:chat:read",
-		"--no-detail",
-		"batch_query",
-	} {
-		if !strings.Contains(got, want) {
-			t.Fatalf("DryRun output = %s, want %q", got, want)
+	for _, banned := range []string{"--no-detail", "--page-token"} {
+		if strings.Contains(got, banned) {
+			t.Fatalf("help output should not mention legacy flag %s:\n%s", banned, got)
 		}
 	}
-}
-
-func TestImFeedShortcutListDoesNotExposeAutoPaginationFlags(t *testing.T) {
-	// Locks in the design decision: this shortcut is a one-page wrapper.
-	// If any of these reappear, callers/AI agents will assume auto-walking
-	// is supported and write code that silently double-fetches.
-	banned := map[string]bool{"page-all": true, "page-limit": true, "page-size": true}
-	for _, fl := range ImFeedShortcutList.Flags {
-		if banned[fl.Name] {
-			t.Fatalf("ImFeedShortcutList must not expose --%s", fl.Name)
-		}
-	}
-}
-
-func TestImFeedShortcutListPageTokenIsOptional(t *testing.T) {
-	// --page-token must NOT be Required: omitting it is the natural first-page
-	// signal (the server treats "missing" and "" the same). Forcing an empty
-	// string would just be noise.
-	for _, fl := range ImFeedShortcutList.Flags {
-		if fl.Name == "page-token" && fl.Required {
-			t.Fatalf("--page-token must be optional; omitting it should mean first page")
-		}
-	}
-}
-
-func TestImFeedShortcutListDetailOnByDefault(t *testing.T) {
-	// The real flag definition must keep detail enrichment on by default:
-	// --no-detail is an opt-out bool with a false zero-value default. The
-	// test-helper command flips it for isolation, so this definition-level
-	// check is what actually locks the shipped default against a flip.
-	for _, fl := range ImFeedShortcutList.Flags {
-		if fl.Name == "no-detail" {
-			if fl.Default != "" && fl.Default != "false" {
-				t.Fatalf("--no-detail default = %q, want unset/false (enrichment on by default)", fl.Default)
-			}
-			return
-		}
-	}
-	t.Fatalf("--no-detail flag not found on ImFeedShortcutList")
 }
 
 func TestFeedShortcutChatIDNotCobraRequired(t *testing.T) {
@@ -663,430 +605,46 @@ func TestFeedShortcutChatIDNotCobraRequired(t *testing.T) {
 	}
 }
 
-func TestFeedShortcutListQueryOmitsEmptyToken(t *testing.T) {
-	q := feedShortcutListQuery("")
-	if _, ok := q["page_token"]; ok {
-		t.Fatalf("feedShortcutListQuery(\"\") = %v, want no page_token key", q)
-	}
-	q = feedShortcutListQuery("next")
-	if v := q["page_token"]; len(v) != 1 || v[0] != "next" {
-		t.Fatalf("feedShortcutListQuery(\"next\") page_token = %v, want [next]", v)
-	}
-}
-
-func TestImFeedShortcutListExecuteForwardsToken(t *testing.T) {
-	tests := []struct {
-		name     string
-		token    string
-		wantSent string // value the server should see in ?page_token=
-		wantKey  bool   // whether ?page_token should appear at all
-	}{
-		{name: "first page omits param", token: "", wantSent: "", wantKey: false},
-		{name: "explicit token is forwarded", token: "tok1", wantSent: "tok1", wantKey: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var calls int
-			var sawKey bool
-			var gotToken string
-			rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-				if !strings.Contains(req.URL.Path, "/open-apis/im/v2/feed_shortcuts") {
-					return nil, fmt.Errorf("unexpected request: %s", req.URL.Path)
-				}
-				calls++
-				_, sawKey = req.URL.Query()["page_token"]
-				gotToken = req.URL.Query().Get("page_token")
-				return shortcutJSONResponse(200, map[string]any{
-					"code": 0,
-					"data": map[string]any{
-						"shortcuts":  []any{map[string]any{"feed_card_id": "oc_a", "type": float64(1)}},
-						"has_more":   false,
-						"page_token": "end",
-					},
-				}), nil
-			}))
-
-			cmd := newFeedShortcutListCmd(t)
-			if err := cmd.Flags().Set("page-token", tt.token); err != nil {
-				t.Fatalf("Set page-token error = %v", err)
-			}
-			setRuntimeField(t, rt, "Cmd", cmd)
-
-			if err := ImFeedShortcutList.Execute(context.Background(), rt); err != nil {
-				t.Fatalf("Execute() error = %v", err)
-			}
-			if calls != 1 {
-				t.Fatalf("expected 1 API call, got %d", calls)
-			}
-			if sawKey != tt.wantKey {
-				t.Fatalf("page_token query key present = %v, want %v", sawKey, tt.wantKey)
-			}
-			if gotToken != tt.wantSent {
-				t.Fatalf("page_token sent = %q, want %q", gotToken, tt.wantSent)
-			}
-		})
-	}
-}
-
-func TestShortcutTypeFromValue(t *testing.T) {
-	tests := []struct {
-		name string
-		v    any
-		want ShortcutType
-	}{
-		{name: "float64 1 → chat", v: float64(1), want: ShortcutTypeChat},
-		{name: "int 1 → chat", v: 1, want: ShortcutTypeChat},
-		{name: "float64 0 → unknown", v: float64(0), want: ShortcutTypeUnknown},
-		{name: "unknown numeric → unknown ShortcutType(99)", v: float64(99), want: ShortcutType(99)},
-		{name: "string defaults to unknown", v: "1", want: ShortcutTypeUnknown},
-		{name: "nil defaults to unknown", v: nil, want: ShortcutTypeUnknown},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := shortcutTypeFromValue(tt.v); got != tt.want {
-				t.Fatalf("shortcutTypeFromValue(%v) = %v, want %v", tt.v, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestResolveChatDetailBatchesAt50(t *testing.T) {
+func TestImFeedShortcutListExecuteRequestsFullList(t *testing.T) {
 	var calls int
+	var rawQuery string
 	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		if !strings.Contains(req.URL.Path, "/open-apis/im/v1/chats/batch_query") {
+		if !strings.Contains(req.URL.Path, "/open-apis/im/v2/feed_shortcuts") {
 			return nil, fmt.Errorf("unexpected request: %s", req.URL.Path)
 		}
 		calls++
-		// Echo each requested chat_id back with a synthetic name so we can
-		// confirm both that batching happened and that the response was
-		// parsed correctly.
-		body, _ := io.ReadAll(req.Body)
-		var parsed struct {
-			ChatIDs []string `json:"chat_ids"`
-		}
-		_ = json.Unmarshal(body, &parsed)
-		items := make([]any, 0, len(parsed.ChatIDs))
-		for _, id := range parsed.ChatIDs {
-			items = append(items, map[string]any{"chat_id": id, "name": "group-" + id})
-		}
-		return shortcutJSONResponse(200, map[string]any{
-			"code": 0,
-			"data": map[string]any{"items": items},
-		}), nil
-	}))
-	setRuntimeScopes(t, rt, chatBatchQueryScope)
-
-	ids := make([]string, 120) // 50 + 50 + 20 → 3 batches
-	for i := range ids {
-		ids[i] = fmt.Sprintf("oc_%d", i)
-	}
-	got, err := resolveChatDetail(rt, ids)
-	if err != nil {
-		t.Fatalf("resolveChatDetail() error = %v", err)
-	}
-	if calls != 3 {
-		t.Fatalf("calls = %d, want 3 (120 ids / 50 batch size)", calls)
-	}
-	if len(got) != 120 {
-		t.Fatalf("resolved size = %d, want 120", len(got))
-	}
-	first := got["oc_0"]
-	last := got["oc_119"]
-	if first == nil || last == nil {
-		t.Fatalf("Items missing boundary entries: first=%v last=%v", first, last)
-	}
-	if first["name"] != "group-oc_0" || last["name"] != "group-oc_119" {
-		t.Fatalf("expected name passthrough; got first=%v last=%v", first["name"], last["name"])
-	}
-}
-
-func TestResolveChatDetailIncludesP2PChats(t *testing.T) {
-	// Unlike the old title-only resolver, the detail resolver keeps p2p chats
-	// in the result map (their full object carries chat_mode/p2p_target_id);
-	// only `name` is empty. Locks in that the empty-name skip was removed
-	// when we switched from `title` (string) to `detail` (full object).
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
+		rawQuery = req.URL.RawQuery
 		return shortcutJSONResponse(200, map[string]any{
 			"code": 0,
 			"data": map[string]any{
-				"items": []any{
-					map[string]any{"chat_id": "oc_group", "name": "Engineering", "chat_mode": "group"},
-					map[string]any{"chat_id": "oc_p2p", "name": "", "chat_mode": "p2p", "p2p_target_id": "ou_x"},
+				"shortcuts": []any{
+					map[string]any{"feed_card_id": "oc_a", "type": float64(1)},
 				},
 			},
 		}), nil
 	}))
-	setRuntimeScopes(t, rt, chatBatchQueryScope)
 
-	got, err := resolveChatDetail(rt, []string{"oc_group", "oc_p2p"})
-	if err != nil {
-		t.Fatalf("resolveChatDetail() error = %v", err)
-	}
-	if got["oc_group"]["name"] != "Engineering" {
-		t.Fatalf("oc_group name = %v, want Engineering", got["oc_group"]["name"])
-	}
-	p2p, ok := got["oc_p2p"]
-	if !ok {
-		t.Fatalf("oc_p2p must be in Items even though name is empty (caller decides what to show)")
-	}
-	if p2p["chat_mode"] != "p2p" || p2p["p2p_target_id"] != "ou_x" {
-		t.Fatalf("p2p detail = %v, want chat_mode=p2p with p2p_target_id passthrough", p2p)
-	}
-}
+	cmd := newFeedShortcutListCmd(t)
+	setRuntimeField(t, rt, "Cmd", cmd)
 
-func TestResolveChatDetailDropsItemsWithoutChatID(t *testing.T) {
-	// Defensive: the server should always echo chat_id back, but if it ever
-	// returns an item missing chat_id we must not write a "" → object entry
-	// into the map and end up attaching nonsense to entries.
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		return shortcutJSONResponse(200, map[string]any{
-			"code": 0,
-			"data": map[string]any{
-				"items": []any{
-					map[string]any{"chat_id": "oc_ok", "name": "ok"},
-					map[string]any{"name": "no chat_id"},
-				},
-			},
-		}), nil
-	}))
-	setRuntimeScopes(t, rt, chatBatchQueryScope)
-
-	got, err := resolveChatDetail(rt, []string{"oc_ok"})
-	if err != nil {
-		t.Fatalf("resolveChatDetail() error = %v", err)
-	}
-	if len(got) != 1 {
-		t.Fatalf("resolved size = %d, want 1 (entry without chat_id must be dropped)", len(got))
-	}
-	if _, ok := got[""]; ok {
-		t.Fatalf("got[\"\"] must not exist; got %v", got[""])
-	}
-}
-
-func TestResolveChatDetailPropagatesScopeError(t *testing.T) {
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		t.Fatalf("resolver should fail scope pre-flight before calling API: %s", req.URL.Path)
-		return nil, nil
-	}))
-	// Token resolves with a known-but-wrong scope set so the missing-scope
-	// branch (not the unknown-metadata warning branch) fires.
-	setRuntimeScopes(t, rt, "search:message")
-
-	_, err := resolveChatDetail(rt, []string{"oc_abc"})
-	if err == nil {
-		t.Fatalf("resolveChatDetail() expected scope error, got nil")
-	}
-	if !strings.Contains(err.Error(), chatBatchQueryScope) {
-		t.Fatalf("resolveChatDetail() error = %v, want mention of %s", err, chatBatchQueryScope)
-	}
-}
-
-func TestEnrichFeedShortcutDetailAttachesAndDedupes(t *testing.T) {
-	var calls int
-	var capturedIDs []string
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		if !strings.Contains(req.URL.Path, "/open-apis/im/v1/chats/batch_query") {
-			return nil, fmt.Errorf("unexpected request: %s", req.URL.Path)
-		}
-		calls++
-		body, _ := io.ReadAll(req.Body)
-		var parsed struct {
-			ChatIDs []string `json:"chat_ids"`
-		}
-		_ = json.Unmarshal(body, &parsed)
-		capturedIDs = append(capturedIDs, parsed.ChatIDs...)
-		items := make([]any, 0, len(parsed.ChatIDs))
-		for _, id := range parsed.ChatIDs {
-			items = append(items, map[string]any{
-				"chat_id":   id,
-				"name":      "name-of-" + id,
-				"chat_mode": "group",
-			})
-		}
-		return shortcutJSONResponse(200, map[string]any{
-			"code": 0,
-			"data": map[string]any{"items": items},
-		}), nil
-	}))
-	setRuntimeScopes(t, rt, chatBatchQueryScope)
-
-	data := map[string]any{
-		"shortcuts": []any{
-			map[string]any{"feed_card_id": "oc_a", "type": float64(1)},
-			map[string]any{"feed_card_id": "oc_b", "type": float64(1)},
-			map[string]any{"feed_card_id": "oc_a", "type": float64(1)}, // duplicate
-			// Unknown type — must be skipped without aborting the whole call.
-			map[string]any{"feed_card_id": "doc_xxx", "type": float64(3)},
-		},
-	}
-	if err := enrichFeedShortcutDetail(rt, data); err != nil {
-		t.Fatalf("enrichFeedShortcutDetail() error = %v", err)
+	if err := ImFeedShortcutList.Execute(context.Background(), rt); err != nil {
+		t.Fatalf("Execute() error = %v", err)
 	}
 	if calls != 1 {
-		t.Fatalf("calls = %d, want 1 (single batch covers all CHAT ids)", calls)
+		t.Fatalf("expected 1 API call, got %d", calls)
 	}
-	if len(capturedIDs) != 2 {
-		t.Fatalf("server saw chat_ids = %v, want 2 dedup'd ids", capturedIDs)
+	if rawQuery != "" {
+		t.Fatalf("request query = %q, want empty query string", rawQuery)
 	}
-
-	items := data["shortcuts"].([]any)
-	for _, ix := range []int{0, 1, 2} { // 2 is the duplicate of 0
-		detail, ok := items[ix].(map[string]any)["detail"].(map[string]any)
-		if !ok {
-			t.Fatalf("item[%d] missing detail field; got %v", ix, items[ix])
-		}
-		// The full chat object is passed through verbatim — not just a name.
-		if detail["chat_mode"] != "group" {
-			t.Fatalf("item[%d] detail.chat_mode = %v, want group (full object passthrough)", ix, detail["chat_mode"])
-		}
-		wantName := "name-of-" + items[ix].(map[string]any)["feed_card_id"].(string)
-		if detail["name"] != wantName {
-			t.Fatalf("item[%d] detail.name = %v, want %q", ix, detail["name"], wantName)
-		}
-	}
-	if _, ok := items[3].(map[string]any)["detail"]; ok {
-		t.Fatalf("item[3] (unknown type) should not have detail set")
-	}
-}
-
-func TestEnrichFeedShortcutDetailNoOpWhenEmpty(t *testing.T) {
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		t.Fatalf("must not call API for empty list: %s", req.URL.Path)
-		return nil, nil
-	}))
-	if err := enrichFeedShortcutDetail(rt, map[string]any{}); err != nil {
-		t.Fatalf("enrichFeedShortcutDetail(empty data) error = %v", err)
-	}
-	if err := enrichFeedShortcutDetail(rt, map[string]any{"shortcuts": []any{}}); err != nil {
-		t.Fatalf("enrichFeedShortcutDetail(empty shortcuts) error = %v", err)
-	}
-}
-
-func TestEnrichFeedShortcutDetailSkipsWhenNoSupportedType(t *testing.T) {
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		t.Fatalf("must not call batch_query when no resolvable types: %s", req.URL.Path)
-		return nil, nil
-	}))
-	data := map[string]any{
-		"shortcuts": []any{
-			map[string]any{"feed_card_id": "doc_1", "type": float64(3)},  // DOC, not exposed
-			map[string]any{"feed_card_id": "app_1", "type": float64(4)},  // OPENAPP, not exposed
-			map[string]any{"feed_card_id": "biz_1", "type": float64(13)}, // APP_FEED, not exposed
-		},
-	}
-	if err := enrichFeedShortcutDetail(rt, data); err != nil {
-		t.Fatalf("enrichFeedShortcutDetail() error = %v", err)
-	}
-	for i, it := range data["shortcuts"].([]any) {
-		if _, ok := it.(map[string]any)["detail"]; ok {
-			t.Fatalf("item[%d] should not have a detail (unknown type)", i)
-		}
-	}
-}
-
-func TestImFeedShortcutListExecuteEnrichesDetailByDefault(t *testing.T) {
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		switch {
-		case strings.Contains(req.URL.Path, "/open-apis/im/v2/feed_shortcuts"):
-			return shortcutJSONResponse(200, map[string]any{
-				"code": 0,
-				"data": map[string]any{
-					"shortcuts": []any{
-						map[string]any{"feed_card_id": "oc_a", "type": float64(1)},
-					},
-					"has_more":   false,
-					"page_token": "",
-				},
-			}), nil
-		case strings.Contains(req.URL.Path, "/open-apis/im/v1/chats/batch_query"):
-			return shortcutJSONResponse(200, map[string]any{
-				"code": 0,
-				"data": map[string]any{
-					"items": []any{
-						map[string]any{
-							"chat_id":   "oc_a",
-							"name":      "Team Alpha",
-							"chat_mode": "group",
-						},
-					},
-				},
-			}), nil
-		}
-		return nil, fmt.Errorf("unexpected request: %s", req.URL.Path)
-	}))
-	setRuntimeScopes(t, rt, feedShortcutReadScope+" "+chatBatchQueryScope)
-
-	cmd := newFeedShortcutListCmd(t)
-	if err := cmd.Flags().Set("no-detail", "false"); err != nil {
-		t.Fatalf("Set no-detail error = %v", err)
-	}
-	setRuntimeField(t, rt, "Cmd", cmd)
-
-	if err := ImFeedShortcutList.Execute(context.Background(), rt); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-	out := rt.Factory.IOStreams.Out.(interface{ String() string }).String()
-	// Verify both the attach-field name and the full-object passthrough,
-	// so future regressions that drop fields (e.g. only keeping `name`)
-	// fail loudly here.
-	for _, want := range []string{
-		`"detail":`,
-		`"chat_mode": "group"`,
-		`"name": "Team Alpha"`,
-	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("stdout missing %q, got:\n%s", want, out)
-		}
-	}
-}
-
-func TestImFeedShortcutListExecuteWarnsOnEnrichFailure(t *testing.T) {
-	rt := newUserShortcutRuntime(t, shortcutRoundTripFunc(func(req *http.Request) (*http.Response, error) {
-		switch {
-		case strings.Contains(req.URL.Path, "/open-apis/im/v2/feed_shortcuts"):
-			return shortcutJSONResponse(200, map[string]any{
-				"code": 0,
-				"data": map[string]any{
-					"shortcuts": []any{
-						map[string]any{"feed_card_id": "oc_a", "type": float64(1)},
-					},
-					"has_more":   false,
-					"page_token": "",
-				},
-			}), nil
-		case strings.Contains(req.URL.Path, "/open-apis/im/v1/chats/batch_query"):
-			return nil, fmt.Errorf("batch_query network failure")
-		}
-		return nil, fmt.Errorf("unexpected request: %s", req.URL.Path)
-	}))
-	setRuntimeScopes(t, rt, feedShortcutReadScope+" "+chatBatchQueryScope)
-
-	cmd := newFeedShortcutListCmd(t)
-	if err := cmd.Flags().Set("no-detail", "false"); err != nil {
-		t.Fatalf("Set no-detail error = %v", err)
-	}
-	setRuntimeField(t, rt, "Cmd", cmd)
-
-	// Listing should still succeed even when enrichment can't reach the API —
-	// failure becomes a stderr warning, not a hard exit.
-	if err := ImFeedShortcutList.Execute(context.Background(), rt); err != nil {
-		t.Fatalf("Execute() error = %v", err)
-	}
-	stderr := rt.Factory.IOStreams.ErrOut.(interface{ String() string }).String()
-	if !strings.Contains(stderr, "detail enrichment failed") {
-		t.Fatalf("stderr = %q, want enrichment warning", stderr)
-	}
-	// And the shortcut itself still appears, just without `detail`.
 	stdout := rt.Factory.IOStreams.Out.(interface{ String() string }).String()
-	if !strings.Contains(stdout, `"feed_card_id": "oc_a"`) {
-		t.Fatalf("stdout should still contain the bare shortcut entry; got:\n%s", stdout)
+	for _, want := range []string{`"feed_card_id": "oc_a"`, `"type": 1`} {
+		if !strings.Contains(stdout, want) {
+			t.Fatalf("stdout = %s, want %q", stdout, want)
+		}
 	}
-	if strings.Contains(stdout, `"detail"`) {
-		t.Fatalf("stdout should NOT contain detail when enrichment failed; got:\n%s", stdout)
-	}
-	// The degradation is mirrored as a machine-readable data field so
-	// stdout-only consumers can tell "skipped" from "nothing to enrich".
-	if !strings.Contains(stdout, `"_notice": "detail enrichment skipped`) {
-		t.Fatalf("stdout should carry the _notice degradation marker; got:\n%s", stdout)
+	for _, banned := range []string{`"detail"`, `"_notice"`, `"page_token"`, `"has_more"`} {
+		if strings.Contains(stdout, banned) {
+			t.Fatalf("stdout should not contain legacy field %s; got:\n%s", banned, stdout)
+		}
 	}
 }

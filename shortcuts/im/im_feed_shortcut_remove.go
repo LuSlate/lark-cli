@@ -15,7 +15,7 @@ import (
 var ImFeedShortcutRemove = common.Shortcut{
 	Service:     "im",
 	Command:     "+feed-shortcut-remove",
-	Description: "Remove chats from the user's feed shortcuts; user-only; batch up to 10 chat IDs per call; per-item failures return ok:false with failed_shortcuts",
+	Description: "Remove chats from the user's feed shortcuts; user-only; CHAT only; CLI enforces up to 30 chat IDs per call; per-item failures return ok:false with failed_shortcuts",
 	Risk:        "write",
 	UserScopes:  []string{feedShortcutWriteScope},
 	AuthTypes:   []string{"user"},
@@ -26,7 +26,7 @@ var ImFeedShortcutRemove = common.Shortcut{
 		// reported through the structured validation envelope (exit 2)
 		// instead of cobra's plain-text error.
 		{Name: "chat-id", Type: "string_slice",
-			Desc: "open_chat_id to remove from feed shortcuts (oc_xxx); required; repeat the flag or pass comma-separated; max 10 per call"},
+			Desc: "open_chat_id to remove from feed shortcuts (oc_xxx); required; repeat the flag or pass comma-separated; CLI max 30 per call"},
 	},
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		_, err := collectChatIDs(runtime)

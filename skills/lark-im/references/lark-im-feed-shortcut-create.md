@@ -9,7 +9,7 @@ This skill maps to shortcut: `lark-cli im +feed-shortcut-create`. Underlying API
 Adds one or more chats to the **current user's** feed shortcuts — equivalent to right-clicking a chat in the Feishu client and pinning it to the feed sidebar.
 
 - Only **CHAT-type** shortcuts are exposed by the OpenAPI gateway right now (`feed_card_id` must be an `oc_xxx` open_chat_id).
-- Batch up to **10 chat IDs per call**; pass more by issuing multiple calls.
+- The upstream OAPI currently documents up to 50 items per write call, but this CLI intentionally enforces a stricter **30 chat IDs per call** local limit; pass more by issuing multiple calls.
 - Currently only supports **user identity** (`--as user`); bot identity is not allowed by the server.
 - If you only know a group name, resolve its `oc_xxx` first with `im +chat-search` or `im +chat-list`.
 
@@ -34,7 +34,7 @@ lark-cli im +feed-shortcut-create --as user --chat-id oc_xxx --dry-run
 
 | Parameter | Default | Description |
 |------|------|------|
-| `--chat-id <oc_xxx>` | required | open_chat_id to add as a feed shortcut; repeatable or comma-separated; **max 10 per call** |
+| `--chat-id <oc_xxx>` | required | open_chat_id to add as a feed shortcut; repeatable or comma-separated; **CLI max 30 per call** |
 | `--head` | true (implied) | Insert at the top of the shortcut list; mutually exclusive with `--tail` |
 | `--tail` | false | Append at the bottom of the shortcut list |
 | `--as user` | required | Server only accepts user_access_token for this API |

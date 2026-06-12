@@ -1411,7 +1411,7 @@ const (
 )
 
 const (
-	feedShortcutBatchLimit = 10
+	feedShortcutBatchLimit = 30
 	feedShortcutWriteScope = "im:feed.shortcut:write"
 	feedShortcutReadScope  = "im:feed.shortcut:read"
 )
@@ -1423,7 +1423,8 @@ type shortcutItem struct {
 }
 
 // collectChatIDs reads --chat-id values (repeatable + comma-split) and
-// returns deduped, validated oc_ IDs. The server batch limit is 10.
+// returns deduped, validated oc_ IDs. This CLI enforces a local batch limit
+// of 30 even though the upstream API currently documents a higher ceiling.
 func collectChatIDs(rt *common.RuntimeContext) ([]string, error) {
 	raw := rt.StrSlice("chat-id")
 	if len(raw) == 0 {

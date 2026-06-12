@@ -55,7 +55,7 @@ func TestIM_FeedShortcutWorkflowAsUser(t *testing.T) {
 		}
 	})
 
-	t.Run("list feed shortcuts as user with detail enrichment", func(t *testing.T) {
+	t.Run("list feed shortcuts as user", func(t *testing.T) {
 		result, err := clie2e.RunCmdWithRetry(ctx, clie2e.Request{
 			Args: []string{
 				"im", "+feed-shortcut-list",
@@ -85,41 +85,11 @@ func TestIM_FeedShortcutWorkflowAsUser(t *testing.T) {
 			}
 			found = true
 			require.Equal(t, int64(1), item.Get("type").Int(), "type should be 1 (CHAT)")
-			// detail enrichment is on by default — the chat we just created
-			// must come back with the chat info object attached.
-			require.True(t, item.Get("detail").Exists(),
-				"detail field should be attached when enrichment is enabled")
-			require.Equal(t, chatID, item.Get("detail.chat_id").String(),
-				"detail.chat_id should echo feed_card_id")
-			require.Equal(t, chatName, item.Get("detail.name").String(),
-				"detail.name should carry the chat's group name")
+			require.False(t, item.Get("detail").Exists(),
+				"detail field should not exist in the direct list contract")
 			break
 		}
 		require.True(t, found, "expected chat %s in feed shortcut list", chatID)
-	})
-
-	t.Run("list feed shortcuts with --no-detail skips lookup", func(t *testing.T) {
-		result, err := clie2e.RunCmd(ctx, clie2e.Request{
-			Args: []string{
-				"im", "+feed-shortcut-list",
-				"--no-detail",
-			},
-			DefaultAs: "user",
-		})
-		require.NoError(t, err)
-		result.AssertExitCode(t, 0)
-		result.AssertStdoutStatus(t, true)
-
-		var foundEntry gjson.Result
-		for _, item := range gjson.Get(result.Stdout, "data.shortcuts").Array() {
-			if item.Get("feed_card_id").String() == chatID {
-				foundEntry = item
-				break
-			}
-		}
-		require.True(t, foundEntry.Exists(), "expected our chat in the bare list")
-		require.False(t, foundEntry.Get("detail").Exists(),
-			"detail field should NOT be present with --no-detail")
 	})
 
 	t.Run("unpin chat from feed as user", func(t *testing.T) {
@@ -143,7 +113,6 @@ func TestIM_FeedShortcutWorkflowAsUser(t *testing.T) {
 		result, err := clie2e.RunCmdWithRetry(ctx, clie2e.Request{
 			Args: []string{
 				"im", "+feed-shortcut-list",
-				"--no-detail",
 			},
 			DefaultAs: "user",
 		}, clie2e.RetryOptions{
@@ -277,7 +246,7 @@ func cleanupFeedShortcuts(parentT *testing.T, defaultAs string, chatIDs ...strin
 	cleanupCtx, cancel := clie2e.CleanupContext()
 	defer cancel()
 	listResult, listErr := clie2e.RunCmd(cleanupCtx, clie2e.Request{
-		Args:      []string{"im", "+feed-shortcut-list", "--no-detail"},
+		Args:      []string{"im", "+feed-shortcut-list"},
 		DefaultAs: defaultAs,
 	})
 	clie2e.ReportCleanupFailure(parentT, "cleanup feed shortcuts list", listResult, listErr)
@@ -410,7 +379,7 @@ func TestIM_FeedShortcutDryRun(t *testing.T) {
 		require.NotContains(t, result.Stdout, "is_header", "remove must not send is_header")
 	})
 
-	t.Run("list dry-run mentions detail enrichment path", func(t *testing.T) {
+	t.Run("list dry-run hits feed_shortcuts endpoint directly", func(t *testing.T) {
 		result, err := clie2e.RunCmd(ctx, clie2e.Request{
 			Args: []string{
 				"im", "+feed-shortcut-list",
@@ -422,24 +391,7 @@ func TestIM_FeedShortcutDryRun(t *testing.T) {
 		result.AssertExitCode(t, 0)
 		require.Contains(t, result.Stdout, "GET")
 		require.Contains(t, result.Stdout, "/open-apis/im/v2/feed_shortcuts")
-		// Enrichment is on by default → DryRun adds a desc about the extra
-		// chats.batch_query call and the conditional scope.
-		require.Contains(t, result.Stdout, "im:chat:read")
-		require.Contains(t, result.Stdout, "batch_query")
-	})
-
-	t.Run("list dry-run with --no-detail omits the extra-scope note", func(t *testing.T) {
-		result, err := clie2e.RunCmd(ctx, clie2e.Request{
-			Args: []string{
-				"im", "+feed-shortcut-list",
-				"--no-detail",
-				"--dry-run",
-			},
-			DefaultAs: "user",
-		})
-		require.NoError(t, err)
-		result.AssertExitCode(t, 0)
-		require.NotContains(t, result.Stdout, "im:chat:read",
-			"with --no-detail, dry-run must not mention im:chat:read")
+		require.NotContains(t, result.Stdout, "im:chat:read")
+		require.NotContains(t, result.Stdout, "batch_query")
 	})
 }
