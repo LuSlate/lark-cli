@@ -318,7 +318,6 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--sheets` | string + File + Stdin（复合 JSON） | required | typed 表格协议 JSON：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool |
-| `--header-style` | bool | optional | 把列名表头行加粗（默认 true） |
 
 ## Schemas
 

@@ -42,7 +42,7 @@ metadata:
 | 读值 + 公式 / 样式 / 批注 | `+cells-get --include value,formula,style,comment,data_validation` | `--with-styles`、`--with-merges`、`--include-merged-cells` |
 | 写纯文本值（整块 CSV 平铺，列里没有需保留的数值 / 日期语义） | `+csv-put`（定位用 `--start-cell`，单个左上角锚点格；也接受 `--range` 别名，区间自动取左上角） | — |
 | 写带类型的数据到**已有**表（列里有数字 / 金额 / 百分比 / 日期 / 计数，要可排序 / 求和 / 入图表 / 透视） | `+table-put`（列显式声明 `type` + `format`，类型保真；来源不限 DataFrame——Counter / dict / list 同理，详见 write-cells） | 在本地把数字拼成 `"$1,234"` / `"30.5%"` 字符串再 `+csv-put`（会落成文本、丢失计算能力） |
-| **新建**电子表格并写带类型的数据（类型保真需求同上，但目标表还不存在） | `+workbook-create --sheets`（协议与 `+table-put` 同构、一步建表 + typed 写入，无需先建空表再 `+table-put`；date / number 不丢，详见 workbook） | 用 `--headers` / `--values` 灌日期 / 数字（会落成文本、丢类型） |
+| **新建**电子表格并写带类型的数据（类型保真需求同上，但目标表还不存在） | `+workbook-create --sheets`（协议与 `+table-put` 同构、一步建表 + typed 写入，无需先建空表再 `+table-put`；date / number 不丢，详见 workbook） | 用 `--values` 灌日期 / 数字（会落成文本、丢类型） |
 | 写值 / 公式 / 样式 | `+cells-set`（定位用 `--range`） | — |
 | 查找单元格 | `+cells-search`（关键字用 `--find`） | `+cells-find`、`+find`、`--query` |
 | 查找并替换 | `+cells-replace` | — |
@@ -90,6 +90,7 @@ metadata:
 | [Lark Sheet Filter View](references/lark-sheets-filter-view.md) | 管理飞书表格中的筛选视图（filter view）。当用户需要"建一个 XX 视图"、"保存这个筛选状态"、"切换不同筛选"、维护一个 sheet 上多份独立筛选配置时使用。视图与筛选器（filter）相互独立，可在同一 sheet 共存；视图的隐藏行仅在用户进入该视图时本地生效，不影响其他协作者。 |
 | [Lark Sheet Sparkline](references/lark-sheets-sparkline.md) | 管理飞书表格中的迷你图（折线迷你图、柱形迷你图、胜负迷你图）。当用户需要在单元格内嵌入小型图表来展示数据趋势时使用。也适用于"趋势线"、"单元格内图表"、"迷你图"等场景。注意：不等同于被禁用的 SPARKLINE() 公式函数。 |
 | [Lark Sheet Float Image](references/lark-sheets-float-image.md) | 管理飞书表格中的浮动图片。当用户需要在表格中插入浮动图片、调整图片位置和大小、查看已有浮动图片、删除图片时使用。也适用于"插入图片"、"添加 logo"、"放一张图"等场景。注意：如果用户需要将图片嵌入到某个单元格内部（单元格图片），请阅读 lark-sheets-write-cells。 |
+| [Lark Sheet Recover](references/lark-sheets-recover.md) | 整表回退到历史版本（方案 B）。当用户提到"恢复到之前的版本"、"撤销所有改动回到某个状态"、"整表回滚"、"recover"时使用。这是全文档回退（丢弃目标版本之后的所有编辑，含他人改动）——要精确逐笔撤销本链路最近编辑，用 +undo。 |
 
 ## 公共 flag 速查
 
@@ -107,7 +108,7 @@ metadata:
 1. **spreadsheet 定位（必填）**：`--url` 与 `--spreadsheet-token` 二选一，**必须给其中之一**。两个都不给 → 校验报错 `specify at least one of --url or --spreadsheet-token`；两个都给 → 互斥冲突。
    - **`--url` 只解析 `/sheets/` 与 `/spreadsheets/` 两种链接**（从路径里抽出 token；也可以直接把裸 token 传给 `--spreadsheet-token`）。其它形态的链接不会被解析成表格 token。
    - ⚠️ **`/wiki/` 知识库链接不能直接当表格定位用**：wiki 链接背后可能是电子表格，也可能是文档 / 多维表格等其它类型，`--url` **不会**自动把 wiki token 解析成 spreadsheet token，直接传会失败。必须先把它解析成真实文档 token —— `lark-cli wiki +node-get --node-token "<wiki 链接或 token>"`，确认返回的 `obj_type` 为 `sheet` 后，取其 `obj_token` 作为 `--spreadsheet-token` 传入（解析细节见 [`../lark-wiki/SKILL.md`](../lark-wiki/SKILL.md)）。
-   - **例外**：`+workbook-create`（新建表 + 可选写入数据）与 `+workbook-import`（把本地文件导入为新表）都产出一张**还不存在**的表格，**不接受任何 spreadsheet / sheet 定位 flag**——`+workbook-create` 只有 `--title` / `--folder-token` / `--headers` / `--values` / `--sheets`，`+workbook-import` 只有 `--file`（必填）/ `--folder-token` / `--name`。
+   - **例外**：`+workbook-create`（新建表 + 可选写入数据）与 `+workbook-import`（把本地文件导入为新表）都产出一张**还不存在**的表格，**不接受任何 spreadsheet / sheet 定位 flag**——`+workbook-create` 只有 `--title` / `--folder-token` / `--values` / `--styles` / `--sheets`，`+workbook-import` 只有 `--file`（必填）/ `--folder-token` / `--name`。
 2. **sheet 定位（公共四件套 shortcut 必填）**：`--sheet-id` 与 `--sheet-name` 二选一，**必须给其中之一**。两个都不给 → 校验报错 `specify at least one of --sheet-id or --sheet-name`。
    - ⚠️ **不确定 sheet 名时禁止直接猜 `Sheet1`**：除非用户对话明确说出 sheet 名 / id，或上下文（之前的工具调用 / URL 锚点 `?sheet=xxx`）已经出现过具体值，否则**第一步先调 `+workbook-info --url "..."`**（或 `--spreadsheet-token`）拿 `sheets[].sheet_id` / `sheets[].title` 列表再选。中文环境下子表常叫"数据" / "Sheet"（无数字）/ "工作表 1" / 业务名，猜 `Sheet1` 大概率撞 `sheet not found`，比先查多耗一次失败调用 + 重试。
    - ⚠️ **`--range` 里的 `Sheet1!` 前缀不能替代 sheet 定位**：即使写了 `--range 'Sheet1!A1:B2'`，仍**必须**额外传 `--sheet-id` 或 `--sheet-name`，否则照样报上面的错。
