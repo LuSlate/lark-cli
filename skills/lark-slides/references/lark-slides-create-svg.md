@@ -77,6 +77,14 @@ CLI 会：
 2. 把 `href="@./hero.png"` 或 `xlink:href="@./hero.png"` 替换为 canonical `href="file_token"`。
 3. 注入 transport metadata：`<metadata data-svglide-assets="true"><img src="file_token" /></metadata>`。
 
+注意：图片上传成功只证明 Drive media upload 成功，不证明目标 live lane 已能解析
+SVGlide image token。若某个 lane 中纯 SVG 页可创建、但带 `@./assets/...`
+的页面在上传后进入 `/slide` 阶段报 `nodeServer internal error`，应按
+image-token 兼容性问题处理，而不是继续修改图片文件本身。`ppe_pure_svg`
+的内部路由和已知边界记录在
+[routes/create-svg/private/ppe-pure-svg-live.md](routes/create-svg/private/ppe-pure-svg-live.md)，
+这份知识只属于 `slides +create-svg` route，XML/SXSD 路径不得调用。
+
 预上传资源可用 `--assets`：
 
 ```json
@@ -163,7 +171,7 @@ SVG 创建不使用单独的规划目录。新建或大幅改写 SVG deck 时，
     {"page": 1, "path": ".lark-slides/plan/<deck-id>/pages/page-001.svg"}
   ],
   "preflight": {
-    "command": "python3 skills/lark-slides/scripts/svg_preflight.py --plan .lark-slides/plan/<deck-id>/slide_plan.json --input .lark-slides/plan/<deck-id>/pages/page-001.svg",
+    "command": "python3 skills/lark-slides/scripts/svg_preflight.py --route-manifest skills/lark-slides/references/routes/create-svg/route.manifest.json --report-scope public --plan .lark-slides/plan/<deck-id>/slide_plan.json --input .lark-slides/plan/<deck-id>/pages/page-001.svg",
     "status": "pending"
   },
   "readback_verification": {
@@ -223,7 +231,7 @@ semantic plan
 -> style_preset + style_system
 -> layout boxes
 -> SVG source
--> svg_preflight.py --plan
+-> svg_preflight.py --route-manifest ... --report-scope public --plan
 ```
 
 `style_system` 至少包含：
@@ -262,6 +270,16 @@ SVG 不是普通矢量图文件的传输外壳。每页都必须选择一个 `vi
 | `brand_system` | 系列化 deck、主题页、收尾页 | `typography`, `geometric_shape` | 不只换颜色；必须复用标题位置、边栏、编号、强调色、图标线宽或背景 motif |
 
 `svg_preflight.py` 会校验 `visual_recipe` 枚举、必填字段、recipe required primitives、8 页以上 recipe family 多样性，以及 plan 声明的 primitives 是否能在 SVG source 中检测到。生成器不能只在 plan 里声明 recipe，实际仍画 XML 式卡片。
+
+### Create-SVG Route-Private Recipes
+
+SVG 私有 recipe 只属于 `slides +create-svg` route，用于鼓励更强的 SVG-native 艺术处理。它们不是 XML/SXSD 的共享知识，也不能写进普通共享 plan。
+
+- Public/shared `slide_plan.json` 只能使用 public recipe id，或在 create-svg route 下使用抽象值 `visual_recipe: "route_private"`。
+- Exact private recipe id 只允许出现在 route-private manifest、route-private selection sidecar、private fixture 或 internal report。
+- 当使用 `route_private` 时，必须传入 create-svg route manifest；如果需要解析到具体 private recipe，还必须传入 route-private selection sidecar。没有 manifest/sidecar 时 preflight fail-closed，不猜测、不回退。
+- Public preflight report 使用 `--report-scope public`，不得输出 exact private recipe id、manifest path、selection path 或 private enum list。
+- XML 创建、普通 `+create`、共享 planning docs 和公开 fixtures 不得读取 route-private manifest，也不得调用 SVG 私有 recipe。
 
 ### 生成阶段 Fail-Fast Gate
 
@@ -339,8 +357,11 @@ comparison >= 4 rows or columns
 - MUST: 高密度结构要由组件实际数量驱动，例如 `scorecard >= 4 metrics` 必须生成 4 个能被识别为 metric/bar/card 的元素；`timeline >= 4 nodes` 必须生成 4 个真实节点和标签；不要用文字描述冒充结构。
 - MUST: 文本组件要按字号、行高和预估行数计算最小 `foreignObject` 高度。卡片、节点、脚注、图例的正文框不得出现 0、高度个位数或明显低于一行文字的 bbox。
 - MUST: 主体文本、卡片、图表、标签、节点和图例必须落在 safe area；全画布背景、边缘承载底、图片遮罩和装饰边框可以超出 safe area，但应只承担背景/承载作用，不承载关键文本。
+- MUST: 承载可见文字的卡片、callout、badge、panel 和 insight box 必须有 `text_surface_contract`，不能默认裸白底黑字。至少使用一种 style-preset 派生处理：tinted fill、accent rail、visible stroke、glass overlay、number/icon marker、深色背板或与背景共用的承载色。
+- MUST: `titleBox` 是不可侵入区域。callout、badge、panel、connector、装饰线和图片标签与标题框底部至少保持 24px 视觉间距；如果标题是两行或大号字，优先扩大间距或移动卡片，而不是压缩标题。
+- MUST: connector line/path 只连接到卡片、节点或图表边缘，不能穿过 title、中心文字、callout 文案或图例。若线条只是背景纹理，降低 opacity 并在 plan 中标为 decorative，不要让它承担 connector_flow。
 - SHOULD: 对高风险页面使用更保守的留白：标题与图表标签至少相隔 24px，曲线端点标签不要压在标题/图例区域，卡片内文字与边框至少留 10-14px。
-- SHOULD: 把每页的 `safe`、`titleBox`、`visualBox`、`textBox` 等布局盒保存为可检查数据，便于自动计算越界和重叠。
+- SHOULD: 把每页的 `safe`、`titleBox`、`visualBox`、`textBox`、`calloutBox`、`connectorPath` 等布局盒保存为可检查数据，便于自动计算越界、重叠、标题压力和 connector 穿字。
 
 推荐生成顺序：
 
@@ -374,7 +395,8 @@ HTML 预览是生成阶段的轻量质检，不是 SVGlide 协议或 CLI API 的
 
 本地 preflight 必须在 `slides +create-svg` 前执行，失败即停：
 
-- `python3 skills/lark-slides/scripts/svg_preflight.py --plan .lark-slides/plan/<deck-id>/slide_plan.json --input page-*.svg` 通过；如果脚本不可用，再退回 `xmllint --noout page-*.svg` 加人工检查。
+- `python3 skills/lark-slides/scripts/svg_preflight.py --route-manifest skills/lark-slides/references/routes/create-svg/route.manifest.json --report-scope public --plan .lark-slides/plan/<deck-id>/slide_plan.json --input page-*.svg` 通过；如果脚本不可用，再退回 `xmllint --noout page-*.svg` 加人工检查。
+- 生成脚本和 preflight 不得并行读写同一个 output 目录；必须等 SVG 文件全部写完后再跑 preflight，避免读到中间态导致误判。
 - root 是 `width="960" height="540" viewBox="0 0 960 540"`。
 - root / leaf `slide:role` 完整，所有 leaf 有几何必填属性。
 - plan 中每页 `layout_family`、`visual_recipe`、`visual_intent`、`visual_focal_point`、`required_primitives`、`svg_primitives`、`xml_like_risk`、`content_density_contract`、`risk_flags`、`source_policy` 完整，且 recipe required primitives 能在对应 SVG source 中命中。`asset_contract` 在 MVP 阶段缺失只 warning；有条件时仍应补全。
@@ -386,6 +408,7 @@ HTML 预览是生成阶段的轻量质检，不是 SVGlide 协议或 CLI API 的
 - 警惕 `circle` / `ellipse` 的 `stroke-width`；当前转换链路可能只保留 border color 而丢失 width。关键圆环、节点外圈和粗描边用双层填充圆/椭圆模拟，或改成 path/rect。
 - 禁止关键路线、闭环、流程连接、timeline rail 使用 `stroke-dasharray`；普通装饰虚线也会 warning。关键路线必须用显式短线段或小圆点 markers 组成，不要把虚线作为唯一视觉表达。
 - 禁止 `font:` shorthand 和空图片框。MVP 阶段 http(s) / data URL 图片、未下载远程图片只 warning；正式交付和可见性要求高的 deck 仍应下载到本地并走 `@./path` 上传或使用 file token。
+- 对尚未证明支持 image token 的 live lane，先用一页纯 SVG 和一页含 `@./assets/...` 的图片 SVG 分别 smoke；如果图片页上传成功但 `/slide` 失败，可以为线上发布生成单独的 `online-pure` SVG 目录，用 SVG-native 几何和渐变替代图片区域，但必须保留原图片预览版本并在交付说明里标注降级。
 - 禁止 unsupported path command；`path d` 只含 `M/L/H/V/C/Q/Z`。
 - 非背景元素不得越界；主体元素应在 safe area 内。
 - 文本框做 bbox overlap 近似检查，尤其是目录、痛点、竞品表、案例图表和总结页。
@@ -529,6 +552,30 @@ notesGrid = x:54 y:430 w:760 h:48
 - 服务端支持 `foreignObject` 内的 `<br />`。为了本地预览和标题排版稳定，标题/大段文本优先使用多个块级 `div` 或 `p` 控制行高，不要只靠 `<br />` 调整复杂布局。
 - 如果需要垂直居中，优先通过更准确的文本框高度、段落行高和 y 坐标解决；布局 wrapper 可以使用，但实际文字节点仍要带显式 `font-size` / `font-weight` / `color`。
 
+### 文本承载面美学
+
+文本框不是视觉主元素，但承载文字的 surface 是页面层级的一部分。生成器必须先决定 surface 类型，再放置文字：
+
+```json
+{
+  "text_surface_contract": {
+    "surface_kind": "accent_rail_card | tinted_panel | glass_overlay | dark_backing | label_chip | metric_tile",
+    "min_gap_to_title": 24,
+    "padding": {"x": 14, "y": 12},
+    "allow_plain_white_panel": false
+  }
+}
+```
+
+- `accent_rail_card`: 卡片左侧或顶部有 6-10px 强调条，适合 callout、洞察点和团队分工。
+- `tinted_panel`: 使用 preset 派生浅底和细描边，适合普通信息组；不要用纯白裸框。
+- `glass_overlay`: 图片上方使用半透明浅底或深底，并与图片遮罩同色系。
+- `dark_backing`: 白字必须完整落在深色承载底内。
+- `label_chip`: 仅承载短标签，避免承载解释句。
+- `metric_tile`: KPI 数字可用高对比底色，但仍要有角色色、分隔线或图形关系。
+
+`svg_preflight.py` 会把以下问题作为 error：`plain_white_text_panel`、`title_surface_pressure`、`connector_crosses_text`。这些错误必须修 source SVG / layout boxes，不能只在 plan 里改字段。
+
 ### 几何与 path 安全线
 
 leaf 几何属性必须写数字或 `px`，不要生成百分比、`em/rem`、`calc(...)`：
@@ -645,6 +692,7 @@ Preview 阶段优先使用这些来源来快速获得丰富视觉；正式交付
 - dashed stroke 不稳定：`stroke-dasharray` 可能降级，尤其是自定义 path 的虚线闭环。关键路线用短 line segment 或 filled dot markers 手工排布；普通装饰虚线也要经 readback 复核。
 - path 会转换为 `type="custom"` 并做 bbox 内坐标归一化，这是预期行为；只要 readback bbox 和视觉位置正确，不算差异。
 - 字体会被转换为服务端支持字体，例如 `Noto Sans` / `思源黑体`，因此生成阶段要给 `foreignObject` 留足高度，不要按浏览器本地字体做极限排版。
+- image token 支持可能随 live lane 漂移：如果 readback 前创建失败，先区分“图片上传失败”和“上传后 `/slide` 失败”。后者是目标 lane 的 token 解析/权限问题，短期发布可改用独立 online-pure 版本；不要把 authoring preview 里的真实图片直接删掉。
 
 ### 生成后检查
 
@@ -652,6 +700,7 @@ Preview 阶段优先使用这些来源来快速获得丰富视觉；正式交付
 
 - 是否已执行本地 preflight，且所有 SVG 通过 XML、协议、资产、bbox 和文本重叠检查。
 - 是否已执行 `slides +create-svg --dry-run`，确认请求链路是创建 presentation + 按页追加 SVG。
+- 如果使用 `@./assets/...`，dry-run 是否展示预期的 `medias/upload_all` 和 transport metadata；live 失败时是否已经用纯 SVG 页和图片页隔离出 lane 问题。
 - live 创建后是否已用 `xml_presentations get` 读回，重新检查画布、页数、越界、文本重叠和 closing slide。
 - root / leaf role 是否完整。
 - 每个 leaf 是否有 [svg-protocol.md](svg-protocol.md) 中列出的几何必填属性。

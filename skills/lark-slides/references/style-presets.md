@@ -62,12 +62,30 @@ Use `visual_plan` as a nested container when useful. `svg_preflight.py` accepts 
 Translate style into supported SVG primitives:
 
 - Palette -> explicit `fill`, `stroke`, and text colors.
-- Panel treatment -> `rect`, `path`, and grouped layout boxes.
+- Panel treatment -> `rect`, `path`, and grouped layout boxes. Text-bearing panels must be translated into a concrete surface kind, not a naked white rectangle.
 - Connector density -> explicit `line` or supported `path`; do not rely on `marker` or key-path `stroke-dasharray`.
 - Texture -> repeated native `line`, `circle`, or `rect`; do not rely on `<pattern>` as the only effect.
 - Image overlay -> real `<image slide:role="image">` plus explicit shape masks/overlays when needed.
 
 Unsafe effects such as `filter`, `mask_clip`, `pattern`, `symbol`, `stroke_dasharray`, and `image_opacity` may appear in the plan only when a safe rewrite or fallback is declared.
+
+## Text Surface Translation
+
+Every style preset has a `shape_language.panel_treatment`. Translate it into one of these SVG-safe text surfaces:
+
+- `accent_rail_card`: tinted card with a 6-10px left/top rail in the preset accent color.
+- `tinted_panel`: non-white preset support fill plus visible stroke.
+- `glass_overlay`: semi-transparent panel on an image with matching overlay color.
+- `dark_backing`: dark rect/card/overlay for light text.
+- `label_chip`: short label only; no explanatory sentence.
+- `metric_tile`: KPI tile with a role color, separator, rail, or small chart cue.
+
+Rules:
+
+- Do not use bare `fill="#ffffff"` rectangles for user-visible text unless the page is an intentional wireframe/table and the panel has visible stroke or grid structure.
+- Keep text surfaces at least 24px away from the title box.
+- Connector lines must terminate at card/node/chart edges; they must not run through visible text.
+- If a preset uses low contrast or editorial whitespace, improve the text surface with spacing, stroke, role color, and alignment rather than adding more plain boxes.
 
 ## Quality Gates
 
@@ -75,6 +93,8 @@ Before calling `slides +create-svg`, run:
 
 ```bash
 python3 skills/lark-slides/scripts/svg_preflight.py \
+  --route-manifest skills/lark-slides/references/routes/create-svg/route.manifest.json \
+  --report-scope public \
   --plan .lark-slides/plan/<deck-id>/slide_plan.json \
   --input .lark-slides/plan/<deck-id>/pages/page-001.svg
 ```
@@ -87,3 +107,4 @@ The preflight checks:
 - unsafe effects have fallback or rewrite notes;
 - declared effects and primitives are present in the SVG source;
 - visible slide text does not leak preset names, source tokens, prompts, tool names, or local file paths.
+- text surfaces avoid `plain_white_text_panel`, `title_surface_pressure`, and `connector_crosses_text` issues.

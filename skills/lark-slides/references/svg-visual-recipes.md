@@ -2,8 +2,8 @@
 
 这份文档是 `slides +create-svg` 的短版可执行 recipe 指南。
 它把研究目录提炼成生成阶段可放入 agent 上下文的规则。
-更完整的研究资料仍保留在 CLI skill 外：
-`/Users/bytedance/bd-projects/workspaces/SVGlide/svglide-visual-guidance/visual_recipe_catalog.md`.
+更完整的研究资料保留在 CLI skill 外；公开生成上下文只使用本文列出的
+underscore runtime id。
 
 ## 边界
 
@@ -99,5 +99,5 @@ overlay，或预合成图片。
   texture、spotlight、dashboard frame、connector flow 或 image overlay。
 - 第一眼看到的对象应该和该页 `visual_focal_point` 一致。
 - 相似页面可以共享 `style_preset`，但不能只替换文案和背景色，布局骨架完全不变。
-- 研究笔记里的 dotted recipe 名称，例如 `cover.hero`，不是有效运行时 id。
+- 研究笔记里的 dotted recipe 名称不是有效运行时 id。
   写入 plan 前必须映射到上面的 underscore id。

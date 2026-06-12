@@ -27,6 +27,9 @@ bbox 问题；这份清单负责需要人工或截图判断的渲染后视觉质
 | 文本重叠、文本容器溢出、标题被裁切 | 重新生成 layout boxes 或减少文本；不要只是整体缩小 |
 | badge、pill、章节标签或页码标签贴住/压住标题 | 把 badge 移出标题块，或保留至少 12-16px 垂直间距 |
 | 装饰线或色带压迫标题 | 把线移到标题区上方，或下移标题，保留呼吸感 |
+| callout / 卡片 / insight panel 侵入标题区 | 重算 `titleBox` 和 `calloutBox`；标题底部到任何文本承载面至少 24px |
+| connector line/path 穿过标题、中心文字或卡片文案 | 改成折线、短 leader line 或连接到卡片边缘；背景线降低 opacity 并声明为 decorative |
+| 多页出现裸白底黑字文本框 | 按 style preset 改成 tinted panel、accent rail card、glass overlay、dark backing、metric tile 或 label chip |
 | 主体内容超出 `960 x 540` 或 safe area | 按 960x540 画布重新计算坐标 |
 | 浅色图片/背景上的低对比文本 | 增加实色承载底、overlay，或切换文字颜色 |
 | 空图片框或 preview 破图 | live 创建前替换资产或使用视觉 fallback |

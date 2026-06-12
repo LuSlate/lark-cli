@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lark-cli.local/schemas/lark-slides/create-svg/private/recipe-selection.schema.json",
+  "title": "SVGlide create-svg private recipe selection sidecar",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_id",
+    "manifest_ref",
+    "selections"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "route_id": {
+      "type": "string",
+      "const": "create-svg"
+    },
+    "manifest_ref": {
+      "type": "string",
+      "const": "references/routes/create-svg/private-recipes.manifest.json"
+    },
+    "manifest_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "deck_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/selection"
+      }
+    }
+  },
+  "$defs": {
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "page_index",
+        "private_recipe_id",
+        "base_recipe",
+        "required_primitives",
+        "required_effects",
+        "minimum_visible_area_ratio",
+        "source_truth_evidence",
+        "selection_reason",
+        "fallback_policy",
+        "exemption_policy"
+      ],
+      "properties": {
+        "page_index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "slide_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "private_recipe_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "base_recipe": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "required_primitives": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "required_effects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "minimum_visible_area_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source_truth_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirement",
+              "evidence"
+            ],
+            "properties": {
+              "requirement": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "selection_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fallback_policy": {
+          "type": "string",
+          "const": "deny"
+        },
+        "exemption_policy": {
+          "type": "string",
+          "const": "deny"
+        }
+      }
+    }
+  }
+}

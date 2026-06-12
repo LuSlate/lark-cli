@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "route_id": "create-svg",
+  "manifest_ref": "references/routes/create-svg/private-recipes.manifest.json",
+  "manifest_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "deck_id": "example-deck",
+  "selections": [
+    {
+      "page_index": 1,
+      "slide_id": "slide-1",
+      "private_recipe_id": "solar_gallery_hero",
+      "base_recipe": "hero_typography",
+      "required_primitives": [
+        "typography",
+        "image_overlay",
+        "geometric_shape"
+      ],
+      "required_effects": [
+        "gradient",
+        "image_overlay",
+        "spotlight"
+      ],
+      "minimum_visible_area_ratio": 0.62,
+      "source_truth_evidence": [
+        {
+          "requirement": "Manifest source truth requirement copied into the sidecar.",
+          "evidence": "Concrete page evidence or asset reference that satisfies the requirement.",
+          "source_ref": "slide_plan.json#/slides/0"
+        }
+      ],
+      "selection_reason": "The private recipe is selected only after matching the page plan to manifest requirements.",
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    }
+  ]
+}

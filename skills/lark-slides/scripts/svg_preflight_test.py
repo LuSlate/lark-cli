@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
+import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
+import svg_private_docs_lint
 import svg_preflight
 
 
@@ -29,6 +32,132 @@ VALID_SVG = """
   <path id="trend" slide:role="shape" d="M64 360 L180 330 C260 300 340 340 420 300 Q500 260 580 290" fill="none" stroke="#2563eb" />
 </svg>
 """
+
+ROUTE_DIR = Path(__file__).resolve().parent.parent / "references" / "routes" / "create-svg"
+ROUTE_MANIFEST_PATH = ROUTE_DIR / "route.manifest.json"
+PRIVATE_RECIPE_MANIFEST_PATH = ROUTE_DIR / "private-recipes.manifest.json"
+
+
+def read_json(path: Path) -> dict[str, object]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def private_recipe_manifest() -> dict[str, object]:
+    return read_json(PRIVATE_RECIPE_MANIFEST_PATH)
+
+
+def private_recipe_ids() -> list[str]:
+    recipes = private_recipe_manifest().get("recipes")
+    if not isinstance(recipes, dict):
+        raise AssertionError("private recipe manifest must include recipes object")
+    return list(recipes)
+
+
+def private_recipe_with_primitive(primitive: str) -> str:
+    recipes = private_recipe_manifest().get("recipes")
+    if not isinstance(recipes, dict):
+        raise AssertionError("private recipe manifest must include recipes object")
+    for recipe_id, recipe in recipes.items():
+        if not isinstance(recipe, dict):
+            continue
+        primitives = svg_preflight.normalize_primitives(recipe.get("required_primitives"))
+        if primitive in primitives:
+            return str(recipe_id)
+    raise AssertionError(f"no private recipe requires {primitive}")
+
+
+def write_recipe_selection(directory: Path, recipe_id: str) -> Path:
+    recipes = private_recipe_manifest().get("recipes")
+    if not isinstance(recipes, dict) or not isinstance(recipes.get(recipe_id), dict):
+        raise AssertionError("private recipe must exist in manifest")
+    recipe = recipes[recipe_id]
+    path = directory / "recipe-selection.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0.0",
+                "route_id": "create-svg",
+                "manifest_ref": "references/routes/create-svg/private-recipes.manifest.json",
+                "manifest_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+                "selections": [
+                    {
+                        "page_index": 1,
+                        "page": 1,
+                        "private_recipe_id": recipe_id,
+                        "base_recipe": recipe["base_recipe"],
+                        "required_primitives": recipe["required_primitives"],
+                        "required_effects": recipe["required_effects"],
+                        "minimum_visible_area_ratio": recipe["minimum_visible_area_ratio"],
+                        "source_truth_evidence": [
+                            {
+                                "requirement": "unit test route-private evidence",
+                                "evidence": "unit test SVG source and plan alignment",
+                                "source_ref": "slide_plan.json#/slides/0",
+                            }
+                        ],
+                        "selection_reason": "unit test validates route-private selection gates",
+                        "fallback_policy": "deny",
+                        "exemption_policy": "deny",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def private_context(selection_path: Path | None = None) -> dict[str, object]:
+    return svg_preflight.build_preflight_context(
+        str(ROUTE_MANIFEST_PATH),
+        str(selection_path) if selection_path else None,
+    )
+
+
+def private_route_plan(primitives: set[str] | list[str], **slide_overrides: object) -> dict[str, object]:
+    primitive_list = sorted(primitives)
+    slide = {
+        "page": 1,
+        "renderer_id": "route_private_story",
+        "layout_family": "route_private",
+        "density": "medium",
+        "visual_recipe": "route_private",
+        "visual_intent": "use the route-private SVG recipe selected by the create-svg sidecar",
+        "visual_focal_point": "route-private visual structure",
+        "visual_signature": "route-private SVG structure is proven by source primitives",
+        "svg_effects": effects_for_primitives(primitive_list),
+        "required_primitives": primitive_list,
+        "svg_primitives": primitive_list,
+        "xml_like_risk": "would collapse into generic XML cards without the SVG route-private recipe",
+        "content_density_contract": "flow >= 4 stages",
+        "asset_contract": "none_required",
+        "risk_flags": [],
+        "source_policy": "Use prompt-provided content only.",
+    }
+    slide.update(slide_overrides)
+    return {
+        "output_mode": "svglide-svg",
+        "page_count": 1,
+        **style_plan_fields(),
+        "svg_files": [{"page": 1, "path": "page-001.svg"}],
+        "slides": [slide],
+    }
+
+
+def private_route_plan_for_context(context: dict[str, object], recipe_id: str, **slide_overrides: object) -> dict[str, object]:
+    primitives = svg_preflight.recipe_required_primitives(recipe_id, context)
+    return private_route_plan(primitives, **slide_overrides)
+
+
+def issue_codes(result: dict[str, object]) -> list[str]:
+    return [str(issue.get("code")) for issue in result.get("issues", []) if isinstance(issue, dict)]
+
+
+def plan_issue_codes(result: dict[str, object]) -> list[str]:
+    plan = result.get("plan")
+    if not isinstance(plan, dict):
+        return []
+    return issue_codes(plan)
 
 
 def with_contract(svg: str) -> str:
@@ -434,6 +563,74 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertIn("decorative_line_title_pressure", codes)
         self.assertEqual(result["summary"]["warning_count"], 1)
 
+    def test_lint_svg_reports_title_surface_pressure(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <foreignObject id="headline" slide:role="shape" slide:shape-type="text" x="64" y="56" width="380" height="94">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:38px;font-weight:900;color:#111;line-height:1.1;">挑战不是单点问题</div>
+          </foreignObject>
+          <rect id="too-close-card" slide:role="shape" x="98" y="126" width="244" height="82" fill="#ffffff" />
+          <foreignObject id="card-text" slide:role="shape" slide:shape-type="text" x="124" y="150" width="170" height="30">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;color:#111;line-height:1.2;">客户结构集中</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("title_surface_pressure", codes)
+
+    def test_lint_svg_reports_plain_white_text_panel(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect id="plain-card" slide:role="shape" x="120" y="190" width="260" height="82" fill="#ffffff" />
+          <foreignObject id="card-text" slide:role="shape" slide:shape-type="text" x="144" y="214" width="190" height="32">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;color:#111;line-height:1.2;">服务品类偏窄</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("plain_white_text_panel", codes)
+
+    def test_lint_svg_accepts_accent_rail_text_panel(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect id="treated-card" slide:role="shape" x="120" y="190" width="260" height="82" fill="#ffffff" />
+          <rect id="accent-rail" slide:role="shape" x="120" y="190" width="8" height="82" fill="#57c9a7" />
+          <foreignObject id="card-text" slide:role="shape" slide:shape-type="text" x="144" y="214" width="190" height="32">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;color:#111;line-height:1.2;">服务品类偏窄</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("plain_white_text_panel", codes)
+
+    def test_lint_svg_reports_connector_crosses_text(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <line id="bad-leader" slide:role="shape" x1="200" y1="292" x2="700" y2="292" stroke="#94A3B8" stroke-width="3" />
+          <foreignObject id="center-text" slide:role="shape" slide:shape-type="text" x="400" y="250" width="160" height="84">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;color:#111;line-height:1.3;text-align:center;">今年必须从交付升级为增长服务</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("connector_crosses_text", codes)
+
     def test_lint_svg_reports_visible_metadata_leak(self) -> None:
         svg = """
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -643,6 +840,215 @@ class SvgPreflightTest(unittest.TestCase):
             self.assertIn("quality_oracle", preset)
         self.assertEqual(group_counts, {"Restrained": 9, "Balanced": 15, "Bold": 11})
         self.assertEqual(len(tokens), 35)
+
+    def test_private_recipe_manifest_catalog_has_valid_route_scoped_schema(self) -> None:
+        route = read_json(ROUTE_MANIFEST_PATH)
+        manifest = private_recipe_manifest()
+        recipes = manifest.get("recipes")
+        self.assertIsInstance(recipes, dict)
+        assert isinstance(recipes, dict)
+        private_ids = set(recipes)
+
+        self.assertEqual(len(private_ids), 7)
+        allowed_ids = route.get("allowed_private_recipe_ids")
+        if allowed_ids is not None:
+            self.assertEqual(private_ids, set(allowed_ids))
+        else:
+            self.assertEqual(route.get("allowed_private_recipe_source"), "private_recipe_manifest_keys")
+        self.assertFalse(private_ids & set(svg_preflight.VISUAL_RECIPE_CATALOG))
+
+        for recipe_id, recipe in recipes.items():
+            self.assertIsInstance(recipe_id, str)
+            self.assertIsInstance(recipe, dict)
+            assert isinstance(recipe, dict)
+            self.assertIn(recipe.get("base_recipe"), svg_preflight.VISUAL_RECIPE_CATALOG)
+            primitives = svg_preflight.normalize_primitives(recipe.get("required_primitives"))
+            effects = svg_preflight.normalize_effects(recipe.get("required_effects"))
+            self.assertTrue(primitives)
+            self.assertTrue(effects)
+            self.assertFalse(primitives - svg_preflight.VALID_VISUAL_PRIMITIVES)
+            self.assertFalse(effects - set(svg_preflight.SVG_EFFECT_CATALOG))
+
+        context = private_context()
+        self.assertEqual(set(context["private_recipe_catalog"]), private_ids)
+
+    def test_route_private_fails_closed_without_manifest_or_selection(self) -> None:
+        public_result = svg_preflight.lint_plan(private_route_plan(["path", "annotation"]))
+        self.assertIn("private_route_not_allowed", issue_codes(public_result))
+
+        manifest_only_result = svg_preflight.lint_plan(
+            private_route_plan(["path", "annotation"]),
+            context=private_context(),
+        )
+        self.assertIn("private_route_selection_missing", issue_codes(manifest_only_result))
+
+    def test_route_private_rejects_minimal_selection_sidecar(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "minimal-selection.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "1.0.0",
+                        "route_id": "create-svg",
+                        "selections": [{"page": 1, "private_recipe_id": recipe_id}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaises(svg_preflight.SvgPreflightError) as raised:
+                private_context(path)
+        self.assertIn("private_route_manifest_invalid", str(raised.exception))
+
+    def test_lint_plan_rejects_exact_private_recipe_id_in_public_plan(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        context = private_context()
+        plan = private_route_plan_for_context(
+            context,
+            recipe_id,
+            visual_recipe=recipe_id,
+        )
+        result = svg_preflight.lint_plan(plan, context=context)
+        self.assertIn("private_recipe_exact_id_in_plan", issue_codes(result))
+
+    def test_lint_files_rejects_route_private_field_spoofing_without_source_primitives(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="56" width="420" height="72">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:32px;font-weight:800;color:#111827;">Title</div>
+          </foreignObject>
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            selection_path = write_recipe_selection(tmp, recipe_id)
+            context = private_context(selection_path)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan_path.write_text(json.dumps(private_route_plan_for_context(context, recipe_id)), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path), context=context)
+        self.assertIn("private_recipe_required_primitives_not_found", plan_issue_codes(result))
+
+    def test_lint_files_rejects_hidden_or_tiny_private_required_primitive(self) -> None:
+        recipe_id = private_recipe_with_primitive("path")
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <defs>
+            <linearGradient id="private-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#0ea5e9" />
+              <stop offset="100%" stop-color="#f43f5e" />
+            </linearGradient>
+          </defs>
+          <rect id="gradient-field" slide:role="shape" x="0" y="0" width="960" height="540" fill="url(#private-gradient)" />
+          <path id="route-path-hidden" slide:role="shape" display="none" d="M120 360 C260 240 460 420 720 180" fill="none" stroke="#111827" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            selection_path = write_recipe_selection(tmp, recipe_id)
+            context = private_context(selection_path)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan_path.write_text(json.dumps(private_route_plan_for_context(context, recipe_id)), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path), context=context)
+        codes = plan_issue_codes(result)
+        self.assertIn("private_recipe_required_primitive_not_visible", codes)
+        self.assertIn("private_recipe_required_primitive_too_small", codes)
+
+    def test_lint_plan_rejects_private_route_fallback_and_exemption_fields(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            selection_path = write_recipe_selection(Path(tmpdir), recipe_id)
+            context = private_context(selection_path)
+            plan = private_route_plan_for_context(
+                context,
+                recipe_id,
+                fallback_policy="safe_rewrite_allowed",
+                exemption_policy="allow_preflight_exemption",
+            )
+            result = svg_preflight.lint_plan(plan, context=context)
+        codes = issue_codes(result)
+        self.assertIn("private_recipe_fallback_not_allowed", codes)
+        self.assertIn("private_recipe_exemption_not_allowed", codes)
+
+    def test_public_redaction_removes_private_recipe_ids_and_private_enums(self) -> None:
+        context = private_context()
+        private_ids = private_recipe_ids()
+        raw = {
+            "issue": {
+                "message": private_ids[0],
+                "hint": "Use one of: " + ", ".join(private_ids),
+            }
+        }
+        redacted = svg_preflight.redact_private_metadata(raw, context)
+        encoded = json.dumps(redacted)
+        for recipe_id in private_ids:
+            self.assertNotIn(recipe_id, encoded)
+        self.assertIn("Use one of: [public catalog]", encoded)
+
+    def test_public_main_redacts_private_manifest_errors(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            selection_path = write_recipe_selection(tmp, recipe_id)
+            context = private_context(selection_path)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            plan_path.write_text(
+                json.dumps(private_route_plan_for_context(context, recipe_id, visual_recipe=recipe_id)),
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = svg_preflight.main(
+                    [
+                        "--route-manifest",
+                        str(ROUTE_MANIFEST_PATH),
+                        "--recipe-selection",
+                        str(selection_path),
+                        "--plan",
+                        str(plan_path),
+                        str(svg_path),
+                    ]
+                )
+        self.assertEqual(exit_code, 1)
+        output = stdout.getvalue()
+        for private_id in private_recipe_ids():
+            self.assertNotIn(private_id, output)
+        self.assertNotIn("Use one of: " + ", ".join(private_recipe_ids()), output)
+
+    def test_private_docs_lint_reports_public_private_id_leak(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            public_doc = repo_root / "README.md"
+            public_doc.write_text(f"Do not publish {recipe_id} in public docs.", encoding="utf-8")
+            issues = svg_private_docs_lint.lint_file(
+                public_doc,
+                repo_root,
+                [recipe_id],
+                [],
+                [],
+            )
+        self.assertEqual([issue.code for issue in issues], ["private_recipe_id_leak"])
+
+    def test_private_docs_lint_output_redacts_leaked_token(self) -> None:
+        recipe_id = private_recipe_ids()[0]
+        issue = svg_private_docs_lint.Issue("README.md", 1, 1, "private_recipe_id_leak", recipe_id)
+        encoded = json.dumps(svg_private_docs_lint.issue_to_dict(issue))
+        self.assertNotIn(recipe_id, encoded)
+        self.assertIn("token_hash", encoded)
 
     def test_lint_plan_reports_unknown_style_preset(self) -> None:
         plan = {

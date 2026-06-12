@@ -85,6 +85,13 @@ Exception:
     "footer_max_lines": 1,
     "long_text_handling": "Shorten, split into multiple boxes, or move detail to speaker notes instead of shrinking into a tight box."
   },
+  "text_surface_contract": {
+    "allowed_surface_kinds": ["accent_rail_card", "tinted_panel", "glass_overlay", "dark_backing", "label_chip", "metric_tile"],
+    "allow_plain_white_panel": false,
+    "min_gap_to_title": 24,
+    "padding": {"x": 14, "y": 12},
+    "connector_policy": "Connectors terminate at card/node/chart edges and must not cross visible text boxes."
+  },
   "verification_plan": {
     "check_background_consistency": true,
     "check_text_fit": true,
@@ -123,6 +130,7 @@ Top-level fields:
 - `style_selection_reason`: required for SVGlide SVG decks. Explain why the preset fits the audience, topic, density, and expected tone.
 - `style_system`: required for SVGlide SVG decks. Translate the selected preset into concrete palette, typography, background strategy, and motif rules. This is separate from `visual_system`: `visual_system` describes the deck identity, while `style_system` records the executable style preset translation.
 - `typography_constraints`: deck-level limits for line count, text box density, and how to handle long text before XML generation.
+- `text_surface_contract`: required for SVGlide SVG decks. Defines allowed text-bearing surface types, title exclusion gap, padding, and connector avoidance. Do not generate plain white text panels unless the user explicitly asks for bare wireframes or tables.
 - `verification_plan`: explicit checks to perform after creation or major edits; include background consistency, text fit, visual focus, and asset rendering when relevant.
 - `slides`: ordered page plans.
 
@@ -140,6 +148,7 @@ Each slide must include:
 SVGlide SVG slides must also include:
 
 - `visual_recipe`: the SVG-native page recipe, such as `path_flow`, `technical_texture`, or `fake_ui_dashboard`.
+- `route_private` is only an abstract create-svg marker. Shared plans must not contain exact SVG private recipe ids; route-private selection belongs in the create-svg sidecar.
 - `visual_signature`: the page's distinctive SVG visual memory point compared with a normal XML/PPT template.
 - `svg_effects`: canonical effect names actually used or planned, such as `path`, `connector_flow`, `gradient`, `texture`, `chart_geometry`, or `image_overlay`.
 - `required_primitives` and `svg_primitives`: the planned SVGlide-safe primitives that must be present in the SVG source.
@@ -239,4 +248,5 @@ After creating the PPT, fetch the presentation and verify:
 - Pages are not crowded, and any planned `timeline`, `comparison`, or `architecture-diagram` page uses its matching visual structure.
 - The actual backgrounds match `visual_system.background_strategy`; any dark, image-led, or emphasis page has an intentional relationship to the rest of the deck.
 - Text boxes respect `typography_constraints`; long labels, captions, footer text, and conclusion bars are not squeezed into boxes that are too short for the intended line count.
+- Text-bearing cards, callouts, badges, labels and metric tiles respect `text_surface_contract`; they are not naked white rectangles, do not press into `titleBox`, and connector lines do not pass through visible text.
 - If real assets are used, the final XML contains renderable asset tokens or supported local placeholders for creation, not http URLs, stale local paths, or blank image boxes.

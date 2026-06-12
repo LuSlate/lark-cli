@@ -28,6 +28,7 @@ CANVAS_WIDTH = 960.0
 CANVAS_HEIGHT = 540.0
 SAFE_AREA = {"x": 48.0, "y": 40.0, "width": 864.0, "height": 460.0}
 BADGE_HEADLINE_MIN_GAP = 8.0
+TITLE_SURFACE_MIN_GAP = 24.0
 DECORATIVE_LINE_HEADLINE_MIN_GAP = 16.0
 TEXT_CONTAINER_TOLERANCE = 2.0
 
@@ -240,6 +241,28 @@ def load_style_preset_catalog() -> dict[str, dict[str, Any]]:
 
 
 STYLE_PRESET_CATALOG = load_style_preset_catalog()
+CREATE_SVG_ROUTE_ID = "create-svg"
+ROUTE_PRIVATE_VISUAL_RECIPE = "route_private"
+ROUTE_PRIVATE_RECIPE_REF = "create_svg_curated_recipe"
+PUBLIC_REPORT_SCOPE = "public"
+INTERNAL_REPORT_SCOPE = "internal"
+PRIVATE_MANIFEST_EXPECTED_COUNT = 7
+VALID_VISUAL_PRIMITIVES = set(PRIMITIVE_ALIASES.values()) | {
+    "annotation",
+    "brand_system",
+    "dashboard",
+    "flow",
+    "geometric_shape",
+    "gradient",
+    "icon",
+    "image",
+    "image_overlay",
+    "micro_chart",
+    "path",
+    "spotlight",
+    "texture",
+    "typography",
+}
 
 
 class SvgPreflightError(Exception):
@@ -253,6 +276,9 @@ def fail(message: str) -> None:
 def parse_args(argv: list[str]) -> dict[str, Any]:
     inputs: list[str] = []
     plan: str | None = None
+    route_manifest: str | None = None
+    recipe_selection: str | None = None
+    report_scope = PUBLIC_REPORT_SCOPE
     index = 0
     while index < len(argv):
         token = argv[index]
@@ -260,6 +286,26 @@ def parse_args(argv: list[str]) -> dict[str, Any]:
             if index + 1 >= len(argv):
                 fail("--plan requires a slide_plan.json path")
             plan = argv[index + 1]
+            index += 2
+            continue
+        if token == "--route-manifest":
+            if index + 1 >= len(argv):
+                fail("--route-manifest requires a route manifest path")
+            route_manifest = argv[index + 1]
+            index += 2
+            continue
+        if token == "--recipe-selection":
+            if index + 1 >= len(argv):
+                fail("--recipe-selection requires a route-private recipe selection sidecar path")
+            recipe_selection = argv[index + 1]
+            index += 2
+            continue
+        if token == "--report-scope":
+            if index + 1 >= len(argv):
+                fail("--report-scope requires public or internal")
+            report_scope = argv[index + 1].strip().lower()
+            if report_scope not in {PUBLIC_REPORT_SCOPE, INTERNAL_REPORT_SCOPE}:
+                fail("--report-scope must be public or internal")
             index += 2
             continue
         if token in {"--input", "-i"}:
@@ -274,7 +320,222 @@ def parse_args(argv: list[str]) -> dict[str, Any]:
         index += 1
     if not inputs:
         fail("at least one --input <svg-file> is required")
-    return {"inputs": inputs, "plan": plan}
+    return {
+        "inputs": inputs,
+        "plan": plan,
+        "route_manifest": route_manifest,
+        "recipe_selection": recipe_selection,
+        "report_scope": report_scope,
+    }
+
+
+def manifest_error(code: str, message: str) -> None:
+    fail(f"{code}: {message}")
+
+
+def read_json_manifest(path: Path, invalid_code: str, missing_code: str) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        manifest_error(missing_code, "manifest not found")
+    except OSError as error:
+        manifest_error(missing_code, error.__class__.__name__)
+    except json.JSONDecodeError as error:
+        manifest_error(invalid_code, f"manifest is not valid JSON: {error}")
+    if not isinstance(data, dict):
+        manifest_error(invalid_code, "manifest root must be an object")
+    return data
+
+
+def resolve_manifest_path(path: str, base: Path | None = None) -> Path:
+    candidate = Path(path)
+    if candidate.is_absolute() or base is None:
+        return candidate
+    return base / candidate
+
+
+def default_preflight_context(report_scope: str = PUBLIC_REPORT_SCOPE) -> dict[str, Any]:
+    return {
+        "route_id": "",
+        "recipe_catalog": VISUAL_RECIPE_CATALOG,
+        "public_recipe_catalog": VISUAL_RECIPE_CATALOG,
+        "private_recipe_catalog": {},
+        "private_id_set": set(),
+        "allow_private": False,
+        "report_scope": report_scope,
+        "route_manifest_path": "",
+        "private_manifest_path": "",
+        "recipe_selection_path": "",
+        "recipe_selection": {},
+    }
+
+
+def validate_private_recipe_manifest(data: dict[str, Any], allowed_ids: set[str] | None = None) -> dict[str, dict[str, Any]]:
+    recipes = data.get("recipes")
+    if not isinstance(recipes, dict):
+        manifest_error("private_route_manifest_invalid", "private recipe manifest must include a recipes object")
+
+    private_ids = set(str(recipe_id) for recipe_id in recipes.keys())
+    if len(private_ids) != PRIVATE_MANIFEST_EXPECTED_COUNT:
+        manifest_error(
+            "private_recipe_catalog_count_mismatch",
+            "private recipe manifest must contain exactly 7 entries",
+        )
+    if allowed_ids is not None and private_ids != allowed_ids:
+        manifest_error("private_recipe_catalog_count_mismatch", "private recipe manifest keys must exactly match route allowed_private_recipe_ids")
+    public_collisions = sorted(private_ids & set(VISUAL_RECIPE_CATALOG))
+    if public_collisions:
+        manifest_error("private_recipe_public_id_collision", "private recipes must not collide with public recipe ids")
+
+    validated: dict[str, dict[str, Any]] = {}
+    for recipe_id, raw_recipe in recipes.items():
+        if not isinstance(raw_recipe, dict):
+            manifest_error("private_route_manifest_invalid", "private recipe entries must be objects")
+        base_recipe = normalize_name(raw_recipe.get("base_recipe"))
+        if base_recipe not in VISUAL_RECIPE_CATALOG:
+            manifest_error("private_recipe_unknown_base_recipe", "private recipe references an unknown base_recipe")
+        required_primitives = normalize_primitives(raw_recipe.get("required_primitives"))
+        unknown_primitives = sorted(required_primitives - VALID_VISUAL_PRIMITIVES)
+        if unknown_primitives:
+            manifest_error(
+                "private_recipe_unknown_primitive",
+                "private recipe references unknown primitives",
+            )
+        required_effects = normalize_effects(raw_recipe.get("required_effects"))
+        unknown_effects = sorted(required_effects - set(SVG_EFFECT_CATALOG))
+        if unknown_effects:
+            manifest_error("private_recipe_unknown_effect", "private recipe references unknown effects")
+        try:
+            minimum_visible_area_ratio = float(raw_recipe.get("minimum_visible_area_ratio", 0))
+        except (TypeError, ValueError):
+            manifest_error("private_route_manifest_invalid", "private recipe minimum_visible_area_ratio must be numeric")
+        if minimum_visible_area_ratio <= 0:
+            manifest_error("private_route_manifest_invalid", "private recipe minimum_visible_area_ratio must be positive")
+        if raw_recipe.get("fallback_policy") != "deny":
+            manifest_error("private_route_manifest_invalid", 'private recipe fallback_policy must be "deny"')
+        if raw_recipe.get("exemption_policy") != "deny":
+            manifest_error("private_route_manifest_invalid", 'private recipe exemption_policy must be "deny"')
+
+        recipe = dict(raw_recipe)
+        recipe["family"] = recipe_family(base_recipe, default_preflight_context())
+        recipe["private"] = True
+        recipe["required_primitives"] = required_primitives | set(VISUAL_RECIPE_CATALOG[base_recipe].get("required_primitives", set()))
+        recipe["required_effects"] = required_effects
+        recipe["minimum_visible_area_ratio"] = minimum_visible_area_ratio
+        validated[str(recipe_id)] = recipe
+    return validated
+
+
+def load_recipe_selection(path: str | None, route_id: str, private_catalog: dict[str, dict[str, Any]]) -> dict[str, str]:
+    if not path:
+        return {}
+    selection_path = Path(path)
+    data = read_json_manifest(selection_path, "private_route_manifest_invalid", "private_route_manifest_missing")
+    if data.get("schema_version") != "1.0.0":
+        manifest_error("private_route_manifest_invalid", "recipe selection schema_version must be 1.0.0")
+    if textify(data.get("route_id")).strip() != route_id:
+        manifest_error("private_route_manifest_invalid", "recipe selection route_id must match the route manifest")
+    if textify(data.get("manifest_ref")).strip() != "references/routes/create-svg/private-recipes.manifest.json":
+        manifest_error("private_route_manifest_invalid", "recipe selection manifest_ref must target the create-svg private manifest")
+    digest = textify(data.get("manifest_digest")).strip()
+    if digest and not SHA256_HASH_RE.match(digest):
+        manifest_error("private_route_manifest_invalid", "recipe selection manifest_digest must be sha256:<64 hex>")
+    selections = data.get("selections")
+    if not isinstance(selections, list) or not selections:
+        manifest_error("private_route_manifest_invalid", "recipe selection must include a selections array")
+    out: dict[str, str] = {}
+    for item in selections:
+        if not isinstance(item, dict):
+            manifest_error("private_route_manifest_invalid", "recipe selection entries must be objects")
+        try:
+            page_index = int(item.get("page_index"))
+        except (TypeError, ValueError):
+            manifest_error("private_route_manifest_invalid", "recipe selection page_index must be a positive integer")
+        if page_index <= 0:
+            manifest_error("private_route_manifest_invalid", "recipe selection page_index must be a positive integer")
+        private_recipe_id = textify(item.get("private_recipe_id")).strip()
+        if private_recipe_id not in private_catalog:
+            manifest_error("private_route_manifest_invalid", "recipe selection references an unknown private recipe")
+        recipe = private_catalog[private_recipe_id]
+        if normalize_name(item.get("base_recipe")) != normalize_name(recipe.get("base_recipe")):
+            manifest_error("private_route_manifest_invalid", "recipe selection base_recipe must match the private manifest")
+        if normalize_primitives(item.get("required_primitives")) != set(recipe.get("required_primitives", set())):
+            manifest_error("private_route_manifest_invalid", "recipe selection required_primitives must match the private manifest")
+        if normalize_effects(item.get("required_effects")) != set(recipe.get("required_effects", set())):
+            manifest_error("private_route_manifest_invalid", "recipe selection required_effects must match the private manifest")
+        try:
+            selected_area_ratio = float(item.get("minimum_visible_area_ratio"))
+        except (TypeError, ValueError):
+            manifest_error("private_route_manifest_invalid", "recipe selection minimum_visible_area_ratio must be numeric")
+        if selected_area_ratio != float(recipe.get("minimum_visible_area_ratio")):
+            manifest_error("private_route_manifest_invalid", "recipe selection minimum_visible_area_ratio must match the private manifest")
+        evidence = item.get("source_truth_evidence")
+        if not isinstance(evidence, list) or not evidence:
+            manifest_error("private_route_manifest_invalid", "recipe selection must include source_truth_evidence")
+        for evidence_item in evidence:
+            if not isinstance(evidence_item, dict) or not textify(evidence_item.get("requirement")).strip() or not textify(evidence_item.get("evidence")).strip():
+                manifest_error("private_route_manifest_invalid", "recipe selection source_truth_evidence entries must include requirement and evidence")
+        if not textify(item.get("selection_reason")).strip():
+            manifest_error("private_route_manifest_invalid", "recipe selection must include selection_reason")
+        if item.get("fallback_policy") != "deny":
+            manifest_error("private_route_manifest_invalid", 'recipe selection fallback_policy must be "deny"')
+        if item.get("exemption_policy") != "deny":
+            manifest_error("private_route_manifest_invalid", 'recipe selection exemption_policy must be "deny"')
+        page = item.get("page")
+        if page is not None:
+            out[f"page:{page}"] = private_recipe_id
+        out[f"index:{page_index}"] = private_recipe_id
+    return out
+
+
+def build_preflight_context(
+    route_manifest: str | None = None,
+    recipe_selection: str | None = None,
+    report_scope: str = PUBLIC_REPORT_SCOPE,
+) -> dict[str, Any]:
+    context = default_preflight_context(report_scope)
+    if not route_manifest:
+        if recipe_selection:
+            manifest_error("private_route_not_allowed", "--recipe-selection requires --route-manifest")
+        return context
+
+    route_path = Path(route_manifest)
+    route = read_json_manifest(route_path, "private_route_manifest_invalid", "private_route_manifest_missing")
+    route_id = textify(route.get("route_id")).strip()
+    if route_id != CREATE_SVG_ROUTE_ID:
+        manifest_error("private_route_not_allowed", f'route manifest route_id must be "{CREATE_SVG_ROUTE_ID}"')
+    manifest_ref = textify(route.get("private_recipe_manifest")).strip()
+    if not manifest_ref:
+        manifest_error("private_route_manifest_invalid", "route manifest must include private_recipe_manifest")
+    private_manifest_path = resolve_manifest_path(manifest_ref, route_path.parent)
+    private_manifest = read_json_manifest(private_manifest_path, "private_route_manifest_invalid", "private_route_manifest_missing")
+    raw_allowed = route.get("allowed_private_recipe_ids")
+    allowed_ids: set[str] | None = None
+    if raw_allowed is not None:
+        if not isinstance(raw_allowed, list) or not raw_allowed:
+            manifest_error("private_route_manifest_invalid", "allowed_private_recipe_ids must be a non-empty array when present")
+        allowed_ids = {textify(item).strip() for item in raw_allowed if textify(item).strip()}
+        if len(allowed_ids) != len(raw_allowed):
+            manifest_error("private_recipe_duplicate_id", "allowed_private_recipe_ids must not contain duplicates or empty ids")
+    elif textify(route.get("allowed_private_recipe_source")).strip() != "private_recipe_manifest_keys":
+        manifest_error("private_route_manifest_invalid", "route manifest must declare allowed_private_recipe_source=private_recipe_manifest_keys")
+    private_catalog = validate_private_recipe_manifest(private_manifest, allowed_ids)
+    selection = load_recipe_selection(recipe_selection, route_id, private_catalog)
+
+    context.update(
+        {
+            "route_id": route_id,
+            "recipe_catalog": {**VISUAL_RECIPE_CATALOG, **private_catalog},
+            "private_recipe_catalog": private_catalog,
+            "private_id_set": set(private_catalog),
+            "allow_private": True,
+            "route_manifest_path": str(route_path),
+            "private_manifest_path": str(private_manifest_path),
+            "recipe_selection_path": recipe_selection or "",
+            "recipe_selection": selection,
+        }
+    )
+    return context
 
 
 def local_name(tag: str) -> str:
@@ -685,6 +946,19 @@ def bbox_for_element(element: ET.Element) -> dict[str, float] | None:
         min_x = min(x1 or 0.0, x2 or 0.0)
         min_y = min(y1 or 0.0, y2 or 0.0)
         return {"x": min_x, "y": min_y, "width": abs((x2 or 0.0) - (x1 or 0.0)), "height": abs((y2 or 0.0) - (y1 or 0.0))}
+    if name == "path":
+        numbers = [float(match.group(0)) for match in PATH_NUMBER_RE.finditer(get_attr(element, "d") or "")]
+        if len(numbers) < 2:
+            return None
+        xs = numbers[0::2]
+        ys = numbers[1::2]
+        if not xs or not ys:
+            return None
+        min_x = min(xs)
+        max_x = max(xs)
+        min_y = min(ys)
+        max_y = max(ys)
+        return {"x": min_x, "y": min_y, "width": max_x - min_x, "height": max_y - min_y}
     return None
 
 
@@ -742,6 +1016,15 @@ def bbox_center(bbox: dict[str, float]) -> tuple[float, float]:
 
 def point_in_bbox(x: float, y: float, bbox: dict[str, float]) -> bool:
     return bbox["x"] <= x <= bbox["x"] + bbox["width"] and bbox["y"] <= y <= bbox["y"] + bbox["height"]
+
+
+def expand_bbox(bbox: dict[str, float], amount: float) -> dict[str, float]:
+    return {
+        "x": bbox["x"] - amount,
+        "y": bbox["y"] - amount,
+        "width": bbox["width"] + amount * 2,
+        "height": bbox["height"] + amount * 2,
+    }
 
 
 def parse_style_props(style: str | None) -> dict[str, str]:
@@ -841,6 +1124,16 @@ def fill_color(element: ET.Element) -> tuple[float, float, float, float] | None:
         return None
     opacity = parse_opacity(get_attr(element, "opacity") or props.get("opacity"))
     return (color[0], color[1], color[2], color[3] * opacity)
+
+
+def stroke_color(element: ET.Element) -> tuple[float, float, float, float] | None:
+    props = parse_style_props(get_attr(element, "style"))
+    return parse_color(get_attr(element, "stroke") or props.get("stroke"))
+
+
+def element_effective_opacity(element: ET.Element) -> float:
+    props = parse_style_props(get_attr(element, "style"))
+    return parse_opacity(get_attr(element, "opacity") or props.get("opacity"))
 
 
 def is_light_text_color(color: tuple[float, float, float, float]) -> bool:
@@ -1003,6 +1296,113 @@ def is_visible_container_rect(element: ET.Element, bbox: dict[str, float], canva
     return bbox["width"] >= 24 and bbox["height"] >= 18
 
 
+def is_plain_light_panel(element: ET.Element) -> bool:
+    color = fill_color(element)
+    if color is None or color[3] < 0.85:
+        return False
+    if relative_luminance(color) < 0.88:
+        return False
+    stroke = stroke_color(element)
+    if stroke is not None and stroke[3] >= 0.2:
+        return False
+    return True
+
+
+def has_accent_rail(container_element: ET.Element, container_bbox: dict[str, float], shaped: list[tuple[ET.Element, dict[str, float]]]) -> bool:
+    for element, bbox in shaped:
+        if element is container_element or local_name(element.tag) != "rect" or svg_role(element) != "shape":
+            continue
+        color = fill_color(element)
+        if color is None or color[3] < 0.7 or relative_luminance(color) >= 0.82:
+            continue
+        contained = bbox_contains(container_bbox, bbox, tolerance=1.5)
+        left_rail = abs(bbox["x"] - container_bbox["x"]) <= 1.5 and bbox["width"] <= 16 and bbox["height"] >= container_bbox["height"] * 0.55
+        top_rail = abs(bbox["y"] - container_bbox["y"]) <= 1.5 and bbox["height"] <= 14 and bbox["width"] >= container_bbox["width"] * 0.45
+        if contained and (left_rail or top_rail):
+            return True
+    return False
+
+
+def is_connector_element(element: ET.Element) -> bool:
+    name = local_name(element.tag)
+    if svg_role(element) != "shape" or name not in {"line", "path"}:
+        return False
+    props = parse_style_props(get_attr(element, "style"))
+    stroke = get_attr(element, "stroke") or props.get("stroke")
+    if not stroke or stroke.strip().lower() in {"none", "transparent"}:
+        return False
+    opacity = element_effective_opacity(element)
+    stroke_opacity = parse_opacity(get_attr(element, "stroke-opacity") or props.get("stroke-opacity"))
+    if opacity * stroke_opacity < 0.18:
+        return False
+    if name == "path":
+        fill = (get_attr(element, "fill") or props.get("fill") or "none").strip().lower()
+        if fill not in {"none", "transparent"}:
+            return False
+    return True
+
+
+def line_segments_for_element(element: ET.Element) -> list[tuple[float, float, float, float]]:
+    name = local_name(element.tag)
+    if name == "line":
+        x1 = parse_required_number(element, "x1")
+        y1 = parse_required_number(element, "y1")
+        x2 = parse_required_number(element, "x2")
+        y2 = parse_required_number(element, "y2")
+        if None in {x1, y1, x2, y2}:
+            return []
+        return [(x1 or 0.0, y1 or 0.0, x2 or 0.0, y2 or 0.0)]
+    if name != "path":
+        return []
+    numbers = [float(match.group(0)) for match in PATH_NUMBER_RE.finditer(get_attr(element, "d") or "")]
+    points = list(zip(numbers[0::2], numbers[1::2]))
+    return [(a[0], a[1], b[0], b[1]) for a, b in zip(points, points[1:])]
+
+
+def orientation(ax: float, ay: float, bx: float, by: float, cx: float, cy: float) -> float:
+    return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+
+
+def on_segment(ax: float, ay: float, bx: float, by: float, cx: float, cy: float) -> bool:
+    return min(ax, bx) - 0.01 <= cx <= max(ax, bx) + 0.01 and min(ay, by) - 0.01 <= cy <= max(ay, by) + 0.01
+
+
+def segments_intersect(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float], d: tuple[float, float]) -> bool:
+    o1 = orientation(a[0], a[1], b[0], b[1], c[0], c[1])
+    o2 = orientation(a[0], a[1], b[0], b[1], d[0], d[1])
+    o3 = orientation(c[0], c[1], d[0], d[1], a[0], a[1])
+    o4 = orientation(c[0], c[1], d[0], d[1], b[0], b[1])
+    if abs(o1) <= 0.01 and on_segment(a[0], a[1], b[0], b[1], c[0], c[1]):
+        return True
+    if abs(o2) <= 0.01 and on_segment(a[0], a[1], b[0], b[1], d[0], d[1]):
+        return True
+    if abs(o3) <= 0.01 and on_segment(c[0], c[1], d[0], d[1], a[0], a[1]):
+        return True
+    if abs(o4) <= 0.01 and on_segment(c[0], c[1], d[0], d[1], b[0], b[1]):
+        return True
+    return (o1 > 0) != (o2 > 0) and (o3 > 0) != (o4 > 0)
+
+
+def line_segment_intersects_bbox(segment: tuple[float, float, float, float], bbox: dict[str, float]) -> bool:
+    x1, y1, x2, y2 = segment
+    segment_bbox = {"x": min(x1, x2), "y": min(y1, y2), "width": abs(x2 - x1), "height": abs(y2 - y1)}
+    if not intersects(segment_bbox, bbox):
+        return False
+    if point_in_bbox(x1, y1, bbox) or point_in_bbox(x2, y2, bbox):
+        return True
+    left = bbox["x"]
+    right = bbox["x"] + bbox["width"]
+    top = bbox["y"]
+    bottom = bbox["y"] + bbox["height"]
+    edges = [
+        ((left, top), (right, top)),
+        ((right, top), (right, bottom)),
+        ((right, bottom), (left, bottom)),
+        ((left, bottom), (left, top)),
+    ]
+    return any(segments_intersect((x1, y1), (x2, y2), start, end) for start, end in edges)
+
+
 def is_decorative_horizontal_rule(element: ET.Element, bbox: dict[str, float]) -> bool:
     name = local_name(element.tag)
     identifier = element_identifier_text(element)
@@ -1045,6 +1445,51 @@ def validate_layout_pressure(
                 break
 
     containers = [(element, bbox) for element, bbox in shaped if is_visible_container_rect(element, bbox, canvas_width, canvas_height)]
+    for headline in headlines:
+        headline_bbox = headline["bbox"]
+        for container_element, container_bbox in containers:
+            if container_bbox["y"] <= headline_bbox["y"]:
+                continue
+            if not horizontal_overlap(container_bbox, headline_bbox, tolerance=8):
+                continue
+            gap = container_bbox["y"] - bbox_bottom(headline_bbox)
+            if gap < TITLE_SURFACE_MIN_GAP:
+                pressure_issue = issue(
+                    "error",
+                    "title_surface_pressure",
+                    "text surface or card is too close to the headline",
+                    headline["element"],
+                    "Move callout cards, labels, badges, and panels outside the title exclusion zone; keep at least 24px between headline bottom and any text surface.",
+                )
+                pressure_issue["surface_element_id"] = get_attr(container_element, "id")
+                pressure_issue["gap"] = round(gap, 2)
+                issues.append(pressure_issue)
+                break
+
+    for container_element, container_bbox in containers:
+        if not is_card_like_rect(container_element, container_bbox, canvas_width, canvas_height):
+            continue
+        if not is_plain_light_panel(container_element):
+            continue
+        if has_accent_rail(container_element, container_bbox, shaped):
+            continue
+        contained_text = [
+            item
+            for item in text_boxes
+            if point_in_bbox(*bbox_center(item["bbox"]), container_bbox) and item["bbox"]["width"] <= container_bbox["width"] + 8
+        ]
+        if not contained_text:
+            continue
+        panel_issue = issue(
+            "error",
+            "plain_white_text_panel",
+            "plain white text panel lacks a visible design treatment",
+            container_element,
+            "Use a style-preset text surface: tinted fill, accent rail, stroke, glass overlay, icon/number marker, or another explicit backing treatment instead of a bare white rectangle.",
+        )
+        panel_issue["contained_text_count"] = len(contained_text)
+        issues.append(panel_issue)
+
     for item in text_boxes:
         element = item["element"]
         bbox = item["bbox"]
@@ -1103,6 +1548,24 @@ def validate_layout_pressure(
                 pressure_issue["rule_element_id"] = get_attr(rule_element, "id")
                 pressure_issue["gap"] = round(gap, 2)
                 issues.append(pressure_issue)
+                break
+
+    connectors = [(element, line_segments_for_element(element)) for element, _bbox in shaped if is_connector_element(element)]
+    for connector_element, segments in connectors:
+        if not segments:
+            continue
+        for item in text_boxes:
+            text_bbox = expand_bbox(item["bbox"], 2.0)
+            if any(line_segment_intersects_bbox(segment, text_bbox) for segment in segments):
+                connector_issue = issue(
+                    "error",
+                    "connector_crosses_text",
+                    "connector line/path crosses a visible text box",
+                    connector_element,
+                    "Route leader lines around text boxes, terminate them at card edges, or shorten them so they do not pass through titles, central labels, or callout copy.",
+                )
+                connector_issue["text_element_id"] = get_attr(item["element"], "id")
+                issues.append(connector_issue)
                 break
 
     return issues
@@ -1167,6 +1630,28 @@ def is_card_like_rect(element: ET.Element, bbox: dict[str, float], canvas_width:
     return 70 <= bbox["width"] <= 420 and 40 <= bbox["height"] <= 240
 
 
+def element_is_hidden(element: ET.Element) -> bool:
+    props = parse_style_props(get_attr(element, "style"))
+    display = textify(get_attr(element, "display") or props.get("display")).strip().lower()
+    visibility = textify(get_attr(element, "visibility") or props.get("visibility")).strip().lower()
+    opacity = parse_opacity(get_attr(element, "opacity") or props.get("opacity"))
+    return display == "none" or visibility in {"hidden", "collapse"} or opacity <= 0.02
+
+
+def add_primitive_area(out: dict[str, float], primitive: str, area: float) -> None:
+    if area <= 0:
+        return
+    out[primitive] = out.get(primitive, 0.0) + area
+
+
+def primitive_signal_area(element: ET.Element, bbox: dict[str, float]) -> float:
+    name = local_name(element.tag)
+    area = bbox["width"] * bbox["height"]
+    if name in {"line", "path"}:
+        return max(area, max(bbox["width"], bbox["height"]) * 4.0)
+    return area
+
+
 def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], text_boxes: list[dict[str, Any]], canvas_width: float, canvas_height: float) -> dict[str, Any]:
     counts = {
         "path": 0,
@@ -1183,6 +1668,8 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
     }
     identifiers: list[str] = []
     semi_transparent_rects: list[dict[str, float]] = []
+    primitive_areas: dict[str, float] = {}
+    hidden_counts: dict[str, int] = {}
 
     for element in elements:
         name = local_name(element.tag)
@@ -1193,21 +1680,56 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
             identifiers.append(identifier)
         bbox = bbox_for_element(element)
         if bbox is None:
+            if element_is_hidden(element):
+                for primitive in ["path"] if name == "path" else []:
+                    hidden_counts[primitive] = hidden_counts.get(primitive, 0) + 1
             continue
         area = bbox["width"] * bbox["height"]
+        signal_area = primitive_signal_area(element, bbox)
+        hidden = element_is_hidden(element)
+        element_primitives: set[str] = set()
+        if name == "path":
+            element_primitives.update({"path", "geometric_shape"})
+        elif name == "line":
+            element_primitives.update({"annotation", "geometric_shape"})
+        elif name in {"rect", "circle", "ellipse"}:
+            element_primitives.add("geometric_shape")
+        elif name == "image":
+            element_primitives.add("image")
+        elif name == "foreignObject" and svg_shape_type(element) == "text":
+            element_primitives.add("typography")
         if is_card_like_rect(element, bbox, canvas_width, canvas_height):
             counts["card_like_rect"] += 1
         if svg_role(element) == "shape" and name in {"rect", "circle", "ellipse", "line", "path"} and area <= 3600:
             counts["small_shape"] += 1
+            element_primitives.add("icon")
         if name == "rect" and 8 <= bbox["width"] <= 240 and 4 <= bbox["height"] <= 70:
             counts["bar_like_rect"] += 1
+            element_primitives.add("micro_chart")
         if name == "rect":
             color = fill_color(element)
             if color is not None and 0.05 < color[3] < 0.85:
                 semi_transparent_rects.append(bbox)
+                element_primitives.add("image_overlay")
+        if re.search(r"(texture|grid|dot|scan|pattern)", identifier):
+            element_primitives.add("texture")
+        if re.search(r"(spotlight|hotspot|highlight|focus)", identifier):
+            element_primitives.add("spotlight")
+        if re.search(r"(route|journey|flow|loop|path)", identifier):
+            element_primitives.add("flow")
+        for primitive in element_primitives:
+            if hidden:
+                hidden_counts[primitive] = hidden_counts.get(primitive, 0) + 1
+            else:
+                add_primitive_area(primitive_areas, primitive, signal_area)
 
     root_identifiers = " ".join(identifiers)
     gradients = sum(1 for element in root.iter() if local_name(element.tag) in {"linearGradient", "radialGradient"})
+    gradient_refs = sum(
+        1
+        for element in root.iter()
+        if "url(#" in textify(get_attr(element, "fill") or get_attr(element, "stroke") or get_attr(element, "style"))
+    )
     patterns = sum(1 for element in root.iter() if local_name(element.tag) == "pattern")
     masks = sum(1 for element in root.iter() if local_name(element.tag) in {"mask", "clipPath"})
     symbols = sum(1 for element in root.iter() if local_name(element.tag) in {"symbol", "use"})
@@ -1248,6 +1770,8 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         primitives.add("image_overlay")
     if gradients:
         primitives.add("gradient")
+    if gradients and gradient_refs:
+        primitive_areas["gradient"] = max(primitive_areas.get("gradient", 0.0), canvas_width * canvas_height * 0.01)
     if filters or filter_refs:
         primitives.add("spotlight")
     if large_text:
@@ -1308,7 +1832,10 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
     return {
         "present": sorted(primitives),
         "counts": counts,
+        "primitive_areas": {key: round(value, 2) for key, value in sorted(primitive_areas.items())},
+        "hidden_counts": dict(sorted(hidden_counts.items())),
         "gradient_count": gradients,
+        "gradient_ref_count": gradient_refs,
         "filter_count": filters + filter_refs,
         "effects": sorted(effects),
     }
@@ -1624,6 +2151,18 @@ def has_effect_fallback(slide: dict[str, Any], effect: str) -> bool:
     return "fallback" in normalized_text or "rewrite" in normalized_text or effect in normalized_text
 
 
+def has_private_fallback_field(slide: dict[str, Any]) -> bool:
+    visual_plan = nested_dict(slide.get("visual_plan"))
+    keys = ["effect_fallbacks", "svg_effect_fallbacks", "safe_rewrite", "recipe_fallback", "fallback_policy"]
+    return any(textify(slide.get(key)).strip() or textify(visual_plan.get(key)).strip() for key in keys)
+
+
+def has_private_exemption_field(slide: dict[str, Any]) -> bool:
+    visual_plan = nested_dict(slide.get("visual_plan"))
+    keys = ["exemption", "exemptions", "exemption_policy", "preflight_exemption", "svg_preflight_exemption"]
+    return any(textify(slide.get(key)).strip() or textify(visual_plan.get(key)).strip() for key in keys)
+
+
 def visible_slide_text(slide: dict[str, Any]) -> str:
     visual_plan = nested_dict(slide.get("visual_plan"))
     parts = [textify(slide.get(key)) for key in VISIBLE_PLAN_TEXT_KEYS]
@@ -1631,8 +2170,48 @@ def visible_slide_text(slide: dict[str, Any]) -> str:
     return " ".join(part for part in parts if part).strip()
 
 
-def recipe_family(recipe: str) -> str:
-    return textify(VISUAL_RECIPE_CATALOG.get(recipe, {}).get("family") or recipe)
+def recipe_family(recipe: str, context: dict[str, Any] | None = None) -> str:
+    catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG) if context else VISUAL_RECIPE_CATALOG
+    return textify(catalog.get(recipe, {}).get("family") or recipe)
+
+
+def recipe_required_primitives(recipe: str, context: dict[str, Any]) -> set[str]:
+    catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
+    recipe_data = catalog.get(recipe, {})
+    return set(recipe_data.get("required_primitives", set()))
+
+
+def recipe_required_effects(recipe: str, context: dict[str, Any]) -> set[str]:
+    catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
+    recipe_data = catalog.get(recipe, {})
+    return set(recipe_data.get("required_effects", set()))
+
+
+def recipe_minimum_visible_area_ratio(recipe: str, context: dict[str, Any]) -> float:
+    catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
+    recipe_data = catalog.get(recipe, {})
+    try:
+        return float(recipe_data.get("minimum_visible_area_ratio", 0.002))
+    except (TypeError, ValueError):
+        return 0.002
+
+
+def is_private_recipe(recipe: str, context: dict[str, Any]) -> bool:
+    return recipe in context.get("private_id_set", set())
+
+
+def selected_private_recipe_for_slide(slide: dict[str, Any], slide_index: int, context: dict[str, Any]) -> str:
+    selections = context.get("recipe_selection", {})
+    page = slide.get("page")
+    candidates = []
+    if page is not None:
+        candidates.append(f"page:{page}")
+    candidates.append(f"index:{slide_index}")
+    for key in candidates:
+        recipe = selections.get(key)
+        if recipe:
+            return textify(recipe).strip()
+    return ""
 
 
 def plan_slide_text(slide: dict[str, Any], keys: list[str] | None = None) -> str:
@@ -1732,7 +2311,8 @@ def source_density_count(kind: str, primitive_summary: dict[str, Any]) -> int:
     return 0
 
 
-def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
+def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any] | None = None) -> dict[str, Any]:
+    context = context or default_preflight_context()
     issues: list[dict[str, Any]] = []
     slides = plan.get("slides")
     if not isinstance(slides, list) or not slides:
@@ -1827,7 +2407,10 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
     layout_families: list[str] = []
     visual_recipes: list[str] = []
     visual_recipe_families: list[str] = []
-    for slide in slides:
+    recipe_catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
+    public_recipe_catalog = context.get("public_recipe_catalog", VISUAL_RECIPE_CATALOG)
+    private_id_set = context.get("private_id_set", set())
+    for slide_index, slide in enumerate(slides, 1):
         if not isinstance(slide, dict):
             issues.append(plan_issue("error", "plan_slide_invalid", "each slide entry must be an object"))
             continue
@@ -1861,7 +2444,9 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                     )
                 )
 
-            visual_recipe = normalize_name(visual_plan.get("visual_recipe"))
+            raw_visual_recipe = normalize_name(visual_plan.get("visual_recipe"))
+            visual_recipe = raw_visual_recipe
+            route_private_requested = raw_visual_recipe == ROUTE_PRIVATE_VISUAL_RECIPE
             if not visual_recipe:
                 issues.append(
                     plan_issue(
@@ -1872,19 +2457,62 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                         "Choose one SVG-native recipe such as hero_typography, path_flow, infographic_scorecard, or fake_ui_dashboard.",
                     )
                 )
-            elif visual_recipe not in VISUAL_RECIPE_CATALOG:
+            elif visual_recipe in private_id_set:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "private_recipe_exact_id_in_plan",
+                        "slide_plan.json must not contain exact SVG private recipe ids",
+                        slide,
+                        "Use visual_recipe=route_private with a create-svg route-private recipe selection sidecar instead.",
+                    )
+                )
+            elif route_private_requested and not context.get("allow_private"):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "private_route_not_allowed",
+                        "route_private visual_recipe requires the create-svg route manifest",
+                        slide,
+                        "Run svg_preflight.py with --route-manifest for the create-svg route; non-SVG/XML paths must not load SVG private recipes.",
+                    )
+                )
+            elif route_private_requested:
+                selected_recipe = selected_private_recipe_for_slide(visual_plan, slide_index, context)
+                if not selected_recipe:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "private_route_selection_missing",
+                            "route_private visual_recipe requires a route-private recipe selection sidecar",
+                            slide,
+                            "Pass --recipe-selection with create-svg route-private selection data; public slide_plan.json must stay abstract.",
+                        )
+                    )
+                elif selected_recipe not in private_id_set:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "private_route_selection_invalid",
+                            "route-private recipe selection references an unavailable SVG private recipe",
+                            slide,
+                        )
+                    )
+                else:
+                    visual_recipe = selected_recipe
+            elif visual_recipe not in recipe_catalog:
                 issues.append(
                     plan_issue(
                         "error",
                         "plan_unknown_visual_recipe",
-                        f'unknown visual_recipe "{visual_recipe}"',
+                        "unknown visual_recipe",
                         slide,
-                        "Use one of: " + ", ".join(sorted(VISUAL_RECIPE_CATALOG)),
+                        "Use one of: " + ", ".join(sorted(public_recipe_catalog)),
                     )
                 )
-            else:
+            if visual_recipe in recipe_catalog:
                 visual_recipes.append(visual_recipe)
-                visual_recipe_families.append(recipe_family(visual_recipe))
+                visual_recipe_families.append(recipe_family(visual_recipe, context))
 
                 declared_primitives = normalize_primitives(visual_plan.get("svg_primitives"))
                 plan_required_primitives = required_plan_primitives(visual_plan)
@@ -1898,25 +2526,25 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                             "Copy the recipe required primitives, then add any page-specific required primitives the SVG source must expose.",
                         )
                     )
-                recipe_required_primitives = set(VISUAL_RECIPE_CATALOG[visual_recipe]["required_primitives"])
-                missing_declared = sorted(recipe_required_primitives - declared_primitives)
+                hard_required_primitives = recipe_required_primitives(visual_recipe, context)
+                missing_declared = sorted(hard_required_primitives - declared_primitives)
                 if missing_declared:
                     issues.append(
                         plan_issue(
                             "error",
                             "plan_recipe_primitives_mismatch",
-                            f'{visual_recipe} requires svg_primitives: {", ".join(sorted(recipe_required_primitives))}',
+                            f'{raw_visual_recipe or visual_recipe} requires svg_primitives: {", ".join(sorted(hard_required_primitives))}',
                             slide,
                             "Declare the SVG-native primitives the page will actually draw, not only a renderer_id.",
                         )
                     )
-                missing_required_field = sorted(recipe_required_primitives - plan_required_primitives)
+                missing_required_field = sorted(hard_required_primitives - plan_required_primitives)
                 if plan_required_primitives and missing_required_field:
                     issues.append(
                         plan_issue(
                             "error",
                             "plan_required_primitives_mismatch",
-                            f'{visual_recipe} requires required_primitives: {", ".join(sorted(recipe_required_primitives))}',
+                            f'{raw_visual_recipe or visual_recipe} requires required_primitives: {", ".join(sorted(hard_required_primitives))}',
                             slide,
                             "required_primitives must cover the selected recipe's hard requirements.",
                         )
@@ -1932,6 +2560,27 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                             f"Missing from svg_primitives: {', '.join(missing_required_declaration)}.",
                         )
                     )
+                if is_private_recipe(visual_recipe, context):
+                    if has_private_fallback_field(visual_plan):
+                        issues.append(
+                            plan_issue(
+                                "error",
+                                "private_recipe_fallback_not_allowed",
+                                "SVG private recipes must not declare fallback or safe rewrite fields",
+                                slide,
+                                "Fix the SVG source to satisfy the route-private recipe instead of weakening it with a fallback.",
+                            )
+                        )
+                    if has_private_exemption_field(visual_plan):
+                        issues.append(
+                            plan_issue(
+                                "error",
+                                "private_recipe_exemption_not_allowed",
+                                "SVG private recipes must not declare preflight exemption fields",
+                                slide,
+                                "Private SVG recipes are fail-closed; remove exemptions and satisfy the source-truth gates.",
+                            )
+                        )
 
             for field in ["visual_intent", "visual_focal_point", "visual_signature", "xml_like_risk"]:
                 if not textify(visual_plan.get(field)).strip():
@@ -2238,11 +2887,11 @@ def load_plan_json(path: str) -> tuple[dict[str, Any] | None, dict[str, Any] | N
     return plan, None
 
 
-def lint_plan_file(path: str) -> dict[str, Any]:
+def lint_plan_file(path: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
     plan, load_error = load_plan_json(path)
     if load_error:
         return load_error
-    return lint_plan(plan or {}, path)
+    return lint_plan(plan or {}, path, context)
 
 
 def planned_svg_path(slide: dict[str, Any], plan: dict[str, Any]) -> str:
@@ -2260,7 +2909,16 @@ def planned_svg_path(slide: dict[str, Any], plan: dict[str, Any]) -> str:
     return ""
 
 
-def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def resolved_visual_recipe_for_slide(slide: dict[str, Any], slide_index: int, context: dict[str, Any]) -> str:
+    visual_plan = slide_visual_plan(slide)
+    recipe = normalize_name(visual_plan.get("visual_recipe"))
+    if recipe == ROUTE_PRIVATE_VISUAL_RECIPE:
+        return selected_private_recipe_for_slide(visual_plan, slide_index, context)
+    return recipe
+
+
+def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    context = context or default_preflight_context()
     if plan.get("output_mode") != "svglide-svg":
         return []
     slides = plan.get("slides")
@@ -2268,7 +2926,7 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
         return []
 
     files_by_name = {Path(textify(file.get("path"))).name: file for file in files if textify(file.get("path"))}
-    alignments: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    alignments: list[tuple[int, dict[str, Any], dict[str, Any]]] = []
     for index, slide in enumerate(slides):
         if not isinstance(slide, dict):
             continue
@@ -2276,32 +2934,60 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
         if svg_path:
             file = files_by_name.get(Path(svg_path).name)
             if file is not None:
-                alignments.append((slide, file))
+                alignments.append((index + 1, slide, file))
                 continue
         if len(files) == len(slides):
-            alignments.append((slide, files[index]))
+            alignments.append((index + 1, slide, files[index]))
 
     issues: list[dict[str, Any]] = []
-    for slide, file in alignments:
+    recipe_catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
+    for slide_index, slide, file in alignments:
         visual_plan = slide_visual_plan(slide)
-        recipe = normalize_name(visual_plan.get("visual_recipe"))
-        if recipe not in VISUAL_RECIPE_CATALOG:
+        recipe = resolved_visual_recipe_for_slide(visual_plan, slide_index, context)
+        if recipe not in recipe_catalog:
             continue
-        source_primitives = set(file.get("visual_primitives", {}).get("present", []))
-        source_effects = set(file.get("visual_primitives", {}).get("effects", []))
+        visual_primitives = file.get("visual_primitives", {})
+        source_primitives = set(visual_primitives.get("present", []))
+        source_effects = set(visual_primitives.get("effects", []))
+        source_areas = visual_primitives.get("primitive_areas", {}) if isinstance(visual_primitives.get("primitive_areas"), dict) else {}
+        hidden_counts = visual_primitives.get("hidden_counts", {}) if isinstance(visual_primitives.get("hidden_counts"), dict) else {}
         declared_primitives = normalize_primitives(visual_plan.get("svg_primitives"))
-        required_primitives = set(VISUAL_RECIPE_CATALOG[recipe]["required_primitives"]) | required_plan_primitives(visual_plan)
+        required_primitives = recipe_required_primitives(recipe, context) | required_plan_primitives(visual_plan)
         missing_required = sorted(required_primitives - source_primitives)
         if missing_required:
             issues.append(
                 plan_issue(
                     "error",
-                    "plan_recipe_required_primitives_not_found",
+                    "private_recipe_required_primitives_not_found" if is_private_recipe(recipe, context) else "plan_recipe_required_primitives_not_found",
                     f'{recipe} required primitives not found in SVG source: {", ".join(missing_required)}',
                     slide,
                     f"SVG file {file.get('path')} exposes primitives {sorted(source_primitives)}; adjust SVG source or choose a more accurate visual_recipe.",
                 )
             )
+        if is_private_recipe(recipe, context):
+            minimum_area = CANVAS_WIDTH * CANVAS_HEIGHT * recipe_minimum_visible_area_ratio(recipe, context)
+            for primitive in sorted(required_primitives):
+                if int(hidden_counts.get(primitive, 0)) > 0 and float(source_areas.get(primitive, 0.0)) <= 0:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "private_recipe_required_primitive_not_visible",
+                            "SVG private recipe required primitive is hidden or transparent in the source",
+                            slide,
+                            "Private recipes must be proven by visible SVG geometry; remove display:none/visibility:hidden/zero opacity or choose another recipe.",
+                        )
+                    )
+                    continue
+                if primitive in source_primitives and float(source_areas.get(primitive, 0.0)) < minimum_area:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "private_recipe_required_primitive_too_small",
+                            "SVG private recipe required primitive is too small to substantiate the recipe",
+                            slide,
+                            "Increase the actual SVG geometry; private recipes cannot be satisfied by tiny hidden markers or metadata-only declarations.",
+                        )
+                    )
         if declared_primitives and not (declared_primitives & source_primitives):
             issues.append(
                 plan_issue(
@@ -2313,17 +2999,30 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
                 )
             )
         declared_effects = normalize_effects(visual_plan.get("svg_effects"))
-        missing_effects = sorted(effect for effect in declared_effects if effect in SVG_EFFECT_CATALOG and effect not in source_effects)
+        required_effects = declared_effects | recipe_required_effects(recipe, context)
+        missing_effects = sorted(effect for effect in required_effects if effect in SVG_EFFECT_CATALOG and effect not in source_effects)
         if missing_effects:
             issues.append(
                 plan_issue(
                     "error",
-                    "plan_svg_effect_not_found",
+                    "private_recipe_required_effect_not_found" if is_private_recipe(recipe, context) else "plan_svg_effect_not_found",
                     f'declared svg_effects not found in SVG source: {", ".join(missing_effects)}',
                     slide,
                     f"SVG file {file.get('path')} exposes effects {sorted(source_effects)}; adjust SVG source or remove inaccurate effects.",
                 )
             )
+        if is_private_recipe(recipe, context):
+            file_warnings = [item for item in file.get("issues", []) if item.get("level") == "warning"]
+            if file_warnings:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "private_recipe_unclassified_warning",
+                        "SVG private recipe pages must not carry unresolved SVG preflight warnings",
+                        slide,
+                        "Classify and fix warnings before using route-private SVG recipes.",
+                    )
+                )
         contract = density_contract_kind_count(visual_plan.get("content_density_contract"))
         density = textify(visual_plan.get("density") or visual_plan.get("text_density")).strip().lower()
         if density == "high" and contract is not None:
@@ -2405,7 +3104,38 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
     return result
 
 
-def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]:
+def private_redaction_terms(context: dict[str, Any]) -> list[str]:
+    terms = [textify(item) for item in sorted(context.get("private_id_set", set()))]
+    for key in ["route_manifest_path", "private_manifest_path", "recipe_selection_path"]:
+        value = textify(context.get(key)).strip()
+        if value:
+            terms.append(value)
+            terms.append(Path(value).name)
+    return [term for term in terms if term]
+
+
+def redact_text(text: str, context: dict[str, Any]) -> str:
+    out = text
+    for term in private_redaction_terms(context):
+        out = out.replace(term, "[redacted-private]")
+    out = re.sub(r"Use one of:\s*([^.\n]+)", "Use one of: [public catalog]", out)
+    return out
+
+
+def redact_private_metadata(value: Any, context: dict[str, Any]) -> Any:
+    if context.get("report_scope") == INTERNAL_REPORT_SCOPE:
+        return value
+    if isinstance(value, str):
+        return redact_text(value, context)
+    if isinstance(value, list):
+        return [redact_private_metadata(item, context) for item in value]
+    if isinstance(value, dict):
+        return {key: redact_private_metadata(item, context) for key, item in value.items()}
+    return value
+
+
+def lint_files(paths: list[str], plan_path: str | None = None, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    context = context or default_preflight_context()
     files: list[dict[str, Any]] = []
     for path in paths:
         svg = Path(path).read_text(encoding="utf-8")
@@ -2413,9 +3143,9 @@ def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]
     plan_result = None
     if plan_path:
         plan, load_error = load_plan_json(plan_path)
-        plan_result = load_error or lint_plan(plan or {}, plan_path)
+        plan_result = load_error or lint_plan(plan or {}, plan_path, context)
         if plan is not None:
-            alignment_issues = lint_plan_svg_alignment(plan, files)
+            alignment_issues = lint_plan_svg_alignment(plan, files, context)
             if alignment_issues:
                 plan_result.setdefault("issues", []).extend(alignment_issues)
                 plan_result["summary"]["error_count"] = sum(1 for item in plan_result["issues"] if item["level"] == "error")
@@ -2441,17 +3171,19 @@ def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]
 
 
 def main(argv: list[str]) -> int:
+    context = default_preflight_context()
     try:
         options = parse_args(argv)
-        result = lint_files(options["inputs"], options["plan"])
+        context = build_preflight_context(options["route_manifest"], options["recipe_selection"], options["report_scope"])
+        result = lint_files(options["inputs"], options["plan"], context)
     except SvgPreflightError as error:
-        print(f"svg_preflight: {error}", file=sys.stderr)
+        print(f"svg_preflight: {redact_text(str(error), context)}", file=sys.stderr)
         return 2
     except OSError as error:
-        print(f"svg_preflight: {error}", file=sys.stderr)
+        print(f"svg_preflight: {redact_text(str(error), context)}", file=sys.stderr)
         return 2
 
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print(json.dumps(redact_private_metadata(result, context), ensure_ascii=False, indent=2))
     return 1 if result["summary"]["error_count"] else 0
 
 

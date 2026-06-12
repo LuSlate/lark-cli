@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "route_id": "create-svg",
+  "route_name": "slides +create-svg",
+  "owner_skill": "lark-slides",
+  "visibility": "public",
+  "private_recipe_manifest": "private-recipes.manifest.json",
+  "allowed_private_recipe_source": "private_recipe_manifest_keys",
+  "public_entrypoints": [
+    "SKILL.md",
+    "references/lark-slides-create-svg.md",
+    "references/svg-protocol.md",
+    "references/svg-visual-recipes.md",
+    "references/svg-aesthetic-review.md"
+  ],
+  "private_policy": {
+    "private_recipe_manifest": "references/routes/create-svg/private-recipes.manifest.json",
+    "recipe_selection_schema": "references/routes/create-svg/private/recipe-selection.schema.json",
+    "recipe_selection_example": "references/routes/create-svg/private/recipe-selection.example.json",
+    "runtime_surface": "route-private",
+    "fallback_policy": "deny",
+    "exemption_policy": "deny"
+  },
+  "docs_leak_lint": {
+    "script": "scripts/svg_private_docs_lint.py",
+    "denylist_source": "references/routes/create-svg/private-recipes.manifest.json",
+    "allowed_exact_id_paths": [
+      "references/routes/create-svg/private-recipes.manifest.json",
+      "references/routes/create-svg/private/**",
+      "tests/fixtures/routes/create-svg/private/**",
+      "tests/fixtures/routes/create-svg/internal-reports/**"
+    ]
+  }
+}

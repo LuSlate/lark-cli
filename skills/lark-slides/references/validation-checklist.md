@@ -50,6 +50,8 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 
 ```bash
 python3 skills/lark-slides/scripts/svg_preflight.py \
+  --route-manifest skills/lark-slides/references/routes/create-svg/route.manifest.json \
+  --report-scope public \
   --plan .lark-slides/plan/<deck-id>/slide_plan.json \
   --input .lark-slides/plan/<deck-id>/pages/page-001.svg
 ```
@@ -57,6 +59,7 @@ python3 skills/lark-slides/scripts/svg_preflight.py \
 通过标准：
 
 - `summary.error_count == 0`，任何 error 都必须先修复再调用 live API。
+- SVG 生成脚本必须先完整结束，再运行 `svg_preflight.py`；不要让生成和 preflight 并行读写同一 output 目录。
 - `style_preset` 必须存在于 `references/style-presets.json`。
 - `style_selection_reason` 必须说明为什么这个 preset 适合当前 deck。
 - `style_system` 必须包含 palette、typography、background strategy 和 motif。
@@ -88,6 +91,22 @@ python3 skills/lark-slides/scripts/svg_preflight.py \
 - 多页没有重复出现同一个布局错误；如果有，必须修生成规则并重新生成相关页面。
 - 用户可见交付 deck 的审美目标默认不低于 `75/100`；低于 `65/100` 应重新生成或显式降级为草稿。
 - 验证记录包含 `preview_path`、`visual_score`、`threshold`、`issue_ids`、`action`。`action=create_live` 才能继续调用 live API；`action=repair_and_rerun` 必须先修 source SVG / plan 并重新跑 preflight。
+
+## Live Create And Image Token Gate
+
+`svg_preflight.py` 通过后，仍必须跑 `slides +create-svg --dry-run`。Dry-run 要确认：
+
+- 请求链路是 create presentation 后按 `--file` 顺序追加 SVG 页。
+- 含 `@./assets/...` 的 SVG 会先出现 `medias/upload_all`，再在 page content 中出现 transport metadata。
+- 纯 SVG 发布版不得残留 `<image>`、`@./assets` 或 `uploaded_file_token`。
+- 所有 `url(#id)` 引用都有对应 `defs` id；dry-run 不一定能拦住未定义渐变。
+
+对 `ppe_pure_svg` 或其他尚未稳定证明支持 image token 的 live lane，先单独 smoke：
+
+- 一页纯 SVG：验证 lane 支持 SVGlide parser。
+- 一页含本地 `@./assets/...` 图片：验证 upload 后的 image token 能被 `/slide` 解析。
+
+如果纯 SVG 页成功、图片页在上传成功后 `/slide` 报 `nodeServer internal error`，短期线上发布可切到单独 `online-pure` SVG 目录，用 shape、path、gradient 和 texture geometry 替代图片区域。这个 fallback 只用于 live 发布，不得覆盖带真实图片的 authoring preview，并必须在最终交付说明中标注。
 
 这一步和 preflight 分工如下：
 

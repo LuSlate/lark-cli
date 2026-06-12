@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0.0",
+  "route_id": "create-svg",
+  "visibility": "route-private",
+  "selection_sidecar_schema": "references/routes/create-svg/private/recipe-selection.schema.json",
+  "blocked_absolute_paths": [
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/svglide-visual-guidance/visual_recipe_catalog.md"
+  ],
+  "blocked_research_dotted_recipe_ids": [
+    "cover.hero",
+    "section.divider",
+    "agenda.structured",
+    "kpi.big-number",
+    "comparison.two-column",
+    "timeline.roadmap",
+    "process.flow",
+    "architecture.layered",
+    "data.single-chart",
+    "dashboard.kpi-grid",
+    "table.visual-summary",
+    "image.story",
+    "quote.insight"
+  ],
+  "recipes": {
+    "solar_gallery_hero": {
+      "base_recipe": "hero_typography",
+      "required_primitives": [
+        "typography",
+        "image_overlay",
+        "geometric_shape"
+      ],
+      "required_effects": [
+        "gradient",
+        "image_overlay",
+        "spotlight"
+      ],
+      "minimum_visible_area_ratio": 0.62,
+      "source_truth_requirements": [
+        "Primary image or product evidence must be traceable to the deck query, local asset reference, or cited preview source.",
+        "Hero title and visual focal point must remain editable or explicitly represented in the SVG source manifest.",
+        "Decorative solar rays or gallery frames must not be the only evidence for the selected recipe."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    },
+    "spectral_wave_strata": {
+      "base_recipe": "gradient_depth",
+      "required_primitives": [
+        "path",
+        "gradient",
+        "geometric_shape"
+      ],
+      "required_effects": [
+        "path",
+        "gradient",
+        "texture"
+      ],
+      "minimum_visible_area_ratio": 0.58,
+      "source_truth_requirements": [
+        "Wave strata must encode an explicit concept, timeline, segment, or hierarchy from the page plan.",
+        "At least three visible strata must be present in the SVG source manifest.",
+        "Labels must map strata to source-backed page content instead of acting as generic decoration."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    },
+    "modernist_grid_gallery": {
+      "base_recipe": "geometric_composition",
+      "required_primitives": [
+        "texture",
+        "image_overlay",
+        "typography"
+      ],
+      "required_effects": [
+        "grid_geometry",
+        "image_overlay",
+        "gradient"
+      ],
+      "minimum_visible_area_ratio": 0.6,
+      "source_truth_requirements": [
+        "Every gallery tile must correspond to a source-backed item, image, milestone, or evidence unit.",
+        "The grid must use stable alignment and must not collapse into ordinary card bullets.",
+        "Any clipping or mask-like treatment must include a safe rewrite in the SVG source manifest."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    },
+    "aurora_ribbon_landscape": {
+      "base_recipe": "gradient_depth",
+      "required_primitives": [
+        "path",
+        "gradient",
+        "geometric_shape"
+      ],
+      "required_effects": [
+        "gradient",
+        "path",
+        "connector_flow"
+      ],
+      "minimum_visible_area_ratio": 0.57,
+      "source_truth_requirements": [
+        "Ribbon paths must carry the page narrative, flow, or segmentation rather than only forming a background.",
+        "The focal ribbon must occupy a meaningful visible area and remain behind readable text.",
+        "Color bands must map to source-backed categories, stages, or emphasis states when labels are present."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    },
+    "prism_spectrum_split": {
+      "base_recipe": "geometric_composition",
+      "required_primitives": [
+        "geometric_shape",
+        "gradient",
+        "typography"
+      ],
+      "required_effects": [
+        "gradient",
+        "spotlight",
+        "connector_flow"
+      ],
+      "minimum_visible_area_ratio": 0.55,
+      "source_truth_requirements": [
+        "The split spectrum must represent a source-backed comparison, segmentation, funnel, or transformation.",
+        "Prism geometry must expose explicit source primitives instead of being a raster-only decoration.",
+        "Each split region must preserve text contrast and safe-area constraints."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    },
+    "layered_hill_dawn": {
+      "base_recipe": "gradient_depth",
+      "required_primitives": [
+        "geometric_shape",
+        "gradient",
+        "typography"
+      ],
+      "required_effects": [
+        "gradient",
+        "texture",
+        "spotlight"
+      ],
+      "minimum_visible_area_ratio": 0.56,
+      "source_truth_requirements": [
+        "Layered hills must express a staged build-up, maturity path, or depth hierarchy from the page plan.",
+        "At least three source-visible depth layers must be represented in the SVG source manifest.",
+        "Dawn lighting must not reduce title or body text contrast below the route safety threshold."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    },
+    "curtain_call_orbit": {
+      "base_recipe": "metaphor_loop",
+      "required_primitives": [
+        "path",
+        "flow",
+        "geometric_shape"
+      ],
+      "required_effects": [
+        "path",
+        "connector_flow",
+        "spotlight"
+      ],
+      "minimum_visible_area_ratio": 0.59,
+      "source_truth_requirements": [
+        "Orbiting elements must map to source-backed actors, milestones, capabilities, or closing takeaways.",
+        "The orbit path must remain visible and must be represented by SVG path or line primitives.",
+        "The curtain or spotlight motif must support the closing narrative instead of hiding required evidence."
+      ],
+      "fallback_policy": "deny",
+      "exemption_policy": "deny"
+    }
+  }
+}
