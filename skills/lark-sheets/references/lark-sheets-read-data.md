@@ -22,7 +22,7 @@
 | 读取目的 | 用这个 shortcut | 数据去向 | 说明 |
 |---------|----------------|---------|------|
 | 快速查看纯值数据、批量处理 | `+csv-get` | 对话上下文 | 返回 CSV 文本（每行带 `[row=N]` 前缀）；大表请按 `--range` 行窗口分批读（截断时看 `has_more`） |
-| 按列类型结构化读出（喂 DataFrame / round-trip 回 `+table-put`） | `+table-get` | 对话上下文 | 返回 typed 协议（`columns:[{name,type}]` + `rows`），列类型由 `number_format` 推断、混合列无损降 `string`；类型保真往返 |
+| 按列类型结构化读出（喂 DataFrame / round-trip 回 `+table-put`） | `+table-get` | 对话上下文 | 返回 typed 协议（`columns:[列名]` + `data` + `dtypes`/`formats`），输出形状对齐 pandas split；可一行 `pd.DataFrame(sheet["data"], columns=sheet["columns"]).astype(sheet["dtypes"])` 还原 DataFrame，或直接 round-trip 回 `+table-put` |
 | 查看公式、样式、批注、数据验证 | `+cells-get` | 对话上下文 | 返回单元格完整信息，token 开销较大 |
 | 查看某区域的下拉框（数据验证）选项 | `+dropdown-get` | 对话上下文 | 返回该 A1 范围已配置的下拉列表选项 |
 
@@ -170,7 +170,9 @@ lark-cli sheets +cells-get --url "https://example.feishu.cn/sheets/shtXXX" --she
 
 ### `+table-get`（飞书 → DataFrame，类型保真读出）
 
-`+table-put`（写入侧，见 write-cells reference）的镜像：把表格读回与 `--sheets` 同构的 typed 协议（`sheets[]` + `columns:[{name,type}]` + `rows`），可直接喂回 `+table-put` 或转 DataFrame。列 `type` 从每列 `number_format` 推断（日期格式→`date`、数值→`number`），`date` 列的序列号转回 ISO `yyyy-mm-dd`——日期、数字往返不丢类型。**列类型只在该列所有非空值一致时才定（`number` / `date` / `bool`）；一列混了类型（如数字列混入「暂无」、日期列混入裸数字）会降为 `string`，让 `columns[].type` 与 `rows` 里每个值自洽——能 round-trip 回 `+table-put`、不让 pandas 崩。降级是无损的（脏值原样保留为文本）；若要把零星脏值转成数值列，交给调用方在 pandas 侧做（`to_numeric(errors='coerce')`），那里原始值仍在、可追溯。** 底层复用 `get_cell_ranges` / `get_range_as_csv`。默认读所有子表、第一行当表头（`--no-header` 把首行当数据、列名取 `col1` / `col2` …）。
+`+table-put`（写入侧，见 write-cells reference）的镜像：把表格读回与 `--sheets` 完全同构的 typed 协议（`sheets[]` + `columns:[列名]` + `data:[[行]]` + `dtypes:{列名:pandas_dtype}` + `formats?:{列名:number_format}`），可直接喂回 `+table-put` 或一行还原 DataFrame。
+
+列类型从每列 `number_format` 推断（日期格式→`date`/`datetime64[ns]`、数值→`number`/`float64`、bool→`bool`），`date` 列的序列号转回 ISO `yyyy-mm-dd`——日期、数字往返不丢类型。**列类型只在该列所有非空值一致时才定（`number` / `date` / `bool`）；一列混了类型（如数字列混入「暂无」、日期列混入裸数字）会降为 `string`（dtypes 输出 `object`），让 `dtypes` 与 `data` 里每个值自洽——能 round-trip 回 `+table-put`、不让 pandas `astype` 崩。降级是无损的（脏值原样保留为文本）；若要把零星脏值转成数值列，交给调用方在 pandas 侧做（`to_numeric(errors='coerce')`），那里原始值仍在、可追溯。** 底层复用 `get_cell_ranges` / `get_range_as_csv`。默认读所有子表、第一行当表头（`--no-header` 把首行当数据、列名取 `col1` / `col2` …）。
 
 ```bash
 # 默认读所有子表 → sheets[]（与 +table-put 的 --sheets 同构，可喂回或转 DataFrame）
@@ -179,15 +181,47 @@ lark-cli sheets +table-get --url "<表URL>"
 lark-cli sheets +table-get --url "<表URL>" --sheet-name "销售"
 ```
 
-`+table-get` 输出 → DataFrame（按读回的 `type` 还原 dtype）：
+#### 输出 → DataFrame（2 行 helper）
+
+输出形状对齐 pandas split：`columns` 是列名数组、`data` 是二维数据、`dtypes` 是 `{列名: pandas_dtype_str}` 映射。直接喂给 `pd.DataFrame(...).astype(...)` 就能一次性还原所有列类型（不必逐列 `to_datetime` / `to_numeric`），写入侧 `df_to_sheet` 的镜像 helper：
 
 ```python
-sheet = out["data"]["sheets"][0]
-df = pd.DataFrame(sheet["rows"], columns=[c["name"] for c in sheet["columns"]])
-for c in sheet["columns"]:
-    if c["type"] == "date":     df[c["name"]] = pd.to_datetime(df[c["name"]])
-    elif c["type"] == "number": df[c["name"]] = pd.to_numeric(df[c["name"]])
+import pandas as pd
+def sheet_to_df(sheet):
+    return pd.DataFrame(sheet["data"], columns=sheet["columns"]).astype(sheet["dtypes"])
+
+# 单 sheet
+df = sheet_to_df(out["data"]["sheets"][0])
+
+# 多 sheet——按名字取
+sheets = {s["name"]: sheet_to_df(s) for s in out["data"]["sheets"]}
+df_sales = sheets["销售"]
 ```
+
+> 显示格式（千分位、百分比、自定义日期）在 `sheet["formats"]`，pandas 不消费；改完数据 round-trip 回去时透传给 `+table-put` 即可，飞书侧显示不变。
+
+#### round-trip：读 → 改 → 写回（写读对偶）
+
+`sheet_to_df` 和 write-cells reference 里的 `df_to_sheet` 是一对镜像 helper，round-trip 三段读 / 改 / 写各一行：
+
+```python
+import json, subprocess
+# 1. 读
+out = json.loads(subprocess.check_output(
+    ["lark-cli","sheets","+table-get","--url",URL,"--sheet-name","销售"]))
+sheet = out["data"]["sheets"][0]
+df = sheet_to_df(sheet)
+
+# 2. 改（pandas 操作）
+df["营收"] = df["营收"] * 1.1
+
+# 3. 写回（formats 是飞书侧显示格式，pandas 不消费，透传保留显示）
+payload = {"sheets": [df_to_sheet(df, sheet["name"], formats=sheet.get("formats"))]}
+subprocess.run(["lark-cli","sheets","+table-put","--url",URL,"--sheets","-"],
+               input=json.dumps(payload).encode(), check=True)
+```
+
+`sheet_to_df(sheet)` 消费 `(columns, data, dtypes)`，`df_to_sheet(df, name, formats=...)` 重新生成同样三个字段——读 / 写完全对偶，只有 `formats` 需要手工透传一次。
 
 ### Validate / DryRun / Execute 约束
 

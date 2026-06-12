@@ -43,7 +43,7 @@
 | 写入已有 spreadsheet | `+table-put --sheets` | 把 DataFrame 转成 `{sheets:[...]}`，按 sheet 名匹配，缺 sheet 时创建，支持覆盖 / 追加 |
 | 新建 spreadsheet 并写入结果 | `+workbook-create --sheets` | 协议与 `+table-put` 同构，一步建表 + typed 写入，适合 pandas 算完直接交付新模型 |
 
-typed payload 结构：
+typed payload 结构（形状对齐 pandas `df.to_json(orient="split")`）：
 
 ```json
 {
@@ -52,12 +52,10 @@ typed payload 结构：
       "name": "Output",
       "start_cell": "A1",
       "mode": "overwrite",
-      "columns": [
-        {"name": "Date", "type": "date", "format": "yyyy-mm-dd"},
-        {"name": "Revenue", "type": "number", "format": "$#,##0;($#,##0);\"-\""},
-        {"name": "EBITDA Margin", "type": "number", "format": "0.0%"}
-      ],
-      "rows": [
+      "columns": ["Date", "Revenue", "EBITDA Margin"],
+      "dtypes": {"Date": "datetime64[ns]", "Revenue": "float64", "EBITDA Margin": "float64"},
+      "formats": {"Revenue": "$#,##0;($#,##0);\"-\"", "EBITDA Margin": "0.0%"},
+      "data": [
         ["2026-12-31", 708000000, 0.29]
       ]
     }
@@ -65,11 +63,27 @@ typed payload 结构：
 }
 ```
 
-DataFrame 转 payload 时按业务语义定列类型：
+pandas 构造（用 write-cells reference 里的 5 行 `df_to_sheet(df, name, formats=None)` helper）：
 
-- 金额、收入、费用、利润、人数、股数、倍数、百分比都用 `type:"number"`；百分比存小数，如 `12.5%` 写 `0.125`，靠 `format:"0.0%"` 显示。
-- 日期列用 `type:"date"`，值用 ISO 日期字符串；不要把日期预格式化成普通文本。
-- 订单号、股票代码、员工编号等需要保留前导零或不参与计算的字段用 `type:"string"`。
+```python
+payload = {"sheets": [
+    df_to_sheet(df, "Output",
+                formats={"Revenue": "$#,##0;($#,##0);\"-\"",
+                         "EBITDA Margin": "0.0%"})
+]}
+# 多 sheet 时 helper 优势更明显——income / balance / cashflow / sensitivity 各一行：
+payload = {"sheets": [df_to_sheet(income, "Income Statement"),
+                      df_to_sheet(balance, "Balance Sheet"),
+                      df_to_sheet(cashflow, "Cash Flow"),
+                      df_to_sheet(sensitivity, "Sensitivity",
+                                  formats={"WACC": "0.00%", "Terminal Growth": "0.00%"})]}
+```
+
+DataFrame 转 payload 时按业务语义对齐 dtype + format：
+
+- 金额、收入、费用、利润、人数、股数、倍数、百分比都是 `number`（dtype 用 `int64` / `float64`，或 nullable `Int64` / `Float64`）；百分比存小数，如 `12.5%` 写 `0.125`，靠 `formats[列名]="0.0%"` 显示。
+- 日期列用 `datetime64[ns]`（pandas 默认 dtype，CLI 映射成 date），值用 ISO 日期字符串；不要把日期预格式化成普通文本。
+- 订单号、股票代码、员工编号等需要保留前导零或不参与计算的字段用 `object`（dtype 缺省也是这个，含前导零的字符串会被 CLI 自动套文本格式 `@`、读回不塌缩成数字）。
 - pandas 计算出的源数据 / 输出表先用 `+table-put` 或 `+workbook-create --sheets` 落地；公式、颜色编码、边框、Sensitivity baseline 高亮再用 `+cells-set` / `+cells-set-style` 补。
 
 ## 财务逻辑规范

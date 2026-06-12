@@ -5,6 +5,7 @@ package sheets
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -24,8 +25,16 @@ func TestTablePut_IsoDateToSerial(t *testing.T) {
 		{"2024-01-01", 45292, true},
 		{"2024-02-29", 45351, true}, // 2024 is a leap year
 		{"1899-12-31", 1, true},     // one day after the epoch
+		// pandas `df.to_json(orient="split", date_format="iso")` emits full ISO
+		// datetimes (`yyyy-mm-ddTHH:MM:SS.fff[±HH:MM]`); df_to_sheet hands those
+		// straight to --sheets, so the writer must round-trip them without
+		// asking agents to strip the time suffix themselves.
+		{"2024-01-15T00:00:00.000", 45306, true},
+		{"2024-01-15T08:30:00+08:00", 45306, true},
 		{"not-a-date", 0, false},
-		{"2024/01/15", 0, false}, // wrong separator
+		{"2024/01/15", 0, false},   // wrong separator
+		{"T2024-01-15", 0, false},  // a leading T isn't a valid prefix to strip
+		{"2024-15-01", 0, false},   // invalid month/day still rejected after T-strip
 	}
 	for _, tt := range cases {
 		got, err := isoDateToSerial(tt.in)
@@ -140,6 +149,102 @@ func TestTablePut_BuildTypedCell(t *testing.T) {
 	})
 }
 
+// TestDtypeToTypeFormat pins down the pandas-dtype → internal (type, format)
+// mapping that drives the writer. Pandas dtype strings come in three flavors —
+// lowercase numpy (`int64`), capitalized nullable pandas (`Int64`), and the
+// stringified output of tz-aware datetimes (`datetime64[ns, UTC]`) — the table
+// below exercises one of each per family so a future pandas release that adds
+// (say) `float128` still maps to "number" via the prefix check rather than
+// silently falling through to string.
+func TestDtypeToTypeFormat(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		dtype, wantType, wantFmt string
+	}{
+		// numeric: all variants → number (no default format; formats[] decides display)
+		{"int8", "number", ""}, {"int16", "number", ""}, {"int32", "number", ""}, {"int64", "number", ""},
+		{"uint8", "number", ""}, {"uint16", "number", ""}, {"uint32", "number", ""}, {"uint64", "number", ""},
+		{"float32", "number", ""}, {"float64", "number", ""},
+		{"Int8", "number", ""}, {"Int64", "number", ""}, {"UInt32", "number", ""}, {"Float64", "number", ""}, // nullable
+		{"complex64", "number", ""}, {"complex128", "number", ""},
+		// booleans: bool (numpy) + boolean (nullable pandas)
+		{"bool", "bool", ""}, {"boolean", "bool", ""},
+		// dates: every datetime* variant, incl. tz-aware
+		{"datetime64[ns]", "date", "yyyy-mm-dd"},
+		{"datetime64[ns, UTC]", "date", "yyyy-mm-dd"},
+		{"datetime64[ns, Asia/Shanghai]", "date", "yyyy-mm-dd"},
+		{"datetime64", "date", "yyyy-mm-dd"},
+		// strings / unknown: object, string, category, empty, gibberish → string + @
+		{"object", "string", "@"}, {"string", "string", "@"}, {"category", "string", "@"},
+		{"", "string", "@"}, {"timestamp", "string", "@"}, {"bigint", "string", "@"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.dtype, func(t *testing.T) {
+			t.Parallel()
+			gotType, gotFmt := dtypeToTypeFormat(tc.dtype)
+			if gotType != tc.wantType || gotFmt != tc.wantFmt {
+				t.Errorf("dtypeToTypeFormat(%q) = (%q, %q), want (%q, %q)",
+					tc.dtype, gotType, gotFmt, tc.wantType, tc.wantFmt)
+			}
+		})
+	}
+}
+
+// TestTypeToDtype pins down the inverse mapping used by +table-get. The dtype
+// string each internal type maps to must be one `df.astype(dtypes)` can
+// consume without a per-column branch — that's the round-trip contract.
+func TestTypeToDtype(t *testing.T) {
+	t.Parallel()
+	cases := []struct{ typ, want string }{
+		{"string", "object"},     // pandas default, astype("object") is a no-op
+		{"number", "float64"},    // works for ints, floats, and NaN-containing series
+		{"date", "datetime64[ns]"}, // matches ISO yyyy-mm-dd strings we emit
+		{"bool", "bool"},         // inferColumnType only picks bool when every cell is bool
+		{"", "object"},           // defensive default
+		{"surprise", "object"},   // ditto
+	}
+	for _, tc := range cases {
+		if got := typeToDtype(tc.typ); got != tc.want {
+			t.Errorf("typeToDtype(%q) = %q, want %q", tc.typ, got, tc.want)
+		}
+	}
+}
+
+// TestNormalize_DefaultsAndFormatOverride covers the wire-shape ergonomics that
+// matter for one-line pandas writes:
+//   - omitting `dtypes` makes every column a text-format string (so a bare
+//     `df.to_json(orient="split")` payload is valid: leading-zero ids survive,
+//     digits don't sneak in as numbers);
+//   - `formats[col]` overrides the dtype-derived default (so a `float64` column
+//     gets `#,##0.00` instead of no format);
+//   - explicit `dtypes[col]` wins over the default-when-missing path.
+func TestNormalize_DefaultsAndFormatOverride(t *testing.T) {
+	t.Parallel()
+	in := &tableSheetIn{
+		Name:    "S",
+		Columns: []string{"id", "amt", "d", "raw"},
+		Dtypes:  map[string]string{"amt": "float64", "d": "datetime64[ns]"}, // id, raw left unspecified
+		Formats: map[string]string{"amt": "#,##0.00"},                       // override float default ("")
+		Data:    [][]interface{}{},
+	}
+	spec, err := in.normalize(0)
+	if err != nil {
+		t.Fatalf("normalize: %v", err)
+	}
+	want := []tableColumnSpec{
+		{Name: "id", Type: "string", Format: "@"},     // unspecified dtype → string + text format
+		{Name: "amt", Type: "number", Format: "#,##0.00"}, // float64 + formats override
+		{Name: "d", Type: "date", Format: "yyyy-mm-dd"}, // datetime → date + default date format
+		{Name: "raw", Type: "string", Format: "@"},    // unspecified → string + text format
+	}
+	for i, w := range want {
+		got := spec.Columns[i]
+		if got != w {
+			t.Errorf("columns[%d] = %+v, want %+v", i, got, w)
+		}
+	}
+}
+
 // numberFormatOf digs the number_format out of a built cell's cell_styles, or
 // "" when absent.
 func numberFormatOf(cell map[string]interface{}) string {
@@ -161,15 +266,17 @@ func TestTablePut_PayloadValidation(t *testing.T) {
 		want string
 	}{
 		{"empty sheets", `{"sheets":[]}`, "at least one sheet"},
-		{"missing name", `{"sheets":[{"columns":[{"name":"a","type":"string"}],"rows":[]}]}`, "name is required"},
-		{"duplicate name", `{"sheets":[{"name":"S","columns":[{"name":"a","type":"string"}],"rows":[]},{"name":"S","columns":[{"name":"a","type":"string"}],"rows":[]}]}`, "duplicate sheet name"},
-		{"no columns", `{"sheets":[{"name":"S","columns":[],"rows":[]}]}`, "columns must be non-empty"},
-		{"bad column type", `{"sheets":[{"name":"S","columns":[{"name":"a","type":"timestamp"}],"rows":[]}]}`, "invalid type"},
-		{"column missing name", `{"sheets":[{"name":"S","columns":[{"type":"string"}],"rows":[]}]}`, "columns[0].name is required"},
-		{"row width mismatch", `{"sheets":[{"name":"S","columns":[{"name":"a","type":"string"},{"name":"b","type":"string"}],"rows":[["x"]]}]}`, "column count"},
-		{"bad start_cell", `{"sheets":[{"name":"S","start_cell":"A","columns":[{"name":"a","type":"string"}],"rows":[]}]}`, "start_cell"},
-		{"bad date value", `{"sheets":[{"name":"S","columns":[{"name":"d","type":"date"}],"rows":[["2025/03/31"]]}]}`, "must be ISO"},
-		{"number expects numeric", `{"sheets":[{"name":"S","columns":[{"name":"n","type":"number"}],"rows":[["abc"]]}]}`, "number expects"},
+		{"missing name", `{"sheets":[{"columns":["a"],"data":[]}]}`, "name is required"},
+		{"duplicate name", `{"sheets":[{"name":"S","columns":["a"],"data":[]},{"name":"S","columns":["a"],"data":[]}]}`, "duplicate sheet name"},
+		{"no columns", `{"sheets":[{"name":"S","columns":[],"data":[]}]}`, "columns must be non-empty"},
+		{"column missing name", `{"sheets":[{"name":"S","columns":[""],"data":[]}]}`, "columns[0] name is required"},
+		{"duplicate column", `{"sheets":[{"name":"S","columns":["a","a"],"data":[]}]}`, "duplicate column name"},
+		{"dtypes refs unknown column", `{"sheets":[{"name":"S","columns":["a"],"data":[],"dtypes":{"b":"int64"}}]}`, "dtypes references unknown column"},
+		{"formats refs unknown column", `{"sheets":[{"name":"S","columns":["a"],"data":[],"formats":{"b":"0.0"}}]}`, "formats references unknown column"},
+		{"row width mismatch", `{"sheets":[{"name":"S","columns":["a","b"],"data":[["x"]]}]}`, "column count"},
+		{"bad start_cell", `{"sheets":[{"name":"S","start_cell":"A","columns":["a"],"data":[]}]}`, "start_cell"},
+		{"bad date value", `{"sheets":[{"name":"S","columns":["d"],"dtypes":{"d":"datetime64[ns]"},"data":[["2025/03/31"]]}]}`, "must be ISO"},
+		{"number expects numeric", `{"sheets":[{"name":"S","columns":["n"],"dtypes":{"n":"int64"},"data":[["abc"]]}]}`, "number expects"},
 		{"invalid json", `{not json`, "invalid JSON"},
 	}
 	for _, tt := range cases {
@@ -198,11 +305,11 @@ func (s stubFlagView) Command() string               { return "+table-put" }
 
 // ─── dry-run: create + write rendering ────────────────────────────────
 
-const tablePutSheetsJSON = `{"sheets":[{"name":"月度","columns":[` +
-	`{"name":"门店","type":"string"},` +
-	`{"name":"月份","type":"date","format":"yyyy-mm"},` +
-	`{"name":"销售额","type":"number","format":"#,##0"}` +
-	`],"rows":[["北京","2024-01-15",259874]]}]}`
+const tablePutSheetsJSON = `{"sheets":[{"name":"月度",` +
+	`"columns":["门店","月份","销售额"],` +
+	`"dtypes":{"门店":"object","月份":"datetime64[ns]","销售额":"int64"},` +
+	`"formats":{"月份":"yyyy-mm","销售额":"#,##0"},` +
+	`"data":[["北京","2024-01-15",259874]]}]}`
 
 func TestTablePut_DryRunWrite(t *testing.T) {
 	t.Parallel()
@@ -271,13 +378,13 @@ func TestTablePut_Validation(t *testing.T) {
 			want: "mutually exclusive",
 		},
 		{
-			name: "bad column type rejected",
-			args: []string{"--url", testURL, "--sheets", `{"sheets":[{"name":"S","columns":[{"name":"a","type":"foo"}],"rows":[]}]}`},
-			want: "invalid type",
+			name: "duplicate column name rejected",
+			args: []string{"--url", testURL, "--sheets", `{"sheets":[{"name":"S","columns":["a","a"],"data":[]}]}`},
+			want: "duplicate column name",
 		},
 		{
 			name: "row width mismatch rejected",
-			args: []string{"--url", testURL, "--sheets", `{"sheets":[{"name":"S","columns":[{"name":"a","type":"string"},{"name":"b","type":"string"}],"rows":[["only-one"]]}]}`},
+			args: []string{"--url", testURL, "--sheets", `{"sheets":[{"name":"S","columns":["a","b"],"data":[["only-one"]]}]}`},
 			want: "column count",
 		},
 	}
@@ -305,7 +412,7 @@ func TestTablePut_ExecuteWrite(t *testing.T) {
 	write := toolOutputStub(testToken, "write", `{"updated_cells_count":2}`)
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
-			`{"sheets":[{"name":"数据","columns":[{"name":"a","type":"string"},{"name":"b","type":"number"}],"rows":[["x",1]]}]}`},
+			`{"sheets":[{"name":"数据","columns":["a","b"],"dtypes":{"b":"int64"},"data":[["x",1]]}]}`},
 		structure, write)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
@@ -337,7 +444,7 @@ func TestTablePut_ExecuteWriteCreatesMissingSheet(t *testing.T) {
 	write.Reusable = true // modify_workbook_structure create + set_cell_range
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
-			`{"sheets":[{"name":"新表","columns":[{"name":"a","type":"string"}],"rows":[["x"]]}]}`},
+			`{"sheets":[{"name":"新表","columns":["a"],"data":[["x"]]}]}`},
 		structBefore, structAfter, write)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
@@ -395,9 +502,15 @@ func TestTablePut_ExecuteCreatesWideSheetWithDims(t *testing.T) {
 	structAfter := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"`+testSheetID+`","sheet_name":"Sheet1","index":0},{"sheet_id":"`+testSheetID2+`","sheet_name":"宽表","index":1}]}`)
 	writeStub := toolOutputStub(testToken, "write", `{"ok":true}`) // set_cell_range
 	const n = 25
-	cols := strings.TrimRight(strings.Repeat(`{"name":"c","type":"string"},`, n), ",")
+	// Distinct names per column — the new wire shape rejects duplicates at
+	// normalize-time, so a repeated "c" would never reach the create call.
+	colNames := make([]string, n)
+	for i := 0; i < n; i++ {
+		colNames[i] = fmt.Sprintf(`"c%d"`, i)
+	}
+	cols := strings.Join(colNames, ",")
 	vals := strings.TrimRight(strings.Repeat(`"x",`, n), ",")
-	payload := `{"sheets":[{"name":"宽表","columns":[` + cols + `],"rows":[[` + vals + `]]}]}`
+	payload := `{"sheets":[{"name":"宽表","columns":[` + cols + `],"data":[[` + vals + `]]}]}`
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets", payload},
 		structBefore, createStub, structAfter, writeStub)
@@ -437,7 +550,7 @@ func TestTablePut_ExecuteTotalFailure(t *testing.T) {
 	}
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
-			`{"sheets":[{"name":"数据","columns":[{"name":"a","type":"string"}],"rows":[["x"]]}]}`},
+			`{"sheets":[{"name":"数据","columns":["a"],"data":[["x"]]}]}`},
 		structure, writeErr)
 	if err == nil {
 		t.Fatalf("expected failure; got nil. out=%s", out)
@@ -464,7 +577,7 @@ func TestTablePut_ExecutePartialFailure(t *testing.T) {
 	}
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
-			`{"sheets":[{"name":"汇总","columns":[{"name":"a","type":"string"}],"rows":[["x"]]},{"name":"明细","columns":[{"name":"a","type":"string"}],"rows":[["y"]]}]}`},
+			`{"sheets":[{"name":"汇总","columns":["a"],"data":[["x"]]},{"name":"明细","columns":["a"],"data":[["y"]]}]}`},
 		structure, writeOK, writeErr)
 	if err == nil {
 		t.Fatalf("expected partial-success error; got nil. out=%s", out)
@@ -485,7 +598,7 @@ func TestTablePut_ExecutePartialFailure(t *testing.T) {
 // --sheets entry can't be combined with the untyped --headers/--values.
 func TestWorkbookCreate_TypedMutualExclusion(t *testing.T) {
 	t.Parallel()
-	typed := `{"sheets":[{"name":"S","columns":[{"name":"a","type":"string"}],"rows":[["x"]]}]}`
+	typed := `{"sheets":[{"name":"S","columns":["a"],"data":[["x"]]}]}`
 	for _, tc := range []struct {
 		name string
 		args []string
@@ -553,7 +666,7 @@ func TestWorkbookCreate_TypedAdoptsDefaultSheet(t *testing.T) {
 	}
 	out, err := runShortcutWithStubs(t, WorkbookCreate, []string{
 		"--title", "Demo",
-		"--sheets", `{"sheets":[{"name":"Sales","columns":[{"name":"d","type":"date"},{"name":"amt","type":"number"}],"rows":[["2024-01-15",1234.5]]}]}`,
+		"--sheets", `{"sheets":[{"name":"Sales","columns":["d","amt"],"dtypes":{"d":"datetime64[ns]","amt":"float64"},"data":[["2024-01-15",1234.5]]}]}`,
 	}, create, structure, rename, write)
 	if err != nil {
 		t.Fatalf("typed create failed: %v\nout=%s", err, out)
@@ -585,7 +698,7 @@ func TestWorkbookCreate_TypedDryRun(t *testing.T) {
 	t.Parallel()
 	calls := parseDryRunAPI(t, WorkbookCreate, []string{
 		"--title", "Demo",
-		"--sheets", `{"sheets":[{"name":"S","columns":[{"name":"d","type":"date"}],"rows":[["2024-01-15"]]}]}`,
+		"--sheets", `{"sheets":[{"name":"S","columns":["d"],"dtypes":{"d":"datetime64[ns]"},"data":[["2024-01-15"]]}]}`,
 	})
 	if len(calls) != 2 {
 		t.Fatalf("want 2 dry-run calls (create + typed write), got %d", len(calls))
@@ -600,7 +713,7 @@ func TestWorkbookCreate_TypedDryRun_MultiSheetStyles(t *testing.T) {
 	t.Parallel()
 	calls := parseDryRunAPI(t, WorkbookCreate, []string{
 		"--title", "Demo",
-		"--sheets", `{"sheets":[{"name":"S1","columns":[{"name":"name","type":"string"}],"rows":[["alice"]]},{"name":"S2","columns":[{"name":"amount","type":"number","format":"0"}],"rows":[[12]]}]}`,
+		"--sheets", `{"sheets":[{"name":"S1","columns":["name"],"data":[["alice"]]},{"name":"S2","columns":["amount"],"dtypes":{"amount":"int64"},"formats":{"amount":"0"},"data":[[12]]}]}`,
 		"--styles", `{"styles":[{"name":"S1","cell_styles":[{"range":"A1:A2","background_color":"#f5f5f5"}],"cell_merges":[{"range":"A1:A2"}]},{"name":"S2","cell_styles":[{"range":"A1","font_weight":"bold"},{"range":"A2","font_color":"#0f7b0f"}],"col_sizes":[{"range":"A:A","type":"pixel","size":120}],"row_sizes":[{"range":"1:1","type":"pixel","size":28}]}]}`,
 	})
 	if len(calls) != 6 {
@@ -698,7 +811,7 @@ func TestTablePut_HeaderAndMode(t *testing.T) {
 
 func TestTablePut_BadModeRejected(t *testing.T) {
 	t.Parallel()
-	_, err := parseTablePutPayload(stubFlagView{"sheets": `{"sheets":[{"name":"S","mode":"upsert","columns":[{"name":"a","type":"string"}],"rows":[]}]}`})
+	_, err := parseTablePutPayload(stubFlagView{"sheets": `{"sheets":[{"name":"S","mode":"upsert","columns":["a"],"data":[]}]}`})
 	if err == nil || !strings.Contains(err.Error(), "invalid") {
 		t.Errorf("mode \"upsert\" should be rejected, got %v", err)
 	}
@@ -714,7 +827,7 @@ func TestTablePut_AppendEmptySheetWritesHeader(t *testing.T) {
 	write := toolOutputStub(testToken, "write", `{"ok":true}`)
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
-			`{"sheets":[{"name":"新","mode":"append","columns":[{"name":"列A","type":"string"}],"rows":[["x"],["y"]]}]}`},
+			`{"sheets":[{"name":"新","mode":"append","columns":["列A"],"data":[["x"],["y"]]}]}`},
 		structure, region, write)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
@@ -751,7 +864,7 @@ func TestTablePut_ExecuteAppend(t *testing.T) {
 	write := toolOutputStub(testToken, "write", `{"ok":true}`)
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
-			`{"sheets":[{"name":"日志","mode":"append","columns":[{"name":"时间","type":"string"},{"name":"值","type":"number"}],"rows":[["t1",1],["t2",2]]}]}`},
+			`{"sheets":[{"name":"日志","mode":"append","columns":["时间","值"],"dtypes":{"值":"int64"},"data":[["t1",1],["t2",2]]}]}`},
 		structure, region, write)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
@@ -782,7 +895,7 @@ func TestTablePut_ExecuteAppend(t *testing.T) {
 func TestTablePut_HeaderFalseAndAllowOverwrite(t *testing.T) {
 	t.Parallel()
 	calls := parseDryRunAPI(t, TablePut, []string{"--url", testURL, "--sheets",
-		`{"sheets":[{"name":"S","header":false,"allow_overwrite":false,"columns":[{"name":"a","type":"string"}],"rows":[["x"],["y"]]}]}`})
+		`{"sheets":[{"name":"S","header":false,"allow_overwrite":false,"columns":["a"],"data":[["x"],["y"]]}]}`})
 	body, _ := calls[0].(map[string]interface{})["body"].(map[string]interface{})
 	input := decodeToolInput(t, body, "set_cell_range")
 	if input["allow_overwrite"] != false {
@@ -919,10 +1032,20 @@ func TestTableGet_DigitStringRoundTrip(t *testing.T) {
 	sheets, _ := data["sheets"].([]interface{})
 	s0, _ := sheets[0].(map[string]interface{})
 	cols, _ := s0["columns"].([]interface{})
-	if c0, _ := cols[0].(map[string]interface{}); c0["type"] != "string" {
-		t.Errorf("@-format col 邮编 → type %v, want string", c0["type"])
+	if cols[0] != "邮编" {
+		t.Errorf("columns[0] = %v, want 邮编", cols[0])
 	}
-	rows, _ := s0["rows"].([]interface{})
+	dtypes, _ := s0["dtypes"].(map[string]interface{})
+	if dtypes["邮编"] != "object" {
+		t.Errorf("dtypes[邮编] = %v, want object (text-format column round-trips as string)", dtypes["邮编"])
+	}
+	// The writer paints `@` on string columns so digit-like text survives;
+	// surfacing that back as a user-set format would round-trip noisily, so the
+	// reader strips it. Hence: no "formats" key at all on an all-string sheet.
+	if _, has := s0["formats"]; has {
+		t.Errorf("@ is a writer convention, must NOT surface in formats: %#v", s0["formats"])
+	}
+	rows, _ := s0["data"].([]interface{})
 	if r0, _ := rows[0].([]interface{}); r0[0] != "00123" {
 		t.Errorf("value = %v, want \"00123\" (leading zero preserved)", r0[0])
 	}
@@ -956,21 +1079,86 @@ func TestTableGet_ExecuteRoundTrip(t *testing.T) {
 	if len(cols) != 3 {
 		t.Fatalf("want 3 columns, got %d", len(cols))
 	}
-	c1, _ := cols[1].(map[string]interface{})
-	if c1["name"] != "月份" || c1["type"] != "date" || c1["format"] != "yyyy-mm" {
-		t.Errorf("col 月份 = %#v, want name=月份 date yyyy-mm", c1)
+	if cols[0] != "门店" || cols[1] != "月份" || cols[2] != "销售额" {
+		t.Errorf("columns = %#v, want [门店 月份 销售额]", cols)
 	}
-	c2, _ := cols[2].(map[string]interface{})
-	if c2["type"] != "number" || c2["format"] != "#,##0" {
-		t.Errorf("col 销售额 = %#v, want number #,##0", c2)
+	dtypes, _ := s0["dtypes"].(map[string]interface{})
+	if dtypes["月份"] != "datetime64[ns]" {
+		t.Errorf("dtypes[月份] = %v, want datetime64[ns]", dtypes["月份"])
 	}
-	rows, _ := s0["rows"].([]interface{})
+	if dtypes["销售额"] != "float64" {
+		t.Errorf("dtypes[销售额] = %v, want float64 (numeric)", dtypes["销售额"])
+	}
+	if dtypes["门店"] != "object" {
+		t.Errorf("dtypes[门店] = %v, want object (string column)", dtypes["门店"])
+	}
+	formats, _ := s0["formats"].(map[string]interface{})
+	if formats["月份"] != "yyyy-mm" {
+		t.Errorf("formats[月份] = %v, want yyyy-mm (number_format preserved)", formats["月份"])
+	}
+	if formats["销售额"] != "#,##0" {
+		t.Errorf("formats[销售额] = %v, want #,##0", formats["销售额"])
+	}
+	rows, _ := s0["data"].([]interface{})
 	r0, _ := rows[0].([]interface{})
 	if r0[1] != "2024-01-15" {
 		t.Errorf("date roundtrip = %v, want 2024-01-15 (serial 45306 → ISO)", r0[1])
 	}
 	if r0[2] != float64(259874) {
 		t.Errorf("number = %v, want 259874", r0[2])
+	}
+}
+
+// TestTableGet_OutputRoundTripsBackIntoTablePut is the contract test: the
+// output of +table-get must be a payload +table-put accepts. This catches
+// dtype/format symmetry breaks early — if the reader ever emits a dtype the
+// writer doesn't recognize (or under a key the writer doesn't read), pipe-back
+// loops in agent scripts would fail with a confusing JSON error instead of a
+// schema error here.
+func TestTableGet_OutputRoundTripsBackIntoTablePut(t *testing.T) {
+	t.Parallel()
+	region := toolOutputStub(testToken, "read", `{"current_region":"A1:D2"}`)
+	cells := toolOutputStub(testToken, "read", `{"ranges":[{"cells":[`+
+		`[{"value":"city"},{"value":"day"},{"value":"revenue"},{"value":"closed"}],`+
+		`[{"value":"BJ"},{"value":45306,"cell_styles":{"number_format":"yyyy-mm-dd"}},{"value":1234.5,"cell_styles":{"number_format":"#,##0.00"}},{"value":true}]`+
+		`]}]}`)
+	out, err := runShortcutWithStubs(t, TableGet,
+		[]string{"--url", testURL, "--sheet-name", "S"}, region, cells)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
+	}
+	data := decodeEnvelopeData(t, out)
+	// The reader's "sheets" array is the same key +table-put consumes, so wrap
+	// the whole `data` envelope back as a fresh --sheets payload and parse it.
+	// A name is mandatory on each sheet, so make sure it survived.
+	body, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("marshal reader output: %v", err)
+	}
+	parsed, err := parseTablePutPayload(stubFlagView{"sheets": string(body)})
+	if err != nil {
+		t.Fatalf("reader output rejected by writer: %v\npayload=%s", err, body)
+	}
+	if len(parsed.Sheets) != 1 {
+		t.Fatalf("round-trip lost sheets: %#v", parsed.Sheets)
+	}
+	s := parsed.Sheets[0]
+	if s.Name != "S" {
+		t.Errorf("name = %q, want S", s.Name)
+	}
+	wantCols := []tableColumnSpec{
+		{Name: "city", Type: "string", Format: "@"},
+		{Name: "day", Type: "date", Format: "yyyy-mm-dd"},
+		{Name: "revenue", Type: "number", Format: "#,##0.00"},
+		{Name: "closed", Type: "bool", Format: ""},
+	}
+	for i, w := range wantCols {
+		if s.Columns[i] != w {
+			t.Errorf("columns[%d] after round-trip = %+v, want %+v", i, s.Columns[i], w)
+		}
+	}
+	if len(s.Rows) != 1 || len(s.Rows[0]) != 4 {
+		t.Fatalf("rows shape changed: %#v", s.Rows)
 	}
 }
 
