@@ -137,25 +137,24 @@ func TestObjectCRUDShortcuts_DryRun(t *testing.T) {
 		// covered separately in the +pivot-create empty-selector / mutex
 		// tests below.
 		{
-			name: "+pivot-create with placement / source / range flags",
+			name: "+pivot-create with placement / source / target-position flags",
 			sc:   PivotCreate,
 			args: []string{
 				"--url", testURL, "--target-sheet-id", testSheetID,
 				"--properties", `{"rows":[{"field":"A"}]}`,
 				"--source", "Sheet1!A1:F1000",
-				"--range", "F1",
 				"--target-position", "B5",
 			},
 			toolName: "manage_pivot_table_object",
 			wantInput: map[string]interface{}{
-				"excel_id":        testToken,
-				"sheet_id":        testSheetID,
-				"operation":       "create",
-				"target_position": "B5",
+				"excel_id":  testToken,
+				"sheet_id":  testSheetID,
+				"operation": "create",
 				"properties": map[string]interface{}{
 					"rows":   []interface{}{map[string]interface{}{"field": "A"}},
 					"source": "Sheet1!A1:F1000",
-					"range":  "F1",
+					// --target-position 映射到 properties.range。
+					"range": "B5",
 				},
 			},
 		},
@@ -503,6 +502,55 @@ func TestPivotCreate_SheetSelectorSemantics(t *testing.T) {
 		input := decodeToolInput(t, body, "manage_pivot_table_object")
 		if got, _ := input["sheet_id"].(string); got != testSheetID {
 			t.Errorf("sheet_id = %q, want %q", got, testSheetID)
+		}
+	})
+}
+
+// TestPivotCreate_TargetPositionRangeMutex regresses the "--target-position
+// and --range cannot both be set" guardrail on +pivot-create. They map to
+// the same wire field (properties.range), so two non-default values are
+// ambiguous; the CLI rejects up front (mirrors the --target-sheet-id /
+// --target-sheet-name mutex). --target-position=A1 is the documented default
+// and is treated as "not set" — pairing it with --range still works.
+func TestPivotCreate_TargetPositionRangeMutex(t *testing.T) {
+	t.Parallel()
+
+	t.Run("both non-default values rejected", func(t *testing.T) {
+		t.Parallel()
+		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+			"--url", testURL,
+			"--target-sheet-id", testSheetID,
+			"--properties", `{"rows":[{"field":"A"}]}`,
+			"--source", "Sheet1!A1:F1000",
+			"--target-position", "B5",
+			"--range", "F1",
+		})
+		if err == nil {
+			t.Fatalf("expected CLI to reject --target-position with --range; stderr=%s", stderr)
+		}
+		combined := stderr + err.Error()
+		if !strings.Contains(combined, "mutually exclusive") {
+			t.Errorf("expected error to say 'mutually exclusive'; got=%s|%v", stderr, err)
+		}
+		if !strings.Contains(combined, "--target-position") || !strings.Contains(combined, "--range") {
+			t.Errorf("expected error to quote both --target-position and --range; got=%s|%v", stderr, err)
+		}
+	})
+
+	t.Run("default A1 with --range is accepted (range wins)", func(t *testing.T) {
+		t.Parallel()
+		body := parseDryRunBody(t, PivotCreate, []string{
+			"--url", testURL,
+			"--target-sheet-id", testSheetID,
+			"--properties", `{"rows":[{"field":"A"}]}`,
+			"--source", "Sheet1!A1:F1000",
+			"--target-position", "A1",
+			"--range", "F1",
+		})
+		input := decodeToolInput(t, body, "manage_pivot_table_object")
+		props, _ := input["properties"].(map[string]interface{})
+		if got, _ := props["range"].(string); got != "F1" {
+			t.Errorf("properties.range = %q, want %q", got, "F1")
 		}
 	})
 }
