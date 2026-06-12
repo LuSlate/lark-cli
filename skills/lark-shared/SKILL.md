@@ -8,10 +8,10 @@ description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/b
 
 通过 lark-cli 操作飞书资源的通用规则与注意事项。正文是常驻核心；以下细节按需读取（`lark-cli skills read lark-shared references/<file>`）：
 
-- [`references/high-risk-approval.md`](references/high-risk-approval.md) — 高危确认门禁（exit 10）：错误形态、识别、按 hint 重试、如何识别高风险
-- [`references/auth-split-flow.md`](references/auth-split-flow.md) — Agent 代理 user 授权的 split-flow 完整步骤
-- [`references/config-init.md`](references/config-init.md) — 首次配置 + URL / 二维码转发规则
-- [`references/lark-wiki-token-routing.md`](references/lark-wiki-token-routing.md) — Wiki token 解包与按底层对象路由
+- **遇到 exit 10 / confirmation 错误** → 读 [`references/high-risk-approval.md`](references/high-risk-approval.md)（错误形态、识别、按 hint 重试、如何识别高风险）
+- **要帮用户做 user 身份授权** → 读 [`references/auth-split-flow.md`](references/auth-split-flow.md)（split-flow 完整步骤）
+- **首次配置 lark-cli（`config init`）** → 读 [`references/config-init.md`](references/config-init.md)（配置 + URL / 二维码转发规则）
+- **拿到 `/wiki/` 链接或 wiki token** → 读 [`references/lark-wiki-token-routing.md`](references/lark-wiki-token-routing.md)（token 解包与按底层对象路由）
 
 ## 配置初始化
 
