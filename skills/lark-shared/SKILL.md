@@ -78,12 +78,12 @@ description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/b
 
 ## 高风险操作的确认门禁（exit 10）
 
-高风险写操作（`risk: "high-risk-write"`）有强制确认门禁。不带确认标志调用这类命令时，CLI **退出码 `10`**，并在 stderr 返回结构化 envelope（`type` 为 `confirmation` 或 `confirmation_required`）。
+高风险写操作（`risk: "high-risk-write"`）未确认时，CLI **退出码 `10`**，并返回确认 envelope（`type` 为 `confirmation` / `confirmation_required`）。
 
-**遇到 exit 10，绝不当普通错误放弃，也绝不静默追加 `--yes`。** 安全默认流程：
+**遇到 exit 10：绝不当普通错误放弃，绝不静默加 `--yes`。**
 
-1. **停下**，把操作名（typed 在 `error.action`；旧式扁平 envelope 在 `error.risk.action`，取 `error.action || error.risk.action`）和关键参数展示给用户，明确告知"这是高风险操作"。
-2. 等用户**显式同意**后，从 envelope 的 `hint` 读出确认 flag（如 `--yes` / `--force`），**追加到你的原始 argv** 后重试——不要写死 `--yes`，也不要照抄 hint 里的示例命令（以免丢失原始参数）。用 argv 数组形式重试，**不要用 `sh -c` 拼接命令**（避免 shell 把用户参数当语法解析）。
-3. 用户拒绝则终止，不擅自跳过门禁。
+1. **停下**，把这次高风险操作和关键参数讲给用户，等其**显式同意**。
+2. 同意后，从 envelope 的 `hint` 读出确认 flag（`--yes` / `--force`），以 argv 数组**追加到原始命令**重试——不写死 `--yes`，不用 `sh -c` 拼接。
+3. 用户拒绝则终止。
 
-**机制细节**（两种错误形态的识别、按 hint 选 flag、如何判断一条命令是否高风险、`--dry-run` 预览）**详见 [`references/high-risk-approval.md`](references/high-risk-approval.md)。**
+**错误形态识别、`action` 字段位置、如何判断高风险、`--dry-run` 预览 → 详见 [`references/high-risk-approval.md`](references/high-risk-approval.md)。**
