@@ -364,14 +364,17 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 			},
 		},
 	}
-	// Initial fill first reads the workbook structure to resolve the default
-	// sheet's id (the create response doesn't echo it), then writes.
+	// The write reads the workbook structure to resolve the default sheet's id
+	// (the create response doesn't echo it). lookupFirstSheetID and
+	// writeTypedSheets' listSheetIDsByName both read it — one reusable stub serves
+	// both. The synthesized sheet is named "Sheet1", matching the default sheet,
+	// so it's adopted in place (no rename).
 	structure := toolOutputStub("shtcnBRAND", "read", `{"sheets":[{"sheet_id":"shtFirst","sheet_name":"Sheet1","index":0}]}`)
+	structure.Reusable = true
 	fill := toolOutputStub("shtcnBRAND", "write", `{"updated_cells":4}`)
 	out, err := runShortcutWithStubs(t, WorkbookCreate, []string{
 		"--title", "Sales",
-		"--headers", `["Name","Score"]`,
-		"--values", `[["alice",95]]`,
+		"--values", `[["Name","Score"],["alice",95]]`,
 	}, create, structure, fill)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
@@ -381,8 +384,8 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 	if ss["spreadsheet_token"] != "shtcnBRAND" {
 		t.Errorf("spreadsheet_token = %v", ss["spreadsheet_token"])
 	}
-	if data["initial_fill"] == nil {
-		t.Errorf("initial_fill missing in envelope")
+	if sheets, _ := data["sheets"].([]interface{}); len(sheets) != 1 {
+		t.Errorf("sheets summary missing in envelope; got %#v", data["sheets"])
 	}
 	// The fill must target the resolved first sheet, not an empty selector.
 	fillInput := decodeToolInput(t, decodeRawEnvelopeBody(t, fill.CapturedBody), "set_cell_range")
@@ -392,14 +395,13 @@ func TestExecute_WorkbookCreate(t *testing.T) {
 }
 
 // TestExecute_WorkbookCreate_EmptyArraysSkipFill locks the fix for the nil-map
-// panic / illegal-range bug: --values '[]' or --headers '[]' must short-circuit
-// the initial fill (no structure/fill calls fire) and finish with the
-// spreadsheet created but no initial_fill — never panic on a nil fill map.
+// panic / illegal-range bug: --values '[]' must short-circuit the initial fill
+// (no structure/fill calls fire) and finish with the spreadsheet created but no
+// sheets summary — never panic on a nil payload.
 func TestExecute_WorkbookCreate_EmptyArraysSkipFill(t *testing.T) {
 	t.Parallel()
 	for _, tc := range []struct{ name, flag, val string }{
 		{"empty values", "--values", "[]"},
-		{"empty headers", "--headers", "[]"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -420,8 +422,8 @@ func TestExecute_WorkbookCreate_EmptyArraysSkipFill(t *testing.T) {
 				t.Fatalf("execute failed: %v\nout=%s", err, out)
 			}
 			data := decodeEnvelopeData(t, out)
-			if data["initial_fill"] != nil {
-				t.Errorf("initial_fill should be absent for %s %s; got %#v", tc.flag, tc.val, data["initial_fill"])
+			if data["sheets"] != nil {
+				t.Errorf("sheets should be absent for %s %s; got %#v", tc.flag, tc.val, data["sheets"])
 			}
 			if ss, _ := data["spreadsheet"].(map[string]interface{}); ss["spreadsheet_token"] != "shtNEW" {
 				t.Errorf("spreadsheet_token = %v, want shtNEW", ss["spreadsheet_token"])

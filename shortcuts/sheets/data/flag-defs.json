@@ -511,22 +511,11 @@
         "desc": "Target folder token; placed at the drive root when omitted"
       },
       {
-        "name": "headers",
-        "kind": "own",
-        "type": "string",
-        "required": "optional",
-        "desc": "Header row as a JSON array: `[\"Col A\",\"Col B\"]`",
-        "input": [
-          "file",
-          "stdin"
-        ]
-      },
-      {
         "name": "values",
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Initial data as a 2D JSON array: `[[\"alice\",95]]`",
+        "desc": "Untyped initial data as one 2D JSON array (`[[\"alice\",95]]`); values are written as-is with their type auto-detected, through the same batched set_cell_range path as --sheets — pair with --styles for number formats, colors, merges, and row/col sizes",
         "input": [
           "file",
           "stdin"
@@ -537,19 +526,22 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Typed table payload as JSON (same shape as `+table-put`): a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool. Mutually exclusive with --headers/--values. Creates the workbook, then writes typed type-faithful data (dates land as real dates, numbers keep precision).",
+        "desc": "Typed table payload as JSON (same shape as `+table-put`): a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool. Mutually exclusive with --values. Creates the workbook, then writes typed type-faithful data (dates land as real dates, numbers keep precision).",
         "input": [
           "file",
           "stdin"
         ]
       },
       {
-        "name": "header-style",
+        "name": "styles",
         "kind": "own",
-        "type": "bool",
+        "type": "string",
         "required": "optional",
-        "desc": "Bold the typed header row (only with --sheets; default true)",
-        "default": "true"
+        "desc": "Initial visual operations as JSON: top-level `{styles:[...]}`. Each item corresponds to one target sheet and must include `name`, plus at least one of `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges`. `cell_styles` entries use +cells-set-style fields with a cell range; row/col sizes use dimension ranges plus type/size; merges use cell ranges plus optional merge_type. With --sheets, styles array length/order/name must match --sheets.sheets. With --values, pass exactly one styles item for the initial sheet (its name is ignored).",
+        "input": [
+          "file",
+          "stdin"
+        ]
       },
       {
         "name": "dry-run",
@@ -2078,14 +2070,6 @@
           "file",
           "stdin"
         ]
-      },
-      {
-        "name": "header-style",
-        "kind": "own",
-        "type": "bool",
-        "required": "optional",
-        "desc": "Bold the header row written from column names (default true)",
-        "default": "true"
       },
       {
         "name": "dry-run",

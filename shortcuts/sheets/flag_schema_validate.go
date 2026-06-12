@@ -65,6 +65,7 @@ func validateParsedJSONFlag(fv flagView, name string, value interface{}) error {
 var parseJSONFlagSkip = map[string]struct{}{
 	"properties": {},
 	"operations": {},
+	"styles":     {},
 }
 
 // validateValueAgainstSchema is the (command, flag) → schema → check

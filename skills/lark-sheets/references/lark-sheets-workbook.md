@@ -138,10 +138,9 @@ _系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--title` | string | required | 新 spreadsheet 标题 |
 | `--folder-token` | string | optional | 目标文件夹 token；省略时放在云空间根目录 |
-| `--headers` | string + File + Stdin（简单 JSON） | optional | 表头行 JSON 数组：`["列A","列B"]` |
-| `--values` | string + File + Stdin（简单 JSON） | optional | 初始数据 JSON 二维数组：`[["alice",95]]` |
-| `--sheets` | string + File + Stdin（复合 JSON） | optional | 建表后写入的 typed 表格协议 JSON（同 +table-put）：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool。与 --headers/--values 互斥；新表默认子表复用为第一个子表，日期/数字类型保真。 |
-| `--header-style` | bool | optional | 把 typed 表头行加粗（仅 --sheets 时生效，默认 true） |
+| `--values` | string + File + Stdin（简单 JSON） | optional | untyped 初始数据，一个 JSON 二维数组（表头并入第一行）：`[["列A","列B"],["alice",95]]`；值原样写入、类型由飞书自动识别，走与 --sheets 相同的分批 `+cells-set`；配 --styles 控制格式/颜色/合并/行列尺寸 |
+| `--sheets` | string + File + Stdin（复合 JSON） | optional | 建表后写入的 typed 表格协议 JSON（同 +table-put）：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool。与 --values 互斥；新表默认子表复用为第一个子表，日期/数字类型保真。 |
+| `--styles` | string + File + Stdin（复合 JSON） | optional | 建表时同时写入的视觉处理操作 JSON：顶层 `{styles:[...]}`，每项对应一个目标子表、含 `name`，并至少给 `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges` 之一。`cell_styles` 用 A1 单元格 range + 扁平样式字段（字段同 +cells-set-style，含 number_format / 颜色 / 对齐 / border_styles）；row/col sizes 用行/列范围 + type/size；merges 用单元格 range + 可选 merge_type。与 --sheets 搭配时 styles 数组长度/顺序/name 必须与 --sheets.sheets 对应；与 --values 搭配时只给一个 styles 项（其 name 忽略）。 |
 
 ### `+workbook-export`
 
@@ -178,6 +177,16 @@ _一个或多个子表的 typed 数据，每个数组元素写入一张子表；
 - `columns` (array<object>) — 列定义，顺序与 rows 中每行的取值一一对应 each: { name: string, type: enum, format?: string }
 - `rows` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 columns 数
 
+### `+workbook-create` `--styles`
+
+
+**数组项**（类型 object）：
+- `cell_merges` (array<object>?) — 单元格合并操作数组；range 使用 A1 单元格范围，merge_type 默认 all each: { merge_type?: enum, range: string }
+- `cell_styles` (array<object>?) — 单元格样式操作数组；每项用 A1 单元格 range 指定范围，字段名与 +cells-set-style 对齐 each: { background_color?: string, border_styles?: object, font_color?: string, font_line?: enum, font_size?: number, …共 12 项 }
+- `col_sizes` (array<object>?) — 列宽操作数组；range 使用列范围如 A:C，type 为 pixel/standard，pixel 需要 size each: { range: string, size?: number, type: enum }
+- `name` (string) — 子表名
+- `row_sizes` (array<object>?) — 行高操作数组；range 使用行范围如 1:3，type 为 pixel/standard/auto，pixel 需要 size each: { range: string, size?: number, type: enum }
+
 ## Examples
 
 公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`（XOR）。`+workbook-info` 只用前两者；`+sheet-*` 系列对单个工作表操作，需 `--sheet-id` 或 `--sheet-name`。
@@ -188,12 +197,13 @@ _一个或多个子表的 typed 数据，每个数组元素写入一张子表；
 
 ### `+workbook-create`
 
-新建电子表格，可选预填数据。两种数据入口**互斥**，按需二选一：
+新建电子表格，可选预填数据。两种数据入口（untyped `--values` / typed `--sheets`）**互斥**，按需二选一——两者都走同一条分批 `set_cell_range` 写入：
 
 ```bash
-# 1) untyped：--headers + --values（纯值；类型由飞书自动识别，日期会落成文本）
+# 1) untyped：--values（一个二维数组，表头并入第一行；值原样写、类型由飞书自动识别，
+#    日期会落成文本，配 --styles 控制格式）
 lark-cli sheets +workbook-create --title "销售" \
-  --headers '["门店","销售额"]' --values '[["北京",259874]]'
+  --values '[["门店","销售额"],["北京",259874]]'
 
 # 2) typed：--sheets（一步建表 + 类型保真）。date 列落成真日期（可排序/透视）、
 #    number 不丢精度、string 列保前导零（如订单号 00123）；多子表一次建。
@@ -208,6 +218,69 @@ lark-cli sheets +workbook-create --title "交易" --sheets '{
 ```
 
 `--sheets` 协议与 `+table-put` 完全同构（字段含义见 lark-sheets-write-cells 的 `+table-put`，大 payload 走 stdin / `@file`）。关键差异：**新建工作簿的默认子表会被复用为第一个子表**（重命名后承载数据），不会残留空 `Sheet1`；其余子表按需新建。它把 `+table-put` 单独做不到的"建表 + typed 写入"合到一条命令，是「pandas 算完直接落地一张带真日期的新表」的首选。回读校验用 `+table-get`（与 `--sheets` 同构、可 round-trip）。
+
+`--styles` 可在建表写入时同时写视觉处理。它和 `--sheets` 一样只有一种外层写法：顶层对象里放 `styles` 数组；数组每项对应一个子表，含 `name`，并按能力拆成四类可选数组：
+
+- `cell_styles`：像 `+cells-set-style`，用 A1 单元格 `range` 加扁平样式字段（`font_weight` / `background_color` / `number_format` 等）和可选 `border_styles`；这些样式会合并进同一次内容 `set_cell_range`。
+- `cell_merges`：用 A1 单元格 `range` 设置合并，`merge_type` 默认为 `all`，可选 `rows` / `columns`。
+- `row_sizes`：用行范围（如 `1:3`）设置行高，`type` 为 `pixel` / `standard` / `auto`；`pixel` 需要 `size`。
+- `col_sizes`：用列范围（如 `A:C`）设置列宽，`type` 为 `pixel` / `standard`；`pixel` 需要 `size`。
+
+同一单元格命中多个 `cell_styles` 项时，后面的操作继续合并覆盖已传字段。`cell_merges` / `row_sizes` / `col_sizes` 在内容写入后顺序执行。
+
+```bash
+# 3) untyped：仍用 {"styles":[...]}，只有一个子表样式项（name 忽略）；range 覆盖 --values 初始区域
+lark-cli sheets +workbook-create --title "销售" \
+  --values '[["门店","销售额"],["北京",259874],["上海",198320]]' \
+  --styles '{
+    "styles":[
+      {"name":"Sheet1","cell_styles":[
+        {"range":"A1:B1","font_weight":"bold","background_color":"#f5f5f5"},
+        {"range":"B2:B3","number_format":"#,##0"}
+      ]}
+    ]
+  }'
+
+# 4) typed 单子表：--styles.styles[0].name 必须对应 --sheets.sheets[0].name
+lark-cli sheets +workbook-create --title "交易" --sheets '{
+  "sheets":[
+    {"name":"明细","columns":[
+      {"name":"日期","type":"date"},
+      {"name":"金额","type":"number","format":"#,##0.00"}
+    ],"rows":[["2024-01-15",1234.5]]}
+  ]}' --styles '{
+    "styles":[
+      {"name":"明细",
+       "cell_styles":[
+        {"range":"A1:B1","font_weight":"bold","background_color":"#f5f5f5",
+          "border_styles":{"bottom":{"style":"solid","weight":"thin","color":"#000000"}}},
+        {"range":"A2:A2","number_format":"yyyy-mm-dd"},
+        {"range":"B2:B2","number_format":"#,##0.00","font_color":"#0f7b0f"}
+       ],
+       "cell_merges":[{"range":"A1:B1"}],
+       "col_sizes":[{"range":"A:B","type":"pixel","size":120}],
+       "row_sizes":[{"range":"1:1","type":"pixel","size":28}]}
+    ]
+  }'
+
+# 5) typed 多子表：styles 数组和 sheets 数组长度、顺序、name 都必须一致
+lark-cli sheets +workbook-create --title "经营看板" --sheets '{
+  "sheets":[
+    {"name":"收入","columns":[{"name":"月份","type":"string"},{"name":"收入","type":"number","format":"#,##0"}],"rows":[["2026-05",1200000]]},
+    {"name":"成本","columns":[{"name":"月份","type":"string"},{"name":"成本","type":"number","format":"#,##0"}],"rows":[["2026-05",730000]]}
+  ]}' --styles '{
+    "styles":[
+      {"name":"收入","cell_styles":[
+        {"range":"A1:B1","font_weight":"bold","background_color":"#f0f7ff"},
+        {"range":"B2:B2","font_color":"#0f7b0f"}
+      ]},
+      {"name":"成本","cell_styles":[
+        {"range":"A1:B1","font_weight":"bold","background_color":"#fff7ed"},
+        {"range":"B2:B2","font_color":"#b42318"}
+      ]}
+    ]
+  }'
+```
 
 > ⚠️ **`+workbook-create` 是把内存里的数据写成新表；要把已有的本地 Excel/CSV 文件原样导入成新表，用 `+workbook-import`**（见下），不要先在本地读出文件再 `+workbook-create` 重灌。
 
@@ -283,6 +356,6 @@ lark-cli sheets +sheet-hide-gridline --url "..." --sheet-id "$SID"
 
 ### Validate / DryRun / Execute 约束
 
-- `Validate`：XOR 公共四件套；`+sheet-create` 校验 `--title` 非空、`--row-count` ≤ 50000、`--col-count` ≤ 200；`+sheet-delete` 必须 `--yes` 或 `--dry-run`；`+workbook-create` 的 `--sheets` 与 `--headers`/`--values` **互斥**，给了 `--sheets` 则按 typed 协议校验 payload（其余约束同 `+table-put`）。
+- `Validate`：XOR 公共四件套；`+sheet-create` 校验 `--title` 非空、`--row-count` ≤ 50000、`--col-count` ≤ 200；`+sheet-delete` 必须 `--yes` 或 `--dry-run`；`+workbook-create` 的 `--sheets` 与 `--values` **互斥**，给了 `--sheets` 则按 typed 协议校验 payload（其余约束同 `+table-put`）。
 - `DryRun`：`+sheet-*` 写操作输出"将要 PATCH 的 sheet metadata"；`--sheet-name` 在 dry-run 输出里生成为 `<resolve:Sheet1>` 占位符，不实际解析为 sheet-id。
 - `Execute`：写操作不自动回读；如需确认目标 sheet 的新状态，自行调用 `+workbook-info`。
