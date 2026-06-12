@@ -139,7 +139,7 @@ _系统：`--dry-run`_
 | `--title` | string | required | 新 spreadsheet 标题 |
 | `--folder-token` | string | optional | 目标文件夹 token；省略时放在云空间根目录 |
 | `--values` | string + File + Stdin（简单 JSON） | optional | untyped 初始数据，一个 JSON 二维数组（表头并入第一行）：`[["列A","列B"],["alice",95]]`；值原样写入、类型由飞书自动识别，走与 --sheets 相同的分批 `+cells-set`；配 --styles 控制格式/颜色/合并/行列尺寸 |
-| `--sheets` | string + File + Stdin（复合 JSON） | optional | 建表后写入的 typed 表格协议 JSON（同 +table-put）：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool。与 --values 互斥；新表默认子表复用为第一个子表，日期/数字类型保真。 |
+| `--sheets` | string + File + Stdin（复合 JSON） | optional | 建表后写入的 typed 表格协议 JSON（同 +table-put）：顶层 sheets 数组，每项 `{name, start_cell?, mode?, header?, allow_overwrite?, columns:["colA","colB",...], data:[[...]], dtypes?:{colA:pandasDtype, ...}, formats?:{colA:numberFormat, ...}}`。Agents 通常用 `{**json.loads(df.to_json(orient="split")), "dtypes": df.dtypes.astype(str).to_dict()}` 一行构造。与 --values 互斥；新表默认子表复用为第一个子表，日期/数字类型保真。 |
 | `--styles` | string + File + Stdin（复合 JSON） | optional | 建表时同时写入的视觉处理操作 JSON：顶层 `{styles:[...]}`，每项对应一个目标子表、含 `name`，并至少给 `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges` 之一。`cell_styles` 用 A1 单元格 range + 扁平样式字段（字段同 +cells-set-style，含 number_format / 颜色 / 对齐 / border_styles）；row/col sizes 用行/列范围 + type/size；merges 用单元格 range + 可选 merge_type。与 --sheets 搭配时 styles 数组长度/顺序/name 必须与 --sheets.sheets 对应；与 --values 搭配时只给一个 styles 项（其 name 忽略）。 |
 
 ### `+workbook-export`
@@ -174,8 +174,10 @@ _一个或多个子表的 typed 数据，每个数组元素写入一张子表；
 - `mode` (enum?) — overwrite（默认）：从 start_cell 起写「表头 + 数据」块；append：把数据追加到子表已有数据下方（默认不重复表头） [overwrite / append]
 - `header` (boolean?) — 是否写一行列名表头
 - `allow_overwrite` (boolean?) — 为 false 时，若写入会落在非空单元格则拒写以保护原数据（返回 partial_success）
-- `columns` (array<object>) — 列定义，顺序与 rows 中每行的取值一一对应 each: { name: string, type: enum, format?: string }
-- `rows` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 columns 数
+- `columns` (array<string>) — 列名字符串数组，顺序与 `data` 中每行取值一一对应
+- `data` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 `columns` 数
+- `dtypes` (object?) — 可选
+- `formats` (object?) — 可选
 
 ### `+workbook-create` `--styles`
 
@@ -209,11 +211,11 @@ lark-cli sheets +workbook-create --title "销售" \
 #    number 不丢精度、string 列保前导零（如订单号 00123）；多子表一次建。
 lark-cli sheets +workbook-create --title "交易" --sheets '{
   "sheets":[
-    {"name":"明细","columns":[
-      {"name":"日期","type":"date"},
-      {"name":"金额","type":"number","format":"#,##0.00"},
-      {"name":"单号","type":"string"}
-    ],"rows":[["2024-01-15",1234.5,"00123"]]}
+    {"name":"明细",
+     "columns":["日期","金额","单号"],
+     "dtypes":{"日期":"datetime64[ns]","金额":"float64","单号":"object"},
+     "formats":{"金额":"#,##0.00"},
+     "data":[["2024-01-15",1234.5,"00123"]]}
   ]}'
 ```
 
@@ -244,10 +246,11 @@ lark-cli sheets +workbook-create --title "销售" \
 # 4) typed 单子表：--styles.styles[0].name 必须对应 --sheets.sheets[0].name
 lark-cli sheets +workbook-create --title "交易" --sheets '{
   "sheets":[
-    {"name":"明细","columns":[
-      {"name":"日期","type":"date"},
-      {"name":"金额","type":"number","format":"#,##0.00"}
-    ],"rows":[["2024-01-15",1234.5]]}
+    {"name":"明细",
+     "columns":["日期","金额"],
+     "dtypes":{"日期":"datetime64[ns]","金额":"float64"},
+     "formats":{"金额":"#,##0.00"},
+     "data":[["2024-01-15",1234.5]]}
   ]}' --styles '{
     "styles":[
       {"name":"明细",
@@ -266,8 +269,8 @@ lark-cli sheets +workbook-create --title "交易" --sheets '{
 # 5) typed 多子表：styles 数组和 sheets 数组长度、顺序、name 都必须一致
 lark-cli sheets +workbook-create --title "经营看板" --sheets '{
   "sheets":[
-    {"name":"收入","columns":[{"name":"月份","type":"string"},{"name":"收入","type":"number","format":"#,##0"}],"rows":[["2026-05",1200000]]},
-    {"name":"成本","columns":[{"name":"月份","type":"string"},{"name":"成本","type":"number","format":"#,##0"}],"rows":[["2026-05",730000]]}
+    {"name":"收入","columns":["月份","收入"],"dtypes":{"收入":"int64"},"formats":{"收入":"#,##0"},"data":[["2026-05",1200000]]},
+    {"name":"成本","columns":["月份","成本"],"dtypes":{"成本":"int64"},"formats":{"成本":"#,##0"},"data":[["2026-05",730000]]}
   ]}' --styles '{
     "styles":[
       {"name":"收入","cell_styles":[

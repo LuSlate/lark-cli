@@ -81,34 +81,127 @@ type tablePayload struct {
 	Sheets []tableSheetSpec `json:"sheets"`
 }
 
+// tableSheetSpec is the *internal* representation a sheet is normalized into
+// after parsing the wire protocol. It carries everything buildSheetMatrix and
+// friends need (typed columns + format + 2D row matrix) and is what the rest of
+// this file works against. The wire shape — string columns + dtypes/formats
+// maps + `data` — lives in tableSheetIn and is collapsed into this struct by
+// (*tableSheetIn).normalize.
 type tableSheetSpec struct {
-	Name      string `json:"name"`
-	StartCell string `json:"start_cell"`
+	Name      string
+	StartCell string
 	// Mode controls write placement: "overwrite" (default) writes a header+data
 	// block from start_cell; "append" writes data below the sheet's existing
 	// data (start_cell's row is ignored, its column is honored).
-	Mode string `json:"mode"`
+	Mode string
 	// Header is whether to write a header row of column names. nil defaults by
 	// mode: true for overwrite, false for append (so appended rows don't repeat
 	// the header). Set explicitly to override.
-	Header *bool `json:"header"`
+	Header *bool
 	// AllowOverwrite, when explicitly false, makes the write fail if it would
 	// land on a non-empty cell. nil defaults to true (overwrite).
-	AllowOverwrite *bool             `json:"allow_overwrite"`
-	Columns        []tableColumnSpec `json:"columns"`
-	Rows           [][]interface{}   `json:"rows"`
+	AllowOverwrite *bool
+	Columns        []tableColumnSpec
+	Rows           [][]interface{}
 }
 
 type tableColumnSpec struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Format string `json:"format"`
+	Name   string
+	Type   string
+	Format string
+}
+
+// tableSheetIn is the wire-level shape of one sheet in --sheets. It is
+// pandas-DataFrame-shaped on purpose: `columns` is a plain string list, `data`
+// is a 2D array, and the per-column type / display format are *separate*
+// dtypes/formats maps keyed by column name. That gives agents a one-liner
+// (`{**json.loads(df.to_json(orient="split")), "dtypes":
+// df.dtypes.astype(str).to_dict()}`) and lets handwritten payloads stay flat
+// rather than nest a {name, type, format} object per column.
+type tableSheetIn struct {
+	Name           string            `json:"name"`
+	StartCell      string            `json:"start_cell"`
+	Mode           string            `json:"mode"`
+	Header         *bool             `json:"header"`
+	AllowOverwrite *bool             `json:"allow_overwrite"`
+	Columns        []string          `json:"columns"`
+	Data           [][]interface{}   `json:"data"`
+	Dtypes         map[string]string `json:"dtypes"`
+	Formats        map[string]string `json:"formats"`
+}
+
+// dtypeToTypeFormat maps a pandas-style dtype string to the internal column
+// (type, default format) pair. The mapping is deliberately permissive: a missing
+// or unknown dtype falls through to string + text format (`@`) so a
+// `to_json(orient="split")` payload that omits `dtypes` writes correctly as an
+// all-string table. Recognized families:
+//   - int*/uint* (lowercase numpy + capitalized nullable pandas) → number
+//   - float* / Float* / complex*                                  → number
+//   - bool / boolean (nullable)                                   → bool
+//   - datetime*  (incl. tz-aware datetime64[ns, UTC])             → date, "yyyy-mm-dd"
+//   - everything else (object, string, category, empty, unknown) → string, "@"
+//
+// Explicit `formats[col]` is layered on top of this default by normalize, so a
+// user-supplied `#,##0.00` on a float64 column still wins.
+func dtypeToTypeFormat(dtype string) (typ, format string) {
+	d := strings.TrimSpace(dtype)
+	if d == "" {
+		return "string", "@"
+	}
+	lower := strings.ToLower(d)
+	switch {
+	case strings.HasPrefix(lower, "datetime"):
+		return "date", "yyyy-mm-dd"
+	case lower == "bool" || lower == "boolean":
+		return "bool", ""
+	case isNumericDtype(lower):
+		return "number", ""
+	default:
+		return "string", "@"
+	}
+}
+
+// isNumericDtype recognizes pandas/numpy numeric dtype strings (lowercased).
+// Covers numpy ints (`int8`/`int64`/...), unsigned ints (`uint*`), floats
+// (`float32`/`float64`), complex, and pandas' nullable variants
+// (`int64`/`uint64`/`float64` lowercased from `Int64`/`UInt64`/`Float64`).
+func isNumericDtype(lower string) bool {
+	for _, p := range []string{"int", "uint", "float", "complex"} {
+		if strings.HasPrefix(lower, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// typeToDtype is the inverse used by +table-get to label each output column.
+// Choices are picked to be safe under a single `df.astype(dtypes)` round-trip:
+//   - string → object (pandas default, no-op astype)
+//   - number → float64 (works for all numeric cells, including ones with NaN)
+//   - date   → datetime64[ns] (matches the ISO strings we emit)
+//   - bool   → bool (inferColumnType only picks bool when every cell is bool)
+//
+// Anything else (defensive default) maps to object.
+func typeToDtype(typ string) string {
+	switch typ {
+	case "number":
+		return "float64"
+	case "date":
+		return "datetime64[ns]"
+	case "bool":
+		return "bool"
+	default:
+		return "object"
+	}
 }
 
 // parseTablePutPayload reads --sheets (JSON, supports @file / stdin) into a
 // validated payload. UseNumber keeps numeric cells as json.Number so large
 // integers (order IDs, etc.) survive without precision loss or scientific
-// notation. Network-free: safe from Validate and DryRun.
+// notation. The wire shape (tableSheetIn: string columns + dtypes/formats maps
+// + `data`) is normalized into the internal tableSheetSpec so the rest of the
+// file (buildSheetMatrix, sheetCreateDims, …) is unaware of it. Network-free:
+// safe from Validate and DryRun.
 func parseTablePutPayload(runtime flagView) (*tablePayload, error) {
 	raw := strings.TrimSpace(runtime.Str("sheets"))
 	if raw == "" {
@@ -116,14 +209,74 @@ func parseTablePutPayload(runtime flagView) (*tablePayload, error) {
 	}
 	dec := json.NewDecoder(strings.NewReader(raw))
 	dec.UseNumber()
-	var p tablePayload
-	if err := dec.Decode(&p); err != nil {
+	var wire struct {
+		Sheets []tableSheetIn `json:"sheets"`
+	}
+	if err := dec.Decode(&wire); err != nil {
 		return nil, common.FlagErrorf("--sheets: invalid JSON: %v", err)
+	}
+	p := &tablePayload{Sheets: make([]tableSheetSpec, 0, len(wire.Sheets))}
+	for i := range wire.Sheets {
+		spec, err := wire.Sheets[i].normalize(i)
+		if err != nil {
+			return nil, err
+		}
+		p.Sheets = append(p.Sheets, spec)
 	}
 	if err := p.validate(); err != nil {
 		return nil, err
 	}
-	return &p, nil
+	return p, nil
+}
+
+// normalize collapses the wire-level pandas-shaped tableSheetIn into the
+// internal tableSheetSpec used by the writer. It pairs each column name with
+// its dtype-derived (type, format) — with `formats[name]` overriding the
+// default — and renames `data` back to the writer's `Rows`. Per-column
+// validation that needs the resolved type lives in tablePayload.validate (so
+// errors carry the sheet-index/name context the writer already prints).
+func (in *tableSheetIn) normalize(idx int) (tableSheetSpec, error) {
+	spec := tableSheetSpec{
+		Name:           in.Name,
+		StartCell:      in.StartCell,
+		Mode:           in.Mode,
+		Header:         in.Header,
+		AllowOverwrite: in.AllowOverwrite,
+		Rows:           in.Data,
+	}
+	seenCol := make(map[string]bool, len(in.Columns))
+	spec.Columns = make([]tableColumnSpec, len(in.Columns))
+	for j, name := range in.Columns {
+		trimmed := strings.TrimSpace(name)
+		if trimmed == "" {
+			return tableSheetSpec{}, common.FlagErrorf("--sheets[%d] %q: columns[%d] name is required", idx, in.Name, j)
+		}
+		if seenCol[name] {
+			return tableSheetSpec{}, common.FlagErrorf("--sheets[%d] %q: duplicate column name %q", idx, in.Name, name)
+		}
+		seenCol[name] = true
+		typ, format := dtypeToTypeFormat(in.Dtypes[name])
+		if f, ok := in.Formats[name]; ok {
+			format = strings.TrimSpace(f)
+		}
+		spec.Columns[j] = tableColumnSpec{Name: name, Type: typ, Format: format}
+	}
+	// Surface dtypes/formats entries that reference a column the sheet doesn't
+	// have — almost always a typo (`"foramt"`, `"营 收"` with stray spaces) and
+	// silently ignoring them would let the writer succeed with the wrong
+	// formatting. The check runs after the column list is built so we can
+	// compare against the canonical set.
+	for k := range in.Dtypes {
+		if !seenCol[k] {
+			return tableSheetSpec{}, common.FlagErrorf("--sheets[%d] %q: dtypes references unknown column %q", idx, in.Name, k)
+		}
+	}
+	for k := range in.Formats {
+		if !seenCol[k] {
+			return tableSheetSpec{}, common.FlagErrorf("--sheets[%d] %q: formats references unknown column %q", idx, in.Name, k)
+		}
+	}
+	return spec, nil
 }
 
 func (p *tablePayload) validate() error {
@@ -145,9 +298,10 @@ func (p *tablePayload) validate() error {
 		}
 		for j := range s.Columns {
 			c := &s.Columns[j]
-			if strings.TrimSpace(c.Name) == "" {
-				return common.FlagErrorf("--sheets[%d] %q: columns[%d].name is required", i, s.Name, j)
-			}
+			// validColumnType still guards the internal Type so a future
+			// dtype-mapping change (or a direct test-time construction of a
+			// tableSheetSpec) can't silently route an unknown type into
+			// buildTypedCell's default branch.
 			if !validColumnType(c.Type) {
 				return common.FlagErrorf("--sheets[%d] %q: columns[%d] %q has invalid type %q (want string/number/date/bool)",
 					i, s.Name, j, c.Name, c.Type)
@@ -345,8 +499,20 @@ var excelEpoch = time.Date(1899, 12, 30, 0, 0, 0, 0, time.UTC)
 // number. The result is written as a numeric cell value with a date
 // number_format, which is the only combination that yields a real (sortable,
 // pivotable, ISNUMBER=TRUE) date in Lark Sheets.
+//
+// Accepts both bare dates (`2024-01-15`) and full ISO datetime strings with a
+// `T` separator (`2024-01-15T00:00:00.000`, `2024-01-15T08:30:00+08:00`). The
+// `T...` suffix is dropped before parsing so the pandas `df_to_sheet` helper
+// — which uses `df.to_json(orient="split", date_format="iso")` and therefore
+// always emits the full ISO form — round-trips without an extra string clean
+// step on the agent side. A leading `T` (no date prefix) is left alone so the
+// parser still rejects it cleanly.
 func isoDateToSerial(s string) (int, error) {
-	t, err := time.Parse("2006-01-02", strings.TrimSpace(s))
+	s = strings.TrimSpace(s)
+	if i := strings.Index(s, "T"); i > 0 {
+		s = s[:i]
+	}
+	t, err := time.Parse("2006-01-02", s)
 	if err != nil {
 		return 0, fmt.Errorf("date %q must be ISO yyyy-mm-dd: %v", s, err)
 	}
@@ -881,9 +1047,26 @@ func tableGetTargets(ctx context.Context, runtime *common.RuntimeContext, token 
 }
 
 // readSheetAsSpec reads one sheet's region and rebuilds it as a typed-protocol
-// sheet (name + typed columns + JSON-safe rows), the inverse of the put path.
+// sheet — the inverse of the put path and the same wire shape +table-put
+// accepts: a string `columns` list, a 2D `data` matrix, and `dtypes` / `formats`
+// maps keyed by column name. That symmetry lets callers round-trip via the
+// pandas-native idiom
+//
+//	pd.DataFrame(sheet["data"], columns=sheet["columns"]).astype(sheet["dtypes"])
+//
+// without a custom helper. `dtypes` is always emitted (one entry per column, so
+// a single `astype()` call covers every column); `formats` is emitted only for
+// columns whose source cells carry a non-empty number_format, since `astype`
+// ignores it and we'd rather not pollute the output.
 func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token string, t tableGetSheet, userRange string, noHeader bool) (map[string]interface{}, error) {
-	spec := map[string]interface{}{"name": t.name, "columns": []interface{}{}, "rows": []interface{}{}}
+	emptySpec := func() map[string]interface{} {
+		return map[string]interface{}{
+			"name":    t.name,
+			"columns": []interface{}{},
+			"data":    []interface{}{},
+			"dtypes":  map[string]interface{}{},
+		}
+	}
 	region := userRange
 	if region == "" {
 		r, err := sheetCurrentRegion(ctx, runtime, token, t.id, t.name)
@@ -893,7 +1076,7 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 		region = r
 	}
 	if region == "" {
-		return spec, nil // empty sheet
+		return emptySpec(), nil // empty sheet
 	}
 	input := map[string]interface{}{
 		"excel_id":            token,
@@ -909,7 +1092,7 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 	}
 	grid := extractCellGrid(out)
 	if len(grid) == 0 {
-		return spec, nil
+		return emptySpec(), nil
 	}
 
 	var headerRow []map[string]interface{}
@@ -925,28 +1108,42 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 		}
 	}
 
-	columns := make([]interface{}, ncols)
+	columnNames := make([]interface{}, ncols)
 	colTypes := make([]string, ncols)
+	dtypes := make(map[string]interface{}, ncols)
+	formats := map[string]interface{}{}
 	for c := 0; c < ncols; c++ {
 		typ, format := inferColumnType(dataRows, c)
 		colTypes[c] = typ
-		col := map[string]interface{}{"name": tableGetColumnName(headerRow, c, noHeader), "type": typ}
-		if format != "" {
-			col["format"] = format
+		name := tableGetColumnName(headerRow, c, noHeader)
+		columnNames[c] = name
+		dtypes[name] = typeToDtype(typ)
+		// Only emit a format when the column actually has one and it's not the
+		// implicit text-format we paint on string columns (the `@` is a writer
+		// convention, not user intent — surfacing it would round-trip back as
+		// an explicit format the user never set).
+		if format != "" && !isTextNumberFormat(format) {
+			formats[name] = format
 		}
-		columns[c] = col
 	}
 
-	rows := make([][]interface{}, 0, len(dataRows))
+	data := make([][]interface{}, 0, len(dataRows))
 	for _, r := range dataRows {
 		row := make([]interface{}, ncols)
 		for c := 0; c < ncols; c++ {
 			row[c] = cellToTyped(cellAt(r, c), colTypes[c])
 		}
-		rows = append(rows, row)
+		data = append(data, row)
 	}
-	spec["columns"] = columns
-	spec["rows"] = rows
+	spec := map[string]interface{}{
+		"name":    t.name,
+		"columns": columnNames,
+		"data":    data,
+		"dtypes":  dtypes,
+	}
+	if len(formats) > 0 {
+		spec["formats"] = formats
+	}
 	return spec, nil
 }
 

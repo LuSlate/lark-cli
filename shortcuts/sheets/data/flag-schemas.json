@@ -6248,13 +6248,13 @@
       "sheets": {
         "type": "array",
         "minItems": 1,
-        "description": "一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入。可由 pandas DataFrame 经薄 helper 生成（NaN→null、Timestamp→ISO、numpy 标量→原生）。",
+        "description": "一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入。整体形状对齐 pandas `df.to_json(orient=\"split\")`：列名走 `columns`、二维取值走 `data`、每列的 pandas dtype 走 `dtypes`、可选的展示格式走 `formats`。一行式用法：`{**json.loads(df.to_json(orient=\"split\")), \"dtypes\": df.dtypes.astype(str).to_dict()}`。",
         "items": {
           "type": "object",
           "required": [
             "name",
             "columns",
-            "rows"
+            "data"
           ],
           "properties": {
             "name": {
@@ -6277,7 +6277,7 @@
             },
             "header": {
               "type": "boolean",
-              "description": "是否写一行列名表头。省略时按 mode 取默认：overwrite→true、append→false（避免在已有表头下重复）；显式给值可覆盖。"
+              "description": "是否写一行列名表头。省略时按 mode 取默认:overwrite→true、append→false（避免在已有表头下重复）；显式给值可覆盖。"
             },
             "allow_overwrite": {
               "type": "boolean",
@@ -6287,38 +6287,14 @@
             "columns": {
               "type": "array",
               "minItems": 1,
-              "description": "列定义，顺序与 rows 中每行的取值一一对应。",
+              "description": "列名字符串数组，顺序与 `data` 中每行取值一一对应。同一子表内列名不可重复。",
               "items": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "type"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "列名（写入表头行的文本）。"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "string",
-                      "number",
-                      "date",
-                      "bool"
-                    ],
-                    "description": "列的声明类型，显式声明、不由 CLI 猜测（避免邮编 / 订单号 / 手机号等「像数字的文本」被误判为数字）。string 列由 +table-put 自动套文本格式（number_format `@`），数字样字符串（含前导零，如「00123」）读写两侧都保真——+table-get 读回时仍判为 string、不会塌缩成数字。date 列取 ISO yyyy-mm-dd 字符串，CLI 转成 Excel 序列号 + 日期 number_format（真日期，可排序 / 透视 / 筛选）。"
-                  },
-                  "format": {
-                    "type": "string",
-                    "description": "可选的单元格 number_format，如 \"yyyy-mm-dd\" / \"0.00%\" / \"#,##0.00\"。percent 列的数值尺度由调用方负责（0.0469 配 \"0.00%\"，helper 不自动乘 100）。"
-                  }
-                }
+                "type": "string"
               }
             },
-            "rows": {
+            "data": {
               "type": "array",
-              "description": "数据行；每行是一个数组，长度必须等于 columns 数。元素按对应列的类型取值，null 表示空单元格。",
+              "description": "数据行；每行是一个数组，长度必须等于 `columns` 数。元素按 `dtypes` 推得的列类型取值（date 列写 ISO yyyy-mm-dd 字符串、number 列写数值、bool 列写布尔、其余写文本），null 表示空单元格。",
               "items": {
                 "type": "array",
                 "items": {
@@ -6328,8 +6304,22 @@
                     "boolean",
                     "null"
                   ],
-                  "description": "单元格值，按所在列的 type 取值（string→文本 / number→数值 / date→ISO yyyy-mm-dd 文本 / bool→布尔）；null 表示空单元格。具体类型由该列在 columns 里声明的 type 决定，故此处仅约束为标量或 null。"
+                  "description": "单元格值：date→ISO yyyy-mm-dd 字符串；number→数值（json.Number 精度保留）；bool→布尔；string→文本；null→空单元格。"
                 }
+              }
+            },
+            "dtypes": {
+              "type": "object",
+              "description": "可选。列名 → pandas dtype 字符串的映射；缺失项默认按 object（string + 文本格式 `@`）处理，所以省略整段时整张表按文本写入（导入 CSV-shaped 数据的最简形态）。dtype 解析规则：`int*` / `uint*` / `Int*` / `UInt*` / `float*` / `Float*` / `complex*` → number（精度保留），`bool` / `boolean` → bool，`datetime64[ns]` / 含时区的 `datetime64[ns, UTC]` 等 → date（默认 `yyyy-mm-dd` 格式），`object` / `string` / `category` / 未识别 → string + 文本格式 `@`（数字样字符串如「00123」不会塌缩成数字）。",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "formats": {
+              "type": "object",
+              "description": "可选。列名 → Excel number_format 字符串的映射，覆盖 dtype 自带的默认格式（金额 `#,##0.00`、百分比 `0.0%`、自定义日期 `yyyy-mm` 等）。percent 列的数值尺度由调用方负责（0.0469 配 `0.00%` 显示 4.69%）。",
+              "additionalProperties": {
+                "type": "string"
               }
             }
           }
@@ -6340,13 +6330,13 @@
       "sheets": {
         "type": "array",
         "minItems": 1,
-        "description": "一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入。可由 pandas DataFrame 经薄 helper 生成（NaN→null、Timestamp→ISO、numpy 标量→原生）。",
+        "description": "一个或多个子表的 typed 数据，每个数组元素写入一张子表；支持多 DataFrame → 多子表一次写入。整体形状对齐 pandas `df.to_json(orient=\"split\")`：列名走 `columns`、二维取值走 `data`、每列的 pandas dtype 走 `dtypes`、可选的展示格式走 `formats`。一行式用法：`{**json.loads(df.to_json(orient=\"split\")), \"dtypes\": df.dtypes.astype(str).to_dict()}`。",
         "items": {
           "type": "object",
           "required": [
             "name",
             "columns",
-            "rows"
+            "data"
           ],
           "properties": {
             "name": {
@@ -6369,7 +6359,7 @@
             },
             "header": {
               "type": "boolean",
-              "description": "是否写一行列名表头。省略时按 mode 取默认：overwrite→true、append→false（避免在已有表头下重复）；显式给值可覆盖。"
+              "description": "是否写一行列名表头。省略时按 mode 取默认:overwrite→true、append→false（避免在已有表头下重复）；显式给值可覆盖。"
             },
             "allow_overwrite": {
               "type": "boolean",
@@ -6379,38 +6369,14 @@
             "columns": {
               "type": "array",
               "minItems": 1,
-              "description": "列定义，顺序与 rows 中每行的取值一一对应。",
+              "description": "列名字符串数组，顺序与 `data` 中每行取值一一对应。同一子表内列名不可重复。",
               "items": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "type"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "列名（写入表头行的文本）。"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "string",
-                      "number",
-                      "date",
-                      "bool"
-                    ],
-                    "description": "列的声明类型，显式声明、不由 CLI 猜测（避免邮编 / 订单号 / 手机号等「像数字的文本」被误判为数字）。string 列由 +table-put 自动套文本格式（number_format `@`），数字样字符串（含前导零，如「00123」）读写两侧都保真——+table-get 读回时仍判为 string、不会塌缩成数字。date 列取 ISO yyyy-mm-dd 字符串，CLI 转成 Excel 序列号 + 日期 number_format（真日期，可排序 / 透视 / 筛选）。"
-                  },
-                  "format": {
-                    "type": "string",
-                    "description": "可选的单元格 number_format，如 \"yyyy-mm-dd\" / \"0.00%\" / \"#,##0.00\"。percent 列的数值尺度由调用方负责（0.0469 配 \"0.00%\"，helper 不自动乘 100）。"
-                  }
-                }
+                "type": "string"
               }
             },
-            "rows": {
+            "data": {
               "type": "array",
-              "description": "数据行；每行是一个数组，长度必须等于 columns 数。元素按对应列的类型取值，null 表示空单元格。",
+              "description": "数据行；每行是一个数组，长度必须等于 `columns` 数。元素按 `dtypes` 推得的列类型取值（date 列写 ISO yyyy-mm-dd 字符串、number 列写数值、bool 列写布尔、其余写文本），null 表示空单元格。",
               "items": {
                 "type": "array",
                 "items": {
@@ -6420,8 +6386,22 @@
                     "boolean",
                     "null"
                   ],
-                  "description": "单元格值，按所在列的 type 取值（string→文本 / number→数值 / date→ISO yyyy-mm-dd 文本 / bool→布尔）；null 表示空单元格。具体类型由该列在 columns 里声明的 type 决定，故此处仅约束为标量或 null。"
+                  "description": "单元格值：date→ISO yyyy-mm-dd 字符串；number→数值（json.Number 精度保留）；bool→布尔；string→文本；null→空单元格。"
                 }
+              }
+            },
+            "dtypes": {
+              "type": "object",
+              "description": "可选。列名 → pandas dtype 字符串的映射；缺失项默认按 object（string + 文本格式 `@`）处理，所以省略整段时整张表按文本写入（导入 CSV-shaped 数据的最简形态）。dtype 解析规则：`int*` / `uint*` / `Int*` / `UInt*` / `float*` / `Float*` / `complex*` → number（精度保留），`bool` / `boolean` → bool，`datetime64[ns]` / 含时区的 `datetime64[ns, UTC]` 等 → date（默认 `yyyy-mm-dd` 格式），`object` / `string` / `category` / 未识别 → string + 文本格式 `@`（数字样字符串如「00123」不会塌缩成数字）。",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "formats": {
+              "type": "object",
+              "description": "可选。列名 → Excel number_format 字符串的映射，覆盖 dtype 自带的默认格式（金额 `#,##0.00`、百分比 `0.0%`、自定义日期 `yyyy-mm` 等）。percent 列的数值尺度由调用方负责（0.0469 配 `0.00%` 显示 4.69%）。",
+              "additionalProperties": {
+                "type": "string"
               }
             }
           }

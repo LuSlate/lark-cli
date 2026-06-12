@@ -317,7 +317,7 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `--sheets` | string + File + Stdin（复合 JSON） | required | typed 表格协议 JSON：顶层 sheets 数组，每项 {name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}；type 为 string/number/date/bool |
+| `--sheets` | string + File + Stdin（复合 JSON） | required | Typed 表格协议（pandas-DataFrame-shaped）JSON：顶层 sheets 数组，每项 `{name, start_cell?, mode?, header?, allow_overwrite?, columns:["colA","colB",...], data:[[...]], dtypes?:{colA:pandasDtype, ...}, formats?:{colA:numberFormat, ...}}`。Agents 通常用 `{**json.loads(df.to_json(orient="split")), "dtypes": df.dtypes.astype(str).to_dict()}` 一行构造。`dtypes` 值是 pandas dtype 字符串（`int64`、`float64`、`Int64`、`bool`、`boolean`、`datetime64[ns]`、`object`、...），CLI 端映射成内部 string/number/date/bool —— 省略 `dtypes` 时该列按文本写入（适合原始 CSV-shaped 数据）。`formats[col]` 是 Excel number_format 字符串（如 `#,##0.00`、`0.0%`、`yyyy-mm`）；缺省时 date 列用 `yyyy-mm-dd`，string 列用文本格式 `@`。 |
 
 ## Schemas
 
@@ -364,8 +364,10 @@ _一个或多个子表的 typed 数据，每个数组元素写入一张子表；
 - `mode` (enum?) — overwrite（默认）：从 start_cell 起写「表头 + 数据」块；append：把数据追加到子表已有数据下方（默认不重复表头） [overwrite / append]
 - `header` (boolean?) — 是否写一行列名表头
 - `allow_overwrite` (boolean?) — 为 false 时，若写入会落在非空单元格则拒写以保护原数据（返回 partial_success）
-- `columns` (array<object>) — 列定义，顺序与 rows 中每行的取值一一对应 each: { name: string, type: enum, format?: string }
-- `rows` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 columns 数
+- `columns` (array<string>) — 列名字符串数组，顺序与 `data` 中每行取值一一对应
+- `data` (array<array<string|number|boolean|null>>) — 数据行；每行是一个数组，长度必须等于 `columns` 数
+- `dtypes` (object?) — 可选
+- `formats` (object?) — 可选
 
 ## Examples
 
@@ -462,9 +464,9 @@ lark-cli sheets +csv-put --spreadsheet-token shtXXX --sheet-id "$SID" \
 
 ### `+table-put`（DataFrame → 飞书，类型保真写入）
 
-把带类型的结构化数据（DataFrame）类型保真地写入**已有**表，底层复用 `set_cell_range`（同 `+cells-set`）。typed 协议：顶层 `sheets[]`，每 sheet 带 `columns:[{name,type,format?}]` + `rows`（二维数组，`null`=空单元格），列 `type` ∈ `string` / `number` / `date` / `bool`（**显式声明**，不让 CLI 猜，避免邮编 / 订单号等"像数字的文本"被误判）。`date` 列的 ISO `yyyy-mm-dd` 字符串会转成 Excel 序列号 + 日期 `number_format`（真日期，可排序 / 透视 / 筛选）。
+把结构化数据（DataFrame、list of dict、Counter）类型保真写入**已有**表，底层复用 `set_cell_range`（同 `+cells-set`）。协议形状**对齐 pandas `to_json(orient="split")`**：`columns:[列名]` + `data:[[行...]]`，可选 `dtypes:{列名:pandas_dtype}` 决定每列类型（number 保精度、date 落真日期），可选 `formats:{列名:number_format}` 覆盖显示格式（千分位 / 百分比 / 自定义日期）。dtypes 缺失时整张表按 string 写入（带 `@` 文本格式，邮编 / 订单号等含前导零的 id 保真）。
 
-只写入**已有**表（`--url` / `--spreadsheet-token` 二选一必填），不新建工作簿——**要新建表格直接用 `+workbook-create --sheets`**（同 typed 协议、一步建表 + 类型保真写入，无需先建空表再回来，详见 workbook reference）。读回用镜像命令 `+table-get`（见 read-data reference），输出与 `--sheets` 同构、可 round-trip。
+只写入**已有**表（`--url` / `--spreadsheet-token` 二选一必填），不新建工作簿——**要新建表格直接用 `+workbook-create --sheets`**（同协议、一步建表 + 类型保真写入，详见 workbook reference）。读回用镜像命令 `+table-get`（见 read-data reference），输出与 `--sheets` 同构、可 round-trip。
 
 ```bash
 # sheet 按 name 匹配、缺则新建；多 DataFrame 经 stdin 一次写多 sheet
@@ -475,28 +477,48 @@ lark-cli sheets +table-put --spreadsheet-token "<token>" --sheets @payload.json
 
 每个 sheet 还可带 `"allow_overwrite": false`（遇非空拒写、保护原数据）、`"header": false`（只写数据不写表头）。完整字段跑 `+table-put --print-schema --flag-name sheets`。
 
-**前提：此 helper 需 pandas。** 注意一台机器常装多个 Python，`python3` 未必指向装了 pandas 的那个——撞 `ModuleNotFoundError` 就换个解释器（如 `/usr/bin/python3`）再试。**不想依赖 pandas 也行**：typed 协议就是纯 JSON，直接手写 `columns` + `rows`（不经 helper）一样喂给 `--sheets -`。DataFrame → 协议 的薄 helper（一次清洗：`NaN→null`、`Timestamp→ISO`、`numpy 标量→原生`）：
+#### DataFrame → 协议（5 行 helper）
+
+pandas 的 `df.to_json(orient="split", date_format="iso")` 一步完成所有清洗（NaN→null、Timestamp→ISO 字符串、numpy 标量→原生数字），helper 只要把 dtypes 拼上去——5 行覆盖单 / 多 sheet：
 
 ```python
-import pandas as pd, numpy as np
+import json
 def df_to_sheet(df, name, formats=None):
-    formats = formats or {}
-    def coltype(s):
-        if pd.api.types.is_datetime64_any_dtype(s): return "date"
-        if pd.api.types.is_bool_dtype(s):           return "bool"
-        if pd.api.types.is_numeric_dtype(s):        return "number"
-        return "string"
-    def cell(v):
-        if pd.isna(v):                  return None
-        if isinstance(v, pd.Timestamp): return v.date().isoformat()
-        if isinstance(v, np.generic):   return v.item()
-        return v
-    columns = [{"name": str(c), "type": coltype(df[c]),
-                **({"format": formats[c]} if c in formats else {})} for c in df.columns]
-    rows = [[cell(v) for v in r] for r in df.itertuples(index=False, name=None)]
-    return {"name": name, "columns": columns, "rows": rows}
-# payload = {"sheets": [df_to_sheet(df, "销售", {"日期": "yyyy-mm-dd"})]}；json.dump 经 stdin 喂给 +table-put --sheets -
+    return {"name": name,
+            **json.loads(df.to_json(orient="split", date_format="iso")),
+            "dtypes": df.dtypes.astype(str).to_dict(),
+            **({"formats": formats} if formats else {})}
+
+# 单 sheet（显式 format 覆盖默认显示）
+payload = {"sheets": [df_to_sheet(df, "销售", {"营收": "#,##0.00", "毛利率": "0.0%"})]}
+
+# 多 sheet——helper 让每个 sheet 一行，不再重复 boilerplate
+payload = {"sheets": [df_to_sheet(df1, "销售"),
+                      df_to_sheet(df2, "成本"),
+                      df_to_sheet(df3, "利润")]}
 ```
+
+> **CSV-shaped 全文本数据**（不需要类型保真、含前导零的 id 也要保留）省掉 dtypes 即可，inline 一行写完，不必走 helper（注意保留 `date_format="iso"`，否则 datetime 列会被序列化成 epoch 毫秒数字，CLI 拒绝）：
+> ```python
+> payload = {"sheets": [{"name": "原始",
+>                        **json.loads(df.to_json(orient="split", date_format="iso"))}]}
+> ```
+> **别把 `to_json + json.loads` 换成 `df.to_dict(orient="split")`**：会留 `numpy.int64` 让 `json.dumps` 后续报 "not serializable"——这一步是清洗的关键。
+
+不用 pandas 也行——typed 协议就是纯 JSON。手写场景：
+
+```python
+# Counter / dict / 手拼数据：直接写 columns + data，按需加 dtypes/formats
+payload = {"sheets": [{
+    "name": "渠道",
+    "columns": ["channel", "count", "rate"],
+    "data": [["app", 1240, 0.62], ["web", 760, 0.38]],
+    "dtypes": {"count": "int64", "rate": "float64"},
+    "formats": {"rate": "0.0%"},
+}]}
+```
+
+> **dtype 速查**：`int64`/`float64`（数值）、`Int64`（含空值的整数，nullable）、`bool`/`boolean`、`datetime64[ns]`（date，默认 `yyyy-mm-dd`）、`object`（string）。pandas dtype 字符串原样塞进 dtypes 即可，CLI 端按前缀匹配（`int*`/`uint*`/`Int*`/`float*` → number 等）。未识别 dtype 兜底为 string。
 
 ### Validate / DryRun / Execute 约束
 
