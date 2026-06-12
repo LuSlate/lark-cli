@@ -223,8 +223,8 @@ func TestTablePut_DryRunWrite(t *testing.T) {
 	}
 	rows := input["cells"].([]interface{})
 	header := rows[0].([]interface{})
-	if hs := cellStyles(header[0]); hs["font_weight"] != "bold" {
-		t.Errorf("header cell should be bold, got %#v", header[0])
+	if hs := cellStyles(header[0]); len(hs) != 0 {
+		t.Errorf("header cell should carry no style now that --header-style is removed, got %#v", header[0])
 	}
 	data := rows[1].([]interface{})
 	// 月份 (date) → serial 45306, number_format yyyy-mm
@@ -490,7 +490,6 @@ func TestWorkbookCreate_TypedMutualExclusion(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"sheets+headers", []string{"--title", "X", "--sheets", typed, "--headers", `["a"]`}},
 		{"sheets+values", []string{"--title", "X", "--sheets", typed, "--values", `[["x"]]`}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -597,6 +596,37 @@ func TestWorkbookCreate_TypedDryRun(t *testing.T) {
 	}
 }
 
+func TestWorkbookCreate_TypedDryRun_MultiSheetStyles(t *testing.T) {
+	t.Parallel()
+	calls := parseDryRunAPI(t, WorkbookCreate, []string{
+		"--title", "Demo",
+		"--sheets", `{"sheets":[{"name":"S1","columns":[{"name":"name","type":"string"}],"rows":[["alice"]]},{"name":"S2","columns":[{"name":"amount","type":"number","format":"0"}],"rows":[[12]]}]}`,
+		"--styles", `{"styles":[{"name":"S1","cell_styles":[{"range":"A1:A2","background_color":"#f5f5f5"}],"cell_merges":[{"range":"A1:A2"}]},{"name":"S2","cell_styles":[{"range":"A1","font_weight":"bold"},{"range":"A2","font_color":"#0f7b0f"}],"col_sizes":[{"range":"A:A","type":"pixel","size":120}],"row_sizes":[{"range":"1:1","type":"pixel","size":28}]}]}`,
+	})
+	if len(calls) != 6 {
+		t.Fatalf("want 6 dry-run calls (create + two typed writes + merge + two resizes), got %d", len(calls))
+	}
+	firstBody, _ := calls[1].(map[string]interface{})["body"].(map[string]interface{})
+	firstInput := decodeToolInput(t, firstBody, "set_cell_range")
+	firstRaw, _ := json.Marshal(firstInput["cells"])
+	if !strings.Contains(string(firstRaw), `"background_color":"#f5f5f5"`) {
+		t.Errorf("first sheet should carry global style; cells=%s", firstRaw)
+	}
+	secondBody, _ := calls[3].(map[string]interface{})["body"].(map[string]interface{})
+	secondInput := decodeToolInput(t, secondBody, "set_cell_range")
+	secondRaw, _ := json.Marshal(secondInput["cells"])
+	if !strings.Contains(string(secondRaw), `"font_weight":"bold"`) || !strings.Contains(string(secondRaw), `"font_color":"#0f7b0f"`) {
+		t.Errorf("second sheet should carry per-cell styles; cells=%s", secondRaw)
+	}
+	allRaw, _ := json.Marshal(calls)
+	if !strings.Contains(string(allRaw), "merge_cells") {
+		t.Errorf("dry-run should include merge_cells visual op; calls=%s", allRaw)
+	}
+	if got := strings.Count(string(allRaw), "resize_range"); got != 2 {
+		t.Errorf("dry-run resize_range count = %d, want 2; calls=%s", got, allRaw)
+	}
+}
+
 func TestTablePut_StringifyCellValue(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -658,10 +688,10 @@ func TestTablePut_HeaderAndMode(t *testing.T) {
 	}
 	// buildSheetMatrix header toggle
 	s := &tableSheetSpec{Columns: []tableColumnSpec{{Name: "a", Type: "string"}}, Rows: [][]interface{}{{"x"}}}
-	if m, _ := buildSheetMatrix(s, true, false); len(m) != 1 {
+	if m, _ := buildSheetMatrix(s, false); len(m) != 1 {
 		t.Errorf("header off → 1 data row, got %d", len(m))
 	}
-	if m, _ := buildSheetMatrix(s, true, true); len(m) != 2 {
+	if m, _ := buildSheetMatrix(s, true); len(m) != 2 {
 		t.Errorf("header on → header + 1 data row, got %d", len(m))
 	}
 }
@@ -987,5 +1017,60 @@ func TestTableGet_AllSheets(t *testing.T) {
 	}
 	if got[0] != "A" || got[1] != "B" {
 		t.Errorf("sheet names = %v, want [A B] in workbook order", got)
+	}
+}
+
+// TestBuildTypedCell_TypeLess verifies a type-less column (Type == "") writes the
+// raw scalar unchanged — no @ text format, json.Number preserved — so untyped
+// --values lets the backend auto-detect types. An explicit format still attaches.
+func TestBuildTypedCell_TypeLess(t *testing.T) {
+	t.Parallel()
+	num := json.Number("145487")
+	pct := json.Number("0.1")
+	cases := []struct {
+		name    string
+		col     tableColumnSpec
+		raw     interface{}
+		wantVal interface{}
+		wantNF  interface{}
+	}{
+		{"number stays json.Number", tableColumnSpec{Name: "c"}, num, num, nil},
+		{"string verbatim", tableColumnSpec{Name: "c"}, "00123", "00123", nil},
+		{"bool verbatim", tableColumnSpec{Name: "c"}, true, true, nil},
+		{"nil → empty cell", tableColumnSpec{Name: "c"}, nil, nil, nil},
+		{"explicit format attaches", tableColumnSpec{Name: "c", Format: "0.0%"}, pct, pct, "0.0%"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			cell, err := buildTypedCell(&tc.col, tc.raw)
+			if err != nil {
+				t.Fatalf("buildTypedCell err: %v", err)
+			}
+			if cell["value"] != tc.wantVal {
+				t.Errorf("value = %#v, want %#v", cell["value"], tc.wantVal)
+			}
+			var gotNF interface{}
+			if cs, _ := cell["cell_styles"].(map[string]interface{}); cs != nil {
+				gotNF = cs["number_format"]
+			}
+			if gotNF != tc.wantNF {
+				t.Errorf("number_format = %#v, want %#v", gotNF, tc.wantNF)
+			}
+		})
+	}
+}
+
+// TestValidColumnType_AcceptsEmpty locks that an empty type is valid — the
+// type-less / raw-passthrough column that --values synthesizes.
+func TestValidColumnType_AcceptsEmpty(t *testing.T) {
+	t.Parallel()
+	for _, ty := range []string{"", "string", "number", "date", "bool"} {
+		if !validColumnType(ty) {
+			t.Errorf("validColumnType(%q) = false, want true", ty)
+		}
+	}
+	if validColumnType("float") {
+		t.Error(`validColumnType("float") = true, want false`)
 	}
 }

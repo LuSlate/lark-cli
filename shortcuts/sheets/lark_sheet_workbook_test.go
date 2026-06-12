@@ -4,6 +4,7 @@
 package sheets
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -305,7 +306,7 @@ func TestWorkbookCreate_DryRun(t *testing.T) {
 		t.Parallel()
 		calls := parseDryRunAPI(t, WorkbookCreate, []string{"--title", "MySheet"})
 		if len(calls) != 1 {
-			t.Fatalf("api calls = %d, want 1 (no headers/data)", len(calls))
+			t.Fatalf("api calls = %d, want 1 (no values)", len(calls))
 		}
 		c := calls[0].(map[string]interface{})
 		if c["url"] != "/open-apis/sheets/v3/spreadsheets" {
@@ -317,12 +318,11 @@ func TestWorkbookCreate_DryRun(t *testing.T) {
 		}
 	})
 
-	t.Run("with headers and data → 2-step plan", func(t *testing.T) {
+	t.Run("with values → 2-step plan", func(t *testing.T) {
 		t.Parallel()
 		calls := parseDryRunAPI(t, WorkbookCreate, []string{
 			"--title", "Sales",
-			"--headers", `["Name","Score"]`,
-			"--values", `[["alice",95],["bob",88]]`,
+			"--values", `[["Name","Score"],["alice",95],["bob",88]]`,
 		})
 		if len(calls) != 2 {
 			t.Fatalf("api calls = %d, want 2 (create + fill)", len(calls))
@@ -334,7 +334,88 @@ func TestWorkbookCreate_DryRun(t *testing.T) {
 		body, _ := fill["body"].(map[string]interface{})
 		input := decodeToolInput(t, body, "set_cell_range")
 		if input["range"] != "A1:B3" {
-			t.Errorf("fill range = %v, want A1:B3 (1 header + 2 data rows × 2 cols)", input["range"])
+			t.Errorf("fill range = %v, want A1:B3 (3 rows × 2 cols)", input["range"])
+		}
+	})
+
+	t.Run("with styles merges into set_cell_range cells", func(t *testing.T) {
+		t.Parallel()
+		calls := parseDryRunAPI(t, WorkbookCreate, []string{
+			"--title", "Sales",
+			"--values", `[["Name","Score"],["alice",95]]`,
+			"--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","font_weight":"bold","background_color":"#f5f5f5"},{"range":"B1","number_format":"0","border_styles":{"bottom":{"style":"solid","weight":"thin","color":"#000000"}}},{"range":"B2","font_color":"#0f7b0f"}]}]}`,
+		})
+		if len(calls) != 2 {
+			t.Fatalf("api calls = %d, want 2 (create + fill)", len(calls))
+		}
+		body, _ := calls[1].(map[string]interface{})["body"].(map[string]interface{})
+		input := decodeToolInput(t, body, "set_cell_range")
+		cells, _ := input["cells"].([]interface{})
+		if len(cells) != 2 {
+			t.Fatalf("cells rows = %#v, want 2", input["cells"])
+		}
+		headerRow, _ := cells[0].([]interface{})
+		firstHeader, _ := headerRow[0].(map[string]interface{})
+		firstStyle, _ := firstHeader["cell_styles"].(map[string]interface{})
+		if firstStyle["font_weight"] != "bold" || firstStyle["background_color"] != "#f5f5f5" {
+			t.Errorf("first header style = %#v, want bold + background", firstStyle)
+		}
+		secondHeader, _ := headerRow[1].(map[string]interface{})
+		if secondHeader["border_styles"] == nil {
+			t.Errorf("second header missing border_styles: %#v", secondHeader)
+		}
+		secondStyle, _ := secondHeader["cell_styles"].(map[string]interface{})
+		if secondStyle["number_format"] != "0" {
+			t.Errorf("second header number_format = %#v, want 0", secondStyle)
+		}
+		dataRow, _ := cells[1].([]interface{})
+		firstData, _ := dataRow[0].(map[string]interface{})
+		if _, ok := firstData["cell_styles"]; ok {
+			t.Errorf("null style should leave first data cell unstyled: %#v", firstData)
+		}
+		secondData, _ := dataRow[1].(map[string]interface{})
+		secondDataStyle, _ := secondData["cell_styles"].(map[string]interface{})
+		if secondDataStyle["font_color"] != "#0f7b0f" {
+			t.Errorf("second data style = %#v, want font color", secondDataStyle)
+		}
+	})
+
+	t.Run("cell style range can cover the whole initial range", func(t *testing.T) {
+		t.Parallel()
+		calls := parseDryRunAPI(t, WorkbookCreate, []string{
+			"--title", "Sales",
+			"--values", `[["Name","Score"],["alice",95]]`,
+			"--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1:B2","horizontal_alignment":"center"}]}]}`,
+		})
+		body, _ := calls[1].(map[string]interface{})["body"].(map[string]interface{})
+		input := decodeToolInput(t, body, "set_cell_range")
+		raw, _ := json.Marshal(input["cells"])
+		if got := strings.Count(string(raw), "horizontal_alignment"); got != 4 {
+			t.Errorf("horizontal_alignment occurrences = %d, want 4 in 2x2 range; cells=%s", got, raw)
+		}
+	})
+	t.Run("overlapping cell_styles deep-merge fields, no cross-cell pollution", func(t *testing.T) {
+		t.Parallel()
+		calls := parseDryRunAPI(t, WorkbookCreate, []string{
+			"--title", "X",
+			"--values", `[["a","b"]]`,
+			"--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1:B1","font_weight":"bold"},{"range":"B1","font_color":"#ff0000"}]}]}`,
+		})
+		body, _ := calls[1].(map[string]interface{})["body"].(map[string]interface{})
+		input := decodeToolInput(t, body, "set_cell_range")
+		cells, _ := input["cells"].([]interface{})
+		row0, _ := cells[0].([]interface{})
+		// B1 hit by both ops → must keep BOTH font_weight (op1) and font_color (op2).
+		b1, _ := row0[1].(map[string]interface{})
+		b1s, _ := b1["cell_styles"].(map[string]interface{})
+		if b1s["font_weight"] != "bold" || b1s["font_color"] != "#ff0000" {
+			t.Errorf("B1 should deep-merge both ops, got %#v", b1s)
+		}
+		// A1 hit only by op1 → must NOT be polluted by op2's font_color (shared submap).
+		a1, _ := row0[0].(map[string]interface{})
+		a1s, _ := a1["cell_styles"].(map[string]interface{})
+		if a1s["font_color"] != nil {
+			t.Errorf("A1 must not be polluted by op2, got %#v", a1s)
 		}
 	})
 }
@@ -347,8 +428,18 @@ func TestWorkbookCreate_DataValidation(t *testing.T) {
 		args []string
 		want string
 	}{
-		{"headers not array", []string{"--title", "X", "--headers", `"abc"`}, "must be a JSON array"},
 		{"values not 2D", []string{"--title", "X", "--values", `["a","b"]`}, "must be an array"},
+		{"styles not object", []string{"--title", "X", "--styles", `"bold"`}, `shaped as {"styles":[...]}`},
+		{"styles missing array", []string{"--title", "X", "--styles", `{"value":"x"}`}, "--styles.styles is required"},
+		{"styles item missing groups", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","value":"x"}]}`}, "must include at least one of cell_styles/row_sizes/col_sizes/cell_merges"},
+		{"cell styles must be array", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":{"range":"A1","font_weight":"bold"}}]}`}, "cell_styles must be an array"},
+		{"cell style needs range", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"font_weight":"bold"}]}]}`}, "range is required"},
+		{"nested cell_styles rejected", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","cell_styles":{"font_weight":"bold"}}]}]}`}, "put style fields directly"},
+		{"row size needs row range", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","row_sizes":[{"range":"A1","type":"pixel","size":20}]}]}`}, "must use row numbers"},
+		{"col size needs pixel size", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","col_sizes":[{"range":"A:A","type":"pixel"}]}]}`}, "requires size"},
+		{"border bad style enum", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","border_styles":{"bottom":{"style":"NONSENSE"}}}]}]}`}, `style "NONSENSE" is invalid`},
+		{"border invalid side", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","border_styles":{"diagonal":{"style":"solid"}}}]}]}`}, "not a valid side"},
+		{"border bad weight", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","border_styles":{"top":{"weight":"xxl"}}}]}]}`}, `weight "xxl" is invalid`},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

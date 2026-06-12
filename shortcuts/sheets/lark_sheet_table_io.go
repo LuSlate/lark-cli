@@ -67,7 +67,7 @@ var TablePut = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		return tablePutWrite(ctx, runtime, token, payload, runtime.Bool("header-style"))
+		return tablePutWrite(ctx, runtime, token, payload)
 	},
 	Tips: []string{
 		"Writes into an existing spreadsheet — pass --url or --spreadsheet-token. To create a new workbook first, use +workbook-create, then point --spreadsheet-token here.",
@@ -182,9 +182,13 @@ func (p *tablePayload) validate() error {
 	return nil
 }
 
+// validColumnType reports whether a column type is one the writer understands.
+// An empty type is valid and means "type-less" (raw passthrough): the value is
+// written as-is and Lark Sheets auto-detects its type — see buildTypedCell.
+// +workbook-create's --values synthesizes an all-type-less payload through this.
 func validColumnType(t string) bool {
 	switch t {
-	case "string", "number", "date", "bool":
+	case "", "string", "number", "date", "bool":
 		return true
 	}
 	return false
@@ -203,21 +207,18 @@ func headerOn(s *tableSheetSpec) bool {
 }
 
 // buildSheetMatrix turns a sheet spec into the set_cell_range cells matrix:
-// optionally a (bold-able) header row of column names, then one row per data
-// record with each cell mapped by its column type. Per-column number_format is
-// attached so numbers/dates render correctly (and dates become real dates).
-func buildSheetMatrix(s *tableSheetSpec, headerStyle, writeHeader bool) ([][]interface{}, error) {
+// optionally a header row of column names, then one row per data record with
+// each cell mapped by its column type. Per-column number_format is attached so
+// numbers/dates render correctly (and dates become real dates). Header cells
+// carry no style of their own — style them via --styles like any other cell.
+func buildSheetMatrix(s *tableSheetSpec, writeHeader bool) ([][]interface{}, error) {
 	ncols := len(s.Columns)
 	matrix := make([][]interface{}, 0, len(s.Rows)+1)
 
 	if writeHeader {
 		header := make([]interface{}, ncols)
 		for c := range s.Columns {
-			cell := map[string]interface{}{"value": s.Columns[c].Name}
-			if headerStyle {
-				cell["cell_styles"] = map[string]interface{}{"font_weight": "bold"}
-			}
-			header[c] = cell
+			header[c] = map[string]interface{}{"value": s.Columns[c].Name}
 		}
 		matrix = append(matrix, header)
 	}
@@ -239,7 +240,9 @@ func buildSheetMatrix(s *tableSheetSpec, headerStyle, writeHeader bool) ([][]int
 // buildTypedCell maps one raw JSON value to a set_cell_range cell per its
 // declared column type. A nil (JSON null) becomes an empty cell that still
 // carries the column's number_format. number values are kept as json.Number to
-// preserve precision; dates are converted to Excel serials.
+// preserve precision; dates are converted to Excel serials. A type-less column
+// (Type == "") writes the raw scalar unchanged, letting the backend auto-detect
+// the type — the untyped --values path relies on this.
 func buildTypedCell(col *tableColumnSpec, raw interface{}) (map[string]interface{}, error) {
 	cell := map[string]interface{}{}
 	nf := strings.TrimSpace(col.Format)
@@ -261,6 +264,12 @@ func buildTypedCell(col *tableColumnSpec, raw interface{}) (map[string]interface
 		return cell, nil
 	}
 	switch col.Type {
+	case "":
+		// Type-less column: write the raw JSON scalar as-is so Lark Sheets
+		// auto-detects the type (numeric → number, else text). json.Number is
+		// kept verbatim for precision; an optional --styles number_format
+		// controls display. This is the untyped --values behavior.
+		cell["value"] = raw
 	case "string":
 		cell["value"] = stringifyCellValue(raw)
 	case "number":
@@ -384,7 +393,7 @@ func tablePutFullRange(s *tableSheetSpec, totalRows int) string {
 // writeSheetData writes one sheet's matrix via set_cell_range, splitting into
 // row batches when the cell count would exceed tablePutMaxCellsPerWrite.
 // Returns a per-sheet summary for the result envelope.
-func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, s *tableSheetSpec, headerStyle bool) (map[string]interface{}, error) {
+func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, s *tableSheetSpec, styles *workbookCreateStylePayload) (map[string]interface{}, error) {
 	_, col0, row0, err := sheetAnchor(s)
 	if err != nil {
 		return nil, err
@@ -410,8 +419,11 @@ func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, 
 		}
 	}
 
-	matrix, err := buildSheetMatrix(s, headerStyle, writeHeader)
+	matrix, err := buildSheetMatrix(s, writeHeader)
 	if err != nil {
+		return nil, err
+	}
+	if err := applyWorkbookCreateStylesToMatrix(matrix, styles, col0, baseRow, fmt.Sprintf("--styles for sheet %q", s.Name)); err != nil {
 		return nil, err
 	}
 
@@ -452,6 +464,9 @@ func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, 
 			return nil, fmt.Errorf("writing rows %d-%d: %w", start+1, end, err)
 		}
 		writes++
+	}
+	if err := applyWorkbookCreateVisualOps(ctx, runtime, token, sheetID, styles); err != nil {
+		return nil, fmt.Errorf("applying visual styles: %w", err)
 	}
 	return map[string]interface{}{
 		"name":      s.Name,
@@ -514,7 +529,7 @@ func lastDataRow(ctx context.Context, runtime *common.RuntimeContext, token, she
 //
 // On failure it returns the summaries written so far alongside the error, so
 // the caller can surface a partial_success.
-func writeTypedSheets(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, headerStyle bool, adoptSheetID string) ([]interface{}, error) {
+func writeTypedSheets(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, adoptSheetID string, styles *workbookCreateSheetStyles) ([]interface{}, error) {
 	byName, err := listSheetIDsByName(ctx, runtime, token)
 	if err != nil {
 		return nil, err
@@ -545,7 +560,7 @@ func writeTypedSheets(ctx context.Context, runtime *common.RuntimeContext, token
 			}
 			byName[s.Name] = sheetID
 		}
-		summary, err := writeSheetData(ctx, runtime, token, sheetID, s, headerStyle)
+		summary, err := writeSheetData(ctx, runtime, token, sheetID, s, styles.styleFor(i))
 		if err != nil {
 			return written, fmt.Errorf("writing sheet %q failed: %w", s.Name, err)
 		}
@@ -570,8 +585,8 @@ func renameSheet(ctx context.Context, runtime *common.RuntimeContext, token, she
 // tablePutWrite writes the payload into an existing workbook and emits the
 // +table-put envelope. The shared write loop lives in writeTypedSheets; this
 // wrapper adds +table-put's output shape and partial-success reporting.
-func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, headerStyle bool) error {
-	written, err := writeTypedSheets(ctx, runtime, token, payload, headerStyle, "")
+func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload) error {
+	written, err := writeTypedSheets(ctx, runtime, token, payload, "", nil)
 	if err != nil {
 		return tablePutPartial(token, nil, written, err.Error())
 	}
@@ -721,10 +736,9 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 	if err != nil {
 		return dry
 	}
-	headerStyle := runtime.Bool("header-style")
 	for i := range payload.Sheets {
 		s := &payload.Sheets[i]
-		matrix, _ := buildSheetMatrix(s, headerStyle, headerOn(s))
+		matrix, _ := buildSheetMatrix(s, headerOn(s))
 		desc := fmt.Sprintf("write sheet %q (%d data rows × %d cols, mode=%s) via set_cell_range",
 			s.Name, len(s.Rows), len(s.Columns), writeModeName(s))
 		rng := tablePutFullRange(s, len(matrix))
