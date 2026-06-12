@@ -6,19 +6,13 @@ description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/b
 
 # lark-cli 共享规则
 
-通过 lark-cli 操作飞书资源的通用规则与注意事项。正文是常驻核心；以下细节按需读取（`lark-cli skills read lark-shared references/<file>`）：
+通过 lark-cli 操作飞书资源的通用规则。正文是常驻核心；以下细节按需读取（`lark-cli skills read lark-shared references/<file>`）：
 
-- **遇到 exit 10 / confirmation 错误** → 读 [`references/high-risk-approval.md`](references/high-risk-approval.md)（错误形态、识别、按 hint 重试、如何识别高风险）
-- **要帮用户做 user 身份授权** → 读 [`references/auth-split-flow.md`](references/auth-split-flow.md)（split-flow 完整步骤）
-- **首次配置 lark-cli（`config init`）** → 读 [`references/config-init.md`](references/config-init.md)（配置 + URL / 二维码转发规则）
+- **遇到 exit 10 / confirmation 错误** → 读 [`references/lark-shared-high-risk-approval.md`](references/lark-shared-high-risk-approval.md)（错误形态、识别、按 hint 重试、如何识别高风险）
+- **要帮用户做 user 身份授权** → 读 [`references/lark-shared-auth-split-flow.md`](references/lark-shared-auth-split-flow.md)（split-flow 完整步骤）
 - **拿到 `/wiki/` 链接或 wiki token** → 读 [`references/lark-wiki-token-routing.md`](references/lark-wiki-token-routing.md)（token 解包与按底层对象路由）
 
-## 配置初始化
-
-首次使用运行 `lark-cli config init --new`（帮用户初始化时用 background 方式发起，从输出提取授权链接发给用户）。
-**详见 [`references/config-init.md`](references/config-init.md)**（含通用的 URL / 二维码转发规则）。
-
-## 认证
+## 认证与身份
 
 ### 身份类型
 
@@ -46,7 +40,7 @@ description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/b
 - `console_url`：飞书开发者后台的权限配置链接。
 - `hint`：建议的修复命令。
 
-- **Bot 身份**：将 `console_url` 提供给用户（按安全规则生成二维码展示、URL 不改写），引导去后台开通 scope。**禁止**对 bot 执行 `auth login`。
+- **Bot 身份**：将 `console_url` 提供给用户（按下方「安全规则」的 URL 规则展示），引导去后台开通 scope。**禁止**对 bot 执行 `auth login`。
 - **User 身份**：
   ```bash
   lark-cli auth login --domain <domain>           # 按业务域授权
@@ -54,7 +48,13 @@ description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/b
   ```
   auth login 必须指定范围（`--domain` 或 `--scope`）；多次 login 的 scope 会累积（增量授权）。
 
-**Agent 代理发起认证**：优先用 split-flow（`--no-wait` 发起 → 展示给用户 → 后续轮 `--device-code` 完成）。三条铁律：① 不在同一轮展示 URL 后立刻阻塞轮询 `--device-code`（交还控制权，等用户回来）；② `--device-code` 由你亲自执行，不要让用户自己跑；③ 不缓存 `verification_url` / `device_code`，每次需要授权都重新发起。**展示授权 URL 时必须同时用 `lark-cli auth qrcode` 生成并展示二维码（URL 在前、二维码在后），不可跳过；URL 当作 opaque string 不要改写。** 完整步骤详见 [`references/auth-split-flow.md`](references/auth-split-flow.md)。
+### Agent 代理发起认证
+
+优先用 split-flow（`--no-wait` 发起 → 展示给用户 → 后续轮 `--device-code` 完成），避免同轮阻塞。三条铁律：① 不在同一轮展示 URL 后立刻阻塞轮询 `--device-code`（交还控制权，等用户回来）；② `--device-code` 由你亲自执行，不要让用户自己跑；③ 不缓存 `verification_url` / `device_code`，每次需要授权都重新发起。授权 URL 的二维码展示按「安全规则」。完整步骤详见 [`references/lark-shared-auth-split-flow.md`](references/lark-shared-auth-split-flow.md)。
+
+## 配置初始化
+
+首次使用运行 `lark-cli config init --new`：帮用户初始化时**非阻塞启动**该命令、**持续读取输出**、从中提取授权链接发给用户（URL 的二维码展示按「安全规则」）。
 
 ## 更新检查
 
@@ -86,4 +86,4 @@ description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/b
 2. 同意后，从 envelope 的 `hint` 读出确认 flag（`--yes` / `--force`），以 argv 数组**追加到原始命令**重试——不写死 `--yes`，不用 `sh -c` 拼接。
 3. 用户拒绝则终止。
 
-**错误形态识别、`action` 字段位置、如何判断高风险、`--dry-run` 预览 → 详见 [`references/high-risk-approval.md`](references/high-risk-approval.md)。**
+**错误形态识别、`action` 字段位置、如何判断高风险、`--dry-run` 预览 → 详见 [`references/lark-shared-high-risk-approval.md`](references/lark-shared-high-risk-approval.md)。**
