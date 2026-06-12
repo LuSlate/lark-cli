@@ -1,6 +1,6 @@
 ---
 name: lark-shared
-version: 1.1.0
+version: 1.0.0
 description: "首次配置 lark-cli、运行 auth login、用 --as 切换 user/bot 身份、处理权限不足或 scope 错误、遇到高风险写操作的确认门禁（exit 10 / confirmation）、更新 lark-cli、或看到 JSON 输出里的 _notice 时使用。"
 ---
 
