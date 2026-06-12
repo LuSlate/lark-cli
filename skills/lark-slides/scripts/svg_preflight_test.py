@@ -55,6 +55,24 @@ def style_plan_fields(preset_id: str = "raw_grid") -> dict[str, object]:
             "background_strategy": "muted grid panels with one stable background family",
             "motif": "dense grid panels with restrained accent labels",
         },
+        "loaded_rule_set": sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES),
+        "plan_path": ".lark-slides/plan/test/slide_plan.json",
+        "quality_gates": {
+            "no_text_overflow": True,
+            "no_debug_guides": True,
+            "no_xml_like_pages": True,
+        },
+        "art_direction": {
+            "cover_treatment": "hero_typography with one dominant title and SVG geometric carrier",
+            "section_divider_treatment": "large chapter number and sparse claim when section pages exist",
+            "closing_treatment": "brand_system or metaphor_loop that mirrors the cover motif",
+            "deck_motif": "grid panels with restrained accent labels",
+            "svg_native_moments": [
+                "cover hero geometry",
+                "data micro chart",
+                "closing motif mirror",
+            ],
+        },
     }
 
 
@@ -663,6 +681,88 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result["issues"]]
         self.assertIn("plan_style_preset_unknown", codes)
 
+    def test_lint_plan_requires_rule_loading_and_art_direction(self) -> None:
+        fields = style_plan_fields()
+        fields.pop("loaded_rule_set")
+        fields.pop("art_direction")
+        fields["quality_gates"] = {"no_text_overflow": True}
+        plan = {
+            "output_mode": "svglide-svg",
+            "page_count": 1,
+            **fields,
+            "slides": [
+                {
+                    "page": 1,
+                    "renderer_id": "route_story",
+                    "density": "medium",
+                    "title": "Route",
+                    **recipe_fields("path_flow", ["path", "annotation"]),
+                }
+            ],
+        }
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("plan_missing_loaded_rule_set", codes)
+        self.assertIn("plan_missing_art_direction", codes)
+        self.assertIn("plan_quality_gate_missing_no_debug_guides", codes)
+        self.assertIn("plan_quality_gate_missing_no_xml_like_pages", codes)
+
+    def test_lint_plan_route_only_svg_still_requires_svg_gates(self) -> None:
+        fields = style_plan_fields()
+        fields.pop("loaded_rule_set")
+        fields.pop("art_direction")
+        plan = {
+            "route": "svglide-svg",
+            "page_count": 1,
+            **fields,
+            "slides": [
+                {
+                    "page": 1,
+                    "renderer_id": "route_story",
+                    "density": "medium",
+                    "title": "Route",
+                    **recipe_fields("path_flow", ["path", "annotation"]),
+                }
+            ],
+        }
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("plan_missing_loaded_rule_set", codes)
+        self.assertIn("plan_missing_art_direction", codes)
+
+    def test_lint_plan_requires_business_claim_sources(self) -> None:
+        plan = {
+            "output_mode": "svglide-svg",
+            "page_count": 1,
+            **style_plan_fields(),
+            "slides": [
+                {
+                    "page": 1,
+                    "renderer_id": "revenue_scorecard",
+                    "density": "medium",
+                    "title": "营收 500 万目标",
+                    **recipe_fields("infographic_scorecard", ["typography", "micro_chart"]),
+                }
+            ],
+        }
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("plan_missing_business_claims", codes)
+
+        plan["business_claims"] = [
+            {"claim": "营收 500 万目标", "source_type": "prompt_provided"},
+            {"claim": "增量来自服务包拆分", "source_type": "derived", "derivation": "derived from the prompt target and strategy request"},
+        ]
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("plan_missing_business_claims", codes)
+        self.assertNotIn("plan_business_claim_missing_derivation", codes)
+
+        plan["business_claims"] = [{"claim": "团队 7 人", "source_type": "prompt_provided"}]
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertIn("plan_business_claim_uncovered", codes)
+
     def test_lint_plan_accepts_nested_visual_plan(self) -> None:
         plan = {
             "output_mode": "svglide-svg",
@@ -745,6 +845,84 @@ class SvgPreflightTest(unittest.TestCase):
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
         codes = [issue["code"] for issue in result["plan"]["issues"]]
         self.assertIn("plan_svg_effect_not_found", codes)
+
+    def test_lint_files_route_only_plan_runs_source_alignment(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="56" width="420" height="72">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;font-weight:800;color:#111827;">Route</div>
+          </foreignObject>
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = {
+                "route": "svglide-svg",
+                "page_count": 1,
+                **style_plan_fields(),
+                "svg_files": [{"page": 1, "path": "page-001.svg"}],
+                "slides": [
+                    {
+                        "page": 1,
+                        "renderer_id": "route_story",
+                        "layout_family": "flow",
+                        "density": "medium",
+                        "title": "Route",
+                        **recipe_fields("path_flow", ["path", "annotation"]),
+                    }
+                ],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        codes = [issue["code"] for issue in result["plan"]["issues"]]
+        self.assertIn("plan_recipe_required_primitives_not_found", codes)
+
+    def test_lint_files_reports_svg_source_business_claim_uncovered(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="56" width="420" height="72">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;font-weight:800;color:#111827;">营收 500 万目标</div>
+          </foreignObject>
+          <path id="trend" slide:role="shape" d="M64 360 L180 330 C260 300 340 340 420 300 Q500 260 580 290" fill="none" stroke="#2563eb" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = {
+                "output_mode": "svglide-svg",
+                "page_count": 1,
+                **style_plan_fields(),
+                "business_claims": [{"claim": "团队 7 人", "source_type": "prompt_provided"}],
+                "svg_files": [{"page": 1, "path": "page-001.svg"}],
+                "slides": [
+                    {
+                        "page": 1,
+                        "renderer_id": "route_story",
+                        "layout_family": "flow",
+                        "density": "medium",
+                        "title": "Route",
+                        **recipe_fields("path_flow", ["path", "annotation"]),
+                    }
+                ],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        codes = [issue["code"] for issue in result["plan"]["issues"]]
+        self.assertIn("source_business_claim_uncovered", codes)
 
     def test_lint_plan_reports_deck_level_generation_risks(self) -> None:
         plan = {
@@ -859,6 +1037,28 @@ class SvgPreflightTest(unittest.TestCase):
                     "typography": "strong title, readable native text labels",
                     "background_strategy": "muted grid panels",
                     "motif": "dense grid panels"
+                  },
+                  "loaded_rule_set": [
+                    "skills/lark-slides/references/svglide-route-admission.md",
+                    "skills/lark-slides/references/style-presets.md",
+                    "skills/lark-slides/references/svg-visual-recipes.md",
+                    "skills/lark-slides/references/svg-aesthetic-review.md",
+                    "skills/lark-slides/references/svglide-planning-layer.md",
+                    "skills/lark-slides/references/svglide-validation-checklist.md",
+                    "skills/lark-slides/references/svglide-visual-planning.md"
+                  ],
+                  "plan_path": ".lark-slides/plan/test/slide_plan.json",
+                  "quality_gates": {
+                    "no_text_overflow": true,
+                    "no_debug_guides": true,
+                    "no_xml_like_pages": true
+                  },
+                  "art_direction": {
+                    "cover_treatment": "hero route cover",
+                    "section_divider_treatment": "not applicable for this one-page test",
+                    "closing_treatment": "not applicable for this one-page test",
+                    "deck_motif": "dense grid panels",
+                    "svg_native_moments": ["route path", "hero image", "annotation geometry"]
                   },
                   "svg_files": [{"page": 1, "path": "page-001.svg"}],
                   "slides": [{

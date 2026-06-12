@@ -47,6 +47,34 @@ PATH_LIKE_RE = re.compile(
     re.IGNORECASE,
 )
 TOOL_LEAK_RE = re.compile(r"\b(lark-cli|svg_preflight|beautiful-feishu-whiteboard|source_token|source prompt|tool name|file path|prompt:)\b", re.IGNORECASE)
+BUSINESS_CLAIM_RE = re.compile(
+    r"(?:(?:\d+(?:\.\d+)?)\s*(?:万|亿|人|%|percent|revenue|收入|营收|客户|项目|团队|增长|目标|KPI|ARR|MRR))|"
+    r"(?:(?:营收|收入|目标|团队|客户|项目|增长|复购|毛利|人效)\s*(?:\d+(?:\.\d+)?))",
+    re.IGNORECASE,
+)
+BUSINESS_CLAIM_FRAGMENT_RE = re.compile(
+    r"(?:[^\s，。；;、,.]{0,8}(?:\d+(?:\.\d+)?)\s*(?:万|亿|人|%|percent|revenue|收入|营收|客户|项目|团队|增长|目标|KPI|ARR|MRR)[^\s，。；;、,.]{0,8})|"
+    r"(?:(?:营收|收入|目标|团队|客户|项目|增长|复购|毛利|人效)[^\s，。；;、,.]{0,8}\d+(?:\.\d+)?[^\s，。；;、,.]{0,8})",
+    re.IGNORECASE,
+)
+
+SVG_PRIVATE_REQUIRED_RULE_FILES = {
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+}
+ART_DIRECTION_REQUIRED_FIELDS = {
+    "cover_treatment",
+    "section_divider_treatment",
+    "closing_treatment",
+    "deck_motif",
+    "svg_native_moments",
+}
+BUSINESS_CLAIM_SOURCE_TYPES = {"prompt_provided", "user_provided", "attachment", "readback", "derived", "assumption", "pending_confirmation"}
 
 SUPPORTED_SHAPES = {"rect", "ellipse", "circle", "line", "path", "foreignObject"}
 RENDERABLE_TAGS = SUPPORTED_SHAPES | {"image", "text", "polygon", "polyline"}
@@ -1597,6 +1625,10 @@ def style_system(plan: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def is_svg_route_plan(plan: dict[str, Any]) -> bool:
+    return normalize_name(plan.get("output_mode")) == "svglide_svg" or normalize_name(plan.get("route")) == "svglide_svg"
+
+
 def slide_visual_plan(slide: dict[str, Any]) -> dict[str, Any]:
     visual_plan = slide.get("visual_plan")
     if isinstance(visual_plan, dict):
@@ -1629,6 +1661,235 @@ def visible_slide_text(slide: dict[str, Any]) -> str:
     parts = [textify(slide.get(key)) for key in VISIBLE_PLAN_TEXT_KEYS]
     parts.extend(textify(visual_plan.get(key)) for key in VISIBLE_PLAN_TEXT_KEYS)
     return " ".join(part for part in parts if part).strip()
+
+
+def normalize_rule_path(value: Any) -> str:
+    return textify(value).strip().replace("\\", "/").lstrip("./")
+
+
+def normalize_rule_set(value: Any) -> set[str]:
+    if isinstance(value, list):
+        return {normalize_rule_path(item) for item in value if normalize_rule_path(item)}
+    if isinstance(value, dict):
+        return normalize_rule_set(value.get("files") or value.get("loaded") or value.get("loaded_rule_set"))
+    if isinstance(value, str):
+        return {normalize_rule_path(part) for part in re.split(r"[,;\n]+", value) if normalize_rule_path(part)}
+    return set()
+
+
+def gate_trace(plan: dict[str, Any]) -> dict[str, Any]:
+    for key in ["gate_trace", "generation_gates", "quality_gates"]:
+        value = plan.get(key)
+        if isinstance(value, dict):
+            return value
+    return {}
+
+
+def claim_like_text(slides: list[Any]) -> str:
+    visible_parts = []
+    for slide in slides:
+        if isinstance(slide, dict):
+            visible_parts.append(visible_slide_text(slide_visual_plan(slide)))
+    text = " ".join(visible_parts)
+    return text if BUSINESS_CLAIM_RE.search(text) else ""
+
+
+def normalize_claim_fragment(value: Any) -> str:
+    return re.sub(r"\s+", "", value).strip("，。；;、,. ")
+
+
+def business_claim_fragments_from_text(text: str) -> list[str]:
+    fragments: list[str] = []
+    seen: set[str] = set()
+    for match in BUSINESS_CLAIM_FRAGMENT_RE.finditer(text):
+        fragment = normalize_claim_fragment(match.group(0))
+        if fragment and fragment not in seen:
+            seen.add(fragment)
+            fragments.append(fragment)
+    return fragments
+
+
+def business_claim_fragments(slides: list[Any]) -> list[str]:
+    return business_claim_fragments_from_text(
+        " ".join(visible_slide_text(slide_visual_plan(slide)) for slide in slides if isinstance(slide, dict))
+    )
+
+
+def validate_art_direction(plan: dict[str, Any], slides: list[Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    art_direction = nested_dict(plan.get("art_direction"))
+    if not art_direction:
+        return [
+            plan_issue(
+                "error",
+                "plan_missing_art_direction",
+                "SVGlide plans must include art_direction before SVG source is written",
+                None,
+                "Declare cover_treatment, section_divider_treatment, closing_treatment, deck_motif, and svg_native_moments.",
+            )
+        ]
+    for field in sorted(ART_DIRECTION_REQUIRED_FIELDS):
+        value = art_direction.get(field)
+        if field == "svg_native_moments":
+            if not isinstance(value, list) or len([item for item in value if textify(item).strip()]) < 3:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_art_direction_missing_svg_native_moments",
+                        "art_direction.svg_native_moments must list at least 3 source-backed SVG-native moments",
+                        None,
+                        "Use moments such as cover hero geometry, numeric micro chart, path flow, loop, texture, or icon system.",
+                    )
+                )
+        elif not textify(value).strip():
+            issues.append(
+                plan_issue(
+                    "error",
+                    f"plan_art_direction_missing_{field}",
+                    f"art_direction must include {field}",
+                )
+            )
+
+    if len(slides) >= 8:
+        first_slide = slide_visual_plan(slides[0]) if isinstance(slides[0], dict) else {}
+        last_slide = slide_visual_plan(slides[-1]) if isinstance(slides[-1], dict) else {}
+        first_recipe = normalize_name(first_slide.get("visual_recipe"))
+        last_recipe = normalize_name(last_slide.get("visual_recipe"))
+        if first_recipe not in {"hero_typography", "geometric_composition", "brand_system", "mask_clip_showcase"}:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_cover_recipe_not_special",
+                    "8+ page SVG decks must start with a cover-capable visual_recipe",
+                    slides[0] if isinstance(slides[0], dict) else None,
+                    "Use hero_typography, geometric_composition, brand_system, or mask_clip_showcase for the cover.",
+                )
+            )
+        if last_recipe not in {"metaphor_loop", "brand_system", "hero_typography", "path_flow"}:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_closing_recipe_not_special",
+                    "8+ page SVG decks must end with a closing-capable visual_recipe",
+                    slides[-1] if isinstance(slides[-1], dict) else None,
+                    "Use metaphor_loop, brand_system, hero_typography, or path_flow for the closing page.",
+                )
+            )
+    return issues
+
+
+def validate_gate_trace(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    trace = gate_trace(plan)
+    loaded_rules = normalize_rule_set(plan.get("loaded_rule_set") or trace.get("loaded_rule_set"))
+    missing_rules = sorted(SVG_PRIVATE_REQUIRED_RULE_FILES - loaded_rules)
+    if missing_rules:
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_missing_loaded_rule_set",
+                "SVGlide plans must record the private SVG rule files loaded before generation",
+                None,
+                "Missing: " + ", ".join(missing_rules),
+            )
+        )
+    if not textify(plan.get("plan_path") or trace.get("plan_path")).strip():
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_missing_gate_plan_path",
+                "SVGlide gate trace must record plan_path",
+                None,
+                "Record .lark-slides/plan/<deck-id>/slide_plan.json so later preflight, preview, and readback can be tied to the same plan.",
+            )
+        )
+    quality_gates = nested_dict(plan.get("quality_gates") or trace.get("quality_gates"))
+    for field in ["no_text_overflow", "no_debug_guides", "no_xml_like_pages"]:
+        if quality_gates.get(field) is not True:
+            issues.append(
+                plan_issue(
+                    "error",
+                    f"plan_quality_gate_missing_{field}",
+                    f"quality_gates.{field} must be true before SVG generation",
+                )
+            )
+    return issues
+
+
+def validate_business_claims(plan: dict[str, Any], slides: list[Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    claims = plan.get("business_claims")
+    fragments = business_claim_fragments(slides)
+    if fragments and not isinstance(claims, list):
+        return [
+            plan_issue(
+                "error",
+                "plan_missing_business_claims",
+                "numeric or business claims in visible SVG plan text require business_claims source records",
+                None,
+                "Mark each claim as prompt_provided, user_provided, attachment, derived, assumption, pending_confirmation, or readback.",
+            )
+        ]
+    if not isinstance(claims, list):
+        return issues
+    issues.extend(validate_business_claim_coverage(claims, fragments))
+    issues.extend(validate_business_claim_records(claims))
+    return issues
+
+
+def validate_business_claim_coverage(claims: list[Any], fragments: list[str], code: str = "plan_business_claim_uncovered") -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    claim_record_text = normalize_claim_fragment(
+        " ".join(
+            textify(claim.get("claim")) + " " + textify(claim.get("source_note")) + " " + textify(claim.get("derivation")) + " " + textify(claim.get("assumption"))
+            for claim in claims
+            if isinstance(claim, dict)
+        )
+    )
+    for fragment in fragments:
+        if fragment not in claim_record_text:
+            issues.append(
+                plan_issue(
+                    "error",
+                    code,
+                    f'visible business/numeric claim is not covered by business_claims: "{fragment}"',
+                    None,
+                    "Add a business_claims entry that includes this visible claim and its source_type.",
+                )
+            )
+    return issues
+
+
+def validate_business_claim_records(claims: list[Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for index, claim in enumerate(claims, 1):
+        if not isinstance(claim, dict):
+            issues.append(plan_issue("error", "plan_business_claim_invalid", f"business_claims[{index}] must be an object"))
+            continue
+        if not textify(claim.get("claim")).strip():
+            issues.append(plan_issue("error", "plan_business_claim_missing_claim", f"business_claims[{index}] must include claim"))
+        source_type = normalize_name(claim.get("source_type"))
+        if source_type not in BUSINESS_CLAIM_SOURCE_TYPES:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_business_claim_source_type_invalid",
+                    f"business_claims[{index}] has invalid source_type",
+                    None,
+                    "Use one of: " + ", ".join(sorted(BUSINESS_CLAIM_SOURCE_TYPES)),
+                )
+            )
+        if source_type in {"derived", "assumption", "pending_confirmation"}:
+            explanation = textify(claim.get("derivation") or claim.get("assumption") or claim.get("source_note")).strip()
+            if not explanation:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_business_claim_missing_derivation",
+                        f"business_claims[{index}] with source_type={source_type} must include derivation, assumption, or source_note",
+                    )
+                )
+    return issues
 
 
 def recipe_family(recipe: str) -> str:
@@ -1758,7 +2019,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
         except (TypeError, ValueError):
             issues.append(plan_issue("error", "plan_page_count_invalid", "plan page_count must be an integer when present"))
 
-    is_svg_plan = plan.get("output_mode") == "svglide-svg"
+    is_svg_plan = is_svg_route_plan(plan)
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
     if is_svg_plan:
@@ -1822,6 +2083,9 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                             f"SVGlide style_system must include {field}",
                         )
                     )
+        issues.extend(validate_gate_trace(plan))
+        issues.extend(validate_art_direction(plan, slides))
+        issues.extend(validate_business_claims(plan, slides))
 
     renderer_ids: list[str] = []
     layout_families: list[str] = []
@@ -2261,7 +2525,7 @@ def planned_svg_path(slide: dict[str, Any], plan: dict[str, Any]) -> str:
 
 
 def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    if plan.get("output_mode") != "svglide-svg":
+    if not is_svg_route_plan(plan):
         return []
     slides = plan.get("slides")
     if not isinstance(slides, list) or not slides:
@@ -2282,6 +2546,26 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
             alignments.append((slide, files[index]))
 
     issues: list[dict[str, Any]] = []
+    claims = plan.get("business_claims")
+    source_fragments: list[str] = []
+    seen_fragments: set[str] = set()
+    for file in files:
+        for fragment in file.get("business_claim_fragments", []):
+            if isinstance(fragment, str) and fragment not in seen_fragments:
+                seen_fragments.add(fragment)
+                source_fragments.append(fragment)
+    if source_fragments and not isinstance(claims, list):
+        issues.append(
+            plan_issue(
+                "error",
+                "source_missing_business_claims",
+                "visible business/numeric claims in SVG source require business_claims source records",
+                None,
+                "Add business_claims entries for source-visible numeric or business claims before live create.",
+            )
+        )
+    elif isinstance(claims, list):
+        issues.extend(validate_business_claim_coverage(claims, source_fragments, "source_business_claim_uncovered"))
     for slide, file in alignments:
         visual_plan = slide_visual_plan(slide)
         recipe = normalize_name(visual_plan.get("visual_recipe"))
@@ -2395,6 +2679,7 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
     result["element_count"] = len(elements)
     result["text_box_count"] = len(text_boxes)
     result["visual_primitives"] = primitive_summary
+    result["business_claim_fragments"] = business_claim_fragments_from_text(" ".join(textify(item.get("text")) for item in text_boxes))
     result["issues"] = issues
     result["summary"] = {
         "error_count": sum(1 for item in issues if item["level"] == "error"),

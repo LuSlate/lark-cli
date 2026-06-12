@@ -30,6 +30,8 @@ metadata:
 
 **CRITICAL — route admission：走 XML 创建/编辑路径时，只读取 XML schema、XML create/edit/validation 文档。只有当用户显式要求 SVG / SVGlide / `slides +create-svg`、输入 root 为 `<svg slide:role="slide">`，或 plan 声明 SVG route 时，才读取 [svglide-route-admission.md](references/svglide-route-admission.md)。SVG route 激活后，私有文档列表以 [svg-private-manifest.json](references/svg-private-manifest.json) 为准；XML route 不得读取。**
 
+**CRITICAL — SVG route 激活后，生成前 MUST 在 `slide_plan.json` 记录 `loaded_rule_set`、`art_direction`、`quality_gates` 和必要的 `business_claims`。`loaded_rule_set` 必须覆盖 manifest 中的 SVG 设计与验证文档；`art_direction` 必须说明封面、章节/节奏页、结尾页、deck motif 和至少 3 个 SVG-native moments；可见业务数字或推导性商业声明必须记录来源或假设。**
+
 **CRITICAL — 走 XML 创建/编辑路径时，生成任何 XML 之前，MUST 先用 Read 工具读取 [xml-schema-quick-ref.md](references/xml-schema-quick-ref.md)，禁止凭记忆猜测 XML 结构。走 SVG 创建路径时，先完成 route admission，再读取 SVG 私有协议和创建文档。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，再生成 XML 或已准入的 SVG route 产物。先创建对应目录，XML 规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)；SVG 扩展规划只在 route admission 后加载。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
@@ -39,6 +41,8 @@ metadata:
 **CRITICAL — 新建演示文稿或大幅改写页面时，规划 `asset_need` MUST 遵循 [asset-planning.md](references/asset-planning.md)：只做元数据规划，必须有 `fallback_if_missing`，不得要求真实搜索、下载或上传素材。**
 
 **CRITICAL — 创建或大幅改写后，MUST 按 [validation-checklist.md](references/validation-checklist.md) 做显式验证：回读全文 XML、核对页数和关键元素、检查空白/破损页、明显溢出、布局风险；XML 语法和文本重叠静态检查优先使用 [`scripts/xml_text_overlap_lint.py`](scripts/xml_text_overlap_lint.py)。SVG route 的额外验证只在 route admission 后加载。**
+
+**CRITICAL — SVG route 创建前 MUST 先通过 [`scripts/svg_preflight.py`](scripts/svg_preflight.py) 的 plan/source gate，再对本地 HTML/SVG preview 运行 [`scripts/svg_preview_lint.py`](scripts/svg_preview_lint.py)。preview 中不得展示 safe-area/debug guide；文本溢出、大数字窄框或明显重叠的 error 会阻断 `slides +create-svg`。live create 后仍需 readback gate，HTML preview 不能替代服务端转换后的验证。**
 
 **CRITICAL — 创建前自检或失败排障时，MUST 按 [troubleshooting.md](references/troubleshooting.md) 检查 XML 转义、结构、shell 截断、图片 token、3350001 和布局风险。**
 

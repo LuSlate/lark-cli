@@ -38,6 +38,60 @@
       "required": ["palette", "typography", "background_strategy", "motif"],
       "additionalProperties": true
     },
+    "loaded_rule_set": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "plan_path": {"type": "string", "minLength": 1},
+    "quality_gates": {
+      "type": "object",
+      "required": ["no_text_overflow", "no_debug_guides", "no_xml_like_pages"],
+      "properties": {
+        "no_text_overflow": {"const": true},
+        "no_debug_guides": {"const": true},
+        "no_xml_like_pages": {"const": true}
+      },
+      "additionalProperties": true
+    },
+    "art_direction": {
+      "type": "object",
+      "required": [
+        "cover_treatment",
+        "section_divider_treatment",
+        "closing_treatment",
+        "deck_motif",
+        "svg_native_moments"
+      ],
+      "properties": {
+        "cover_treatment": {"type": "string", "minLength": 1},
+        "section_divider_treatment": {"type": "string", "minLength": 1},
+        "closing_treatment": {"type": "string", "minLength": 1},
+        "deck_motif": {"type": "string", "minLength": 1},
+        "svg_native_moments": {
+          "type": "array",
+          "minItems": 3,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": true
+    },
+    "business_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "source_type"],
+        "properties": {
+          "claim": {"type": "string", "minLength": 1},
+          "source_type": {
+            "enum": ["prompt_provided", "user_provided", "attachment", "readback", "derived", "assumption", "pending_confirmation"]
+          },
+          "derivation": {"type": "string"},
+          "assumption": {"type": "string"},
+          "source_note": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
     "svg_files": {
       "type": "array",
       "items": {
@@ -96,7 +150,16 @@
       }
     }
   },
-  "required": ["slides", "style_preset", "style_selection_reason", "style_system"],
+  "required": [
+    "slides",
+    "style_preset",
+    "style_selection_reason",
+    "style_system",
+    "loaded_rule_set",
+    "plan_path",
+    "quality_gates",
+    "art_direction"
+  ],
   "anyOf": [
     {"required": ["route"]},
     {"required": ["output_mode"]}

@@ -18,6 +18,16 @@ SVG route plans must include:
 - `style_preset`: a preset id from `style-presets.json`.
 - `style_selection_reason`: why the preset fits the audience, topic, density, and tone.
 - `style_system`: executable palette, typography, background strategy, and motif derived from the preset.
+- `loaded_rule_set`: exact SVG private rule files loaded after route admission. It must include the manifest-required design and validation references, not only protocol files.
+- `plan_path`: the `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` path that later preflight, preview lint, live create, and readback records belong to.
+- `quality_gates`: deterministic gates requested before source generation, including `no_text_overflow: true`, `no_debug_guides: true`, and `no_xml_like_pages: true`.
+- `art_direction`: the deck-level visual strategy that must drive source geometry, not just prose. Required fields:
+  - `cover_treatment`
+  - `section_divider_treatment`
+  - `closing_treatment`
+  - `deck_motif`
+  - `svg_native_moments` with at least 3 source-backed moments
+- `business_claims`: source records for visible numeric or business claims. Use `prompt_provided`, `user_provided`, `attachment`, `readback`, `derived`, `assumption`, or `pending_confirmation`; derived or assumed claims must include a derivation or assumption note.
 - `svg_files`: ordered source files when `slides +create-svg --file` will consume generated pages.
 - `fallback_policy`: `strict-native` or `auto` when the compiler gate is available.
 
@@ -57,6 +67,31 @@ Each SVG slide must include:
     "background_strategy": "muted grid panels with one stable background family",
     "motif": "dense grid panels with restrained accent labels"
   },
+  "loaded_rule_set": [
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md"
+  ],
+  "plan_path": ".lark-slides/plan/demo/slide_plan.json",
+  "quality_gates": {
+    "no_text_overflow": true,
+    "no_debug_guides": true,
+    "no_xml_like_pages": true
+  },
+  "art_direction": {
+    "cover_treatment": "Hero typography with a single dominant claim and source-backed SVG geometry.",
+    "section_divider_treatment": "Sparse chapter reset with oversized section number and shared motif.",
+    "closing_treatment": "Closing loop or brand-system page that mirrors the cover motif and states the next action.",
+    "deck_motif": "dense grid panels with restrained accent labels",
+    "svg_native_moments": ["cover geometry", "data micro chart", "closing loop"]
+  },
+  "business_claims": [
+    {"claim": "All numeric claims are prompt-provided or marked pending.", "source_type": "prompt_provided"}
+  ],
   "svg_files": [{"page": 1, "path": ".lark-slides/plan/demo/pages/page-001.svg"}],
   "slides": [
     {
@@ -85,6 +120,7 @@ Each SVG slide must include:
 ## Diversity Gates
 
 - 8 or more SVG pages must end with an explicit closing, summary, thanks, Q&A, or next-step page.
+- 8 or more SVG pages must declare cover, section-divider/tempo, and closing treatments in `art_direction`; the first and last page recipes must support those roles.
 - 8 or more SVG pages should use at least 5 recipe families.
 - 10 or more SVG pages should use at least 5 distinct `renderer_id` values and 5 `layout_family` values.
 - Do not use the same renderer or layout family for 3 consecutive pages.
