@@ -12,6 +12,11 @@ metadata:
 
 身份：仅使用 `--as user`。使用前阅读 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)。
 
+**CRITICAL — 开始前 MUST 先用 Read 工具读取 [`../lark-vc/references/vc-domain-boundaries.md`](../lark-vc/references/vc-domain-boundaries.md)**，不读将导致命令使用、会议产物决策、领域边界职责判断错误：
+> 1. 了解日历 & VC、会议产物 & 文档的关联关系和职责划分
+> 2. 了解会议产物（妙记和纪要）之间的关联关系，例如：**妙记和纪要产生条件相互独立**
+> 3. 了解不同会议产物的组成部分，以便根据需求决策使用哪种产物的数据
+
 Note 域只接受显式 `note_id`：用户直接提供，或 `docs +fetch --api-version v2` 返回的 `<vc-transcribe-tab vc-node-id="...">` 中的 `vc-node-id`。不要从 `doc_token`、标题、正文或 backlink 反推 `note_id`。
 
 ## 命令路由

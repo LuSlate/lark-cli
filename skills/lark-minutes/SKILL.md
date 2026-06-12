@@ -27,6 +27,7 @@ metadata:
 | Shortcut | 说明 |
 |----------|------|
 | [`+search`](references/lark-minutes-search.md) | 按关键词、所有者、参与者、时间范围搜索妙记 |
+| [`+detail`](references/lark-minutes-detail.md) | 查询妙记详情，按需获取 AI 产物（总结、待办、章节、逐字稿、关键词） |
 | [`+download`](references/lark-minutes-download.md) | 下载妙记音视频媒体文件 |
 | [`+upload`](references/lark-minutes-upload.md) | 上传 file_token 生成妙记 |
 | [`+update`](references/lark-minutes-update.md) | 更新妙记标题 |
@@ -44,9 +45,9 @@ metadata:
 | "把音视频转妙记/上传文件生成妙记" | 本 skill（`+upload`） |
 | "重命名妙记/改妙记标题" | 本 skill（`+update`） |
 | "替换说话人/把 A 的发言改成 B" | 本 skill（`+speaker-replace`） |
-| "这个妙记的逐字稿/总结/待办/章节" | [lark-vc](../lark-vc/SKILL.md)（`vc +notes --minute-tokens`） |
+| "这个妙记的逐字稿/总结/待办/章节（需保存逐字稿到文件）" | 本 skill（`+detail --minute-tokens --transcript`） |
 | "xx 纪要的逐字稿/原始记录/谁说了什么" 且没有 `minute_token` / 妙记 URL / 本地音视频文件 | 不走本 skill；路由到 [lark-drive](../lark-drive/SKILL.md) / [lark-doc](../lark-doc/SKILL.md)，必要时再到 [lark-note](../lark-note/SKILL.md) |
-| "把音视频文件转成纪要/逐字稿/文字稿" | 先本 skill（`+upload`），再 [lark-vc](../lark-vc/SKILL.md)（`vc +notes --minute-tokens`） |
+| "把音视频文件转成纪要/逐字稿/文字稿" | 先本 skill（`+upload`），再本 skill（`minutes +detail --minute-tokens`） |
 | 用户同时提到"会议/开会"和"妙记" | 先 [lark-vc](../lark-vc/SKILL.md)（`+search` → `+recording`），再本 skill |
 
 ## 核心概念
@@ -77,26 +78,28 @@ metadata:
 ### 3. 下载妙记音视频文件
 
 1. 下载妙记音视频文件到本地，或获取有效期 1 天的下载链接。详见 [minutes +download](references/lark-minutes-download.md)。
-2. `+download` 只负责音视频媒体文件。用户需要逐字稿、总结、待办、章节等纪要内容时，请使用 [vc +notes --minute-tokens](../lark-vc/references/lark-vc-notes.md)。
+2. `+download` 只负责音视频媒体文件。用户需要逐字稿、总结、待办、章节等纪要内容时，请使用 `minutes +detail`。
 3. 用户只想拿可分享的下载地址时，使用 `--url-only`；用户要落地到本地文件时，直接下载。
-4. 未显式指定路径时，文件默认落到 `./minutes/{minute_token}/<server-filename>`，与 `vc +notes` 的逐字稿共享同一目录便于聚合。
+4. 未显式指定路径时，文件默认落到 `./minutes/{minute_token}/<server-filename>`，与 `minutes +detail` 的逐字稿共享同一目录便于聚合。
 
-> **注意**：`+download` 只负责音视频媒体文件。如果用户需要的是逐字稿、总结、待办、章节等纪要内容，请使用 [vc +notes --minute-tokens](../lark-vc/references/lark-vc-notes.md)。
+> **注意**：`+download` 只负责音视频媒体文件。如果用户需要的是逐字稿、总结、待办、章节等纪要内容，请使用 `minutes +detail`。
 
 ### 4. 读取妙记的逐字稿、总结、待办、章节（只读）
 
-1. 当用户要**查看 / 读取**"这个妙记的逐字稿""总结""待办""章节"时，使用 [vc +notes --minute-tokens](../lark-vc/references/lark-vc-notes.md)。
-2. 如果当前上下文中已有 `minute_token`，可直接传给 `vc +notes`；如果只有妙记 URL，先提取 `minute_token`。
-3. 如果用户给的是**本地音视频文件**，但目标是"转成纪要""转成逐字稿""转成文字稿""转成撰写文字"，应先按下文第 5 节上传文件生成妙记，再把返回的 `minute_url` 提取成 `minute_token`，继续调用 `vc +notes --minute-tokens`。
-4. 用户如果直接给出本地文件名或路径，并要求"转逐字稿""转文字稿""整理成撰写文字"，这也是本 skill 的明确触发信号。
+1. 当用户说"这个妙记的逐字稿""总结""待办""章节"时，请使用本 skill 的 `+detail` 命令。
+2. `minutes +detail` **必须显式指定**要获取的产物 flag（`--summary` / `--todo` / `--chapter` / `--keyword` / `--transcript`），未传任何产物 flag 时只返回基础信息（如 `title`），不会返回任何 AI 产物内容。请求的产物即使为空也返回空值字段，便于程序化处理。
+3. 如果当前上下文中已有 `minute_token`，可直接传给 `minutes +detail`；如果只有妙记 URL，先提取 `minute_token`。
+4. 如果用户给的是**本地音视频文件**，但目标是"转成纪要""转成逐字稿""转成文字稿""转成撰写文字"，也支持；此时应先按下文第 5 节上传文件生成妙记，再把返回的 `minute_url` 提取成 `minute_token`，继续调用 `minutes +detail --minute-tokens`。
+5. 用户如果直接给出本地文件名或路径，并要求"转逐字稿""转文字稿""整理成撰写文字"，这也是本 skill 的明确触发信号。
 
 ```bash
-# 通过 minute_token 获取纪要产物（逐字稿、总结、待办、章节）
-lark-cli vc +notes --minute-tokens <minute_token>
-```
+# 通过 minute_token 获取指定产物（必须显式列出要拿的 flag）
+lark-cli minutes +detail --minute-tokens <minute_token> --summary --todo --chapter
 
-> **跨 skill 路由**：逐字稿、AI 总结、待办、章节等纪要内容由 [lark-vc](../lark-vc/SKILL.md) 的 `+notes` 命令提供
-> **读 vs 写**：`vc +notes` 只负责**读取** AI 产物。用户要**新建 / 修改 / 删除**妙记内的 AI 待办或替换 AI 总结，见下文第 6 节，**不要**走 [lark-task](../lark-task/SKILL.md)。
+# 仅获取逐字稿并保存到文件
+lark-cli minutes +detail --minute-tokens <minute_token> --transcript
+```
+> 用户要**新建 / 修改 / 删除**妙记内的 AI 待办或替换 AI 总结，见下文第 6 节，**不要**走 [lark-task](../lark-task/SKILL.md)。
 
 ### 5. 上传音视频文件生成妙记（并可继续获取纪要 / 逐字稿）
 
@@ -105,11 +108,11 @@ lark-cli vc +notes --minute-tokens <minute_token>
 3. **处理流程**：
    - **上传音视频获取 `file_token`**：使用 [`lark-cli drive +upload`](../lark-drive/references/lark-drive-upload.md) 上传本地文件到云空间（云盘/云存储）并获取 `file_token`。
    - **生成妙记**：获取到 `file_token` 后，调用 [`lark-cli minutes +upload`](references/lark-minutes-upload.md) 将文件转换为妙记并获取 `minute_url` 链接。
-   - **继续获取纪要 / 逐字稿（按需）**：如果用户目标不是只要妙记链接，而是要纪要、逐字稿、总结、待办或章节，则从 `minute_url` 中提取 `minute_token`，再调用 [`lark-cli vc +notes --minute-tokens`](../lark-vc/references/lark-vc-notes.md) 获取对应产物。
+   - **继续获取纪要 / 逐字稿（按需）**：如果用户目标不是只要妙记链接，而是要纪要、逐字稿、总结、待办或章节，则从 `minute_url` 中提取 `minute_token`，再调用 [`lark-cli minutes +detail --minute-tokens`](references/lark-minutes-detail.md) 获取对应产物。
 
 > **注意**：必须先获取飞书云空间（云盘/云存储）的 `file_token` 才能进行转换。
 >
-> **不要误走本地转写工具**：当用户目标是把本地音视频文件转成纪要、逐字稿、文字稿、撰写文字时，不要改用 `ffmpeg`、`whisper` 或其他本地 ASR/转码命令；标准路径就是 `drive +upload -> minutes +upload -> vc +notes --minute-tokens`。
+> **不要误走本地转写工具**：当用户目标是把本地音视频文件转成纪要、逐字稿、文字稿、撰写文字时，不要改用 `ffmpeg`、`whisper` 或其他本地 ASR/转码命令；标准路径就是 `drive +upload -> minutes +upload -> minutes +detail --minute-tokens`。
 
 ### 6. 编辑妙记的 AI 待办与 AI 总结（写入）
 
@@ -141,11 +144,11 @@ lark-cli minutes +todo --minute-token <token> --as user --todos '[
 ]'
 ```
 
-**更新 / 删除前**：先用 `vc +notes --minute-tokens <token>` 读取 `todos[].todo_id`（按 `content` 匹配目标条目；列表顺序不保证稳定，**不要**用"第 2 条"代替 `todo_id`）。
+**更新 / 删除前**：先用 `minutes +detail --minute-tokens <token> --todo` 读取 `todos[].todo_id`（按 `content` 匹配目标条目；列表顺序不保证稳定，**不要**用"第 2 条"代替 `todo_id`）。
 
 **无编辑权限**：若 CLI 返回 `error.type=no_edit_permission`，表示对**这条妙记**没有编辑权，应请所有者授权；**不要**误走 `auth login --scope`。
 
-**逐字稿关键词替换无命中**：`minutes +word-replace` 时，若 CLI 返回 `error.type=words_not_found`，表示传入的 `source_word` 在该妙记逐字稿中**一个都没匹配到**，未做任何替换。这是**参数问题不是权限问题**：先用 `vc +notes --minute-tokens <token>` 读取当前逐字稿，核对 `source_word` 的精确写法与大小写后重试。
+**逐字稿关键词替换无命中**：`minutes +word-replace` 时，若 CLI 返回 `error.type=words_not_found`，表示传入的 `source_word` 在该妙记逐字稿中**一个都没匹配到**，未做任何替换。这是**参数问题不是权限问题**：先用 `minutes +detail --minute-tokens <token> --transcript` 读取当前逐字稿，核对 `source_word` 的精确写法与大小写后重试。
 
 **替换 AI 总结全文**：见 [minutes +summary](references/lark-minutes-summary.md)。
 
@@ -166,17 +169,15 @@ Minutes (妙记) ← minute_token 标识
 > - 用户说"妙记列表 / 搜索妙记 / 某个关键词的妙记" → `minutes +search`
 > - 用户只是想看"我的妙记 / 某段时间内的妙记 / 妙记列表"，不要先走 [lark-vc](../lark-vc/SKILL.md)，而应直接使用本 skill
 > - 用户如果同时提到"会议 / 会 / 开会 / 某场会"，即使也提到了"妙记"，也应优先走 [lark-vc](../lark-vc/SKILL.md) 先定位会议，再通过 [vc +recording](../lark-vc/references/lark-vc-recording.md) 获取 `minute_token`
-> - 用户如果要的是妙记基础信息，拿到 `minute_token` 后用 `minutes minutes get`；用户如果要**读取**逐字稿、文字稿、撰写文字、总结、待办、章节，再走 `vc +notes --minute-tokens`
+> - 用户如果要的是妙记基础信息，拿到 `minute_token` 后用 `minutes minutes get`；用户如果要的是逐字稿、文字稿、撰写文字、总结、待办、章节，走 `minutes +detail`
 > - “我的妙记”“参与的妙记”等自然语言映射细则，以 [minutes +search](references/lark-minutes-search.md) 为准
 > - 结果有多页时，使用 `page_token` 持续翻页，直到确认没有更多结果
 > - `minutes +search` 单次最多返回 `200` 条；结果总数没有固定上限
 > - 用户说"这个妙记的标题 / 时长 / 封面 / 链接" → `minutes minutes get`
 > - 用户说"下载这个妙记的视频 / 音频 / 媒体文件" → `minutes +download`
-> - 用户要**读取**"这个妙记的逐字稿 / 文字稿 / 撰写文字 / 总结 / 待办 / 章节" → [vc +notes --minute-tokens](../lark-vc/references/lark-vc-notes.md)
-> - 用户要在**妙记内新建 / 修改 / 删除 AI 待办**（含「妙记里加待办」「任务1 已完成」等）→ [`minutes +todo`](references/lark-minutes-todo.md)，**禁止**走 lark-task
-> - 用户要**替换妙记 AI 总结全文** → [`minutes +summary`](references/lark-minutes-summary.md)
+> - 用户说"这个妙记的逐字稿 / 文字稿 / 撰写文字 / 总结 / 待办 / 章节" → 使用 [vc +notes --minute-tokens](../lark-vc/references/lark-vc-notes.md)
 > - 用户说"通过文件生成妙记 / 把音视频转妙记" → 先上传获取 `file_token`，然后使用 `minutes +upload`
-> - 用户说"把音视频文件转成纪要 / 逐字稿 / 文字稿 / 撰写文字 / 总结 / 待办 / 章节" → 先上传获取 `file_token`，调用 `minutes +upload` 生成 `minute_url`，再提取 `minute_token` 走 `vc +notes --minute-tokens`
+> - 用户说"把音视频文件转成纪要 / 逐字稿 / 文字稿 / 撰写文字 / 总结 / 待办 / 章节" → 先上传获取 `file_token`，调用 `minutes +upload` 生成 `minute_url`，再提取 `minute_token` 走 `minutes +detail --minute-tokens`
 > - 用户说"重命名妙记 / 改妙记标题 / 修改妙记名字" → `minutes +update`
 > - 用户说"替换说话人 / 把 A 的发言改成 B / 重新归属发言人" → `minutes +speaker-replace`
 > - 用户说"批量替换逐字稿关键词" → `minutes +word-replace`
@@ -223,7 +224,6 @@ lark-cli minutes <resource> <method> [flags]
 
 ## 不在本 skill 范围
 
-- 已有 `minute_token` 的纪要/逐字稿/总结/待办/章节内容获取 → [lark-vc](../lark-vc/SKILL.md)（`vc +notes --minute-tokens`）
 - 只有自然语言纪要标题的逐字稿查询 → 文档搜索 / Docx 正文读取；有显式 `vc-node-id` 才进入 [lark-note](../lark-note/SKILL.md)
 - 搜索历史会议记录 → [lark-vc](../lark-vc/SKILL.md)
 - 查询未来的会议日程 → [lark-calendar](../lark-calendar/SKILL.md)

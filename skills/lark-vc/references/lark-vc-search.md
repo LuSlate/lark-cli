@@ -11,7 +11,7 @@
 
 `--query` 只用于真实会议关键词，例如会议主题、项目名、评审名、客户名。用户只是说"我这月参加的所有视频会议"、"最近两周我组织的所有视频会议"、"总结主要议题 / 看看参会情况"时，本质是历史会议列表和后续总结，不要把"回顾"、"所有视频会议"、"总结主要议题"等动作词放进 `--query`。这类请求应先用时间范围 + `--participant-ids` / `--organizer-ids` 搜全量候选，再按结果继续取纪要或录制信息。
 
-列表阶段只负责找会议记录；总结阶段必须继续取证。若用户要求"主要议题"、"主要决策"、"参会情况"，先确认搜索结果的 `meeting_id`、时间、组织者/参与者符合过滤条件，然后用 `vc +notes` 或 `vc +recording` / `minutes` 读取纪要、妙记或录制信息。没有纪要或妙记时，如实说明只能基于会议标题/参会数据汇总，不要编造议题。
+列表阶段只负责找会议记录；总结阶段必须继续取证。若用户要求"主要议题"、"主要决策"、"参会情况"，先确认搜索结果的 `meeting_id`、时间、组织者/参与者符合过滤条件，然后用 `vc +detail` 或 `minutes` 读取纪要、妙记或录制信息。没有纪要或妙记时，如实说明只能基于会议标题/参会数据汇总，不要编造议题。
 
 ## 典型触发表达
 
@@ -161,7 +161,7 @@ lark-cli vc +search --query "周会" --page-size 15 --page-token "<PAGE_TOKEN>"
 
 ```bash
 # 如果要会议纪要 / 逐字稿 / AI 总结 / 待办 / 章节
-lark-cli vc +notes --meeting-ids <MEETING_ID>
+lark-cli vc +detail --meeting-ids <MEETING_ID>
 
 # 如果要会议对应的妙记信息 / minute_token / 妙记链接
 lark-cli vc +recording --meeting-ids <MEETING_ID>
@@ -183,11 +183,11 @@ lark-cli minutes minutes get --params '{"minute_token":"<MINUTE_TOKEN>"}'
 - 排查参数与请求结构时优先使用 `--dry-run`。
 - 搜索的时间范围最大为 1 个月，如果需要搜索更长时间范围的会议，需要拆分为多次时间范围为一个月查询。
 - 不要使用 `yesterday`、`today` 这类相对时间字面量；请先转换成明确日期，例如 `2026-03-10`。
-- 用户如果明确问的是“妙记信息”而不是“纪要内容”，不要默认走 `vc +notes`；应先用 `vc +recording`。
+- 用户如果明确问的是“妙记信息”而不是“纪要内容”，不要默认走 `vc +detail`；应先用 `vc +recording`。
 
 ## 参考
 
 - [lark-vc](../SKILL.md) -- 视频会议全部命令
-- [lark-vc-recording](lark-vc-recording.md) -- 查询会议对应的 minute_token
-- [lark-vc-notes](lark-vc-notes.md) -- 获取会议纪要
+- [lark-vc-detail](lark-vc-detail.md) -- 获取会议详情
+- [lark-vc-recording](lark-vc-recording.md) -- 基于 meeting_id 查询 minute_token
 - [lark-shared](../../lark-shared/SKILL.md) -- 认证和全局参数

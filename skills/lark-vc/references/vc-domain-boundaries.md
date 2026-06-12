@@ -93,8 +93,20 @@ lark-cli vc +search --start "<YYYY-MM-DD>" --end "<YYYY-MM-DD>" --format json
 
 ##### 获取会议产物
 
+当用户提供 `meeting_id` 并需要会议产物时，先用 `vc +detail` 拿到 `note_id` 和 `minute_token`：
+
 ```bash
-lark-cli vc +notes --meeting-ids '<meeting_id1>,<meeting_id2>'
+lark-cli vc +detail --meeting-ids '<meeting_id1>,<meeting_id2>'
+```
+
+详细用法请阅读 [`lark-vc-detail.md`](lark-vc-detail.md)。
+
+**优先路径：通过 `note_id` 获取纪要产物**
+
+如果用户未明确要求使用妙记，且返回了 `note_id`，**优先**使用 `note +detail` 获取纪要文档的 token 信息：
+
+```bash
+lark-cli note +detail --note-id <note_id>
 ```
 
 可获取会议的所有产物信息，包括：
@@ -102,17 +114,20 @@ lark-cli vc +notes --meeting-ids '<meeting_id1>,<meeting_id2>'
 - 智能纪要（`note_doc_token`）— AI 生成的总结和待办信息
 - 逐字稿（`verbatim_doc_token`）— 完整的会中发言记录（仅 `normal` 纪要可直接读取该文档）
 - 共享文档（`shared_doc_token`）— 会中投屏共享的文档
-- 妙记 Token（`minute_token`）— 如存在录制产物则返回
 
-详细用法请阅读 [`lark-vc-notes.md`](lark-vc-notes.md)。
+拿到文档 token 后，再通过 Doc 域 `docs +fetch` 拉取文档正文内容（见 Step 3）。详细用法请阅读 [`lark-note-detail.md`](../../lark-note/references/lark-note-detail.md)。
 
-如果返回了 `minute_token`，可通过以下命令获取妙记的详细信息（总结、待办、章节、文字记录）：
+**备选路径：通过 `minute_token` 获取妙记产物**
+
+如果 `note_id` 为空，或用户明确要求使用妙记产物，则使用 `minutes +detail` 获取妙记的具体产物：
 
 ```bash
-lark-cli vc +notes --minute-tokens '<minute_token1>,<minute_token2>'
+# 必须显式指定要获取的产物 flag，至少传一个；不传则不会返回任何产物内容
+lark-cli minutes +detail --minute-tokens '<minute_token1>,<minute_token2>' \
+  --summary --todo --chapter --keyword --transcript
 ```
 
-可获取妙记的总结、待办、章节、文字记录等信息。详细用法请阅读 [`lark-vc-notes.md`](lark-vc-notes.md)。
+> **注意**：`minutes +detail` 需要**手动指定**要获取的产物 flag，可选 `--summary`（总结）、`--todo`（待办）、`--chapter`（章节）、`--keyword`（关键词）、`--transcript`（文字记录）。**未传任何产物 flag 时不会返回产物内容**，请按用户诉求按需指定。详细用法请阅读 [`lark-minutes-detail.md`](../../lark-minutes/references/lark-minutes-detail.md)。
 
 #### Step 3: 按 `note_display_type` 拉取正文 / 逐字稿
 

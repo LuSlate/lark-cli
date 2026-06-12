@@ -35,7 +35,7 @@ lark-cli vc +search --query "站会" --start-time ...
 | Shortcut | 说明 |
 |----------|------|
 | [`+search`](references/lark-vc-search.md) | 搜索历史会议记录（需至少一个筛选条件） |
-| [`+notes`](references/lark-vc-notes.md) | 查询会议纪要和妙记产物（通过 meeting-ids、minute-tokens 或 calendar-event-ids） |
+| [`+detail`](references/lark-vc-detail.md) | 通过 meeting-ids 获取会议详情，包括 note_id 和 minute_token |
 | [`+recording`](references/lark-vc-recording.md) | 通过 meeting-ids 或 calendar-event-ids 查询 minute_token |
 
 - 使用任何 Shortcut 前，必须先读其对应 reference 文档。
@@ -49,7 +49,8 @@ lark-cli vc +search --query "站会" --start-time ...
 | 查"今天有哪些会议" | `vc +search`（已结束）+ lark-calendar（未开始），合并展示 |
 | 只按自然语言标题查"xx 纪要的逐字稿 / 原始记录 / 谁说了什么" | 先到 [lark-drive](../lark-drive/SKILL.md) / [lark-doc](../lark-doc/SKILL.md)；仅在已拿到 `note_id` / `vc-node-id` 后再到 [lark-note](../lark-note/SKILL.md) |
 | Agent 真实入会/离会、会中实时事件 | [lark-vc-agent](../lark-vc-agent/SKILL.md) |
-| 本地音视频文件转纪要/逐字稿 | 先走 [lark-minutes](../lark-minutes/SKILL.md) 上传，再回 `vc +notes --minute-tokens` |
+| 妙记信息/时长/封面/链接 | 先走 `vc +detail` 获取 `minute_token`，再用 [lark-minutes](../lark-minutes/SKILL.md) 的 `minutes get` |
+| 本地音视频文件转纪要/逐字稿 | 先走 [lark-minutes](../lark-minutes/SKILL.md) 上传，再用 `minutes +detail --minute-tokens` |
 
 ## 核心概念
 
@@ -98,7 +99,7 @@ lark-cli docs +fetch --api-version v2 --doc <note_doc_token> --doc-format markdo
 #    并非所有纪要都有封面画板，没有 <whiteboard> 标签时跳过即可
 lark-cli docs +media-download --type whiteboard --token <whiteboard_token> --output ./minutes/<minute_token>/cover
 ```
-> **产物目录规范**：同一会议的所有下载产物（录像、逐字稿、封面图等）统一放到 `./minutes/{minute_token}/` 目录下。这与 `minutes +download` 和 `vc +notes --minute-tokens` 的默认落点保持一致，便于 Agent 聚合。显式路径（如封面图）需手动对齐到同一目录。
+> **产物目录规范**：同一会议的所有下载产物（录像、逐字稿、封面图等）统一放到 `./minutes/{minute_token}/` 目录下。这与 `minutes +download` 和 `minutes +detail --minute-tokens` 的默认落点保持一致，便于 Agent 聚合。显式路径（如封面图）需手动对齐到同一目录。
 
 > **纪要相关文档 — 根据用户意图选择：**
 > - `note_doc_token` → **AI 智能纪要**（AI 总结 + 待办）
@@ -106,7 +107,7 @@ lark-cli docs +media-download --type whiteboard --token <whiteboard_token> --out
 > - 用户说"逐字稿""完整记录""谁说了什么"时 → 按 `note_display_type` 路由，详见 [`+notes`](references/lark-vc-notes.md)
 > - 用户说"纪要""总结""纪要内容"时，应同时返回 `note_doc_token` 和 `meeting_notes`（如有）
 > - 用户意图不明确时，应展示所有文档链接让用户选择，而不是替用户决定
-> - 如果用户提供的是**本地音视频文件**并说"转纪要""转逐字稿"，不要直接从 `vc +notes` 开始；应先用 [minutes +upload](../lark-minutes/references/lark-minutes-upload.md) 生成 `minute_url`，再提取 `minute_token` 调用 `vc +notes --minute-tokens`
+> - 如果用户提供的是**本地音视频文件**并说"转纪要""转逐字稿"，不要直接从 `vc +detail` 开始；应先用 [minutes +upload](../lark-minutes/references/lark-minutes-upload.md) 生成 `minute_url`，再提取 `minute_token` 调用 `minutes +detail --minute-tokens`
 
 ### 3. 纪要文档与逐字稿链接
 1. 纪要文档、逐字稿文档与关联的共享文档默认使用文档 Token 返回。
@@ -137,7 +138,7 @@ lark-cli vc meeting get --params '{"meeting_id":"<meeting_id>","with_participant
 | 用户意图 | 推荐命令 | 所在 skill |
 |---------|---------|--------|
 | 参会人快照（谁参加过、何时入/离会，任意时点）| `vc meeting get --with-participants` | 本 skill |
-| 已结束会议的发言内容 | 先 `vc +notes`，再按 `note_display_type` 路由 | 本 skill / [`lark-note`](../lark-note/SKILL.md) |
+| 已结束会议的发言内容 | 优先：`vc +detail` 取 `note_id` 再 `note +detail` 取 `verbatim_doc_token` 后 `docs +fetch`；备选：`vc +detail` 取 `minute_token` 再 `minutes +detail --transcript` | [lark-note](../lark-note/SKILL.md) / [lark-minutes](../lark-minutes/SKILL.md) |
 | **进行中会议**的实时事件流（转写、聊天、共享、会中加入/离开）| `vc +meeting-events` | [`lark-vc-agent`](../lark-vc-agent/SKILL.md) |
 | **Agent 真实入会 / 离会** | `vc +meeting-join` / `vc +meeting-leave` | [`lark-vc-agent`](../lark-vc-agent/SKILL.md) |
 
@@ -193,5 +194,5 @@ lark-cli vc meeting get --params '{"meeting_id": "<meeting_id>", "with_participa
 - 查询未来的会议日程 → [lark-calendar](../lark-calendar/SKILL.md)
 - Agent 真实入会/离会、会中实时事件 → [lark-vc-agent](../lark-vc-agent/SKILL.md)
 - 只有纪要文档标题的逐字稿查询 → 文档搜索 / Docx 正文读取；有显式 `vc-node-id` 才进入 [lark-note](../lark-note/SKILL.md)
-- 本地音视频文件转纪要/逐字稿 → [lark-minutes](../lark-minutes/SKILL.md)（上传后回 `vc +notes`）
+- 本地音视频文件转纪要/逐字稿 → [lark-minutes](../lark-minutes/SKILL.md)（上传后使用 `minutes +detail`）
 - 妙记搜索/下载/上传/重命名/替换说话人 → [lark-minutes](../lark-minutes/SKILL.md)

@@ -55,8 +55,8 @@ metadata:
 2. 输入是 **`meeting_id`**（长数字 ID），不是 9 位会议号。
 3. Bot 必须**真实参会过**（先 `+meeting-join`），否则事件流通常不可见。具体的状态边界、结束后宽限窗口与错误码（如 `10005 / 20001 / 20002`）请查看 `+meeting-events` reference。
 4. **不能做会后复盘**，**不能替代参会人快照查询**。如果会议已结束：
-   - 想拿纪要文档或逐字稿文档 token：用 `lark-cli vc +notes --meeting-ids <meeting.id>`
-   - 想拿 AI 产物（summary / todos / chapters）或导出逐字稿文件：先用 `lark-cli vc +recording --meeting-ids <meeting.id>` 拿 `minute_token`，再用 `lark-cli vc +notes --minute-tokens <minute_token>`
+   - **优先（拿纪要类文档：智能纪要 / 逐字稿 / 共享文档）**：先 `lark-cli vc +detail --meeting-ids <meeting.id>` 拿 `note_id` 和 `minute_token`；再 `lark-cli note +detail --note-id <note_id>` 拿 `note_doc_token`（智能纪要）/ `verbatim_doc_token`（逐字稿）。
+   - **备选（拿妙记 AI 产物）**：用上一步的 `minute_token` 调 `lark-cli minutes +detail --minute-tokens <minute_token> --summary --todo --chapter --keyword --transcript`（**必须显式指定产物 flag，不传则不返回任何产物内容**）。
    - 想看参会人快照：用 `vc meeting get --with-participants`（见 [`lark-vc`](../lark-vc/SKILL.md)）
 5. **默认必须使用** **`--page-all`**，除非用户明确要求“只查一页”，或确实需要控制返回体大小。
 6. 输出格式默认优先 `--format pretty`（时间线更易读）；只有在需要完整保留原始消息流与结构化字段时，才使用 `--format json`。
@@ -84,7 +84,7 @@ MID=$(echo "$JOIN" | jq -r '.data.meeting.id')
 lark-cli vc +meeting-events --meeting-id "$MID" --page-all --format pretty
 
 # 3. 会后可选：取纪要 / 逐字稿（跨到 lark-vc）
-lark-cli vc +notes --meeting-ids "$MID"
+lark-cli vc +detail --meeting-ids "$MID"
 ```
 
 如果用户随后明确要求退出 / 离开 / 结束参会，再单独调用 `lark-cli vc +meeting-leave --meeting-id "$MID"`。

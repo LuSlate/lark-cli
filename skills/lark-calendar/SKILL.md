@@ -31,6 +31,8 @@ lark-cli calendar +agenda --as user
 | Shortcut | 说明 |
 |----------|------|
 | [`+agenda`](references/lark-calendar-agenda.md) | 查看日程安排（默认今天） |
+| [`+search-event`](references/lark-calendar-search-event.md) | 按关键词、时间范围和参会人搜索日程 |
+| [`+meeting`](references/lark-calendar-meeting.md) | 通过日程事件 ID 获取关联的视频会议信息（meeting_id、meeting_note） |
 | [`+create`](references/lark-calendar-create.md) | 创建日程并邀请参会人（ISO 8601 时间） |
 | [`+update`](references/lark-calendar-update.md) | 更新既有日程字段，或独立增量添加/移除参会人和会议室 |
 | [`+freebusy`](references/lark-calendar-freebusy.md) | 查询用户主日历的忙闲信息和 RSVP 状态 |
@@ -64,6 +66,8 @@ lark-cli calendar +agenda --as user
 |----------|--------|
 | 查询过去的会议（"昨天的会议""上周的会"） | [`../lark-vc/SKILL.md`](../lark-vc/SKILL.md)（会议数据含即时会议，仅查日程会遗漏） |
 | 查询日历/日程或未来时间的会议 | 本 skill |
+| 按关键词搜索日程 | 本 skill（`+search-event`） |
+| 从日程获取关联的会议 ID 或纪要文档 | 本 skill（`+meeting`） |
 | 预约/改约日程、添加/移除参会人、添加/更换会议室、调整时间 | 先判断新建 vs 编辑，再进入 [schedule-meeting 工作流](references/lark-calendar-schedule-meeting.md) |
 
 ## 任务类型分流

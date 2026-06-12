@@ -77,11 +77,17 @@ lark-cli vc +meeting-leave --meeting-id <meeting.id>
 如果用户只是要求会议结束后拉录制、纪要或逐字稿，不要先调用 `+meeting-leave`；直接跨到 `lark-vc` 查询会后产物。
 
 ```bash
-# 第 1 步：会议结束后查询录制
+# 第 1 步：会议结束后查询录制（minute_token）
 lark-cli vc +recording --meeting-ids <meeting.id>
 
-# 第 2 步：查询会议纪要
-lark-cli vc +notes --meeting-ids <meeting.id>
+# 第 2 步：查询会议详情，拿到 note_id 和 minute_token
+lark-cli vc +detail --meeting-ids <meeting.id>
+
+# 第 3 步：根据用户诉求继续拉产物
+# 优先：通过 note_id 获取纪要文档 token，再用 docs +fetch 读正文
+lark-cli note +detail --note-id <note_id>
+# 备选：通过 minute_token 获取妙记产物（必须显式指定 flag）
+lark-cli minutes +detail --minute-tokens <minute_token> --summary --todo --chapter --transcript
 ```
 
 ## 常见错误与排查
@@ -104,7 +110,7 @@ lark-cli vc +notes --meeting-ids <meeting.id>
 - [lark-vc-agent-meeting-events](lark-vc-agent-meeting-events.md) — 会中事件流
 - [lark-vc-search](../../lark-vc/references/lark-vc-search.md) — 搜索历史会议（获取 meeting_id）
 - [lark-vc-recording](../../lark-vc/references/lark-vc-recording.md) — 查询 minute_token
-- [lark-vc-notes](../../lark-vc/references/lark-vc-notes.md) — 获取会议纪要
+- [lark-vc-detail](../../lark-vc/references/lark-vc-detail.md) — 获取会议详情
 - [lark-vc-agent](../SKILL.md) — Agent 参会能力（本 skill）
 - [lark-vc](../../lark-vc/SKILL.md) — 视频会议原子域（Meeting / Note 等核心概念）
 - [lark-shared](../../lark-shared/SKILL.md) — 认证和全局参数
