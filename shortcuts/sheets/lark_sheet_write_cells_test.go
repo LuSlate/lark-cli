@@ -4,6 +4,7 @@
 package sheets
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -424,6 +425,44 @@ func TestCellsSet_RequiresJSONArray(t *testing.T) {
 	combined := stdout + stderr + err.Error()
 	if !strings.Contains(combined, `expected type "array"`) && !strings.Contains(combined, "must be a JSON array") {
 		t.Errorf("expected array-type guard; got=%s|%s|%v", stdout, stderr, err)
+	}
+}
+
+// TestCellsSet_RejectsUnsupportedMentionType pins the mention_type enum in
+// data/flag-schemas.json (synced from the upstream tool schema): a rich_text
+// mention whose mention_type is outside MENTION_FILE_TYPE (here 6 = cloud
+// shared folder) is rejected by the schema validator at flag-parse time,
+// before it can reach the server and blow up pb serialization
+// ("mentionFileInfo.fileType: enum value expected").
+func TestCellsSet_RejectsUnsupportedMentionType(t *testing.T) {
+	t.Parallel()
+	cells := `[[{"rich_text":[{"type":"mention","text":"x","mention_type":6,"mention_token":"t"}]}]]`
+	stdout, stderr, err := runShortcutCapturingErr(t, CellsSet, []string{
+		"--url", testURL, "--sheet-id", testSheetID,
+		"--range", "A1", "--cells", cells, "--dry-run",
+	})
+	if err == nil {
+		t.Fatalf("expected validation error; stdout=%s stderr=%s", stdout, stderr)
+	}
+	combined := stdout + stderr + err.Error()
+	if !strings.Contains(combined, "mention_type") || !strings.Contains(combined, "not in enum") {
+		t.Errorf("expected mention_type enum guard; got=%s|%s|%v", stdout, stderr, err)
+	}
+}
+
+// TestCellsSet_AllowsValidMentionTypes confirms the guard lets through a
+// user @mention (mention_type 0) and a render-supported file type (22 = DOCX).
+func TestCellsSet_AllowsValidMentionTypes(t *testing.T) {
+	t.Parallel()
+	for _, mt := range []int{0, 22} {
+		cells := fmt.Sprintf(`[[{"rich_text":[{"type":"mention","text":"x","mention_type":%d,"mention_token":"t"}]}]]`, mt)
+		stdout, stderr, err := runShortcutCapturingErr(t, CellsSet, []string{
+			"--url", testURL, "--sheet-id", testSheetID,
+			"--range", "A1", "--cells", cells, "--dry-run",
+		})
+		if err != nil {
+			t.Errorf("mention_type %d: unexpected error: stdout=%s stderr=%s err=%v", mt, stdout, stderr, err)
+		}
 	}
 }
 

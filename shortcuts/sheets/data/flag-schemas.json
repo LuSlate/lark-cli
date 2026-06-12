@@ -462,8 +462,21 @@
                       "type": "string"
                     },
                     "mention_type": {
-                      "description": "@提及类型编号（仅 type='mention' 时可选）",
-                      "type": "number"
+                      "description": "@提及类型编号（仅 type='mention' 时可选）。0 或不填=@用户；@文件时按类型取：1=文档 3=电子表格 8=多维表格 11=思维笔记 12=文件 15=旧版幻灯片 16=知识库 22=新版文档 30=幻灯片 38=画板",
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1,
+                        3,
+                        8,
+                        11,
+                        12,
+                        15,
+                        16,
+                        22,
+                        30,
+                        38
+                      ]
                     },
                     "notify": {
                       "description": "是否发送通知（仅 type='mention' 时可选，默认 true）",
