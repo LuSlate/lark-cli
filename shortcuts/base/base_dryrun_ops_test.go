@@ -73,6 +73,14 @@ func TestDryRunFieldOps(t *testing.T) {
 	)
 	assertDryRunContains(t, dryRunFieldList(ctx, listRT), "GET /open-apis/base/v3/bases/app_x/tables/tbl_1/fields", "offset=0", "limit=200")
 
+	batchListRT := newBaseTestRuntimeWithArrays(
+		map[string]string{"base-token": "app_x"},
+		map[string][]string{"table-id": {"tbl_1", "tbl_2"}},
+		nil,
+		map[string]int{"offset": 0, "limit": 50},
+	)
+	assertDryRunContains(t, dryRunFieldListBatch(ctx, batchListRT), "GET /open-apis/base/v3/bases/app_x/tables/tbl_1/fields", "GET /open-apis/base/v3/bases/app_x/tables/tbl_2/fields", "limit=50")
+
 	rt := newBaseTestRuntime(
 		map[string]string{
 			"base-token": "app_x",

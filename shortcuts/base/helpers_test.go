@@ -4,6 +4,7 @@
 package base
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"reflect"
@@ -494,5 +495,63 @@ func TestCanonicalSelectAndCompareHelpers(t *testing.T) {
 	}
 	if _, err := resolveTableRef([]map[string]interface{}{{"id": "tbl_1", "name": "Orders"}}, "Missing"); err == nil || !strings.Contains(err.Error(), "not found") {
 		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestNormalizePluralReferenceValues(t *testing.T) {
+	cases := []struct {
+		name string
+		in   []string
+		want []string
+	}{
+		{"repeated single values", []string{"fldA", "fldB"}, []string{"fldA", "fldB"}},
+		{"json array", []string{`["fldA","fldB"]`}, []string{"fldA", "fldB"}},
+		{"comma separated ids", []string{"fldA, fldB"}, []string{"fldA", "fldB"}},
+		{"comma separated names", []string{"商品名称,SKU,单价"}, []string{"商品名称", "SKU", "单价"}},
+		{"trailing comma ignored", []string{"recA,recB,"}, []string{"recA", "recB"}},
+		{"fullwidth comma kept whole", []string{"销售额，单价"}, []string{"销售额，单价"}},
+		{"mixed forms", []string{`["fldA"]`, "fldB,fldC", "Name"}, []string{"fldA", "fldB", "fldC", "Name"}},
+		{"invalid json kept literal", []string{`[fldA`}, []string{`[fldA`}},
+		{"blank dropped", []string{"  ", "fldA"}, []string{"fldA"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := normalizePluralReferenceValues(tc.in); !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("got=%v want=%v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestRecordFlagAliasMergeAndDedupe(t *testing.T) {
+	fieldRT := newBaseTestRuntimeWithArrays(nil, map[string][]string{
+		"field-id": {"fldA"},
+		"fields":   {"fldA,fldB"},
+	}, nil, nil)
+	if got := recordFieldFlags(fieldRT); !reflect.DeepEqual(got, []string{"fldA", "fldB"}) {
+		t.Fatalf("field flags=%v", got)
+	}
+	recordRT := newBaseTestRuntimeWithArrays(nil, map[string][]string{
+		"record-id":  {"recA"},
+		"record-ids": {`["recA","recB"]`},
+	}, nil, nil)
+	if got := recordIDFlags(recordRT); !reflect.DeepEqual(got, []string{"recA", "recB"}) {
+		t.Fatalf("record flags=%v", got)
+	}
+}
+
+func TestFieldSearchOptionsKeywordQueryAlias(t *testing.T) {
+	ctx := context.Background()
+	if err := BaseFieldSearchOptions.Validate(ctx, newBaseTestRuntime(
+		map[string]string{"field-id": "Status", "keyword": "A", "query": "B"}, nil, nil,
+	)); err == nil || !strings.Contains(err.Error(), "use only one") {
+		t.Fatalf("err=%v", err)
+	}
+	queryOnly := newBaseTestRuntime(map[string]string{"field-id": "Status", "query": "Do"}, nil, nil)
+	if err := BaseFieldSearchOptions.Validate(ctx, queryOnly); err != nil {
+		t.Fatalf("err=%v", err)
+	}
+	if got := fieldSearchOptionsKeyword(queryOnly); got != "Do" {
+		t.Fatalf("keyword=%q", got)
 	}
 }

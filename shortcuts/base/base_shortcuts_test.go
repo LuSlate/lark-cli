@@ -59,6 +59,23 @@ func newBaseTestRuntimeWithArrays(stringFlags map[string]string, stringArrayFlag
 	return &common.RuntimeContext{Cmd: cmd, Config: &core.CliConfig{UserOpenId: "ou_test"}}
 }
 
+func TestFieldSearchOptionsAlias(t *testing.T) {
+	runtime := newBaseTestRuntime(map[string]string{"field-name": "Status"}, nil, nil)
+	if got := fieldSearchOptionsRef(runtime); got != "Status" {
+		t.Fatalf("field ref=%q", got)
+	}
+	if err := BaseFieldSearchOptions.Validate(context.Background(), runtime); err != nil {
+		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestFieldSearchOptionsRequiresFieldRef(t *testing.T) {
+	err := BaseFieldSearchOptions.Validate(context.Background(), newBaseTestRuntime(map[string]string{}, nil, nil))
+	if err == nil || !strings.Contains(err.Error(), "--field-id is required") {
+		t.Fatalf("err=%v", err)
+	}
+}
+
 func TestBaseAction(t *testing.T) {
 	t.Run("missing action", func(t *testing.T) {
 		runtime := newBaseTestRuntime(map[string]string{"get": ""}, map[string]bool{"list": false}, nil)
@@ -135,7 +152,7 @@ func TestShortcutsCatalog(t *testing.T) {
 	want := []string{
 		"+base-block-list", "+base-block-create", "+base-block-move", "+base-block-rename", "+base-block-delete",
 		"+table-list", "+table-get", "+table-create", "+table-update", "+table-delete",
-		"+field-list", "+field-get", "+field-create", "+field-update", "+field-delete", "+field-search-options",
+		"+field-list", "+field-list-batch", "+field-get", "+field-create", "+field-update", "+field-delete", "+field-search-options",
 		"+view-list", "+view-get", "+view-create", "+view-delete", "+view-get-filter", "+view-set-filter", "+view-get-visible-fields", "+view-set-visible-fields", "+view-get-group", "+view-set-group", "+view-get-sort", "+view-set-sort", "+view-get-timebar", "+view-set-timebar", "+view-get-card", "+view-set-card", "+view-rename",
 		"+record-list", "+record-search", "+record-get", "+record-upsert", "+record-batch-create", "+record-batch-update", "+record-share-link-create", "+record-upload-attachment", "+record-download-attachment", "+record-remove-attachment", "+record-delete",
 		"+record-history-list",
@@ -1087,6 +1104,22 @@ func TestBaseRecordValidate(t *testing.T) {
 		nil,
 	)); err != nil {
 		t.Fatalf("record search flag validate err=%v", err)
+	}
+	if err := BaseRecordSearch.Validate(ctx, newBaseTestRuntimeWithArrays(
+		map[string]string{"base-token": "b", "table-id": "tbl_1", "query": "Alice"},
+		map[string][]string{"search-field": {"Name"}},
+		nil,
+		nil,
+	)); err != nil {
+		t.Fatalf("record search query alias validate err=%v", err)
+	}
+	if err := BaseRecordSearch.Validate(ctx, newBaseTestRuntimeWithArrays(
+		map[string]string{"base-token": "b", "table-id": "tbl_1", "keyword": "Alice", "query": "Bob"},
+		map[string][]string{"search-field": {"Name"}},
+		nil,
+		nil,
+	)); err == nil || !strings.Contains(err.Error(), "use only one") {
+		t.Fatalf("err=%v", err)
 	}
 	if err := BaseRecordSearch.Validate(ctx, newBaseTestRuntime(
 		map[string]string{

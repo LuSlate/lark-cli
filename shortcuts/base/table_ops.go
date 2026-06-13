@@ -63,7 +63,8 @@ func executeTableList(runtime *common.RuntimeContext) error {
 		offset = 0
 	}
 	limit := common.ParseIntBounded(runtime, "limit", 1, 100)
-	tables, total, err := listAllTables(runtime, runtime.Str("base-token"), offset, limit)
+	baseToken := runtime.Str("base-token")
+	tables, total, err := listAllTables(runtime, baseToken, offset, limit)
 	if err != nil {
 		return err
 	}
@@ -174,6 +175,24 @@ func listEveryField(runtime *common.RuntimeContext, baseToken, tableID string) (
 	items := []map[string]interface{}{}
 	for {
 		batch, total, err := listAllFields(runtime, baseToken, tableID, offset, pageLimit)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, batch...)
+		if len(batch) == 0 || len(batch) < pageLimit || (total > 0 && len(items) >= total) {
+			break
+		}
+		offset += len(batch)
+	}
+	return items, nil
+}
+
+func listEveryTable(runtime *common.RuntimeContext, baseToken string) ([]map[string]interface{}, error) {
+	const pageLimit = 100
+	offset := 0
+	items := []map[string]interface{}{}
+	for {
+		batch, total, err := listAllTables(runtime, baseToken, offset, pageLimit)
 		if err != nil {
 			return nil, err
 		}
