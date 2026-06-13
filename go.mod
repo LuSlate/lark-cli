@@ -19,17 +19,14 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/zalando/go-keyring v0.2.8
+	github.com/facebookincubator/flog v0.0.0-20190930132826-d2511d0ce33c
+	github.com/facebookincubator/sks v0.0.0-20251112220143-6823f23937b4
 	golang.org/x/net v0.33.0
 	golang.org/x/sync v0.15.0
 	golang.org/x/sys v0.33.0
 	golang.org/x/term v0.27.0
 	golang.org/x/text v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
-)
-
-require (
-	github.com/facebookincubator/flog v0.0.0-20190930132826-d2511d0ce33c
-	github.com/facebookincubator/sks v0.0.0-20251112220143-6823f23937b4
 )
 
 require (
