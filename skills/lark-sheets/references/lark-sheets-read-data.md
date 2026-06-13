@@ -120,6 +120,12 @@ _公共四件套 · 系统：`--dry-run`_
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
+> [!CAUTION]
+> **`+csv-get` 高频臆造 flag（不存在，传了会被 cobra 拒，报 `unknown flag`）：**
+> - ❌ `--rows-json` / `--json-rows` / `--as-json` / `--format json-rows` —— `+csv-get` **只输出带 `[row=N]` 前缀的 CSV 文本**，没有"按行 JSON / 结构化"开关。
+> - ✅ **要结构化 / 类型化输出（喂 DataFrame、按列类型读出、round-trip 回写）请改用 `+table-get`**（见下），它返回 `columns:[{name,type}]` + `rows` 的 typed 协议。
+> - ✅ 只要纯值就用 `+csv-get`；下游要行号 / 列坐标直接从 `[row=N]` 前缀与 `col_indices` 取，不需要额外 flag。
+
 ### `+table-get`
 
 _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_

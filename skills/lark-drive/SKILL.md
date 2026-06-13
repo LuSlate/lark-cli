@@ -28,6 +28,7 @@ metadata:
 - 用户要比较原生 `.md` 文件的**历史版本差异**，或比较远端 Markdown 与本地草稿，切到 [`lark-markdown`](../lark-markdown/SKILL.md) 的 `lark-cli markdown +diff`；需要版本号时先用 `drive +version-history`。
 - 用户要查看、下载、回滚或删除文件的**历史版本**，使用 `drive +version-history`、`drive +version-get`、`drive +version-revert`、`drive +version-delete`；这组命令同时支持 `--as user` 和 `--as bot`，自动化场景优先 `--as bot`。
 - 用户要把本地 `.xlsx` / `.xls` / `.csv` 导入成电子表格，使用 `lark-cli drive +import --type sheet`。
+- **`+import` 只接受 cwd 下的本地相对路径**：没有 `--url` flag、也不接受绝对路径。源文件在远端（http(s) / TOS）时，**先 `cd` 到工作区 `wget`/`curl` 下载，再用相对路径 `--file` 导入**，例：`cd <工作区> && wget -O data.xlsx "<链接>" && lark-cli drive +import --file data.xlsx --type sheet`（细节与反例见 [`+import`](references/lark-drive-import.md)）。
 - 用户要在云空间（云盘/云存储）里新建文件夹，优先使用 `lark-cli drive +create-folder`。
 - 用户要查看某个文件有哪些可下载预览格式，或想下载 PDF / HTML / 文本 / 图片等预览产物，使用 `lark-cli drive +preview`。
 - 用户要获取某个文件的封面图，优先使用 `lark-cli drive +cover`；先 `--list-only` 看规格，再选 `--spec` 下载。

@@ -57,11 +57,26 @@ lark-cli drive +import --file ./README.md --type docx --dry-run
 
 | 参数 | 必填 | 说明 |
 |------|------|------|
-| `--file` | 是 | 本地文件路径，根据文件后缀名自动推断 `file_extension`；文件需满足对应格式的导入大小限制，超过 20MB 且仍在允许范围内时会自动切换分片上传 |
+| `--file` | 是 | **本地文件路径，且只接受 cwd 下的相对路径**（出于安全，绝对路径会被拒）；根据文件后缀名自动推断 `file_extension`；文件需满足对应格式的导入大小限制，超过 20MB 且仍在允许范围内时会自动切换分片上传 |
 | `--type` | 是 | 导入目标云文档格式。可选值：`docx` (新版文档)、`sheet` (电子表格)、`bitable` (多维表格)、`slides` (飞书幻灯片) |
 | `--folder-token` | 否 | 目标文件夹 token，不传则请求中的 `point.mount_key` 为空字符串，Import API 会将其解释为导入到云空间（云盘/云存储）根目录 |
 | `--name` | 否 | 导入后的在线云文档名称，不传默认使用本地文件名去掉扩展名后的结果 |
 | `--target-token` | 否 | 已有的多维表格 token，将数据导入到该多维表格中（**仅支持 `--type bitable`**）；传入后数据会挂载到目标多维表格而非新建一个 |
+
+> [!CAUTION]
+> **`drive +import` 高频误用（会被 cobra / 安全校验直接拒，别试）：**
+>
+> - ❌ **不存在 `--url` flag**：`drive +import` **只能导入本地文件**，不能直接传网络 / TOS 链接。
+>   - 报错形如：`unknown flag "--url" for "lark-cli drive +import"`。
+>   - ✅ 正解：源文件在远端（http(s) / TOS）时，**先下载到工作区再导入**：
+>     ```bash
+>     cd <你的工作区目录>
+>     wget -O data.xlsx "https://tosv.byted.org/.../Data001.xlsx"   # 或 curl -o
+>     lark-cli drive +import --file data.xlsx --type sheet
+>     ```
+> - ❌ **`--file` 不接受绝对路径**：传 `--file /home/user/.../Data001.xlsx` 会报 `unsafe file path: --file must be a relative path within the current directory`。
+>   - ✅ 正解：先 `cd` 到文件所在工作区目录，再用**相对路径**（如 `--file Data001.xlsx`）。
+>   - ❌ 报错提示里若建议你"改用绝对路径 / 移动文件"之类，**不要照做绕过**——只用 cwd 内相对路径。
 
 ## 行为说明
 
