@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,7 +53,7 @@ var TablePut = common.Shortcut{
 		if _, err := resolveSpreadsheetToken(runtime); err != nil {
 			return err
 		}
-		_, err := parseTablePutPayload(runtime)
+		_, err := resolveTablePayload(runtime)
 		return err
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
@@ -63,7 +64,7 @@ var TablePut = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		payload, err := parseTablePutPayload(runtime)
+		payload, err := resolveTablePayload(runtime)
 		if err != nil {
 			return err
 		}
@@ -72,7 +73,30 @@ var TablePut = common.Shortcut{
 	Tips: []string{
 		"Writes into an existing spreadsheet — pass --url or --spreadsheet-token. To create a new workbook first, use +workbook-create, then point --spreadsheet-token here.",
 		"Payload sheets are matched to existing sub-sheets by name (created when absent). Date columns take ISO yyyy-mm-dd strings — converted to real dates (serial + date format).",
+		"Two equivalent producers: --sheets (multi-sheet JSON, the pandas-split convention) or --dataframe (single-sheet Arrow IPC binary, what `df.to_feather()` writes). Mutually exclusive; pick by what your producer already emits.",
 	},
+}
+
+// resolveTablePayload picks between --sheets (JSON, multi-sheet) and
+// --dataframe (Arrow IPC, single-sheet), enforces XOR, and returns the
+// unified internal tablePayload. Both +table-put and +workbook-create funnel
+// through here so the two entry points stay in lockstep; Validate / Execute /
+// DryRun / workbookCreateData all share this one decision. Network-free.
+func resolveTablePayload(rctx *common.RuntimeContext) (*tablePayload, error) {
+	sheetsGiven := rctx.Changed("sheets") && strings.TrimSpace(rctx.Str("sheets")) != ""
+	dfGiven := rctx.Changed("dataframe") && strings.TrimSpace(rctx.Str("dataframe")) != ""
+	if sheetsGiven && dfGiven {
+		return nil, common.FlagErrorf("--sheets and --dataframe are mutually exclusive")
+	}
+	if !sheetsGiven && !dfGiven {
+		// Mirror the original "--sheets is required" message but list both
+		// alternatives so users discover the binary entry from the error.
+		return nil, common.FlagErrorf("one of --sheets or --dataframe is required")
+	}
+	if dfGiven {
+		return parseDataframePayload(rctx)
+	}
+	return parseTablePutPayload(rctx)
 }
 
 // ─── protocol ─────────────────────────────────────────────────────────
@@ -601,6 +625,16 @@ func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, 
 		}, nil
 	}
 
+	// Grow the sub-sheet to fit the write block before the first batch.
+	// Without this, writes past the sheet's initial dimensions (typically the
+	// backend default of 200 rows × 20 cols — which also covers
+	// `+workbook-create`'s adopted Sheet1) fail with [900015206] range exceeds
+	// sheet bounds. Best-effort: if reading dims fails the downstream write
+	// will surface the same out-of-bounds error it did before this helper.
+	if err := ensureSheetCapacity(ctx, runtime, token, sheetID, baseRow+len(matrix), col0+ncols); err != nil {
+		return nil, fmt.Errorf("ensuring sheet capacity: %w", err)
+	}
+
 	startCol := columnIndexToLetter(col0)
 	endCol := columnIndexToLetter(col0 + ncols - 1)
 	allowOverwrite := s.AllowOverwrite == nil || *s.AllowOverwrite
@@ -819,6 +853,91 @@ func sheetCreateDims(s *tableSheetSpec) (rows, cols int) {
 	return rows, cols
 }
 
+// ensureSheetCapacity grows the sub-sheet's row / column count enough to
+// fit a needRows × needCols write block before the next set_cell_range call.
+// Both +table-put writing into an existing sheet *and* +workbook-create's
+// adopted default Sheet1 inherit the backend's 200×20 default — anything
+// past that would error with `[900015206] range exceeds sheet bounds`.
+// Read failures (e.g. mock stubs without `row_count`) silently fall through;
+// the downstream write surfaces the same out-of-bounds error it did before,
+// so the helper can't make things worse. Backend hard ceilings (50000 rows,
+// 200 cols) are honored.
+func ensureSheetCapacity(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, needRows, needCols int) error {
+	if needRows <= 0 && needCols <= 0 {
+		return nil
+	}
+	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_sheet_structure", map[string]interface{}{
+		"excel_id": token,
+		"sheet_id": sheetID,
+	})
+	if err != nil {
+		// best-effort: skip if we can't see current dims (mock without stub,
+		// permissions, transient failure). The write below will still bounce
+		// if the sheet really is too small, so degrading silently here is
+		// fail-open by design.
+		return nil //nolint:nilerr
+	}
+	m, _ := out.(map[string]interface{})
+	// get_sheet_structure reports current dims as the `range` field
+	// (e.g. "A1:T200" → 20 cols × 200 rows). splitCellRef parses the
+	// bottom-right corner into 0-based (col, row).
+	curRows, curCols := 0, 0
+	if rng, _ := m["range"].(string); rng != "" {
+		parts := strings.SplitN(rng, ":", 2)
+		if len(parts) == 2 {
+			if c, r, ok := splitCellRef(parts[1]); ok {
+				curCols = c + 1
+				curRows = r + 1
+			}
+		}
+	}
+	if needRows > curRows && curRows > 0 {
+		target := needRows
+		if target > 50000 {
+			target = 50000
+		}
+		if target > curRows {
+			// position is 1-based and must be ≤ curRows (the backend rejects
+			// "before row N+1" as out-of-range). Inserting before the last
+			// existing row pushes that row down and effectively appends
+			// `count` blank rows — the data writes that follow will overwrite
+			// the existing rows from row 1, so the placement of the inserted
+			// blanks doesn't matter as long as the total dimension grows.
+			input := map[string]interface{}{
+				"excel_id":  token,
+				"sheet_id":  sheetID,
+				"operation": "insert",
+				"position":  strconv.Itoa(curRows),
+				"count":     target - curRows,
+			}
+			if _, err := callTool(ctx, runtime, token, ToolKindWrite, "modify_sheet_structure", input); err != nil {
+				return fmt.Errorf("growing rows %d → %d: %w", curRows, target, err)
+			}
+		}
+	}
+	if needCols > curCols && curCols > 0 {
+		target := needCols
+		if target > 200 {
+			target = 200
+		}
+		if target > curCols {
+			// Same 1-based, ≤-current constraint as rows: insert before the
+			// last existing column letter.
+			input := map[string]interface{}{
+				"excel_id":  token,
+				"sheet_id":  sheetID,
+				"operation": "insert",
+				"position":  columnIndexToLetter(curCols - 1),
+				"count":     target - curCols,
+			}
+			if _, err := callTool(ctx, runtime, token, ToolKindWrite, "modify_sheet_structure", input); err != nil {
+				return fmt.Errorf("growing cols %d → %d: %w", curCols, target, err)
+			}
+		}
+	}
+	return nil
+}
+
 // listSheetIDsByName maps every existing sub-sheet's display name to its id via
 // a single get_workbook_structure read. Used by write mode to decide which
 // payload sheets already exist.
@@ -894,7 +1013,7 @@ func tablePutPartial(token string, spreadsheet interface{}, written []interface{
 // by Validate, so errors here degrade to an empty preview rather than twice.
 func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 	dry := common.NewDryRunAPI()
-	payload, err := parseTablePutPayload(runtime)
+	payload, err := resolveTablePayload(runtime)
 	if err != nil {
 		return dry
 	}
@@ -951,6 +1070,15 @@ var TableGet = common.Shortcut{
 		if strings.TrimSpace(runtime.Str("sheet-id")) != "" && strings.TrimSpace(runtime.Str("sheet-name")) != "" {
 			return common.FlagErrorf("--sheet-id and --sheet-name are mutually exclusive")
 		}
+		// --dataframe-out is Arrow IPC, which carries one schema per file — a
+		// whole-workbook read can't ride that shape. Surface the constraint
+		// before we round-trip to the API instead of after the read fails to
+		// encode.
+		if strings.TrimSpace(runtime.Str("dataframe-out")) != "" {
+			if strings.TrimSpace(runtime.Str("sheet-id")) == "" && strings.TrimSpace(runtime.Str("sheet-name")) == "" {
+				return common.FlagErrorf("--dataframe-out requires --sheet-id or --sheet-name (single-sheet only); for the whole workbook, drop --dataframe-out and use the default JSON output")
+			}
+		}
 		return nil
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
@@ -992,12 +1120,38 @@ var TableGet = common.Shortcut{
 			}
 			sheets = append(sheets, spec)
 		}
+		// Arrow IPC binary branch: Validate already guards single-sheet so the
+		// sheets slice has exactly one entry here. Stdout mode owns stdout for
+		// the binary stream — no envelope, raw Arrow only. File mode writes
+		// the Arrow blob to disk and still emits the lark-cli JSON envelope
+		// (output_path / bytes / sheet_name) so scripted callers can detect
+		// success the same way they do for every other shortcut.
+		if dfOut := strings.TrimSpace(runtime.Str("dataframe-out")); dfOut != "" {
+			spec, _ := sheets[0].(map[string]interface{})
+			data, err := encodeSheetMapToArrowIPC(spec)
+			if err != nil {
+				return common.FlagErrorf("--dataframe-out: encode arrow: %v", err)
+			}
+			if err := writeDataframeOut(runtime, dfOut, data); err != nil {
+				return err
+			}
+			if dfOut == "-" {
+				return nil
+			}
+			runtime.Out(map[string]interface{}{
+				"output_path": strings.TrimPrefix(dfOut, "@"),
+				"bytes":       len(data),
+				"sheet_name":  spec["name"],
+			}, nil)
+			return nil
+		}
 		runtime.Out(map[string]interface{}{"sheets": sheets}, nil)
 		return nil
 	},
 	Tips: []string{
 		"Output is the same shape +table-put consumes — pipe it back in, or load sheets[].rows into a DataFrame keyed by columns[].name.",
 		"Column types are inferred per column, but only when every non-empty cell agrees; a column mixing types (e.g. numbers + \"暂无\") degrades to string — lossless and round-trips cleanly. Numeric coercion of dirty cells is the caller's job (pandas to_numeric(errors=\"coerce\") on the string column).",
+		"For a pandas round-trip, use --dataframe-out (single sheet, Arrow IPC / Feather v2) — `@./x.arrow` writes a file, `-` streams binary to stdout for `pd.read_feather(BytesIO(stdout))`. Multi-sheet reads stay on the JSON path.",
 	},
 }
 
