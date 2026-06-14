@@ -571,18 +571,35 @@ var WorkbookCreate = common.Shortcut{
 		if strings.TrimSpace(runtime.Str("title")) == "" {
 			return common.FlagErrorf("--title is required")
 		}
-		// --sheets (typed) is an alternative, mutually exclusive data entry to the
-		// untyped --values. Gated on Changed (not just non-empty): an explicitly-
-		// given but empty --sheets (e.g. empty stdin / file) is an error, not a
-		// silent fall-through to creating an empty workbook.
-		if runtime.Changed("sheets") {
+		// --sheets (typed JSON) and --dataframe (typed Arrow IPC) are two
+		// alternative typed data entries; both are mutually exclusive with
+		// the untyped --values. Gating on Changed (not just non-empty) catches
+		// an explicitly-given but empty payload as an error instead of letting
+		// it fall through to creating an empty workbook.
+		sheetsGiven := runtime.Changed("sheets")
+		dfGiven := runtime.Changed("dataframe")
+		if sheetsGiven && dfGiven {
+			return common.FlagErrorf("--sheets and --dataframe are mutually exclusive")
+		}
+		if (sheetsGiven || dfGiven) && runtime.Str("values") != "" {
+			return common.FlagErrorf("--values is mutually exclusive with --sheets/--dataframe")
+		}
+		if sheetsGiven {
 			if strings.TrimSpace(runtime.Str("sheets")) == "" {
 				return common.FlagErrorf("--sheets was given but resolved to empty (empty stdin/file?); pass a typed payload, or drop --sheets to create an empty workbook")
 			}
-			if runtime.Str("values") != "" {
-				return common.FlagErrorf("--sheets is mutually exclusive with --values")
-			}
 			payload, err := parseTablePutPayload(runtime)
+			if err != nil {
+				return err
+			}
+			_, err = parseWorkbookCreateSheetStyles(runtime, payload)
+			return err
+		}
+		if dfGiven {
+			if strings.TrimSpace(runtime.Str("dataframe")) == "" {
+				return common.FlagErrorf("--dataframe was given but resolved to empty; pass a path to an Arrow IPC file, or drop --dataframe to create an empty workbook")
+			}
+			payload, err := parseDataframePayload(runtime)
 			if err != nil {
 				return err
 			}
@@ -722,6 +739,17 @@ const valuesSheetName = "Sheet1"
 func workbookCreateData(runtime *common.RuntimeContext) (*tablePayload, *workbookCreateSheetStyles, error) {
 	if runtime.Changed("sheets") {
 		payload, err := parseTablePutPayload(runtime)
+		if err != nil {
+			return nil, nil, err
+		}
+		styles, err := parseWorkbookCreateSheetStyles(runtime, payload)
+		if err != nil {
+			return nil, nil, err
+		}
+		return payload, styles, nil
+	}
+	if runtime.Changed("dataframe") {
+		payload, err := parseDataframePayload(runtime)
 		if err != nil {
 			return nil, nil, err
 		}
