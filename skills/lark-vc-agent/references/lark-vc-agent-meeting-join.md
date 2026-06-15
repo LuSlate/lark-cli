@@ -40,7 +40,7 @@ lark-cli vc +meeting-join --meeting-number 123456789 --dry-run
 
 ### 1. 优先使用 bot 身份
 
-这是 bot 入会能力，优先使用 `--as bot`。如果误用 `--as user` 且服务端返回“user access token is not supported”，切到 bot 身份重试。
+这是 bot 入会能力，优先使用 `--as bot`。如果误用 `--as user` 且服务端提示当前 user 身份不支持 bot 入会，切到 bot 身份重试。
 
 ### 2. 会议号格式严格校验
 
