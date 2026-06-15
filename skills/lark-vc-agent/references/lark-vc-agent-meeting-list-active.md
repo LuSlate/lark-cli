@@ -33,7 +33,7 @@ lark-cli vc +meeting-list-active --as bot --user-id ou_xxx --dry-run
 
 - 不传 `--user-id`。
 - 返回当前登录用户正在参加的会议。
-- 后续可直接用返回的 `meeting_id` 调用：
+- 这是 UAT 下读取会中事件的前置发现步骤；后续必须继续用 `--as user` 调用：
 
 ```bash
 lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --format pretty
@@ -42,7 +42,7 @@ lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --for
 ### TAT / `--as bot`
 
 - 必须传 `--user-id <user_open_id>`，即 `ou_...`。
-- 返回该用户当前正在参加、且 bot 也在会中的会议。
+- 返回该用户当前正在参加、且 bot 也在会中的会议；它不是任意用户当前会议全集。
 - 如果返回空，不代表用户不在任何会议中，只能说明没有找到“用户在会中且 bot 也在会中”的当前会。
 - TAT 读取事件仍然要求 bot 在会中。常见流程是：
 
@@ -55,6 +55,12 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --form
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --format pretty
 ```
+
+## 多会议选择
+
+- 如果返回多个会议，不要自动挑第一个。
+- 向用户展示每个候选的 `meeting_title` / `meeting_no` / `meeting_id`，等待用户选择。
+- 选择后继续沿用发现 meeting_id 时的身份：UAT 发现的 meeting_id 用 `--as user`，TAT 发现的 meeting_id 用 `--as bot`。
 
 ## 常见错误与排查
 

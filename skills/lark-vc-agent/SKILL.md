@@ -57,6 +57,7 @@ metadata:
 3. 身份语义必须区分清楚：
    - UAT / `--as user`：当前 user 在会中即可读取该会事件。
    - TAT / `--as bot`：bot 必须在会中或参会过；meeting_id 优先来自 `+meeting-join` 返回的 `meeting.id`，也可以先用 `+meeting-list-active --as bot --user-id <user_open_id>` 找到 bot 也在的当前会。
+   - **meeting_id 的来源身份必须延续**：UAT 拿到的 meeting_id 后续用 `--as user`；TAT 拿到的 meeting_id 后续用 `--as bot`。不要混用身份。
    - 不要把 TAT 理解成“任意 meeting_id 都能读”。如果 bot 没进过该会，事件流不可见。
 4. **不能做会后复盘**，**不能替代参会人快照查询**。如果会议已结束：
    - 想拿纪要文档或逐字稿文档 token：用 `lark-cli vc +notes --meeting-ids <meeting.id>`
@@ -67,6 +68,7 @@ metadata:
 7. **必须识别分页信号**：只要响应里出现 `has_more=true`、pretty 里的 `more available`，或返回了非空 `page_token`，就不能把当前结果当作完整事件流；默认应继续分页，或明确告诉用户当前只是部分结果。
 8. 保留响应里的 `page_token`，下次增量拉取直接续，不要从头再拉。
 9. **只要你是基于** **`+meeting-events`** **来回答一场正在进行中的会议内容，就不能直接复用旧结果。** 无论用户是在问“现在/刚刚/最新”的状态，还是让你“总结一下这个会议讲什么”，都必须先重新拉一次当前事件流，确认拿到的是最新信息，再基于最新结果回答。只有在用户明确要求基于某次历史快照继续分析时，才可以复用旧结果。
+10. 用户直接问“这个会议讲了什么 / 现在讲到哪了”且上下文没有明确 meeting_id 时，先走 UAT：`lark-cli vc +meeting-list-active --as user --format pretty`。若返回多个会议，展示候选并让用户选择；若 UAT 权限不足，再提示授权或询问是否改用 bot 身份。
 
 ### 3. 离开会议（写操作）
 
@@ -78,9 +80,10 @@ metadata:
 ### 4. 获取当前可用的进行中会议 ID（读操作）
 
 1. `+meeting-list-active` 用来发现当前进行中的会议，并拿到后续 `+meeting-events` 需要的长数字 `meeting_id`。
-2. UAT / `--as user`：不需要传 `--user-id`，返回当前登录用户正在参加的会议。
+2. UAT / `--as user`：不需要传 `--user-id`，返回当前登录用户正在参加的会议；这是 `+meeting-events --as user` 的前置发现步骤。
 3. TAT / `--as bot`：必须传 `--user-id <user_open_id>`，即 `ou_...`；返回该用户当前正在参加且 bot 也在会中的会议。它不是全量会议搜索接口。
 4. 如果 TAT 返回空，说明没有找到“目标用户在会中且 bot 也在会中”的当前会；先让 bot 通过 `+meeting-join` 入会，或确认传入的 `user_id` 和会议状态。
+5. 如果返回多个会议，不要自动任选一个；按 `meeting_title` / `meeting_no` / `meeting_id` 展示候选，等待用户明确选择后再调用 `+meeting-events`。
 
 ### 5. Agent 参会示范
 

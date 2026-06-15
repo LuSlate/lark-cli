@@ -61,14 +61,16 @@ var VCMeetingListActive = common.Shortcut{
 				fmt.Fprintln(w, "No active meetings.")
 				return
 			}
-			for i, raw := range meetings {
+			displayedMeetings := 0
+			for _, raw := range meetings {
 				meeting, _ := raw.(map[string]interface{})
 				if meeting == nil {
 					continue
 				}
-				if i > 0 {
+				if displayedMeetings > 0 {
 					fmt.Fprintln(w)
 				}
+				displayedMeetings++
 				title := common.GetString(meeting, "meeting_title")
 				if title == "" {
 					title = "Untitled meeting"
@@ -80,6 +82,10 @@ var VCMeetingListActive = common.Shortcut{
 				if no := common.GetString(meeting, "meeting_no"); no != "" {
 					fmt.Fprintf(w, "  Meeting No:  %s\n", no)
 				}
+			}
+			if displayedMeetings > 1 {
+				fmt.Fprintln(w)
+				fmt.Fprintln(w, "Multiple active meetings found. Ask the user to choose one meeting_id before calling +meeting-events.")
 			}
 		})
 		return nil
