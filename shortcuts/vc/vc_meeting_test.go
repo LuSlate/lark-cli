@@ -608,6 +608,12 @@ func TestMeetingListActive_DryRun_UserIdentity(t *testing.T) {
 	}
 }
 
+func TestMeetingListActive_ScopeMatchesEventReadPermission(t *testing.T) {
+	if len(VCMeetingListActive.Scopes) != 1 || VCMeetingListActive.Scopes[0] != "vc:meeting.meetingevent:read" {
+		t.Fatalf("scopes = %#v, want [vc:meeting.meetingevent:read]", VCMeetingListActive.Scopes)
+	}
+}
+
 func TestMeetingListActive_DryRun_UserIdentityIgnoresUserID(t *testing.T) {
 	f, stdout, _, _ := cmdutil.TestFactory(t, defaultConfig())
 	err := mountAndRun(t, VCMeetingListActive, []string{
