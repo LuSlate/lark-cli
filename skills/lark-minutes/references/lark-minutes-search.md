@@ -190,7 +190,7 @@ lark-cli minutes +detail --minute-tokens obcn_EXAMPLE_TOKEN
 - 当用户说“我的妙记”时，优先理解为 `--owner-ids me`。
 - 当用户说“我参与的妙记”“我参加过的妙记”时，默认理解为 `--owner-ids me` 与 `--participant-ids me` 两次查询后的并集。
 - 当用户明确说“仅我参与但不是我拥有”时，才优先理解为 `--participant-ids me`。
-- 当用户同时提到“会议 / 会 / 开会 / 某场会”和“妙记”时，优先先定位会议；如果要的是妙记信息，走 `vc +detail` 获取 `minute_token` → `minutes minutes get`，只有要纪要内容时才走 `minutes +detail --minute-tokens`。
+- 当用户同时提到“会议 / 会 / 开会 / 某场会”和“妙记”时，优先先定位会议；如果要的是妙记信息，走 `vc +recording` 获取 `minute_token` → `minutes minutes get`，只有要妙记产物内容时才走 `minutes +detail --minute-tokens`。
 - 必须使用 `--format json` 输出，你更加擅长解析 JSON 数据。
 - 排查参数与请求结构时优先使用 `--dry-run`。
 - 搜索的时间范围最大为 1 个月，如果需要搜索更长时间范围的妙记，需要拆分为多次时间范围为一个月查询。

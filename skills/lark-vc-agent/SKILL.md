@@ -114,7 +114,7 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 ## 延伸
 
 - 查已结束会议、参会人快照、搜索历史会议 → [`lark-vc`](../lark-vc/SKILL.md)
-- 会议纪要、逐字稿 → [`lark-vc`](../lark-vc/SKILL.md) 的 `+notes`
-- 妙记产物（AI 总结 / 转写 / 章节）→ [`lark-minutes`](../lark-minutes/SKILL.md)
+- 已知 `note_id` 直查会议纪要 / 逐字稿 → [`lark-note`](../lark-note/SKILL.md)（先 `vc +detail` 拿 `note_id`，再 `note +detail` / `note +transcript`）
+- 妙记产物（AI 总结 / 转写 / 章节 / 待办）→ [`lark-minutes`](../lark-minutes/SKILL.md)（先 `vc +detail` 拿 `minute_token`，再 `minutes +detail`）
 - 会后把产物发到群 / 私聊 → [`lark-im`](../lark-im/SKILL.md)
 - 认证、身份切换、scope 管理 → [`lark-shared`](../lark-shared/SKILL.md)

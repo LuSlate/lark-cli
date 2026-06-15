@@ -40,7 +40,8 @@ var scopesDetailMinuteTokens = []string{
 // minuteDetailItem represents a single minute detail result.
 type minuteDetailItem struct {
 	MinuteToken string         `json:"minute_token"`
-	Title       string         `json:"title,omitempty"`
+	Title       string         `json:"title"`
+	NoteID      string         `json:"note_id"`
 	Artifacts   map[string]any `json:"artifacts,omitempty"`
 	Error       string         `json:"error,omitempty"`
 }
@@ -67,6 +68,9 @@ func fetchMinuteDetail(ctx context.Context, runtime *common.RuntimeContext, minu
 	result := &minuteDetailItem{MinuteToken: minuteToken}
 	if v, ok := minute["title"].(string); ok && v != "" {
 		result.Title = v
+	}
+	if v, ok := minute["note_id"].(string); ok && v != "" {
+		result.NoteID = v
 	}
 
 	// Fetch artifacts selectively based on flags
@@ -247,9 +251,8 @@ var MinutesDetail = common.Shortcut{
 					row["error"] = r.Error
 				} else {
 					row["status"] = "OK"
-					if r.Title != "" {
-						row["title"] = r.Title
-					}
+					row["title"] = r.Title
+					row["note_id"] = r.NoteID
 					if len(r.Artifacts) > 0 {
 						var parts []string
 						if _, ok := r.Artifacts["summary"]; ok {

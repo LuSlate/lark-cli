@@ -1,66 +1,40 @@
 
 # calendar +meeting
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
-
-通过日程 ID（event_id） 获取关联的视频会议信息，包括会议 ID（meeting_id） 和绑定的会议纪要文档（meeting_note）。只读操作。
-
-本 skill 对应 shortcut：`lark-cli calendar +meeting`。
+通过日程 ID（`event_id`） 获取关联的视频会议信息（`meeting_id`、`meeting_note`）。只读。
 
 ## 命令
 
 ```bash
-# 查询单个日程的会议信息
-lark-cli calendar +meeting --event-ids <event_id>
+# 单个 / 批量（逗号分隔，最多 50 个）
+lark-cli calendar +meeting --event-ids <event_id1>,<event_id2>
 
-# 指定日历 ID（默认使用主日历）
-lark-cli calendar +meeting --event-ids <event_id1> --calendar-id <calendar_id>
+# 默认使用主日历，需要时显式传 --calendar-id
+lark-cli calendar +meeting --event-ids <event_id> --calendar-id <calendar_id>
 ```
 
-## 参数
-
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `--event-ids <ids>` | 是 | 日程事件实例 ID，逗号分隔支持批量，最多 50 个 |
-| `--calendar-id <id>` | 否 | 日历 ID，默认使用主日历("primary") |
-
-## 输出结果
-
-返回 `meetings` 数组，每条记录包含：
+## 输出字段
 
 | 字段 | 说明 |
 |------|------|
 | `event_id` | 日程 ID |
-| `meeting_id` | 关联的视频会议 ID（如有）。 |
-| `meeting_note` | 关联的会议纪要文档 Token（如有）。 |
+| `meeting_id` | 关联的视频会议 ID |
+| `meeting_note` | 用户主动绑定到日程的纪要文档 Token（`MeetingNotes`，由用户在日程页手动添加；）。**与会中产生的 AI 智能纪要 `note_doc_token` 是两份不同文档**，要拿 AI 纪要请继续走 `vc +detail` → `note +detail`。 |
 
-## 典型场景
+## 下游链路
 
-### 场景 1：从日程获取会议信息
+`calendar +meeting` 只把日程 ID 翻译为 `meeting_id` / `meeting_note`，要拿会中产生的产物（AI 智能纪要、逐字稿、妙记）需继续调用：
 
 ```bash
-# 1. 查看日程安排，获取 event_id
-lark-cli calendar +agenda --start 2026-06-10 --end 2026-06-11
-
-# 2. 获取日程关联的会议信息
-lark-cli calendar +meeting --event-ids <event_id>
-
-# 3. 用 meeting_id 进一步获取会议详情
+# 1. meeting_id → note_id + minute_token（同一会议两份产物，可能各自为空）
 lark-cli vc +detail --meeting-ids <meeting_id>
+
+# 2a. note_id → 纪要文档 token（note_doc_token / verbatim_doc_token / shared_doc_tokens）
+lark-cli note +detail --note-id <note_id>
+
+# 2b. minute_token → 妙记 AI 产物（按需获取，不传不返回任何 AI 内容）
+lark-cli minutes +detail --minute-tokens <minute_token> --summary --todo --chapter --keyword --transcript
+
+# 3. 任意文档 token（meeting_note / note_doc_token / verbatim_doc_token / shared_doc_token）→ 正文
+lark-cli docs +fetch --api-version v2 --doc <doc_token> --doc-format markdown
 ```
-
-## 与其他命令的关系
-
-| 需求 | 推荐命令 |
-|------|---------|
-| 从日程获取会议 ID 和纪要文档 | `calendar +meeting` |
-| 通过会议 ID 获取 note_id 和 minute_token | `vc +detail --meeting-ids` |
-| 通过 note_id 获取 note_doc_token / verbatim_doc_token / shared_doc_tokens | `note +detail --note-id` |
-| 读取纪要 / 逐字稿 / 共享文档正文 | `docs +fetch --api-version v2 --doc <doc_token>` |
-| 获取妙记产物（需手动指定 `--summary` / `--todo` / `--chapter` / `--keyword` / `--transcript`，不传不返回） | `minutes +detail --minute-tokens` |
-
-## 参考
-
-- [lark-calendar](../SKILL.md) — 日历全部命令
-- [lark-vc](../../lark-vc/SKILL.md) — 视频会议（进一步获取会议详情）
-- [lark-shared](../../lark-shared/SKILL.md) — 认证和全局参数

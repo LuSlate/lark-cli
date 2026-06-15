@@ -78,40 +78,47 @@ type searchEventOutput struct {
 	PageToken  string            `json:"page_token"`
 }
 
-// parseSearchEventTimeRange parses --time-range (start~end format) into RFC3339 strings.
+// parseSearchEventTimeRange parses --start / --end into RFC3339 strings.
+// When only one side is provided, the other defaults to the same day's
+// boundary (start → end-of-day, end → start-of-day).
 func parseSearchEventTimeRange(runtime *common.RuntimeContext) (string, string, error) {
-	tr := strings.TrimSpace(runtime.Str("time-range"))
-	if tr == "" {
+	startInput := strings.TrimSpace(runtime.Str("start"))
+	endInput := strings.TrimSpace(runtime.Str("end"))
+	if startInput == "" && endInput == "" {
 		return "", "", nil
 	}
-	parts := strings.SplitN(tr, "~", 2)
-	if len(parts) != 2 {
-		return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--time-range: expected start~end format (e.g. 2026-04-20~2026-04-27)").WithParam("--time-range")
+
+	var startSec, endSec int64
+
+	if startInput != "" {
+		ts, err := common.ParseTime(startInput)
+		if err != nil {
+			return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--start: %v", err).WithParam("--start")
+		}
+		startSec, _ = strconv.ParseInt(ts, 10, 64)
 	}
-	startInput := strings.TrimSpace(parts[0])
-	endInput := strings.TrimSpace(parts[1])
-	if startInput == "" || endInput == "" {
-		return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--time-range: both start and end must be provided").WithParam("--time-range")
+	if endInput != "" {
+		ts, err := common.ParseTime(endInput, "end")
+		if err != nil {
+			return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--end: %v", err).WithParam("--end")
+		}
+		endSec, _ = strconv.ParseInt(ts, 10, 64)
 	}
 
-	startTs, err := common.ParseTime(startInput)
-	if err != nil {
-		return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--time-range start: %v", err).WithParam("--time-range")
+	if startInput == "" {
+		t := time.Unix(endSec, 0).In(time.Local)
+		startSec = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix()
 	}
-	endTs, err := common.ParseTime(endInput, "end")
-	if err != nil {
-		return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--time-range end: %v", err).WithParam("--time-range")
+	if endInput == "" {
+		t := time.Unix(startSec, 0).In(time.Local)
+		endSec = time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location()).Unix()
 	}
 
-	startSec, _ := strconv.ParseInt(startTs, 10, 64)
-	endSec, _ := strconv.ParseInt(endTs, 10, 64)
 	if startSec > endSec {
-		return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--time-range: start must be before end").WithParam("--time-range")
+		return "", "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--start must be before --end").WithParam("--start")
 	}
 
-	startRFC3339 := time.Unix(startSec, 0).Format(time.RFC3339)
-	endRFC3339 := time.Unix(endSec, 0).Format(time.RFC3339)
-	return startRFC3339, endRFC3339, nil
+	return time.Unix(startSec, 0).Format(time.RFC3339), time.Unix(endSec, 0).Format(time.RFC3339), nil
 }
 
 // buildSearchEventFilter builds the filter object for the search_event API.
@@ -182,7 +189,8 @@ var CalendarSearchEvent = common.Shortcut{
 		{Name: "calendar-id", Desc: "calendar ID (default: primary)"},
 		{Name: "query", Desc: "search keyword"},
 		{Name: "attendee-ids", Desc: "attendee IDs, comma-separated (supports user ou_, chat oc_, room omm_)"},
-		{Name: "time-range", Desc: "search time range in start~end format (e.g. 2026-04-20~2026-04-27)"},
+		{Name: "start", Desc: "search time range start (ISO 8601 or YYYY-MM-DD)"},
+		{Name: "end", Desc: "search time range end (ISO 8601 or YYYY-MM-DD)"},
 		{Name: "page-token", Desc: "page token for next page"},
 		{Name: "page-size", Default: "20", Desc: "page size, 1-30 (default 20)"},
 	},

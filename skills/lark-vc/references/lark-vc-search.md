@@ -1,11 +1,7 @@
 
 # vc +search
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
-
-搜索已结束的历史会议记录，支持关键词、时间范围、组织者、参与者以及会议室等多条件过滤。只读操作，不修改任何会议数据。
-
-本 skill 对应 shortcut：`lark-cli vc +search`（调用 `POST /open-apis/vc/v1/meetings/search`）。
+搜索已结束的历史会议记录，支持关键词、时间范围、组织者、参与者、会议室多条件过滤。只读，仅 `--as user`。
 
 ## 关键词使用边界
 
@@ -35,37 +31,17 @@ lark-cli vc +search --start 2026-03-10 --end 2026-03-10
 
 # 按时间范围搜索
 lark-cli vc +search --start "2026-03-10T00:00+08:00" --end "2026-03-17T00:00+08:00"
-lark-cli vc +search --start 2026-03-10 --end 2026-03-17
 
-# 关键词 + 时间范围
-lark-cli vc +search --query "周会" --start "2026-03-10T00:00+08:00" --end "2026-03-17T00:00+08:00"
-lark-cli vc +search --query "周会" --start "2026-03-10T00:00+08:00"
-lark-cli vc +search --query "周会" --end "2026-03-17T00:00+08:00"
-
-# 按组织者过滤（open_id，逗号分隔）
-lark-cli vc +search --organizer-ids "ou_a,ou_b"
-
-# 按参与者过滤（open_id，逗号分隔）
-lark-cli vc +search --participant-ids "ou_x,ou_y"
-
-# 查询我这个月参加过的历史会议，不带关键词
-lark-cli vc +search --start "<YYYY-MM-DD>" --end "<YYYY-MM-DD>" --participant-ids "ou_me"
-
-# 查询最近两周我组织的历史会议，不带关键词
-lark-cli vc +search --start "<YYYY-MM-DD>" --end "<YYYY-MM-DD>" --organizer-ids "ou_me"
-
-# 按会议室过滤
+# 按组织者 / 参与者 / 会议室（逗号分隔）
+lark-cli vc +search --organizer-ids "ou_user1,ou_user2"
+lark-cli vc +search --participant-ids "ou_user1,ou_user2"
 lark-cli vc +search --room-ids "123,456"
 
-# 多条件组合查询
-lark-cli vc +search --organizer-ids "ou_a" --room-ids "123" --start "2026-03-10T00:00+08:00"
+# 多条件组合
+lark-cli vc +search --organizer-ids "ou_user1" --room-ids "123" --start "2026-03-10T00:00+08:00"
 
-# 分页查询
-lark-cli vc +search --query "周会" --page-size 15
-lark-cli vc +search --query "周会" --page-token "next_page_token"
-
-# 输出为表格/可读格式
-lark-cli vc +search --query "周会" --format json
+# 翻页
+lark-cli vc +search --query "周会" --page-token "<PAGE_TOKEN>"
 ```
 
 ## 参数
@@ -185,9 +161,3 @@ lark-cli minutes minutes get --params '{"minute_token":"<MINUTE_TOKEN>"}'
 - 不要使用 `yesterday`、`today` 这类相对时间字面量；请先转换成明确日期，例如 `2026-03-10`。
 - 用户如果明确问的是“妙记信息”而不是“纪要内容”，不要默认走 `vc +detail`；应先用 `vc +recording`。
 
-## 参考
-
-- [lark-vc](../SKILL.md) -- 视频会议全部命令
-- [lark-vc-detail](lark-vc-detail.md) -- 获取会议详情
-- [lark-vc-recording](lark-vc-recording.md) -- 基于 meeting_id 查询 minute_token
-- [lark-shared](../../lark-shared/SKILL.md) -- 认证和全局参数

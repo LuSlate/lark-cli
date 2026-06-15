@@ -30,7 +30,7 @@
 | 逐字稿 | `verbatim_doc_token` | 飞书文档 | 完整的逐句发言记录（含说话人、时间戳）— **仅 `note_display_type=normal` 时是可读的独立文档**；`unified` 纪要的逐字稿用 `note +transcript --note-id <note_id>` 拉取（见下方 [Note 域](#note-域)） |
 | 共享文档 | `shared_doc_token` | 飞书文档 | 会中投屏共享的文档信息 |
 
-此外，还存在**用户会议纪要（MeetingNotes）**，对应 `meeting_notes` 字段。这是用户主动绑定到会议的纪要文档，通常用于会前记录会议相关内容，与智能纪要文档相互独立。仅通过 `+notes --calendar-event-ids` 路径返回。
+此外，还存在**用户会议纪要（MeetingNotes）**，对应 `meeting_note` 字段。这是用户主动绑定到日程的纪要文档，通常用于会前记录会议相关内容，与智能纪要文档相互独立。仅通过 [`calendar +meeting --event-ids`](../../lark-calendar/references/lark-calendar-meeting.md) 路径返回。
 
 #### 链路二：开启「录制」
 
@@ -153,8 +153,10 @@ lark-cli note +transcript --note-id <note_id>
 
 ## Note 域
 
-- VC 只负责从 `meeting_id` / `calendar_event_id` / `minute_token` 定位会议产物和 `note_id`。
+- VC 只负责从 `meeting_id` 定位会议产物和 `note_id` / `minute_token`（[`vc +detail`](lark-vc-detail.md)）。
 - 已知 `note_id` 后切到 [lark-note](../../lark-note/SKILL.md)；逐字稿路由以 `lark-note` 的 `note_display_type` 规则为准。
+- 已知 `minute_token` 时，[`minutes +detail`](../../lark-minutes/references/lark-minutes-detail.md) 顶层会一并返回该妙记关联的 `note_id`（如有）；可直接传给 `note +detail` 取纪要文档 token，无需绕回 VC。
+- 仅有日程 `event_id` 时，先走 [`calendar +meeting`](../../lark-calendar/references/lark-calendar-meeting.md) 拿到 `meeting_id` 或用户绑定的 `meeting_note`，再按上述路径继续。
 - 只有自然语言纪要标题时，先走文档搜索与 `docs +fetch --api-version v2`；只有 `<vc-transcribe-tab vc-node-id="...">` 的 `vc-node-id` 可以进入 Note 域。
 - `doc_token` / Docx URL 不是 `note_id`。没有 `vc-node-id` 时不要反推 Note，继续按 Doc 域读取正文或正文中明确给出的逐字稿文档。
 

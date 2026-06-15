@@ -67,7 +67,8 @@ lark-cli calendar +agenda --as user
 | 查询过去的会议（"昨天的会议""上周的会"） | [`../lark-vc/SKILL.md`](../lark-vc/SKILL.md)（会议数据含即时会议，仅查日程会遗漏） |
 | 查询日历/日程或未来时间的会议 | 本 skill |
 | 按关键词搜索日程 | 本 skill（`+search-event`） |
-| 从日程获取关联的会议 ID 或纪要文档 | 本 skill（`+meeting`） |
+| 从日程获取关联的视频会议 ID 或用户绑定的会议纪要文档 | 本 skill（`+meeting`） |
+| 从日程进一步拿 AI 智能纪要 / 逐字稿 / 妙记产物 | 先 `+meeting` 取 `meeting_id`，再 [`vc +detail`](../lark-vc/references/lark-vc-detail.md) → [`note +detail`](../lark-note/references/lark-note-detail.md) / [`minutes +detail`](../lark-minutes/references/lark-minutes-detail.md) |
 | 预约/改约日程、添加/移除参会人、添加/更换会议室、调整时间 | 先判断新建 vs 编辑，再进入 [schedule-meeting 工作流](references/lark-calendar-schedule-meeting.md) |
 
 ## 任务类型分流

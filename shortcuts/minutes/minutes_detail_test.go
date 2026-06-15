@@ -219,6 +219,9 @@ func TestDetail_Execute_BasicInfo(t *testing.T) {
 	if m["title"] != "Test Meeting" {
 		t.Errorf("title = %v, want Test Meeting", m["title"])
 	}
+	if _, ok := m["note_id"]; ok {
+		t.Errorf("note_id should be omitted when minute has no note_id, got %v", m["note_id"])
+	}
 }
 
 func TestDetail_Execute_WithSummaryAndTodo(t *testing.T) {
@@ -243,6 +246,9 @@ func TestDetail_Execute_WithSummaryAndTodo(t *testing.T) {
 		t.Fatalf("expected 1 minute, got %d", len(minutes))
 	}
 	m, _ := minutes[0].(map[string]any)
+	if m["note_id"] != "note_art" {
+		t.Errorf("note_id = %v, want note_art", m["note_id"])
+	}
 	arts, _ := m["artifacts"].(map[string]any)
 	if arts == nil {
 		t.Fatal("expected artifacts to be present")

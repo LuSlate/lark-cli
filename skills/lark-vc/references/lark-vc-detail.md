@@ -1,28 +1,16 @@
 
 # vc +detail
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
-
-通过会议 ID 获取会议详情，包括会议基本信息、关联的纪要 ID（`note_id`）和妙记 Token（`minute_token`）。只读操作。
-
-本 skill 对应 shortcut：`lark-cli vc +detail`。
+通过会议 ID 获取会议详情，包括基本信息、关联的纪要 ID（`note_id`）和妙记 Token（`minute_token`）。只读。
 
 ## 命令
 
 ```bash
-# 批量查询（逗号分隔，最多 50 个）
-lark-cli vc +detail --meeting-ids 69xxxxxxxxxxxxx28,69xxxxxxxxxxxxx29
+# 单个 / 批量（逗号分隔，最多 50 个）
+lark-cli vc +detail --meeting-ids <meeting_id1>,<meeting_id2>
 ```
 
-## 参数
-
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `--meeting-ids <ids>` | 是 | 会议 ID，逗号分隔支持批量，最多 50 个 |
-
-## 输出结果
-
-返回 `meetings` 数组，每条记录包含：
+## 输出字段
 
 | 字段 | 说明 |
 |------|------|
@@ -42,7 +30,7 @@ lark-cli vc +detail --meeting-ids 69xxxxxxxxxxxxx28,69xxxxxxxxxxxxx29
 
 ```bash
 # 1. 获取会议详情，拿到 note_id 和 minute_token
-lark-cli vc +detail --meeting-ids 69xxxxxxxxxxxxx28
+lark-cli vc +detail --meeting-ids <meeting_id>
 
 # 2. 用 note_id 获取纪要文档 Token（note_doc_token / verbatim_doc_token / shared_doc_tokens）
 lark-cli note +detail --note-id <note_id>
@@ -54,18 +42,3 @@ lark-cli minutes +detail --minute-tokens <minute_token> --todo --transcript
 ```
 
 > **路由建议**：当用户未明确指定使用妙记时，**优先**走 `note +detail` 链路（纪要文档信息更完整、含逐字稿原文），仅在 `note_id` 为空或用户要求妙记产物时才走 `minutes +detail`。
-
-## 与其他命令的关系
-
-| 需求 | 推荐命令 |
-|------|---------|
-| 只需获取 note_id 和 minute_token | `vc +detail` |
-| 需要纪要文档 Token（note_doc_token、verbatim_doc_token 等） | `note +detail --note-id` |
-| 需要妙记的 AI 产物（总结、待办、章节、逐字稿） | `minutes +detail --minute-tokens` |
-
-## 参考
-
-- [lark-vc](../SKILL.md) — 视频会议全部命令
-- [lark-note-detail](../../lark-note/references/lark-note-detail.md) — 查询纪要详情命令介绍
-- [lark-minutes-detail](../../lark-minutes/references/lark-minutes-detail.md) — 查询妙记详情命令介绍
-- [lark-shared](../../lark-shared/SKILL.md) — 认证和全局参数

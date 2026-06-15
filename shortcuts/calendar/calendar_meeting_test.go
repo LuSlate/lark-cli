@@ -253,18 +253,18 @@ func TestMeeting_Execute_NoMeeting(t *testing.T) {
 
 func TestSearchEvent_Validation_InvalidTimeRange(t *testing.T) {
 	f, _, _, _ := cmdutil.TestFactory(t, calDefaultConfig())
-	err := calMountAndRun(t, CalendarSearchEvent, []string{"+search-event", "--time-range", "bad-format", "--as", "user"}, f, nil)
+	err := calMountAndRun(t, CalendarSearchEvent, []string{"+search-event", "--start", "bad-format", "--end", "2026-04-27", "--as", "user"}, f, nil)
 	if err == nil {
-		t.Fatal("expected validation error for invalid time-range")
+		t.Fatal("expected validation error for invalid --start")
 	}
-	if !strings.Contains(err.Error(), "start~end") {
+	if !strings.Contains(err.Error(), "--start") {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
 
 func TestSearchEvent_Validation_TimeRangeStartAfterEnd(t *testing.T) {
 	f, _, _, _ := cmdutil.TestFactory(t, calDefaultConfig())
-	err := calMountAndRun(t, CalendarSearchEvent, []string{"+search-event", "--time-range", "2026-04-27~2026-04-20", "--as", "user"}, f, nil)
+	err := calMountAndRun(t, CalendarSearchEvent, []string{"+search-event", "--start", "2026-04-27", "--end", "2026-04-20", "--as", "user"}, f, nil)
 	if err == nil {
 		t.Fatal("expected validation error for start after end")
 	}
@@ -367,21 +367,27 @@ func TestSearchEvent_Execute_Empty(t *testing.T) {
 func TestParseSearchEventTimeRange(t *testing.T) {
 	tests := []struct {
 		name    string
-		input   string
+		start   string
+		end     string
 		wantErr bool
 	}{
-		{"empty", "", false},
-		{"valid", "2026-04-20~2026-04-27", false},
-		{"no tilde", "2026-04-20", true},
-		{"empty parts", "~", true},
-		{"start after end", "2026-04-27~2026-04-20", true},
+		{"empty", "", "", false},
+		{"valid", "2026-04-20", "2026-04-27", false},
+		{"start only defaults end", "2026-04-20", "", false},
+		{"end only defaults start", "", "2026-04-27", false},
+		{"invalid start format", "not-a-date", "2026-04-27", true},
+		{"start after end", "2026-04-27", "2026-04-20", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := &cobra.Command{Use: "test"}
-			cmd.Flags().String("time-range", "", "")
-			if tt.input != "" {
-				_ = cmd.Flags().Set("time-range", tt.input)
+			cmd.Flags().String("start", "", "")
+			cmd.Flags().String("end", "", "")
+			if tt.start != "" {
+				_ = cmd.Flags().Set("start", tt.start)
+			}
+			if tt.end != "" {
+				_ = cmd.Flags().Set("end", tt.end)
 			}
 			runtime := common.TestNewRuntimeContext(cmd, calDefaultConfig())
 			_, _, err := parseSearchEventTimeRange(runtime)
@@ -390,6 +396,42 @@ func TestParseSearchEventTimeRange(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("start only fills end with end-of-day", func(t *testing.T) {
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("start", "", "")
+		cmd.Flags().String("end", "", "")
+		_ = cmd.Flags().Set("start", "2026-04-20")
+		runtime := common.TestNewRuntimeContext(cmd, calDefaultConfig())
+		startRFC, endRFC, err := parseSearchEventTimeRange(runtime)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.HasPrefix(startRFC, "2026-04-20T00:00:00") {
+			t.Errorf("start = %s, want 2026-04-20T00:00:00...", startRFC)
+		}
+		if !strings.HasPrefix(endRFC, "2026-04-20T23:59:59") {
+			t.Errorf("end = %s, want 2026-04-20T23:59:59...", endRFC)
+		}
+	})
+
+	t.Run("end only fills start with start-of-day", func(t *testing.T) {
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("start", "", "")
+		cmd.Flags().String("end", "", "")
+		_ = cmd.Flags().Set("end", "2026-04-27")
+		runtime := common.TestNewRuntimeContext(cmd, calDefaultConfig())
+		startRFC, endRFC, err := parseSearchEventTimeRange(runtime)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.HasPrefix(startRFC, "2026-04-27T00:00:00") {
+			t.Errorf("start = %s, want 2026-04-27T00:00:00...", startRFC)
+		}
+		if !strings.HasPrefix(endRFC, "2026-04-27T23:59:59") {
+			t.Errorf("end = %s, want 2026-04-27T23:59:59...", endRFC)
+		}
+	})
 }
 
 func TestBuildSearchEventFilter(t *testing.T) {
