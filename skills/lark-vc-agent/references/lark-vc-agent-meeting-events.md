@@ -11,6 +11,7 @@
 
 - UAT / `--as user`：当前 user 在该会中即可读取事件。
 - TAT / `--as bot`：bot 必须在该会中或参会过；`meeting_id` 通常来自 `+meeting-join` 返回的 `meeting.id`，也可以通过 `+meeting-list-active --as bot --user-id <user_open_id>` 发现。TAT 不表示可以读取任意 meeting_id。
+- `meeting_id` 的获取身份决定后续读取身份：UAT 发现的 meeting_id 后续用 `--as user`，TAT 发现的 meeting_id 后续用 `--as bot`。
 
 ## 命令
 
@@ -54,6 +55,7 @@ lark-cli vc +meeting-events --meeting-id 69xxxxxxxxxxxxx28 --dry-run
 - `+search` 结果中的 `id`
 
 **不要**把 9 位会议号（`--meeting-number`）传给这个命令。
+如果 meeting_id 来自 `+meeting-list-active`，后续 `+meeting-events` 必须沿用同一身份；如果返回多个会议，先让用户选择具体 meeting_id。
 
 ### 2. 支持 UAT 和 TAT，但权限锚点不同
 
@@ -61,6 +63,13 @@ lark-cli vc +meeting-events --meeting-id 69xxxxxxxxxxxxx28 --dry-run
 - TAT / `--as bot`：bot 必须在会中或参会过；不要拿任意 meeting_id 直接查。
 
 ### 3. 读取事件前必须先拿到可见的 meeting_id
+
+UAT 场景默认先发现当前用户所在会议：
+
+```bash
+lark-cli vc +meeting-list-active --as user --format pretty
+lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --format pretty
+```
 
 TAT 场景最稳妥的调用顺序通常是：
 
@@ -127,7 +136,9 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --form
 
 执行准则：
 
-- 这类问题默认先用 `lark-cli vc +meeting-events --meeting-id <meeting.id> --page-all --format json` 拉取最新事件流。
+- 如果上下文已有明确 meeting_id，先确认它来自 UAT 还是 TAT，再用同一身份执行 `+meeting-events --page-all --format json`。
+- 如果上下文没有明确 meeting_id，先执行 `lark-cli vc +meeting-list-active --as user --format pretty` 发现当前用户所在会议；返回多个会议时先让用户选择。
+- 这类问题拿到 meeting_id 后，用 `lark-cli vc +meeting-events --meeting-id <meeting.id> --page-all --format json` 拉取最新事件流。
 - 如果事件中出现共享文档线索，例如：
   - `magic_share_started`
   - `share_doc.title`

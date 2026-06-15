@@ -778,6 +778,42 @@ func TestMeetingListActive_ExecutePretty_Empty(t *testing.T) {
 	}
 }
 
+func TestMeetingListActive_ExecutePretty_SingleMeetingNoSelectionPrompt(t *testing.T) {
+	f, stdout, _, reg := cmdutil.TestFactory(t, defaultConfig())
+	reg.Register(&httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/vc/v1/bots/user_active_meeting",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"meetings": []interface{}{
+					map[string]interface{}{
+						"meeting_id":    "9001",
+						"meeting_no":    "123456789",
+						"meeting_title": "Standup",
+					},
+				},
+			},
+		},
+	})
+
+	err := mountAndRun(t, VCMeetingListActive, []string{
+		"+meeting-list-active", "--format", "pretty", "--as", "user",
+	}, f, stdout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	out := stdout.String()
+	for _, want := range []string{"Standup", "Meeting ID:  9001", "Meeting No:  123456789"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("pretty output missing %q: %s", want, out)
+		}
+	}
+	if strings.Contains(out, "Multiple active meetings found") {
+		t.Fatalf("single meeting should not show selection prompt: %s", out)
+	}
+}
+
 func TestMeetingListActive_ExecutePretty_MultipleMeetings(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, defaultConfig())
 	reg.Register(&httpmock.Stub{
@@ -793,7 +829,14 @@ func TestMeetingListActive_ExecutePretty_MultipleMeetings(t *testing.T) {
 						"meeting_title": "Standup",
 					},
 					"ignored",
-					map[string]interface{}{},
+					map[string]interface{}{
+						"meeting_id":    "9002",
+						"meeting_no":    "987654321",
+						"meeting_title": "Planning",
+					},
+					map[string]interface{}{
+						"meeting_id": "9003",
+					},
 				},
 			},
 		},
@@ -806,7 +849,17 @@ func TestMeetingListActive_ExecutePretty_MultipleMeetings(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	out := stdout.String()
-	for _, want := range []string{"Standup", "Meeting ID:  9001", "Meeting No:  123456789", "Untitled meeting"} {
+	for _, want := range []string{
+		"Standup",
+		"Meeting ID:  9001",
+		"Meeting No:  123456789",
+		"Planning",
+		"Meeting ID:  9002",
+		"Meeting No:  987654321",
+		"Untitled meeting",
+		"Meeting ID:  9003",
+		"Multiple active meetings found. Ask the user to choose one meeting_id before calling +meeting-events.",
+	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("pretty output missing %q: %s", want, out)
 		}
