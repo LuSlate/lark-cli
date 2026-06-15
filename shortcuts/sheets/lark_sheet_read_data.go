@@ -47,7 +47,7 @@ var CellsGet = common.Shortcut{
 			return err
 		}
 		if strings.TrimSpace(runtime.Str("range")) == "" {
-			return common.FlagErrorf("--range is required")
+			return sheetsValidationForFlag("range", "--range is required")
 		}
 		return nil
 	},
@@ -140,7 +140,7 @@ var CsvGet = common.Shortcut{
 			return err
 		}
 		if strings.TrimSpace(runtime.Str("range")) == "" {
-			return common.FlagErrorf("--range is required")
+			return sheetsValidationForFlag("range", "--range is required")
 		}
 		return nil
 	},
@@ -259,7 +259,7 @@ var DropdownGet = common.Shortcut{
 			return err
 		}
 		if strings.TrimSpace(runtime.Str("range")) == "" {
-			return common.FlagErrorf("--range is required")
+			return sheetsValidationForFlag("range", "--range is required")
 		}
 		return nil
 	},
