@@ -156,6 +156,9 @@ func validateMeetingEventsMeetingID(meetingID string) error {
 	if meetingID == "" {
 		return errs.NewValidationError(errs.SubtypeInvalidArgument, "--meeting-id is required").WithParam("--meeting-id")
 	}
+	if validMeetingNumber(meetingID) {
+		return errs.NewValidationError(errs.SubtypeInvalidArgument, "--meeting-id must be a long meeting_id, not a 9-digit meeting number; use +meeting-join or +meeting-list-active to get meeting_id").WithParam("--meeting-id")
+	}
 	value, err := strconv.ParseInt(meetingID, 10, 64)
 	if err != nil || value <= 0 {
 		return errs.NewValidationError(errs.SubtypeInvalidArgument, "--meeting-id must be a positive integer, got %q", meetingID).WithParam("--meeting-id")
