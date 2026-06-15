@@ -113,12 +113,12 @@ func TestAppsListWorkflowAsUser(t *testing.T) {
 		})
 		require.NoError(t, err)
 		items := assertListEnvelope(t, result)
-		// When the server echoes app_type on items, the html filter must not
-		// return full_stack apps. Conditional so the test does not assume the
-		// field is always present in the list response.
+		// When the server echoes app_type on items, the html filter must return
+		// exactly html apps. Conditional so the test does not assume the field is
+		// always present in the list response.
 		for _, item := range items.Array() {
 			if at := item.Get("app_type"); at.Exists() {
-				assert.NotEqual(t, "full_stack", at.String(), "html filter must not return full_stack apps")
+				assert.Equal(t, "html", at.String(), "html filter should only return html apps when app_type is present")
 			}
 		}
 	})
