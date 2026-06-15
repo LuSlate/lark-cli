@@ -262,6 +262,26 @@ func TestMeetingEvents_Validation_InvalidMeetingID(t *testing.T) {
 	}
 }
 
+func TestMeetingEvents_Validation_RejectsMeetingNumber(t *testing.T) {
+	runtime := newMeetingEventsRuntime()
+	mustSetMeetingEventsFlag(t, runtime, "meeting-id", "732067044")
+
+	err := VCMeetingEvents.Validate(context.Background(), runtime)
+	if err == nil {
+		t.Fatal("expected validation error for 9-digit meeting number")
+	}
+	if !strings.Contains(err.Error(), "not a 9-digit meeting number") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected *errs.ValidationError, got %T: %v", err, err)
+	}
+	if ve.Param != "--meeting-id" {
+		t.Errorf("Param = %q, want %q", ve.Param, "--meeting-id")
+	}
+}
+
 func TestMeetingEvents_Validation_InvalidTimeRange(t *testing.T) {
 	runtime := newMeetingEventsRuntime()
 	mustSetMeetingEventsFlag(t, runtime, "meeting-id", "7628568141510692381")
