@@ -1,6 +1,6 @@
 ---
 name: lark-sheets
-version: 2.0.0
+version: 3.0.0
 description: "飞书电子表格：创建和操作电子表格。支持创建表格、管理工作表与行列结构（增删/合并/调整尺寸/隐藏/冻结）、读写单元格（值/公式/样式/批注/单元格图片）、查找替换、多操作原子批量更新，以及图表、透视表、条件格式、筛选器、迷你图、浮动图片等对象的创建与维护。当用户需要创建电子表格、管理工作表、批量读写或编辑数据、统计汇总与可视化、表格美化、公式计算（含 Excel 公式迁移）、金融/财务建模（DCF、三张表、预算、Sensitivity 等）等任务时使用。若用户是想按名称或关键词搜索云空间（云盘/云存储）里的表格文件，请改用 lark-drive 的 drive +search 先定位资源。当用户给出 doubao.com 的 /sheets/ URL/token 时，也应直接使用本 skill，不要因为域名不是飞书而回退到 WebFetch；路由依据是 URL 路径模式和 token，而不是域名。"
 metadata:
   requires:
@@ -70,7 +70,6 @@ metadata:
 | [飞书表格核心操作：分析、编辑与可视化](references/lark-sheets-core-operations.md) | 飞书表格核心操作工作流。当用户需要对已有的飞书表格进行查看、分析、编辑或可视化时使用。适用场景：数据查询与统计、公式计算、表格美化、创建图表/透视表、筛选排序、批量修改数据、调整表格结构等。即使用户没有明确说"飞书表格"，只要操作对象是已有的在线表格，都应触发此工作流。 |
 | [飞书表格样式与配色规范](references/lark-sheets-visual-standards.md) | 飞书表格样式与配色规范：表头/数据区/汇总行的颜色、字号、对齐、边框等取值标准，以及新增汇总行、追加行列继承原表风格、已有区域美化等典型场景的决策流程与样式要点。工具调用参数细节请参考对应的 lark-sheets-write-cells / lark-sheets-range-operations / lark-sheets-batch-update。条件格式（高亮、标红、数据条、色阶）请使用 lark-sheets-conditional-format。 |
 | [飞书表格公式生成规则](references/lark-sheets-formula-translation.md) | Excel 公式到飞书表格公式的迁移与生成规则。核心目标不是保留 Excel 原语法，而是按飞书表格可执行规则重写公式，并在结果上尽量对齐 Excel。当用户要求把 Excel 公式改写成飞书表格公式，或需要生成飞书公式（尤其涉及 ARRAYFORMULA、原生数组函数、INDEX/OFFSET、MAP/LAMBDA、日期差、多层范围结果与二次展开）时使用。 |
-| [飞书表格金融/财务建模规范](references/lark-sheets-financial-modeling-standards.md) | 飞书表格金融/财务/估值建模场景的专业结构与视觉规范：DCF / LBO / Comps / Precedent、三张财务报表、预算与 Variance Analysis、Sensitivity / Scenario、FP&A 等。覆盖科目分类、三表勾稽、Assumptions / Calc / Sensitivity 拆分、年份横向布局、假设颜色编码、财务数字格式、Sensitivity 禁色阶等。与通用视觉规范冲突时以本文为准；用户明确样式或既有模板优先。 |
 
 ### 按对象的工具参考（含 shortcut）
 
