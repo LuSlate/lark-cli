@@ -4,12 +4,11 @@
 
 面向"已有飞书表格"的核心工作流，核心原则：**先了解，再分析或写入，最后验证**。本文是方法论总纲；具体工具的参数细节、边界陷阱在对应子 skill，本文用指针引到那里，不重复展开。
 
-**四份「通用方法与规范」如何分工**（都不含 shortcut，按主题单一归属）：
+**三份「通用方法与规范」如何分工**（都不含 shortcut，按主题单一归属）：
 
 - **本文（core-operations）= 流程与铁律**：端到端工作流 + 全局铁律 + 横切陷阱，是读取入口与枢纽。
 - **`lark-sheets-visual-standards` = 样式知识**：配色 / 表头 / 数值格式 / 斑马纹 / 美化决策等"正确视觉输出"的全部标准。
 - **`lark-sheets-formula-translation` = 公式知识**：飞书公式书写与 Excel 迁移的全部正确性规则（绝对引用、范围语法、数组语义、不支持函数等）。
-- **`lark-sheets-financial-modeling-standards` = 金融/财务建模知识**：DCF / 三张表 / 预算 / Sensitivity 等专业模型的结构、公式、颜色编码、数字格式与验收规则；与通用视觉规范冲突时以金融规范为准。
 
 > **下面的铁律对所有任务一律生效**，即使你是被索引直接路由进 visual 或 formula 而没经过本文——编辑类任务务必先回到这里过一遍铁律。
 
@@ -27,7 +26,7 @@
 
 ## 推荐工作流程
 
-1. **规划 skill 清单**：开工前一次性列出本任务要读的子 skill（避免读一个调一个），本轮已读过的不重复读。本 skill + `lark-sheets-workbook` 几乎每次都要；任务涉及 DCF、三张表、预算、Variance、Sensitivity、估值、FP&A 等金融/财务建模时，必须额外读取 `lark-sheets-financial-modeling-standards`。
+1. **规划 skill 清单**：开工前一次性列出本任务要读的子 skill（避免读一个调一个），本轮已读过的不重复读。本 skill + `lark-sheets-workbook` 几乎每次都要。
 2. **了解结构**：先 `+workbook-info` 拿子表列表 / 行列数 / 冻结位置（不可猜测，猜错会越界覆盖）；涉及合并 / 隐藏 / 分组 / 行高列宽再用 `lark-sheets-sheet-structure` 的 `+sheet-info`。
 3. **读取数据（按任务类型选路径，细则见 `lark-sheets-read-data`）**：
 
