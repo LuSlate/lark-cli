@@ -48,7 +48,7 @@ var VCMeetingEvents = common.Shortcut{
 	Description: "List bot meeting events by meeting ID",
 	Risk:        "read",
 	Scopes:      []string{"vc:meeting.meetingevent:read"},
-	AuthTypes:   []string{"user"},
+	AuthTypes:   []string{"user", "bot"},
 	HasFormat:   true,
 	Flags: []common.Flag{
 		{Name: "meeting-id", Required: true, Desc: "meeting ID to query"},
