@@ -16,9 +16,21 @@ metadata:
 
 > **导入分流规则：** 如果用户要把本地 Excel / CSV / `.base` 快照导入成 Base / 多维表格 / bitable，必须优先使用 `lark-cli drive +import --type bitable`。不要先切到 `lark-base`；`lark-base` 只负责导入完成后的表内操作。
 
+## Workflow 优先分流
+
+当用户的目标不只是“查一下 / 定位一个资源”，而是要把 Workspace 里的资料**整理、收集、归档、归类、汇总、移动或放到一起**时，必须先判断 workflow，不要直接从单个 shortcut 开始。
+
+| 用户意图 | 典型说法 | 必须先阅读 |
+|----------|----------|------------|
+| 按主题收集资料并统一归档 | “把有关 X 的文档整理到一起”、“找到所有关于 X 的资料并放到某个文件夹 / 知识库节点”、“按关键词收集资料” | [`references/lark-drive-workflow-topic-move-collector.md`](references/lark-drive-workflow-topic-move-collector.md) |
+| 整理目录结构或生成整理方案 | “整理云盘 / 文档库 / 知识库”、“盘点目录结构”、“归类这些文件夹”、“重构文档库目录” | [`references/lark-drive-workflow-knowledge-organize.md`](references/lark-drive-workflow-knowledge-organize.md) |
+
+如果同一请求同时像“搜索”和“整理 / 收集 / 归档”，workflow 优先；`drive +search` 只作为 workflow 内部召回步骤使用。
+
+一旦进入某个 workflow，后续阶段不得改路由到其他 workflow。只有用户明确改变目标，或当前 workflow 明确不支持新目标时，才允许暂停并询问是否切换。
+
 ## 快速决策
 
-- 用户要**整理云盘 / 文件夹 / 文档库 / 知识库 / 个人文档库**，或要“盘点目录结构、找出未归档/临时/重复/空目录、生成整理方案”，必须先阅读 [`references/lark-drive-workflow-knowledge-organize.md`](references/lark-drive-workflow-knowledge-organize.md)。默认只生成方案；创建目录、移动资源、申请权限都必须单独确认。
 - 用户要**搜文档 / Wiki / 电子表格 / 多维表格 / 云空间（云盘/云存储）对象**，优先使用 `lark-cli drive +search`。自然语言里"最近我编辑过的"、"我创建的"（→ `--created-by-me`，原始创建者语义）、"我负责/owner 的"（→ `--mine`，owner 语义）、"最近一周我打开过的 xxx"、"某人 owner 的 docx" 等直接映射到扁平 flag，避免手写嵌套 JSON。
 - 用户要**根据文档评论定位正文位置**，例如 根据评论 review 文档、根据评论内容回看文档、区分多处相同引用文本时，对于 docx 类型（`file_type=docx`）的文档支持通过 `need_relation=true` 返回评论位置，其他类型暂不支持，具体用法需要先阅读 [`references/lark-drive-comment-location.md`](references/lark-drive-comment-location.md) 了解。
 - 用户给出 doubao.com 的云空间资源 URL/token，或明确提到豆包里的 file/folder/docx/sheet/bitable/wiki 资源时，仍按资源类型、URL 路径和 token 路由到本 skill；不要因为域名不是飞书而回退到 WebFetch。
