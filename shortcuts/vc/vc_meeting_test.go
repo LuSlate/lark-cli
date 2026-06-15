@@ -890,6 +890,12 @@ func TestMeetingListActive_Execute_APIError(t *testing.T) {
 		t.Fatalf("error problem = (%+v, %t), want authorization problem", p, ok)
 	} else if p.Subtype != errs.SubtypePermissionDenied {
 		t.Fatalf("error subtype = %q, want %q", p.Subtype, errs.SubtypePermissionDenied)
+	} else if p.Code != 121005 {
+		t.Fatalf("error code = %d, want 121005", p.Code)
+	}
+	var pe *errs.PermissionError
+	if !errors.As(err, &pe) {
+		t.Fatalf("expected *errs.PermissionError, got %T: %v", err, err)
 	}
 }
 

@@ -92,6 +92,7 @@ var VCMeetingListActive = common.Shortcut{
 	},
 }
 
+// validateMeetingListActiveUserID validates the target user only for bot identity.
 func validateMeetingListActiveUserID(runtime *common.RuntimeContext) error {
 	if !runtime.IsBot() {
 		return nil
@@ -106,6 +107,7 @@ func validateMeetingListActiveUserID(runtime *common.RuntimeContext) error {
 	return nil
 }
 
+// buildMeetingListActiveParams builds the query params for active meeting lookup.
 func buildMeetingListActiveParams(runtime *common.RuntimeContext) (map[string]interface{}, error) {
 	if err := validateMeetingListActiveUserID(runtime); err != nil {
 		return nil, err
