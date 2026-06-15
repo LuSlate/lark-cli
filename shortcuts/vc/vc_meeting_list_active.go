@@ -23,7 +23,7 @@ var VCMeetingListActive = common.Shortcut{
 	Command:     "+meeting-list-active",
 	Description: "List active meetings for the current identity or target user",
 	Risk:        "read",
-	Scopes:      []string{"vc:meeting.active:read"},
+	Scopes:      []string{"vc:meeting.meetingevent:read"},
 	AuthTypes:   []string{"user", "bot"},
 	HasFormat:   true,
 	Flags: []common.Flag{

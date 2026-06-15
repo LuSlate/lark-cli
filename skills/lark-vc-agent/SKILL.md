@@ -131,7 +131,7 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 | Shortcut          | 所需 scope                       |
 | ----------------- | ------------------------------ |
 | `+meeting-join`   | `vc:meeting.bot.join:write`    |
-| `+meeting-list-active` | `vc:meeting.active:read` |
+| `+meeting-list-active` | `vc:meeting.meetingevent:read` |
 | `+meeting-events` | `vc:meeting.meetingevent:read` |
 | `+meeting-leave`  | `vc:meeting.bot.join:write`    |
 
