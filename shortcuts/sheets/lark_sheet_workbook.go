@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/extension/fileio"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/shortcuts/common"
 	"github.com/larksuite/cli/shortcuts/drive"
@@ -660,7 +660,7 @@ var WorkbookCreate = common.Shortcut{
 		if v := strings.TrimSpace(runtime.Str("folder-token")); v != "" {
 			body["folder_token"] = v
 		}
-		data, err := runtime.CallAPI("POST", "/open-apis/sheets/v3/spreadsheets", nil, body)
+		data, err := runtime.CallAPITyped("POST", "/open-apis/sheets/v3/spreadsheets", nil, body)
 		if err != nil {
 			return err
 		}
@@ -670,7 +670,7 @@ var WorkbookCreate = common.Shortcut{
 			token = common.GetString(ss, "token")
 		}
 		if token == "" {
-			return output.Errorf(output.ExitAPI, "api_error", "spreadsheet created but token missing in response")
+			return errs.NewInternalError(errs.SubtypeInvalidResponse, "spreadsheet created but token missing in response")
 		}
 
 		result := map[string]interface{}{"spreadsheet": ss}
@@ -686,13 +686,11 @@ var WorkbookCreate = common.Shortcut{
 		if payload != nil {
 			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
 			if err != nil {
-				return workbookCreatedButFillFailed(token, ss,
-					fmt.Sprintf("resolving its default sheet for the write failed: %v", err))
+				return workbookCreatedButFillFailed(token, "resolving its default sheet for the write failed", err)
 			}
 			written, err := writeTypedSheets(ctx, runtime, token, payload, firstSheetID, sheetStyles)
 			if err != nil {
-				return workbookCreatedButFillFailed(token, ss,
-					fmt.Sprintf("write failed: %v", err))
+				return workbookCreatedButFillFailed(token, "initial fill failed", err)
 			}
 			result["sheets"] = written
 		}
@@ -707,22 +705,13 @@ var WorkbookCreate = common.Shortcut{
 
 // workbookCreatedButFillFailed builds a structured partial-success error for the
 // window where the spreadsheet POST succeeded but the follow-up initial fill did
-// not. The new spreadsheet_token is surfaced in the error detail so callers can
-// retry the fill (+cells-set / +csv-put) or delete the orphan, instead of only
-// finding the token interpolated into a bare error string.
-func workbookCreatedButFillFailed(token string, spreadsheet interface{}, reason string) error {
-	return &output.ExitError{
-		Code: output.ExitAPI,
-		Detail: &output.ErrDetail{
-			Type:    "partial_success",
-			Message: fmt.Sprintf("spreadsheet %s created but %s", token, reason),
-			Hint:    "the spreadsheet exists; retry the fill with the returned spreadsheet_token, or delete it",
-			Detail: map[string]interface{}{
-				"spreadsheet_token": token,
-				"spreadsheet":       spreadsheet,
-			},
-		},
-	}
+// not. The new spreadsheet_token is surfaced in the message and the underlying
+// failure is preserved as the cause so callers can retry the fill
+// (+cells-set / +csv-put) or delete the orphan, rather than orphaning the workbook.
+func workbookCreatedButFillFailed(token, reason string, cause error) error {
+	return errs.NewValidationError(errs.SubtypeFailedPrecondition, "spreadsheet %s created but %s", token, reason).
+		WithCause(cause).
+		WithHint("the spreadsheet exists; retry the fill with the returned spreadsheet_token (+cells-set / +csv-put), or delete it")
 }
 
 // valuesSheetName is the synthesized sheet name for the untyped --values path.
@@ -1585,7 +1574,7 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 	}
 	m, ok := out.(map[string]interface{})
 	if !ok {
-		return "", 0, output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned non-object output")
+		return "", 0, errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned non-object output")
 	}
 	sheets, _ := m["sheets"].([]interface{})
 	for _, raw := range sheets {
@@ -1604,7 +1593,7 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 		if (sheetID != "" && id == sheetID) || (sheetName != "" && name == sheetName) {
 			idx, ok := util.ToFloat64(sm["index"])
 			if !ok {
-				return "", 0, output.Errorf(output.ExitAPI, "tool_output", "sheet entry missing index field")
+				return "", 0, errs.NewInternalError(errs.SubtypeInvalidResponse, "sheet entry missing index field")
 			}
 			return id, int(idx), nil
 		}
@@ -1613,7 +1602,7 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 	if target == "" {
 		target = sheetName
 	}
-	return "", 0, output.Errorf(output.ExitAPI, "not_found", fmt.Sprintf("sheet %q not found in workbook", target))
+	return "", 0, errs.NewValidationError(errs.SubtypeFailedPrecondition, "sheet %q not found in workbook", target)
 }
 
 // lookupFirstSheetID returns the sheet_id of the sub-sheet at index 0 (the
@@ -1630,7 +1619,7 @@ func lookupFirstSheetID(ctx context.Context, runtime *common.RuntimeContext, tok
 	}
 	m, ok := out.(map[string]interface{})
 	if !ok {
-		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned non-object output")
+		return "", errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned non-object output")
 	}
 	sheets, _ := m["sheets"].([]interface{})
 	bestID := ""
@@ -1658,7 +1647,7 @@ func lookupFirstSheetID(ctx context.Context, runtime *common.RuntimeContext, tok
 		}
 	}
 	if bestID == "" {
-		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned no sheets")
+		return "", errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned no sheets")
 	}
 	return bestID, nil
 }

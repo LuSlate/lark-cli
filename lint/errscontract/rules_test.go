@@ -620,6 +620,7 @@ func boom() error {
 
 func TestCheckNoLegacyEnvelopeLiteral_RejectsExitErrorLiteralOnMigratedShortcutPaths(t *testing.T) {
 	for _, path := range []string{
+		"shortcuts/markdown/markdown_fetch.go",
 		"shortcuts/okr/okr_image_upload.go",
 		"shortcuts/task/task_update.go",
 		"shortcuts/whiteboard/whiteboard_update.go",
@@ -950,11 +951,17 @@ func TestCheckNoLegacyCommonHelperCall_RejectsLegacyHelpersOnMigratedPath(t *tes
 		"HandleApiResult",
 	}
 	paths := []string{
+		"shortcuts/doc/docs_fetch_v2.go",
 		"shortcuts/drive/drive_search.go",
+		"shortcuts/im/im_messages_send.go",
 		"shortcuts/mail/mail_send.go",
+		"shortcuts/markdown/markdown_fetch.go",
 		"shortcuts/okr/okr_progress_create.go",
+		"shortcuts/sheets/helpers.go",
+		"shortcuts/slides/slides_create.go",
 		"shortcuts/task/task_update.go",
 		"shortcuts/whiteboard/whiteboard_query.go",
+		"shortcuts/wiki/wiki_node_get.go",
 	}
 	for _, path := range paths {
 		for _, helper := range helpers {
@@ -982,6 +989,18 @@ common.` + helper + `()
 	}
 }
 
+func TestMigratedCommonHelperPaths_CoverMigratedEnvelopePaths(t *testing.T) {
+	commonPaths := make(map[string]struct{}, len(migratedCommonHelperPaths))
+	for _, path := range migratedCommonHelperPaths {
+		commonPaths[path] = struct{}{}
+	}
+	for _, path := range migratedEnvelopePaths {
+		if _, ok := commonPaths[path]; !ok {
+			t.Fatalf("migratedEnvelopePaths contains %q but migratedCommonHelperPaths does not", path)
+		}
+	}
+}
+
 func TestCheckNoLegacyCommonHelperCall_RejectsDangerousCharsOnCalendarPath(t *testing.T) {
 	src := `package calendar
 
@@ -1000,6 +1019,91 @@ func boom() {
 	}
 	if !strings.Contains(v[0].Suggestion, "common.RejectDangerousCharsTyped") {
 		t.Errorf("suggestion should name typed replacement, got: %s", v[0].Suggestion)
+	}
+}
+
+func TestCheckNoLegacyCommonHelperCall_CoversDocPathWithAliasAndFunctionValue(t *testing.T) {
+	src := `package migrated
+
+import c "github.com/larksuite/cli/shortcuts/common"
+
+func boom() {
+	f := c.FlagErrorf
+	_ = f
+	c.WrapInputStatError(nil)
+}
+`
+	v := CheckNoLegacyCommonHelperCall("shortcuts/doc/docs_fetch_v2.go", src)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 violations for aliased/function-value legacy helpers on doc path, got %d: %+v", len(v), v)
+	}
+}
+
+func TestCheckNoLegacyCommonHelperCall_CoversSheetsPathWithAliasAndFunctionValue(t *testing.T) {
+	src := `package migrated
+
+import c "github.com/larksuite/cli/shortcuts/common"
+
+func boom() {
+	f := c.FlagErrorf
+	_ = f
+	c.WrapInputStatError(nil)
+}
+`
+	v := CheckNoLegacyCommonHelperCall("shortcuts/sheets/helpers.go", src)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 violations for aliased/function-value legacy helpers on sheets path, got %d: %+v", len(v), v)
+	}
+}
+
+func TestCheckNoLegacyCommonHelperCall_CoversSlidesPathWithAliasAndFunctionValue(t *testing.T) {
+	src := `package migrated
+
+import c "github.com/larksuite/cli/shortcuts/common"
+
+func boom() {
+	f := c.FlagErrorf
+	_ = f
+	c.WrapInputStatError(nil)
+}
+`
+	v := CheckNoLegacyCommonHelperCall("shortcuts/slides/slides_create.go", src)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 violations for aliased/function-value legacy helpers on slides path, got %d: %+v", len(v), v)
+	}
+}
+
+func TestCheckNoLegacyCommonHelperCall_CoversMarkdownPathWithAliasAndFunctionValue(t *testing.T) {
+	src := `package migrated
+
+import c "github.com/larksuite/cli/shortcuts/common"
+
+func boom() {
+	f := c.FlagErrorf
+	_ = f
+	c.WrapInputStatError(nil)
+}
+`
+	v := CheckNoLegacyCommonHelperCall("shortcuts/markdown/markdown_fetch.go", src)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 violations for aliased/function-value legacy helpers on markdown path, got %d: %+v", len(v), v)
+	}
+}
+
+func TestCheckNoLegacyCommonHelperCall_CoversWikiPathWithAliasAndFunctionValue(t *testing.T) {
+	src := `package migrated
+
+import c "github.com/larksuite/cli/shortcuts/common"
+
+func boom() {
+	f := c.FlagErrorf
+	_ = f
+	c.WrapInputStatError(nil)
+}
+`
+	v := CheckNoLegacyCommonHelperCall("shortcuts/wiki/wiki_node_get.go", src)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 violations for aliased/function-value legacy helpers on wiki path, got %d: %+v", len(v), v)
 	}
 }
 
