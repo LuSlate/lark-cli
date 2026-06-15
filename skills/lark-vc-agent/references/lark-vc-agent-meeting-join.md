@@ -38,9 +38,9 @@ lark-cli vc +meeting-join --meeting-number 123456789 --dry-run
 
 ## 核心约束
 
-### 1. 仅支持 user 身份
+### 1. 优先使用 bot 身份
 
-该命令仅支持 `user` 身份。
+这是 bot 入会能力，优先使用 `--as bot`。如果误用 `--as user` 且服务端返回“user access token is not supported”，切到 bot 身份重试。
 
 ### 2. 会议号格式严格校验
 
@@ -94,6 +94,12 @@ lark-cli vc +meeting-join --meeting-number 123456789
 lark-cli vc +meeting-events --meeting-id <meeting.id> --page-all --format pretty
 ```
 
+如果 bot 已经在会中，也可以通过 active meeting 找回 `meeting_id`：
+
+```bash
+lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
+```
+
 ### 场景 2：加入会议 → 会后拉取纪要 / 录制
 
 ```bash
@@ -126,6 +132,7 @@ lark-cli vc +notes --meeting-ids <meeting.id>
 ## 参考
 
 - [lark-vc-agent-meeting-leave](lark-vc-agent-meeting-leave.md) — 对应的离会命令
+- [lark-vc-agent-meeting-list-active](lark-vc-agent-meeting-list-active.md) — 发现当前可读事件的进行中会议 ID
 - [lark-vc-agent-meeting-events](lark-vc-agent-meeting-events.md) — 会中事件流
 - [lark-vc-search](../../lark-vc/references/lark-vc-search.md) — 搜索历史会议记录
 - [lark-vc-recording](../../lark-vc/references/lark-vc-recording.md) — 查询 minute_token

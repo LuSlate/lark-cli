@@ -3,9 +3,14 @@
 
 > **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
 
-查询当前 bot 在一场正在进行的视频会议中收到的会中事件列表。该命令是**读操作**。对进行中会议，要求 bot 当前仍在会中；对已结束会议，存在一个**结束后 5 分钟内的宽限窗口**，只要 bot 曾经在这场会里出现过，仍可继续拉取事件。
+查询一场正在进行的视频会议中的会中事件列表。该命令是**读操作**。UAT / `--as user` 要求当前 user 在会中；TAT / `--as bot` 要求 bot 在会中或参会过。对已结束会议，存在一个**结束后 5 分钟内的宽限窗口**，只要对应身份曾经在这场会里出现过，仍可继续拉取事件。
 
 本 skill 对应 shortcut：`lark-cli vc +meeting-events`（调用 `GET /open-apis/vc/v1/bots/events`）。
+
+身份边界：
+
+- UAT / `--as user`：当前 user 在该会中即可读取事件。
+- TAT / `--as bot`：bot 必须在该会中或参会过；`meeting_id` 通常来自 `+meeting-join` 返回的 `meeting.id`，也可以通过 `+meeting-list-active --as bot --user-id <user_open_id>` 发现。TAT 不表示可以读取任意 meeting_id。
 
 ## 命令
 
@@ -45,30 +50,37 @@ lark-cli vc +meeting-events --meeting-id 69xxxxxxxxxxxxx28 --dry-run
 
 `--meeting-id` 必须是会议的长数字 ID。它通常来自：
 - `+meeting-join` 返回体中的 `meeting.id`
+- `+meeting-list-active` 返回体中的 `meeting_id`
 - `+search` 结果中的 `id`
 
 **不要**把 9 位会议号（`--meeting-number`）传给这个命令。
 
-### 2. 仅支持 user 身份
+### 2. 支持 UAT 和 TAT，但权限锚点不同
 
-该命令仅支持 `user` 身份。
+- UAT / `--as user`：当前 user 在会中即可。
+- TAT / `--as bot`：bot 必须在会中或参会过；不要拿任意 meeting_id 直接查。
 
-### 3. bot 必须在会中，或在会议结束后的 5 分钟宽限窗口内曾经在会中
+### 3. 读取事件前必须先拿到可见的 meeting_id
 
-这是查询“bot 在会中观察到的事件”的接口。若 bot 已离会、未入会、或会议已经无法再判断 bot 身份，后端通常会报：
-- `bot is not in meeting, no permission`
-
-因此，最稳妥的调用顺序通常是：
+TAT 场景最稳妥的调用顺序通常是：
 
 ```bash
-# 先入会
-lark-cli vc +meeting-join --meeting-number 123456789
-
-# 记录返回的 meeting.id
+# 方式 1：先入会，直接记录返回的 meeting.id
+lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
 # 再查询事件
-lark-cli vc +meeting-events --meeting-id <meeting.id>
+lark-cli vc +meeting-events --as bot --meeting-id <meeting.id>
 ```
+
+如果 bot 已经在会中，也可以先通过 active meeting 找会：
+
+```bash
+lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
+lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --format pretty
+```
+
+若对应身份已离会、未入会、或会议已经无法再判断身份，后端通常会报：
+- `bot is not in meeting, no permission`
 
 更精确地说，后端当前的判断规则是：
 
@@ -171,7 +183,7 @@ lark-cli vc +meeting-events --meeting-id <meeting.id>
 
 | 输入参数 | 获取方式 |
 |---------|---------|
-| `meeting-id` | `+meeting-join` 返回的 `meeting.id`；或 `+search` 结果中的 `id` |
+| `meeting-id` | `+meeting-join` 返回的 `meeting.id`；或 `+meeting-list-active` 返回的 `meeting_id`；或 `+search` 结果中的 `id` |
 | `start` / `end` | 用户给出的时间范围；如未给出则默认取全量可见事件 |
 | `page-token` | 上一页或上一次查询结果中保存的 `page_token`；建议持久化保存，便于下次继续拉取新增事件 |
 
@@ -185,6 +197,13 @@ lark-cli vc +meeting-join --meeting-number 123456789
 
 # 第 2 步：查询事件流
 lark-cli vc +meeting-events --meeting-id <meeting.id> --page-all --format pretty
+```
+
+### 场景 1b：TAT 下 bot 已在会中，先发现 meeting_id 再读事件
+
+```bash
+lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
+lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --format pretty
 ```
 
 ### 场景 2：过滤某段时间内的事件
@@ -238,6 +257,7 @@ lark-cli vc +meeting-events \
 ## 参考
 
 - [lark-vc-agent-meeting-join](lark-vc-agent-meeting-join.md) — 先真实入会
+- [lark-vc-agent-meeting-list-active](lark-vc-agent-meeting-list-active.md) — 发现当前可读事件的进行中会议 ID
 - [lark-vc-agent-meeting-leave](lark-vc-agent-meeting-leave.md) — 用户明确要求时离会
 - [lark-vc-search](../../lark-vc/references/lark-vc-search.md) — 搜索历史会议（获取 meeting_id）
 - [lark-vc-recording](../../lark-vc/references/lark-vc-recording.md) — 查询 minute_token
