@@ -196,7 +196,7 @@ _排序条件列表（仅 sort 操作）_
 
 ## Examples
 
-> ⚠️ 本 skill 派生的 shortcut 跨 3 个分组：`+rows-resize` / `+cols-resize` → 工作表，`+cells-*` → 单元格，`+range-*` → 区域。skill 视角统一在这里讲解。
+> ⚠️ 本 reference 派生的 shortcut 跨 3 个分组：`+rows-resize` / `+cols-resize` → 工作表，`+cells-*` → 单元格，`+range-*` → 区域。这里统一从区域操作视角讲解。
 
 公共四件套：所有 shortcut 顶部排列 `--url` / `--spreadsheet-token` / `--sheet-id` / `--sheet-name`（XOR）。
 

@@ -22,7 +22,7 @@
 
 当同一工具需要对多个区域重复调用时，**必须**改用 `+batch-update` 合并为单次请求——`+batch-update` 是原子提交（要么全成功要么整批回滚）；逐个调用非原子，中途失败会留下半成品。
 
-**`+dropdown-update` 的选项模式（`--options` / `--source-range` 二选一）+ 配色规则**（`--colors` 长度可短不能长、必须配 `--highlight=true` 才生效、不传按内置 10 色色板循环补色）见 [`lark-sheets-write-cells`](./lark-sheets-write-cells.md) 的「Dropdown 选项 + 配色」节，本 skill 不重复。`+dropdown-delete` 不涉及这些 flag。
+**`+dropdown-update` 的选项模式（`--options` / `--source-range` 二选一）+ 配色规则**（`--colors` 长度可短不能长、必须配 `--highlight=true` 才生效、不传按内置 10 色色板循环补色）见 [`lark-sheets-write-cells`](./lark-sheets-write-cells.md) 的「Dropdown 选项 + 配色」节，本文不重复。`+dropdown-delete` 不涉及这些 flag。
 
 ## Shortcuts
 
