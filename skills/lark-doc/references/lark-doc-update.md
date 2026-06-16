@@ -99,6 +99,8 @@ lark-cli docs +update --api-version v2 --doc "<doc_id>" --command str_replace \
 
 ### block_insert_after — 在指定 block 之后插入
 
+> ⚠️ **同一锚点多次插入会反序**：`block_insert_after` 每次都会把内容插入到 `--block-id` 指定块的正后方。如果多次复用同一个锚点，后一次插入会排在前一次插入之前（例如依次插入 A、B、C，最终顺序是 anchor → C → B → A）。若要保持自然顺序，优先把同一位置的多个 block 合并到一次 `--content` 写入；必须分多次写入时，每次写入后重新 `fetch --detail with-ids`，用上一次新插入的最后一个 block 作为下一次锚点。
+
 ```bash
 lark-cli docs +update --api-version v2 --doc "<doc_id>" --command block_insert_after \
   --block-id "目标 block_id" \
@@ -236,6 +238,7 @@ lark-cli docs +update --api-version v2 --doc "<doc_id>" --command str_replace \
 - **保护不可重建的内容**：图片、画板、电子表格等以 token 形式存储，替换时避开这些 block
 - **str_replace 的 replacement 支持富文本**：可以用行内标签 `<b>`、`<a>`、`<cite>`、`<latex>` 等替换普通文本为富文本
 - **同一 block 只能被 replace 一次**：多次修改同一 block 请合并为一次 block_replace
+- **同一插入位置优先合并写入**：不要对同一个 `--block-id` 多次执行 `block_insert_after` 来追加多段内容；这会让后插入的内容出现在前插入内容之前。把连续内容合并到一次 `--content`，或每次插入后重新获取最后一个新 block 的 ID 作为下一次锚点
 - **block_replace 后重新获取 ID**：`block_replace` 成功后旧 block ID 不保证继续可用；继续做相邻块操作前，重新 `docs +fetch --detail with-ids`
 - **block_delete 支持批量**：用逗号分隔多个 block_id 一次删除
 - **复杂结构重组**：将多个段落转换为 grid / table 等复杂布局时，分步操作比 overwrite 更安全：
