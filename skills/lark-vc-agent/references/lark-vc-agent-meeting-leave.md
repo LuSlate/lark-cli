@@ -77,7 +77,7 @@ lark-cli vc +meeting-leave --as bot --meeting-id <meeting.id>
 如果用户只是要求会议结束后拉录制、纪要或逐字稿，不要先调用 `+meeting-leave`；直接跨到 `lark-vc` 查询会后产物。
 
 ```bash
-# 第 1 步：会议结束后进入 lark-vc 做产物发现
+# 第 1 步：会议结束后进入 lark-vc 获取会议产物信息
 lark-cli vc +notes --meeting-ids <meeting.id>
 ```
 
