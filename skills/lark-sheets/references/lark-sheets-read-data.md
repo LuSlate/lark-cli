@@ -43,7 +43,7 @@
 注意：
 
 - `+csv-get` 和 `+cells-get` 支持分页/截断，注意检查 `has_more` / `truncated` 标志；使用 `+cells-get` 时，在读取 `cells` 之前还必须先看 `warning_message`，并用每个 range 的 `actual_range` / `row_indices` / `col_indices` 判断真实位置
-- 隐藏行列默认包含在返回结果中（`--skip-hidden=false`），如需只看可见数据设为 `true`
+- 隐藏行列默认包含在返回结果中（`--skip-hidden=false`），如需只看可见数据设为 `true`。读取原语本身不标注哪些行列被隐藏：若要识别隐藏区间（以决定是否过滤、或如何解读混入的隐藏数据），用 `+sheet-info --include hidden_rows,hidden_cols` 取隐藏行列集合，再结合 `+csv-get` / `+cells-get` 返回的 `row_indices` / `col_indices` 判断每行 / 每列是否隐藏
 
 **常见配置错误（必须注意）**：
 - **全量读取导致上下文溢出（高频致命错误）**：不要对大表（数百行以上）直接用 `+csv-get` 或 `+cells-get` 读取全部数据到上下文。大表场景必须分批读取：用 `--range` 切行窗口逐块读（`+csv-get` / `+cells-get` 单次返回量由 `--max-chars` 自动兜底，截断时返回 `has_more`）；过大时考虑导出到本地文件后用脚本处理再分批回写
