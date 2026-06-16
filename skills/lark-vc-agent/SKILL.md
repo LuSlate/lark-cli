@@ -1,7 +1,7 @@
 ---
 name: lark-vc-agent
 version: 1.0.0
-description: "飞书视频会议：让机器人代当前用户加入/离开正在进行的会议，并读取会议期间的实时事件（参会人加入与离开、发言、聊天、屏幕共享等）。1. 用户提供 9 位会议号、要求代为入会或离会时使用 +meeting-join / +meeting-leave——会真实产生入会/离会记录。2. 会议进行中用户想知道“谁加入了”“谁离开了”“谁在发言”“有人共享屏幕吗”等会中动态时，用 +meeting-events 读取事件时间线：UAT 要求当前 user 在会中；TAT 要求 bot 在会中，meeting_id 来自 +meeting-join 返回或 +meeting-list-active。3. 典型场景：参会机器人、会中助手、代为旁听、代为参会。查询已结束会议的参会名单、纪要或逐字稿请使用 lark-vc 技能。"
+description: "飞书视频会议会中能力：用于让应用机器人真实加入或离开正在进行的会议，并读取当前身份可见的会中事件，如参会人加入/离开、发言、聊天、屏幕共享。适用于用户询问正在开的会议发生了什么、谁在发言、是否共享内容，或需要发现当前可读的进行中会议 ID。不负责已结束会议搜索、参会人快照、纪要、逐字稿或录制查询，这些使用 lark-vc 技能。"
 metadata:
   requires:
     bins: ["lark-cli"]
@@ -10,7 +10,7 @@ metadata:
 
 # vc-agent (v1)
 
-**CRITICAL — 开始前 MUST 先用 Read 工具读取以下两份 skill 文档：**
+相关技能：
 
 - [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md) — 认证、身份切换、权限处理
 - [`../lark-vc/SKILL.md`](../lark-vc/SKILL.md) — 视频会议的核心概念（Meeting / Note / Minutes 等），本 skill 直接复用，不再重复定义
@@ -39,6 +39,18 @@ metadata:
 | "昨天那场会有谁参加过"、"搜昨天的会"、"查纪要/逐字稿/录制"                          | [`lark-vc`](../lark-vc/SKILL.md)                                                                                                                      |
 | "帮我参会，结束后把纪要发到群" 等跨阶段场景                                    | 按序编排：本 skill（入会 → 读事件）→ 会议结束后用 [`lark-vc`](../lark-vc/SKILL.md) / [`lark-minutes`](../lark-minutes/SKILL.md) 拉纪要 → [`lark-im`](../lark-im/SKILL.md) 发群 |
 
+## 身份路由
+
+不要向用户暴露内部身份缩写；对用户只说“用户身份”或“应用身份”。
+
+| 场景 | 使用身份 | 关键规则 |
+| ---- | -------- | -------- |
+| 查询当前登录用户正在参加的会议 | `--as user` | 不传 `--user-id`；拿到的 `meeting_id` 后续继续用 `--as user` 读事件 |
+| 查询目标用户且应用机器人也在会中的会议 | `--as bot --user-id <user_open_id>` | `--user-id` 必须是 `ou_...`；拿到的 `meeting_id` 后续继续用 `--as bot` 读事件 |
+| 用户明确要求应用机器人入会/旁听/代参会 | `--as bot` | 这是写操作，会真实产生入会记录；返回的 `meeting.id` 后续继续用 `--as bot` |
+
+硬规则：`meeting_id` 从哪种身份路径拿到，后续 `+meeting-events` 就沿用哪种身份，除非用户明确要求切换场景（例如从“仅查询我当前会”改成“让应用机器人入会旁听”）。
+
 ## 核心场景
 
 ### 1. 加入正在进行的会议（写操作）
@@ -47,18 +59,14 @@ metadata:
 2. `+meeting-join --meeting-number` 只接受 **9 位纯数字**会议号，不是会议链接整串、也不是 `meeting_id`。如果用户只是给了 9 位会议号并询问会中内容，先按 `+meeting-list-active` 的会议号匹配流程找 `meeting_id`，不要直接入会。
 3. 返回体中的 `meeting.id` **必须立刻记录**——后续 `+meeting-events` / `+meeting-leave` 都靠它，**不能用 9 位会议号替代**。
 4. 入会对所有参会人可见，执行前核实 9 位会议号来源，避免误入错会。
-5. 优先使用 `--as bot` 执行真实 bot 入会；若误用 `--as user` 且服务端提示当前 user 身份不支持 bot 入会，切到 bot 身份重试。
+5. 使用应用身份 `--as bot` 执行真实入会；不要用当前登录用户身份尝试让应用机器人入会。
 6. 若入会失败，优先查看 `+meeting-join` reference 的错误排查段落，重点确认会议号、密码、会议状态、等候室 / 审批以及会议是否禁止当前身份加入。
 
 ### 2. 感知会中事件（读操作）
 
 1. 用户要看"会议里正在发生什么"（参会人加入/离开、聊天、转写、屏幕共享）时，用 `+meeting-events`。
 2. 输入是 **`meeting_id`**（长数字 ID），不是 9 位会议号。
-3. 身份语义必须区分清楚：
-   - UAT / `--as user`：当前 user 在会中即可读取该会事件。
-   - TAT / `--as bot`：bot 必须在会中或参会过；meeting_id 优先来自 `+meeting-join` 返回的 `meeting.id`，也可以先用 `+meeting-list-active --as bot --user-id <user_open_id>` 找到 bot 也在的当前会。
-   - **meeting_id 的来源身份必须延续**：UAT 拿到的 meeting_id 后续用 `--as user`；TAT 拿到的 meeting_id 后续用 `--as bot`。不要混用身份。
-   - 不要把 TAT 理解成“任意 meeting_id 都能读”。如果 bot 没进过该会，事件流不可见。
+3. 不依赖默认身份。`meeting_id` 来自用户身份发现时，继续用 `--as user`；来自应用身份发现或 `+meeting-join` 时，继续用 `--as bot`。身份不一致会导致空结果或权限错误。
 4. **不能做会后复盘**，**不能替代参会人快照查询**。如果会议已结束：
    - 想拿纪要文档或逐字稿文档 token：用 `lark-cli vc +notes --meeting-ids <meeting.id>`
    - 想拿 AI 产物（summary / todos / chapters）或导出逐字稿文件：先用 `lark-cli vc +recording --meeting-ids <meeting.id>` 拿 `minute_token`，再用 `lark-cli vc +notes --minute-tokens <minute_token>`
@@ -68,8 +76,8 @@ metadata:
 7. **必须识别分页信号**：只要响应里出现 `has_more=true`、pretty 里的 `more available`，或返回了非空 `page_token`，就不能把当前结果当作完整事件流；默认应继续分页，或明确告诉用户当前只是部分结果。
 8. 保留响应里的 `page_token`，下次增量拉取直接续，不要从头再拉。
 9. **只要你是基于** **`+meeting-events`** **来回答一场正在进行中的会议内容，就不能直接复用旧结果。** 无论用户是在问“现在/刚刚/最新”的状态，还是让你“总结一下这个会议讲什么”，都必须先重新拉一次当前事件流，确认拿到的是最新信息，再基于最新结果回答。只有在用户明确要求基于某次历史快照继续分析时，才可以复用旧结果。
-10. 用户直接问“这个会议讲了什么 / 现在讲到哪了”且上下文没有明确 meeting_id 时，先走 UAT：`lark-cli vc +meeting-list-active --as user --format pretty`。若返回多个会议，展示候选并让用户选择；若 UAT 权限不足，再提示授权或询问是否改用 bot 身份。
-11. 用户直接提供 **9 位会议号** 并询问会中事件/会议内容时，默认把它当作 active meeting 的筛选条件：先查 `+meeting-list-active --as user --format json`，在返回里匹配 `meeting_no == <9位会议号>`；匹配到唯一会议后取长数字 `meeting_id` 再查 `+meeting-events --as user`。只有用户明确要求“入会 / 让 bot 旁听 / 代我参会”时才改用 `+meeting-join`。
+10. 用户直接问“这个会议讲了什么 / 现在讲到哪了”且上下文没有明确 `meeting_id` 时，先用用户身份发现当前会议；如果用户明确要求应用机器人视角，或上下文已经是应用机器人参会流程，再用应用身份发现。若返回多个会议，展示候选并让用户选择。
+11. 用户直接提供 **9 位会议号** 并询问会中事件/会议内容时，默认把它当作 active meeting 的筛选条件：先按当前身份查 active meetings，并在返回里匹配 `meeting_no == <9位会议号>`；匹配到唯一会议后取长数字 `meeting_id`，再用同一身份查事件。只有用户明确要求“入会 / 让应用机器人旁听 / 代我参会”时才改用 `+meeting-join`。
 
 ### 3. 离开会议（写操作）
 
@@ -81,23 +89,23 @@ metadata:
 ### 4. 获取当前可用的进行中会议 ID（读操作）
 
 1. `+meeting-list-active` 用来发现当前进行中的会议，并拿到后续 `+meeting-events` 需要的长数字 `meeting_id`。
-2. UAT / `--as user`：不需要传 `--user-id`，返回当前登录用户正在参加的会议；这是 `+meeting-events --as user` 的前置发现步骤。
-3. TAT / `--as bot`：必须传 `--user-id <user_open_id>`，即 `ou_...`；返回该用户当前正在参加且 bot 也在会中的会议。它不是全量会议搜索接口。
-4. 如果 TAT 返回空，说明没有找到“目标用户在会中且 bot 也在会中”的当前会；先让 bot 通过 `+meeting-join` 入会，或确认传入的 `user_id` 和会议状态。
+2. 用户身份：`lark-cli vc +meeting-list-active --as user --format json`，用于发现当前登录用户正在参加的会议；后续 `+meeting-events` 继续 `--as user`。
+3. 应用身份：`lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json`，`--user-id` 必须是目标用户 open_id，即 `ou_...`；返回该用户当前正在参加且应用机器人也在会中的会议。它不是全量会议搜索接口。后续 `+meeting-events` 继续 `--as bot`。
+4. 如果返回空，先按当前身份解释：用户身份下表示当前用户没有可见的进行中会议；应用身份下表示没有找到“目标用户在会中且应用机器人也在会中”的当前会。
 5. 如果返回多个会议，不要自动任选一个；按 `meeting_title` / `meeting_no` / `meeting_id` 展示候选，等待用户明确选择后再调用 `+meeting-events`。
-6. 如果用户给了 9 位会议号，先在 active meeting 结果中按 `meeting_no` 匹配。匹配失败时，不要自动入会；说明当前身份没有发现这个会议号对应的进行中会议，并询问用户是否需要 bot 真实入会或切换身份。
+6. 如果用户给了 9 位会议号，先在 active meeting 结果中按 `meeting_no` 匹配。匹配失败时，不要自动入会；只有用户明确要求应用机器人真实入会时，才询问或执行 `+meeting-join`。
 
 ### 5. Agent 参会示范
 
 ```bash
 # 1. 入会，捕获 meeting.id
-JOIN=$(lark-cli vc +meeting-join --meeting-number 123456789 --format json)
+JOIN=$(lark-cli vc +meeting-join --as bot --meeting-number 123456789 --format json)
 MID=$(echo "$JOIN" | jq -r '.data.meeting.id')
 
 # 2. 会中轮询事件
 #    默认用 --page-all 拉全当前可见事件；下次增量优先复用 page_token
 #    典型间隔 10-30 秒
-lark-cli vc +meeting-events --meeting-id "$MID" --page-all --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id "$MID" --page-all --format pretty
 
 # 3. 会后可选：取纪要 / 逐字稿（跨到 lark-vc）
 lark-cli vc +notes --meeting-ids "$MID"
@@ -112,6 +120,13 @@ lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --format pretty
 ```
 
+如果只是回答当前登录用户所在会议发生了什么，使用用户身份一路查：
+
+```bash
+lark-cli vc +meeting-list-active --as user --format json
+lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --format pretty
+```
+
 ## Shortcuts
 
 Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
@@ -120,13 +135,13 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 | --------------------------------------------------------------- | -- | -------------------------------------------------------------------------- |
 | [`+meeting-join`](references/lark-vc-agent-meeting-join.md)     | 写  | Join an in-progress meeting by 9-digit meeting number                      |
 | [`+meeting-list-active`](references/lark-vc-agent-meeting-list-active.md) | 读  | List active meetings and discover meeting_id for event reads               |
-| [`+meeting-events`](references/lark-vc-agent-meeting-events.md) | 读  | List bot meeting events (participant joined/left, transcript, chat, share) |
+| [`+meeting-events`](references/lark-vc-agent-meeting-events.md) | 读  | List meeting events visible to the app agent (participant joined/left, transcript, chat, share) |
 | [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)   | 写  | Leave a meeting by meeting\_id                                             |
 
-- 使用 `+meeting-join` 前**必须**阅读 [references/lark-vc-agent-meeting-join.md](references/lark-vc-agent-meeting-join.md)，了解入参格式与写操作可见性风险。
-- 使用 `+meeting-list-active` 前**必须**阅读 [references/lark-vc-agent-meeting-list-active.md](references/lark-vc-agent-meeting-list-active.md)，了解 UAT/TAT 的 `user_id` 和 bot-in-meeting 过滤语义。
-- 使用 `+meeting-events` 前**必须**阅读 [references/lark-vc-agent-meeting-events.md](references/lark-vc-agent-meeting-events.md)，了解 `meeting_id` 来源、分页、错误码（10005 / 20001 / 20002）与 UAT/TAT 身份边界。
-- 使用 `+meeting-leave` 前**必须**阅读 [references/lark-vc-agent-meeting-leave.md](references/lark-vc-agent-meeting-leave.md)，了解 `meeting_id` 的来源与写操作可见性。
+- [`+meeting-join`](references/lark-vc-agent-meeting-join.md)：入参格式、写操作可见性风险、入会失败排查。
+- [`+meeting-list-active`](references/lark-vc-agent-meeting-list-active.md)：用户身份和应用身份的不同返回范围。
+- [`+meeting-events`](references/lark-vc-agent-meeting-events.md)：`meeting_id` 来源、身份延续、分页和错误码（10005 / 20001 / 20002）。
+- [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)：`meeting_id` 的来源与写操作可见性。
 
 ## 权限表
 
@@ -137,9 +152,9 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 | `+meeting-events` | `vc:meeting.meetingevent:read` |
 | `+meeting-leave`  | `vc:meeting.bot.join:write`    |
 
-## TAT 权限配置检查
+## 应用身份权限配置检查
 
-TAT / `--as bot` 报 `no permission`、`missing required scope(s)`、`permission_violations`、`ErrNotInGray` 或 `20017` 时，不要引导用户执行 `auth login`。按顺序检查：
+应用身份 `--as bot` 报 `no permission`、`missing required scope(s)`、`permission_violations`、`ErrNotInGray` 或 `20017` 时，不要引导用户执行 `auth login`。按顺序检查：
 
 1. 应用已开通对应 scope：`vc:meeting.meetingevent:read`（读取 active meeting / events）或 `vc:meeting.bot.join:write`（bot 入会 / 离会）。
 2. 应用已发布并安装到当前租户。

@@ -3,29 +3,29 @@
 
 > **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
 
-通过 9 位会议号加入一场正在进行的视频会议（bot join）。这是一次**写操作**，会实际让当前身份加入会议。
+通过 9 位会议号让应用机器人加入一场正在进行的视频会议。这是一次**写操作**，会实际让应用机器人加入会议。
 
 本 skill 对应 shortcut：`lark-cli vc +meeting-join`（调用 `POST /open-apis/vc/v1/bots/join`）。
 
-> **不要把 9 位会议号等同于入会意图。** 用户给出 9 位会议号并询问“会议讲了什么 / 查会中事件”时，先用 `+meeting-list-active` 查当前 active meetings 并按 `meeting_no` 匹配；只有用户明确要求“入会 / 让 bot 旁听 / 代我参会”时才调用本命令。
+> **不要把 9 位会议号等同于入会意图。** 用户给出 9 位会议号并询问“会议讲了什么 / 查会中事件”时，先用 `+meeting-list-active` 查当前 active meetings 并按 `meeting_no` 匹配；只有用户明确要求“入会 / 让应用机器人旁听 / 代我参会”时才调用本命令。
 
 ## 命令
 
 ```bash
 # 仅指定会议号（无密码）
-lark-cli vc +meeting-join --meeting-number 123456789
+lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
 # 指定会议号 + 密码
-lark-cli vc +meeting-join --meeting-number 123456789 --password 8888
+lark-cli vc +meeting-join --as bot --meeting-number 123456789 --password 8888
 
 # 从邀请事件透传 call_id（参见「如何获取输入参数」）
-lark-cli vc +meeting-join --meeting-number 123456789 --call-id a08e06bf-9a41-44e4-a89c-a7871899e783
+lark-cli vc +meeting-join --as bot --meeting-number 123456789 --call-id a08e06bf-9a41-44e4-a89c-a7871899e783
 
 # 输出格式
-lark-cli vc +meeting-join --meeting-number 123456789 --format json
+lark-cli vc +meeting-join --as bot --meeting-number 123456789 --format json
 
 # 预览 API 调用（不实际加入会议）
-lark-cli vc +meeting-join --meeting-number 123456789 --dry-run
+lark-cli vc +meeting-join --as bot --meeting-number 123456789 --dry-run
 ```
 
 ## 参数
@@ -40,9 +40,9 @@ lark-cli vc +meeting-join --meeting-number 123456789 --dry-run
 
 ## 核心约束
 
-### 1. 优先使用 bot 身份
+### 1. 使用应用身份
 
-这是 bot 入会能力，优先使用 `--as bot`。如果误用 `--as user` 且服务端提示当前 user 身份不支持 bot 入会，切到 bot 身份重试。
+这是应用机器人入会能力，使用 `--as bot`。不要用当前登录用户身份尝试让应用机器人入会。
 
 ### 2. 会议号格式严格校验
 
@@ -55,8 +55,8 @@ lark-cli vc +meeting-join --meeting-number 123456789 --dry-run
 
 ### 3. 会议必须已开始且允许入会
 
-- 会议必须处于**进行中**状态，bot 无法加入尚未开始或已结束的会议。
-- 若会议设置了**等候室 / 入会审批**，bot 可能需要主持人放行后才真正入会。
+- 会议必须处于**进行中**状态，应用机器人无法加入尚未开始或已结束的会议。
+- 若会议设置了**等候室 / 入会审批**，应用机器人可能需要主持人放行后才真正入会。
 - 若返回 `HTTP 403: no permission`（错误码 `121003`），不要只理解成“账号没权限”。这类报错更常见的原因是：会议参数或会控配置当前不满足入会条件，例如会议号填错、密码未传或错误、会议尚未开始、等候室 / 入会审批未放行、会议禁止外部/特定身份加入等。应先确认这些配置项，再重试。
 
 ### 4. 机器人入会后对其他参会人可见
@@ -90,10 +90,10 @@ lark-cli vc +meeting-join --meeting-number 123456789 --dry-run
 
 ```bash
 # 第 1 步：加入会议，记录返回的 meeting.id
-lark-cli vc +meeting-join --meeting-number 123456789
+lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
 # 第 2 步：使用返回的 meeting.id 查询会中事件
-lark-cli vc +meeting-events --meeting-id <meeting.id> --page-all --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --format pretty
 ```
 
 如果 bot 已经在会中，也可以通过 active meeting 找回 `meeting_id`：
@@ -106,7 +106,7 @@ lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 
 ```bash
 # 第 1 步：加入并参会
-lark-cli vc +meeting-join --meeting-number 123456789
+lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
 # 第 2 步：会议结束后，查询录制（拿到 minute_token）
 lark-cli vc +recording --meeting-ids <meeting.id>
@@ -122,8 +122,8 @@ lark-cli vc +notes --meeting-ids <meeting.id>
 | `--meeting-number must be exactly 9 digits` | 会议号不是 9 位纯数字 | 检查是否误传了会议链接或 meeting_id |
 | 会议密码错误 | `--password` 错误或未提供 | 向主持人确认会议密码 |
 | 会议不存在 / 已结束 | 会议号错误或会议未进行中 | 确认会议正在进行中 |
-| `HTTP 403: no permission` / `121003` | 入会前置条件不满足，通常不是单纯 scope 问题 | 依次确认：1）会议允许智能体加入；2）会议号正确；3）如有密码，已正确传入 `--password`；4）会议已开始；5）等候室 / 入会审批已放行；6）会议未禁止当前身份加入（如限制外部、限制 bot、仅特定成员可入会）；确认后重试 |
-| TAT / `--as bot` 权限不足 | 应用 scope、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。检查 `vc:meeting.bot.join:write`、应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
+| `HTTP 403: no permission` / `121003` | 入会前置条件不满足，通常不是单纯 scope 问题 | 依次确认：1）会议允许智能体加入；2）会议号正确；3）如有密码，已正确传入 `--password`；4）会议已开始；5）等候室 / 入会审批已放行；6）会议未禁止当前身份加入（如限制外部、限制应用机器人、仅特定成员可入会）；确认后重试 |
+| 应用身份权限不足 | 应用 scope、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。检查 `vc:meeting.bot.join:write`、应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
 | 入会被拒绝 | 等候室 / 入会审批 / 限制外部入会 | 联系主持人放行或调整会议设置 |
 
 ## 提示
