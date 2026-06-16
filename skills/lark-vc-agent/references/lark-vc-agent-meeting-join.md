@@ -7,6 +7,8 @@
 
 本 skill 对应 shortcut：`lark-cli vc +meeting-join`（调用 `POST /open-apis/vc/v1/bots/join`）。
 
+> **不要把 9 位会议号等同于入会意图。** 用户给出 9 位会议号并询问“会议讲了什么 / 查会中事件”时，先用 `+meeting-list-active` 查当前 active meetings 并按 `meeting_no` 匹配；只有用户明确要求“入会 / 让 bot 旁听 / 代我参会”时才调用本命令。
+
 ## 命令
 
 ```bash
@@ -121,6 +123,7 @@ lark-cli vc +notes --meeting-ids <meeting.id>
 | 会议密码错误 | `--password` 错误或未提供 | 向主持人确认会议密码 |
 | 会议不存在 / 已结束 | 会议号错误或会议未进行中 | 确认会议正在进行中 |
 | `HTTP 403: no permission` / `121003` | 入会前置条件不满足，通常不是单纯 scope 问题 | 依次确认：1）会议允许智能体加入；2）会议号正确；3）如有密码，已正确传入 `--password`；4）会议已开始；5）等候室 / 入会审批已放行；6）会议未禁止当前身份加入（如限制外部、限制 bot、仅特定成员可入会）；确认后重试 |
+| TAT / `--as bot` 权限不足 | 应用 scope、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。检查 `vc:meeting.bot.join:write`、应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
 | 入会被拒绝 | 等候室 / 入会审批 / 限制外部入会 | 联系主持人放行或调整会议设置 |
 
 ## 提示

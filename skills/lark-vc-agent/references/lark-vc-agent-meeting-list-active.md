@@ -62,6 +62,27 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --form
 - 向用户展示每个候选的 `meeting_title` / `meeting_no` / `meeting_id`，等待用户选择。
 - 选择后继续沿用发现 meeting_id 时的身份：UAT 发现的 meeting_id 用 `--as user`，TAT 发现的 meeting_id 用 `--as bot`。
 
+## 9 位会议号匹配
+
+用户提供 9 位会议号但没有明确要求 bot 入会时，把会议号当作 active meeting 的筛选条件，而不是写操作指令。
+
+```bash
+lark-cli vc +meeting-list-active --as user --format json
+```
+
+匹配规则：
+
+- 在返回会议中匹配 `meeting_no == <9位会议号>`。
+- 匹配到唯一会议：取该项的长数字 `meeting_id`，后续用同一身份调用 `+meeting-events`。
+- 匹配到多个会议：展示候选，让用户选择。
+- 没有匹配：说明当前身份没有发现该会议号对应的 active meeting；不要自动调用 `+meeting-join`，除非用户明确要求入会。
+
+TAT 场景已有目标用户 `open_id` 时，先按 bot 身份查 active，再用同样规则匹配：
+
+```bash
+lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
+```
+
 ## 常见错误与排查
 
 | 错误现象 | 根本原因 | 解决方案 |
@@ -69,6 +90,7 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --form
 | `--user-id is required when --as bot` | TAT 未传目标用户 | 传入目标用户 open_id |
 | 返回空列表 | 没有满足“目标用户在会中且 bot 也在会中”的当前会 | 先让 bot 入会，或确认 `user_id` 和会议状态 |
 | `--user-id` 格式错误 | 传入了 internal user_id 或其他非 `ou_...` 值 | 改传目标用户 open_id |
+| TAT / `--as bot` 权限不足 | 应用 scope、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。检查 `vc:meeting.meetingevent:read`、应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
 
 ## 参考
 
