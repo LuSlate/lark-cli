@@ -102,7 +102,7 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --form
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 ```
 
-### 场景 2：加入会议 → 会后进入 lark-vc 做产物发现
+### 场景 2：加入会议 → 会后进入 lark-vc 获取会议产物信息
 
 ```bash
 # 第 1 步：加入并参会
