@@ -57,6 +57,8 @@ lark-cli vc +meeting-events --meeting-id 69xxxxxxxxxxxxx28 --dry-run
 **不要**把 9 位会议号（`--meeting-number`）传给这个命令。
 如果 meeting_id 来自 `+meeting-list-active`，后续 `+meeting-events` 必须沿用同一身份；如果返回多个会议，先让用户选择具体 meeting_id。
 
+如果用户提供的是 9 位会议号且没有明确要求 bot 入会，先用 `+meeting-list-active` 查当前 active meetings 并按 `meeting_no` 匹配。匹配到唯一项后，取该项的长数字 `meeting_id` 再调用本命令；匹配失败时不要自动入会，除非用户明确说“入会 / 让 bot 旁听 / 代我参会”。
+
 ### 2. 支持 UAT 和 TAT，但权限锚点不同
 
 - UAT / `--as user`：当前 user 在会中即可。
@@ -138,6 +140,7 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --form
 
 - 如果上下文已有明确 meeting_id，先确认它来自 UAT 还是 TAT，再用同一身份执行 `+meeting-events --page-all --format json`。
 - 如果上下文没有明确 meeting_id，先执行 `lark-cli vc +meeting-list-active --as user --format pretty` 发现当前用户所在会议；返回多个会议时先让用户选择。
+- 如果上下文只有 9 位会议号，先执行 `lark-cli vc +meeting-list-active --as user --format json` 并按 `meeting_no` 匹配；匹配到唯一会议后再查事件。不要为了总结会议而自动调用 `+meeting-join`。
 - 这类问题拿到 meeting_id 后，用 `lark-cli vc +meeting-events --meeting-id <meeting.id> --page-all --format json` 拉取最新事件流。
 - 如果事件中出现共享文档线索，例如：
   - `magic_share_started`
@@ -255,6 +258,7 @@ lark-cli vc +meeting-events \
 | `10005 bot is not in meeting` | bot 从未真实入会该会议；或会议已结束但 bot 从未在会中出现过 | 先 `+meeting-join --meeting-number <9位号>` 真实入会再查；如果会议已经结束且当时 bot 没进过会，本接口也拉不到数据。**如果只是想看参会人快照，改用 `lark-cli vc meeting get --params '{"meeting_id":"<meeting.id>"}' --with-participants`**（不依赖 bot 身份参会） |
 | `20001 meeting_status_MEETING_END` | 会议已结束且已超出后端允许的 5 分钟宽限窗口 | 本接口不再适合继续拉取事件。若要拿纪要文档或逐字稿 token，用 `lark-cli vc +notes --meeting-ids <meeting.id>`；若要拿 AI 产物（summary / todos / chapters）或导出逐字稿文件，先用 `lark-cli vc +recording --meeting-ids <meeting.id>` 拿 `minute_token`，再用 `lark-cli vc +notes --minute-tokens <minute_token>`；参会人请用 `lark-cli vc meeting get --params '{"meeting_id":"<meeting.id>"}' --with-participants` |
 | `20002 meeting not exist` | `meeting_id` 错误，或会议实例当前已不可获取（常见于把 9 位会议号当 meeting_id 传） | 确认传入的是长数字 `meeting_id`，不是 9 位会议号 |
+| TAT / `--as bot` 权限不足 | 应用 scope、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。检查 `vc:meeting.meetingevent:read`、应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
 | `HTTP 404` / `HTTP 500` | 服务端当前无法找到或处理该会议实例 | 换一个正在进行且 bot 可见的 meeting_id，或排查后端问题 |
 
 ## 提示
