@@ -1,7 +1,5 @@
 # vc +meeting-list-active
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、身份切换和权限处理。
-
 列出当前进行中的会议，用来发现 `+meeting-events` 需要的长数字 `meeting_id`。
 
 本 skill 对应 shortcut：`lark-cli vc +meeting-list-active`（调用 `GET /open-apis/vc/v1/bots/user_active_meeting`）。
@@ -14,10 +12,6 @@ lark-cli vc +meeting-list-active --as user --format json
 
 # 查询指定用户当前参加、且应用机器人也在会中的会议
 lark-cli vc +meeting-list-active --as bot --user-id ou_xxx --format json
-
-# 预览 API 调用
-lark-cli vc +meeting-list-active --as user --dry-run
-lark-cli vc +meeting-list-active --as bot --user-id ou_xxx --dry-run
 ```
 
 ## 参数
@@ -25,8 +19,6 @@ lark-cli vc +meeting-list-active --as bot --user-id ou_xxx --dry-run
 | 参数 | 必填 | 说明 |
 |------|------|------|
 | `--user-id <id>` | 应用身份必填 | 目标用户 open_id，格式为 `ou_...`。用户身份不传；应用身份直接透传给接口，不接受 internal user_id 或数字 ID |
-| `--format <fmt>` | 否 | 输出格式：json / pretty / table / ndjson / csv |
-| `--dry-run` | 否 | 预览 API 调用，不执行 |
 
 ## 身份语义
 
@@ -88,6 +80,7 @@ lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 |---------|---------|---------|
 | `--user-id is required when --as bot` | 应用身份未传目标用户 | 传入目标用户 open_id |
 | 用户身份返回空列表 | 当前登录用户没有可见的进行中会议 | 确认用户是否在会中，或是否切错身份 |
+| 用户身份不支持 | 当前接口不支持用用户身份访问 | 不要反复执行 `auth login`。改用应用身份流程：先拿目标用户 open_id，再执行 `+meeting-list-active --as bot --user-id <user_open_id>`；同时按应用身份权限配置检查应用权限、安装、数据范围和灰度 |
 | 应用身份返回空列表 | 没有满足“目标用户在会中且应用机器人也在会中”的当前会 | 先让应用机器人入会，或确认 `user_id` 和会议状态 |
 | `--user-id` 格式错误 | 传入了 internal user_id 或其他非 `ou_...` 值 | 改传目标用户 open_id |
 | 应用身份权限不足 | 应用权限、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。以 CLI 返回的 metadata / error envelope 为准确认缺失权限；检查应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |

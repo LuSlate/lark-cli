@@ -1,8 +1,6 @@
 
 # vc +meeting-events
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
-
 查询一场正在进行的视频会议中的会中事件列表。该命令是**读操作**，必须沿用 `meeting_id` 的来源身份：用户身份发现的会议继续用用户身份读，应用身份发现或应用机器人入会得到的会议继续用应用身份读。对已结束会议，存在一个**结束后 5 分钟内的宽限窗口**；应用身份读取时，要求应用机器人曾经在这场会里出现过。
 
 本 skill 对应 shortcut：`lark-cli vc +meeting-events`（调用 `GET /open-apis/vc/v1/bots/events`）。
@@ -27,9 +25,6 @@ lark-cli vc +meeting-events --as <same_identity> --meeting-id 69xxxxxxxxxxxxx28 
 
 # 调试或控制返回体大小时，显式只查一页
 lark-cli vc +meeting-events --as <same_identity> --meeting-id 69xxxxxxxxxxxxx28 --page-size 20 --format json
-
-# 预览 API 调用（不实际请求）
-lark-cli vc +meeting-events --as <same_identity> --meeting-id 69xxxxxxxxxxxxx28 --dry-run
 ```
 
 ## 参数
@@ -42,8 +37,6 @@ lark-cli vc +meeting-events --as <same_identity> --meeting-id 69xxxxxxxxxxxxx28 
 | `--page-token <token>` | 否 | 从指定分页游标继续拉取下一页 |
 | `--page-size <n>` | 否 | 单页模式每页大小。CLI 会自动夹紧到 `20-100`；传 `--page-all` 时固定使用 `100` |
 | `--page-all` | 否 | 自动分页，直到没有更多页面为止（内部有安全上限） |
-| `--format <fmt>` | 否 | 输出格式：json (CLI 默认) / pretty（本 skill 推荐默认） / table / ndjson / csv |
-| `--dry-run` | 否 | 预览 API 调用，不执行 |
 
 ## 核心约束
 
@@ -266,6 +259,7 @@ lark-cli vc +meeting-events \
 | `--meeting-id is required` | 未传入 `--meeting-id` | 传入长数字 `meeting.id` |
 | `not a 9-digit meeting number` | 把 9 位会议号误传给 `--meeting-id` | 如果只是查询会中内容，先用 `+meeting-list-active` 按 `meeting_no` 匹配拿长数字 `meeting_id`；只有用户明确要求入会时才用 `+meeting-join --as bot --meeting-number <9位号>` |
 | `10005 bot is not in meeting` | 使用应用身份读取，但应用机器人从未真实入会该会议；或会议已结束但应用机器人从未在会中出现过 | 如果本来是用户身份发现的 `meeting_id`，改回 `--as user`；如果确实要应用身份读取，先 `+meeting-join --as bot --meeting-number <9位号>` 真实入会再查。**如果只是想看参会人快照，改用 `lark-cli vc meeting get --params '{"meeting_id":"<meeting.id>"}' --with-participants`** |
+| 用户身份不支持 | 当前事件读取接口不支持用用户身份访问 | 不要反复执行 `auth login`。改用应用身份流程：先通过 `+meeting-list-active --as bot --user-id <user_open_id>` 获取应用身份可读的 `meeting_id`，或在用户明确同意后让应用机器人入会，再用 `+meeting-events --as bot` 读取 |
 | `20001 meeting_status_MEETING_END` | 会议已结束且已超出后端允许的 5 分钟宽限窗口 | 本接口不再适合继续拉取事件。先用 `lark-cli vc +notes --meeting-ids <meeting.id>` 获取会议产物信息，再根据 `note_display_type` / `note_id` / `minute_token` 和用户意图选择纪要正文、逐字稿或妙记；参会人请用 `lark-cli vc meeting get --params '{"meeting_id":"<meeting.id>"}' --with-participants` |
 | `20002 meeting not exist` | `meeting_id` 错误，或会议实例当前已不可获取（常见于把 9 位会议号当 meeting_id 传） | 确认传入的是长数字 `meeting_id`，不是 9 位会议号 |
 | 应用身份权限不足 | 应用权限、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。以 CLI 返回的 metadata / error envelope 为准确认缺失权限；检查应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |

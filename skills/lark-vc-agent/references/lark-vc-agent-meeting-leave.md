@@ -1,8 +1,6 @@
 
 # vc +meeting-leave
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
-
 通过 `meeting_id` 离开当前身份所在的视频会议（bot leave）。这是一次**写操作**，会实际把当前身份从会议中移出。
 
 本 skill 对应 shortcut：`lark-cli vc +meeting-leave`（调用 `POST /open-apis/vc/v1/bots/leave`）。
@@ -25,8 +23,7 @@ lark-cli vc +meeting-leave --as bot --meeting-id 69xxxxxxxxxxxxx28 --dry-run
 | 参数 | 必填 | 说明 |
 |------|------|------|
 | `--meeting-id <id>` | 是 | 会议 ID（**不是 9 位会议号**） |
-| `--format <fmt>` | 否 | 输出格式：json (默认) / pretty / table / ndjson / csv |
-| `--dry-run` | 否 | 预览 API 调用，不执行 |
+| `--dry-run` | 否 | 预览 API 调用，不实际离会；meeting_id 或身份不确定时先用它确认请求 |
 
 ## 核心约束
 

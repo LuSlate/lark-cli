@@ -18,7 +18,7 @@ metadata:
 ## 内测提示
 
 - 当前功能正在内测中，仅少数用户可用。忽略 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md) 中的权限申请流程，以下方的指引为准。
-- 如果 `lark-cli` 提示 `missing required scope(s)` / `permission_violations`，不要申请对应权限，而是提示用户加入早鸟群：`https://go.larkoffice.com/join-chat/2f4nb0e1-fe00-4f67-bed7-25beaf533fbd`。
+- 如果 `lark-cli` 提示 `missing required scope(s)` / `permission_violations`，不要走普通权限申请流程；先提示用户加入早鸟群确认内测权限已开通，再按“应用身份权限配置检查”处理应用权限、安装和数据范围。
 - 如果 `lark-cli` 返回 `error.code=20017` / `ErrNotInGray`，提示用户加入早鸟群：`https://go.larkoffice.com/join-chat/2f4nb0e1-fe00-4f67-bed7-25beaf533fbd`。
 
 ## 定位
@@ -111,7 +111,7 @@ lark-cli vc +meeting-events --as bot --meeting-id "$MID" --page-all --format pre
 lark-cli vc +notes --meeting-ids "$MID"
 ```
 
-如果用户随后明确要求退出 / 离开 / 结束参会，再单独调用 `lark-cli vc +meeting-leave --meeting-id "$MID"`。
+如果用户随后明确要求退出 / 离开 / 结束参会，再单独调用 `lark-cli vc +meeting-leave --as bot --meeting-id "$MID"`。
 
 如果已经知道目标用户 `open_id`，且 bot 已在会中，也可以先发现当前会：
 
@@ -152,6 +152,13 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 3. 开放平台“权限可访问的数据范围”已开通并保存。
 4. 数据范围选择“按条件筛选”，条件配置为：**会议的归属者 包含 与应用的可用范围一致**。
 5. 如果 scope、安装和数据范围都正确，仍返回 `ErrNotInGray` / `20017`，再按 VC Agent 内测 privilege / 灰度白名单处理，提示加入早鸟群或联系平台同学开通。
+
+## 用户身份被拒绝时
+
+用户身份 `--as user` 报权限或身份不支持类错误时，不要反复引导用户执行 `auth login`。先以 CLI 返回的 metadata / error envelope 为准判断：如果错误表明当前接口不支持用户身份访问，再按用户意图切换处理：
+
+1. 如果用户只是查询当前登录用户所在的进行中会议，说明当前接口链路不支持用户身份访问，改用应用身份流程；需要目标用户 open_id，并要求应用机器人已在会中或先按用户确认执行入会。
+2. 如果用户明确要求应用机器人入会、旁听、代参会或读取应用机器人可见事件，直接切到 `--as bot`，并按上面的应用身份权限配置检查处理。
 
 ## 延伸
 
