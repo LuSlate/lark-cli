@@ -11,7 +11,7 @@ Supports both `--as user` (default) and `--as bot`. Auto-resolves the p2p `chat_
 - **`--user-id` (DM by open_id) is user-identity only — and the constraint is silent until you hit it.** The p2p-resolution endpoint requires user identity; with `--as bot` it errors. For bot identity, look up the p2p `chat_id` yourself and pass `--chat-id`.
 - **`P2P chat not found for this user`** means no DM exists *for the current identity* with that user — not a bad ID. Confirm the DM relationship under the identity you're calling as.
 - **Resolve a chat name → `chat_id` via [`+chat-search`](lark-im-chat-search.md) first**, then pass `--chat-id`. **Do NOT use `im chats search` or `+chat-list`** — those are not search APIs and won't locate the target.
-- **`--order` defaults to `desc`** (newest first); pass `--order asc` for chronological reading. (Note: the flag is `--order`, not `--sort`.)
+- **`--order` defaults to `desc`** (newest first); pass `--order asc` for chronological reading. (Note: the flag is `--order`, not `--sort`.) It is the **only** sort axis — messages are always ordered by creation time. There is no field sort: `--sort sender` (or any field) is rejected. If asked to group/sort by sender, fetch with `--order` and aggregate client-side, and say so (local post-processing, not a CLI/API sort).
 - **Image content is a placeholder, not bytes**: images render as `[Image: img_xxx]`; files/audio/video carry resource keys. Nothing downloads unless you pass `--download-resources` (writes to `./lark-im-resources/`) or use [`im +messages-resources-download`](lark-im-messages-resources-download.md).
 
 ## Thread expansion (`thread_id`)

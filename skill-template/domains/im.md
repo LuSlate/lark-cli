@@ -24,7 +24,7 @@ lark-cli im +chat-messages-list --chat-id oc_xxx --as user  # GOOD: sender = rea
 
 ### Default message enrichment
 
-The four message-pulling shortcuts auto-attach `reactions` (+ `update_time` for edited messages) — no separate `reactions.batch_query` (needs `im:message.reactions:read`); `--no-reactions` opts out. Contract: [`references/lark-im-message-enrichment.md`](references/lark-im-message-enrichment.md).
+The four message-pulling shortcuts auto-attach `reactions` (+ `update_time` for edited messages) — no separate `reactions.batch_query` (needs `im:message.reactions:read`); `--no-reactions` opts out. `+chat-messages-list` / `+messages-mget` / `+threads-messages-list` also accept `--download-resources` (opt-in, off by default) to fetch message binaries into `./lark-im-resources/`. Contract: [`references/lark-im-message-enrichment.md`](references/lark-im-message-enrichment.md).
 
 ### Flag Types
 

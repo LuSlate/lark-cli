@@ -65,7 +65,7 @@ lark-cli im +chat-messages-list --chat-id oc_xxx --as user  # GOOD: sender = rea
 
 ### Default message enrichment
 
-The four message-pulling shortcuts auto-attach `reactions` (+ `update_time` for edited messages) — no separate `reactions.batch_query` (needs `im:message.reactions:read`); `--no-reactions` opts out. Contract: [`references/lark-im-message-enrichment.md`](references/lark-im-message-enrichment.md).
+The four message-pulling shortcuts auto-attach `reactions` (+ `update_time` for edited messages) — no separate `reactions.batch_query` (needs `im:message.reactions:read`); `--no-reactions` opts out. `+chat-messages-list` / `+messages-mget` / `+threads-messages-list` also accept `--download-resources` (opt-in, off by default) to fetch message binaries into `./lark-im-resources/`. Contract: [`references/lark-im-message-enrichment.md`](references/lark-im-message-enrichment.md).
 
 ### Flag Types
 
@@ -103,18 +103,15 @@ lark-cli im <resource> <method> [flags] # 调用 API
 
 ### chat.user_setting
 
-  - `batch_query` — 批量查询当前用户在群内的个人偏好设置 (e.g. `is_muted` mutes normal messages, `is_mute_at_all` mutes @all messages); up to 10 chats per request. Identity: `user` only (`user_access_token`); the caller must be in each target chat.
-  - `batch_update` — 批量更新当前用户在群内的个人偏好设置 (e.g. `is_muted` mutes normal messages, `is_mute_at_all` mutes @all messages); up to 10 chats per request. Identity: `user` only (`user_access_token`); the caller must be in each target chat.
+`batch_query`(user) · `batch_update`(user)
 
 ### chat.managers
 
-  - `add_managers` — 指定群管理员。Identity: supports `user` and `bot`; only the group owner can add managers; max 10 managers per chat (20 for super-large chats), and at most 5 bots per request.
-  - `delete_managers` — 删除群管理员。Identity: supports `user` and `bot`; only the group owner can remove managers; max 50 users or 5 bots per request.
+`add_managers`(user/bot) · `delete_managers`(user/bot)
 
 ### chat.moderation
 
-  - `get` — 获取群成员发言权限。Identity: supports `user` and `bot`; the caller must be in the target chat and belong to the same tenant.
-  - `update` — 更新群发言权限。Identity: supports `user` and `bot`; only the group owner (or creator bot with `im:chat:operate_as_owner`) can update; the caller must be in the chat.
+`get`(user/bot) · `update`(user/bot)
 
 ### messages
 

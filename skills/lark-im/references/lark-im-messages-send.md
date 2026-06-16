@@ -31,10 +31,13 @@ For multi-line text, indentation, code blocks, or literal backslashes, use shell
 lark-cli im +messages-send --chat-id oc_xxx --text $'Build failed\nBranch: feature/x\nAction: check logs'
 ```
 
-## @Mention format (text / post)
+## @Mention format (differs by message type)
 
-- Recommended: `<at user_id="ou_xxx">name</at>`; @all: `<at user_id="all"></at>`.
-- The shortcut normalizes `<at id=...>` / `<at open_id=...>` into `user_id`, but author your examples with `user_id`.
+The shortcut only normalizes mentions for `text` and `post`; **`interactive` card content is passed through verbatim**, so cards must use the card-native syntax — this asymmetry is the trap.
+
+- **`text`**: `<at user_id="ou_xxx">name</at>` (inner name optional); @all: `<at user_id="all"></at>`. The shortcut also normalizes `<at id=...>` / `<at open_id=...>` into `user_id`, but author examples with `user_id`.
+- **`post`**: same inline form inside a `text`/`md` element, or a dedicated node `{"tag":"at","user_id":"ou_xxx"}` (`"all"` for everyone).
+- **`interactive` (card)**: NOT normalized — use card-native `<at>` inside a `lark_md`/`markdown` element: single `<at id=ou_xxx></at>`, multiple `<at ids=ou_xxx1,ou_xxx2></at>`, by email `<at email=user@example.com></at>`.
 
 ## Common mistakes (the non-obvious ones)
 

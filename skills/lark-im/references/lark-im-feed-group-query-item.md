@@ -10,7 +10,7 @@ Maps to `lark-cli im +feed-group-query-item`. **Run `lark-cli im +feed-group-que
 
 - **Lightweight ID lookup — prefer it over the list methods when you already hold the IDs.** Use this when you have the `feed_id`s (the `oc_xxx` you passed to `batch_add_item`); reserve `+feed-group-list-item` (paginated, heavier) for discovering IDs you don't have. **No pagination** for this method.
 - **`chat_name` enrichment is unconditional → needs a second scope.** Resolves `chat_name` for each card exactly as `+feed-group-list-item` does (follow-up `chats/batch_query`, injected into both `items[]` and `deleted_items[]`). So this needs `im:chat:read` **in addition to** `im:feed_group_v1:read`; there is no un-enriched path.
-- **Unresolvable cards silently omit `chat_name`** — soft-deleted or no-permission chats just lack the field; the command still exits 0.
+- **Unresolvable cards silently omit `chat_name`** — soft-deleted or no-permission chats just lack the field; the command still exits 0. **p2p (direct) cards also omit it** (server returns an empty `name`); to label one, fetch the chat via `chats/batch_query`, read `p2p_target_id`, and resolve it with a contact lookup.
 
 ## HELP-GAP — not yet in `--help`/schema; keep until CLI adds it
 

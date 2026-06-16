@@ -2,7 +2,7 @@
 
 > **Prerequisite:** Read [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) first for authentication, global parameters, and safety rules.
 
-Maps to `lark-cli im +chat-search`. **Run `lark-cli im +chat-search --help` for the authoritative flag list (`--query` / `--member-ids` / `--search-types` / `--sort-by` / `--page-size` / `--page-token` / `--is-manager` / `--exclude-muted` / `--disable-search-by-user`), limits, and enums.** This file covers only what `--help` cannot.
+Maps to `lark-cli im +chat-search`. **Run `lark-cli im +chat-search --help` for the authoritative flag list (`--query` / `--member-ids` / `--search-types` / `--chat-modes` / `--sort` / `--page-size` / `--page-token` / `--is-manager` / `--exclude-muted` / `--disable-search-by-user`), limits, and enums.** This file covers only what `--help` cannot.
 
 ## Gotchas
 
@@ -11,6 +11,7 @@ Maps to `lark-cli im +chat-search`. **Run `lark-cli im +chat-search --help` for 
 - `--query` containing `-` is auto-wrapped in quotes.
 - **On empty results, do NOT fall back to `+chat-list` / `GET /chats`** — list is not a search API (returns all chats unfiltered, won't locate the target). Refine the keyword or check visibility under the current identity instead.
 - Supports `--as user` (default) and `--as bot` (bot needs bot capability enabled).
+- **`--sort` is always descending** (`create_time` / `update_time` / `member_count`, high→low). There is no ascending option. If the user asks for "fewest first / ascending / 从少到多", tell them the search API doesn't support ascending and re-sort the fetched page client-side — do **NOT** invent `member_count_asc` or pass `asc` (rejected).
 
 ## `--exclude-muted` (user identity only)
 

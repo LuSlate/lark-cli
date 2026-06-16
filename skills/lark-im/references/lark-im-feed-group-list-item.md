@@ -9,7 +9,7 @@ Maps to `lark-cli im +feed-group-list-item`. **Run `lark-cli im +feed-group-list
 ## Gotchas
 
 - **`chat_name` enrichment is unconditional → needs a second scope.** A v1 feed card's `feed_id` is always a chat ID (`oc_xxx`), so the shortcut always issues a follow-up `chats/batch_query` and injects `chat_name` into each entry of **both** `items[]` and `deleted_items[]`. There is no single-scope, un-enriched path — so this needs `im:chat:read` **in addition to** `im:feed_group_v1:read` (vs. `+feed-group-list`, which needs only the read scope).
-- **Unresolvable cards silently omit `chat_name`** — a soft-deleted chat or one you can't see just lacks the field; the command still exits 0. Do not treat a missing `chat_name` as an error.
+- **Unresolvable cards silently omit `chat_name`** — a soft-deleted chat or one you can't see just lacks the field; the command still exits 0. Do not treat a missing `chat_name` as an error. **p2p (direct) cards also omit it** (the server returns an empty `name`; clients show the partner's display name instead) — if you need a label, fetch the chat via `chats/batch_query`, read `p2p_target_id`, and resolve it with a contact lookup.
 - **Dual-list response.** Like `+feed-group-list`, results split into `items[]` (live) and `deleted_items[]` (soft-deleted); `--page-all` merges both. Incremental-sync consumers must read both.
 - **`--page-token` wins over `--page-all`** when both are set — you get exactly that one page.
 

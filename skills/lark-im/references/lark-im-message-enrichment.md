@@ -13,6 +13,15 @@ Cross-cutting behavior shared by the message-pulling shortcuts. `--help` documen
 - **Requires `im:message.reactions:read`.** Declared in each shortcut's scopes, so the pre-flight surfaces `missing_scope` before sending. Bots registered before this scope existed need an incremental authorization in the developer console (a user re-login picking up the scope is enough for user identity).
 - **High-N pulls are batched, not serialized.** Reaction lookups split into batches of ≤20 ids (server cap) dispatched with bounded concurrency (≤4 in flight), so e.g. 550 ids → 28 batches finish in a few round-trips, not tens of seconds. Don't add your own throttling/looping on top.
 
+## Resource auto-download (`--download-resources`, opt-in)
+
+`+chat-messages-list` / `+messages-mget` / `+threads-messages-list` accept `--download-resources` (**off by default** — omitted = no `resources` block and zero extra requests). When set, eligible resources (`image`/`file`/`audio`/`video`/`media` + post-embedded; **stickers excluded** — Feishu can't fetch them) download into `./lark-im-resources/`, and each message gains a `resources` array of `{message_id, key, type, local_path, size_bytes}`.
+
+- **`merge_forward` trap**: for a resource inside a forwarded message, `message_id` is the **top-level container** id, not the sub-item's — the download endpoint rejects sub-item ids with `234003 File not in msg`. Thread replies each get their own block.
+- **Fail-silent isolation**: one resource that fails to download is flagged `"error": true` + a single stderr `warning: resource_download_failed: …`; the message and other resources are unaffected (exit 0).
+- Deduped by `(message_id, file_key)`, bounded concurrency (≤3), output confined to `./lark-im-resources/` (path-separator / `..` / absolute `file_key` rejected).
+- **No extra scope**: uses `im:message:readonly`, already declared by the listing commands; works under user and bot identity. For one-off fetches use [`+messages-resources-download`](lark-im-messages-resources-download.md).
+
 ## Thread-replies expansion caps (mget / chat-messages-list only)
 
 Any returned message carrying a `thread_id` triggers a fetch of that thread's replies, attached as a `thread_replies` array on the host (distinct threads fetched with ≤4 concurrent). Two caps gate it:
