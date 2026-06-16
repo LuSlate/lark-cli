@@ -68,8 +68,8 @@ metadata:
 2. 输入是 **`meeting_id`**（长数字 ID），不是 9 位会议号。
 3. 不依赖默认身份。`meeting_id` 来自用户身份发现时，继续用 `--as user`；来自应用身份发现或 `+meeting-join` 时，继续用 `--as bot`。身份不一致会导致空结果或权限错误。
 4. **不能做会后复盘**，**不能替代参会人快照查询**。如果会议已结束：
-   - 想拿纪要文档或逐字稿文档 token：用 `lark-cli vc +notes --meeting-ids <meeting.id>`
-   - 想拿 AI 产物（summary / todos / chapters）或导出逐字稿文件：先用 `lark-cli vc +recording --meeting-ids <meeting.id>` 拿 `minute_token`，再用 `lark-cli vc +notes --minute-tokens <minute_token>`
+   - 先用 `lark-cli vc +notes --meeting-ids <meeting.id>` 做产物发现。
+   - 再根据 `note_display_type`、`note_id`、`minute_token` 和用户意图，按 [`lark-vc`](../lark-vc/SKILL.md) 的产物决策读取正文、逐字稿或妙记。
    - 想看参会人快照：用 `vc meeting get --with-participants`（见 [`lark-vc`](../lark-vc/SKILL.md)）
 5. **默认必须使用** **`--page-all`**，除非用户明确要求“只查一页”，或确实需要控制返回体大小。
 6. 输出格式默认优先 `--format pretty`（时间线更易读）；只有在需要完整保留原始消息流与结构化字段时，才使用 `--format json`。
@@ -81,10 +81,10 @@ metadata:
 
 ### 3. 离开会议（写操作）
 
-1. 只有用户明确要求机器人退出 / 离开 / 结束参会时，才用 `+meeting-leave --meeting-id <从 +meeting-join 返回的 meeting.id 或 +meeting-list-active 返回的 meeting_id>`；不应因任务完成而执行离会。
-2. `--meeting-id` **必须**是 `+meeting-join` 返回的长数字 `meeting.id`，**不接受 9 位会议号**。
+1. 只有用户明确要求机器人退出 / 离开 / 结束参会时，才用应用身份执行 `+meeting-leave --as bot --meeting-id <长数字 meeting_id>`；不应因任务完成而执行离会。
+2. `--meeting-id` **必须**是长数字会议 ID，通常来自 `+meeting-join` 返回的 `meeting.id`，也可以来自应用身份 `+meeting-list-active` 返回的 `meeting_id`。如果来自 list-active，必须确认应用机器人当前就在该会中。**不接受 9 位会议号**。
 3. 离会**立即生效**，机器人从会议的参会人列表中消失，对其他参会人可见；若需要重新入会，再跑一次 `+meeting-join` 即可（非真正"不可逆"）。
-4. 优先使用与入会相同的 bot 身份离会。
+4. 使用与入会或 active meeting 发现相同的应用身份离会。
 
 ### 4. 获取当前可用的进行中会议 ID（读操作）
 
@@ -107,7 +107,7 @@ MID=$(echo "$JOIN" | jq -r '.data.meeting.id')
 #    典型间隔 10-30 秒
 lark-cli vc +meeting-events --as bot --meeting-id "$MID" --page-all --format pretty
 
-# 3. 会后可选：取纪要 / 逐字稿（跨到 lark-vc）
+# 3. 会后可选：进入 lark-vc 做产物发现，再按 note_display_type / minute_token 决策读取
 lark-cli vc +notes --meeting-ids "$MID"
 ```
 
@@ -143,20 +143,11 @@ Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
 - [`+meeting-events`](references/lark-vc-agent-meeting-events.md)：`meeting_id` 来源、身份延续、分页和错误码（10005 / 20001 / 20002）。
 - [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)：`meeting_id` 的来源与写操作可见性。
 
-## 权限表
-
-| Shortcut          | 所需 scope                       |
-| ----------------- | ------------------------------ |
-| `+meeting-join`   | `vc:meeting.bot.join:write`    |
-| `+meeting-list-active` | `vc:meeting.meetingevent:read` |
-| `+meeting-events` | `vc:meeting.meetingevent:read` |
-| `+meeting-leave`  | `vc:meeting.bot.join:write`    |
-
 ## 应用身份权限配置检查
 
 应用身份 `--as bot` 报 `no permission`、`missing required scope(s)`、`permission_violations`、`ErrNotInGray` 或 `20017` 时，不要引导用户执行 `auth login`。按顺序检查：
 
-1. 应用已开通对应 scope：`vc:meeting.meetingevent:read`（读取 active meeting / events）或 `vc:meeting.bot.join:write`（bot 入会 / 离会）。
+1. 以 CLI 返回的 metadata / error envelope 为准，确认提示的 VC Agent 相关权限已开通。常见读取 active meeting / events 需要会中事件读取权限；应用机器人入会 / 离会需要 bot 入会写权限。
 2. 应用已发布并安装到当前租户。
 3. 开放平台“权限可访问的数据范围”已开通并保存。
 4. 数据范围选择“按条件筛选”，条件配置为：**会议的归属者 包含 与应用的可用范围一致**。
