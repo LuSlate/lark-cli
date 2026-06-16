@@ -1,0 +1,59 @@
+{
+  "version": "2026-06-15",
+  "source": "SVGlide public runtime visual recipe registry",
+  "notes": [
+    "This file is the runtime source of truth for public SVGlide visual_recipe ids.",
+    "Human-readable docs such as svg-visual-recipes.md must describe this registry, not redefine it.",
+    "Research docs may use dotted recipe taxonomy, but slide_plan.json must use these underscore ids or route_private."
+  ],
+  "recipes": {
+    "hero_typography": {
+      "family": "hero",
+      "required_primitives": ["typography", "geometric_shape"]
+    },
+    "geometric_composition": {
+      "family": "geometry",
+      "required_primitives": ["geometric_shape", "path"]
+    },
+    "path_flow": {
+      "family": "flow",
+      "required_primitives": ["path", "annotation"]
+    },
+    "infographic_scorecard": {
+      "family": "data",
+      "required_primitives": ["typography", "micro_chart"]
+    },
+    "icon_capability_map": {
+      "family": "icon",
+      "required_primitives": ["icon", "geometric_shape"]
+    },
+    "gradient_depth": {
+      "family": "depth",
+      "required_primitives": ["gradient", "geometric_shape"]
+    },
+    "mask_clip_showcase": {
+      "family": "showcase",
+      "required_primitives": ["typography", "image_overlay"]
+    },
+    "technical_texture": {
+      "family": "texture",
+      "required_primitives": ["texture", "path"]
+    },
+    "metaphor_loop": {
+      "family": "flow",
+      "required_primitives": ["path", "geometric_shape"]
+    },
+    "spotlight_annotation": {
+      "family": "annotation",
+      "required_primitives": ["spotlight", "annotation"]
+    },
+    "fake_ui_dashboard": {
+      "family": "data",
+      "required_primitives": ["dashboard", "micro_chart"]
+    },
+    "brand_system": {
+      "family": "brand",
+      "required_primitives": ["typography", "geometric_shape"]
+    }
+  }
+}

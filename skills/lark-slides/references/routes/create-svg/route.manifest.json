@@ -10,6 +10,8 @@
     "SKILL.md",
     "references/lark-slides-create-svg.md",
     "references/svg-protocol.md",
+    "references/svglide-project-pipeline.md",
+    "references/asset-planning.md",
     "references/svg-visual-recipes.md",
     "references/svg-aesthetic-review.md"
   ],
@@ -29,6 +31,13 @@
       "references/routes/create-svg/private/**",
       "tests/fixtures/routes/create-svg/private/**",
       "tests/fixtures/routes/create-svg/internal-reports/**"
+    ],
+    "allowed_private_doc_links": [
+      {
+        "path": "references/lark-slides-create-svg.md",
+        "target": "references/routes/create-svg/private/ppe-pure-svg-live.md",
+        "reason": "public workflow may link to PPE troubleshooting, but must not inline private environment details"
+      }
     ]
   }
 }

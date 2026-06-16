@@ -1,18 +1,23 @@
 # SVGlide 视觉 Recipe
 
 这份文档是 `slides +create-svg` 的短版可执行 recipe 指南。
-它把研究目录提炼成生成阶段可放入 agent 上下文的规则。
-更完整的研究资料保留在 CLI skill 外；公开生成上下文只使用本文列出的
-underscore runtime id。
+运行时 public recipe 真源是同目录下的 [svg-recipes.json](svg-recipes.json)；
+`svg_preflight.py` 直接读取该 registry。本文只做人类可读说明和选择指南，
+不要在本文中重新定义一套与 registry 不一致的 runtime catalog。
+
+更完整的研究资料保留在 CLI skill 外；公开生成上下文只使用
+`svg-recipes.json` 中列出的 underscore runtime id。
 
 ## 边界
 
 - `visual_recipe` 定义页面结构，以及这一页为什么值得用 SVG。
 - `style_preset` 定义视觉语言、配色、纹理、密度和 motif。
 - `renderer_id` 定义具体几何渲染器。
+- `seed_id` / `layout_skeleton_id` 定义可校验版式骨架和容量预算。
 
 不要用 `style_preset` 替代 `visual_recipe`。不要在 `slide_plan.json`
-里发明新的 recipe id。
+里发明新的 recipe id。`visual_recipe` 也不能替代 seed skeleton，不能放宽
+`text_budget_by_role`、`footer_safe_zone` 或 `vertical_text_policy`。
 
 ## 硬默认值
 
@@ -21,6 +26,9 @@ underscore runtime id。
   `x=48..912` and `y=40..500`.
 - 网格：使用稳定的 12 栏或 8px 步进布局，避免临时手调坐标。
 - 文本：中文正文每行控制在约 28 个字；英文正文每行约 62 个字符。
+- Role budget：标题、正文、callout、label、footer 必须分别遵守 seed 的 `text_budget_by_role`。
+- Footer：footer/source/legal/page mark 只进入 `footer_safe_zone`；正文、图例、chart label 和标签不得侵入。
+- 竖排：默认禁用竖排正文、`writing-mode`、`text-orientation` 和旋转长文本；只有 seed 明确允许的短装饰标签可使用。
 - 装饰：装饰线、水印、纹理和背景几何不能抢夺标题/焦点内容的注意力，也不能贴住它们。
 - Deck 多样性：8 页以上 SVG deck 应至少使用 5 种 visual recipe family。
 
@@ -46,7 +54,7 @@ underscore runtime id。
 
 ## Recipe Selection Matrix
 
-在 `slide_plan.json` 中使用这些 CLI 支持的 underscore id。
+在 `slide_plan.json` 中使用 `svg-recipes.json` 支持的 underscore id。
 
 | 用户意图 | `visual_recipe` | SVG source 中必须体现 |
 |---|---|---|

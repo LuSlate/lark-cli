@@ -22,20 +22,45 @@ VALID_SVG = """
      slide:contract-version="svglide-authoring-contract/v1"
      width="960" height="540" viewBox="0 0 960 540">
   <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
-  <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="56" width="420" height="72">
+  <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="46" width="500" height="46">
     <div xmlns="http://www.w3.org/1999/xhtml"
-         style="font-size:32px;font-weight:800;font-family:Arial;color:#111827;line-height:1.15;text-align:left;">
+         style="font-size:28px;font-weight:800;font-family:Arial;color:#111827;line-height:1.15;text-align:left;">
       Strategy review
     </div>
   </foreignObject>
   <image id="hero" slide:role="image" href="@./assets/hero.jpg" x="560" y="96" width="320" height="220" />
-  <path id="trend" slide:role="shape" d="M64 360 L180 330 C260 300 340 340 420 300 Q500 260 580 290" fill="none" stroke="#2563eb" />
+  <foreignObject id="body-input" slide:role="shape" slide:shape-type="text" x="76" y="226" width="96" height="30">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;font-weight:700;color:#111827;line-height:1.2;text-align:center;">Input</div>
+  </foreignObject>
+  <foreignObject id="body-output" slide:role="shape" slide:shape-type="text" x="780" y="226" width="96" height="30">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;font-weight:700;color:#111827;line-height:1.2;text-align:center;">Output</div>
+  </foreignObject>
+  <foreignObject id="callout-note" slide:role="shape" slide:shape-type="text" x="170" y="392" width="420" height="28">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;font-weight:600;color:#334155;line-height:1.2;text-align:left;">Pipeline stays inside seed boxes</div>
+  </foreignObject>
+  <path id="trend-flow-path" slide:role="shape" d="M210 260 C360 190 520 330 750 260" fill="none" stroke="#2563eb" />
 </svg>
 """
 
 ROUTE_DIR = Path(__file__).resolve().parent.parent / "references" / "routes" / "create-svg"
 ROUTE_MANIFEST_PATH = ROUTE_DIR / "route.manifest.json"
 PRIVATE_RECIPE_MANIFEST_PATH = ROUTE_DIR / "private-recipes.manifest.json"
+PUBLIC_RECIPE_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "references" / "svg-recipes.json"
+PUBLIC_SEED_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "references" / "svg-seeds.json"
+SEED_BY_RECIPE = {
+    "hero_typography": "cover_hero_statement",
+    "geometric_composition": "comparison_two_column_decision",
+    "path_flow": "process_pipeline",
+    "infographic_scorecard": "single_chart_takeaway",
+    "icon_capability_map": "capability_icon_map",
+    "gradient_depth": "section_divider_index",
+    "mask_clip_showcase": "image_story_showcase",
+    "technical_texture": "architecture_layered_system",
+    "metaphor_loop": "loop_flywheel",
+    "spotlight_annotation": "spotlight_diagnosis_callout",
+    "fake_ui_dashboard": "dashboard_kpi_grid",
+    "brand_system": "closing_summary",
+}
 
 
 def read_json(path: Path) -> dict[str, object]:
@@ -119,8 +144,8 @@ def private_route_plan(primitives: set[str] | list[str], **slide_overrides: obje
     slide = {
         "page": 1,
         "renderer_id": "route_private_story",
-        "layout_family": "route_private",
         "density": "medium",
+        **seed_fields("process_pipeline"),
         "visual_recipe": "route_private",
         "visual_intent": "use the route-private SVG recipe selected by the create-svg sidecar",
         "visual_focal_point": "route-private visual structure",
@@ -151,6 +176,10 @@ def private_route_plan_for_context(context: dict[str, object], recipe_id: str, *
 
 def issue_codes(result: dict[str, object]) -> list[str]:
     return [str(issue.get("code")) for issue in result.get("issues", []) if isinstance(issue, dict)]
+
+
+def issue_levels(result: dict[str, object], code: str) -> list[str]:
+    return [str(issue.get("level")) for issue in result.get("issues", []) if isinstance(issue, dict) and issue.get("code") == code]
 
 
 def plan_issue_codes(result: dict[str, object]) -> list[str]:
@@ -207,8 +236,9 @@ def effects_for_primitives(primitives: list[str]) -> list[str]:
 
 
 def recipe_fields(recipe: str, primitives: list[str]) -> dict[str, object]:
+    seed = seed_fields(SEED_BY_RECIPE.get(recipe, "process_pipeline"))
     return {
-        "layout_family": recipe,
+        **seed,
         "visual_recipe": recipe,
         "visual_intent": f"use {recipe} as the SVG-native visual carrier",
         "visual_focal_point": "main visual structure",
@@ -221,6 +251,44 @@ def recipe_fields(recipe: str, primitives: list[str]) -> dict[str, object]:
         "asset_contract": "none_required",
         "risk_flags": [],
         "source_policy": "Use prompt-provided content only; mark missing numbers as pending.",
+    }
+
+
+def seed_fields(seed_id: str = "process_pipeline") -> dict[str, object]:
+    seed = svg_preflight.SVG_SEED_CATALOG[seed_id]
+    key_message = "One seeded idea"
+    return {
+        "seed_id": seed_id,
+        "layout_family": seed["layout_family"],
+        "layout_skeleton_id": seed["layout_skeleton"]["id"],
+        "layout_boxes": seed["layout_boxes"],
+        "content_budget": seed["content_budget"],
+        "text_capacity": seed["default_text_capacity"],
+        "text_budget_by_role": seed["text_budget_by_role"],
+        "one_idea": key_message,
+        "key_message": key_message,
+        "reserved_bands": seed["reserved_bands"],
+        "footer_safe_zone": seed["footer_safe_zone"],
+        "vertical_text_policy": seed["vertical_text_policy"],
+    }
+
+
+def single_slide_plan(recipe: str = "path_flow", primitives: list[str] | None = None, **slide_overrides: object) -> dict[str, object]:
+    primitive_list = primitives or list(svg_preflight.VISUAL_RECIPE_CATALOG[recipe]["required_primitives"])
+    slide = {
+        "page": 1,
+        "renderer_id": "route_story",
+        "density": "medium",
+        "title": "Route",
+        **recipe_fields(recipe, primitive_list),
+        "asset_contract": "none_required",
+    }
+    slide.update(slide_overrides)
+    return {
+        "output_mode": "svglide-svg",
+        "page_count": 1,
+        **style_plan_fields(),
+        "slides": [slide],
     }
 
 
@@ -546,6 +614,74 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result["issues"]]
         self.assertIn("text_container_overflow", codes)
 
+    def test_lint_svg_reports_hidden_visible_text(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="hidden-copy" slide:role="shape" slide:shape-type="text" x="80" y="120" width="360" height="80" display="none">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:700;color:#111827;">This copy is part of the visible plan but hidden in SVG.</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("hidden_visible_text", codes)
+
+    def test_lint_svg_reports_parent_hidden_visible_text(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <g display="none">
+            <foreignObject id="hidden-copy" slide:role="shape" slide:shape-type="text" x="80" y="120" width="360" height="80">
+              <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:700;color:#111827;">This visible copy is hidden by its parent group.</div>
+            </foreignObject>
+          </g>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("hidden_visible_text", codes)
+
+    def test_lint_svg_reports_clipped_visible_text(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="clipped-copy" slide:role="shape" slide:shape-type="text" x="80" y="120" width="120" height="24" style="overflow:hidden;">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:700;color:#111827;line-height:1.2;">This sentence will wrap into multiple hidden lines.</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("clipped_visible_text", codes)
+
+    def test_lint_svg_reports_parent_clipped_visible_text(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <g style="overflow:hidden;">
+            <foreignObject id="clipped-copy" slide:role="shape" slide:shape-type="text" x="80" y="120" width="120" height="24">
+              <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:700;color:#111827;line-height:1.2;">This sentence will wrap into multiple hidden lines.</div>
+            </foreignObject>
+          </g>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("clipped_visible_text", codes)
+
     def test_lint_svg_warns_decorative_line_title_pressure(self) -> None:
         svg = """
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -841,6 +977,55 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertEqual(group_counts, {"Restrained": 9, "Balanced": 15, "Bold": 11})
         self.assertEqual(len(tokens), 35)
 
+    def test_public_recipe_registry_is_runtime_catalog_source(self) -> None:
+        registry = read_json(PUBLIC_RECIPE_REGISTRY_PATH)
+        recipes = registry.get("recipes")
+        self.assertIsInstance(recipes, dict)
+        assert isinstance(recipes, dict)
+        self.assertEqual(set(recipes), set(svg_preflight.VISUAL_RECIPE_CATALOG))
+        for recipe_id, recipe in recipes.items():
+            self.assertIsInstance(recipe_id, str)
+            self.assertIsInstance(recipe, dict)
+            assert isinstance(recipe, dict)
+            self.assertNotIn(".", recipe_id)
+            self.assertEqual(recipe_id, recipe_id.lower())
+            self.assertIn("family", recipe)
+            primitives = svg_preflight.normalize_primitives(recipe.get("required_primitives"))
+            effects = svg_preflight.normalize_effects(recipe.get("required_effects"))
+            self.assertTrue(primitives)
+            self.assertFalse(primitives - svg_preflight.VALID_VISUAL_PRIMITIVES)
+            self.assertFalse(effects - set(svg_preflight.SVG_EFFECT_CATALOG))
+            self.assertEqual(primitives, svg_preflight.VISUAL_RECIPE_CATALOG[recipe_id]["required_primitives"])
+
+    def test_public_seed_registry_is_runtime_catalog_source(self) -> None:
+        registry = read_json(PUBLIC_SEED_REGISTRY_PATH)
+        seeds = registry.get("seeds")
+        self.assertIsInstance(seeds, dict)
+        assert isinstance(seeds, dict)
+        self.assertEqual(len(seeds), 16)
+        self.assertEqual(set(seeds), set(svg_preflight.SVG_SEED_CATALOG))
+        self.assertEqual({seed["visual_recipe"] for seed in svg_preflight.SVG_SEED_CATALOG.values()}, set(svg_preflight.VISUAL_RECIPE_CATALOG))
+        for seed_id, seed in seeds.items():
+            self.assertEqual(seed_id, seed_id.lower())
+            self.assertIn(seed.get("visual_recipe"), svg_preflight.VISUAL_RECIPE_CATALOG)
+            self.assertIsInstance(seed.get("layout_boxes"), list)
+            self.assertTrue(seed.get("layout_boxes"))
+            self.assertIsInstance(seed.get("content_budget"), dict)
+            self.assertIsInstance(seed.get("default_text_capacity"), dict)
+            self.assertIn("footer", seed.get("reserved_bands", {}))
+            self.assertIsInstance(seed.get("layout_skeleton"), dict)
+            self.assertTrue(seed["layout_skeleton"].get("id"))
+            self.assertIsInstance(seed["layout_skeleton"].get("locked_roles"), list)
+            self.assertIsInstance(seed.get("text_budget_by_role"), dict)
+            self.assertTrue(seed["text_budget_by_role"])
+            self.assertIsInstance(seed.get("footer_safe_zone"), dict)
+            self.assertIn("allowed_roles", seed["footer_safe_zone"])
+            self.assertIsInstance(seed.get("vertical_text_policy"), dict)
+            self.assertIn(seed["vertical_text_policy"].get("mode"), {"deny", "allow", "restricted"})
+            primitives = svg_preflight.normalize_primitives(seed.get("required_primitives"))
+            self.assertTrue(primitives)
+            self.assertFalse(primitives - svg_preflight.VALID_VISUAL_PRIMITIVES)
+
     def test_private_recipe_manifest_catalog_has_valid_route_scoped_schema(self) -> None:
         route = read_json(ROUTE_MANIFEST_PATH)
         manifest = private_recipe_manifest()
@@ -1090,6 +1275,104 @@ class SvgPreflightTest(unittest.TestCase):
         result = svg_preflight.lint_plan(plan)
         self.assertEqual(result["summary"]["error_count"], 0)
 
+    def test_lint_plan_accepts_declared_seed_controls(self) -> None:
+        result = svg_preflight.lint_plan(single_slide_plan())
+        self.assertEqual(result["summary"]["error_count"], 0)
+
+    def test_lint_plan_reports_unknown_seed(self) -> None:
+        plan = single_slide_plan(seed_id="missing_seed")
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_unknown_seed", issue_codes(result))
+
+    def test_lint_plan_reports_seed_visual_recipe_mismatch(self) -> None:
+        plan = single_slide_plan(seed_id="cover_hero_statement")
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_seed_visual_recipe_mismatch", issue_codes(result))
+
+    def test_lint_plan_reports_missing_layout_boxes(self) -> None:
+        plan = single_slide_plan(layout_boxes=[])
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_missing_layout_boxes", issue_codes(result))
+        self.assertEqual(issue_levels(result, "plan_missing_layout_boxes"), ["warning"])
+        self.assertEqual(result["summary"]["error_count"], 0)
+
+    def test_lint_plan_can_promote_seed_controls_to_errors_with_strict_profile(self) -> None:
+        plan = single_slide_plan(layout_boxes=[])
+        plan["validation_profile"] = {"mode": "svglide_project_pipeline", "strict": True}
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_missing_layout_boxes", issue_codes(result))
+        self.assertEqual(issue_levels(result, "plan_missing_layout_boxes"), ["error"])
+
+    def test_lint_plan_reports_missing_seed_skeleton_controls(self) -> None:
+        plan = single_slide_plan()
+        slide = plan["slides"][0]
+        assert isinstance(slide, dict)
+        slide.pop("layout_skeleton_id", None)
+        slide.pop("layout_skeleton", None)
+        slide.pop("text_budget_by_role", None)
+        slide.pop("footer_safe_zone", None)
+        slide.pop("vertical_text_policy", None)
+        result = svg_preflight.lint_plan(plan)
+        codes = issue_codes(result)
+        self.assertIn("plan_seed_layout_skeleton_missing", codes)
+        self.assertIn("plan_missing_text_budget_by_role", codes)
+        self.assertIn("plan_missing_footer_safe_zone", codes)
+        self.assertIn("plan_vertical_text_policy_missing", codes)
+
+    def test_lint_plan_reports_seed_layout_skeleton_drift(self) -> None:
+        plan = single_slide_plan()
+        slide = plan["slides"][0]
+        assert isinstance(slide, dict)
+        layout_boxes = json.loads(json.dumps(slide["layout_boxes"]))
+        layout_boxes[0]["x"] = layout_boxes[0]["x"] + 120
+        slide["layout_boxes"] = layout_boxes
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_seed_layout_skeleton_drift", issue_codes(result))
+
+    def test_lint_plan_reports_missing_duplicate_role_seed_box(self) -> None:
+        plan = single_slide_plan("geometric_composition")
+        slide = plan["slides"][0]
+        assert isinstance(slide, dict)
+        slide["layout_boxes"] = [box for box in slide["layout_boxes"] if isinstance(box, dict) and box.get("id") != "right-panel"]
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_seed_layout_skeleton_drift", issue_codes(result))
+
+    def test_lint_plan_reports_role_text_budget_exceeded(self) -> None:
+        plan = single_slide_plan(
+            body="这是一段明显超过局部正文预算的长文本，用来验证 role 级别预算不会被总预算掩盖。",
+            text_budget_by_role={
+                "body": {"max_chars": 8, "max_lines": 1, "max_boxes": 3, "min_font_px": 12},
+                "title": {"max_chars": 36, "max_lines": 2, "max_boxes": 1, "min_font_px": 22},
+                "footer": {"max_chars": 34, "max_lines": 1, "max_boxes": 1, "min_font_px": 9},
+            },
+        )
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_text_role_budget_exceeded", issue_codes(result))
+
+    def test_lint_plan_reports_title_body_footer_budget_exceeded(self) -> None:
+        plan = single_slide_plan(
+            title="This title is too long",
+            body="This body has too much detail for the selected seed.",
+            footer="Footer source note is also too long",
+            content_budget={"max_visible_chars": 30, "title": 6, "body": 10, "footer": 8},
+        )
+        result = svg_preflight.lint_plan(plan)
+        codes = issue_codes(result)
+        self.assertIn("plan_content_budget_exceeded", codes)
+        self.assertIn("plan_title_capacity_exceeded", codes)
+        self.assertIn("plan_body_capacity_exceeded", codes)
+        self.assertIn("plan_footer_capacity_exceeded", codes)
+
+    def test_lint_plan_rejects_seed_budget_loosened_by_plan(self) -> None:
+        plan = single_slide_plan(content_budget={"max_visible_chars": 9999, "title": 999, "body": 999, "footer": 999})
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_seed_content_budget_loosened", issue_codes(result))
+
+    def test_lint_plan_reports_layout_box_missing_coordinates(self) -> None:
+        plan = single_slide_plan(layout_boxes=[{"role": "title", "width": 500, "height": 60}])
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_layout_box_invalid", issue_codes(result))
+
     def test_lint_plan_reports_unsafe_svg_effect_without_fallback(self) -> None:
         plan = {
             "output_mode": "svglide-svg",
@@ -1151,6 +1434,120 @@ class SvgPreflightTest(unittest.TestCase):
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
         codes = [issue["code"] for issue in result["plan"]["issues"]]
         self.assertIn("plan_svg_effect_not_found", codes)
+
+    def test_lint_files_reports_source_role_budget_and_vertical_text(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="46" width="640" height="52">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;font-weight:800;color:#111827;">Route</div>
+          </foreignObject>
+          <foreignObject id="body-copy" slide:role="shape" slide:shape-type="text" x="68" y="214" width="120" height="84">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#111827;">正文超出局部预算</div>
+          </foreignObject>
+          <foreignObject id="body-vertical" slide:role="shape" slide:shape-type="text" x="772" y="214" width="120" height="84">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;writing-mode:vertical-rl;color:#111827;">竖排正文</div>
+          </foreignObject>
+          <foreignObject id="callout-note" slide:role="shape" slide:shape-type="text" x="150" y="382" width="660" height="48">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;color:#334155;">Note</div>
+          </foreignObject>
+          <path id="trend-flow-path" slide:role="shape" d="M210 260 C360 190 520 330 750 260" fill="none" stroke="#2563eb" />
+          <line id="annotation-line" slide:role="shape" x1="210" y1="300" x2="750" y2="300" stroke="#2563eb" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = single_slide_plan(
+                text_budget_by_role={
+                    **seed_fields("process_pipeline")["text_budget_by_role"],
+                    "body": {"max_chars": 4, "max_lines": 2, "max_boxes": 3, "min_font_px": 12},
+                },
+                svg_files=[{"page": 1, "path": "page-001.svg"}],
+            )
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        codes = plan_issue_codes(result)
+        self.assertIn("plan_source_role_text_budget_exceeded", codes)
+        self.assertIn("vertical_text_disallowed_role", codes)
+
+    def test_lint_files_reports_neutral_text_id_against_role_budget(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="alpha" slide:role="shape" slide:shape-type="text" x="300" y="184" width="220" height="64">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#111827;">中性 ID 也不能绕过正文预算</div>
+          </foreignObject>
+          <path id="trend-flow-path" slide:role="shape" d="M210 260 C360 190 520 330 750 260" fill="none" stroke="#2563eb" />
+          <line id="annotation-line" slide:role="shape" x1="210" y1="300" x2="750" y2="300" stroke="#2563eb" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = single_slide_plan(
+                text_budget_by_role={
+                    **seed_fields("process_pipeline")["text_budget_by_role"],
+                    "body": {"max_chars": 4, "max_lines": 2, "max_boxes": 4, "min_font_px": 12},
+                },
+                svg_files=[{"page": 1, "path": "page-001.svg"}],
+            )
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_source_role_text_budget_exceeded", plan_issue_codes(result))
+
+    def test_lint_files_reports_footer_safe_zone_intrusion(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="46" width="640" height="52">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;font-weight:800;color:#111827;">Route</div>
+          </foreignObject>
+          <foreignObject id="body-copy" slide:role="shape" slide:shape-type="text" x="68" y="492" width="400" height="28">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;color:#111827;">Body should stay above the bottom band.</div>
+          </foreignObject>
+          <path id="trend-flow-path" slide:role="shape" d="M210 260 C360 190 520 330 750 260" fill="none" stroke="#2563eb" />
+          <line id="annotation-line" slide:role="shape" x1="210" y1="300" x2="750" y2="300" stroke="#2563eb" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = single_slide_plan(svg_files=[{"page": 1, "path": "page-001.svg"}])
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("footer_safe_zone_intrusion", plan_issue_codes(result))
+
+    def test_lint_svg_reports_label_text_overlap(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="body-copy" slide:role="shape" slide:shape-type="text" x="320" y="180" width="220" height="60">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;color:#111827;">Readable body copy</div>
+          </foreignObject>
+          <rect id="label-chip" slide:role="shape" x="420" y="190" width="120" height="30" fill="#ef4444" />
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        self.assertIn("label_text_overlap", issue_codes(result))
 
     def test_lint_plan_reports_deck_level_generation_risks(self) -> None:
         plan = {
@@ -1253,50 +1650,153 @@ class SvgPreflightTest(unittest.TestCase):
             svg_path = tmp / "page-001.svg"
             plan_path = tmp / "slide_plan.json"
             svg_path.write_text(VALID_SVG, encoding="utf-8")
-            plan_path.write_text(
-                """
-                {
-                  "output_mode": "svglide-svg",
-                  "page_count": 1,
-                  "style_preset": "raw_grid",
-                  "style_selection_reason": "raw_grid fits technical training pages that need dense but readable visual structure",
-                  "style_system": {
-                    "palette": {"background": "#F5F5F5", "text": "#0A0A0A", "accent": "#F2D4CF"},
-                    "typography": "strong title, readable native text labels",
-                    "background_strategy": "muted grid panels",
-                    "motif": "dense grid panels"
-                  },
-                  "svg_files": [{"page": 1, "path": "page-001.svg"}],
-                  "slides": [{
-                    "page": 1,
-                    "renderer_id": "route_story",
-                    "layout_family": "flow",
-                    "density": "medium",
-                    "visual_recipe": "path_flow",
-                    "visual_intent": "show a rising product route",
-                    "visual_focal_point": "curved route line",
-                    "visual_signature": "curved route path with explicit annotations",
-                    "svg_effects": ["path", "connector_flow", "typography"],
-                    "required_primitives": ["path", "annotation"],
-                    "svg_primitives": ["path", "annotation"],
-                    "xml_like_risk": "would become cards plus arrows in XML",
-                    "content_density_contract": "flow >= 4 stages",
-                    "asset_contract": {
-                      "source_type": "procedural",
-                      "license": "original generated asset",
-                      "local_path": "@./assets/hero.jpg",
-                      "usage_page": 1,
-                      "generated_by": "unit test"
-                    },
-                    "risk_flags": [],
-                    "source_policy": "Use prompt-provided content only."
-                  }]
-                }
-                """,
-                encoding="utf-8",
-            )
+            plan = {
+                "output_mode": "svglide-svg",
+                "page_count": 1,
+                **style_plan_fields(),
+                "svg_files": [{"page": 1, "path": "page-001.svg"}],
+                "slides": [
+                    {
+                        "page": 1,
+                        "renderer_id": "route_story",
+                        "density": "medium",
+                        **recipe_fields("path_flow", ["path", "annotation"]),
+                        "asset_contract": {
+                            "source_type": "procedural",
+                            "license": "original generated asset",
+                            "local_path": "@./assets/hero.jpg",
+                            "usage_page": 1,
+                            "generated_by": "unit test",
+                        },
+                    }
+                ],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
         self.assertEqual(result["summary"]["error_count"], 0)
+
+    def test_lint_files_reports_footer_reserved_band_violation(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="46" width="500" height="46">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;font-weight:800;color:#111827;">Route</div>
+          </foreignObject>
+          <foreignObject id="body-input" slide:role="shape" slide:shape-type="text" x="76" y="226" width="96" height="30">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;font-weight:700;color:#111827;text-align:center;">Input</div>
+          </foreignObject>
+          <foreignObject id="body-output" slide:role="shape" slide:shape-type="text" x="780" y="226" width="96" height="30">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;font-weight:700;color:#111827;text-align:center;">Output</div>
+          </foreignObject>
+          <foreignObject id="callout-note" slide:role="shape" slide:shape-type="text" x="170" y="392" width="420" height="28">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;font-weight:600;color:#334155;">Pipeline note</div>
+          </foreignObject>
+          <path id="flow-path" slide:role="shape" d="M80 270 C220 190 420 340 620 220" fill="none" stroke="#2563eb" />
+          <line id="annotation-line" slide:role="shape" x1="620" y1="220" x2="720" y2="190" stroke="#111827" />
+          <foreignObject id="footer-source" slide:role="shape" slide:shape-type="text" x="64" y="462" width="520" height="24">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;font-weight:500;color:#374151;">Source: unit test</div>
+          </foreignObject>
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = single_slide_plan()
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_footer_reserved_band_violation", plan_issue_codes(result))
+
+    def test_lint_files_reports_body_text_inside_footer_band(self) -> None:
+        svg = VALID_SVG.replace(
+            "</svg>",
+            """
+  <foreignObject id="body-bottom-copy" slide:role="shape" slide:shape-type="text" x="80" y="500" width="260" height="20">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;font-weight:600;color:#111827;">Body copy should stay with the main content</div>
+  </foreignObject>
+</svg>
+""",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(svg, encoding="utf-8")
+            plan = single_slide_plan()
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_footer_reserved_band_violation", plan_issue_codes(result))
+
+    def test_lint_files_reports_source_text_box_count_exceeded(self) -> None:
+        svg = VALID_SVG.replace(
+            "</svg>",
+            """
+  <foreignObject id="extra" slide:role="shape" slide:shape-type="text" x="300" y="320" width="120" height="24">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;font-weight:600;color:#111827;">Extra</div>
+  </foreignObject>
+</svg>
+""",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(svg, encoding="utf-8")
+            plan = single_slide_plan(content_budget={"max_text_boxes": 4})
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_source_text_box_count_exceeded", plan_issue_codes(result))
+
+    def test_lint_files_reports_source_text_box_count_below_seed_minimum(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="46" width="500" height="46">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;font-weight:800;color:#111827;">Route</div>
+          </foreignObject>
+          <path id="flow-path" slide:role="shape" d="M210 260 C360 190 520 330 750 260" fill="none" stroke="#2563eb" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = single_slide_plan()
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_source_text_box_count_below_seed_minimum", plan_issue_codes(result))
+
+    def test_lint_files_reports_text_box_outside_seed_layout_box(self) -> None:
+        svg = VALID_SVG.replace('id="title" slide:role="shape" slide:shape-type="text" x="64" y="46"', 'id="title" slide:role="shape" slide:shape-type="text" x="64" y="130"')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(svg, encoding="utf-8")
+            plan = single_slide_plan()
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_text_box_outside_seed_layout_box", plan_issue_codes(result))
+
+    def test_lint_files_requires_plan_for_create_svg_route(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            svg_path = Path(tmpdir) / "page-001.svg"
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], context=private_context())
+        self.assertIn("plan_required_for_create_svg_route", plan_issue_codes(result))
 
     def test_lint_files_reports_declared_recipe_without_source_primitives(self) -> None:
         svg = """
@@ -1370,20 +1870,9 @@ class SvgPreflightTest(unittest.TestCase):
                     {
                         "page": 1,
                         "renderer_id": "route_story",
-                        "layout_family": "flow",
                         "density": "medium",
-                        "visual_recipe": "path_flow",
-                        "visual_intent": "show a rising product route",
-                        "visual_focal_point": "curved route line",
-                        "visual_signature": "curved route path with explicit annotations",
-                        "svg_effects": ["path", "connector_flow", "typography"],
-                        "required_primitives": ["path", "annotation"],
-                        "svg_primitives": ["path", "annotation"],
-                        "xml_like_risk": "would become cards plus arrows in XML",
-                        "content_density_contract": "flow >= 4 stages",
+                        **recipe_fields("path_flow", ["path", "annotation"]),
                         "asset_contract": "none_required",
-                        "risk_flags": [],
-                        "source_policy": "Use prompt-provided content only.",
                     }
                 ],
             }
@@ -1409,17 +1898,8 @@ class SvgPreflightTest(unittest.TestCase):
                     {
                         "page": 1,
                         "renderer_id": "route_story",
-                        "layout_family": "flow",
                         "density": "medium",
-                        "visual_recipe": "path_flow",
-                        "visual_intent": "show a rising product route",
-                        "visual_focal_point": "curved route line",
-                        "visual_signature": "curved route path with explicit annotations",
-                        "svg_effects": ["path", "connector_flow", "typography"],
-                        "required_primitives": ["path", "annotation"],
-                        "svg_primitives": ["path", "annotation"],
-                        "xml_like_risk": "would become cards plus arrows in XML",
-                        "content_density_contract": "flow >= 4 stages",
+                        **recipe_fields("path_flow", ["path", "annotation"]),
                         "asset_contract": {
                             "mode": "preview",
                             "source_type": "public_url",
@@ -1456,17 +1936,8 @@ class SvgPreflightTest(unittest.TestCase):
                     {
                         "page": 1,
                         "renderer_id": "route_story",
-                        "layout_family": "flow",
                         "density": "medium",
-                        "visual_recipe": "path_flow",
-                        "visual_intent": "show a rising product route",
-                        "visual_focal_point": "curved route line",
-                        "visual_signature": "curved route path with explicit annotations",
-                        "svg_effects": ["path", "connector_flow", "typography"],
-                        "required_primitives": ["path", "annotation"],
-                        "svg_primitives": ["path", "annotation"],
-                        "xml_like_risk": "would become cards plus arrows in XML",
-                        "content_density_contract": "flow >= 4 stages",
+                        **recipe_fields("path_flow", ["path", "annotation"]),
                         "asset_contract": {
                             "mode": "preview",
                             "source_type": "public_url",

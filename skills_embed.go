@@ -14,11 +14,15 @@ import (
 
 // skillsEmbedFS embeds each skill's agent-readable content (SKILL.md +
 // references/, plus lark-whiteboard's routes/ and scenes/) so the CLI serves
-// content matching the binary version; machine-resource dirs (assets/, scripts/)
-// are excluded, saving ~3.3 MB. It's a whitelist — a new subdirectory type is
-// silently omitted until added here.
+// content matching the binary version. Machine-resource dirs remain excluded by
+// default; lark-slides SVG runtime scripts are explicitly embedded because
+// create-svg can execute them in packaged CLI installs.
 //
 //go:embed skills/*/SKILL.md skills/*/references skills/*/routes skills/*/scenes
+//go:embed skills/lark-slides/scripts/svglide_project_runner.py
+//go:embed skills/lark-slides/scripts/svg_preview_lint.py
+//go:embed skills/lark-slides/scripts/ppt_master_asset_inventory.py
+//go:embed skills/lark-slides/scripts/svglide_asset_selector.py
 var skillsEmbedFS embed.FS
 
 // init wires the embedded tree in as the default skill content. It compiles into

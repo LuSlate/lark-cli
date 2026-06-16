@@ -53,56 +53,85 @@ SUPPORTED_SHAPES = {"rect", "ellipse", "circle", "line", "path", "foreignObject"
 RENDERABLE_TAGS = SUPPORTED_SHAPES | {"image", "text", "polygon", "polyline"}
 IGNORED_SUBTREES = {"defs", "style"}
 
-VISUAL_RECIPE_CATALOG: dict[str, dict[str, Any]] = {
-    "hero_typography": {
-        "family": "hero",
-        "required_primitives": {"typography", "geometric_shape"},
-    },
-    "geometric_composition": {
-        "family": "geometry",
-        "required_primitives": {"geometric_shape", "path"},
-    },
-    "path_flow": {
-        "family": "flow",
-        "required_primitives": {"path", "annotation"},
-    },
-    "infographic_scorecard": {
-        "family": "data",
-        "required_primitives": {"typography", "micro_chart"},
-    },
-    "icon_capability_map": {
-        "family": "icon",
-        "required_primitives": {"icon", "geometric_shape"},
-    },
-    "gradient_depth": {
-        "family": "depth",
-        "required_primitives": {"gradient", "geometric_shape"},
-    },
-    "mask_clip_showcase": {
-        "family": "showcase",
-        "required_primitives": {"typography", "image_overlay"},
-    },
-    "technical_texture": {
-        "family": "texture",
-        "required_primitives": {"texture", "path"},
-    },
-    "metaphor_loop": {
-        "family": "flow",
-        "required_primitives": {"path", "geometric_shape"},
-    },
-    "spotlight_annotation": {
-        "family": "annotation",
-        "required_primitives": {"spotlight", "annotation"},
-    },
-    "fake_ui_dashboard": {
-        "family": "data",
-        "required_primitives": {"dashboard", "micro_chart"},
-    },
-    "brand_system": {
-        "family": "brand",
-        "required_primitives": {"typography", "geometric_shape"},
-    },
-}
+def _string_set(value: Any) -> set[str]:
+    if not isinstance(value, list):
+        return set()
+    return {str(item).strip() for item in value if str(item).strip()}
+
+
+def _normalized_public_id(value: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
+
+
+def load_visual_recipe_catalog() -> dict[str, dict[str, Any]]:
+    path = Path(__file__).resolve().parent.parent / "references" / "svg-recipes.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"failed to load public SVG recipe registry: {path}: {error}") from error
+    recipes = data.get("recipes") if isinstance(data, dict) else None
+    if not isinstance(recipes, dict):
+        raise RuntimeError(f"invalid public SVG recipe registry: {path}: missing recipes object")
+    out: dict[str, dict[str, Any]] = {}
+    for recipe_id, raw_recipe in recipes.items():
+        if not isinstance(raw_recipe, dict):
+            raise RuntimeError(f"invalid public SVG recipe registry: {recipe_id} must be an object")
+        normalized_id = _normalized_public_id(recipe_id)
+        if not normalized_id:
+            raise RuntimeError("invalid public SVG recipe registry: recipe id must not be empty")
+        out[normalized_id] = {
+            "family": str(raw_recipe.get("family") or normalized_id).strip() or normalized_id,
+            "required_primitives": _string_set(raw_recipe.get("required_primitives")),
+            "required_effects": _string_set(raw_recipe.get("required_effects")),
+        }
+        if "minimum_visible_area_ratio" in raw_recipe:
+            out[normalized_id]["minimum_visible_area_ratio"] = raw_recipe.get("minimum_visible_area_ratio")
+    return out
+
+
+VISUAL_RECIPE_CATALOG: dict[str, dict[str, Any]] = load_visual_recipe_catalog()
+
+
+def load_svg_seed_catalog() -> dict[str, dict[str, Any]]:
+    path = Path(__file__).resolve().parent.parent / "references" / "svg-seeds.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"failed to load SVG seed registry: {path}: {error}") from error
+    seeds = data.get("seeds") if isinstance(data, dict) else None
+    if not isinstance(seeds, dict):
+        raise RuntimeError(f"invalid SVG seed registry: {path}: missing seeds object")
+    out: dict[str, dict[str, Any]] = {}
+    for seed_id, raw_seed in seeds.items():
+        if not isinstance(raw_seed, dict):
+            raise RuntimeError(f"invalid SVG seed registry: {seed_id} must be an object")
+        normalized_id = _normalized_public_id(seed_id)
+        if not normalized_id:
+            raise RuntimeError("invalid SVG seed registry: seed id must not be empty")
+        capacity = raw_seed.get("default_text_capacity")
+        layout_boxes = raw_seed.get("layout_boxes")
+        required_primitives = _string_set(raw_seed.get("required_primitives"))
+        out[normalized_id] = {
+            "page_use": str(raw_seed.get("page_use") or "").strip(),
+            "family": str(raw_seed.get("family") or normalized_id).strip() or normalized_id,
+            "visual_recipe": _normalized_public_id(raw_seed.get("visual_recipe")),
+            "layout_family": _normalized_public_id(raw_seed.get("layout_family")),
+            "layout_boxes": layout_boxes if isinstance(layout_boxes, list) else [],
+            "layout_skeleton": raw_seed.get("layout_skeleton") if isinstance(raw_seed.get("layout_skeleton"), dict) else {},
+            "default_text_capacity": capacity if isinstance(capacity, dict) else {},
+            "content_budget": raw_seed.get("content_budget") if isinstance(raw_seed.get("content_budget"), dict) else {},
+            "text_budget_by_role": raw_seed.get("text_budget_by_role") if isinstance(raw_seed.get("text_budget_by_role"), dict) else {},
+            "reserved_bands": raw_seed.get("reserved_bands") if isinstance(raw_seed.get("reserved_bands"), dict) else {},
+            "footer_safe_zone": raw_seed.get("footer_safe_zone") if isinstance(raw_seed.get("footer_safe_zone"), dict) else {},
+            "vertical_text_policy": raw_seed.get("vertical_text_policy") if isinstance(raw_seed.get("vertical_text_policy"), dict) else {},
+            "required_primitives": required_primitives,
+            "required_layout_box_roles": _string_set(raw_seed.get("required_layout_box_roles")),
+            "quality_rules": raw_seed.get("quality_rules") if isinstance(raw_seed.get("quality_rules"), list) else [],
+        }
+    return out
+
+
+SVG_SEED_CATALOG: dict[str, dict[str, Any]] = load_svg_seed_catalog()
 
 PRIMITIVE_ALIASES = {
     "annotation_line": "annotation",
@@ -218,6 +247,27 @@ VISIBLE_PLAN_TEXT_KEYS = [
     "visual_intent",
     "visual_focal_point",
 ]
+CAPACITY_PLAN_TEXT_KEYS = [
+    "title",
+    "subtitle",
+    "headline",
+    "kicker",
+    "key_message",
+    "takeaway",
+    "body",
+    "bullets",
+    "callouts",
+    "labels",
+    "visible_source_note",
+]
+TEXT_LAYOUT_ROLE_RE = re.compile(r"(title|headline|body|copy|text|label|caption|note|source|footer|callout|chip|metric)", re.IGNORECASE)
+TEXT_CLIP_RISK_RATIO = 0.85
+CAPACITY_MAX_KEYS = {"max_visible_chars", "max_text_boxes", "title", "body", "footer"}
+CAPACITY_MIN_KEYS = {"min_text_boxes"}
+INTERNAL_INHERITED_HIDDEN_ATTR = "__svglide_inherited_hidden"
+INTERNAL_INHERITED_CLIP_ATTR = "__svglide_inherited_clip"
+VERTICAL_WRITING_MODE_RE = re.compile(r"\b(vertical-(?:rl|lr)|sideways-(?:rl|lr)|tb(?:-rl)?)\b", re.IGNORECASE)
+ROTATED_TEXT_RE = re.compile(r"rotate\(\s*(?:90|270|-90)(?:deg)?(?:[\s,)]|$)", re.IGNORECASE)
 
 
 def load_style_preset_catalog() -> dict[str, dict[str, Any]]:
@@ -359,6 +409,7 @@ def default_preflight_context(report_scope: str = PUBLIC_REPORT_SCOPE) -> dict[s
         "route_id": "",
         "recipe_catalog": VISUAL_RECIPE_CATALOG,
         "public_recipe_catalog": VISUAL_RECIPE_CATALOG,
+        "seed_catalog": SVG_SEED_CATALOG,
         "private_recipe_catalog": {},
         "private_id_set": set(),
         "allow_private": False,
@@ -617,17 +668,43 @@ def href_value(element: ET.Element) -> str | None:
     return get_attr(element, "href") or get_attr(element, "href", XLINK_NS)
 
 
+def element_self_hidden(element: ET.Element) -> bool:
+    props = parse_style_props(get_attr(element, "style"))
+    display = textify(get_attr(element, "display") or props.get("display")).strip().lower()
+    visibility = textify(get_attr(element, "visibility") or props.get("visibility")).strip().lower()
+    opacity = parse_opacity(get_attr(element, "opacity") or props.get("opacity"))
+    return display == "none" or visibility in {"hidden", "collapse"} or opacity <= 0.02
+
+
+def element_self_clip_risk(element: ET.Element) -> bool:
+    props = parse_style_props(get_attr(element, "style"))
+    overflow = textify(get_attr(element, "overflow") or props.get("overflow")).strip().lower()
+    return bool(
+        overflow in {"hidden", "clip"}
+        or get_attr(element, "clip-path")
+        or props.get("clip-path")
+        or get_attr(element, "mask")
+        or props.get("mask")
+    )
+
+
 def walk_renderable(root: ET.Element) -> list[ET.Element]:
     out: list[ET.Element] = []
 
-    def walk(element: ET.Element) -> None:
+    def walk(element: ET.Element, inherited_hidden: bool = False, inherited_clip: bool = False) -> None:
         name = local_name(element.tag)
         if name in IGNORED_SUBTREES:
             return
+        current_hidden = inherited_hidden or element_self_hidden(element)
+        current_clip = inherited_clip or element_self_clip_risk(element)
+        if current_hidden:
+            element.set(INTERNAL_INHERITED_HIDDEN_ATTR, "1")
+        if current_clip:
+            element.set(INTERNAL_INHERITED_CLIP_ATTR, "1")
         if name in RENDERABLE_TAGS or name == "foreignObject" or name == "image":
             out.append(element)
         for child in list(element):
-            walk(child)
+            walk(child, current_hidden, current_clip)
 
     for child in list(root):
         walk(child)
@@ -695,6 +772,16 @@ def validate_roles_and_attrs(elements: list[ET.Element]) -> list[dict[str, Any]]
         name = local_name(element.tag)
         role = svg_role(element)
         if name == "text":
+            if is_vertical_text_element(element):
+                issues.append(
+                    issue(
+                        "error",
+                        "unsupported_vertical_text",
+                        "root-level vertical <text> is not supported by SVGlide authoring",
+                        element,
+                        "Use seed-declared short vertical labels only, rendered through a supported text surface; do not use root <text writing-mode> for readable content.",
+                    )
+                )
             issues.append(
                 issue(
                     "error",
@@ -1189,7 +1276,16 @@ def validate_geometry(elements: list[ET.Element], canvas_width: float, canvas_he
         if name == "foreignObject" and svg_role(element) == "shape" and svg_shape_type(element) == "text":
             text = "".join(element.itertext()).strip()
             if text:
-                text_boxes.append({"element": element, "bbox": bbox, "text": text})
+                text_boxes.append(
+                    {
+                        "element": element,
+                        "bbox": bbox,
+                        "text": text,
+                        "identifier": element_identifier_text(element),
+                        "font_size": text_font_size(element),
+                        "vertical_text": is_vertical_text_element(element),
+                    }
+                )
     return issues, text_boxes
 
 
@@ -1294,6 +1390,31 @@ def is_visible_container_rect(element: ET.Element, bbox: dict[str, float], canva
     if fill in {"none", "transparent"} and not stroke:
         return False
     return bbox["width"] >= 24 and bbox["height"] >= 18
+
+
+def overlap_area(left: dict[str, float], right: dict[str, float]) -> float:
+    x1 = max(left["x"], right["x"])
+    y1 = max(left["y"], right["y"])
+    x2 = min(bbox_right(left), bbox_right(right))
+    y2 = min(bbox_bottom(left), bbox_bottom(right))
+    return max(0.0, x2 - x1) * max(0.0, y2 - y1)
+
+
+def is_label_or_decor_shape(element: ET.Element, bbox: dict[str, float], canvas_width: float, canvas_height: float) -> bool:
+    if is_background_bbox(bbox, canvas_width, canvas_height):
+        return False
+    name = local_name(element.tag)
+    if svg_role(element) != "shape" or name not in {"rect", "circle", "ellipse", "path"}:
+        return False
+    identifier = element_identifier_text(element)
+    if re.search(r"(badge|chip|label|tag|pill|marker|stamp|seal|decor|ornament|kicker)", identifier):
+        return True
+    return bbox["width"] <= 150 and bbox["height"] <= 54 and bbox["width"] * bbox["height"] <= 7200
+
+
+def is_text_owned_by_shape(text_bbox: dict[str, float], shape_bbox: dict[str, float]) -> bool:
+    center_x, center_y = bbox_center(text_bbox)
+    return point_in_bbox(center_x, center_y, shape_bbox) and text_bbox["width"] <= shape_bbox["width"] + 6 and text_bbox["height"] <= shape_bbox["height"] + 6
 
 
 def is_plain_light_panel(element: ET.Element) -> bool:
@@ -1445,6 +1566,55 @@ def validate_layout_pressure(
                 break
 
     containers = [(element, bbox) for element, bbox in shaped if is_visible_container_rect(element, bbox, canvas_width, canvas_height)]
+    label_shapes = [(element, bbox) for element, bbox in shaped if is_label_or_decor_shape(element, bbox, canvas_width, canvas_height)]
+    for label_element, label_bbox in label_shapes:
+        for item in text_boxes:
+            text_bbox = item["bbox"]
+            if is_text_owned_by_shape(text_bbox, label_bbox):
+                continue
+            area = overlap_area(label_bbox, expand_bbox(text_bbox, 1.5))
+            if area <= 8:
+                continue
+            label_issue = issue(
+                "error",
+                "label_text_overlap",
+                "label, badge, or decorative shape overlaps readable text",
+                label_element,
+                "Move labels and decorative marks outside title/body/callout text boxes; do not let style markers cover readable content.",
+            )
+            label_issue["text_element_id"] = get_attr(item["element"], "id")
+            label_issue["overlap_area"] = round(area, 2)
+            issues.append(label_issue)
+            break
+
+    right_top_text = [
+        item
+        for item in text_boxes
+        if item["bbox"]["x"] >= 600 and item["bbox"]["y"] <= 132 and textify(item.get("text")).strip()
+    ]
+    if right_top_text:
+        total_chars = sum(visible_text_char_count(item.get("text")) for item in right_top_text)
+        min_gap = min(
+            (
+                max(0.0, max(right_top_text[a]["bbox"]["x"], right_top_text[b]["bbox"]["x"]) - min(bbox_right(right_top_text[a]["bbox"]), bbox_right(right_top_text[b]["bbox"])))
+                for a in range(len(right_top_text))
+                for b in range(a + 1, len(right_top_text))
+            ),
+            default=999.0,
+        )
+        if total_chars > 28 or len(right_top_text) > 2 or min_gap < 12:
+            crowded_issue = issue(
+                "warning",
+                "right_title_safe_zone_crowded",
+                "right-side title or chip area is crowded",
+                right_top_text[0]["element"],
+                "Keep the top-right title/chip rail short and separated; move secondary labels into body boxes or reduce text.",
+            )
+            crowded_issue["text_box_count"] = len(right_top_text)
+            crowded_issue["visible_chars"] = total_chars
+            crowded_issue["min_gap"] = round(min_gap, 2)
+            issues.append(crowded_issue)
+
     for headline in headlines:
         headline_bbox = headline["bbox"]
         for container_element, container_bbox in containers:
@@ -1622,6 +1792,26 @@ def text_font_size(element: ET.Element) -> float | None:
     return None
 
 
+def element_writing_mode_text(element: ET.Element) -> str:
+    parts: list[str] = []
+    for child in element.iter():
+        for key in ["writing-mode", "text-orientation", "transform"]:
+            value = get_attr(child, key)
+            if value:
+                parts.append(value)
+        style = parse_style_props(get_attr(child, "style"))
+        for key in ["writing-mode", "text-orientation", "transform"]:
+            value = style.get(key)
+            if value:
+                parts.append(value)
+    return " ".join(parts)
+
+
+def is_vertical_text_element(element: ET.Element) -> bool:
+    mode = element_writing_mode_text(element)
+    return bool(VERTICAL_WRITING_MODE_RE.search(mode) or ROTATED_TEXT_RE.search(mode))
+
+
 def is_card_like_rect(element: ET.Element, bbox: dict[str, float], canvas_width: float, canvas_height: float) -> bool:
     if local_name(element.tag) != "rect" or svg_role(element) != "shape":
         return False
@@ -1631,11 +1821,55 @@ def is_card_like_rect(element: ET.Element, bbox: dict[str, float], canvas_width:
 
 
 def element_is_hidden(element: ET.Element) -> bool:
-    props = parse_style_props(get_attr(element, "style"))
-    display = textify(get_attr(element, "display") or props.get("display")).strip().lower()
-    visibility = textify(get_attr(element, "visibility") or props.get("visibility")).strip().lower()
-    opacity = parse_opacity(get_attr(element, "opacity") or props.get("opacity"))
-    return display == "none" or visibility in {"hidden", "collapse"} or opacity <= 0.02
+    return get_attr(element, INTERNAL_INHERITED_HIDDEN_ATTR) == "1" or element_self_hidden(element)
+
+
+def element_has_clip_risk(element: ET.Element) -> bool:
+    if get_attr(element, INTERNAL_INHERITED_CLIP_ATTR) == "1":
+        return True
+    for child in element.iter():
+        if element_self_clip_risk(child):
+            return True
+    return False
+
+
+def validate_text_visibility_clipping(text_boxes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for item in text_boxes:
+        element = item.get("element")
+        if not isinstance(element, ET.Element):
+            continue
+        text = textify(item.get("text")).strip()
+        if not text:
+            continue
+        if element_is_hidden(element):
+            issues.append(
+                issue(
+                    "error",
+                    "hidden_visible_text",
+                    "visible slide text is declared in a hidden or transparent text box",
+                    element,
+                    "Do not rely on display:none, visibility:hidden, or near-zero opacity for visible content; remove the text or make the box visible.",
+                )
+            )
+            continue
+        if not element_has_clip_risk(element):
+            continue
+        bbox = item["bbox"]
+        font_size = text_font_size(element) or 14.0
+        required_width, required_height, required_lines = text_required_size(text, font_size, bbox["width"])
+        if required_lines > 1 and required_height >= bbox["height"] * TEXT_CLIP_RISK_RATIO or required_width > bbox["width"] + TEXT_CONTAINER_TOLERANCE:
+            clipped_issue = issue(
+                "error",
+                "clipped_visible_text",
+                "visible slide text is likely clipped by overflow/clip-path/mask",
+                element,
+                "Increase the text box, shorten the content, or remove clipping from text-bearing foreignObject nodes.",
+            )
+            clipped_issue["required_width"] = round(required_width, 2)
+            clipped_issue["required_height"] = round(required_height, 2)
+            issues.append(clipped_issue)
+    return issues
 
 
 def add_primitive_area(out: dict[str, float], primitive: str, area: float) -> None:
@@ -2124,6 +2358,19 @@ def style_system(plan: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def validation_profile(plan: dict[str, Any]) -> dict[str, Any]:
+    profile = plan.get("validation_profile")
+    return profile if isinstance(profile, dict) else {}
+
+
+def seed_gate_level(plan: dict[str, Any]) -> str:
+    profile = validation_profile(plan)
+    drift_policy = normalize_name(profile.get("drift_policy") or profile.get("seed_policy") or profile.get("mode"))
+    if profile.get("strict") is True or drift_policy in {"error", "errors", "strict", "fail", "fail_closed"}:
+        return "error"
+    return "warning"
+
+
 def slide_visual_plan(slide: dict[str, Any]) -> dict[str, Any]:
     visual_plan = slide.get("visual_plan")
     if isinstance(visual_plan, dict):
@@ -2168,6 +2415,498 @@ def visible_slide_text(slide: dict[str, Any]) -> str:
     parts = [textify(slide.get(key)) for key in VISIBLE_PLAN_TEXT_KEYS]
     parts.extend(textify(visual_plan.get(key)) for key in VISIBLE_PLAN_TEXT_KEYS)
     return " ".join(part for part in parts if part).strip()
+
+
+def visible_text_char_count(value: Any) -> int:
+    return len(re.sub(r"\s+", " ", textify(value)).strip())
+
+
+def capacity_visible_text(slide: dict[str, Any]) -> str:
+    return " ".join(textify(slide.get(key)) for key in CAPACITY_PLAN_TEXT_KEYS if textify(slide.get(key)).strip()).strip()
+
+
+def slide_seed_id(slide: dict[str, Any]) -> str:
+    for key in ["seed_id", "seed", "svg_seed", "template_seed", "layout_seed", "visual_seed"]:
+        seed = normalize_name(slide.get(key))
+        if seed:
+            return seed
+    return ""
+
+
+def slide_text_capacity_value(slide: dict[str, Any]) -> Any:
+    for key in ["content_budget", "text_capacity", "text_budget", "text_capacity_contract"]:
+        if key in slide:
+            return slide.get(key)
+    return None
+
+
+def slide_layout_boxes(slide: dict[str, Any]) -> list[Any]:
+    raw = slide.get("layout_boxes")
+    if raw is None:
+        layout = slide.get("layout")
+        if isinstance(layout, dict):
+            raw = layout.get("boxes") or layout.get("layout_boxes")
+    if isinstance(raw, list):
+        return raw
+    if isinstance(raw, dict):
+        boxes = raw.get("boxes")
+        if isinstance(boxes, list):
+            return boxes
+    return []
+
+
+def slide_layout_skeleton(slide: dict[str, Any]) -> dict[str, Any]:
+    raw = slide.get("layout_skeleton") or slide.get("layoutSkeleton")
+    return raw if isinstance(raw, dict) else {}
+
+
+def slide_layout_skeleton_id(slide: dict[str, Any]) -> str:
+    for value in [
+        slide.get("layout_skeleton_id"),
+        slide.get("skeleton_id"),
+        nested_dict(slide.get("layout_skeleton")).get("id"),
+        nested_dict(slide.get("layoutSkeleton")).get("id"),
+    ]:
+        skeleton_id = normalize_name(value)
+        if skeleton_id:
+            return skeleton_id
+    return ""
+
+
+def positive_int_value(value: Any) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number > 0 else None
+
+
+def capacity_limit_from_mapping(data: dict[str, Any], keys: set[str]) -> int | None:
+    for key, value in data.items():
+        if normalize_name(key) in keys:
+            parsed = positive_int_value(value)
+            if parsed is not None:
+                return parsed
+    return None
+
+
+def parse_capacity_string(value: str) -> dict[str, int]:
+    out: dict[str, int] = {}
+    pairs = [
+        ("max_visible_chars", r"(?:max[_ -]?)?(?:visible[_ -]?)?(?:chars|characters)\s*(?:<=|=|:)?\s*([0-9]+)"),
+        ("max_text_boxes", r"max[_ -]?(?:text[_ -]?)?(?:boxes|box_count)\s*(?:<=|=|:)?\s*([0-9]+)"),
+        ("min_text_boxes", r"min[_ -]?(?:text[_ -]?)?(?:boxes|box_count)\s*(?:>=|=|:)?\s*([0-9]+)"),
+    ]
+    lower = value.lower()
+    for key, pattern in pairs:
+        match = re.search(pattern, lower)
+        if not match:
+            continue
+        parsed = positive_int_value(match.group(1))
+        if parsed is not None:
+            out[key] = parsed
+    return out
+
+
+def capacity_limits_from_value(capacity: Any) -> dict[str, int]:
+    limits: dict[str, int] = {}
+    if isinstance(capacity, dict):
+        aliases = {
+            "max_visible_chars": {"max_visible_chars", "max_chars", "max_characters", "visible_chars"},
+            "max_text_boxes": {"max_text_boxes", "max_boxes", "max_box_count"},
+            "min_text_boxes": {"min_text_boxes", "min_boxes", "required_text_boxes", "required_boxes"},
+            "title": {"title", "max_title_chars", "title_chars"},
+            "body": {"body", "max_body_chars", "body_chars"},
+            "footer": {"footer", "max_footer_chars", "footer_chars"},
+        }
+        for target, keys in aliases.items():
+            parsed = capacity_limit_from_mapping(capacity, keys)
+            if parsed is not None:
+                limits[target] = parsed
+    elif isinstance(capacity, str):
+        limits.update(parse_capacity_string(capacity))
+    elif capacity is not None:
+        parsed = positive_int_value(capacity)
+        if parsed is not None:
+            limits["max_visible_chars"] = parsed
+    return limits
+
+
+def text_capacity_limits(capacity: Any, seed_data: dict[str, Any] | None = None) -> dict[str, int]:
+    limits: dict[str, int] = {}
+    for key in ["content_budget", "default_text_capacity"]:
+        default_capacity = seed_data.get(key) if seed_data else None
+        if isinstance(default_capacity, dict):
+            limits.update(capacity_limits_from_value(default_capacity))
+    for key, value in capacity_limits_from_value(capacity).items():
+        if key in limits and key in CAPACITY_MAX_KEYS:
+            limits[key] = min(limits[key], value)
+        elif key in limits and key in CAPACITY_MIN_KEYS:
+            limits[key] = max(limits[key], value)
+        else:
+            limits[key] = value
+    return limits
+
+
+def slide_text_budget_by_role(slide: dict[str, Any]) -> dict[str, Any]:
+    raw = slide.get("text_budget_by_role") or slide.get("role_text_budget") or slide.get("roleTextBudget")
+    return raw if isinstance(raw, dict) else {}
+
+
+def role_budget_by_role(budget: dict[str, Any], seed_data: dict[str, Any] | None = None) -> dict[str, dict[str, int]]:
+    merged: dict[str, dict[str, int]] = {}
+    for source in [seed_data.get("text_budget_by_role") if seed_data else None, budget]:
+        if not isinstance(source, dict):
+            continue
+        for role, raw_limits in source.items():
+            normalized_role = normalize_name(role)
+            if not normalized_role:
+                continue
+            raw = raw_limits if isinstance(raw_limits, dict) else {"max_chars": raw_limits}
+            limits: dict[str, int] = dict(merged.get(normalized_role, {}))
+            aliases = {
+                "max_chars": {"max_chars", "chars", "max_visible_chars", "max_characters"},
+                "max_lines": {"max_lines", "lines"},
+                "max_boxes": {"max_boxes", "max_text_boxes", "boxes"},
+                "min_font_px": {"min_font_px", "min_font_size", "min_font"},
+            }
+            for target, keys in aliases.items():
+                parsed = capacity_limit_from_mapping(raw, keys)
+                if parsed is None:
+                    continue
+                if target.startswith("max_") and target in limits:
+                    limits[target] = min(limits[target], parsed)
+                else:
+                    limits[target] = parsed
+            merged[normalized_role] = limits
+    return merged
+
+
+def role_budget_loosenings(budget: dict[str, Any], seed_data: dict[str, Any] | None = None) -> list[str]:
+    if not seed_data:
+        return []
+    seed_limits = role_budget_by_role({}, seed_data)
+    plan_limits = role_budget_by_role(budget, None)
+    loosened: list[str] = []
+    for role, limits in plan_limits.items():
+        seed_role_limits = seed_limits.get(role)
+        if not seed_role_limits:
+            continue
+        for key, value in limits.items():
+            seed_value = seed_role_limits.get(key)
+            if seed_value is None:
+                continue
+            if key.startswith("max_") and value > seed_value:
+                loosened.append(f"{role}.{key} {value}>{seed_value}")
+            elif key.startswith("min_") and value < seed_value:
+                loosened.append(f"{role}.{key} {value}<{seed_value}")
+    return loosened
+
+
+def role_plan_text(slide: dict[str, Any], role: str) -> str:
+    keys_by_role = {
+        "title": ["title", "headline", "heading", "subtitle"],
+        "headline": ["headline", "title"],
+        "kicker": ["kicker", "eyebrow", "section"],
+        "body": ["body", "bullets", "copy", "paragraphs", "key_message", "takeaway", "one_idea"],
+        "callout": ["callout", "callouts", "cta", "takeaway"],
+        "label": ["label", "labels", "caption", "captions", "legend", "legends"],
+        "caption": ["caption", "captions", "label", "labels"],
+        "metric": ["metric", "metrics", "kpi", "kpis"],
+        "footer": ["footer", "source_note", "visible_source_note", "legal"],
+    }
+    keys = keys_by_role.get(role, [role])
+    return " ".join(textify(slide.get(key)) for key in keys if textify(slide.get(key)).strip()).strip()
+
+
+def capacity_budget_loosenings(capacity: Any, seed_data: dict[str, Any] | None = None) -> list[str]:
+    if not seed_data:
+        return []
+    seed_limits = text_capacity_limits(None, seed_data)
+    plan_limits = capacity_limits_from_value(capacity)
+    loosened: list[str] = []
+    for key, value in plan_limits.items():
+        seed_value = seed_limits.get(key)
+        if seed_value is None:
+            continue
+        if key in CAPACITY_MAX_KEYS and value > seed_value:
+            loosened.append(f"{key} {value}>{seed_value}")
+        elif key in CAPACITY_MIN_KEYS and value < seed_value:
+            loosened.append(f"{key} {value}<{seed_value}")
+    return loosened
+
+
+def layout_box_role(box: dict[str, Any]) -> str:
+    return textify(box.get("role") or box.get("type") or box.get("id") or box.get("name")).strip()
+
+
+def layout_box_dimension(box: dict[str, Any], *keys: str) -> float | None:
+    for key in keys:
+        value = box.get(key)
+        if isinstance(value, bool) or value is None:
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def layout_box_has_positive_bbox(box: dict[str, Any]) -> bool:
+    x = layout_box_dimension(box, "x", "left")
+    y = layout_box_dimension(box, "y", "top")
+    width = layout_box_dimension(box, "width", "w")
+    height = layout_box_dimension(box, "height", "h")
+    return x is not None and y is not None and width is not None and height is not None and width > 0 and height > 0
+
+
+def is_text_layout_box(box: dict[str, Any]) -> bool:
+    return bool(TEXT_LAYOUT_ROLE_RE.search(layout_box_role(box)))
+
+
+def layout_box_hidden_clip(box: dict[str, Any]) -> bool:
+    if bool(box.get("clip") or box.get("clips") or box.get("hidden_clip")):
+        return True
+    for key in ["overflow", "clip_path", "clip-path", "mask"]:
+        value = normalize_name(box.get(key))
+        if value in {"hidden", "clip", "clipped", "mask", "masked", "true", "yes"}:
+            return True
+    return False
+
+
+def layout_box_roles(boxes: list[Any]) -> set[str]:
+    roles: set[str] = set()
+    for box in boxes:
+        if isinstance(box, dict):
+            role = normalize_name(layout_box_role(box))
+            if role:
+                roles.add(role)
+    return roles
+
+
+def slide_reserved_bands(slide: dict[str, Any]) -> dict[str, Any]:
+    raw = slide.get("reserved_bands") or slide.get("reservedBands")
+    if isinstance(raw, dict):
+        return raw
+    return {}
+
+
+def slide_footer_safe_zone(slide: dict[str, Any], seed_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    raw = slide.get("footer_safe_zone") or slide.get("footerSafeZone")
+    if isinstance(raw, dict):
+        return raw
+    seed_raw = seed_data.get("footer_safe_zone") if seed_data else None
+    if isinstance(seed_raw, dict):
+        return seed_raw
+    footer = reserved_footer_band(slide, seed_data)
+    return footer or {}
+
+
+def bbox_from_mapping(value: Any) -> dict[str, float] | None:
+    if not isinstance(value, dict):
+        return None
+    x = layout_box_dimension(value, "x", "left")
+    y = layout_box_dimension(value, "y", "top")
+    width = layout_box_dimension(value, "width", "w")
+    height = layout_box_dimension(value, "height", "h")
+    if None in {x, y, width, height} or width is None or height is None or width <= 0 or height <= 0:
+        return None
+    return {"x": x or 0.0, "y": y or 0.0, "width": width, "height": height}
+
+
+def footer_safe_zone_bbox(slide: dict[str, Any], seed_data: dict[str, Any] | None = None) -> dict[str, float] | None:
+    return bbox_from_mapping(slide_footer_safe_zone(slide, seed_data))
+
+
+def footer_safe_zone_allowed_roles(slide: dict[str, Any], seed_data: dict[str, Any] | None = None) -> set[str]:
+    zone = slide_footer_safe_zone(slide, seed_data)
+    allowed = _string_set(zone.get("allowed_roles") or zone.get("allowedRoles"))
+    return {normalize_name(role) for role in allowed if normalize_name(role)} or {"footer"}
+
+
+def footer_safe_zone_min_gap(slide: dict[str, Any], seed_data: dict[str, Any] | None = None) -> float:
+    zone = slide_footer_safe_zone(slide, seed_data)
+    gap = layout_box_dimension(zone, "min_gap_above_px", "minGapAbovePx", "body_clearance_px", "bodyClearancePx")
+    return gap if gap is not None else 0.0
+
+
+def reserved_footer_band(slide: dict[str, Any], seed_data: dict[str, Any] | None = None) -> dict[str, float] | None:
+    bands = slide_reserved_bands(slide)
+    footer = bbox_from_mapping(bands.get("footer"))
+    if footer is not None:
+        return footer
+    seed_bands = seed_data.get("reserved_bands") if seed_data else None
+    if isinstance(seed_bands, dict):
+        return bbox_from_mapping(seed_bands.get("footer"))
+    return None
+
+
+def capacity_section_text(slide: dict[str, Any], section: str) -> str:
+    keys_by_section = {
+        "title": ["title", "headline", "kicker", "subtitle"],
+        "body": ["body", "bullets", "callouts", "labels", "key_message", "takeaway", "one_idea"],
+        "footer": ["footer", "source_note", "visible_source_note"],
+    }
+    keys = keys_by_section.get(section, [])
+    return " ".join(textify(slide.get(key)) for key in keys if textify(slide.get(key)).strip()).strip()
+
+
+def slide_vertical_text_policy(slide: dict[str, Any], seed_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    raw = slide.get("vertical_text_policy") or slide.get("verticalTextPolicy")
+    if isinstance(raw, dict):
+        return raw
+    seed_raw = seed_data.get("vertical_text_policy") if seed_data else None
+    if isinstance(seed_raw, dict):
+        return seed_raw
+    return {"mode": "deny", "allowed_roles": [], "max_chars": 0, "max_lines": 0}
+
+
+def vertical_text_policy_allows(policy: dict[str, Any], role: str) -> bool:
+    mode = normalize_name(policy.get("mode") or policy.get("status") or "deny")
+    enabled = policy.get("enabled")
+    if mode in {"deny", "disabled", "forbid", "forbidden", "none"} or enabled is False:
+        return False
+    allowed_roles = {normalize_name(item) for item in _string_set(policy.get("allowed_roles") or policy.get("allowedRoles")) if normalize_name(item)}
+    return bool(role and (role in allowed_roles or "*" in allowed_roles))
+
+
+def vertical_policy_limit(policy: dict[str, Any], key: str, default: int) -> int:
+    parsed = capacity_limit_from_mapping(policy, {key, key.replace("_", ""), f"max_{key}"})
+    return parsed if parsed is not None else default
+
+
+def is_footer_identifier(identifier: str, visible_text: str = "") -> bool:
+    combined = f"{identifier} {visible_text}"
+    return bool(re.search(r"(footer|source|legal|page[_ -]?num|pagination|来源|资料来源|数据来源|页码|页脚)", combined, re.IGNORECASE))
+
+
+def layout_box_bboxes_by_role(boxes: list[Any]) -> dict[str, list[dict[str, float]]]:
+    out: dict[str, list[dict[str, float]]] = {}
+    for box in boxes:
+        if not isinstance(box, dict):
+            continue
+        role = normalize_name(layout_box_role(box))
+        bbox = bbox_from_mapping(box)
+        if role and bbox is not None:
+            out.setdefault(role, []).append(bbox)
+    return out
+
+
+def layout_box_id(box: dict[str, Any]) -> str:
+    return normalize_name(box.get("id") or box.get("name") or layout_box_role(box))
+
+
+def layout_box_bboxes_by_id(boxes: list[Any]) -> dict[str, dict[str, float]]:
+    out: dict[str, dict[str, float]] = {}
+    for box in boxes:
+        if not isinstance(box, dict):
+            continue
+        box_id = layout_box_id(box)
+        bbox = bbox_from_mapping(box)
+        if box_id and bbox is not None:
+            out[box_id] = bbox
+    return out
+
+
+def first_layout_bbox_by_role(boxes: list[Any]) -> dict[str, dict[str, float]]:
+    out: dict[str, dict[str, float]] = {}
+    for box in boxes:
+        if not isinstance(box, dict):
+            continue
+        role = normalize_name(layout_box_role(box))
+        bbox = bbox_from_mapping(box)
+        if role and bbox is not None and role not in out:
+            out[role] = bbox
+    return out
+
+
+def infer_text_box_role_from_layout(text_box: dict[str, Any], layout_bboxes: dict[str, list[dict[str, float]]]) -> str:
+    text_bbox = bbox_from_mapping(text_box.get("bbox"))
+    if text_bbox is None:
+        return ""
+    center_x, center_y = bbox_center(text_bbox)
+    candidates: list[tuple[float, str]] = []
+    for role, boxes in layout_bboxes.items():
+        for box in boxes:
+            if bbox_contains(box, text_bbox, tolerance=TEXT_CONTAINER_TOLERANCE) or point_in_bbox(center_x, center_y, box):
+                candidates.append((box["width"] * box["height"], role))
+    if not candidates:
+        return ""
+    return min(candidates)[1]
+
+
+def seed_layout_skeleton(seed_data: dict[str, Any] | None) -> dict[str, Any]:
+    if not seed_data:
+        return {}
+    raw = seed_data.get("layout_skeleton")
+    return raw if isinstance(raw, dict) else {}
+
+
+def seed_skeleton_id(seed_id: str, skeleton: dict[str, Any]) -> str:
+    return normalize_name(skeleton.get("id") or f"{seed_id}_skeleton")
+
+
+def skeleton_drift_issues(seed_id: str, seed_data: dict[str, Any], plan_boxes: list[Any]) -> list[str]:
+    skeleton = seed_layout_skeleton(seed_data)
+    if not skeleton:
+        return []
+    tolerance_value = layout_box_dimension(skeleton, "drift_tolerance_px", "driftTolerancePx")
+    tolerance = tolerance_value if tolerance_value is not None else 24.0
+    locked_roles = _string_set(skeleton.get("locked_roles"))
+    if not locked_roles:
+        locked_roles = {normalize_name(role) for role in seed_data.get("required_layout_box_roles", set()) if normalize_name(role)}
+    seed_boxes = first_layout_bbox_by_role(seed_data.get("layout_boxes") if isinstance(seed_data.get("layout_boxes"), list) else [])
+    plan_role_boxes = first_layout_bbox_by_role(plan_boxes)
+    seed_boxes_by_id = layout_box_bboxes_by_id(seed_data.get("layout_boxes") if isinstance(seed_data.get("layout_boxes"), list) else [])
+    plan_boxes_by_id = layout_box_bboxes_by_id(plan_boxes)
+    locked_box_ids = _string_set(skeleton.get("locked_boxes") or skeleton.get("locked_box_ids") or skeleton.get("lockedBoxIds"))
+    if not locked_box_ids:
+        locked_box_ids = set(seed_boxes_by_id)
+    drifts: list[str] = []
+    for box_id in sorted(locked_box_ids):
+        seed_bbox = seed_boxes_by_id.get(box_id)
+        plan_bbox = plan_boxes_by_id.get(box_id)
+        if seed_bbox is None:
+            continue
+        if plan_bbox is None:
+            drifts.append(f"{seed_id}.{box_id} missing")
+            continue
+        for key in ["x", "y", "width", "height"]:
+            if abs(plan_bbox[key] - seed_bbox[key]) > tolerance:
+                drifts.append(f"{seed_id}.{box_id}.{key} {round(plan_bbox[key], 1)} != {round(seed_bbox[key], 1)} +/- {round(tolerance, 1)}")
+                break
+    for role in sorted(locked_roles):
+        seed_bbox = seed_boxes.get(role)
+        plan_bbox = plan_role_boxes.get(role)
+        if seed_bbox is None or plan_bbox is None:
+            continue
+        for key in ["x", "y", "width", "height"]:
+            if abs(plan_bbox[key] - seed_bbox[key]) > tolerance:
+                drifts.append(f"{seed_id}.{role}.{key} {round(plan_bbox[key], 1)} != {round(seed_bbox[key], 1)} +/- {round(tolerance, 1)}")
+                break
+    return drifts
+
+
+def infer_text_box_role(text_box: dict[str, Any], available_roles: set[str]) -> str:
+    identifier = textify(text_box.get("identifier") or text_box.get("element_id"))
+    visible_text = textify(text_box.get("text"))
+    normalized = normalize_name(f"{identifier} {visible_text}")
+    for role in sorted(available_roles, key=len, reverse=True):
+        if role and role in normalized:
+            return role
+    if is_footer_identifier(identifier, visible_text):
+        return "footer"
+    if re.search(r"(title|headline|heading|kicker|subtitle|标题|主标题)", normalized):
+        return "title"
+    if re.search(r"(callout|cta|chip|badge|label|caption|标注|标签)", normalized):
+        return "callout" if "callout" in available_roles else "body"
+    if re.search(r"(metric|kpi|number|指标)", normalized):
+        return "metric" if "metric" in available_roles else "body"
+    if re.search(r"(body|copy|text|paragraph|bullet|正文|说明)", normalized):
+        return "body"
+    return ""
 
 
 def recipe_family(recipe: str, context: dict[str, Any] | None = None) -> str:
@@ -2338,10 +3077,22 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
         except (TypeError, ValueError):
             issues.append(plan_issue("error", "plan_page_count_invalid", "plan page_count must be an integer when present"))
 
-    is_svg_plan = plan.get("output_mode") == "svglide-svg"
+    is_create_svg_route = context.get("route_id") == CREATE_SVG_ROUTE_ID
+    is_svg_plan = plan.get("output_mode") == "svglide-svg" or is_create_svg_route
+    seed_level = seed_gate_level(plan)
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
     if is_svg_plan:
+        if plan.get("output_mode") != "svglide-svg":
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_output_mode_required",
+                    'create-svg route plans must include output_mode="svglide-svg"',
+                    None,
+                    "Do not run create-svg with an untyped plan; output_mode controls SVG seed and recipe gates.",
+                )
+            )
         if not STYLE_PRESET_CATALOG:
             issues.append(
                 plan_issue(
@@ -2410,6 +3161,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
     recipe_catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
     public_recipe_catalog = context.get("public_recipe_catalog", VISUAL_RECIPE_CATALOG)
     private_id_set = context.get("private_id_set", set())
+    seed_catalog = context.get("seed_catalog", SVG_SEED_CATALOG)
     for slide_index, slide in enumerate(slides, 1):
         if not isinstance(slide, dict):
             issues.append(plan_issue("error", "plan_slide_invalid", "each slide entry must be an object"))
@@ -2447,6 +3199,274 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
             raw_visual_recipe = normalize_name(visual_plan.get("visual_recipe"))
             visual_recipe = raw_visual_recipe
             route_private_requested = raw_visual_recipe == ROUTE_PRIVATE_VISUAL_RECIPE
+            seed_id = slide_seed_id(visual_plan)
+            seed_data = None
+            if not seed_id:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_seed_id",
+                        "SVGlide plan slides must include seed_id",
+                        slide,
+                        "Choose a seed from references/svg-seeds.json before filling content; do not start from a blank page.",
+                    )
+                )
+            elif seed_id not in seed_catalog:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_unknown_seed",
+                        f'unknown seed_id "{seed_id}"',
+                        slide,
+                        "Use one of: " + ", ".join(sorted(seed_catalog)),
+                    )
+                )
+            else:
+                seed_data = seed_catalog[seed_id]
+                seed_layout_family = normalize_name(seed_data.get("layout_family"))
+                if seed_layout_family and layout_family and normalize_name(layout_family) != seed_layout_family:
+                    issues.append(
+                        plan_issue(
+                            seed_level,
+                            "plan_seed_layout_family_mismatch",
+                            f'seed "{seed_id}" requires layout_family "{seed_layout_family}"',
+                            slide,
+                            "Keep the selected seed structure or choose a seed that matches the intended layout family.",
+                        )
+                    )
+                seed_recipe = normalize_name(seed_data.get("visual_recipe"))
+                if seed_recipe and raw_visual_recipe and not route_private_requested and raw_visual_recipe != seed_recipe:
+                    issues.append(
+                        plan_issue(
+                            seed_level,
+                            "plan_seed_visual_recipe_mismatch",
+                            f'seed "{seed_id}" requires visual_recipe "{seed_recipe}"',
+                            slide,
+                            "Seed and visual_recipe must describe the same structure; choose a different seed or update the recipe.",
+                        )
+                    )
+            layout_boxes = slide_layout_boxes(visual_plan)
+            if not layout_boxes:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_layout_boxes",
+                        "SVGlide plan slides must declare layout_boxes copied from or adapted from the selected seed",
+                        slide,
+                        "Declare concrete title/body/visual/footer boxes with x/y/width/height before writing SVG.",
+                    )
+                )
+            else:
+                for box in layout_boxes:
+                    if not isinstance(box, dict) or not layout_box_role(box) or not layout_box_has_positive_bbox(box):
+                        issues.append(
+                            plan_issue(
+                                seed_level,
+                                "plan_layout_box_invalid",
+                                "layout_boxes entries must include role plus positive x/y/width/height geometry",
+                                slide,
+                                "Use boxes such as {role:title,x:64,y:48,width:560,height:58}.",
+                            )
+                        )
+                        break
+                if seed_data is not None:
+                    required_roles = {normalize_name(role) for role in seed_data.get("required_layout_box_roles", set()) if normalize_name(role)}
+                    missing_roles = sorted(required_roles - layout_box_roles(layout_boxes))
+                    if missing_roles:
+                        issues.append(
+                            plan_issue(
+                                seed_level,
+                                "plan_missing_layout_boxes",
+                                f'seed "{seed_id}" requires layout box roles: {", ".join(sorted(required_roles))}',
+                                slide,
+                                f"Missing layout box roles: {', '.join(missing_roles)}.",
+                            )
+                        )
+                    skeleton = seed_layout_skeleton(seed_data)
+                    if skeleton:
+                        expected_skeleton_id = seed_skeleton_id(seed_id, skeleton)
+                        plan_skeleton = slide_layout_skeleton(visual_plan)
+                        plan_skeleton_id = slide_layout_skeleton_id(visual_plan)
+                        if not plan_skeleton and not plan_skeleton_id:
+                            issues.append(
+                                plan_issue(
+                                    seed_level,
+                                    "plan_seed_layout_skeleton_missing",
+                                    "SVGlide plan must declare the selected seed layout_skeleton",
+                                    slide,
+                                    "Copy layout_skeleton or layout_skeleton_id from svg-seeds.json; seed skeleton is a layout contract, not inspiration.",
+                                )
+                            )
+                        elif plan_skeleton_id and plan_skeleton_id != expected_skeleton_id:
+                            issues.append(
+                                plan_issue(
+                                    seed_level,
+                                    "plan_seed_layout_skeleton_mismatch",
+                                    f'seed "{seed_id}" requires layout_skeleton_id "{expected_skeleton_id}"',
+                                    slide,
+                                    "Use the seed skeleton ID unchanged; choose another seed for a different structure.",
+                                )
+                            )
+                        for drift in skeleton_drift_issues(seed_id, seed_data, layout_boxes):
+                            issues.append(
+                                plan_issue(
+                                    seed_level,
+                                    "plan_seed_layout_skeleton_drift",
+                                    f"layout box drift exceeds selected seed tolerance: {drift}",
+                                    slide,
+                                    "Keep locked seed roles near their registered boxes, or create a new seed for the new layout.",
+                                )
+                            )
+            capacity_value = slide_text_capacity_value(visual_plan)
+            if capacity_value is None:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_content_budget",
+                        "SVGlide plan slides must declare content_budget or text_capacity",
+                        slide,
+                        "Copy the seed budget, then tighten it for the actual title/body/footer copy.",
+                    )
+                )
+            for loosened in capacity_budget_loosenings(capacity_value, seed_data):
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_seed_content_budget_loosened",
+                        f"plan content budget widens the selected seed budget: {loosened}",
+                        slide,
+                        "Seed budgets are upper bounds; shorten content, split the page, or choose a higher-capacity seed instead of increasing the budget.",
+                    )
+                )
+            role_budget = slide_text_budget_by_role(visual_plan)
+            if seed_data is not None and seed_data.get("text_budget_by_role") and not role_budget:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_text_budget_by_role",
+                        "SVGlide plan must declare text_budget_by_role copied from the selected seed",
+                        slide,
+                        "Use role-level title/body/callout/label/footer budgets so local overcrowding is caught before SVG rendering.",
+                    )
+                )
+            for loosened in role_budget_loosenings(role_budget, seed_data):
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_seed_text_budget_loosened",
+                        f"plan role text budget widens the selected seed budget: {loosened}",
+                        slide,
+                        "Role text budgets are upper bounds; shorten content, split the page, or choose a higher-capacity seed.",
+                    )
+                )
+            for role, limits in role_budget_by_role(role_budget, seed_data).items():
+                max_chars = limits.get("max_chars")
+                if not max_chars:
+                    continue
+                count = visible_text_char_count(role_plan_text(visual_plan, role))
+                if count > max_chars:
+                    issues.append(
+                        plan_issue(
+                            seed_level,
+                            "plan_text_role_budget_exceeded",
+                            f'{role} plan text has {count} chars, above role budget {max_chars}',
+                            slide,
+                            "Keep each role inside its seed-derived budget; do not solve overflow by shrinking font or rotating text.",
+                        )
+                    )
+            capacity_limits = text_capacity_limits(capacity_value, seed_data)
+            text_box_count = sum(1 for box in layout_boxes if isinstance(box, dict) and is_text_layout_box(box))
+            max_text_boxes = capacity_limits.get("max_text_boxes")
+            min_text_boxes = capacity_limits.get("min_text_boxes")
+            if max_text_boxes and text_box_count > max_text_boxes:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_text_box_count_exceeded",
+                        f"plan has {text_box_count} text layout boxes, above max_text_boxes {max_text_boxes}",
+                        slide,
+                        "Reduce visible text surfaces or choose a seed designed for denser content.",
+                    )
+                )
+            if min_text_boxes and text_box_count < min_text_boxes:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_text_box_count_below_seed_minimum",
+                        f"plan has {text_box_count} text layout boxes, below min_text_boxes {min_text_boxes}",
+                        slide,
+                        "Keep the selected seed's required readable text structure, or choose a sparser seed.",
+                    )
+                )
+            visible_chars = visible_text_char_count(capacity_visible_text(visual_plan))
+            if capacity_limits.get("max_visible_chars") and visible_chars > capacity_limits["max_visible_chars"]:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_content_budget_exceeded",
+                        f"visible plan text has {visible_chars} chars, above max_visible_chars {capacity_limits['max_visible_chars']}",
+                        slide,
+                        "Shorten content or split the idea into another seeded page before rendering SVG.",
+                    )
+                )
+            for section, code in [
+                ("title", "plan_title_capacity_exceeded"),
+                ("body", "plan_body_capacity_exceeded"),
+                ("footer", "plan_footer_capacity_exceeded"),
+            ]:
+                limit = capacity_limits.get(section)
+                count = visible_text_char_count(capacity_section_text(visual_plan, section))
+                if limit and count > limit:
+                    issues.append(
+                        plan_issue(
+                            seed_level,
+                            code,
+                            f"{section} text has {count} chars, above {section} budget {limit}",
+                            slide,
+                            f"Keep {section} content within the selected seed's local text capacity.",
+                        )
+                    )
+            if not textify(visual_plan.get("one_idea") or visual_plan.get("key_message")).strip():
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_one_idea",
+                        "SVGlide plan slides must declare one_idea or key_message",
+                        slide,
+                        "Open Design-style authoring starts with one message per seeded page, then fits content into the preserved structure.",
+                    )
+                )
+            reserved_bands = slide_reserved_bands(visual_plan)
+            if not reserved_bands or bbox_from_mapping(reserved_bands.get("footer")) is None:
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_reserved_bands",
+                        "SVGlide plan slides must declare reserved_bands.footer",
+                        slide,
+                        "Reserve the footer band explicitly so body text cannot drift into source notes, page marks, or legal copy.",
+                    )
+                )
+            if seed_data is not None and seed_data.get("footer_safe_zone") and not isinstance(visual_plan.get("footer_safe_zone"), dict):
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_missing_footer_safe_zone",
+                        "SVGlide plan must declare footer_safe_zone copied from the selected seed",
+                        slide,
+                        "footer_safe_zone states which roles may enter the footer band and how much clearance body content needs.",
+                    )
+                )
+            if seed_data is not None and seed_data.get("vertical_text_policy") and not isinstance(visual_plan.get("vertical_text_policy"), dict):
+                issues.append(
+                    plan_issue(
+                        seed_level,
+                        "plan_vertical_text_policy_missing",
+                        "SVGlide plan must declare vertical_text_policy copied from the selected seed",
+                        slide,
+                        "Default policy is deny; only short seed-approved roles may use vertical or rotated text.",
+                    )
+                )
             if not visual_recipe:
                 issues.append(
                     plan_issue(
@@ -2941,9 +3961,12 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
 
     issues: list[dict[str, Any]] = []
     recipe_catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
+    seed_catalog = context.get("seed_catalog", SVG_SEED_CATALOG)
     for slide_index, slide, file in alignments:
         visual_plan = slide_visual_plan(slide)
         recipe = resolved_visual_recipe_for_slide(visual_plan, slide_index, context)
+        seed_id = slide_seed_id(visual_plan)
+        seed_data = seed_catalog.get(seed_id) if seed_id in seed_catalog else None
         if recipe not in recipe_catalog:
             continue
         visual_primitives = file.get("visual_primitives", {})
@@ -3050,6 +4073,221 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
                         'MVP preflight allows incomplete image metadata; for preview add retrieval_query, source_type, license="preview_unverified", local_path_or_href, usage_page, and source_url/href when available.',
                     )
                 )
+        footer_band = reserved_footer_band(visual_plan)
+        footer_zone = footer_safe_zone_bbox(visual_plan, seed_data) or footer_band
+        footer_allowed_roles = footer_safe_zone_allowed_roles(visual_plan, seed_data)
+        footer_min_gap = footer_safe_zone_min_gap(visual_plan, seed_data)
+        vertical_policy = slide_vertical_text_policy(visual_plan, seed_data)
+        text_box_reports = file.get("text_boxes")
+        layout_boxes = slide_layout_boxes(visual_plan)
+        layout_bboxes = layout_box_bboxes_by_role(layout_boxes)
+        capacity_limits = text_capacity_limits(slide_text_capacity_value(visual_plan), seed_data)
+        role_budgets = role_budget_by_role(slide_text_budget_by_role(visual_plan), seed_data)
+        if footer_band is not None and isinstance(text_box_reports, list):
+            source_text_box_count = len(text_box_reports)
+            max_text_boxes = capacity_limits.get("max_text_boxes")
+            min_text_boxes = capacity_limits.get("min_text_boxes")
+            if max_text_boxes and source_text_box_count > max_text_boxes:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_source_text_box_count_exceeded",
+                        f"SVG source has {source_text_box_count} text boxes, above max_text_boxes {max_text_boxes}",
+                        slide,
+                        "Reduce rendered text surfaces or choose a higher-capacity seed.",
+                    )
+                )
+            if min_text_boxes and source_text_box_count < min_text_boxes:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_source_text_box_count_below_seed_minimum",
+                        f"SVG source has {source_text_box_count} text boxes, below min_text_boxes {min_text_boxes}",
+                        slide,
+                        "The final SVG should preserve the selected seed's readable text structure.",
+                    )
+                )
+            source_visible_chars = sum(int(text_box.get("text_chars", 0)) for text_box in text_box_reports if isinstance(text_box, dict))
+            if capacity_limits.get("max_visible_chars") and source_visible_chars > capacity_limits["max_visible_chars"]:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_source_content_budget_exceeded",
+                        f"SVG source has {source_visible_chars} visible text chars, above max_visible_chars {capacity_limits['max_visible_chars']}",
+                        slide,
+                        "Shorten rendered copy or split the page before live create.",
+                    )
+                )
+            source_role_chars: dict[str, int] = {}
+            source_role_boxes: dict[str, int] = {}
+            role_line_counts: dict[str, int] = {}
+            role_min_fonts: dict[str, float] = {}
+            for text_box in text_box_reports:
+                if not isinstance(text_box, dict):
+                    continue
+                text_bbox = bbox_from_mapping(text_box.get("bbox"))
+                if text_bbox is None:
+                    continue
+                identifier = textify(text_box.get("identifier") or text_box.get("element_id"))
+                visible_text = textify(text_box.get("text"))
+                role = infer_text_box_role(text_box, set(layout_bboxes)) or infer_text_box_role_from_layout(text_box, layout_bboxes)
+                is_footer = role == "footer" or (is_footer_identifier(identifier, visible_text) and role not in {"source", "caption"})
+                if not role and is_footer:
+                    role = "footer"
+                budget_role = role
+                if not budget_role and not is_footer and "body" in role_budgets:
+                    budget_role = "body"
+                elif budget_role not in role_budgets and not is_footer and "body" in role_budgets:
+                    budget_role = "body"
+                if budget_role:
+                    source_role_chars[budget_role] = source_role_chars.get(budget_role, 0) + visible_text_char_count(visible_text)
+                    source_role_boxes[budget_role] = source_role_boxes.get(budget_role, 0) + 1
+                    font_size = float(text_box.get("font_size") or 0.0)
+                    role_min_fonts[budget_role] = min(role_min_fonts.get(budget_role, font_size or 999.0), font_size or 999.0)
+                    _, _required_height, required_lines = text_required_size(visible_text, font_size or 14.0, text_bbox["width"])
+                    role_line_counts[budget_role] = max(role_line_counts.get(budget_role, 0), required_lines)
+                if bool(text_box.get("vertical_text")):
+                    if not role:
+                        role = budget_role or "body"
+                    if not vertical_text_policy_allows(vertical_policy, role):
+                        issues.append(
+                            plan_issue(
+                                "error",
+                                "vertical_text_disallowed_role",
+                                f'SVG source uses vertical text in role "{role}" but the selected seed policy does not allow it',
+                                slide,
+                                "Do not use writing-mode/text-orientation/rotated long text unless the seed explicitly allows this role.",
+                            )
+                        )
+                        break
+                    max_vertical_chars = vertical_policy_limit(vertical_policy, "max_chars", 8)
+                    if visible_text_char_count(visible_text) > max_vertical_chars:
+                        issues.append(
+                            plan_issue(
+                                "error",
+                                "vertical_text_budget_exceeded",
+                                f'vertical text has {visible_text_char_count(visible_text)} chars, above policy max_chars {max_vertical_chars}',
+                                slide,
+                                "Use vertical text only for short decorative labels; move explanations into horizontal body boxes.",
+                            )
+                        )
+                        break
+                if is_footer and not bbox_contains(footer_band, text_bbox, tolerance=TEXT_CONTAINER_TOLERANCE):
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_footer_reserved_band_violation",
+                            "footer/source/note text is outside reserved_bands.footer",
+                            slide,
+                            f"Keep footer-like text inside the declared footer band in {file.get('path')}.",
+                        )
+                    )
+                    break
+                if not is_footer and intersects(text_bbox, footer_band):
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_footer_reserved_band_violation",
+                            "non-footer text intrudes into reserved_bands.footer",
+                            slide,
+                            "Move body/callout text above the reserved footer band or shrink the body box.",
+                        )
+                    )
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "footer_safe_zone_intrusion",
+                            "non-footer text intrudes into footer_safe_zone",
+                            slide,
+                            "Only footer/source/legal/page mark roles may enter the footer safe zone; move body, labels, and chart legends above it.",
+                        )
+                    )
+                    break
+                if footer_zone is not None:
+                    zone_role = role or ("footer" if is_footer else "body")
+                    gap_above = footer_zone["y"] - bbox_bottom(text_bbox)
+                    if intersects(text_bbox, footer_zone) and zone_role not in footer_allowed_roles:
+                        issues.append(
+                            plan_issue(
+                                "error",
+                                "footer_safe_zone_intrusion",
+                                f'SVG text role "{zone_role}" intrudes into footer_safe_zone',
+                                slide,
+                                "Only footer/source/legal/page mark roles may enter the footer safe zone; move body, labels, and chart legends above it.",
+                            )
+                        )
+                        break
+                    if zone_role not in footer_allowed_roles and 0 <= gap_above < footer_min_gap:
+                        issues.append(
+                            plan_issue(
+                                "error",
+                                "footer_safe_zone_intrusion",
+                                f'SVG text role "{zone_role}" is too close to footer_safe_zone',
+                                slide,
+                                f"Keep non-footer content at least {round(footer_min_gap, 1)}px above the footer safe zone.",
+                            )
+                        )
+                        break
+                if role and role in layout_bboxes and not any(bbox_contains(box, text_bbox, tolerance=TEXT_CONTAINER_TOLERANCE) for box in layout_bboxes[role]):
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_text_box_outside_seed_layout_box",
+                            f'SVG text box inferred as "{role}" is outside the matching layout box',
+                            slide,
+                            "Keep final SVG text inside the seed-derived layout box, or update the plan boxes before rendering.",
+                        )
+                    )
+                    break
+            for role, limits in role_budgets.items():
+                max_chars = limits.get("max_chars")
+                if max_chars and source_role_chars.get(role, 0) > max_chars:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_source_role_text_budget_exceeded",
+                            f'SVG source role "{role}" has {source_role_chars.get(role, 0)} chars, above role budget {max_chars}',
+                            slide,
+                            "Shorten rendered copy, split the page, or choose a seed with a higher role budget.",
+                        )
+                    )
+                    break
+                max_boxes = limits.get("max_boxes")
+                if max_boxes and source_role_boxes.get(role, 0) > max_boxes:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_source_role_text_budget_exceeded",
+                            f'SVG source role "{role}" has {source_role_boxes.get(role, 0)} text boxes, above role budget {max_boxes}',
+                            slide,
+                            "Reduce role text surfaces or use a seed designed for denser content.",
+                        )
+                    )
+                    break
+                max_lines = limits.get("max_lines")
+                if max_lines and role_line_counts.get(role, 0) > max_lines:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_source_role_text_budget_exceeded",
+                            f'SVG source role "{role}" needs {role_line_counts.get(role, 0)} lines, above role budget {max_lines}',
+                            slide,
+                            "Increase the seed text box only by creating/updating a seed, or shorten the wording.",
+                        )
+                    )
+                    break
+                min_font = limits.get("min_font_px")
+                if min_font and role_min_fonts.get(role, 999.0) < min_font:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_source_role_text_budget_exceeded",
+                            f'SVG source role "{role}" font size is below min_font_px {min_font}',
+                            slide,
+                            "Do not hide overflow by shrinking text below the seed minimum.",
+                        )
+                    )
+                    break
     return issues
 
 
@@ -3085,6 +4323,7 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
         + validate_text_overlap(text_boxes)
         + validate_layout_pressure(elements, text_boxes, width, height)
         + validate_visible_svg_text_leaks(text_boxes)
+        + validate_text_visibility_clipping(text_boxes)
         + validate_visual_quality(elements)
         + validate_xml_like_layout(elements, text_boxes, primitive_summary)
     )
@@ -3093,6 +4332,18 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
     result["height"] = height
     result["element_count"] = len(elements)
     result["text_box_count"] = len(text_boxes)
+    result["text_boxes"] = [
+        {
+            "element_id": get_attr(item["element"], "id"),
+            "identifier": element_identifier_text(item["element"]),
+            "bbox": {key: round(value, 2) for key, value in item["bbox"].items()},
+            "text": textify(item.get("text")).strip()[:160],
+            "text_chars": visible_text_char_count(item.get("text")),
+            "font_size": round(float(item.get("font_size") or 0.0), 2),
+            "vertical_text": bool(item.get("vertical_text")),
+        }
+        for item in text_boxes
+    ]
     result["visual_primitives"] = primitive_summary
     result["issues"] = issues
     result["summary"] = {
@@ -3150,6 +4401,19 @@ def lint_files(paths: list[str], plan_path: str | None = None, context: dict[str
                 plan_result.setdefault("issues", []).extend(alignment_issues)
                 plan_result["summary"]["error_count"] = sum(1 for item in plan_result["issues"] if item["level"] == "error")
                 plan_result["summary"]["warning_count"] = sum(1 for item in plan_result["issues"] if item["level"] == "warning")
+    elif context.get("route_id") == CREATE_SVG_ROUTE_ID:
+        plan_result = {
+            "path": "<missing-plan>",
+            "issues": [
+                {
+                    "level": "error",
+                    "code": "plan_required_for_create_svg_route",
+                    "message": "create-svg route preflight requires --plan so seed, recipe, layout, and content-budget gates cannot be bypassed",
+                    "hint": "Pass --plan .lark-slides/plan/<deck-id>/slide_plan.json together with SVG inputs before live create.",
+                }
+            ],
+            "summary": {"error_count": 1, "warning_count": 0},
+        }
     summary = {
         "file_count": len(files),
         "error_count": sum(file["summary"]["error_count"] for file in files),

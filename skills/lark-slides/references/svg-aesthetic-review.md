@@ -6,6 +6,9 @@
 
 这份 review 补充 `svg_preflight.py`。Preflight 负责确定性的协议、plan 和
 bbox 问题；这份清单负责需要人工或截图判断的渲染后视觉质量问题。
+Project runner 中的 `svg_preview_lint.py` 负责缺 preview、破损 SVG、明显重叠、
+越界、空图和高置信浅字无底等 objective lint；本文件负责人工/截图视角的
+审美判断。二者都不能替代 live readback。
 
 ## 必须执行的 Review 流程
 

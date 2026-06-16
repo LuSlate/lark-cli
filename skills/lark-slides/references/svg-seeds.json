@@ -1,0 +1,2728 @@
+{
+  "version": "2026-06-15",
+  "source": "SVGlide local seed registry for create-svg authoring",
+  "notes": [
+    "This registry localizes Open Design's seed-first workflow for SVGlide.",
+    "Seeds are machine-readable generation controls, not HTML/CSS runtime templates.",
+    "SVGlide output remains 960x540 protocol SVG that the Slides service snapshots into a slide."
+  ],
+  "seeds": {
+    "cover_hero_statement": {
+      "page_use": "deck cover, thesis, executive opening",
+      "visual_recipe": "hero_typography",
+      "layout_family": "hero",
+      "layout_boxes": [
+        {
+          "id": "kicker",
+          "role": "kicker",
+          "x": 72,
+          "y": 60,
+          "width": 260,
+          "height": 30
+        },
+        {
+          "id": "title",
+          "role": "title",
+          "x": 72,
+          "y": 150,
+          "width": 560,
+          "height": 120
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 76,
+          "y": 284,
+          "width": 520,
+          "height": 72
+        },
+        {
+          "id": "visual",
+          "role": "visual",
+          "x": 600,
+          "y": 84,
+          "width": 288,
+          "height": 360
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 190,
+        "title": 42,
+        "body": 96,
+        "footer": 36,
+        "max_text_boxes": 4,
+        "min_text_boxes": 2
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 190,
+        "title": 42,
+        "body": 96,
+        "footer": 36,
+        "max_text_boxes": 4,
+        "min_text_boxes": 2
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "typography",
+        "geometric_shape",
+        "path"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "body",
+        "visual",
+        "footer"
+      ],
+      "quality_rules": [
+        "one dominant idea",
+        "no bullet wall",
+        "visual motif supports title"
+      ],
+      "layout_skeleton": {
+        "id": "cover_hero_statement_skeleton",
+        "reading_order": [
+          "kicker",
+          "title",
+          "body",
+          "visual",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "body",
+          "visual",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 42,
+          "max_lines": 2,
+          "max_boxes": 2,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 96,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "section_divider_index": {
+      "page_use": "chapter divider, transition, module opening",
+      "visual_recipe": "gradient_depth",
+      "layout_family": "section",
+      "layout_boxes": [
+        {
+          "id": "section-number",
+          "role": "kicker",
+          "x": 72,
+          "y": 92,
+          "width": 160,
+          "height": 90
+        },
+        {
+          "id": "title",
+          "role": "title",
+          "x": 180,
+          "y": 188,
+          "width": 600,
+          "height": 88
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 184,
+          "y": 292,
+          "width": 560,
+          "height": 38
+        },
+        {
+          "id": "visual",
+          "role": "visual",
+          "x": 0,
+          "y": 320,
+          "width": 960,
+          "height": 180
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 145,
+        "title": 34,
+        "body": 60,
+        "footer": 32,
+        "max_text_boxes": 4,
+        "min_text_boxes": 2
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 145,
+        "title": 34,
+        "body": 60,
+        "footer": 32,
+        "max_text_boxes": 4,
+        "min_text_boxes": 2
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "gradient",
+        "geometric_shape",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "visual",
+        "footer"
+      ],
+      "quality_rules": [
+        "strong chapter signal",
+        "minimal copy",
+        "visible depth motif"
+      ],
+      "layout_skeleton": {
+        "id": "section_divider_index_skeleton",
+        "reading_order": [
+          "kicker",
+          "title",
+          "body",
+          "visual",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "visual",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 34,
+          "max_lines": 2,
+          "max_boxes": 2,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 60,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 32,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "agenda_numbered_path": {
+      "page_use": "agenda, contents, meeting path, deck map",
+      "visual_recipe": "geometric_composition",
+      "layout_family": "navigation",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 54,
+          "width": 600,
+          "height": 54
+        },
+        {
+          "id": "rail",
+          "role": "timeline",
+          "x": 96,
+          "y": 136,
+          "width": 48,
+          "height": 312
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 154,
+          "y": 126,
+          "width": 650,
+          "height": 330
+        },
+        {
+          "id": "visual",
+          "role": "visual",
+          "x": 820,
+          "y": 156,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 260,
+        "title": 36,
+        "body": 180,
+        "footer": 34,
+        "max_text_boxes": 8,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 260,
+        "title": 36,
+        "body": 180,
+        "footer": 34,
+        "max_text_boxes": 8,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "geometric_shape",
+        "path",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "timeline",
+        "body",
+        "footer"
+      ],
+      "quality_rules": [
+        "4-7 agenda items",
+        "each item max two lines",
+        "number rail is real geometry"
+      ],
+      "layout_skeleton": {
+        "id": "agenda_numbered_path_skeleton",
+        "reading_order": [
+          "title",
+          "timeline",
+          "body",
+          "visual",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "timeline",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 180,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "quote_insight_claim": {
+      "page_use": "quote, key conclusion, decision principle",
+      "visual_recipe": "hero_typography",
+      "layout_family": "insight",
+      "layout_boxes": [
+        {
+          "id": "quote-mark",
+          "role": "visual",
+          "x": 68,
+          "y": 96,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": "title",
+          "role": "title",
+          "x": 116,
+          "y": 150,
+          "width": 728,
+          "height": 150
+        },
+        {
+          "id": "source",
+          "role": "source",
+          "x": 122,
+          "y": 322,
+          "width": 420,
+          "height": 28
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 122,
+          "y": 378,
+          "width": 620,
+          "height": 42
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 165,
+        "title": 68,
+        "body": 52,
+        "footer": 36,
+        "max_text_boxes": 5,
+        "min_text_boxes": 2
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 165,
+        "title": 68,
+        "body": 52,
+        "footer": 36,
+        "max_text_boxes": 5,
+        "min_text_boxes": 2
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "body",
+        "footer",
+        "source"
+      ],
+      "quality_rules": [
+        "one claim only",
+        "source stays outside body",
+        "quote mark remains decorative"
+      ],
+      "layout_skeleton": {
+        "id": "quote_insight_claim_skeleton",
+        "reading_order": [
+          "visual",
+          "title",
+          "source",
+          "body",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "source",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 68,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 52,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        },
+        "source": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "comparison_two_column_decision": {
+      "page_use": "comparison, before/after, option A/B",
+      "visual_recipe": "geometric_composition",
+      "layout_family": "comparison",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 48,
+          "width": 720,
+          "height": 54
+        },
+        {
+          "id": "left-panel",
+          "role": "body",
+          "x": 72,
+          "y": 136,
+          "width": 384,
+          "height": 300
+        },
+        {
+          "id": "right-panel",
+          "role": "body",
+          "x": 504,
+          "y": 136,
+          "width": 384,
+          "height": 300
+        },
+        {
+          "id": "dimension-rail",
+          "role": "table",
+          "x": 84,
+          "y": 204,
+          "width": 792,
+          "height": 190
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 320,
+        "title": 36,
+        "body": 220,
+        "footer": 36,
+        "max_text_boxes": 12,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 320,
+        "title": 36,
+        "body": 220,
+        "footer": 36,
+        "max_text_boxes": 12,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "geometric_shape",
+        "path",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "body",
+        "table",
+        "footer"
+      ],
+      "quality_rules": [
+        "3-5 dimensions",
+        "cell copy is short",
+        "recommendation is explicit"
+      ],
+      "layout_skeleton": {
+        "id": "comparison_two_column_decision_skeleton",
+        "reading_order": [
+          "title",
+          "body",
+          "table",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "body",
+          "table",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 220,
+          "max_lines": 6,
+          "max_boxes": 2,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "capability_icon_map": {
+      "page_use": "capability map, product modules, team roles",
+      "visual_recipe": "icon_capability_map",
+      "layout_family": "map",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 46,
+          "width": 660,
+          "height": 52
+        },
+        {
+          "id": "center-node",
+          "role": "visual",
+          "x": 398,
+          "y": 190,
+          "width": 164,
+          "height": 110
+        },
+        {
+          "id": "icon-grid",
+          "role": "grid",
+          "x": 92,
+          "y": 132,
+          "width": 776,
+          "height": 300
+        },
+        {
+          "id": "legend",
+          "role": "body",
+          "x": 126,
+          "y": 454,
+          "width": 708,
+          "height": 26
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 280,
+        "title": 36,
+        "body": 170,
+        "footer": 34,
+        "max_text_boxes": 9,
+        "min_text_boxes": 3
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 280,
+        "title": 36,
+        "body": 170,
+        "footer": 34,
+        "max_text_boxes": 9,
+        "min_text_boxes": 3
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "icon",
+        "geometric_shape",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "grid",
+        "body",
+        "footer"
+      ],
+      "quality_rules": [
+        "4-8 nodes",
+        "node labels max two lines",
+        "icons are systemized"
+      ],
+      "layout_skeleton": {
+        "id": "capability_icon_map_skeleton",
+        "reading_order": [
+          "title",
+          "visual",
+          "grid",
+          "body",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "grid",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 170,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "kpi_big_number": {
+      "page_use": "single KPI, annual result, growth target",
+      "visual_recipe": "infographic_scorecard",
+      "layout_family": "metric",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 48,
+          "width": 640,
+          "height": 52
+        },
+        {
+          "id": "metric",
+          "role": "metric",
+          "x": 74,
+          "y": 152,
+          "width": 470,
+          "height": 138
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 86,
+          "y": 306,
+          "width": 390,
+          "height": 72
+        },
+        {
+          "id": "chart",
+          "role": "chart",
+          "x": 570,
+          "y": 148,
+          "width": 300,
+          "height": 188
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 220,
+        "title": 34,
+        "body": 110,
+        "footer": 34,
+        "max_text_boxes": 7,
+        "min_text_boxes": 3
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 220,
+        "title": 34,
+        "body": 110,
+        "footer": 34,
+        "max_text_boxes": 7,
+        "min_text_boxes": 3
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "typography",
+        "micro_chart"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "metric",
+        "body",
+        "chart",
+        "footer"
+      ],
+      "quality_rules": [
+        "one dominant metric",
+        "chart is real SVG geometry or approved chart marker",
+        "no fake precision"
+      ],
+      "layout_skeleton": {
+        "id": "kpi_big_number_skeleton",
+        "reading_order": [
+          "title",
+          "metric",
+          "body",
+          "chart",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "metric",
+          "body",
+          "chart",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 34,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 110,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "metric": {
+          "max_chars": 80,
+          "max_lines": 3,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "single_chart_takeaway": {
+      "page_use": "trend insight, category comparison, data evidence",
+      "visual_recipe": "infographic_scorecard",
+      "layout_family": "chart",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 42,
+          "width": 680,
+          "height": 48
+        },
+        {
+          "id": "takeaway",
+          "role": "body",
+          "x": 66,
+          "y": 94,
+          "width": 660,
+          "height": 34
+        },
+        {
+          "id": "chart",
+          "role": "chart",
+          "x": 86,
+          "y": 154,
+          "width": 650,
+          "height": 296
+        },
+        {
+          "id": "annotation",
+          "role": "callout",
+          "x": 748,
+          "y": 168,
+          "width": 150,
+          "height": 168
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 260,
+        "title": 36,
+        "body": 150,
+        "footer": 36,
+        "max_text_boxes": 8,
+        "min_text_boxes": 3
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 260,
+        "title": 36,
+        "body": 150,
+        "footer": 36,
+        "max_text_boxes": 8,
+        "min_text_boxes": 3
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "typography",
+        "micro_chart",
+        "annotation"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "body",
+        "chart",
+        "callout",
+        "footer"
+      ],
+      "quality_rules": [
+        "one takeaway line",
+        "1-3 annotations",
+        "chart is not a decorative bar strip"
+      ],
+      "layout_skeleton": {
+        "id": "single_chart_takeaway_skeleton",
+        "reading_order": [
+          "title",
+          "body",
+          "chart",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "body",
+          "chart",
+          "callout",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 150,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "dashboard_kpi_grid": {
+      "page_use": "operating dashboard, project status, KPI grid",
+      "visual_recipe": "fake_ui_dashboard",
+      "layout_family": "dashboard",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 48,
+          "y": 34,
+          "width": 864,
+          "height": 48
+        },
+        {
+          "id": "primary-kpi",
+          "role": "metric",
+          "x": 64,
+          "y": 106,
+          "width": 260,
+          "height": 128
+        },
+        {
+          "id": "secondary-grid",
+          "role": "grid",
+          "x": 348,
+          "y": 106,
+          "width": 548,
+          "height": 128
+        },
+        {
+          "id": "chart-row",
+          "role": "chart",
+          "x": 64,
+          "y": 258,
+          "width": 832,
+          "height": 150
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 64,
+          "y": 426,
+          "width": 832,
+          "height": 56
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 360,
+        "title": 34,
+        "body": 230,
+        "footer": 36,
+        "max_text_boxes": 14,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 360,
+        "title": 34,
+        "body": 230,
+        "footer": 36,
+        "max_text_boxes": 14,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "dashboard",
+        "micro_chart",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "metric",
+        "grid",
+        "chart",
+        "body",
+        "footer"
+      ],
+      "quality_rules": [
+        "4-8 KPIs",
+        "2-4 micro charts",
+        "status rows use visual structure"
+      ],
+      "layout_skeleton": {
+        "id": "dashboard_kpi_grid_skeleton",
+        "reading_order": [
+          "title",
+          "metric",
+          "grid",
+          "chart",
+          "body",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "metric",
+          "grid",
+          "chart",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 34,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 230,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "metric": {
+          "max_chars": 80,
+          "max_lines": 3,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "timeline_roadmap": {
+      "page_use": "roadmap, milestone, phase plan",
+      "visual_recipe": "path_flow",
+      "layout_family": "roadmap",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 46,
+          "width": 680,
+          "height": 52
+        },
+        {
+          "id": "spine",
+          "role": "timeline",
+          "x": 96,
+          "y": 236,
+          "width": 768,
+          "height": 72
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 96,
+          "y": 160,
+          "width": 768,
+          "height": 210
+        },
+        {
+          "id": "callout",
+          "role": "callout",
+          "x": 612,
+          "y": 380,
+          "width": 250,
+          "height": 60
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 285,
+        "title": 36,
+        "body": 180,
+        "footer": 34,
+        "max_text_boxes": 9,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 285,
+        "title": 36,
+        "body": 180,
+        "footer": 34,
+        "max_text_boxes": 9,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "path",
+        "annotation",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "timeline",
+        "body",
+        "footer"
+      ],
+      "quality_rules": [
+        "3-6 milestones",
+        "labels are compact",
+        "timeline path is visible"
+      ],
+      "layout_skeleton": {
+        "id": "timeline_roadmap_skeleton",
+        "reading_order": [
+          "title",
+          "timeline",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "timeline",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 180,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "process_pipeline": {
+      "page_use": "workflow, process, pipeline, cause-effect",
+      "visual_recipe": "path_flow",
+      "layout_family": "flow",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 46,
+          "width": 680,
+          "height": 52
+        },
+        {
+          "id": "input",
+          "role": "body",
+          "x": 68,
+          "y": 214,
+          "width": 120,
+          "height": 84
+        },
+        {
+          "id": "steps",
+          "role": "flow",
+          "x": 210,
+          "y": 160,
+          "width": 540,
+          "height": 170
+        },
+        {
+          "id": "output",
+          "role": "body",
+          "x": 772,
+          "y": 214,
+          "width": 120,
+          "height": 84
+        },
+        {
+          "id": "note",
+          "role": "callout",
+          "x": 150,
+          "y": 382,
+          "width": 660,
+          "height": 48
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 270,
+        "title": 36,
+        "body": 170,
+        "footer": 34,
+        "max_text_boxes": 8,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 270,
+        "title": 36,
+        "body": 170,
+        "footer": 34,
+        "max_text_boxes": 8,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "path",
+        "annotation",
+        "geometric_shape"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "flow",
+        "body",
+        "callout",
+        "footer"
+      ],
+      "quality_rules": [
+        "4-6 steps",
+        "connectors avoid labels",
+        "note strip is not a paragraph"
+      ],
+      "layout_skeleton": {
+        "id": "process_pipeline_skeleton",
+        "reading_order": [
+          "title",
+          "body",
+          "flow",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "flow",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 170,
+          "max_lines": 6,
+          "max_boxes": 2,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "loop_flywheel": {
+      "page_use": "flywheel, feedback loop, growth cycle",
+      "visual_recipe": "metaphor_loop",
+      "layout_family": "loop",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 46,
+          "width": 680,
+          "height": 52
+        },
+        {
+          "id": "loop-path",
+          "role": "flow",
+          "x": 240,
+          "y": 126,
+          "width": 480,
+          "height": 300
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 226,
+          "y": 124,
+          "width": 508,
+          "height": 302
+        },
+        {
+          "id": "center",
+          "role": "callout",
+          "x": 360,
+          "y": 230,
+          "width": 240,
+          "height": 74
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 260,
+        "title": 36,
+        "body": 160,
+        "footer": 34,
+        "max_text_boxes": 8,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 260,
+        "title": 36,
+        "body": 160,
+        "footer": 34,
+        "max_text_boxes": 8,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "path",
+        "geometric_shape",
+        "typography"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "flow",
+        "body",
+        "callout",
+        "footer"
+      ],
+      "quality_rules": [
+        "3-5 loop nodes",
+        "center thesis max two lines",
+        "loop path owns the page"
+      ],
+      "layout_skeleton": {
+        "id": "loop_flywheel_skeleton",
+        "reading_order": [
+          "title",
+          "flow",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "flow",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 160,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "architecture_layered_system": {
+      "page_use": "system architecture, service map, module dependency",
+      "visual_recipe": "technical_texture",
+      "layout_family": "architecture",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 42,
+          "width": 700,
+          "height": 50
+        },
+        {
+          "id": "diagram",
+          "role": "diagram",
+          "x": 90,
+          "y": 128,
+          "width": 600,
+          "height": 300
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 724,
+          "y": 142,
+          "width": 150,
+          "height": 230
+        },
+        {
+          "id": "labels",
+          "role": "label",
+          "x": 130,
+          "y": 434,
+          "width": 520,
+          "height": 34
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 310,
+        "title": 36,
+        "body": 190,
+        "footer": 34,
+        "max_text_boxes": 10,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 310,
+        "title": 36,
+        "body": 190,
+        "footer": 34,
+        "max_text_boxes": 10,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "texture",
+        "path",
+        "geometric_shape"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "diagram",
+        "body",
+        "footer"
+      ],
+      "quality_rules": [
+        "3-5 layers",
+        "6-12 nodes",
+        "no code-like tiny text"
+      ],
+      "layout_skeleton": {
+        "id": "architecture_layered_system_skeleton",
+        "reading_order": [
+          "title",
+          "diagram",
+          "body",
+          "label",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "diagram",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 190,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "label": {
+          "max_chars": 60,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 10
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "image_story_showcase": {
+      "page_use": "case study, screenshot story, product proof",
+      "visual_recipe": "mask_clip_showcase",
+      "layout_family": "showcase",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 42,
+          "width": 640,
+          "height": 50
+        },
+        {
+          "id": "image",
+          "role": "image",
+          "x": 70,
+          "y": 126,
+          "width": 520,
+          "height": 318
+        },
+        {
+          "id": "caption",
+          "role": "caption",
+          "x": 84,
+          "y": 456,
+          "width": 470,
+          "height": 24
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 626,
+          "y": 134,
+          "width": 250,
+          "height": 226
+        },
+        {
+          "id": "callout",
+          "role": "callout",
+          "x": 520,
+          "y": 170,
+          "width": 180,
+          "height": 180
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 250,
+        "title": 34,
+        "body": 150,
+        "footer": 36,
+        "max_text_boxes": 7,
+        "min_text_boxes": 3
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 250,
+        "title": 34,
+        "body": 150,
+        "footer": 36,
+        "max_text_boxes": 7,
+        "min_text_boxes": 3
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "typography",
+        "image_overlay",
+        "annotation"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "image",
+        "body",
+        "footer",
+        "caption"
+      ],
+      "quality_rules": [
+        "image has asset contract",
+        "overlay preserves readability",
+        "callouts do not obscure inspection-critical content"
+      ],
+      "layout_skeleton": {
+        "id": "image_story_showcase_skeleton",
+        "reading_order": [
+          "title",
+          "image",
+          "caption",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "image",
+          "caption",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 34,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 150,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        },
+        "caption": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "spotlight_diagnosis_callout": {
+      "page_use": "diagnosis, risk callout, annotated detail",
+      "visual_recipe": "spotlight_annotation",
+      "layout_family": "annotation",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 64,
+          "y": 42,
+          "width": 680,
+          "height": 50
+        },
+        {
+          "id": "base-visual",
+          "role": "visual",
+          "x": 92,
+          "y": 128,
+          "width": 530,
+          "height": 318
+        },
+        {
+          "id": "spotlight",
+          "role": "spotlight",
+          "x": 270,
+          "y": 214,
+          "width": 150,
+          "height": 90
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 660,
+          "y": 150,
+          "width": 214,
+          "height": 210
+        },
+        {
+          "id": "callout",
+          "role": "callout",
+          "x": 660,
+          "y": 382,
+          "width": 214,
+          "height": 52
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 285,
+        "title": 36,
+        "body": 180,
+        "footer": 34,
+        "max_text_boxes": 9,
+        "min_text_boxes": 4
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 285,
+        "title": 36,
+        "body": 180,
+        "footer": 34,
+        "max_text_boxes": 9,
+        "min_text_boxes": 4
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "spotlight",
+        "annotation",
+        "path",
+        "geometric_shape"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "visual",
+        "spotlight",
+        "body",
+        "callout",
+        "footer"
+      ],
+      "quality_rules": [
+        "1-2 targets",
+        "callout max five lines",
+        "spotlight is a visible primitive"
+      ],
+      "layout_skeleton": {
+        "id": "spotlight_diagnosis_callout_skeleton",
+        "reading_order": [
+          "title",
+          "visual",
+          "spotlight",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "visual",
+          "spotlight",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 36,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 180,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 34,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    },
+    "closing_summary": {
+      "page_use": "summary, Q&A, thanks, next step",
+      "visual_recipe": "brand_system",
+      "layout_family": "closing",
+      "layout_boxes": [
+        {
+          "id": "title",
+          "role": "title",
+          "x": 72,
+          "y": 96,
+          "width": 620,
+          "height": 104
+        },
+        {
+          "id": "body",
+          "role": "body",
+          "x": 76,
+          "y": 240,
+          "width": 520,
+          "height": 96
+        },
+        {
+          "id": "cta",
+          "role": "callout",
+          "x": 628,
+          "y": 248,
+          "width": 236,
+          "height": 88
+        },
+        {
+          "id": "footer",
+          "role": "footer",
+          "x": 64,
+          "y": 500,
+          "width": 832,
+          "height": 24
+        }
+      ],
+      "content_budget": {
+        "max_visible_chars": 185,
+        "title": 38,
+        "body": 90,
+        "footer": 36,
+        "max_text_boxes": 5,
+        "min_text_boxes": 2
+      },
+      "default_text_capacity": {
+        "max_visible_chars": 185,
+        "title": 38,
+        "body": 90,
+        "footer": 36,
+        "max_text_boxes": 5,
+        "min_text_boxes": 2
+      },
+      "reserved_bands": {
+        "footer": {
+          "x": 48,
+          "y": 496,
+          "width": 864,
+          "height": 32
+        }
+      },
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "required_layout_box_roles": [
+        "title",
+        "body",
+        "footer"
+      ],
+      "quality_rules": [
+        "explicit closing signal",
+        "one next action",
+        "no new dense evidence"
+      ],
+      "layout_skeleton": {
+        "id": "closing_summary_skeleton",
+        "reading_order": [
+          "title",
+          "body",
+          "callout",
+          "footer"
+        ],
+        "locked_roles": [
+          "title",
+          "body",
+          "footer"
+        ],
+        "drift_tolerance_px": 28,
+        "min_role_gap_px": {
+          "title_to_content": 24,
+          "label_to_text": 8
+        },
+        "no_overlap_role_pairs": [
+          [
+            "label",
+            "body"
+          ],
+          [
+            "label",
+            "callout"
+          ],
+          [
+            "callout",
+            "title"
+          ]
+        ],
+        "right_title_crowding": {
+          "enabled": false,
+          "min_gap_px": 16,
+          "max_chars": 28
+        }
+      },
+      "text_budget_by_role": {
+        "title": {
+          "max_chars": 38,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 22
+        },
+        "body": {
+          "max_chars": 90,
+          "max_lines": 6,
+          "max_boxes": 1,
+          "min_font_px": 12
+        },
+        "callout": {
+          "max_chars": 72,
+          "max_lines": 2,
+          "max_boxes": 1,
+          "min_font_px": 11
+        },
+        "footer": {
+          "max_chars": 36,
+          "max_lines": 1,
+          "max_boxes": 1,
+          "min_font_px": 9
+        }
+      },
+      "footer_safe_zone": {
+        "x": 48,
+        "y": 496,
+        "width": 864,
+        "height": 32,
+        "allowed_roles": [
+          "footer"
+        ],
+        "min_gap_above_px": 8
+      },
+      "vertical_text_policy": {
+        "mode": "deny",
+        "allowed_roles": [],
+        "max_chars": 0,
+        "max_lines": 0
+      }
+    }
+  }
+}

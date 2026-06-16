@@ -4,6 +4,25 @@
 
 本文件只定义轻量资产规划。不要把它理解成素材采集流程。
 
+## SVGlide Asset Modes
+
+`slides +create-svg` 的资产模式只写在现有 `asset_strategy.mode` 和 page-level
+`visual_plan.asset_contract.mode` 里。不要新增平行的顶层 `asset_mode` 或
+`image_policy`。
+
+允许的 mode：
+
+- `authoring_preview_rich`：默认 authoring 模式。只要有助于页面表达，就使用丰富 preview 资产；同时记录来源元数据，并把未知授权标为 preview-only。
+- `online_pure_fallback`：live lane 尚未证明 image token 可用时的发布 fallback。保留丰富 authoring preview，另行准备 pure-SVG 发布输出。
+- `production_asset_strict`：正式交付模式。每张图片、logo 和资产都必须有可审计来源、授权、本地路径或 file token，以及使用页。
+
+迁移期兼容映射：
+
+- `preview` 映射到 `authoring_preview_rich`。
+- `production` 映射到 `production_asset_strict`。
+
+P0 preflight 可以 warning 并映射旧值。等示例和文档迁完后，旧值应升级为 error。
+
 ## Core Rules
 
 - `asset_need` is metadata only. It can guide page design, but it must not require web search, local download, media upload, or external tools.
