@@ -32,9 +32,9 @@ func TestTablePut_IsoDateToSerial(t *testing.T) {
 		{"2024-01-15T00:00:00.000", 45306, true},
 		{"2024-01-15T08:30:00+08:00", 45306, true},
 		{"not-a-date", 0, false},
-		{"2024/01/15", 0, false},   // wrong separator
-		{"T2024-01-15", 0, false},  // a leading T isn't a valid prefix to strip
-		{"2024-15-01", 0, false},   // invalid month/day still rejected after T-strip
+		{"2024/01/15", 0, false},  // wrong separator
+		{"T2024-01-15", 0, false}, // a leading T isn't a valid prefix to strip
+		{"2024-15-01", 0, false},  // invalid month/day still rejected after T-strip
 	}
 	for _, tt := range cases {
 		got, err := isoDateToSerial(tt.in)
@@ -196,12 +196,12 @@ func TestDtypeToTypeFormat(t *testing.T) {
 func TestTypeToDtype(t *testing.T) {
 	t.Parallel()
 	cases := []struct{ typ, want string }{
-		{"string", "object"},     // pandas default, astype("object") is a no-op
-		{"number", "float64"},    // works for ints, floats, and NaN-containing series
+		{"string", "object"},       // pandas default, astype("object") is a no-op
+		{"number", "float64"},      // works for ints, floats, and NaN-containing series
 		{"date", "datetime64[ns]"}, // matches ISO yyyy-mm-dd strings we emit
-		{"bool", "bool"},         // inferColumnType only picks bool when every cell is bool
-		{"", "object"},           // defensive default
-		{"surprise", "object"},   // ditto
+		{"bool", "bool"},           // inferColumnType only picks bool when every cell is bool
+		{"", "object"},             // defensive default
+		{"surprise", "object"},     // ditto
 	}
 	for _, tc := range cases {
 		if got := typeToDtype(tc.typ); got != tc.want {
@@ -232,10 +232,10 @@ func TestNormalize_DefaultsAndFormatOverride(t *testing.T) {
 		t.Fatalf("normalize: %v", err)
 	}
 	want := []tableColumnSpec{
-		{Name: "id", Type: "string", Format: "@"},     // unspecified dtype → string + text format
+		{Name: "id", Type: "string", Format: "@"},         // unspecified dtype → string + text format
 		{Name: "amt", Type: "number", Format: "#,##0.00"}, // float64 + formats override
-		{Name: "d", Type: "date", Format: "yyyy-mm-dd"}, // datetime → date + default date format
-		{Name: "raw", Type: "string", Format: "@"},    // unspecified → string + text format
+		{Name: "d", Type: "date", Format: "yyyy-mm-dd"},   // datetime → date + default date format
+		{Name: "raw", Type: "string", Format: "@"},        // unspecified → string + text format
 	}
 	for i, w := range want {
 		got := spec.Columns[i]
@@ -356,6 +356,80 @@ func cellStyles(c interface{}) map[string]interface{} {
 	m, _ := c.(map[string]interface{})
 	s, _ := m["cell_styles"].(map[string]interface{})
 	return s
+}
+
+// TestTablePut_DryRunWithStyles confirms --styles flows through the same shared
+// path as +workbook-create: cell_styles merge into the matrix, and merges /
+// resizes render as their own tool calls after the set_cell_range write.
+func TestTablePut_DryRunWithStyles(t *testing.T) {
+	t.Parallel()
+	calls := parseDryRunAPI(t, TablePut, []string{
+		"--url", testURL,
+		"--sheets", `{"sheets":[{"name":"数据","columns":["a","b"],"data":[["x","y"]]}]}`,
+		"--styles", `{"styles":[{"name":"数据","cell_styles":[{"range":"A1:B1","font_weight":"bold"}],"cell_merges":[{"range":"A1:B1"}],"col_sizes":[{"range":"A:A","type":"pixel","size":120}]}]}`,
+	})
+	if len(calls) != 3 {
+		t.Fatalf("want 3 dry-run calls (set_cell_range + merge + resize), got %d", len(calls))
+	}
+	body, _ := calls[0].(map[string]interface{})["body"].(map[string]interface{})
+	input := decodeToolInput(t, body, "set_cell_range")
+	cellsRaw, _ := json.Marshal(input["cells"])
+	if !strings.Contains(string(cellsRaw), `"font_weight":"bold"`) {
+		t.Errorf("cell_styles should merge into the matrix; cells=%s", cellsRaw)
+	}
+	allRaw, _ := json.Marshal(calls)
+	if !strings.Contains(string(allRaw), "merge_cells") {
+		t.Errorf("dry-run should include merge_cells visual op; calls=%s", allRaw)
+	}
+	if !strings.Contains(string(allRaw), "resize_range") {
+		t.Errorf("dry-run should include resize_range visual op; calls=%s", allRaw)
+	}
+}
+
+// TestTablePut_StylesNameMismatchRejected confirms a styles item whose name
+// doesn't match the payload sheet is rejected at Validate, before any write.
+func TestTablePut_StylesNameMismatchRejected(t *testing.T) {
+	t.Parallel()
+	stdout, stderr, err := runShortcutCapturingErr(t, TablePut, []string{
+		"--url", testURL,
+		"--sheets", `{"sheets":[{"name":"数据","columns":["a"],"data":[["x"]]}]}`,
+		"--styles", `{"styles":[{"name":"其他","cell_styles":[{"range":"A1","font_weight":"bold"}]}]}`,
+		"--dry-run",
+	})
+	if err == nil {
+		t.Fatalf("expected validation error; got nil. stdout=%s stderr=%s", stdout, stderr)
+	}
+	if !strings.Contains(stdout+stderr+err.Error(), "must match") {
+		t.Errorf("error should flag the name mismatch; got=%s|%s|%v", stdout, stderr, err)
+	}
+}
+
+// TestTablePut_ExecuteWithStyles drives the full write + visual-ops path: the
+// set_cell_range write carries the merged cell_styles, then merge_cells /
+// resize_range tool calls apply the structural styles in the same call.
+func TestTablePut_ExecuteWithStyles(t *testing.T) {
+	t.Parallel()
+	structure := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"`+testSheetID+`","sheet_name":"数据","index":0}]}`)
+	// get_sheet_structure (ensureSheetCapacity) + set_cell_range + merge_cells +
+	// resize_range all hit the same write/read endpoints; mark reusable so the
+	// FIFO stub serves each.
+	dims := toolOutputStub(testToken, "read", `{"range":"A1:T200"}`)
+	dims.Reusable = true
+	write := toolOutputStub(testToken, "write", `{"ok":true}`)
+	write.Reusable = true
+	out, err := runShortcutWithStubs(t, TablePut,
+		[]string{"--url", testURL,
+			"--sheets", `{"sheets":[{"name":"数据","columns":["a","b"],"data":[["x","y"]]}]}`,
+			"--styles", `{"styles":[{"name":"数据","cell_styles":[{"range":"A1:B1","font_weight":"bold"}],"cell_merges":[{"range":"A1:B1"}]}]}`},
+		structure, dims, write)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
+	}
+	data := decodeEnvelopeData(t, out)
+	sheets, _ := data["sheets"].([]interface{})
+	if len(sheets) != 1 {
+		t.Fatalf("result sheets = %d, want 1: %#v", len(sheets), data)
+	}
 }
 
 // ─── validation through the cobra surface ─────────────────────────────

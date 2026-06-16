@@ -320,6 +320,8 @@ lark-cli sheets +sheet-create --url "https://example.feishu.cn/sheets/shtXXX" \
   --title "汇总" --index 0
 ```
 
+> 💡 `+sheet-create` 只建一张**空子表**。要在已有工作簿里建子表并一步写入 typed 数据和/或样式，用 `+table-put`（payload 里命名的子表缺则自动新建）配合它的 `--sheets` / `--styles`，省掉先建表再 `+cells-set` / `+cells-set-style` 的二次往返。
+
 ### `+sheet-delete`
 
 > ⚠️ 工作表删除不可逆；先 `--dry-run` 看输出 sheet_id + title 确认是要删的那张。

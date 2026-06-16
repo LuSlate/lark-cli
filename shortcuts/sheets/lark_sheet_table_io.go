@@ -53,7 +53,14 @@ var TablePut = common.Shortcut{
 		if _, err := resolveSpreadsheetToken(runtime); err != nil {
 			return err
 		}
-		_, err := resolveTablePayload(runtime)
+		payload, err := resolveTablePayload(runtime)
+		if err != nil {
+			return err
+		}
+		// --styles is parsed (and aligned against the payload's sheets) up front
+		// so a malformed style item fails before any write lands — mirroring
+		// +workbook-create's Validate.
+		_, err = parseWorkbookCreateSheetStyles(runtime, payload)
 		return err
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
@@ -68,12 +75,17 @@ var TablePut = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		return tablePutWrite(ctx, runtime, token, payload)
+		styles, err := parseWorkbookCreateSheetStyles(runtime, payload)
+		if err != nil {
+			return err
+		}
+		return tablePutWrite(ctx, runtime, token, payload, styles)
 	},
 	Tips: []string{
 		"Writes into an existing spreadsheet — pass --url or --spreadsheet-token. To create a new workbook first, use +workbook-create, then point --spreadsheet-token here.",
 		"Payload sheets are matched to existing sub-sheets by name (created when absent). Date columns take ISO yyyy-mm-dd strings — converted to real dates (serial + date format).",
 		"Two equivalent producers: --sheets (multi-sheet JSON, the pandas-split convention) or --dataframe (single-sheet Arrow IPC binary, what `df.to_feather()` writes). Mutually exclusive; pick by what your producer already emits.",
+		"--styles applies number formats, colors, merges, and row/col sizes in the same call (same shape as +workbook-create's --styles): one styles item per written sheet, name-matched. Skips the separate +cells-set-style round-trip.",
 	},
 }
 
@@ -784,9 +796,11 @@ func renameSheet(ctx context.Context, runtime *common.RuntimeContext, token, she
 
 // tablePutWrite writes the payload into an existing workbook and emits the
 // +table-put envelope. The shared write loop lives in writeTypedSheets; this
-// wrapper adds +table-put's output shape and partial-success reporting.
-func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload) error {
-	written, err := writeTypedSheets(ctx, runtime, token, payload, "", nil)
+// wrapper adds +table-put's output shape and partial-success reporting. styles
+// (optional, parsed from --styles) is forwarded so per-sheet visual ops apply
+// in the same call.
+func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, styles *workbookCreateSheetStyles) error {
+	written, err := writeTypedSheets(ctx, runtime, token, payload, "", styles)
 	if err != nil {
 		return tablePutPartial(token, nil, written, err.Error())
 	}
@@ -1009,8 +1023,10 @@ func tablePutPartial(token string, spreadsheet interface{}, written []interface{
 // ─── dry-run ──────────────────────────────────────────────────────────
 
 // tablePutDryRun renders the set_cell_range write the shortcut would send for
-// each sheet. Network-free; the payload and locator have already been validated
-// by Validate, so errors here degrade to an empty preview rather than twice.
+// each sheet, plus any --styles visual ops (cell_styles merged into the matrix;
+// merges / row+col sizes as their own tool calls). Network-free; the payload,
+// locator, and styles have already been validated by Validate, so errors here
+// degrade to an empty preview rather than twice.
 func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 	dry := common.NewDryRunAPI()
 	payload, err := resolveTablePayload(runtime)
@@ -1021,6 +1037,7 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 	if err != nil {
 		return dry
 	}
+	sheetStyles, _ := parseWorkbookCreateSheetStyles(runtime, payload)
 	for i := range payload.Sheets {
 		s := &payload.Sheets[i]
 		matrix, _ := buildSheetMatrix(s, headerOn(s))
@@ -1029,6 +1046,13 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 		rng := tablePutFullRange(s, len(matrix))
 		if s.Mode == "append" {
 			rng = "<append below existing data>"
+		} else {
+			// cell_styles are merged into the matrix only for overwrite mode,
+			// where the anchor row is known statically; append's base row is
+			// resolved at execute time, so the preview leaves the matrix bare
+			// (the merges / sizes ops below still render).
+			_, col0, row0, _ := sheetAnchor(s)
+			_ = applyWorkbookCreateStylesToMatrix(matrix, sheetStyles.styleFor(i), col0, row0, fmt.Sprintf("--styles for sheet %q", s.Name))
 		}
 		input := map[string]interface{}{
 			"excel_id":   token,
@@ -1041,6 +1065,7 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 		}
 		wireBody, _ := buildToolBody("set_cell_range", input)
 		dry.POST(toolInvokePath(token, ToolKindWrite)).Desc(desc).Body(wireBody)
+		appendWorkbookCreateVisualOpsDryRun(dry, token, "", s.Name, sheetStyles.styleFor(i))
 	}
 	return dry
 }
