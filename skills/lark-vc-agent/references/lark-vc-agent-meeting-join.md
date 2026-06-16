@@ -102,18 +102,17 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --form
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 ```
 
-### 场景 2：加入会议 → 会后拉取纪要 / 录制
+### 场景 2：加入会议 → 会后进入 lark-vc 做产物发现
 
 ```bash
 # 第 1 步：加入并参会
 lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
-# 第 2 步：会议结束后，查询录制（拿到 minute_token）
-lark-cli vc +recording --meeting-ids <meeting.id>
-
-# 第 3 步：查询会议纪要（总结 / 待办 / 章节 / 逐字稿）
+# 第 2 步：会议结束后，先查询会议产物
 lark-cli vc +notes --meeting-ids <meeting.id>
 ```
+
+后续按 `lark-vc` 的产物决策处理：根据 `note_display_type`、`note_id`、`minute_token` 和用户意图选择纪要正文、逐字稿或妙记。
 
 ## 常见错误与排查
 
@@ -123,7 +122,7 @@ lark-cli vc +notes --meeting-ids <meeting.id>
 | 会议密码错误 | `--password` 错误或未提供 | 向主持人确认会议密码 |
 | 会议不存在 / 已结束 | 会议号错误或会议未进行中 | 确认会议正在进行中 |
 | `HTTP 403: no permission` / `121003` | 入会前置条件不满足，通常不是单纯 scope 问题 | 依次确认：1）会议允许智能体加入；2）会议号正确；3）如有密码，已正确传入 `--password`；4）会议已开始；5）等候室 / 入会审批已放行；6）会议未禁止当前身份加入（如限制外部、限制应用机器人、仅特定成员可入会）；确认后重试 |
-| 应用身份权限不足 | 应用 scope、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。检查 `vc:meeting.bot.join:write`、应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
+| 应用身份权限不足 | 应用权限、租户安装、权限可访问的数据范围或 VC Agent privilege 未配置完整 | 不要执行 `auth login`。以 CLI 返回的 metadata / error envelope 为准确认缺失权限；检查应用发布/安装，以及开放平台“权限可访问的数据范围”：选择“按条件筛选”，条件为“会议的归属者 包含 与应用的可用范围一致”；仍失败再排查内测 privilege / 灰度 |
 | 入会被拒绝 | 等候室 / 入会审批 / 限制外部入会 | 联系主持人放行或调整会议设置 |
 
 ## 提示
