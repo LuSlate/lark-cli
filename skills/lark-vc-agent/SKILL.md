@@ -18,7 +18,7 @@ metadata:
 ## 内测提示
 
 - 当前功能正在内测中，仅少数用户可用。忽略 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md) 中的权限申请流程，以下方的指引为准。
-- 如果 `lark-cli` 提示 `missing required scope(s)` / `permission_violations`，不要走普通权限申请流程；先提示用户加入早鸟群确认内测权限已开通，再按“应用身份权限配置检查”处理应用权限、安装和数据范围。
+- 如果 `lark-cli` 提示 `missing required scope(s)` / `permission_violations`，不要走普通权限申请流程；先提示用户加入早鸟群确认内测权限已开通，再按 [权限与身份错误排查](references/lark-vc-agent-permission-troubleshooting.md) 处理应用权限、安装和数据范围。
 - 如果 `lark-cli` 返回 `error.code=20017` / `ErrNotInGray`，提示用户加入早鸟群：`https://go.larkoffice.com/join-chat/2f4nb0e1-fe00-4f67-bed7-25beaf533fbd`。
 
 ## 定位
@@ -95,70 +95,19 @@ metadata:
 5. 如果返回多个会议，不要自动任选一个；按 `meeting_title` / `meeting_no` / `meeting_id` 展示候选，等待用户明确选择后再调用 `+meeting-events`。
 6. 如果用户给了 9 位会议号，先在 active meeting 结果中按 `meeting_no` 匹配。匹配失败时，不要自动入会；只有用户明确要求应用机器人真实入会时，才询问或执行 `+meeting-join`。
 
-### 5. Agent 参会示范
+### 5. 常用编排
 
-```bash
-# 1. 入会，捕获 meeting.id
-JOIN=$(lark-cli vc +meeting-join --as bot --meeting-number 123456789 --format json)
-MID=$(echo "$JOIN" | jq -r '.data.meeting.id')
-
-# 2. 会中轮询事件
-#    默认用 --page-all 拉全当前可见事件；下次增量优先复用 page_token
-#    典型间隔 10-30 秒
-lark-cli vc +meeting-events --as bot --meeting-id "$MID" --page-all --format pretty
-
-# 3. 会后可选：进入 lark-vc 获取会议产物信息，再按 note_display_type / minute_token 决策读取
-lark-cli vc +notes --meeting-ids "$MID"
-```
-
-如果用户随后明确要求退出 / 离开 / 结束参会，再单独调用 `lark-cli vc +meeting-leave --as bot --meeting-id "$MID"`。
-
-如果已经知道目标用户 `open_id`，且 bot 已在会中，也可以先发现当前会：
-
-```bash
-lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
-lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --format pretty
-```
-
-如果只是回答当前登录用户所在会议发生了什么，使用用户身份一路查：
-
-```bash
-lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --format pretty
-```
+- 应用机器人真实入会：`+meeting-join --as bot` → 记录返回的 `meeting.id` → `+meeting-events --as bot --page-all`；只有用户明确要求退出时才 `+meeting-leave --as bot`。
+- 已知目标用户 `open_id` 且应用机器人已在会：`+meeting-list-active --as bot --user-id <user_open_id>` → `+meeting-events --as bot`。
+- 只回答当前登录用户所在会议发生了什么：`+meeting-list-active --as user` → `+meeting-events --as user`。
 
 ## Shortcuts
 
-Shortcut 是对常用操作的高级封装（`lark-cli vc +<verb> [flags]`）。
-
-| Shortcut                                                        | 类型 | 说明                                                                         |
-| --------------------------------------------------------------- | -- | -------------------------------------------------------------------------- |
-| [`+meeting-join`](references/lark-vc-agent-meeting-join.md)     | 写  | Join an in-progress meeting by 9-digit meeting number                      |
-| [`+meeting-list-active`](references/lark-vc-agent-meeting-list-active.md) | 读  | List active meetings and discover meeting_id for event reads               |
-| [`+meeting-events`](references/lark-vc-agent-meeting-events.md) | 读  | List meeting events visible to the app agent (participant joined/left, transcript, chat, share) |
-| [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)   | 写  | Leave a meeting by meeting\_id                                             |
-
-- [`+meeting-join`](references/lark-vc-agent-meeting-join.md)：入参格式、写操作可见性风险、入会失败排查。
-- [`+meeting-list-active`](references/lark-vc-agent-meeting-list-active.md)：用户身份和应用身份的不同返回范围。
-- [`+meeting-events`](references/lark-vc-agent-meeting-events.md)：`meeting_id` 来源、身份延续、分页和错误码（10005 / 20001 / 20002）。
-- [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)：`meeting_id` 的来源与写操作可见性。
-
-## 应用身份权限配置检查
-
-应用身份 `--as bot` 报 `no permission`、`missing required scope(s)`、`permission_violations`、`ErrNotInGray` 或 `20017` 时，不要引导用户执行 `auth login`。按顺序检查：
-
-1. 以 CLI 返回的 metadata / error envelope 为准，确认提示的 VC Agent 相关权限已开通。常见读取 active meeting / events 需要会中事件读取权限；应用机器人入会 / 离会需要 bot 入会写权限。
-2. 应用已发布并安装到当前租户。
-3. 开放平台“权限可访问的数据范围”已开通并保存。
-4. 数据范围选择“按条件筛选”，条件配置为：**会议的归属者 包含 与应用的可用范围一致**。
-5. 如果 scope、安装和数据范围都正确，仍返回 `ErrNotInGray` / `20017`，再按 VC Agent 内测 privilege / 灰度白名单处理，提示加入早鸟群或联系平台同学开通。
-
-## 用户身份被拒绝时
-
-用户身份 `--as user` 报权限或身份不支持类错误时，不要反复引导用户执行 `auth login`。先以 CLI 返回的 metadata / error envelope 为准判断：如果错误表明当前接口不支持用户身份访问，再按用户意图切换处理：
-
-1. 如果用户只是查询当前登录用户所在的进行中会议，说明当前接口链路不支持用户身份访问，改用应用身份流程；需要目标用户 open_id，并要求应用机器人已在会中或先按用户确认执行入会。
-2. 如果用户明确要求应用机器人入会、旁听、代参会或读取应用机器人可见事件，直接切到 `--as bot`，并按上面的应用身份权限配置检查处理。
+- [`+meeting-join`](references/lark-vc-agent-meeting-join.md)（写）：9 位会议号入会、写操作风险、失败排查。
+- [`+meeting-list-active`](references/lark-vc-agent-meeting-list-active.md)（读）：发现 active meeting，区分用户身份和应用身份返回范围。
+- [`+meeting-events`](references/lark-vc-agent-meeting-events.md)（读）：按 `meeting_id` 读取事件，处理身份延续、分页和错误码。
+- [`+meeting-leave`](references/lark-vc-agent-meeting-leave.md)（写）：按长数字 `meeting_id` 离会。
+- [权限与身份错误排查](references/lark-vc-agent-permission-troubleshooting.md)：内测权限、应用权限、数据范围和身份不支持类错误。
 
 ## 延伸
 
