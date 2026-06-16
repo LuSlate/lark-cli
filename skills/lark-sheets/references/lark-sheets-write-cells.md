@@ -70,9 +70,7 @@
 
 `+cells-set` 为一块区域设置值 / 公式 / 批注 / 样式，也支持 `rich_text` 的 `type: "embed-image"` 嵌入单元格图片。**关键：`cells` 二维数组的行列维度必须与 `range`（闭区间）严格一致，否则触发 `InvalidCellRangeError`**——维度计算示例见文末 `## Schemas` 的 `--cells`。
 
-> **单元格图片 vs 浮动图片**：
-> - **单元格图片**（本工具）：图片嵌入在单元格内部，属于单元格内容，随单元格移动。通过 `rich_text` 中 `type: "embed-image"` 写入。
-> - **浮动图片**：图片悬浮在单元格上方，可自由定位和调整大小，不属于单元格内容。→ 使用 lark-sheets-float-image。
+> **单元格图片 vs 浮动图片（选错最高频）**：图若**属于某条记录、要随那行排序 / 筛选 / 增删**（凭证 / 证件照 / 每行配图，话里带「对应 / 每行 / 这列」等绑定词）→ **单元格图片**（本工具）：用 `+cells-set-image`（最短）或 `+cells-set` 的 `rich_text` + `type: "embed-image"`。只是自由摆放的装饰（logo / 水印 / 封面）→ 浮动图片，见 lark-sheets-float-image。别因「浮动图更好控制 / 更熟」默认选浮动图——它承载"对应某记录"的图会随增删行 / 排序错位。
 
 高频模式（**必须遵守，禁止逐行写入替代**）：
 
@@ -135,7 +133,7 @@ Step 2: `+cells-set` — range="A2", cells 含 value + cell_styles + border_styl
 - **语义信号**（二选一）：用户 prompt 含"合计/汇总/总计/统计/各科平均分/最下面加一行算…/底部总计"等意图词；或上下文明确是"表尾追加一行做聚合"
 - **结构信号**：新行全行都在做聚合（含 `=SUM/AVERAGE/COUNT/MAX/MIN/SUBTOTAL(...)`，支持 IFERROR 包裹），**不是**单个 cell 算个参考值或每行都算的派生列
 
-满足上述时，**不要在本 skill 里猜样式**，直接去读 `lark-sheets-visual-standards` 的「场景一 → 1A. 添加汇总行 / 表头行」章节，按那里的样式要点配齐 `font.bold / horizontal_alignment / background_color / border_styles`。
+满足上述时，**不要在本文里猜样式**，直接去读 `lark-sheets-visual-standards` 的「场景一 → 1A. 添加汇总行 / 表头行」章节，按那里的样式要点配齐 `font.bold / horizontal_alignment / background_color / border_styles`。
 
 反例（**不是**汇总行，禁止自动加粗）：
 - 用户说"在 H5 帮我算个 AVERAGE 参考"→ 单 cell 计算
@@ -376,14 +374,14 @@ _一个或多个子表的 typed 数据，每个数组元素写入一张子表；
 
 ### `+cells-set` 的拆分与转介绍
 
-"工具选择"段已讲清纯值（`+csv-put`）vs 富写入（`+cells-set`）。下表补 CLI 侧的 `+cells-set` **兄弟拆分**，以及不属于本 skill 的**跨 skill 转介绍**——避免 agent 用 `+cells-set` 硬扛所有写入场景。
+"工具选择"段已讲清纯值（`+csv-put`）vs 富写入（`+cells-set`）。下表补 CLI 侧的 `+cells-set` **兄弟拆分**，以及不属于本 reference 的**跨 reference 转介绍**——避免 agent 用 `+cells-set` 硬扛所有写入场景。
 
 | 写入场景 | 用这个 | 不要用 |
 |---------|--------|--------|
 | 只改**已有 cell 的样式**，不动 value/formula | `+cells-set-style` | `+cells-set`（会触发不必要的值写入） |
 | 把**单张图片嵌入**到某个 cell | `+cells-set-image` | `+cells-set`（参数更繁琐） |
-| **插行/列 + 写入** 这种多步组合，且要原子 | `+batch-update`（跨 skill） | 多次独立 `+cells-set`（非原子；插入会扰动后续 range） |
-| 在**多个不连续 range** 上应用同一组样式 | `+cells-batch-set-style`（跨 skill） | 多次 `+cells-set-style`（非原子） |
+| **插行/列 + 写入** 这种多步组合，且要原子 | `+batch-update`（见 lark-sheets-batch-update） | 多次独立 `+cells-set`（非原子；插入会扰动后续 range） |
+| 在**多个不连续 range** 上应用同一组样式 | `+cells-batch-set-style`（见 lark-sheets-batch-update） | 多次 `+cells-set-style`（非原子） |
 
 ### `+cells-set`
 
