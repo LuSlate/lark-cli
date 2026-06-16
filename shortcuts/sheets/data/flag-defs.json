@@ -2093,6 +2093,17 @@
         "desc": "Single-sheet typed table from one Arrow IPC file (a.k.a. Feather v2 — what `pandas.DataFrame.to_feather()` writes), XOR with `--sheets`. Pass `@<path>` for a file or `-` for binary stdin (same convention as other input flags). Arrow bytes are read raw — no TrimSpace / BOM strip — so the IPC magic survives intact (unlike text input flags). Column types come from the Arrow schema (int*/uint*/float* → number, date32/date64/timestamp → date, utf8/large_utf8 → string, bool → bool); per-column `number_format` may be set via Arrow field metadata (`pa.field(\"price\", pa.float64(), metadata={b\"number_format\": b\"$#,##0.00\"})`). Writes the sheet at default placement: name `Sheet1` (created when absent), overwrite from A1 with header. For a different sheet name, anchor, mode, or to write multiple sheets, use `--sheets` instead."
       },
       {
+        "name": "styles",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Visual operations applied after the typed write, as JSON: top-level `{styles:[...]}`. Each item corresponds to one written sheet and must include `name`, plus at least one of `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges`. `cell_styles` entries use +cells-set-style fields with a cell range; row/col sizes use dimension ranges plus type/size; merges use cell ranges plus optional merge_type. The styles array length/order/name must match the written sheets: with --sheets, match --sheets.sheets; with --dataframe (single sheet named Sheet1), pass exactly one styles item with name `Sheet1`.",
+        "input": [
+          "file",
+          "stdin"
+        ]
+      },
+      {
         "name": "dry-run",
         "kind": "system",
         "type": "bool",

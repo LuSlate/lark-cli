@@ -114,6 +114,9 @@ var SheetCreate = common.Shortcut{
 		runtime.Out(out, nil)
 		return nil
 	},
+	Tips: []string{
+		"+sheet-create makes an empty sub-sheet. To create a sub-sheet and fill it with typed data and/or styles in one step, use +table-put (missing sheets named in the payload are created automatically) with its --sheets and --styles flags.",
+	},
 }
 
 func sheetCreateInput(runtime flagView, token string) (map[string]interface{}, error) {
