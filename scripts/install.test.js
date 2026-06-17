@@ -131,6 +131,17 @@ describe("verifyChecksum", () => {
       }
     );
   });
+
+  it("verifyChecksum throws [SECURITY] on null/empty expectedHash (fail-closed)", () => {
+    const filePath = makeTmpFile("content");
+    assert.throws(
+      () => verifyChecksum(filePath, null),
+      (err) => {
+        assert.match(err.message, /^\[SECURITY\]/);
+        return true;
+      }
+    );
+  });
 });
 
 describe("assertAllowedHost", () => {
