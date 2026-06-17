@@ -263,25 +263,10 @@ func ResolveConfigFromMulti(raw *MultiAppConfig, kc keychain.KeychainAccess, pro
 		}
 	}
 
-	if err := ValidateSecretKeyMatch(app.AppId, app.AppSecret); err != nil {
-		return nil, &ConfigError{Code: 3, Type: "config",
-			Message: "appId and appSecret keychain key are out of sync",
-			Hint:    err.Error()}
-	}
-
-	secret, err := ResolveSecretInput(app.AppSecret, kc)
-	if err != nil {
-		// Deprecated: legacy *output.ExitError passthrough; removed after typed migration.
-		var exitErr *output.ExitError
-		if errors.As(err, &exitErr) {
-			return nil, exitErr
-		}
-		return nil, &ConfigError{Code: 3, Type: "config", Message: err.Error()}
-	}
-	// Validate the auth method at resolution time so a malformed profile fails
-	// here rather than silently degrading to client_secret (unknown method) or
-	// failing later at token-signing (private_key_jwt without a key handle).
-	// Empty stays empty — downstream treats it as client_secret (back-compat).
+	// Validate the auth method first so a malformed profile fails here rather
+	// than silently degrading to client_secret (unknown method) or failing later
+	// at token-signing. Empty stays empty — downstream treats it as client_secret
+	// (back-compat).
 	switch app.AuthMethod {
 	case "", AuthMethodClientSecret, AuthMethodPrivateKeyJWT:
 	default:
@@ -289,10 +274,33 @@ func ResolveConfigFromMulti(raw *MultiAppConfig, kc keychain.KeychainAccess, pro
 			Message: fmt.Sprintf("unknown authMethod %q", app.AuthMethod),
 			Hint:    fmt.Sprintf("supported: %s, %s (empty defaults to %s)", AuthMethodClientSecret, AuthMethodPrivateKeyJWT, AuthMethodClientSecret)}
 	}
-	if app.AuthMethod == AuthMethodPrivateKeyJWT && app.KeyRef == nil {
-		return nil, &ConfigError{Code: 3, Type: "config",
-			Message: "private_key_jwt requires a key handle (keyRef) but none is configured",
-			Hint:    "re-run: lark-cli config init --new --auth-method private_key_jwt"}
+
+	// private_key_jwt carries no secret: validate the key handle and skip secret
+	// resolution entirely, so a stale/broken AppSecret ref never produces a
+	// confusing secret-resolution error for an otherwise-valid pkjwt profile.
+	var secret string
+	if app.AuthMethod == AuthMethodPrivateKeyJWT {
+		if app.KeyRef == nil || app.KeyRef.Source != "tee" || app.KeyRef.ID == "" {
+			return nil, &ConfigError{Code: 3, Type: "config",
+				Message: "private_key_jwt requires a key handle (keyRef) but none is configured",
+				Hint:    "re-run: lark-cli config init --new --auth-method private_key_jwt"}
+		}
+	} else {
+		if err := ValidateSecretKeyMatch(app.AppId, app.AppSecret); err != nil {
+			return nil, &ConfigError{Code: 3, Type: "config",
+				Message: "appId and appSecret keychain key are out of sync",
+				Hint:    err.Error()}
+		}
+		var resolveErr error
+		secret, resolveErr = ResolveSecretInput(app.AppSecret, kc)
+		if resolveErr != nil {
+			// Deprecated: legacy *output.ExitError passthrough; removed after typed migration.
+			var exitErr *output.ExitError
+			if errors.As(resolveErr, &exitErr) {
+				return nil, exitErr
+			}
+			return nil, &ConfigError{Code: 3, Type: "config", Message: resolveErr.Error()}
+		}
 	}
 
 	cfg := &CliConfig{
