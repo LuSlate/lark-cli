@@ -35,26 +35,52 @@ var SlidesCreateSVG = common.Shortcut{
 			Desc:     "SVG file path; repeat for multiple pages",
 		},
 		{Name: "assets", Desc: "optional assets.json path mapping SVG @path placeholders to uploaded file tokens"},
+		{
+			Name:    "svg-rasterize-effects",
+			Default: "off",
+			Enum:    []string{"off", "auto", "strict", "force-page"},
+			Desc:    "Rasterize unsupported rich SVG effects before upload: off|auto|strict|force-page",
+		},
+		{
+			Name:    "svg-rasterize-scale",
+			Type:    "int",
+			Default: "2",
+			Desc:    "PNG raster scale; default 2",
+		},
+		{Name: "svg-rasterize-report", Desc: "optional raster report output path"},
 	},
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		if err := validateSVGFileInputs(runtime, runtime.StrArray("file")); err != nil {
+			return err
+		}
+		if err := validateSVGRasterizeFlags(runtime); err != nil {
 			return err
 		}
 		return validateSVGAssetsPath(runtime, runtime.Str("assets"))
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		title := effectiveTitle(runtime.Str("title"))
-		svgs, err := readSVGFiles(runtime, runtime.StrArray("file"))
+		dry := common.NewDryRunAPI()
+		svgs, prepareReport, err := prepareSVGFilesForCreate(
+			runtime,
+			runtime.StrArray("file"),
+			svgPrepareOptionsFromRuntime(runtime, true),
+		)
 		if err != nil {
-			return common.NewDryRunAPI().Set("error", err.Error())
+			return dry.Set("error", err.Error())
 		}
 		assets, err := parseSVGAssets(runtime, runtime.Str("assets"))
 		if err != nil {
-			return common.NewDryRunAPI().Set("error", err.Error())
+			return dry.Set("error", err.Error())
+		}
+		if err := validateSVGRasterAssetConflicts(assets, prepareReport); err != nil {
+			return dry.Set("error", err.Error())
 		}
 		pages, uploadPaths := dryRunRewriteSVGImagePlaceholders(svgs, assets)
+		if prepareReport != nil {
+			dry.Set("svg_rasterize_report", prepareReport)
+		}
 
-		dry := common.NewDryRunAPI()
 		total := 1 + len(uploadPaths) + len(pages)
 		descSuffix := ""
 		if len(uploadPaths) > 0 {
@@ -90,12 +116,19 @@ var SlidesCreateSVG = common.Shortcut{
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		title := effectiveTitle(runtime.Str("title"))
-		svgs, err := readSVGFiles(runtime, runtime.StrArray("file"))
+		svgs, prepareReport, err := prepareSVGFilesForCreate(
+			runtime,
+			runtime.StrArray("file"),
+			svgPrepareOptionsFromRuntime(runtime, false),
+		)
 		if err != nil {
 			return err
 		}
 		assets, err := parseSVGAssets(runtime, runtime.Str("assets"))
 		if err != nil {
+			return err
+		}
+		if err := validateSVGRasterAssetConflicts(assets, prepareReport); err != nil {
 			return err
 		}
 
@@ -106,6 +139,9 @@ var SlidesCreateSVG = common.Shortcut{
 		result := map[string]interface{}{
 			"xml_presentation_id": presentationID,
 			"title":               title,
+		}
+		if prepareReport != nil {
+			result["svg_rasterize_report"] = prepareReport
 		}
 		if revisionID > 0 {
 			result["revision_id"] = revisionID

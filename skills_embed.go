@@ -19,6 +19,10 @@ import (
 // create-svg can execute them in packaged CLI installs.
 //
 //go:embed skills/*/SKILL.md skills/*/references skills/*/routes skills/*/scenes
+//go:embed skills/lark-slides/scripts/svg_rasterize_effects.py
+//go:embed skills/lark-slides/scripts/svg_effect_classifier.py
+//go:embed skills/lark-slides/scripts/svg_safe_rewrite.py
+//go:embed skills/lark-slides/scripts/svg_raster_renderer.py
 //go:embed skills/lark-slides/scripts/svglide_project_runner.py
 //go:embed skills/lark-slides/scripts/svg_preview_lint.py
 //go:embed skills/lark-slides/scripts/ppt_master_asset_inventory.py
