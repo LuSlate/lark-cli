@@ -46,6 +46,8 @@ receipts. It is not part of the default `--until dry_run` authoring path.
   source/
     brief.md
     inputs.json
+    evidence.json
+    source_pack.json
   slide_plan.json
   assets/
     asset_manifest.json
@@ -86,6 +88,12 @@ design truth already owned by `slide_plan.json`.
   "title": "Example Deck",
   "lane": "pure_svg",
   "plan": "slide_plan.json",
+  "source": {
+    "status": "user_prompt_only",
+    "brief": "source/brief.md",
+    "evidence": "source/evidence.json",
+    "source_pack": "source/source_pack.json"
+  },
   "pages": [
     {
       "page": 1,
@@ -122,6 +130,29 @@ is the execution index. Before `prepare`, these counts must agree:
 When the plan changes, regenerate or update the manifest in the same step.
 Do not let `prepare`, `preflight`, `dry_run`, or `live_create` consume a stale
 manifest after pages were added, deleted, or reordered.
+
+## Source And Strategy Discipline
+
+Pure topic input must first become structured source state before page SVG is
+rendered. Store the original brief in `source/brief.md`; store source status,
+evidence ids, numeric-claim policy, and missing-source notes in
+`source/source_pack.json` or top-level `slide_plan.source_pack`. Research notes
+or citation indexes belong in `source/evidence.json` when they exist.
+
+`slide_plan.json` must keep strategy decisions in the existing plan surface:
+
+- `narrative_mode`: story mode, not visual style.
+- `visual_style`: visual language target.
+- `strategy_locks`: exactly eight locked decisions with `id`, `decision`, and
+  `evidence_ref`.
+- `asset_strategy`, `chart_policy`, and `icon_policy`: deck-level selection
+  policy.
+- page-level `source_refs`, `asset_selection_reason`,
+  `rejected_asset_alternatives`, `chart_decision`, and `chart_verification`.
+
+The runner fingerprints source files, plan, catalogs, generated SVG, prepared
+SVG, and receipts. Source pack changes should invalidate receipts rather than
+letting old generation or quality evidence be reused silently.
 
 `preview_lint`, `preflight`, `quality_gate`, `ppe_proof`, `dry_run`,
 `live_create`, and `readback` are runner-owned stages. Do not override
@@ -161,6 +192,12 @@ to the SVG evidence. The quality gate must fail when `selected_assets` includes
 an asset that is not present in the usage receipt.
 
 Every mutation must be recorded in `receipts/prepare.json`.
+
+Chart pages should additionally write `receipts/chart-verify.json` when data
+coordinates are available. This receipt verifies source data against visible SVG
+or native chart geometry: expected mark count, bar height/width, line points,
+stacked proportions, labels, and plot-area alignment. When data is not available,
+the plan must say so and avoid numeric claims.
 
 ## Runner
 

@@ -175,12 +175,14 @@ python3 skills/lark-slides/scripts/template_tool.py extract --template <template
 ```text
 Step 1: 需求澄清 & 读取知识
   - 澄清主题、受众、页数、风格；SVGlide 模糊页数按默认 10 页处理，不因页数缺失单独阻塞；模板需求按“模板与脚本优先流程”处理
+  - 纯主题输入不能直接跳到页面绘制；先形成结构化资料层，至少记录 `input_profile`、`source_brief`、事实/数字状态和缺来源处理策略
+  - SVGlide 生成前锁定核心决策：`canvas`、`page_count`、`audience`、`narrative_mode`、`visual_style`、`asset_strategy.mode`、`chart_policy`、`icon_policy`
   - 读取 xml-schema-quick-ref.md；新建 / 大幅改写时还要读取 planning-layer.md、visual-planning.md、asset-planning.md
 
 Step 2: 生成大纲 → 用户确认 → 写入 slide_plan.json
   - 生成结构化大纲供用户确认；如使用模板，标明基于哪个模板改写
   - 新建 / 大幅改写必须先创建目录并写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`
-  - plan 字段、路径命名、模板边界和 `asset_need` 结构按 planning-layer.md / asset-planning.md 执行
+  - plan 字段、路径命名、模板边界、`strategy_locks`、`source_pack`、`asset_need` 和 chart/icon policy 结构按 planning-layer.md / asset-planning.md 执行
 
 Step 3: 按 slide_plan.json 生成 XML 或 SVGlide SVG → 创建
   - 逐页消费 plan：key_message 定主结论，layout_type 定几何，visual_focus 定主视觉，text_density 定文本量

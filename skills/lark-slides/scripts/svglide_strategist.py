@@ -206,6 +206,21 @@ STYLE_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("monochrome", ("serious", "formal", "minimal", "decision", "compare", "正式", "决策")),
 )
 
+VISUAL_STYLE_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("operational_dashboard", ("dashboard", "kpi", "metric", "status", "ops", "operation", "看板", "指标", "运营")),
+    ("technical_system", ("technology", "architecture", "system", "platform", "infra", "technical", "技术", "架构", "系统", "平台")),
+    ("data_journalism", ("financial", "market", "capital", "report", "analysis", "data", "finance", "资本", "市场", "数据", "分析")),
+    ("premium_regional", ("regional", "city", "residence", "planning", "oasis", "water", "culture", "城市", "居住", "策划", "绿洲", "水系", "地域", "人文", "阿克苏", "新疆")),
+    ("process_playbook", ("process", "pipeline", "workflow", "roadmap", "playbook", "流程", "链路", "路线", "规划")),
+    ("executive_minimal", ("serious", "formal", "minimal", "decision", "board", "strategy", "正式", "决策", "战略")),
+)
+
+IMAGE_STRATEGY_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("provided", ("attachment", "provided image", "source image", "uploaded", "附件", "已提供图片", "素材包")),
+    ("web", ("web search", "search image", "website", "online", "网页", "联网", "搜索图片")),
+    ("ai", ("generate image", "ai image", "illustration", "rendering", "生成图片", "插画", "效果图")),
+)
+
 NARRATIVE_MODES = {"briefing", "instructional", "narrative", "pyramid", "showcase"}
 
 MODE_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -327,6 +342,36 @@ def narrative_mode_from_brief(brief: str, slide_plan: dict[str, Any] | None = No
     return "briefing"
 
 
+def visual_style_from_brief(brief: str, slide_plan: dict[str, Any] | None = None) -> str:
+    explicit = normalize_public_token(first_present(slide_plan or {}, ("visual_style", "visualStyle", "style_target")))
+    if explicit:
+        return explicit
+    lowered = " ".join([brief, compact_text(slide_plan or {})]).lower()
+    tokens = tokenize(lowered)
+    for style, keywords in VISUAL_STYLE_HINTS:
+        if any((keyword in tokens if re.fullmatch(r"[a-z0-9-]+", keyword) else keyword in lowered) for keyword in keywords):
+            return style
+    return "data_journalism" if "data" in tokens else "executive_minimal"
+
+
+def image_strategy_from_brief(brief: str, slide_plan: dict[str, Any] | None = None) -> str:
+    existing = slide_plan.get("asset_strategy") if isinstance(slide_plan, dict) else None
+    if isinstance(existing, dict):
+        mode = normalize_public_token(existing.get("mode") or existing.get("image_strategy") or existing.get("imageStrategy"))
+        if mode in {"provided", "web", "ai", "svg", "none", "authoring_preview_rich", "online_pure_fallback", "production_asset_strict"}:
+            return mode
+    lowered = " ".join([brief, compact_text(slide_plan or {})]).lower()
+    tokens = tokenize(lowered)
+    for mode, keywords in IMAGE_STRATEGY_HINTS:
+        if any((keyword in tokens if re.fullmatch(r"[a-z0-9-]+", keyword) else keyword in lowered) for keyword in keywords):
+            return mode
+    return "svg"
+
+
+def normalize_public_token(value: Any) -> str:
+    return re.sub(r"[^a-z0-9_]+", "_", compact_text(value).strip().lower()).strip("_")
+
+
 def style_system_from_preset(style_id: str, catalogs: dict[str, Any]) -> dict[str, Any]:
     preset = catalogs["style_presets"].get(style_id, {})
     palette = preset.get("palette") if isinstance(preset.get("palette"), dict) else {}
@@ -433,6 +478,149 @@ def normalize_empty_chart_type(value: Any) -> str:
     return "" if normalized in {"none", "na", "n_a", "not_applicable", "no_chart", "no"} else normalized
 
 
+def source_pack_from_plan(brief: str, output: dict[str, Any]) -> dict[str, Any]:
+    existing = output.get("source_pack")
+    if isinstance(existing, dict):
+        return clone_json(existing)
+    status = "user_prompt_only" if compact_text(brief or output) else "missing"
+    return {
+        "schema_version": "svglide-source-pack/v1",
+        "source_status": status,
+        "numeric_claim_policy": "cite_or_remove",
+        "items": [
+            {
+                "id": "brief",
+                "type": "user_prompt",
+                "status": "available" if status != "missing" else "missing",
+                "source_ref": "source/brief.md",
+                "usage_pages": "all",
+                "license": "user_provided",
+            }
+        ],
+    }
+
+
+def source_pack_item_ids(source_pack: dict[str, Any]) -> set[str]:
+    items = source_pack.get("items")
+    if not isinstance(items, list):
+        return set()
+    return {compact_text(item.get("id")) for item in items if isinstance(item, dict) and compact_text(item.get("id"))}
+
+
+def source_pack_status(source_pack: dict[str, Any]) -> str:
+    status = compact_text(source_pack.get("source_status"))
+    if status:
+        return status
+    items = source_pack.get("items")
+    if isinstance(items, list) and items:
+        return "user_provided"
+    return "missing"
+
+
+def asset_strategy_contract(image_strategy: str) -> dict[str, Any]:
+    return {
+        "mode": "authoring_preview_rich" if image_strategy in {"provided", "web", "ai"} else "online_pure_fallback",
+        "image_strategy": image_strategy,
+        "fallback": "prefer SVGlide-safe vector primitives when source or license is unavailable",
+    }
+
+
+def icon_policy_contract() -> dict[str, Any]:
+    return {
+        "style": "single_consistent_family",
+        "semantic_mapping_required": True,
+        "consistency_rule": "one deck uses one icon stroke/fill language; icons must label concepts rather than decorate empty space",
+    }
+
+
+def chart_policy_contract() -> dict[str, Any]:
+    return {
+        "selection_rule": "data_relationship_first",
+        "requires_data_coordinate_check": True,
+        "receipt": "receipts/chart-verify.json",
+    }
+
+
+def strategy_locks_from_contract(
+    *,
+    output: dict[str, Any],
+    page_count: int,
+    narrative_mode: str,
+    visual_style: str,
+    style_id: str,
+    image_strategy: str,
+) -> list[dict[str, Any]]:
+    existing = output.get("strategy_locks")
+    if isinstance(existing, list) and existing:
+        return clone_json(existing)
+    audience = compact_text(output.get("audience")) or "inferred_from_brief"
+    return [
+        {"id": "canvas", "decision": clone_json(CANVAS), "evidence_ref": "plan.canvas"},
+        {"id": "page_count", "decision": page_count, "evidence_ref": "plan.page_count"},
+        {"id": "audience", "decision": audience, "evidence_ref": "plan.audience"},
+        {"id": "narrative_mode", "decision": narrative_mode, "evidence_ref": "plan.narrative_mode"},
+        {"id": "visual_style", "decision": visual_style, "evidence_ref": "plan.visual_style"},
+        {"id": "style_preset", "decision": style_id, "evidence_ref": "plan.style_preset"},
+        {"id": "asset_strategy", "decision": image_strategy, "evidence_ref": "plan.asset_strategy.mode"},
+        {"id": "chart_policy", "decision": "data_relationship_first", "evidence_ref": "plan.chart_policy"},
+    ]
+
+
+def chart_decision_for_slide(completed: dict[str, Any], profile_data: dict[str, Any]) -> dict[str, Any]:
+    chart_type = compact_text(completed.get("chart_type"))
+    anchor = completed.get("main_visual_anchor")
+    anchor_role = ""
+    if isinstance(anchor, dict):
+        anchor_role = compact_text(anchor.get("layout_box_role") or anchor.get("role"))
+    if not chart_type:
+        return {
+            "status": "not_required",
+            "chart_type": "",
+            "reason": "page visual carrier is not a data chart",
+            "data_ref": "brief",
+            "anchor_role": anchor_role,
+            "bbox_tolerance_px": 12,
+        }
+    return {
+        "status": "required",
+        "chart_type": chart_type,
+        "reason": f"{chart_type} fits {profile_data['page_type']} because the page needs {profile_data['density_contract']}",
+        "data_ref": "brief",
+        "anchor_role": anchor_role or "chart",
+        "bbox_tolerance_px": 12,
+    }
+
+
+def chart_verification_for_slide(chart_decision: dict[str, Any]) -> dict[str, Any]:
+    if chart_decision.get("status") != "required":
+        return {"status": "not_required"}
+    return {
+        "status": "required",
+        "method": "verify data-to-geometry mapping for visible chart marks",
+        "receipt": "receipts/chart-verify.json",
+        "checks": ["plot_area", "mark_count", "label_alignment", "scale_mapping"],
+    }
+
+
+def asset_selection_reason(profile_data: dict[str, Any]) -> str:
+    return (
+        f"{profile_data['asset_id']} is selected for {profile_data['page_type']} because it provides "
+        f"{profile_data['composition_archetype']} geometry and supports {profile_data['density_contract']}."
+    )
+
+
+def rejected_asset_alternatives(profile_data: dict[str, Any]) -> list[dict[str, str]]:
+    page_type = profile_data["page_type"]
+    alternatives: list[dict[str, str]] = []
+    if page_type not in {"kpi_overview", "chart_takeaway"}:
+        alternatives.append({"asset_id": "chart.kpi_cards", "reason": "rejected because the page is not metric-led"})
+    if page_type not in {"roadmap", "process_flow", "agenda"}:
+        alternatives.append({"asset_id": "chart.timeline", "reason": "rejected because a phase spine would weaken the page purpose"})
+    if page_type not in {"capability_map"}:
+        alternatives.append({"asset_id": "chart.hub_spoke", "reason": "rejected because the page does not need a central-system relationship"})
+    return alternatives[:2]
+
+
 def known_profile_evidence() -> set[str]:
     evidence: set[str] = set()
     for profile in PAGE_PROFILES.values():
@@ -505,6 +693,8 @@ def complete_slide(slide: dict[str, Any], *, brief: str, fallback_description: s
             "usage": "page-type geometry only; do not copy raw SVG paths",
         },
     )
+    setdefault_clone(completed, "asset_selection_reason", asset_selection_reason(profile_data))
+    setdefault_clone(completed, "rejected_asset_alternatives", rejected_asset_alternatives(profile_data))
     setdefault_clone(completed, "visual_intent", f"use {recipe.replace('_', ' ')} structure to make the page readable as SVG-native content")
     setdefault_clone(completed, "visual_focal_point", profile_data["main_visual_anchor"])
     setdefault_clone(completed, "required_primitives", required_primitives)
@@ -513,8 +703,13 @@ def complete_slide(slide: dict[str, Any], *, brief: str, fallback_description: s
     setdefault_clone(completed, "content_density_contract", profile_data["density_contract"])
     setdefault_clone(completed, "asset_contract", "none_required")
     setdefault_clone(completed, "risk_flags", [])
+    setdefault_clone(completed, "source_refs", ["brief"])
     setdefault_clone(completed, "source_status", "user_prompt_only")
     setdefault_clone(completed, "source_policy", "when source material is missing, mark missing evidence and avoid numeric claims")
+    setdefault_clone(completed, "speaker_intent", f"Advance the deck by proving: {completed.get('key_message')}")
+    chart_decision = chart_decision_for_slide(completed, profile_data)
+    setdefault_clone(completed, "chart_decision", chart_decision)
+    setdefault_clone(completed, "chart_verification", chart_verification_for_slide(completed.get("chart_decision", chart_decision)))
     setdefault_clone(completed, "layout_guardrails", DEFAULT_GUARDRAILS)
     completed["visual_design_contract"] = complete_visual_design_contract(completed, profile_data)
     return completed
@@ -566,18 +761,24 @@ def build_design_pattern_selection(slides: list[dict[str, Any]], existing: Any, 
     selection = clone_json(existing) if isinstance(existing, dict) else {}
     raw_assets = selection.get("selected_assets")
     selected_assets: list[dict[str, Any]] = [clone_json(item) for item in raw_assets if isinstance(item, dict)] if isinstance(raw_assets, list) else []
+    for asset in selected_assets:
+        setdefault_clone(asset, "copy_policy", "derive_contract_only")
+        setdefault_clone(asset, "selection_reason", "selected because it matches a slide page_type, visual_recipe, and density contract")
     seen = {compact_text(asset.get("id") or asset.get("asset_id")) for asset in selected_assets}
     pattern_ids = catalogs.get("pattern_ids", set())
     for slide in slides:
         asset_id = selected_asset_id(slide)
         if not asset_id or asset_id in seen or (pattern_ids and asset_id not in pattern_ids):
             continue
+        reason = compact_text(slide.get("asset_selection_reason")) or "selected because it matches the slide page_type, visual_recipe, and density contract"
         selected_assets.append(
             {
                 "id": asset_id,
                 "kind": "chart_template",
                 "usage": "geometry_contract",
                 "copy_policy": "derive_contract_only",
+                "selection_reason": reason,
+                "rejected_alternatives": clone_json(slide.get("rejected_asset_alternatives", [])),
             }
         )
         seen.add(asset_id)
@@ -610,16 +811,44 @@ def build_contract(
         style_id = style_preset_from_brief(brief or compact_text(output), catalogs)
     explicit_mode = compact_text(output.get("narrative_mode") or output.get("mode"))
     narrative_mode = explicit_mode if explicit_mode in NARRATIVE_MODES else narrative_mode_from_brief(brief, output)
+    visual_style = visual_style_from_brief(brief, output)
+    image_strategy = image_strategy_from_brief(brief, output)
+    source_pack = source_pack_from_plan(brief, output)
 
     setdefault_clone(output, "schema_version", CONTRACT_SCHEMA_VERSION)
     setdefault_clone(output, "output_mode", "svglide-svg")
     output["mode"] = narrative_mode
     setdefault_clone(output, "narrative_mode", narrative_mode)
+    output["visual_style"] = visual_style
     setdefault_clone(output, "canvas", CANVAS)
     setdefault_clone(output, "safe_area", SAFE_AREA)
     output["style_preset"] = style_id
     setdefault_clone(output, "style_selection_reason", f"{style_id} matches the brief and the selected SVG page recipes")
     output["style_system"] = apply_brief_palette(style_system_from_preset(style_id, catalogs), brief)
+    output["source_pack"] = source_pack
+    setdefault_clone(output, "input_profile", {"input_type": "topic", "source_status": source_pack_status(source_pack)})
+    setdefault_clone(output, "source_brief", {"path": "source/brief.md", "evidence_index": "source/evidence.json", "numeric_claim_policy": "cite_or_remove"})
+    setdefault_clone(output, "asset_strategy", asset_strategy_contract(image_strategy))
+    setdefault_clone(output, "icon_policy", icon_policy_contract())
+    setdefault_clone(output, "chart_policy", chart_policy_contract())
+    output["strategy_locks"] = strategy_locks_from_contract(
+        output=output,
+        page_count=len(completed_slides),
+        narrative_mode=narrative_mode,
+        visual_style=visual_style,
+        style_id=style_id,
+        image_strategy=image_strategy,
+    )
+    setdefault_clone(
+        output,
+        "acceptance_criteria",
+        [
+            {"id": "source_refs_resolved", "status": "planned", "gate": "preflight"},
+            {"id": "chart_anchor_aligned", "status": "planned", "gate": "preflight"},
+            {"id": "preview_score_passed", "status": "planned", "gate": "preview_lint"},
+            {"id": "quality_gate_passed", "status": "planned", "gate": "quality_gate"},
+        ],
+    )
     for slide in completed_slides:
         contract = slide.get("visual_design_contract")
         if isinstance(contract, dict):

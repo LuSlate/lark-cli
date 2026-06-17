@@ -29,6 +29,15 @@ class SVGlideStrategistTest(unittest.TestCase):
         self.assertEqual("svglide-svg", plan["output_mode"])
         self.assertEqual("briefing", plan["mode"])
         self.assertEqual("briefing", plan["narrative_mode"])
+        self.assertEqual("operational_dashboard", plan["visual_style"])
+        self.assertEqual("svg", plan["asset_strategy"]["image_strategy"])
+        self.assertEqual("svglide-source-pack/v1", plan["source_pack"]["schema_version"])
+        self.assertEqual("user_prompt_only", plan["source_pack"]["source_status"])
+        self.assertEqual(8, len(plan["strategy_locks"]))
+        self.assertEqual(
+            ["canvas", "page_count", "audience", "narrative_mode", "visual_style", "style_preset", "asset_strategy", "chart_policy"],
+            [item["id"] for item in plan["strategy_locks"]],
+        )
         self.assertEqual("raw_grid", plan["style_preset"])
         self.assertEqual({"background", "text", "accent"}, set(plan["style_system"]["palette"]).intersection({"background", "text", "accent"}))
         self.assertEqual(4, plan["page_count"])
@@ -42,6 +51,8 @@ class SVGlideStrategistTest(unittest.TestCase):
             plan["page_rhythm"],
         )
         self.assertEqual(["chart.vertical_list", "chart.kpi_cards", "chart.timeline", "chart.numbered_steps"], [asset["id"] for asset in plan["design_pattern_selection"]["selected_assets"]])
+        self.assertTrue(all(asset["copy_policy"] == "derive_contract_only" for asset in plan["design_pattern_selection"]["selected_assets"]))
+        self.assertTrue(all(asset["selection_reason"] for asset in plan["design_pattern_selection"]["selected_assets"]))
 
         dashboard = plan["slides"][1]
         self.assertEqual("KPI dashboard: four health metrics with micro trends", dashboard["key_message"])
@@ -53,6 +64,9 @@ class SVGlideStrategistTest(unittest.TestCase):
         self.assertEqual(["typography", "chart_geometry"], dashboard["svg_effects"])
         self.assertEqual("fake_ui_dashboard", dashboard["visual_recipe"])
         self.assertEqual("chart.kpi_cards", dashboard["reference_asset"]["asset_id"])
+        self.assertEqual(["brief"], dashboard["source_refs"])
+        self.assertIn("chart.kpi_cards is selected", dashboard["asset_selection_reason"])
+        self.assertEqual("not_required", dashboard["chart_decision"]["status"])
         self.assertIn("main text and chart labels stay inside safe area", dashboard["layout_guardrails"])
         self.assertEqual(
             {
@@ -89,6 +103,26 @@ class SVGlideStrategistTest(unittest.TestCase):
         self.assertEqual("#4A90E2", palette["accent"])
         self.assertEqual(["#8BC34A", "#E91E63"], palette["support"])
         self.assertEqual("brief_hex_colors", plan["style_system"]["palette_source"])
+
+    def test_visual_style_does_not_pollute_narrative_mode(self) -> None:
+        plan = strategist.build_contract(
+            brief="Global AI capital market data report.",
+            slide_plan={
+                "mode": "data_journalism",
+                "visual_style": "data_journalism",
+                "slides": [{"title": "Capital Flow", "description": "chart page with bar chart", "chart_type": "bar_chart"}],
+            },
+        )
+
+        self.assertEqual("briefing", plan["mode"])
+        self.assertEqual("briefing", plan["narrative_mode"])
+        self.assertEqual("data_journalism", plan["visual_style"])
+        slide = plan["slides"][0]
+        self.assertEqual("required", slide["chart_decision"]["status"])
+        self.assertEqual("bar_chart", slide["chart_decision"]["chart_type"])
+        self.assertTrue(slide["chart_decision"]["reason"])
+        self.assertEqual("brief", slide["chart_decision"]["data_ref"])
+        self.assertEqual("required", slide["chart_verification"]["status"])
 
     def test_complete_existing_plan_preserves_manual_fields(self) -> None:
         base = {

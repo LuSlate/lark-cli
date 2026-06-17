@@ -2298,6 +2298,11 @@ PLAN_CLOSING_RE = re.compile(r"(closing|conclusion|q-and-a|q&a|summary|thanks|�
 PLAN_MISSING_SOURCE_RE = re.compile(r"(missing|unavailable|pending|缺失|待补|待从|未提供|来源不足)", re.IGNORECASE)
 PLAN_SOURCE_GUARD_RE = re.compile(r"(no numeric|source guard|pending|待补|待从|缺失|来源|未提供|不编造|不虚构|占位)", re.IGNORECASE)
 NO_ASSET_RE = re.compile(r"(none|no[_ -]?asset|no[_ -]?image|not[_ -]?needed|无|不需要)", re.IGNORECASE)
+NARRATIVE_MODE_IDS = {"briefing", "instructional", "narrative", "pyramid", "showcase"}
+VISUAL_STYLE_MODE_RE = re.compile(
+    r"(data[_ -]?journalism|editorial|technical|regional|premium|minimal|dashboard|dark|tech|visual|style)",
+    re.IGNORECASE,
+)
 
 
 def plan_issue(level: str, code: str, message: str, slide: dict[str, Any] | None = None, hint: str | None = None) -> dict[str, Any]:
@@ -2325,6 +2330,57 @@ def textify(value: Any) -> str:
 
 def normalize_name(value: Any) -> str:
     return re.sub(r"[^a-z0-9]+", "_", textify(value).strip().lower()).strip("_")
+
+
+def source_pack_item_ids(plan: dict[str, Any]) -> set[str]:
+    pack = plan.get("source_pack")
+    if not isinstance(pack, dict):
+        return set()
+    items = pack.get("items")
+    if not isinstance(items, list):
+        return set()
+    return {textify(item.get("id")).strip() for item in items if isinstance(item, dict) and textify(item.get("id")).strip()}
+
+
+def plan_source_refs(slide: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for key in ["source_ref", "source_refs", "sourceRefs", "data_ref", "data_refs", "dataRefs"]:
+        value = slide.get(key)
+        if isinstance(value, list):
+            refs.extend(textify(item).strip() for item in value if textify(item).strip())
+        elif textify(value).strip():
+            refs.append(textify(value).strip())
+    chart_decision = slide.get("chart_decision")
+    if isinstance(chart_decision, dict) and textify(chart_decision.get("data_ref")).strip():
+        refs.append(textify(chart_decision.get("data_ref")).strip())
+    return refs
+
+
+def strategy_locks_valid(value: Any) -> tuple[bool, str]:
+    if not isinstance(value, list):
+        return False, "strategy_locks must be a list"
+    if len(value) != 8:
+        return False, f"strategy_locks must contain exactly 8 locks, got {len(value)}"
+    seen: set[str] = set()
+    for index, item in enumerate(value, 1):
+        if not isinstance(item, dict):
+            return False, f"strategy_locks[{index}] must be an object"
+        lock_id = textify(item.get("id")).strip()
+        if not lock_id:
+            return False, f"strategy_locks[{index}] is missing id"
+        if lock_id in seen:
+            return False, f'duplicate strategy lock id "{lock_id}"'
+        seen.add(lock_id)
+        if item.get("decision") in (None, "", []):
+            return False, f'strategy lock "{lock_id}" is missing decision'
+        if not textify(item.get("evidence_ref")).strip():
+            return False, f'strategy lock "{lock_id}" is missing evidence_ref'
+    return True, ""
+
+
+def chart_decision_contract(slide: dict[str, Any]) -> dict[str, Any]:
+    value = slide.get("chart_decision") or slide.get("chartDecision")
+    return value if isinstance(value, dict) else {}
 
 
 def normalize_primitive(value: Any) -> str:
@@ -3347,6 +3403,29 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
     if is_svg_plan:
+        mode_value = textify(plan.get("mode")).strip()
+        normalized_mode = normalize_name(mode_value)
+        if mode_value and normalized_mode not in NARRATIVE_MODE_IDS and VISUAL_STYLE_MODE_RE.search(mode_value):
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_visual_style_in_mode",
+                    "SVGlide plan mode must describe narrative mode, not visual style",
+                    None,
+                    "Move visual style language into visual_style, style_preset, and style_selection_reason.",
+                )
+            )
+        locks_ok, locks_message = strategy_locks_valid(plan.get("strategy_locks"))
+        if not locks_ok:
+            issues.append(
+                plan_issue(
+                    strategist_level,
+                    "plan_strategy_locks_invalid",
+                    locks_message,
+                    None,
+                    "Record the eight generation decisions as strategy_locks: canvas, page_count, audience, narrative_mode, visual_style, style_preset, asset_strategy, chart_policy.",
+                )
+            )
         if plan.get("output_mode") != "svglide-svg":
             issues.append(
                 plan_issue(
@@ -3438,6 +3517,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
     chart_type_contracts = context.get("chart_type_contracts", CHART_TYPE_CONTRACTS)
     private_id_set = context.get("private_id_set", set())
     seed_catalog = context.get("seed_catalog", SVG_SEED_CATALOG)
+    known_source_refs = source_pack_item_ids(plan)
     for slide_index, slide in enumerate(slides, 1):
         if not isinstance(slide, dict):
             issues.append(plan_issue("error", "plan_slide_invalid", "each slide entry must be an object"))
@@ -3445,6 +3525,28 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
 
         visual_plan = slide_visual_plan(slide)
         layout_boxes = slide_layout_boxes(visual_plan)
+        if is_svg_plan:
+            for source_ref in plan_source_refs(visual_plan):
+                if known_source_refs and source_ref not in known_source_refs:
+                    issues.append(
+                        plan_issue(
+                            strategist_level,
+                            "plan_source_ref_missing",
+                            f'source reference "{source_ref}" is not present in source_pack.items',
+                            slide,
+                            "Add the referenced item to source_pack.items or update the slide source_refs/data_ref.",
+                        )
+                    )
+                elif not known_source_refs:
+                    issues.append(
+                        plan_issue(
+                            strategist_level,
+                            "plan_source_pack_missing",
+                            "slide declares source_refs but the plan has no source_pack items to resolve them",
+                            slide,
+                            "Add source_pack.items with stable ids before relying on source/data references.",
+                        )
+                    )
 
         renderer_id = slide_renderer_id(visual_plan)
         renderer_ids.append(renderer_id)
@@ -3913,6 +4015,49 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
 
             chart_type = slide_chart_type(visual_plan)
             if chart_type:
+                chart_decision = chart_decision_contract(visual_plan)
+                if not chart_decision:
+                    issues.append(
+                        plan_issue(
+                            strategist_level,
+                            "plan_missing_chart_decision",
+                            "chart pages must include chart_decision with reason, data_ref, anchor_role, and bbox_tolerance_px",
+                            slide,
+                            "Choose charts by data relationship first and record why this chart matches the page purpose.",
+                        )
+                    )
+                else:
+                    if not textify(chart_decision.get("reason")).strip():
+                        issues.append(
+                            plan_issue(
+                                strategist_level,
+                                "plan_chart_decision_missing_reason",
+                                "chart_decision.reason is required for chart pages",
+                                slide,
+                                "Explain why this chart type fits the data relationship and page message.",
+                            )
+                        )
+                    anchor_role = normalize_name(chart_decision.get("anchor_role"))
+                    if not anchor_role:
+                        issues.append(
+                            plan_issue(
+                                strategist_level,
+                                "plan_chart_decision_missing_anchor_role",
+                                "chart_decision.anchor_role is required for chart pages",
+                                slide,
+                                "Point chart_decision.anchor_role at the layout box that owns the chart geometry.",
+                            )
+                        )
+                    elif anchor_role not in layout_box_roles(layout_boxes):
+                        issues.append(
+                            plan_issue(
+                                strategist_level,
+                                "plan_chart_anchor_role_missing",
+                                f'chart_decision.anchor_role "{anchor_role}" is not present in layout_boxes',
+                                slide,
+                                "Use an anchor role from layout_boxes, usually chart or visual.",
+                            )
+                        )
                 if chart_type not in chart_type_contracts:
                     issues.append(
                         plan_issue(

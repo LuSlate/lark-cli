@@ -80,6 +80,13 @@ STRATEGIST_CONTRACT_CODES = {
     "plan_missing_main_visual_anchor",
     "plan_main_visual_anchor_not_met",
     "plan_reference_asset_unstructured",
+    "plan_strategy_locks_invalid",
+    "plan_source_pack_missing",
+    "plan_source_ref_missing",
+    "plan_missing_chart_decision",
+    "plan_chart_decision_missing_reason",
+    "plan_chart_decision_missing_anchor_role",
+    "plan_chart_anchor_role_missing",
     "plan_unknown_chart_type",
     "plan_chart_type_recipe_mismatch",
     "plan_chart_type_contract_not_met",
@@ -605,6 +612,35 @@ def add_value_fingerprint(inputs: list[dict[str, Any]], kind: str, value: Any) -
     inputs.append({"kind": kind, "value": value, "digest": text_digest(text)})
 
 
+def add_source_pack_fingerprints(inputs: list[dict[str, Any]], project: Path, data: dict[str, Any]) -> None:
+    source = data.get("source")
+    candidates = ["source/source_pack.json", "source/evidence.json", "source/research.md"]
+    if isinstance(source, dict):
+        for key in ["pack", "source_pack", "evidence", "research"]:
+            value = text_from_any(source.get(key))
+            if value:
+                candidates.append(value)
+    for relative in dict.fromkeys(candidates):
+        add_file_fingerprint(inputs, project, "source_pack_file", project_file(project, relative))
+
+
+def generation_contract_summary(project: Path, data: dict[str, Any]) -> dict[str, Any]:
+    plan = read_json(plan_file(project, data), {})
+    if not isinstance(plan, dict):
+        plan = {}
+    source_pack = plan.get("source_pack") if isinstance(plan.get("source_pack"), dict) else {}
+    strategy_locks = plan.get("strategy_locks") if isinstance(plan.get("strategy_locks"), list) else []
+    source_status = text_from_any(source_pack.get("source_status")) if isinstance(source_pack, dict) else ""
+    return {
+        "source_pack_digest": json_digest(source_pack) if source_pack else "",
+        "source_pack_status": source_status or ("missing" if not source_pack else "present"),
+        "strategy_lock_ids": [text_from_any(item.get("id")) for item in strategy_locks if isinstance(item, dict) and text_from_any(item.get("id"))],
+        "style_preset": text_from_any(plan.get("style_preset")),
+        "narrative_mode": text_from_any(plan.get("narrative_mode") or plan.get("mode")),
+        "visual_style": text_from_any(plan.get("visual_style")),
+    }
+
+
 def resolve_cli_for_command(cli: str) -> str:
     cli_path = Path(cli)
     if not cli_path.is_absolute():
@@ -675,6 +711,7 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
     cli = text_from_any(get_arg(args, "cli", "./lark-cli")) or "./lark-cli"
     inputs: list[dict[str, Any]] = []
     add_file_fingerprint(inputs, project, "manifest", manifest_path(project))
+    add_source_pack_fingerprints(inputs, project, data)
     add_value_fingerprint(inputs, "stage_command", stage_command(data, stage))
 
     if stage == "generate":
@@ -889,6 +926,10 @@ def write_stage_receipt(
         "input_fingerprint": fingerprint,
         **body,
     }
+    if stage == "generate":
+        summary = generation_contract_summary(project, data)
+        receipt["generation_contract"] = summary
+        receipt.update(summary)
     write_json(receipt_path(project, stage, data), receipt)
     update_state(project, stage, receipt)
     update_timings(project, stage, receipt)
@@ -2022,6 +2063,28 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         raise RunnerError("quality gate failed: " + "; ".join(failures))
 
     status = "passed_with_waiver" if waivers else "passed"
+    preview_summary = preview_lint.get("summary") if isinstance(preview_lint.get("summary"), dict) else {}
+    preview_issue_ids = preview_summary.get("issue_ids") if isinstance(preview_summary.get("issue_ids"), list) else []
+    strategist_issue_ids = strategist_contract.get("issue_codes") if isinstance(strategist_contract.get("issue_codes"), list) else []
+    issue_ids = sorted({text_from_any(item) for item in [*preview_issue_ids, *strategist_issue_ids] if text_from_any(item)})
+    chart_alignment_codes = {
+        "plan_missing_chart_decision",
+        "plan_chart_decision_missing_reason",
+        "plan_chart_decision_missing_anchor_role",
+        "plan_chart_anchor_role_missing",
+        "plan_chart_type_contract_not_met",
+    }
+    chart_alignment_status = "repair_required" if chart_alignment_codes.intersection(set(strategist_issue_ids)) else "passed"
+    generation_summary = generation_contract_summary(project, data)
+    acceptance = {
+        "action": "create_live" if status == "passed" else "repair_and_rerun",
+        "issue_ids": issue_ids,
+        "preview_path": text_from_any(preview_summary.get("preview")) or "preview/preview.html",
+        "visual_score": preview_score if isinstance(preview_score, int) and not isinstance(preview_score, bool) else None,
+        "threshold": threshold,
+        "source_pack_status": generation_summary.get("source_pack_status"),
+        "chart_alignment_status": chart_alignment_status,
+    }
     return {
         "schema_version": QUALITY_GATE_SCHEMA,
         "status": status,
@@ -2037,6 +2100,7 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         "visual_score": preview_score if isinstance(preview_score, int) and not isinstance(preview_score, bool) else None,
         "visual_score_threshold": threshold,
         "visual_score_mode": "enforced" if score_enforced else "advisory",
+        "acceptance": acceptance,
         "waivers": waivers,
     }
 

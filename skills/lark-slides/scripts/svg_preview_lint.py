@@ -1188,12 +1188,21 @@ def lint_project(project: Path, preview: Path, plan: Path, validation_profile: s
     score_enforced = visual_score_enforced(profile)
     warning_gate_passed = profile != "golden" or warning_count == 0
     status = "passed" if error_count == 0 and (score_passed or not score_enforced) and warning_gate_passed else "failed"
+    issue_ids = []
+    for item in checks:
+        code = str(item.get("code") or "").strip()
+        if not code:
+            continue
+        page = item.get("page")
+        issue_ids.append(f"{page}:{code}" if page is not None else code)
     return {
         "schema_version": SCHEMA_VERSION,
         "status": status,
         "error_count": error_count,
         "warning_count": warning_count,
         "checks": checks,
+        "issue_ids": sorted(set(issue_ids)),
+        "action": "create_live" if status == "passed" and score_passed else "repair_and_rerun",
         "visual_score": score,
         "visual_score_threshold": threshold,
         "visual_score_passed": score_passed,

@@ -96,6 +96,8 @@ class SvgPreviewLintTest(unittest.TestCase):
         result = self.lint(project)
 
         self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["action"], "repair_and_rerun")
+        self.assertIn("preview_missing", result["issue_ids"])
         self.assertIn("preview_missing", self.codes(result))
 
     def test_missing_svg_fails(self) -> None:
@@ -257,6 +259,8 @@ class SvgPreviewLintTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(result["schema_version"], "svglide-preview-lint/v1")
         self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["action"], "create_live")
+        self.assertEqual(result["issue_ids"], [])
         self.assertEqual(result["error_count"], 0)
         self.assertEqual(result["visual_score_mode"], "advisory")
         self.assertEqual(result["validation_profile"], "authoring")

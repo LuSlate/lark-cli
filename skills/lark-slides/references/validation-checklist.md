@@ -155,6 +155,47 @@ SVGlide 项目必须同时检查计划、执行 manifest、SVG source 和 receip
 live creation 要求 `quality_gate.status=passed`。`passed_with_waiver` 只允许
 authoring/debug dry-run，不得用于 production、golden 或 live lane。
 
+## Chart Data Verification
+
+当页面声明 `chart_type`、chart marker、或图表类 reference asset 时，不能只检查
+“有图表几何”。还要检查数据到视觉坐标的映射是否可信。
+
+计划层必须包含：
+
+```json
+{
+  "chart_decision": {
+    "chart_type": "bar_chart",
+    "reason": "bar chart fits category comparison and supports one takeaway",
+    "data_ref": "brief",
+    "anchor_role": "chart",
+    "bbox_tolerance_px": 12
+  },
+  "chart_verification": {
+    "status": "required",
+    "receipt": "receipts/chart-verify.json",
+    "checks": ["plot_area", "mark_count", "label_alignment", "scale_mapping"]
+  }
+}
+```
+
+验证记录建议写入 `receipts/chart-verify.json`，并至少包含：
+
+- `data_source`: source pack id, inline chart spec id, or explicit unavailable marker.
+- `chart_type`: normalized chart type.
+- `mapping_formula`: how values map to bar height/width, line point y, stacked share, radar radius, or node/flow weight.
+- `expected_marks`: expected bars, points, stacks, sectors, vertices, or flows.
+- `verification.status`: `passed`, `failed`, or `not_applicable_missing_data`.
+
+最终验证记录要写清：
+
+```text
+Chart data: checked N/N chart pages; failed M; missing data K.
+```
+
+若没有可信数据源，页面可以保留示意图，但必须在 `source_policy` 中写明 no numeric
+claims，不得伪造真实数值、排名、比例或来源。
+
 ## Live Create And Image Token Gate
 
 `svg_preflight.py` 通过后，仍必须跑 `slides +create-svg --dry-run`。Dry-run 要确认：

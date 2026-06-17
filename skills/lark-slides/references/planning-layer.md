@@ -55,8 +55,19 @@ Exception:
 
 ```json
 {
+  "input_profile": {
+    "input_type": "topic",
+    "source_status": "research_required"
+  },
+  "source_brief": {
+    "path": "source/brief.md",
+    "evidence_index": "source/evidence.json",
+    "numeric_claim_policy": "cite_or_remove"
+  },
   "presentation_goal": "Explain the proposal and secure approval for the next phase.",
   "audience": "Product and engineering leaders who know the domain but need a concise decision narrative.",
+  "narrative_mode": "briefing",
+  "visual_style": "data_journalism",
   "theme_style": "Clean business style, light background, restrained blue accent, strong visual hierarchy.",
   "visual_system": {
     "background_strategy": "Content pages use one light base; cover and closing may use a related dark treatment with the same accent system.",
@@ -78,6 +89,25 @@ Exception:
     "typography": "strong title, readable native text labels",
     "background_strategy": "muted grid panels with one stable background family",
     "motif": "dense grid panels with restrained accent labels"
+  },
+  "strategy_locks": [
+    {"id": "canvas", "decision": {"width": 960, "height": 540}, "evidence_ref": "plan.canvas"},
+    {"id": "page_count", "decision": 10, "evidence_ref": "plan.page_count"},
+    {"id": "audience", "decision": "Product and engineering leaders", "evidence_ref": "plan.audience"},
+    {"id": "narrative_mode", "decision": "briefing", "evidence_ref": "plan.narrative_mode"},
+    {"id": "visual_style", "decision": "data_journalism", "evidence_ref": "plan.visual_style"},
+    {"id": "style_preset", "decision": "raw_grid", "evidence_ref": "plan.style_preset"},
+    {"id": "asset_strategy", "decision": "authoring_preview_rich", "evidence_ref": "plan.asset_strategy.mode"},
+    {"id": "chart_policy", "decision": "data_relationship_first", "evidence_ref": "plan.chart_policy"}
+  ],
+  "chart_policy": {
+    "selection_rule": "data_relationship_first",
+    "requires_data_coordinate_check": true,
+    "receipt": "receipts/chart-verify.json"
+  },
+  "icon_policy": {
+    "style": "single_consistent_family",
+    "semantic_mapping_required": true
   },
   "typography_constraints": {
     "title_max_lines": 2,
@@ -122,13 +152,20 @@ Exception:
 
 Top-level fields:
 
+- `input_profile`: input type and source status. For pure topic prompts, mark `source_status` as `research_required` or `user_prompt_only` rather than pretending a source document exists.
+- `source_brief`: path and evidence index for structured source material. Numeric claims must be cited or removed according to `numeric_claim_policy`.
 - `presentation_goal`: what the whole deck is trying to achieve.
 - `audience`: target readers or listeners and their assumed background.
+- `narrative_mode`: the story mode, such as `briefing`, `instructional`, `narrative`, `pyramid`, or `showcase`. Do not put visual style names here.
+- `visual_style`: the visual language target, separate from `narrative_mode` and separate from the executable `style_preset`.
 - `theme_style`: visual tone, palette direction, and professional style.
 - `visual_system`: deck-level visual rules that must stay stable across pages, including background strategy, recurring motif, and color roles.
 - `style_preset`: required for SVGlide SVG decks. Choose one id from `references/style-presets.json`; omit only for non-SVG XML/SXSD plans.
 - `style_selection_reason`: required for SVGlide SVG decks. Explain why the preset fits the audience, topic, density, and expected tone.
 - `style_system`: required for SVGlide SVG decks. Translate the selected preset into concrete palette, typography, background strategy, and motif rules. This is separate from `visual_system`: `visual_system` describes the deck identity, while `style_system` records the executable style preset translation.
+- `strategy_locks`: required for SVGlide SVG decks. Record exactly eight locked decisions: `canvas`, `page_count`, `audience`, `narrative_mode`, `visual_style`, `style_preset`, `asset_strategy`, and `chart_policy`. Each lock must have `id`, `decision`, and `evidence_ref`.
+- `chart_policy`: deck-level chart rule. Select chart type from data relationship and page purpose first; chart pages must have a page-level `chart_decision`.
+- `icon_policy`: deck-level icon discipline. Use one consistent semantic family and map icons to concepts; do not mix unrelated icon styles as decoration.
 - `typography_constraints`: deck-level limits for line count, text box density, and how to handle long text before XML generation.
 - `text_surface_contract`: required for SVGlide SVG decks. Defines allowed text-bearing surface types, title exclusion gap, padding, and connector avoidance. Do not generate plain white text panels unless the user explicitly asks for bare wireframes or tables.
 - `verification_plan`: explicit checks to perform after creation or major edits; include background consistency, text fit, visual focus, and asset rendering when relevant.
@@ -153,6 +190,9 @@ SVGlide SVG slides must also include:
 - `svg_effects`: canonical effect names actually used or planned, such as `path`, `connector_flow`, `gradient`, `texture`, `chart_geometry`, or `image_overlay`.
 - `required_primitives` and `svg_primitives`: the planned SVGlide-safe primitives that must be present in the SVG source.
 - `xml_like_risk`, `content_density_contract`, `risk_flags`, and `source_policy`: quality and source-safety fields consumed by `svg_preflight.py --plan`.
+- `source_refs`: stable ids from top-level `source_pack.items` used by this page. If a page cites data, charts, or numeric claims, those refs must resolve.
+- `chart_decision`: required when `chart_type` is present. Include `chart_type`, `reason`, `data_ref`, `anchor_role`, and `bbox_tolerance_px`; the reason must explain the data relationship and page purpose, not just name a template.
+- `chart_verification`: required when `chart_type` is present. Point to the receipt that checks visible marks against source data, such as bar heights, line points, stacked proportions, or radar vertices.
 
 ## Layout Vocabulary
 

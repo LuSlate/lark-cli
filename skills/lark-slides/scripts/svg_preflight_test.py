@@ -216,6 +216,32 @@ def style_plan_fields(preset_id: str = "raw_grid") -> dict[str, object]:
     }
 
 
+def source_pack_fields() -> dict[str, object]:
+    return {
+        "source_pack": {
+            "schema_version": "svglide-source-pack/v1",
+            "source_status": "user_prompt_only",
+            "numeric_claim_policy": "cite_or_remove",
+            "items": [{"id": "brief", "type": "user_prompt", "status": "available", "source_ref": "source/brief.md"}],
+        }
+    }
+
+
+def strategy_lock_fields() -> dict[str, object]:
+    return {
+        "strategy_locks": [
+            {"id": "canvas", "decision": {"width": 960, "height": 540}, "evidence_ref": "plan.canvas"},
+            {"id": "page_count", "decision": 1, "evidence_ref": "plan.page_count"},
+            {"id": "audience", "decision": "test", "evidence_ref": "plan.audience"},
+            {"id": "narrative_mode", "decision": "briefing", "evidence_ref": "plan.narrative_mode"},
+            {"id": "visual_style", "decision": "data_journalism", "evidence_ref": "plan.visual_style"},
+            {"id": "style_preset", "decision": "raw_grid", "evidence_ref": "plan.style_preset"},
+            {"id": "asset_strategy", "decision": "svg", "evidence_ref": "plan.asset_strategy.mode"},
+            {"id": "chart_policy", "decision": "data_relationship_first", "evidence_ref": "plan.chart_policy"},
+        ]
+    }
+
+
 def effects_for_primitives(primitives: list[str]) -> list[str]:
     effects = {"typography"}
     primitive_set = set(primitives)
@@ -1093,6 +1119,48 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertEqual(issue_levels(result, "plan_missing_page_rhythm"), ["error"])
         self.assertIn("plan_missing_page_type", issue_codes(result))
         self.assertIn("plan_missing_main_visual_anchor", issue_codes(result))
+
+    def test_lint_plan_reports_visual_style_in_mode(self) -> None:
+        plan = single_slide_plan()
+        plan["mode"] = "data_journalism"
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertIn("plan_visual_style_in_mode", issue_codes(result))
+        self.assertEqual(issue_levels(result, "plan_visual_style_in_mode"), ["error"])
+
+    def test_lint_plan_golden_requires_strategy_locks(self) -> None:
+        plan = single_slide_plan()
+        plan["validation_profile"] = {"profile": "golden"}
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertIn("plan_strategy_locks_invalid", issue_codes(result))
+        self.assertEqual(issue_levels(result, "plan_strategy_locks_invalid"), ["error"])
+
+    def test_lint_plan_reports_missing_source_ref(self) -> None:
+        plan = single_slide_plan(source_refs=["missing-source"])
+        plan.update(source_pack_fields())
+        plan.update(strategy_lock_fields())
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertIn("plan_source_ref_missing", issue_codes(result))
+
+    def test_lint_plan_reports_invalid_chart_decision(self) -> None:
+        plan = single_slide_plan(
+            "infographic_scorecard",
+            ["typography", "micro_chart"],
+            chart_type="bar_chart",
+            chart_decision={"data_ref": "brief", "anchor_role": "missing_box", "bbox_tolerance_px": 12},
+        )
+        plan.update(source_pack_fields())
+        plan.update(strategy_lock_fields())
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertIn("plan_chart_decision_missing_reason", issue_codes(result))
+        self.assertIn("plan_chart_anchor_role_missing", issue_codes(result))
 
     def test_lint_plan_reports_unstructured_reference_asset(self) -> None:
         plan = single_slide_plan(reference_asset="use the chart reference")

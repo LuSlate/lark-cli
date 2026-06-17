@@ -105,6 +105,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertTrue((project / "pages" / "page-001.svg").exists())
         self.assertTrue((project / "receipts" / "emitted_components.json").exists())
         self.assertTrue((project / "receipts" / "design-pattern-usage.json").exists())
+        self.assertTrue(receipt["source_pack_digest"])
+        self.assertEqual(["canvas", "page_count", "audience", "narrative_mode", "visual_style", "style_preset", "asset_strategy", "chart_policy"], receipt["strategy_lock_ids"])
+        self.assertEqual("operational_dashboard", receipt["visual_style"])
         plan = runner.read_json(project / "slide_plan.json", {})
         self.assertEqual(3, plan["page_count"])
         self.assertIn("design_pattern_selection", plan)
@@ -153,6 +156,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                 "summary": {
                     "error_count": 0,
                     "warning_count": preview_warning_count,
+                    "issue_ids": [],
+                    "action": "create_live",
                     "visual_score": visual_score,
                     "visual_score_threshold": runner.visual_score_threshold(profile),
                     "visual_score_mode": "enforced" if runner.visual_score_enforced(profile) else "advisory",
@@ -272,6 +277,18 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertFalse(runner.should_skip_existing(project, data, "prepare"))
         with self.assertRaisesRegex(runner.RunnerError, "stale"):
             runner.require_latest_prepare(project, data)
+
+    def test_source_pack_changes_invalidate_stage_fingerprint(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        source_pack = project / "source" / "source_pack.json"
+        write_json(source_pack, {"items": [{"id": "brief", "status": "available"}]})
+
+        before = runner.stage_input_fingerprint("generate", project, self.args(project))["digest"]
+        write_json(source_pack, {"items": [{"id": "brief", "status": "updated"}]})
+        after = runner.stage_input_fingerprint("generate", project, self.args(project))["digest"]
+
+        self.assertNotEqual(before, after)
 
     def test_timing_receipt_records_v2_fields(self) -> None:
         project = self.make_project()
@@ -487,6 +504,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         receipt = runner.write_stage_receipt(project, data, "quality_gate", runner.now_ms(), body, args=args)
 
         self.assertEqual(body["status"], "passed_with_waiver")
+        self.assertEqual(body["acceptance"]["action"], "repair_and_rerun")
         self.assertEqual(receipt["input_fingerprint"]["schema_version"], "svglide-stage-fingerprint/v1")
         self.assertTrue(runner.should_skip_existing(project, data, "quality_gate", args))
         with self.assertRaisesRegex(runner.RunnerError, "passed quality_gate"):
@@ -528,6 +546,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(body["visual_score"], 72)
         self.assertEqual(body["visual_score_threshold"], 75)
         self.assertEqual(body["visual_score_mode"], "advisory")
+        self.assertEqual(body["acceptance"]["action"], "create_live")
+        self.assertEqual(body["acceptance"]["source_pack_status"], "missing")
+        self.assertEqual(body["acceptance"]["chart_alignment_status"], "passed")
 
     def test_quality_gate_records_preflight_strategist_contract_issues(self) -> None:
         project = self.make_project()
