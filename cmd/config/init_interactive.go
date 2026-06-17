@@ -350,6 +350,9 @@ func runCreateAppFlow(ctx context.Context, f *cmdutil.Factory, brandOverride cor
 	if finalMethod == core.AuthMethodPrivateKeyJWT {
 		keyToStore = keyLabel
 	}
+	if err := validatePKJWTKeyBinding(finalMethod, keyToStore); err != nil {
+		return nil, err
+	}
 	return &configInitResult{
 		Mode:       "create",
 		Brand:      finalBrand,
@@ -358,6 +361,21 @@ func runCreateAppFlow(ctx context.Context, f *cmdutil.Factory, brandOverride cor
 		AuthMethod: finalMethod,
 		KeyLabel:   keyToStore,
 	}, nil
+}
+
+// validatePKJWTKeyBinding rejects a registration that resolved to
+// private_key_jwt without a signing key bound to it. keyLabel is non-empty only
+// when the local flow chose private_key_jwt and signed a TEE attestation; a
+// resolved method of private_key_jwt with no key handle would save an unusable
+// config (rejected later at config load, surfacing as "saved OK, fails on first
+// use"), so it is caught here at registration time instead.
+func validatePKJWTKeyBinding(finalMethod, keyLabel string) error {
+	if finalMethod == core.AuthMethodPrivateKeyJWT && keyLabel == "" {
+		return errs.NewConfigError(errs.SubtypeInvalidClient,
+			"registration resolved to private_key_jwt but no signing key was bound to this app (an existing secret-based app may have been selected)").
+			WithHint("re-register with: lark-cli config init --new --auth-method private_key_jwt")
+	}
+	return nil
 }
 
 // resolveFinalAuthMethod picks the authoritative method from the poll result,
