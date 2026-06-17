@@ -102,6 +102,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual("passed", receipt["status"])
         self.assertEqual("builtin:svglide_strategist_runtime", receipt["generator"])
         self.assertTrue((project / "slide_plan.json").exists())
+        self.assertTrue((project / "source" / "source_pack.json").exists())
+        self.assertTrue((project / "source" / "design_spec.json").exists())
         self.assertTrue((project / "pages" / "page-001.svg").exists())
         self.assertTrue((project / "receipts" / "emitted_components.json").exists())
         self.assertTrue((project / "receipts" / "design-pattern-usage.json").exists())
@@ -111,8 +113,58 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         plan = runner.read_json(project / "slide_plan.json", {})
         self.assertEqual(3, plan["page_count"])
         self.assertIn("design_pattern_selection", plan)
+        self.assertEqual("source/source_pack.json", plan["source_pack_ref"])
+        self.assertEqual("source/design_spec.json", plan["design_spec_ref"])
         self.assertEqual("briefing", plan["mode"])
         self.assertEqual({"error_count": 0, "warning_count": 0}, svg_preflight.lint_plan(plan)["summary"])
+
+    def test_source_and_strategy_stages_emit_project_receipts(self) -> None:
+        root = Path(tempfile.mkdtemp(dir=runner.repo_root()))
+        self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
+        project = root / "strategy-project"
+        project.mkdir(parents=True)
+        write_json(
+            project / "project_manifest.json",
+            {
+                "deck_id": "strategy-project",
+                "title": "Strategy Project",
+                "plan": "slide_plan.json",
+                "brief": "Create an Aksu oasis planning deck with agenda, section, seasonal blocks, and value outlook.",
+                "page_descriptions": [
+                    "Cover: 以水为脉",
+                    "目录：项目核心定位、春夏秋冬、价值展望",
+                    "章节过渡页：01 项目核心定位与愿景",
+                ],
+            },
+        )
+        data = runner.manifest(project)
+        args = self.args(project)
+
+        source = runner.execute_stage("source", project, data, args)
+        strategy = runner.execute_stage("strategy", project, data, args)
+
+        self.assertEqual("passed", source["status"])
+        self.assertEqual("passed", strategy["status"])
+        self.assertTrue((project / "source" / "source_pack.json").exists())
+        self.assertTrue((project / "source" / "evidence.json").exists())
+        self.assertTrue((project / "source" / "design_spec.json").exists())
+        plan = runner.read_json(project / "slide_plan.json", {})
+        design_spec = runner.read_json(project / "source" / "design_spec.json", {})
+        self.assertEqual("premium_regional", plan["visual_style"])
+        self.assertEqual("source/source_pack.json", plan["source_pack_ref"])
+        self.assertEqual("source/design_spec.json", plan["design_spec_ref"])
+        self.assertEqual(3, len(design_spec["renderer_selection"]))
+        self.assertTrue(all(item["renderer_id"] for item in design_spec["renderer_selection"]))
+
+    def test_project_brief_text_does_not_append_generated_source_brief_to_manifest_brief(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["brief"] = "Create a concise business report."
+        write_json(project / "project_manifest.json", data)
+        (project / "source").mkdir(exist_ok=True)
+        (project / "source" / "brief.md").write_text("Create a concise business report.\n", encoding="utf-8")
+
+        self.assertEqual("Create a concise business report.", runner.project_brief_text(project, runner.manifest(project)))
 
     def write_gate_inputs(
         self,
@@ -146,6 +198,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             },
             args=args,
         )
+        chart_verify = runner.run_chart_verify(project, data, args)
+        runner.write_stage_receipt(project, data, "chart_verify", runner.now_ms(), chart_verify, args=args)
         runner.write_stage_receipt(
             project,
             data,
@@ -437,23 +491,30 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertFalse(runner.load_env_proof(str(proof))["verified"])
 
     def test_stage_aliases_accept_cli_names(self) -> None:
+        self.assertEqual(runner.normalize_stage("source-pack"), "source")
+        self.assertEqual(runner.normalize_stage("design-strategy"), "strategy")
         self.assertEqual(runner.normalize_stage("dry-run"), "dry_run")
         self.assertEqual(runner.normalize_stage("live-create"), "live_create")
         self.assertEqual(runner.normalize_stage("preview-lint"), "preview_lint")
+        self.assertEqual(runner.normalize_stage("chart-verify"), "chart_verify")
         self.assertEqual(runner.normalize_stage("quality-gate"), "quality_gate")
         self.assertEqual(runner.normalize_stage("ppe-proof"), "ppe_proof")
         self.assertEqual(runner.normalize_stage("render-contact-sheet"), "render_contact_sheet")
 
-    def test_stage_graph_includes_quality_gate_and_ppe_proof(self) -> None:
+    def test_stage_graph_includes_source_strategy_chart_verify_quality_gate_and_ppe_proof(self) -> None:
         dry_run_stages = runner.stages_until("dry_run")
         readback_stages = runner.stages_until("readback")
 
+        self.assertEqual(dry_run_stages[:3], ["source", "strategy", "generate"])
+        self.assertLess(dry_run_stages.index("preview_lint"), dry_run_stages.index("chart_verify"))
+        self.assertLess(dry_run_stages.index("chart_verify"), dry_run_stages.index("quality_gate"))
         self.assertIn("quality_gate", dry_run_stages)
         self.assertNotIn("ppe_proof", dry_run_stages)
         self.assertNotIn("live_create", dry_run_stages)
         self.assertEqual(readback_stages[-3:], ["ppe_proof", "live_create", "readback"])
         parser = runner.build_parser()
         self.assertEqual(parser.parse_args(["quality-gate", "--project", "/tmp/p"]).single_stage, "quality_gate")
+        self.assertEqual(parser.parse_args(["chart-verify", "--project", "/tmp/p"]).single_stage, "chart_verify")
         self.assertEqual(parser.parse_args(["ppe-proof", "--project", "/tmp/p"]).single_stage, "ppe_proof")
 
     def test_skipped_preview_lint_receipt_is_not_reused(self) -> None:
@@ -492,6 +553,87 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
         with self.assertRaisesRegex(runner.RunnerError, "preview_lint is runner-owned"):
             runner.run_preview_lint(project, data, self.args(project))
+
+    def write_minimal_preflight_receipt(self, project: Path, data: dict[str, object], args: Namespace) -> None:
+        self.write_prepare_receipt(project, data)
+        runner.write_stage_receipt(
+            project,
+            data,
+            "preflight",
+            runner.now_ms(),
+            {
+                "status": "passed",
+                "summary": {
+                    "summary": {"error_count": 0, "warning_count": 0},
+                    "plan": {"issues": [], "summary": {"error_count": 0, "warning_count": 0}},
+                },
+            },
+            args=args,
+        )
+
+    def test_chart_verify_passes_when_required_chart_has_svg_geometry(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(CHART_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "chart_type": "bar_chart",
+                        "chart_decision": {
+                            "status": "required",
+                            "chart_type": "bar_chart",
+                            "reason": "compare category values",
+                            "data_ref": "brief",
+                            "anchor_role": "chart",
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_minimal_preflight_receipt(project, data, args)
+
+        body = runner.run_chart_verify(project, data, args)
+
+        self.assertEqual("passed", body["status"])
+        self.assertEqual(1, body["summary"]["required_chart_count"])
+        self.assertEqual(1, body["summary"]["verified_chart_count"])
+        self.assertEqual("bar", body["pages"][0]["expected_mark_kind"])
+
+    def test_chart_verify_fails_when_required_chart_has_no_svg_geometry(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "chart_type": "bar_chart",
+                        "chart_decision": {
+                            "status": "required",
+                            "chart_type": "bar_chart",
+                            "reason": "compare category values",
+                            "data_ref": "brief",
+                            "anchor_role": "chart",
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_minimal_preflight_receipt(project, data, args)
+
+        body = runner.run_chart_verify(project, data, args)
+
+        self.assertEqual("failed", body["status"])
+        self.assertEqual(1, body["summary"]["error_count"])
+        self.assertEqual("chart_geometry_not_found", body["issues"][0]["code"])
 
     def test_quality_gate_allows_authoring_component_waiver_for_dry_run(self) -> None:
         project = self.make_project()

@@ -26,11 +26,14 @@ import svg_preflight
 
 
 STAGES = [
+    "source",
+    "strategy",
     "generate",
     "prepare",
     "preview",
     "preflight",
     "preview_lint",
+    "chart_verify",
     "quality_gate",
     "dry_run",
     "ppe_proof",
@@ -39,12 +42,18 @@ STAGES = [
     "render_contact_sheet",
 ]
 STAGE_ALIASES = {
+    "source-pack": "source",
+    "source_pack": "source",
+    "design-strategy": "strategy",
+    "design_strategy": "strategy",
     "dry-run": "dry_run",
     "dry_run": "dry_run",
     "live-create": "live_create",
     "live_create": "live_create",
     "preview-lint": "preview_lint",
     "preview_lint": "preview_lint",
+    "chart-verify": "chart_verify",
+    "chart_verify": "chart_verify",
     "quality-gate": "quality_gate",
     "quality_gate": "quality_gate",
     "ppe-proof": "ppe_proof",
@@ -53,11 +62,14 @@ STAGE_ALIASES = {
     "render_contact_sheet": "render_contact_sheet",
 }
 STAGE_TARGET_MS = {
+    "source": 3_000,
+    "strategy": 5_000,
     "generate": 30_000,
     "prepare": 5_000,
     "preview": 10_000,
     "preflight": 10_000,
     "preview_lint": 10_000,
+    "chart_verify": 5_000,
     "quality_gate": 3_000,
     "dry_run": 30_000,
     "ppe_proof": 30_000,
@@ -72,6 +84,9 @@ QUALITY_GATE_SCHEMA = "svglide-quality-gate/v1"
 ENV_PROOF_SCHEMA = "svglide-env-proof/v1"
 DESIGN_PATTERN_USAGE_SCHEMA = "svglide-design-pattern-usage/v1"
 COMPONENT_REPORT_SCHEMA = "svglide-component-report/v1"
+CHART_VERIFY_SCHEMA = "svglide-chart-verify/v1"
+SOURCE_PACK_SCHEMA = "svglide-source-pack/v1"
+DESIGN_SPEC_SCHEMA = "svglide-design-spec/v1"
 PREVIEW_LINT_WAIVER_TTL_MS = 30 * 60 * 1000
 DEFAULT_VALIDATION_PROFILE = "authoring"
 STRATEGIST_CONTRACT_CODES = {
@@ -524,11 +539,217 @@ def project_brief_text(project: Path, data: dict[str, Any]) -> str:
             continue
         path = safe_existing_file(project_file(project, value), root=project)
         parts.append(path.read_text(encoding="utf-8"))
+    has_explicit_brief = bool(parts)
     for relative in ["source/brief.md", "source/prompt.md", "brief.md", "prompt.md"]:
+        if has_explicit_brief and relative == "source/brief.md":
+            continue
         candidate = project / relative
         if candidate.exists() and candidate.is_file():
             parts.append(candidate.read_text(encoding="utf-8"))
-    return "\n\n".join(part.strip() for part in parts if part.strip())
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for part in parts:
+        stripped = part.strip()
+        if not stripped or stripped in seen:
+            continue
+        seen.add(stripped)
+        normalized.append(stripped)
+    return "\n\n".join(normalized)
+
+
+def source_dir(project: Path) -> Path:
+    return project / "source"
+
+
+def source_pack_path(project: Path) -> Path:
+    return source_dir(project) / "source_pack.json"
+
+
+def evidence_path(project: Path) -> Path:
+    return source_dir(project) / "evidence.json"
+
+
+def source_brief_path(project: Path) -> Path:
+    return source_dir(project) / "brief.md"
+
+
+def design_spec_path(project: Path) -> Path:
+    return source_dir(project) / "design_spec.json"
+
+
+def normalize_source_pack(pack: Any, brief: str, data: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(pack, dict):
+        out = dict(pack)
+    else:
+        out = {}
+    out.setdefault("schema_version", SOURCE_PACK_SCHEMA)
+    out.setdefault("source_status", "user_prompt_only" if brief.strip() else "missing")
+    out.setdefault("numeric_claim_policy", "cite_or_remove")
+    items = out.get("items")
+    if not isinstance(items, list):
+        items = []
+    has_brief = any(isinstance(item, dict) and text_from_any(item.get("id")) == "brief" for item in items)
+    if not has_brief:
+        items.insert(
+            0,
+            {
+                "id": "brief",
+                "type": "user_prompt",
+                "status": "available" if brief.strip() else "missing",
+                "source_ref": "source/brief.md",
+                "usage_pages": "all",
+                "license": "user_provided",
+            },
+        )
+    manifest_sources = data.get("source") if isinstance(data.get("source"), dict) else {}
+    for key in ["research", "evidence", "source_pack"]:
+        value = text_from_any(manifest_sources.get(key)) if isinstance(manifest_sources, dict) else ""
+        if value and not any(isinstance(item, dict) and text_from_any(item.get("source_ref")) == value for item in items):
+            items.append(
+                {
+                    "id": f"manifest_{key}",
+                    "type": key,
+                    "status": "declared",
+                    "source_ref": value,
+                    "usage_pages": "all",
+                    "license": "project_manifest",
+                }
+            )
+    out["items"] = items
+    return out
+
+
+def build_source_artifacts(project: Path, data: dict[str, Any], plan: dict[str, Any] | None = None) -> dict[str, Any]:
+    brief = project_brief_text(project, data)
+    existing_pack = plan.get("source_pack") if isinstance(plan, dict) else None
+    pack = normalize_source_pack(existing_pack, brief, data)
+    evidence = {
+        "schema_version": "svglide-evidence-index/v1",
+        "source_pack": "source/source_pack.json",
+        "brief": "source/brief.md",
+        "source_status": pack.get("source_status"),
+        "items": [
+            {
+                "id": text_from_any(item.get("id")),
+                "source_ref": text_from_any(item.get("source_ref")),
+                "status": text_from_any(item.get("status")),
+                "type": text_from_any(item.get("type")),
+            }
+            for item in pack.get("items", [])
+            if isinstance(item, dict)
+        ],
+    }
+    return {"brief": brief, "source_pack": pack, "evidence": evidence}
+
+
+def write_source_artifacts(project: Path, artifacts: dict[str, Any]) -> dict[str, Any]:
+    source_dir(project).mkdir(parents=True, exist_ok=True)
+    brief = text_from_any(artifacts.get("brief"))
+    if brief:
+        source_brief_path(project).write_text(brief.rstrip() + "\n", encoding="utf-8")
+    elif not source_brief_path(project).exists():
+        source_brief_path(project).write_text("", encoding="utf-8")
+    write_json(source_pack_path(project), artifacts.get("source_pack", {}))
+    write_json(evidence_path(project), artifacts.get("evidence", {}))
+    pack = artifacts.get("source_pack") if isinstance(artifacts.get("source_pack"), dict) else {}
+    return {
+        "status": "passed",
+        "source_pack": rel_to_project(project, source_pack_path(project)),
+        "evidence": rel_to_project(project, evidence_path(project)),
+        "brief": rel_to_project(project, source_brief_path(project)),
+        "source_pack_digest": json_digest(pack),
+        "source_pack_status": text_from_any(pack.get("source_status")) or "missing",
+        "item_count": len(pack.get("items", [])) if isinstance(pack.get("items"), list) else 0,
+    }
+
+
+def design_spec_from_plan(plan: dict[str, Any], project: Path) -> dict[str, Any]:
+    slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
+    renderer_selection: list[dict[str, Any]] = []
+    for index, slide in enumerate(slides, 1):
+        if not isinstance(slide, dict):
+            continue
+        renderer_selection.append(
+            {
+                "page": slide.get("page", index),
+                "page_type": text_from_any(slide.get("page_type")),
+                "renderer_id": text_from_any(slide.get("renderer_id")),
+                "runtime_renderer_family": text_from_any(slide.get("runtime_renderer_family")),
+                "seed_id": text_from_any(slide.get("seed_id")),
+                "visual_recipe": text_from_any(slide.get("visual_recipe")),
+                "visual_signature": text_from_any(slide.get("visual_signature")),
+                "reference_asset": slide.get("reference_asset") if isinstance(slide.get("reference_asset"), dict) else {},
+                "chart_decision": slide.get("chart_decision") if isinstance(slide.get("chart_decision"), dict) else {},
+            }
+        )
+    return {
+        "schema_version": DESIGN_SPEC_SCHEMA,
+        "title": deck_title(project, {"title": plan.get("title") or plan.get("deck_title") or project.name}),
+        "output_mode": text_from_any(plan.get("output_mode")),
+        "mode": text_from_any(plan.get("mode") or plan.get("narrative_mode")),
+        "visual_style": text_from_any(plan.get("visual_style")),
+        "style_preset": text_from_any(plan.get("style_preset")),
+        "style_system": plan.get("style_system") if isinstance(plan.get("style_system"), dict) else {},
+        "strategy_locks": plan.get("strategy_locks") if isinstance(plan.get("strategy_locks"), list) else [],
+        "asset_strategy": plan.get("asset_strategy") if isinstance(plan.get("asset_strategy"), dict) else {},
+        "chart_policy": plan.get("chart_policy") if isinstance(plan.get("chart_policy"), dict) else {},
+        "icon_policy": plan.get("icon_policy") if isinstance(plan.get("icon_policy"), dict) else {},
+        "page_rhythm": plan.get("page_rhythm") if isinstance(plan.get("page_rhythm"), list) else [],
+        "source_pack_ref": "source/source_pack.json",
+        "renderer_registry_ref": "skills/lark-slides/references/svglide-renderer-registry.json",
+        "renderer_selection": renderer_selection,
+    }
+
+
+def write_design_spec(project: Path, plan: dict[str, Any]) -> dict[str, Any]:
+    spec = design_spec_from_plan(plan, project)
+    write_json(design_spec_path(project), spec)
+    return {
+        "design_spec": rel_to_project(project, design_spec_path(project)),
+        "design_spec_digest": json_digest(spec),
+        "renderer_count": len(spec.get("renderer_selection", [])) if isinstance(spec.get("renderer_selection"), list) else 0,
+        "visual_style": spec.get("visual_style"),
+        "style_preset": spec.get("style_preset"),
+    }
+
+
+def run_source(project: Path, data: dict[str, Any]) -> dict[str, Any]:
+    artifacts = build_source_artifacts(project, data, {})
+    return write_source_artifacts(project, artifacts)
+
+
+def run_strategy(project: Path, data: dict[str, Any]) -> dict[str, Any]:
+    import svglide_strategist
+
+    plan_path = safe_output_file(plan_file(project, data), root=project, suffix=".json")
+    existing_plan = read_json(plan_path, {}) if plan_path.exists() else None
+    if existing_plan is not None and not isinstance(existing_plan, dict):
+        raise RunnerError("slide_plan.json must contain an object")
+    contract = svglide_strategist.build_contract(
+        brief=project_brief_text(project, data),
+        slide_plan=existing_plan,
+        page_descriptions=manifest_page_descriptions(data),
+    )
+    if not text_from_any(contract.get("title")):
+        contract["title"] = deck_title(project, data)
+    source_artifacts = build_source_artifacts(project, data, contract)
+    write_source_artifacts(project, source_artifacts)
+    contract["source_pack"] = source_artifacts["source_pack"]
+    contract["source_pack_ref"] = "source/source_pack.json"
+    contract["design_spec_ref"] = "source/design_spec.json"
+    write_json(plan_path, contract)
+    spec_summary = write_design_spec(project, contract)
+    return {
+        "status": "passed",
+        "plan": rel_to_project(project, plan_path),
+        "source_pack": "source/source_pack.json",
+        **spec_summary,
+        "strategy_lock_ids": [
+            text_from_any(item.get("id"))
+            for item in contract.get("strategy_locks", [])
+            if isinstance(item, dict) and text_from_any(item.get("id"))
+        ],
+    }
 
 
 def builtin_generate(project: Path, data: dict[str, Any]) -> dict[str, Any]:
@@ -549,13 +770,21 @@ def builtin_generate(project: Path, data: dict[str, Any]) -> dict[str, Any]:
     )
     if not text_from_any(contract.get("title")):
         contract["title"] = deck_title(project, data)
+    source_artifacts = build_source_artifacts(project, data, contract)
+    write_source_artifacts(project, source_artifacts)
+    contract["source_pack"] = source_artifacts["source_pack"]
+    contract["source_pack_ref"] = "source/source_pack.json"
+    contract["design_spec_ref"] = "source/design_spec.json"
     write_json(plan_path, contract)
+    spec_summary = write_design_spec(project, contract)
 
     runtime_cache = svglide_gen_runtime.compose_project(project, plan_path)
     body = {
         "status": "passed",
         "generator": "builtin:svglide_strategist_runtime",
         "plan": rel_to_project(project, plan_path),
+        "source_pack": "source/source_pack.json",
+        **spec_summary,
         "page_count": runtime_cache.get("page_count", 0),
         "outputs": runtime_cache.get("outputs", {}),
         "runtime_cache": runtime_cache,
@@ -714,6 +943,25 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
     add_source_pack_fingerprints(inputs, project, data)
     add_value_fingerprint(inputs, "stage_command", stage_command(data, stage))
 
+    if stage == "source":
+        for relative in ["source/brief.md", "source/prompt.md", "brief.md", "prompt.md"]:
+            add_file_fingerprint(inputs, project, "brief", project / relative)
+        add_value_fingerprint(inputs, "brief", project_brief_text(project, data))
+        add_value_fingerprint(inputs, "page_descriptions", manifest_page_descriptions(data))
+    if stage == "strategy":
+        add_file_fingerprint(inputs, project, "source_receipt", receipt_path(project, "source", data))
+        add_file_fingerprint(inputs, project, "source_pack", source_pack_path(project))
+        add_file_fingerprint(inputs, project, "evidence", evidence_path(project))
+        plan = plan_file(project, data)
+        if plan.exists():
+            add_file_fingerprint(inputs, project, "plan", plan)
+        scripts = repo_root() / "skills" / "lark-slides" / "scripts"
+        references = repo_root() / "skills" / "lark-slides" / "references"
+        add_file_fingerprint(inputs, project, "script", scripts / "svglide_strategist.py")
+        for catalog in ["style-presets.json", "svg-seeds.json", "svg-recipes.json", "svglide-design-pattern-map.json", "svglide-renderer-registry.json"]:
+            add_file_fingerprint(inputs, project, "catalog", references / catalog)
+        add_value_fingerprint(inputs, "brief", project_brief_text(project, data))
+        add_value_fingerprint(inputs, "page_descriptions", manifest_page_descriptions(data))
     if stage == "generate":
         plan = plan_file(project, data)
         if plan.exists():
@@ -724,17 +972,18 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
         references = repo_root() / "skills" / "lark-slides" / "references"
         for script_name in ["svglide_strategist.py", "svglide_gen_runtime.py"]:
             add_file_fingerprint(inputs, project, "script", scripts / script_name)
-        for catalog in ["style-presets.json", "svg-seeds.json", "svg-recipes.json", "svglide-design-pattern-map.json"]:
+        for catalog in ["style-presets.json", "svg-seeds.json", "svg-recipes.json", "svglide-design-pattern-map.json", "svglide-renderer-registry.json"]:
             add_file_fingerprint(inputs, project, "catalog", references / catalog)
+        add_file_fingerprint(inputs, project, "design_spec", design_spec_path(project))
         add_value_fingerprint(inputs, "brief", project_brief_text(project, data))
         add_value_fingerprint(inputs, "page_descriptions", manifest_page_descriptions(data))
-    if stage in {"generate", "prepare"}:
+    if stage in {"source", "strategy", "generate", "prepare"}:
         for page in project_pages(project, data, prepared=False):
             add_file_fingerprint(inputs, project, "source_svg", page)
-    if stage not in {"generate", "prepare"}:
+    if stage not in {"source", "strategy", "generate", "prepare"}:
         for page in project_pages(project, data, prepared=True):
             add_file_fingerprint(inputs, project, "prepared_svg", page)
-    if stage != "generate":
+    if stage not in {"source"}:
         add_file_fingerprint(inputs, project, "plan", plan_file(project, data))
 
     scripts = repo_root() / "skills" / "lark-slides" / "scripts"
@@ -753,11 +1002,16 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
         add_file_fingerprint(inputs, project, "script", scripts / "svg_preview_lint.py")
         add_value_fingerprint(inputs, "allow_missing_preview_lint", bool(get_arg(args, "allow_missing_preview_lint", False)))
         add_value_fingerprint(inputs, "validation_profile", quality_validation_profile(resolved_validation_profile(data, args, project=project)))
+    if stage == "chart_verify":
+        add_file_fingerprint(inputs, project, "script", scripts / "svglide_project_runner.py")
+        add_file_fingerprint(inputs, project, "plan", plan_file(project, data))
+        add_file_fingerprint(inputs, project, "preflight_receipt", receipt_path(project, "preflight", data))
     if stage == "quality_gate":
-        for dependency in ["preflight", "preview_lint"]:
+        for dependency in ["preflight", "preview_lint", "chart_verify"]:
             add_file_fingerprint(inputs, project, f"{dependency}_receipt", receipt_path(project, dependency, data))
         add_file_fingerprint(inputs, project, "component_report", project / "receipts" / "emitted_components.json")
         add_file_fingerprint(inputs, project, "design_pattern_usage", project / "receipts" / "design-pattern-usage.json")
+        add_file_fingerprint(inputs, project, "design_spec", design_spec_path(project))
         add_file_fingerprint(inputs, project, "component_waiver", project / "receipts" / "emitted-components-waiver.json")
         add_file_fingerprint(inputs, project, "allowlist_receipt", project / "receipts" / "allowlist.json")
         try:
@@ -1991,6 +2245,209 @@ def raster_summary(project: Path, data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def chart_requirement_slides(project: Path, data: dict[str, Any]) -> list[dict[str, Any]]:
+    plan = read_json(plan_file(project, data), {})
+    if not isinstance(plan, dict):
+        return []
+    slides = plan.get("slides")
+    if not isinstance(slides, list):
+        return []
+    requirements: list[dict[str, Any]] = []
+    for index, slide in enumerate(slides, 1):
+        if not isinstance(slide, dict):
+            continue
+        decision = slide.get("chart_decision") if isinstance(slide.get("chart_decision"), dict) else {}
+        chart_type = text_from_any(decision.get("chart_type") or slide.get("chart_type"))
+        status = text_from_any(decision.get("status"))
+        if not chart_type or status == "not_required":
+            continue
+        try:
+            page_number = int(slide.get("page", index))
+        except (TypeError, ValueError):
+            page_number = index
+        requirements.append(
+            {
+                "page": page_number if not isinstance(page_number, bool) else index,
+                "index": index,
+                "chart_type": chart_type,
+                "anchor_role": text_from_any(decision.get("anchor_role")),
+                "data_ref": text_from_any(decision.get("data_ref")),
+                "reason": text_from_any(decision.get("reason")),
+            }
+        )
+    return requirements
+
+
+def chart_mark_kind(chart_type: str) -> str:
+    normalized = chart_type.replace("-", "_").lower()
+    if "bar" in normalized or normalized in {"pareto_chart", "waterfall_chart"}:
+        return "bar"
+    if "line" in normalized or "area" in normalized:
+        return "line"
+    if "donut" in normalized or "pie" in normalized:
+        return "donut"
+    if "bubble" in normalized or "scatter" in normalized:
+        return "bubble"
+    if "sankey" in normalized or "flow" in normalized:
+        return "sankey"
+    if "kpi" in normalized:
+        return "kpi"
+    if "hub" in normalized:
+        return "hub"
+    if "table" in normalized or "matrix" in normalized:
+        return "table"
+    return "chart"
+
+
+def element_chart_tokens(element: ET.Element) -> set[str]:
+    name = svg_preflight.local_name(element.tag).lower()
+    identifier = svg_preflight.element_identifier_text(element).lower()
+    text = "".join(element.itertext()).lower()
+    combined = f"{identifier} {text}"
+    tokens: set[str] = set()
+    if re.search(r"(chart|plot|axis|insight|metric|kpi)", combined):
+        tokens.add("chart")
+    if name == "rect" and re.search(r"(bar|column|rank)", combined):
+        tokens.add("bar")
+    if name in {"path", "line", "polyline"} and re.search(r"(line|trend|curve|axis)", combined):
+        tokens.add("line")
+    if re.search(r"(donut|ring|segment|share|proportion)", combined):
+        tokens.add("donut")
+    if name in {"circle", "ellipse"} and re.search(r"(bubble|scatter|node)", combined):
+        tokens.add("bubble")
+    if name in {"path", "rect"} and re.search(r"(sankey|flow|lane|stream)", combined):
+        tokens.add("sankey")
+    if re.search(r"(hub|spoke|orbit|node)", combined):
+        tokens.add("hub")
+    if re.search(r"(table|matrix|cell|row|column)", combined):
+        tokens.add("table")
+    if name == "foreignobject" and re.search(r"(metric|kpi|%|\\$|\\d)", combined):
+        tokens.add("kpi")
+    return tokens
+
+
+def chart_mark_summary(path: Path) -> dict[str, Any]:
+    root = ET.parse(path).getroot()
+    counts: dict[str, int] = {}
+    ids: list[str] = []
+    for element in root.iter():
+        if svg_preflight.svg_role(element) not in {"shape", "image"}:
+            continue
+        tokens = element_chart_tokens(element)
+        if not tokens:
+            continue
+        identifier = svg_preflight.element_identifier_text(element)
+        if identifier:
+            ids.append(identifier)
+        for token in tokens:
+            counts[token] = counts.get(token, 0) + 1
+    return {"counts": counts, "ids": ids[:24]}
+
+
+def chart_kind_passes(kind: str, counts: dict[str, int]) -> bool:
+    if kind == "bar":
+        return counts.get("bar", 0) >= 2 or counts.get("chart", 0) >= 3
+    if kind == "line":
+        return counts.get("line", 0) >= 1 or counts.get("chart", 0) >= 3
+    if kind == "donut":
+        return counts.get("donut", 0) >= 2 or counts.get("chart", 0) >= 3
+    if kind == "bubble":
+        return counts.get("bubble", 0) >= 2 or counts.get("chart", 0) >= 3
+    if kind == "sankey":
+        return counts.get("sankey", 0) >= 2 or counts.get("chart", 0) >= 3
+    if kind == "kpi":
+        return counts.get("kpi", 0) >= 2 or counts.get("chart", 0) >= 2
+    if kind in {"hub", "table"}:
+        return counts.get(kind, 0) >= 2 or counts.get("chart", 0) >= 2
+    return counts.get("chart", 0) >= 2
+
+
+def run_chart_verify(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
+    require_fresh_receipt(project, data, "preflight", {"passed"}, args)
+    requirements = chart_requirement_slides(project, data)
+    prepared_pages = project_pages(project, data, prepared=True)
+    pages: list[dict[str, Any]] = []
+    issues: list[dict[str, Any]] = []
+    for requirement in requirements:
+        page_index = int(requirement["index"]) - 1
+        chart_type = requirement["chart_type"]
+        kind = chart_mark_kind(chart_type)
+        if page_index < 0 or page_index >= len(prepared_pages):
+            issues.append({"level": "error", "code": "missing_prepared_page", "page": requirement["page"], "chart_type": chart_type})
+            continue
+        page_path = safe_existing_file(prepared_pages[page_index], suffix=".svg", root=project)
+        try:
+            marks = chart_mark_summary(page_path)
+        except ET.ParseError as error:
+            issues.append({"level": "error", "code": "invalid_svg", "page": requirement["page"], "message": str(error)})
+            continue
+        counts = marks["counts"]
+        passed = chart_kind_passes(kind, counts)
+        if not passed:
+            issues.append(
+                {
+                    "level": "error",
+                    "code": "chart_geometry_not_found",
+                    "page": requirement["page"],
+                    "chart_type": chart_type,
+                    "expected_mark_kind": kind,
+                    "counts": counts,
+                }
+            )
+        if not requirement.get("data_ref"):
+            issues.append({"level": "warning", "code": "chart_data_ref_missing", "page": requirement["page"], "chart_type": chart_type})
+        pages.append(
+            {
+                "page": requirement["page"],
+                "chart_type": chart_type,
+                "expected_mark_kind": kind,
+                "status": "passed" if passed else "failed",
+                "prepared_svg": rel_to_project(project, page_path),
+                "mark_counts": counts,
+                "sample_ids": marks["ids"],
+                "anchor_role": requirement.get("anchor_role"),
+                "data_ref": requirement.get("data_ref"),
+            }
+        )
+
+    error_count = sum(1 for issue in issues if issue.get("level") == "error")
+    warning_count = sum(1 for issue in issues if issue.get("level") == "warning")
+    return {
+        "schema_version": CHART_VERIFY_SCHEMA,
+        "status": "passed" if error_count == 0 else "failed",
+        "summary": {
+            "required_chart_count": len(requirements),
+            "verified_chart_count": sum(1 for page in pages if page.get("status") == "passed"),
+            "error_count": error_count,
+            "warning_count": warning_count,
+        },
+        "pages": pages,
+        "issues": issues,
+    }
+
+
+def chart_verify_summary(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
+    requirements = chart_requirement_slides(project, data)
+    if not requirements and not receipt_path(project, "chart_verify", data).exists():
+        return {
+            "status": "not_required",
+            "required_chart_count": 0,
+            "verified_chart_count": 0,
+            "error_count": 0,
+            "warning_count": 0,
+        }
+    receipt = require_fresh_receipt(project, data, "chart_verify", {"passed"}, args)
+    summary = receipt.get("summary") if isinstance(receipt.get("summary"), dict) else {}
+    return {
+        "status": text_from_any(receipt.get("status")) or "passed",
+        "required_chart_count": required_int(summary.get("required_chart_count", 0), "chart_verify.summary.required_chart_count"),
+        "verified_chart_count": required_int(summary.get("verified_chart_count", 0), "chart_verify.summary.verified_chart_count"),
+        "error_count": required_int(summary.get("error_count", 0), "chart_verify.summary.error_count"),
+        "warning_count": required_int(summary.get("warning_count", 0), "chart_verify.summary.warning_count"),
+        "path": rel_to_project(project, receipt_path(project, "chart_verify", data)),
+    }
+
+
 def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
     preflight = require_fresh_receipt(project, data, "preflight", {"passed"}, args)
     preview_lint = require_fresh_receipt(project, data, "preview_lint", {"passed", "waived"}, args)
@@ -2003,6 +2460,7 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
     component_counts = component_report_summary(project, data, args)
     visual_contract = visual_design_contract_summary(project, data, args)
     design_usage = design_pattern_usage_summary(project, data, args)
+    chart_verify = chart_verify_summary(project, data, args)
     raster_counts = raster_summary(project, data)
     allowlist = allowlist_summary(project, data)
     profile = quality_validation_profile(resolved_validation_profile(data, args, project=project))
@@ -2031,6 +2489,8 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         failures.append("SVGlide visual design contract must be proven")
     if design_usage["error_count"] != 0:
         failures.append("SVGlide design pattern usage must be proven")
+    if chart_verify["error_count"] != 0:
+        failures.append("chart_verify.error_count must be 0")
     if raster_counts["error_count"] != 0:
         failures.append("raster.error_count must be 0")
     preview_score = preview_counts.get("visual_score")
@@ -2049,6 +2509,7 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         + component_counts["warning_count"]
         + visual_contract["warning_count"]
         + design_usage["warning_count"]
+        + chart_verify["warning_count"]
         + raster_counts["warning_count"]
     )
     if production or profile == "golden":
@@ -2084,6 +2545,7 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         "threshold": threshold,
         "source_pack_status": generation_summary.get("source_pack_status"),
         "chart_alignment_status": chart_alignment_status,
+        "chart_verify_status": chart_verify.get("status"),
     }
     return {
         "schema_version": QUALITY_GATE_SCHEMA,
@@ -2094,6 +2556,7 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         "component_report": component_counts,
         "visual_design_contract": visual_contract,
         "design_pattern_usage": design_usage,
+        "chart_verify": chart_verify,
         "raster": raster_counts,
         "allowlist": allowlist,
         "validation_profile": profile,
@@ -2965,6 +3428,12 @@ def run_preview_lint(project: Path, data: dict[str, Any], args: argparse.Namespa
 def execute_stage(stage: str, project: Path, data: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
     started = now_ms()
     ensure_project_dirs(project)
+    if stage == "source":
+        body = run_source(project, data)
+        return write_stage_receipt(project, data, stage, started, body, prepared_digest=False, args=args)
+    if stage == "strategy":
+        body = run_strategy(project, data)
+        return write_stage_receipt(project, data, stage, started, body, prepared_digest=False, args=args)
     if stage == "generate":
         body = run_generate(project, data)
         return write_stage_receipt(project, data, stage, started, body, prepared_digest=False, args=args)
@@ -2980,6 +3449,9 @@ def execute_stage(stage: str, project: Path, data: dict[str, Any], args: argpars
         return write_stage_receipt(project, data, stage, started, body, prepared_digest=True, args=args)
     if stage == "preview_lint":
         body = run_preview_lint(project, data, args)
+        return write_stage_receipt(project, data, stage, started, body, prepared_digest=True, args=args)
+    if stage == "chart_verify":
+        body = run_chart_verify(project, data, args)
         return write_stage_receipt(project, data, stage, started, body, prepared_digest=True, args=args)
     if stage == "quality_gate":
         body = run_quality_gate(project, data, args)

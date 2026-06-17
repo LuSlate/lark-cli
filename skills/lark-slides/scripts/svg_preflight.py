@@ -3020,6 +3020,10 @@ def skeleton_drift_issues(seed_id: str, seed_data: dict[str, Any], plan_boxes: l
 def infer_text_box_role(text_box: dict[str, Any], available_roles: set[str]) -> str:
     identifier = textify(text_box.get("identifier") or text_box.get("element_id"))
     visible_text = textify(text_box.get("text"))
+    identifier_role = normalize_name(identifier)
+    for role in sorted(available_roles, key=len, reverse=True):
+        if role and role in identifier_role:
+            return role
     normalized = normalize_name(f"{identifier} {visible_text}")
     for role in sorted(available_roles, key=len, reverse=True):
         if role and role in normalized:

@@ -13,7 +13,9 @@
     "references/svglide-project-pipeline.md",
     "references/asset-planning.md",
     "references/svg-visual-recipes.md",
-    "references/svg-aesthetic-review.md"
+    "references/svg-aesthetic-review.md",
+    "references/svglide-absorption-matrix.md",
+    "references/svglide-renderer-registry.json"
   ],
   "private_policy": {
     "private_recipe_manifest": "references/routes/create-svg/private-recipes.manifest.json",

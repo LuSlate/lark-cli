@@ -1,0 +1,185 @@
+{
+  "schema_version": "svglide-renderer-registry/v1",
+  "source": "SVGlide internal renderer contracts for create-svg authoring",
+  "rules": [
+    "Active renderers must map to an existing layout seed and visual recipe.",
+    "Active renderers must declare the runtime renderer family used by svglide_gen_runtime.py.",
+    "Candidate renderers may document planned coverage, but strategist must not select them automatically."
+  ],
+  "renderers": [
+    {
+      "id": "cover_hero_statement",
+      "status": "active",
+      "page_kind": "cover",
+      "runtime_renderer_family": "layout.cover",
+      "layout_seed_id": "cover_hero_statement",
+      "visual_recipe_id": "hero_typography",
+      "style_reskin_hooks": ["background", "hero_route", "title_field", "motif"],
+      "required_primitives": ["typography", "geometric_shape", "path"]
+    },
+    {
+      "id": "agenda_numbered_path",
+      "status": "active",
+      "page_kind": "agenda",
+      "runtime_renderer_family": "chart.flow",
+      "layout_seed_id": "agenda_numbered_path",
+      "visual_recipe_id": "path_flow",
+      "style_reskin_hooks": ["numbered_route", "connector", "section_label"],
+      "required_primitives": ["typography", "path", "annotation"]
+    },
+    {
+      "id": "section_divider_index",
+      "status": "active",
+      "page_kind": "section",
+      "runtime_renderer_family": "layout.chapter",
+      "layout_seed_id": "section_divider_index",
+      "visual_recipe_id": "gradient_depth",
+      "style_reskin_hooks": ["section_index", "signal_field", "motif"],
+      "required_primitives": ["typography", "gradient", "geometric_shape"]
+    },
+    {
+      "id": "dashboard_kpi_grid",
+      "status": "active",
+      "page_kind": "kpi_cards",
+      "runtime_renderer_family": "chart.kpi",
+      "layout_seed_id": "dashboard_kpi_grid",
+      "visual_recipe_id": "fake_ui_dashboard",
+      "style_reskin_hooks": ["metric_card", "micro_trend", "insight_strip"],
+      "required_primitives": ["typography", "dashboard", "micro_chart"]
+    },
+    {
+      "id": "single_chart_takeaway",
+      "status": "active",
+      "page_kind": "bar_chart",
+      "runtime_renderer_family": "chart.bar",
+      "layout_seed_id": "single_chart_takeaway",
+      "visual_recipe_id": "infographic_scorecard",
+      "chart_types": ["bar_chart", "horizontal_bar_chart", "pareto_chart"],
+      "style_reskin_hooks": ["plot_area", "bars", "axis_label", "insight_strip"],
+      "required_primitives": ["typography", "micro_chart", "geometric_shape"]
+    },
+    {
+      "id": "timeline_roadmap",
+      "status": "active",
+      "page_kind": "timeline",
+      "runtime_renderer_family": "chart.flow",
+      "layout_seed_id": "timeline_roadmap",
+      "visual_recipe_id": "path_flow",
+      "style_reskin_hooks": ["phase_spine", "milestone", "ownership_label"],
+      "required_primitives": ["typography", "path", "annotation"]
+    },
+    {
+      "id": "process_pipeline",
+      "status": "active",
+      "page_kind": "process_flow",
+      "runtime_renderer_family": "chart.flow",
+      "layout_seed_id": "process_pipeline",
+      "visual_recipe_id": "path_flow",
+      "style_reskin_hooks": ["flow_lane", "connector", "input_output_anchor"],
+      "required_primitives": ["typography", "path", "annotation"]
+    },
+    {
+      "id": "comparison_two_column_decision",
+      "status": "active",
+      "page_kind": "comparison",
+      "runtime_renderer_family": "chart.matrix",
+      "layout_seed_id": "comparison_two_column_decision",
+      "visual_recipe_id": "geometric_composition",
+      "chart_types": ["comparison_table", "quadrant_text_bullets"],
+      "style_reskin_hooks": ["decision_axis", "contrast_panel", "dimension_label"],
+      "required_primitives": ["typography", "geometric_shape"]
+    },
+    {
+      "id": "capability_icon_map",
+      "status": "active",
+      "page_kind": "hub_spoke",
+      "runtime_renderer_family": "chart.hub",
+      "layout_seed_id": "capability_icon_map",
+      "visual_recipe_id": "icon_capability_map",
+      "chart_types": ["hub_spoke"],
+      "style_reskin_hooks": ["hub", "spoke", "module_icon", "orbit"],
+      "required_primitives": ["typography", "icon", "geometric_shape"]
+    },
+    {
+      "id": "spotlight_diagnosis_callout",
+      "status": "active",
+      "page_kind": "insight_callout",
+      "runtime_renderer_family": "contract.annotation",
+      "layout_seed_id": "spotlight_diagnosis_callout",
+      "visual_recipe_id": "spotlight_annotation",
+      "style_reskin_hooks": ["spotlight", "annotation_line", "callout_label"],
+      "required_primitives": ["typography", "spotlight", "annotation"]
+    },
+    {
+      "id": "closing_summary",
+      "status": "active",
+      "page_kind": "closing",
+      "runtime_renderer_family": "layout.closing",
+      "layout_seed_id": "closing_summary",
+      "visual_recipe_id": "brand_system",
+      "style_reskin_hooks": ["closing_ribbon", "action_card", "final_statement"],
+      "required_primitives": ["typography", "geometric_shape"]
+    },
+    {
+      "id": "bubble_chart",
+      "status": "active",
+      "page_kind": "bubble_chart",
+      "runtime_renderer_family": "chart.bubble",
+      "layout_seed_id": "single_chart_takeaway",
+      "visual_recipe_id": "infographic_scorecard",
+      "chart_types": ["bubble_chart"],
+      "style_reskin_hooks": ["plot_area", "bubble", "label_plate", "insight_band"],
+      "required_primitives": ["typography", "micro_chart", "geometric_shape"]
+    },
+    {
+      "id": "donut_chart",
+      "status": "active",
+      "page_kind": "donut_chart",
+      "runtime_renderer_family": "chart.donut",
+      "layout_seed_id": "single_chart_takeaway",
+      "visual_recipe_id": "infographic_scorecard",
+      "chart_types": ["donut_chart"],
+      "style_reskin_hooks": ["ring", "segment_label", "center_metric", "legend"],
+      "required_primitives": ["typography", "micro_chart", "geometric_shape"]
+    },
+    {
+      "id": "sankey_chart",
+      "status": "active",
+      "page_kind": "sankey_chart",
+      "runtime_renderer_family": "chart.sankey",
+      "layout_seed_id": "process_pipeline",
+      "visual_recipe_id": "path_flow",
+      "chart_types": ["sankey_chart"],
+      "style_reskin_hooks": ["flow_width", "source_node", "target_node", "return_path"],
+      "required_primitives": ["typography", "path", "geometric_shape"]
+    },
+    {
+      "id": "line_chart",
+      "status": "candidate",
+      "page_kind": "line_chart",
+      "runtime_renderer_family": "chart.line",
+      "layout_seed_id": "single_chart_takeaway",
+      "visual_recipe_id": "infographic_scorecard",
+      "chart_types": ["dual_axis_line_chart"],
+      "activation_blocker": "needs line data-to-coordinate chart verification fixture"
+    },
+    {
+      "id": "table_editorial",
+      "status": "candidate",
+      "page_kind": "table",
+      "runtime_renderer_family": "chart.table",
+      "layout_seed_id": "comparison_two_column_decision",
+      "visual_recipe_id": "geometric_composition",
+      "activation_blocker": "needs dense table preview lint fixture"
+    },
+    {
+      "id": "regional_image_story",
+      "status": "candidate",
+      "page_kind": "image_story",
+      "runtime_renderer_family": "layout.content",
+      "layout_seed_id": "image_story_showcase",
+      "visual_recipe_id": "mask_clip_showcase",
+      "activation_blocker": "needs asset receipt lane for image-backed story pages"
+    }
+  ]
+}

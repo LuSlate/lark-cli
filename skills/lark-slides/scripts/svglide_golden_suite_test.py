@@ -32,6 +32,7 @@ class SVGlideGoldenSuiteTest(unittest.TestCase):
             {
                 "ai-capital-editorial",
                 "aksu-oasis-planning",
+                "data-dense-business-report",
                 "runtime-smoke",
             }.issubset(case_ids)
         )
@@ -72,6 +73,14 @@ class SVGlideGoldenSuiteTest(unittest.TestCase):
         self.assertIn("section", aksu["expected_archetypes"])
         self.assertIn("agenda_numbered_path", aksu["required_evidence"])
         self.assertIn("section_signal", aksu["required_evidence"])
+
+    def test_data_dense_case_requires_runner_quality_evidence(self) -> None:
+        cases = {case["case_id"]: case for case in golden_suite.list_cases()}
+        data_case = cases["data-dense-business-report"]
+
+        self.assertIn("chart_verify_receipt", data_case["required_evidence"])
+        self.assertIn("quality_gate_pass", data_case["required_evidence"])
+        self.assertIn("timing_receipt", data_case["required_evidence"])
 
 
 if __name__ == "__main__":

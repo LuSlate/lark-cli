@@ -286,12 +286,20 @@ def load_catalogs(ref_dir: Path | None = None) -> dict[str, Any]:
     seed_data = read_json(root / "svg-seeds.json")
     recipe_data = read_json(root / "svg-recipes.json")
     pattern_data = read_json(root / "svglide-design-pattern-map.json")
+    renderer_path = root / "svglide-renderer-registry.json"
+    renderer_data = read_json(renderer_path) if renderer_path.exists() else {"renderers": []}
+    renderers = {
+        item["id"]: item
+        for item in renderer_data.get("renderers", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("id")
+    }
     return {
         "style_presets": {item["style_id"]: item for item in style_data.get("presets", []) if isinstance(item, dict) and item.get("style_id")},
         "seeds": seed_data.get("seeds", {}),
         "recipes": recipe_data.get("recipes", {}),
         "chart_type_contracts": recipe_data.get("chart_type_contracts", {}),
         "pattern_ids": {item.get("id") for item in pattern_data.get("resources", []) if isinstance(item, dict) and item.get("id")},
+        "renderers": renderers,
     }
 
 
@@ -659,6 +667,7 @@ def complete_slide(slide: dict[str, Any], *, brief: str, fallback_description: s
     text = slide_text(completed, fallback_description) or brief
     profile = classify_profile(text, index=index, total=total)
     seed_id, seed, profile_data = seed_for_slide(completed, profile, catalogs)
+    renderer_contract = catalogs.get("renderers", {}).get(profile_data["renderer_id"], {})
     recipe = compact_text(completed.get("visual_recipe")) or compact_text(seed.get("visual_recipe"))
     recipe_contract = catalogs["recipes"].get(recipe, {})
     required_primitives = list_union(recipe_contract.get("required_primitives"), seed.get("required_primitives"), completed.get("required_primitives"))
@@ -667,6 +676,10 @@ def complete_slide(slide: dict[str, Any], *, brief: str, fallback_description: s
     setdefault_clone(completed, "page", index + 1)
     setdefault_clone(completed, "key_message", first_present(completed, ("key_message", "one_idea", "title", "headline", "description")) or text)
     setdefault_clone(completed, "renderer_id", profile_data["renderer_id"])
+    if isinstance(renderer_contract, dict) and renderer_contract:
+        setdefault_clone(completed, "renderer_registry_status", renderer_contract.get("status"))
+        setdefault_clone(completed, "runtime_renderer_family", renderer_contract.get("runtime_renderer_family"))
+        setdefault_clone(completed, "style_reskin_hooks", renderer_contract.get("style_reskin_hooks", []))
     setdefault_clone(completed, "page_rhythm", profile_data["page_rhythm"])
     setdefault_clone(completed, "page_type", profile_data["page_type"])
     setdefault_clone(completed, "chart_type", profile_data["chart_type"])

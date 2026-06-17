@@ -28,7 +28,7 @@ It does not own:
 ## Stage Order
 
 ```text
-generate -> prepare -> preview -> preflight -> preview_lint -> quality_gate -> dry_run -> ppe_proof -> live_create -> readback
+source -> strategy -> generate -> prepare -> preview -> preflight -> preview_lint -> chart_verify -> quality_gate -> dry_run -> ppe_proof -> live_create -> readback
 ```
 
 `render_contact_sheet` is an optional artifact stage after readback/raster
@@ -48,6 +48,7 @@ receipts. It is not part of the default `--until dry_run` authoring path.
     inputs.json
     evidence.json
     source_pack.json
+    design_spec.json
   slide_plan.json
   assets/
     asset_manifest.json
@@ -58,20 +59,27 @@ receipts. It is not part of the default `--until dry_run` authoring path.
   preview/
     preview.html
   logs/
+    source.log
+    strategy.log
     generate.log
     prepare.log
     preview.log
     preflight.log
     preview-lint.log
+    chart-verify.log
     dry-run.log
     live-create.log
     readback.log
   receipts/
     timings.json
     env.json
+    source.json
+    strategy.json
     prepare.json
     preflight.json
     preview-lint.json
+    chart-verify.json
+    quality-gate.json
     dry-run.json
     live-create.json
     readback.json
@@ -137,7 +145,9 @@ Pure topic input must first become structured source state before page SVG is
 rendered. Store the original brief in `source/brief.md`; store source status,
 evidence ids, numeric-claim policy, and missing-source notes in
 `source/source_pack.json` or top-level `slide_plan.source_pack`. Research notes
-or citation indexes belong in `source/evidence.json` when they exist.
+or citation indexes belong in `source/evidence.json` when they exist. The
+runner-owned `source` stage writes these files before generation when the
+project starts from a prompt or manifest brief.
 
 `slide_plan.json` must keep strategy decisions in the existing plan surface:
 
@@ -150,14 +160,21 @@ or citation indexes belong in `source/evidence.json` when they exist.
 - page-level `source_refs`, `asset_selection_reason`,
   `rejected_asset_alternatives`, `chart_decision`, and `chart_verification`.
 
+The runner-owned `strategy` stage writes `source/design_spec.json` and refreshes
+`slide_plan.json` with the current strategy locks, style system, renderer
+selection, source pack reference, and design spec reference. `design_spec.json`
+is a receipt-like summary for audit and comparison; `slide_plan.json` remains
+the protocol-facing plan.
+
 The runner fingerprints source files, plan, catalogs, generated SVG, prepared
 SVG, and receipts. Source pack changes should invalidate receipts rather than
 letting old generation or quality evidence be reused silently.
 
-`preview_lint`, `preflight`, `quality_gate`, `ppe_proof`, `dry_run`,
-`live_create`, and `readback` are runner-owned stages. Do not override
-`preview_lint` through `stage_commands`; the runner calls the bundled
-`scripts/svg_preview_lint.py` with a fixed argument contract.
+`source`, `strategy`, `preview_lint`, `preflight`, `chart_verify`,
+`quality_gate`, `ppe_proof`, `dry_run`, `live_create`, and `readback` are
+runner-owned stages. Do not override `preview_lint` through `stage_commands`;
+the runner calls the bundled `scripts/svg_preview_lint.py` with a fixed
+argument contract.
 
 ## Prepare
 
@@ -231,13 +248,20 @@ quality lane. Manual debugging may continue from preflight to dry-run/readback
 without `preview/preview.html`, but it must not proceed to guarded live creation
 or production/golden delivery until preview lint and quality gate have passed.
 
-`quality_gate` reads the latest preflight receipt, preview lint receipt, raster
-report, allowlist, asset selection, visual design contract, and component report
-evidence. If a slide declares `visual_design_contract.required_visual_evidence`,
-the same page in `receipts/emitted_components.json` must prove those evidence
-tokens through component `effects`, `primitives`, `renderer_id`, or component id.
-During P0 migration, authoring/debug dry-run may use an unexpired legacy
-component waiver. Production, golden, and live lanes must not use that waiver.
+`chart_verify` reads `slide_plan.json` and `prepared/*.svg`. When a slide
+declares a required `chart_decision`, it writes `receipts/chart-verify.json`
+proving that the expected chart carrier exists in the prepared SVG. This first
+pass checks visible geometry and anchors; stricter data-to-coordinate checks can
+extend the same receipt.
+
+`quality_gate` reads the latest preflight receipt, preview lint receipt,
+chart-verify receipt, raster report, allowlist, asset selection, visual design
+contract, and component report evidence. If a slide declares
+`visual_design_contract.required_visual_evidence`, the same page in
+`receipts/emitted_components.json` must prove those evidence tokens through
+component `effects`, `primitives`, `renderer_id`, or component id. During P0
+migration, authoring/debug dry-run may use an unexpired legacy component
+waiver. Production, golden, and live lanes must not use that waiver.
 
 ## PPE Proof
 

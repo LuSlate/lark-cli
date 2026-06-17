@@ -342,6 +342,18 @@ def chart_marker(metadata: str) -> str:
 
 
 class SvgPreflightTest(unittest.TestCase):
+    def test_text_role_inference_prefers_identifier_over_visible_text(self) -> None:
+        role = svg_preflight.infer_text_box_role(
+            {
+                "identifier": "body",
+                "text": "Business health metrics and KPI status",
+                "bbox": {"x": 64, "y": 426, "width": 832, "height": 42},
+            },
+            {"title", "body", "metric", "grid", "footer"},
+        )
+
+        self.assertEqual("body", role)
+
     def test_lint_svg_accepts_valid_svglide(self) -> None:
         result = svg_preflight.lint_svg(VALID_SVG)
         self.assertEqual(result["summary"]["error_count"], 0)

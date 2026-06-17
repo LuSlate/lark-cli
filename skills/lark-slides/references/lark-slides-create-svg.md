@@ -162,7 +162,7 @@ seed skeleton 不是灵感参考，而是初始版式骨架。生成器必须保
 
 SVG 创建不使用单独的规划目录。新建或大幅改写 SVG deck 时，仍然复用 [planning-layer.md](planning-layer.md) 规定的 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，不要另建 `.lark-slides/svg-plan` 或只保留散落的 `.svg` 文件。
 
-当需要把生成、prepare、preview、preflight、preview_lint、quality_gate、dry-run、PPE proof、live create 和 readback 串成可恢复流水线时，项目级 `project_manifest.json`、`state.json`、`prepared/` 和 `receipts/` 规则见 [svglide-project-pipeline.md](svglide-project-pipeline.md)。该文档只管本地执行状态，不替代 `slide_plan.json`、SVG 协议或 route-private 规则。
+当需要把 source、strategy、generate、prepare、preview、preflight、preview_lint、chart_verify、quality_gate、dry-run、PPE proof、live create 和 readback 串成可恢复流水线时，项目级 `project_manifest.json`、`state.json`、`prepared/` 和 `receipts/` 规则见 [svglide-project-pipeline.md](svglide-project-pipeline.md)。该文档只管本地执行状态，不替代 `slide_plan.json`、SVG 协议或 route-private 规则。
 
 在通用 plan 字段基础上，SVG deck 还应补充这些 SVG 专属字段：
 
@@ -254,6 +254,8 @@ SVG 创建不使用单独的规划目录。新建或大幅改写 SVG deck 时，
 `receipts/emitted_components.json` 的 page-level component `effects`、
 `primitives`、`renderer_id` 或 component id。`quality_gate` 会核对这些证据；
 只在 plan 里声明但 SVG/component report 没有落地时不得进入 dry-run/live。
+
+Renderer 的可执行覆盖面由 [svglide-renderer-registry.json](svglide-renderer-registry.json) 声明。只有 `status=active` 且能映射到现有 `svg-seeds.json` 与 `svg-recipes.json` 的 renderer 才能被自动选择；candidate renderer 只能用于实验或手工样张。
 
 模板也复用现有 `template_tool.py search -> summarize -> extract` 路由。模板摘要只用于选择主题、页面流、视觉节奏和布局骨架；生成 SVG 时要把模板结构翻译成 SVG layout boxes / visual recipes，不要照搬模板 XML，也不要读取完整模板 XML。
 

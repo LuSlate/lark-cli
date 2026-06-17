@@ -57,6 +57,28 @@ _GOLDEN_CASES: tuple[dict[str, Any], ...] = (
         ],
     },
     {
+        "case_id": "data-dense-business-report",
+        "theme_domain": "business_operations_data_report",
+        "prompt_summary": "Dense business report with executive summary, KPI dashboard, trend chart, comparison matrix, and action plan.",
+        "expected_archetypes": [
+            "cover",
+            "agenda",
+            "kpi_cards",
+            "bar_chart",
+            "line_chart",
+            "comparison_table",
+            "process_flow",
+            "closing",
+        ],
+        "required_evidence": [
+            "source_pack_digest",
+            "renderer_registry_mapping",
+            "chart_verify_receipt",
+            "quality_gate_pass",
+            "timing_receipt",
+        ],
+    },
+    {
         "case_id": "runtime-smoke",
         "theme_domain": "svglide_runtime_health",
         "prompt_summary": "Small deterministic smoke case for validating runtime composition, manifest plumbing, and receipt emission before larger regressions.",
