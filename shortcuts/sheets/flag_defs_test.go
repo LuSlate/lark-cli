@@ -67,7 +67,7 @@ func TestFlagsFor_MapsAllFields(t *testing.T) {
 	}
 	// hidden + int default
 	cap := byName("+cells-get", "max-chars")
-	if cap == nil || !cap.Hidden || cap.Default != "200000" {
+	if cap == nil || !cap.Hidden || cap.Default != "500000" {
 		t.Errorf("+cells-get --max-chars not mapped: %+v", cap)
 	}
 	// input sources

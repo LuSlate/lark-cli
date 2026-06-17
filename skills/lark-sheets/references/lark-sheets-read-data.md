@@ -100,7 +100,7 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `A1:F10`（不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet） |
 | `--include` | string_slice | optional | 要返回的信息类别，逗号分隔多个（可选值：`value` / `formula` / `style` / `comment` / `data_validation`） |
-| `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
+| `--max-chars` | int | optional | 防爆，默认 500000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
 ### `+dropdown-get`
@@ -118,7 +118,7 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `A1:F30`（不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet） |
-| `--max-chars` | int | optional | 防爆，默认 200000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
+| `--max-chars` | int | optional | 防爆，默认 500000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
