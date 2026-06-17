@@ -228,6 +228,50 @@ class SvgPreviewLintTest(unittest.TestCase):
         self.assertIn("low_information_density", self.codes(result))
         self.assertLess(result["visual_score"], 100)
 
+    def test_placeholder_renderer_copy_gets_warning(self) -> None:
+        project = self.make_project()
+        self.write_preview(project)
+        self.write_svg(
+            project,
+            """
+            <rect x="0" y="0" width="960" height="540" fill="#f8fafc" />
+            <rect x="96" y="120" width="260" height="190" fill="#dbeafe" />
+            <path d="M120 350 C240 260 420 380 620 250" fill="none" stroke="#2563eb" stroke-width="8" />
+            <text x="80" y="96" font-size="30" fill="#111827">Smoke deck</text>
+            <text x="80" y="156" font-size="18" fill="#334155">A generated page that still exposes implementation copy.</text>
+            <text id="footer" x="320" y="512" font-size="10" fill="#64748b">SVGlide contract renderer · 01</text>
+            """,
+        )
+
+        result = self.lint(project)
+
+        self.assertEqual(result["status"], "passed")
+        self.assertIn("placeholder_renderer_copy", self.codes(result))
+        self.assertLess(result["visual_score"], 100)
+
+    def test_unlabeled_visual_system_gets_density_warning(self) -> None:
+        project = self.make_project()
+        self.write_preview(project)
+        self.write_svg(
+            project,
+            """
+            <rect x="0" y="0" width="960" height="540" fill="#f8fafc" />
+            <rect x="80" y="128" width="160" height="96" fill="#dbeafe" />
+            <rect x="280" y="128" width="160" height="96" fill="#bfdbfe" />
+            <rect x="480" y="128" width="160" height="96" fill="#93c5fd" />
+            <rect x="680" y="128" width="160" height="96" fill="#60a5fa" />
+            <path d="M120 340 L260 300 L420 360 L620 278 L820 330" fill="none" stroke="#2563eb" stroke-width="8" />
+            <text x="80" y="82" font-size="30" fill="#111827">Shape-only dashboard</text>
+            <text x="80" y="444" font-size="18" fill="#334155">The message is present but the visual system is not labeled.</text>
+            """,
+        )
+
+        result = self.lint(project)
+
+        self.assertEqual(result["status"], "passed")
+        self.assertIn("unlabeled_visual_system", self.codes(result))
+        self.assertLess(result["visual_score"], 100)
+
     def test_repeated_multi_page_layout_gets_variety_warning(self) -> None:
         project = self.make_project()
         refs = []

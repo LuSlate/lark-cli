@@ -6,15 +6,21 @@ import contextlib
 import io
 import json
 import shutil
+import sys
 import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+
+import svg_preflight
 import svglide_project_runner as runner
 
 
 SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /></svg>"""
+CHART_SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><rect id="chart-plot-backplane" slide:role="shape" x="70" y="110" width="780" height="320" fill="#eef6ff" /><rect id="chart-bar-1" slide:role="shape" x="120" y="260" width="92" height="130" fill="#4A90E2" /><rect id="chart-bar-2" slide:role="shape" x="250" y="220" width="92" height="170" fill="#4A90E2" /><rect id="chart-insight-strip" slide:role="shape" x="610" y="145" width="190" height="72" fill="#E91E63" /><foreignObject id="chart-insight-label" slide:role="shape" slide:shape-type="text" x="628" y="160" width="150" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px">核心洞察</div></foreignObject></svg>"""
 
 
 def write_json(path: Path, data: object) -> None:
@@ -68,6 +74,41 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         body = runner.builtin_prepare(project, data)
         runner.write_stage_receipt(project, data, "prepare", runner.now_ms(), body, prepared_digest=False, args=self.args(project))
 
+    def test_builtin_generate_composes_plan_pages_and_receipts(self) -> None:
+        root = Path(tempfile.mkdtemp(dir=runner.repo_root()))
+        self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
+        project = root / "runtime-generate"
+        project.mkdir(parents=True)
+        write_json(
+            project / "project_manifest.json",
+            {
+                "deck_id": "runtime-generate",
+                "title": "Runtime Generate",
+                "plan": "slide_plan.json",
+                "brief": "Create an operations review with KPI dashboard and closing next steps.",
+                "page_descriptions": [
+                    "Cover: operating thesis and review scope",
+                    "KPI dashboard: four health metrics with micro trends",
+                    "Closing: next steps and decision request",
+                ],
+            },
+        )
+        data = runner.manifest(project)
+
+        receipt = runner.execute_stage("generate", project, data, self.args(project))
+
+        self.assertEqual("passed", receipt["status"])
+        self.assertEqual("builtin:svglide_strategist_runtime", receipt["generator"])
+        self.assertTrue((project / "slide_plan.json").exists())
+        self.assertTrue((project / "pages" / "page-001.svg").exists())
+        self.assertTrue((project / "receipts" / "emitted_components.json").exists())
+        self.assertTrue((project / "receipts" / "design-pattern-usage.json").exists())
+        plan = runner.read_json(project / "slide_plan.json", {})
+        self.assertEqual(3, plan["page_count"])
+        self.assertIn("design_pattern_selection", plan)
+        self.assertEqual("briefing", plan["mode"])
+        self.assertEqual({"error_count": 0, "warning_count": 0}, svg_preflight.lint_plan(plan)["summary"])
+
     def write_gate_inputs(
         self,
         project: Path,
@@ -77,6 +118,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         preview_warning_count: int = 0,
         visual_score: int = 100,
         validation_profile: str | None = None,
+        preflight_plan_issues: list[dict[str, object]] | None = None,
     ) -> None:
         profile = validation_profile or runner.quality_validation_profile(
             runner.resolved_validation_profile(data, args, project=project)
@@ -87,7 +129,16 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             data,
             "preflight",
             runner.now_ms(),
-            {"status": "passed", "summary": {"summary": {"error_count": 0, "warning_count": 0}}},
+            {
+                "status": "passed",
+                "summary": {
+                    "summary": {
+                        "error_count": sum(1 for item in preflight_plan_issues or [] if item.get("level") == "error"),
+                        "warning_count": sum(1 for item in preflight_plan_issues or [] if item.get("level") == "warning"),
+                    },
+                    "plan": {"issues": preflight_plan_issues or [], "summary": {"error_count": 0, "warning_count": 0}},
+                },
+            },
             args=args,
         )
         runner.write_stage_receipt(
@@ -147,6 +198,12 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def write_fake_cli(self, project: Path, version: str = "lark-cli 1.2.3") -> Path:
         cli = project / "fake-lark-cli"
         cli.write_text(f"#!/bin/sh\necho {version!r}\n", encoding="utf-8")
+        cli.chmod(cli.stat().st_mode | 0o111)
+        return cli
+
+    def write_fake_cli_body(self, project: Path, body: str) -> Path:
+        cli = project / "fake-lark-cli"
+        cli.write_text(body, encoding="utf-8")
         cli.chmod(cli.stat().st_mode | 0o111)
         return cli
 
@@ -470,6 +527,30 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(body["visual_score_threshold"], 75)
         self.assertEqual(body["visual_score_mode"], "advisory")
 
+    def test_quality_gate_records_preflight_strategist_contract_issues(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        args = self.args(project)
+        self.write_gate_inputs(
+            project,
+            data,
+            args,
+            preflight_plan_issues=[
+                {
+                    "level": "warning",
+                    "code": "plan_missing_page_rhythm",
+                    "message": "multi-page SVGlide plans must declare page_rhythm",
+                }
+            ],
+        )
+        self.write_component_report(project)
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["strategist_contract"]["warning_count"], 1)
+        self.assertIn("plan_missing_page_rhythm", body["strategist_contract"]["issue_codes"])
+
     def test_quality_gate_rejects_production_score_below_threshold(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
@@ -494,7 +575,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         with self.assertRaisesRegex(runner.RunnerError, "golden warning_budget must be 0"):
             runner.run_quality_gate(project, data, args)
 
-    def test_quality_gate_rejects_unproven_ppt_master_asset_selection(self) -> None:
+    def test_quality_gate_rejects_unproven_design_pattern_selection(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
         write_json(
@@ -502,7 +583,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             {
                 "output_mode": "svglide-svg",
                 "title": "Demo Deck",
-                "ppt_master_asset_selection": {
+                "design_pattern_selection": {
                     "selected_assets": [
                         {"id": "chart.timeline", "kind": "chart_template"},
                     ],
@@ -513,10 +594,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_gate_inputs(project, data, args)
         self.write_component_report(project)
 
-        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+        with self.assertRaisesRegex(runner.RunnerError, "SVGlide design pattern usage"):
             runner.run_quality_gate(project, data, args)
 
-    def test_quality_gate_accepts_proven_ppt_master_asset_selection(self) -> None:
+    def test_quality_gate_accepts_proven_design_pattern_selection(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
         write_json(
@@ -524,7 +605,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             {
                 "output_mode": "svglide-svg",
                 "title": "Demo Deck",
-                "ppt_master_asset_selection": {
+                "design_pattern_selection": {
                     "selected_assets": [
                         {"id": "chart.timeline", "kind": "chart_template"},
                     ],
@@ -535,9 +616,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_gate_inputs(project, data, args)
         self.write_component_report(project)
         write_json(
-            project / "receipts" / "ppt-master-asset-usage.json",
+            project / "receipts" / "design-pattern-usage.json",
             {
-                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "schema_version": "svglide-design-pattern-usage/v1",
                 "status": "passed",
                 "used_asset_ids": ["chart.timeline"],
                 "page_usages": [
@@ -556,7 +637,300 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         body = runner.run_quality_gate(project, data, args)
 
         self.assertEqual(body["status"], "passed")
-        self.assertEqual(body["ppt_master_asset_usage"]["used_count"], 1)
+        self.assertEqual(body["design_pattern_usage"]["used_count"], 1)
+
+    def test_quality_gate_rejects_unproven_visual_design_contract(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show the capital flow",
+                            "composition_archetype": "data_stage",
+                            "primary_motif": "takeaway_chart",
+                            "required_visual_evidence": ["chart_geometry", "insight_strip"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_structured_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_accepts_proven_visual_design_contract(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(CHART_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show the capital flow",
+                            "composition_archetype": "data_stage",
+                            "primary_motif": "takeaway_chart",
+                            "required_visual_evidence": ["chart_geometry", "insight_strip"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "contract-bar",
+                                "renderer_id": "contract.bar",
+                                "bbox": {"x": 80, "y": 120, "width": 760, "height": 300},
+                                "primitives": ["typography", "micro_chart"],
+                                "effects": ["chart_geometry", "insight_strip"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["visual_design_contract"]["status"], "passed")
+        self.assertEqual(body["visual_design_contract"]["page_count"], 1)
+
+    def test_quality_gate_rejects_visual_contract_receipt_not_backed_by_prepared_svg(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show the capital flow",
+                            "composition_archetype": "data_stage",
+                            "primary_motif": "takeaway_chart",
+                            "required_visual_evidence": ["chart_geometry", "insight_strip"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "contract-bar",
+                                "renderer_id": "contract.bar",
+                                "bbox": {"x": 80, "y": 120, "width": 760, "height": 300},
+                                "primitives": ["typography", "micro_chart"],
+                                "effects": ["chart_geometry", "insight_strip"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_visual_contract_primitive_only_receipt(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show typography",
+                            "composition_archetype": "text_stage",
+                            "primary_motif": "title_field",
+                            "required_visual_evidence": ["typography"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "fake-typography",
+                                "renderer_id": "contract.fake",
+                                "bbox": {"x": 80, "y": 120, "width": 760, "height": 300},
+                                "primitives": ["typography"],
+                                "effects": [],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_binds_source_proof_by_manifest_page_number(self) -> None:
+        project = self.make_project()
+        write_json(
+            project / "project_manifest.json",
+            {
+                "deck_id": "demo",
+                "title": "Demo Deck",
+                "plan": "slide_plan.json",
+                "pages": [
+                    {"page": 2, "source_svg": "pages/page-002.svg", "prepared_svg": "prepared/page-002.svg"},
+                    {"page": 1, "source_svg": "pages/page-001.svg", "prepared_svg": "prepared/page-001.svg"},
+                ],
+                "stage_commands": {"prepare": "builtin:copy_and_normalize_svg"},
+            },
+        )
+        (project / "pages" / "page-001.svg").write_text(SVG, encoding="utf-8")
+        (project / "pages" / "page-002.svg").write_text(CHART_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 2,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show the capital flow",
+                            "composition_archetype": "data_stage",
+                            "primary_motif": "takeaway_chart",
+                            "required_visual_evidence": ["chart_geometry"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 2,
+                        "components": [
+                            {
+                                "id": "contract-bar",
+                                "renderer_id": "contract.bar",
+                                "bbox": {"x": 80, "y": 120, "width": 760, "height": 300},
+                                "primitives": ["typography", "micro_chart"],
+                                "effects": ["chart_geometry"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["visual_design_contract"]["status"], "passed")
+
+    def test_quality_gate_rejects_evidence_effect_without_matching_geometry(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show a chart takeaway",
+                            "composition_archetype": "data_stage",
+                            "primary_motif": "takeaway_chart",
+                            "required_visual_evidence": ["chart_geometry"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "ordinary-text-box",
+                                "renderer_id": "demo.text",
+                                "bbox": {"x": 80, "y": 120, "width": 360, "height": 48},
+                                "primitives": ["typography"],
+                                "effects": ["chart_geometry"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
 
     def test_quality_gate_rejects_selected_assets_not_used_by_receipt(self) -> None:
         project = self.make_project()
@@ -566,7 +940,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             {
                 "output_mode": "svglide-svg",
                 "title": "Demo Deck",
-                "ppt_master_asset_selection": {
+                "design_pattern_selection": {
                     "selected_assets": [
                         {"id": "chart.bubble_chart", "kind": "chart_template"},
                         {"id": "chart.hub_spoke", "kind": "chart_template"},
@@ -578,9 +952,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_gate_inputs(project, data, args)
         self.write_component_report(project)
         write_json(
-            project / "receipts" / "ppt-master-asset-usage.json",
+            project / "receipts" / "design-pattern-usage.json",
             {
-                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "schema_version": "svglide-design-pattern-usage/v1",
                 "status": "passed",
                 "page_usages": [
                     {
@@ -595,10 +969,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             },
         )
 
-        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+        with self.assertRaisesRegex(runner.RunnerError, "SVGlide design pattern usage"):
             runner.run_quality_gate(project, data, args)
 
-    def test_quality_gate_ignores_disabled_ppt_master_selected_assets(self) -> None:
+    def test_quality_gate_ignores_disabled_design_pattern_selected_assets(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
         write_json(
@@ -606,7 +980,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             {
                 "output_mode": "svglide-svg",
                 "title": "Demo Deck",
-                "ppt_master_asset_selection": {
+                "design_pattern_selection": {
                     "selected_assets": [
                         {"id": "chart.bubble_chart", "kind": "chart_template", "enabled": True},
                         {"id": "chart.hub_spoke", "kind": "chart_template", "enabled": False},
@@ -618,9 +992,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_gate_inputs(project, data, args)
         self.write_component_report(project)
         write_json(
-            project / "receipts" / "ppt-master-asset-usage.json",
+            project / "receipts" / "design-pattern-usage.json",
             {
-                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "schema_version": "svglide-design-pattern-usage/v1",
                 "status": "passed",
                 "page_usages": [
                     {
@@ -638,8 +1012,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         body = runner.run_quality_gate(project, data, args)
 
         self.assertEqual(body["status"], "passed")
-        self.assertEqual(body["ppt_master_asset_usage"]["selected_count"], 1)
-        self.assertNotIn("chart.hub_spoke", body["ppt_master_asset_usage"]["missing_asset_ids"])
+        self.assertEqual(body["design_pattern_usage"]["selected_count"], 1)
+        self.assertNotIn("chart.hub_spoke", body["design_pattern_usage"]["missing_asset_ids"])
 
     def test_quality_gate_rejects_shallow_component_report_for_golden(self) -> None:
         project = self.make_project()
@@ -651,6 +1025,46 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_component_report(project)
 
         with self.assertRaisesRegex(runner.RunnerError, "component report schema_version"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_legacy_design_usage_receipt_for_golden(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["validation_profile"] = {"profile": "golden"}
+        write_json(project / "project_manifest.json", data)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "design_pattern_selection": {
+                    "selected_assets": [
+                        {"id": "chart.timeline", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_structured_component_report(project)
+        write_json(
+            project / "receipts" / "design-pattern-usage.json",
+            {
+                "status": "passed",
+                "page_usages": [
+                    {
+                        "page": 1,
+                        "asset_id": "chart.timeline",
+                        "component_ids": ["component.timeline.1"],
+                        "source_trace": "derived_renderer_contract",
+                    }
+                ],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "design-pattern-usage.json schema_version"):
             runner.run_quality_gate(project, data, args)
 
     def test_quality_gate_accepts_structured_component_report_for_golden(self) -> None:
@@ -688,7 +1102,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(body["status"], "passed")
         self.assertEqual(body["component_report"]["status"], "passed")
 
-    def test_quality_gate_rejects_ppt_master_usage_without_page_trace(self) -> None:
+    def test_quality_gate_rejects_design_usage_without_page_trace(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
         write_json(
@@ -696,7 +1110,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             {
                 "output_mode": "svglide-svg",
                 "title": "Demo Deck",
-                "ppt_master_asset_selection": {
+                "design_pattern_selection": {
                     "selected_assets": [
                         {"id": "chart.timeline", "kind": "chart_template"},
                     ],
@@ -707,9 +1121,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_gate_inputs(project, data, args)
         self.write_component_report(project)
         write_json(
-            project / "receipts" / "ppt-master-asset-usage.json",
+            project / "receipts" / "design-pattern-usage.json",
             {
-                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "schema_version": "svglide-design-pattern-usage/v1",
                 "status": "passed",
                 "used_asset_ids": ["chart.timeline"],
                 "error_count": 0,
@@ -717,10 +1131,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             },
         )
 
-        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+        with self.assertRaisesRegex(runner.RunnerError, "SVGlide design pattern usage"):
             runner.run_quality_gate(project, data, args)
 
-    def test_quality_gate_rejects_unproven_slide_level_ppt_master_reference(self) -> None:
+    def test_quality_gate_rejects_unproven_slide_level_design_pattern_reference(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
         write_json(
@@ -732,7 +1146,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                     {
                         "page": 1,
                         "visual_plan": {
-                            "ppt_master_reference_assets": [
+                            "design_reference_assets": [
                                 {"id": "layout.government_blue", "kind": "layout_template"},
                             ],
                         },
@@ -744,7 +1158,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_gate_inputs(project, data, args)
         self.write_component_report(project)
 
-        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+        with self.assertRaisesRegex(runner.RunnerError, "SVGlide design pattern usage"):
             runner.run_quality_gate(project, data, args)
 
     def test_dry_run_requires_latest_quality_gate(self) -> None:
@@ -753,6 +1167,54 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
         with self.assertRaisesRegex(runner.RunnerError, "quality_gate"):
             runner.run_dry_run(project, data, "./lark-cli", self.args(project))
+
+    def test_dry_run_marks_keychain_config_failure_as_blocked_by_auth(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        cli = self.write_fake_cli_body(
+            project,
+            """#!/bin/sh
+if [ "$1" = "--version" ]; then
+  echo "lark-cli 1.2.3"
+  exit 0
+fi
+echo '{"ok":false,"error":{"type":"config","message":"keychain Get failed: keychain not initialized"}}'
+exit 1
+""",
+        )
+        args = self.args(project, cli=str(cli))
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+        quality = runner.run_quality_gate(project, data, args)
+        runner.write_stage_receipt(project, data, "quality_gate", runner.now_ms(), quality, args=args)
+
+        body = runner.run_dry_run(project, data, str(cli), args)
+
+        self.assertEqual(body["status"], "blocked_by_auth")
+        self.assertEqual(body["summary"]["error"]["type"], "config")
+
+    def test_dry_run_still_fails_for_create_svg_errors(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        cli = self.write_fake_cli_body(
+            project,
+            """#!/bin/sh
+if [ "$1" = "--version" ]; then
+  echo "lark-cli 1.2.3"
+  exit 0
+fi
+echo '{"ok":false,"error":{"type":"validation","message":"bad svg"}}'
+exit 1
+""",
+        )
+        args = self.args(project, cli=str(cli))
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+        quality = runner.run_quality_gate(project, data, args)
+        runner.write_stage_receipt(project, data, "quality_gate", runner.now_ms(), quality, args=args)
+
+        with self.assertRaisesRegex(runner.RunnerError, "dry-run failed"):
+            runner.run_dry_run(project, data, str(cli), args)
 
     def test_ppe_proof_normalizes_raw_env_proof(self) -> None:
         project = self.make_project()

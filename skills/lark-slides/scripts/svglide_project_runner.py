@@ -16,10 +16,13 @@ import struct
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import svg_preflight
 
 
 STAGES = [
@@ -67,10 +70,20 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 STAGE_FINGERPRINT_SCHEMA = "svglide-stage-fingerprint/v1"
 QUALITY_GATE_SCHEMA = "svglide-quality-gate/v1"
 ENV_PROOF_SCHEMA = "svglide-env-proof/v1"
-PPT_MASTER_ASSET_USAGE_SCHEMA = "svglide-ppt-master-asset-usage/v1"
+DESIGN_PATTERN_USAGE_SCHEMA = "svglide-design-pattern-usage/v1"
 COMPONENT_REPORT_SCHEMA = "svglide-component-report/v1"
 PREVIEW_LINT_WAIVER_TTL_MS = 30 * 60 * 1000
 DEFAULT_VALIDATION_PROFILE = "authoring"
+STRATEGIST_CONTRACT_CODES = {
+    "plan_missing_page_rhythm",
+    "plan_missing_page_type",
+    "plan_missing_main_visual_anchor",
+    "plan_main_visual_anchor_not_met",
+    "plan_reference_asset_unstructured",
+    "plan_unknown_chart_type",
+    "plan_chart_type_recipe_mismatch",
+    "plan_chart_type_contract_not_met",
+}
 VISUAL_SCORE_THRESHOLDS = {
     "authoring": 75,
     "production": 85,
@@ -464,6 +477,95 @@ def run_manifest_command(project: Path, data: dict[str, Any], stage: str) -> dic
     return {"status": "passed", "command": args, "log": str(log_path(project, stage).relative_to(project))}
 
 
+def manifest_page_descriptions(data: dict[str, Any]) -> list[str]:
+    descriptions: list[str] = []
+    raw_descriptions = data.get("page_descriptions")
+    if isinstance(raw_descriptions, list):
+        descriptions.extend(text_from_any(item) for item in raw_descriptions if text_from_any(item))
+    for key in ["slides", "pages"]:
+        raw_pages = data.get(key)
+        if not isinstance(raw_pages, list):
+            continue
+        for item in raw_pages:
+            if isinstance(item, str) and item.strip():
+                descriptions.append(item.strip())
+                continue
+            if not isinstance(item, dict):
+                continue
+            text = " ".join(
+                part
+                for part in [
+                    text_from_any(item.get("title") or item.get("headline") or item.get("name")),
+                    text_from_any(item.get("description") or item.get("summary") or item.get("key_message")),
+                ]
+                if part
+            )
+            if text:
+                descriptions.append(text)
+    return descriptions
+
+
+def project_brief_text(project: Path, data: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for key in ["brief", "prompt", "query", "source_brief"]:
+        value = text_from_any(data.get(key))
+        if value:
+            parts.append(value)
+    for key in ["brief_file", "prompt_file", "source_brief_file", "source_file"]:
+        value = text_from_any(data.get(key))
+        if not value:
+            continue
+        path = safe_existing_file(project_file(project, value), root=project)
+        parts.append(path.read_text(encoding="utf-8"))
+    for relative in ["source/brief.md", "source/prompt.md", "brief.md", "prompt.md"]:
+        candidate = project / relative
+        if candidate.exists() and candidate.is_file():
+            parts.append(candidate.read_text(encoding="utf-8"))
+    return "\n\n".join(part.strip() for part in parts if part.strip())
+
+
+def builtin_generate(project: Path, data: dict[str, Any]) -> dict[str, Any]:
+    if data.get("generated") is True:
+        return {"status": "skipped", "reason": "generated=true"}
+
+    import svglide_gen_runtime
+    import svglide_strategist
+
+    plan_path = safe_output_file(plan_file(project, data), root=project, suffix=".json")
+    existing_plan = read_json(plan_path, {}) if plan_path.exists() else None
+    if existing_plan is not None and not isinstance(existing_plan, dict):
+        raise RunnerError("slide_plan.json must contain an object")
+    contract = svglide_strategist.build_contract(
+        brief=project_brief_text(project, data),
+        slide_plan=existing_plan,
+        page_descriptions=manifest_page_descriptions(data),
+    )
+    if not text_from_any(contract.get("title")):
+        contract["title"] = deck_title(project, data)
+    write_json(plan_path, contract)
+
+    runtime_cache = svglide_gen_runtime.compose_project(project, plan_path)
+    body = {
+        "status": "passed",
+        "generator": "builtin:svglide_strategist_runtime",
+        "plan": rel_to_project(project, plan_path),
+        "page_count": runtime_cache.get("page_count", 0),
+        "outputs": runtime_cache.get("outputs", {}),
+        "runtime_cache": runtime_cache,
+    }
+    log_path(project, "generate").write_text(json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    return body
+
+
+def run_generate(project: Path, data: dict[str, Any]) -> dict[str, Any]:
+    command = stage_command(data, "generate")
+    if not command or command in {"builtin:svglide_runtime", "builtin:svglide_strategist_runtime"}:
+        return builtin_generate(project, data)
+    if command.startswith("builtin:"):
+        raise RunnerError(f"unknown generate builtin: {command}")
+    return run_manifest_command(project, data, "generate")
+
+
 def current_input_digest(project: Path, data: dict[str, Any], *, prepared: bool) -> str:
     pieces: list[str] = []
     plan = plan_file(project, data)
@@ -575,6 +677,20 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
     add_file_fingerprint(inputs, project, "manifest", manifest_path(project))
     add_value_fingerprint(inputs, "stage_command", stage_command(data, stage))
 
+    if stage == "generate":
+        plan = plan_file(project, data)
+        if plan.exists():
+            add_file_fingerprint(inputs, project, "plan", plan)
+        for relative in ["source/brief.md", "source/prompt.md", "brief.md", "prompt.md"]:
+            add_file_fingerprint(inputs, project, "brief", project / relative)
+        scripts = repo_root() / "skills" / "lark-slides" / "scripts"
+        references = repo_root() / "skills" / "lark-slides" / "references"
+        for script_name in ["svglide_strategist.py", "svglide_gen_runtime.py"]:
+            add_file_fingerprint(inputs, project, "script", scripts / script_name)
+        for catalog in ["style-presets.json", "svg-seeds.json", "svg-recipes.json", "svglide-design-pattern-map.json"]:
+            add_file_fingerprint(inputs, project, "catalog", references / catalog)
+        add_value_fingerprint(inputs, "brief", project_brief_text(project, data))
+        add_value_fingerprint(inputs, "page_descriptions", manifest_page_descriptions(data))
     if stage in {"generate", "prepare"}:
         for page in project_pages(project, data, prepared=False):
             add_file_fingerprint(inputs, project, "source_svg", page)
@@ -604,7 +720,7 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
         for dependency in ["preflight", "preview_lint"]:
             add_file_fingerprint(inputs, project, f"{dependency}_receipt", receipt_path(project, dependency, data))
         add_file_fingerprint(inputs, project, "component_report", project / "receipts" / "emitted_components.json")
-        add_file_fingerprint(inputs, project, "ppt_master_asset_usage", project / "receipts" / "ppt-master-asset-usage.json")
+        add_file_fingerprint(inputs, project, "design_pattern_usage", project / "receipts" / "design-pattern-usage.json")
         add_file_fingerprint(inputs, project, "component_waiver", project / "receipts" / "emitted-components-waiver.json")
         add_file_fingerprint(inputs, project, "allowlist_receipt", project / "receipts" / "allowlist.json")
         try:
@@ -839,7 +955,7 @@ def run_preflight(project: Path, data: dict[str, Any]) -> dict[str, Any]:
         args.extend(["--input", str(safe_existing_file(path, suffix=".svg", root=project))])
     result = run_command(args, cwd=repo_root())
     log_path(project, "preflight").write_text(result.stdout + result.stderr, encoding="utf-8")
-    parsed = parse_json_output(result.stdout)
+    parsed = parse_json_output(result.stdout) or parse_json_output(result.stderr)
     if result.returncode != 0:
         raise RunnerError(f"preflight failed: {result.returncode}; see {log_path(project, 'preflight')}")
     return {
@@ -858,6 +974,22 @@ def parse_json_output(text: str) -> Any:
         return json.loads(stripped)
     except json.JSONDecodeError:
         return None
+
+
+def is_cli_auth_config_failure(result: CommandResult, parsed: Any) -> bool:
+    combined = f"{result.stdout}\n{result.stderr}".lower()
+    if "keychain get failed" in combined or ("keychain" in combined and "not initialized" in combined):
+        return True
+    if not isinstance(parsed, dict):
+        return False
+    error = parsed.get("error")
+    if not isinstance(error, dict):
+        return False
+    error_type = text_from_any(error.get("type")).lower()
+    message = text_from_any(error.get("message") or error.get("hint")).lower()
+    return error_type in {"auth", "authentication", "config"} and any(
+        token in message for token in ["keychain", "credential", "auth", "login"]
+    )
 
 
 def build_create_svg_command(project: Path, data: dict[str, Any], cli: str, *, dry_run: bool) -> list[str]:
@@ -1018,6 +1150,33 @@ def extract_stage_counts(stage: str, receipt: dict[str, Any], *, allow_waived: b
     raise RunnerError(f"cannot extract counts for stage: {stage}")
 
 
+def preflight_strategist_contract_summary(receipt: dict[str, Any]) -> dict[str, Any]:
+    issues = nested(receipt, ["summary", "plan", "issues"])
+    if not isinstance(issues, list):
+        issues = []
+    matched: list[dict[str, Any]] = []
+    for item in issues:
+        if not isinstance(item, dict):
+            continue
+        code = text_from_any(item.get("code"))
+        if code in STRATEGIST_CONTRACT_CODES:
+            matched.append(
+                {
+                    "level": text_from_any(item.get("level")) or "error",
+                    "code": code,
+                    "page": item.get("page"),
+                }
+            )
+    return {
+        "status": "passed" if not any(item["level"] == "error" for item in matched) else "failed",
+        "issue_count": len(matched),
+        "error_count": sum(1 for item in matched if item["level"] == "error"),
+        "warning_count": sum(1 for item in matched if item["level"] == "warning"),
+        "issue_codes": sorted({item["code"] for item in matched}),
+        "issues": matched,
+    }
+
+
 def dry_run_waiver_allowed(
     data: dict[str, Any], args: argparse.Namespace | None = None, *, project: Path | None = None
 ) -> bool:
@@ -1061,6 +1220,294 @@ def component_report_summary(project: Path, data: dict[str, Any], args: argparse
     raise RunnerError("quality gate requires receipts/emitted_components.json or active legacy component waiver")
 
 
+def component_bbox_area(component: dict[str, Any]) -> float:
+    bbox = component.get("bbox")
+    if not isinstance(bbox, dict):
+        return 0.0
+    width = bbox.get("width")
+    height = bbox.get("height")
+    if not isinstance(width, (int, float)) or isinstance(width, bool):
+        return 0.0
+    if not isinstance(height, (int, float)) or isinstance(height, bool):
+        return 0.0
+    return max(0.0, float(width)) * max(0.0, float(height))
+
+
+def component_tokens(component: dict[str, Any], key: str) -> set[str]:
+    values = component.get(key)
+    if not isinstance(values, list):
+        return set()
+    return {text_from_any(value) for value in values if text_from_any(value)}
+
+
+def bbox_area(box: dict[str, float]) -> float:
+    return max(0.0, float(box.get("width", 0.0))) * max(0.0, float(box.get("height", 0.0)))
+
+
+def bbox_right(box: dict[str, float]) -> float:
+    return float(box.get("x", 0.0)) + float(box.get("width", 0.0))
+
+
+def bbox_bottom(box: dict[str, float]) -> float:
+    return float(box.get("y", 0.0)) + float(box.get("height", 0.0))
+
+
+def bbox_overlap_area(left: dict[str, float], right: dict[str, float]) -> float:
+    x1 = max(float(left.get("x", 0.0)), float(right.get("x", 0.0)))
+    y1 = max(float(left.get("y", 0.0)), float(right.get("y", 0.0)))
+    x2 = min(bbox_right(left), bbox_right(right))
+    y2 = min(bbox_bottom(left), bbox_bottom(right))
+    return max(0.0, x2 - x1) * max(0.0, y2 - y1)
+
+
+def component_bbox(component: dict[str, Any]) -> dict[str, float] | None:
+    raw = component.get("bbox")
+    if not isinstance(raw, dict):
+        return None
+    out: dict[str, float] = {}
+    for key in ("x", "y", "width", "height"):
+        value = raw.get(key)
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            return None
+        out[key] = float(value)
+    if out["width"] <= 0 or out["height"] <= 0:
+        return None
+    return out
+
+
+def source_element_tokens(element: ET.Element) -> set[str]:
+    name = svg_preflight.local_name(element.tag).lower()
+    identifier = svg_preflight.element_identifier_text(element).lower()
+    tokens: set[str] = set()
+    if name == "foreignobject":
+        tokens.add("typography")
+    if name in {"rect", "circle", "ellipse", "path", "line", "polygon", "polyline"}:
+        tokens.add("geometric_shape")
+    if name in {"path", "line", "polyline"} or re.search(r"(route|journey|flow|loop|path|spine|ribbon|connector)", identifier):
+        tokens.update({"path", "connector"})
+    if re.search(r"(chart|metric|kpi|bar|plot|donut|bubble|sankey|variance|insight-strip)", identifier):
+        tokens.add("micro_chart")
+    if re.search(r"(dashboard|grid|metric|kpi|panel|card)", identifier):
+        tokens.add("dashboard")
+    if re.search(r"(label|legend|caption|note|callout|annotation|insight)", identifier):
+        tokens.add("annotation")
+    if re.search(r"(icon|node|satellite|glyph|hub)", identifier):
+        tokens.add("icon")
+    if re.search(r"(spotlight|hotspot|highlight|focus)", identifier):
+        tokens.add("spotlight")
+    return tokens
+
+
+def collect_source_page_elements(project: Path, data: dict[str, Any]) -> dict[int, list[dict[str, Any]]]:
+    elements_by_page: dict[int, list[dict[str, Any]]] = {}
+    manifest_pages = data.get("pages")
+    if isinstance(manifest_pages, list) and manifest_pages:
+        page_paths: list[tuple[int, Path]] = []
+        for index, page in enumerate(manifest_pages, 1):
+            if not isinstance(page, dict):
+                continue
+            try:
+                page_number = int(page.get("page", index))
+            except (TypeError, ValueError):
+                page_number = index
+            raw_path = text_from_any(page.get("prepared_svg"))
+            if raw_path:
+                page_paths.append((page_number, project_file(project, raw_path)))
+        if not page_paths:
+            page_paths = [(index, path) for index, path in enumerate(project_pages(project, data, prepared=True), 1)]
+    else:
+        page_paths = [(index, path) for index, path in enumerate(project_pages(project, data, prepared=True), 1)]
+    for page_number, path in page_paths:
+        try:
+            root = ET.parse(path).getroot()
+        except ET.ParseError:
+            continue
+        entries: list[dict[str, Any]] = []
+        for element in root.iter():
+            if svg_preflight.svg_role(element) not in {"shape", "image"}:
+                continue
+            bbox = svg_preflight.bbox_for_element(element)
+            if bbox is None or bbox_area(bbox) <= 0:
+                continue
+            entries.append(
+                {
+                    "id": svg_preflight.element_identifier_text(element),
+                    "tag": svg_preflight.local_name(element.tag).lower(),
+                    "bbox": bbox,
+                    "tokens": source_element_tokens(element),
+                }
+            )
+        elements_by_page[page_number] = entries
+    return elements_by_page
+
+
+def source_tokens_for_component(component: dict[str, Any], source_elements: list[dict[str, Any]]) -> tuple[set[str], dict[str, float]]:
+    box = component_bbox(component)
+    if box is None:
+        return set(), {}
+    tokens: set[str] = set()
+    token_area: dict[str, float] = {}
+    for entry in source_elements:
+        source_bbox = entry.get("bbox")
+        if not isinstance(source_bbox, dict):
+            continue
+        overlap = bbox_overlap_area(box, source_bbox)
+        if overlap <= 4:
+            continue
+        for token in entry.get("tokens", set()):
+            if not token:
+                continue
+            tokens.add(token)
+            token_area[token] = token_area.get(token, 0.0) + overlap
+    return tokens, token_area
+
+
+def source_supports_visual_evidence(component: dict[str, Any], source_elements: list[dict[str, Any]], evidence: str) -> bool:
+    tokens, token_area = source_tokens_for_component(component, source_elements)
+    area = component_bbox_area(component)
+    if evidence in {"chart_geometry", "metric_hierarchy", "dashboard_grid"}:
+        return bool({"micro_chart", "dashboard"} & tokens) and max(token_area.get("micro_chart", 0.0), token_area.get("dashboard", 0.0)) >= min(area, 5_000)
+    if evidence in {"numbered_path", "hero_route", "connector_flow", "flow_lanes", "phase_spine", "closing_ribbon"}:
+        return bool({"path", "connector"} & tokens) and max(token_area.get("path", 0.0), token_area.get("connector", 0.0)) >= min(area, 5_000)
+    if evidence in {"full_page_archetype", "hero_signal", "decision_matrix", "contrast_panels"}:
+        return bool({"geometric_shape", "path", "connector"} & tokens) and max(token_area.get("geometric_shape", 0.0), token_area.get("path", 0.0), token_area.get("connector", 0.0)) >= min(area, 20_000)
+    if evidence == "sector_field":
+        return "geometric_shape" in tokens and token_area.get("geometric_shape", 0.0) >= min(area, 10_000)
+    if evidence == "hub_spoke":
+        return bool({"connector", "icon", "geometric_shape"} & tokens) and sum(token_area.get(token, 0.0) for token in {"connector", "icon", "geometric_shape"}) >= min(area, 10_000)
+    if evidence == "insight_strip":
+        return bool({"micro_chart", "geometric_shape"} & tokens) and max(token_area.get("micro_chart", 0.0), token_area.get("geometric_shape", 0.0)) >= min(area, 5_000)
+    if evidence in {"title_field", "section_index", "semantic_labels", "action_cards"}:
+        return "typography" in tokens and token_area.get("typography", 0.0) >= 1_000
+    if evidence == "spotlight":
+        return bool({"annotation", "geometric_shape", "spotlight"} & tokens) and sum(token_area.get(token, 0.0) for token in {"annotation", "geometric_shape", "spotlight"}) >= min(area, 5_000)
+    return evidence in tokens
+
+
+def component_supports_visual_evidence(component: dict[str, Any], evidence: str) -> bool:
+    primitives = component_tokens(component, "primitives")
+    effects = component_tokens(component, "effects")
+    area = component_bbox_area(component)
+    if evidence in {"chart_geometry", "metric_hierarchy", "dashboard_grid"}:
+        return bool({"micro_chart", "dashboard"} & primitives) and area >= 5_000
+    if evidence in {"numbered_path", "hero_route", "connector_flow", "flow_lanes", "phase_spine", "closing_ribbon"}:
+        return bool({"path", "connector"} & primitives) and area >= 5_000
+    if evidence in {"full_page_archetype", "hero_signal", "decision_matrix", "contrast_panels"}:
+        return bool({"geometric_shape", "path", "connector"} & primitives) and area >= 20_000
+    if evidence == "sector_field":
+        return "geometric_shape" in primitives and area >= 10_000
+    if evidence == "hub_spoke":
+        return bool({"connector", "icon", "geometric_shape"} & primitives) and area >= 10_000
+    if evidence == "insight_strip":
+        return bool({"micro_chart", "geometric_shape"} & primitives) and area >= 5_000
+    if evidence in {"title_field", "section_index", "semantic_labels", "action_cards"}:
+        return "typography" in primitives and area >= 1_000
+    if evidence == "spotlight":
+        return bool({"annotation", "geometric_shape"} & primitives) and area >= 5_000
+    return evidence in primitives or evidence in effects
+
+
+def component_proves_visual_evidence(component: dict[str, Any], source_elements: list[dict[str, Any]], evidence: str) -> bool:
+    return component_supports_visual_evidence(component, evidence) and source_supports_visual_evidence(component, source_elements, evidence)
+
+
+def collect_component_page_evidence(report: dict[str, Any], source_elements_by_page: dict[int, list[dict[str, Any]]] | None = None) -> dict[int, list[dict[str, Any]]]:
+    components_by_page: dict[int, list[dict[str, Any]]] = {}
+    pages = report.get("pages")
+    if not isinstance(pages, list):
+        return components_by_page
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        try:
+            page_number = int(page.get("page"))
+        except (TypeError, ValueError):
+            continue
+        components_by_page.setdefault(page_number, [])
+        components = page.get("components")
+        if not isinstance(components, list):
+            continue
+        for component in components:
+            if not isinstance(component, dict):
+                continue
+            components_by_page[page_number].append(component)
+    return components_by_page
+
+
+def visual_contract_required_for_plan(plan: dict[str, Any]) -> bool:
+    return text_from_any(plan.get("schema_version")).startswith("svglide-strategist-contract/")
+
+
+def visual_design_contract_summary(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
+    plan = read_json(plan_file(project, data), {})
+    if not isinstance(plan, dict):
+        return {"status": "not_configured", "page_count": 0, "error_count": 0, "warning_count": 0}
+    slides = plan.get("slides")
+    if not isinstance(slides, list):
+        slides = []
+    required_for_plan = visual_contract_required_for_plan(plan)
+    configured_count = 0
+    issues: list[dict[str, Any]] = []
+    page_requirements: dict[int, list[str]] = {}
+    required_fields = ("visual_thesis", "composition_archetype", "primary_motif", "required_visual_evidence")
+    for index, slide in enumerate(slides, 1):
+        if not isinstance(slide, dict):
+            continue
+        page = slide.get("page", index)
+        try:
+            page_number = int(page)
+        except (TypeError, ValueError):
+            page_number = index
+        contract = slide.get("visual_design_contract")
+        if not isinstance(contract, dict):
+            if required_for_plan:
+                issues.append({"page": page_number, "code": "missing_visual_design_contract"})
+            continue
+        configured_count += 1
+        for field in required_fields:
+            value = contract.get(field)
+            if value in (None, "", []):
+                issues.append({"page": page_number, "code": f"missing_{field}"})
+        raw_evidence = contract.get("required_visual_evidence")
+        evidence = [text_from_any(item) for item in raw_evidence] if isinstance(raw_evidence, list) else []
+        evidence = [item for item in evidence if item]
+        page_requirements[page_number] = evidence
+
+    if configured_count == 0 and not issues:
+        return {"status": "not_configured", "page_count": 0, "error_count": 0, "warning_count": 0}
+
+    report_path = project / "receipts" / "emitted_components.json"
+    if not report_path.exists():
+        return {
+            "status": "failed",
+            "page_count": configured_count,
+            "error_count": 1,
+            "warning_count": 0,
+            "issues": [{"code": "missing_component_report"}],
+            "path": rel_to_project(project, report_path),
+        }
+    report = read_json(report_path, {})
+    if not isinstance(report, dict):
+        raise RunnerError("emitted_components.json must contain an object")
+    source_elements_by_page = collect_source_page_elements(project, data)
+    components_by_page = collect_component_page_evidence(report, source_elements_by_page)
+    for page_number, required_evidence in sorted(page_requirements.items()):
+        components = components_by_page.get(page_number, [])
+        source_elements = source_elements_by_page.get(page_number, [])
+        for evidence in required_evidence:
+            if not any(component_proves_visual_evidence(component, source_elements, evidence) for component in components):
+                issues.append({"page": page_number, "code": "missing_visual_evidence", "evidence": evidence})
+
+    return {
+        "status": "passed" if not issues else "failed",
+        "page_count": configured_count,
+        "error_count": len(issues),
+        "warning_count": 0,
+        "issues": issues,
+        "path": rel_to_project(project, report_path),
+    }
+
+
 def asset_id_from(value: Any) -> str:
     if isinstance(value, str):
         return value.strip()
@@ -1081,12 +1528,12 @@ def add_asset_ids(output: set[str], value: Any) -> None:
         output.add(asset_id)
 
 
-def collect_ppt_master_asset_ids(project: Path, data: dict[str, Any]) -> set[str]:
+def collect_design_pattern_ids(project: Path, data: dict[str, Any]) -> set[str]:
     plan = read_json(plan_file(project, data), {})
     if not isinstance(plan, dict):
         return set()
     asset_ids: set[str] = set()
-    selection = plan.get("ppt_master_asset_selection")
+    selection = plan.get("design_pattern_selection")
     if isinstance(selection, dict):
         add_asset_ids(asset_ids, selection.get("selected_assets"))
     slides = plan.get("slides")
@@ -1095,20 +1542,20 @@ def collect_ppt_master_asset_ids(project: Path, data: dict[str, Any]) -> set[str
     for slide in slides:
         if not isinstance(slide, dict):
             continue
-        add_asset_ids(asset_ids, slide.get("ppt_master_reference_assets"))
+        add_asset_ids(asset_ids, slide.get("design_reference_assets"))
         visual_plan = slide.get("visual_plan")
         if isinstance(visual_plan, dict):
-            add_asset_ids(asset_ids, visual_plan.get("ppt_master_reference_assets"))
+            add_asset_ids(asset_ids, visual_plan.get("design_reference_assets"))
     svg_files = plan.get("svg_files")
     if not isinstance(svg_files, list):
         svg_files = []
     for slide in svg_files:
         if isinstance(slide, dict):
-            add_asset_ids(asset_ids, slide.get("ppt_master_reference_assets"))
+            add_asset_ids(asset_ids, slide.get("design_reference_assets"))
     return asset_ids
 
 
-def collect_used_ppt_master_asset_ids(report: dict[str, Any]) -> set[str]:
+def collect_used_design_pattern_ids(report: dict[str, Any]) -> set[str]:
     used: set[str] = set()
     usages = report.get("page_usages")
     if isinstance(usages, list):
@@ -1126,7 +1573,7 @@ def collect_used_ppt_master_asset_ids(report: dict[str, Any]) -> set[str]:
     return used
 
 
-def active_ppt_master_asset_waivers(report: dict[str, Any]) -> tuple[set[str], list[dict[str, Any]]]:
+def active_design_pattern_waivers(report: dict[str, Any]) -> tuple[set[str], list[dict[str, Any]]]:
     waived: set[str] = set()
     waivers: list[dict[str, Any]] = []
     raw_waivers = report.get("waived_assets")
@@ -1139,16 +1586,23 @@ def active_ppt_master_asset_waivers(report: dict[str, Any]) -> tuple[set[str], l
         validation = validate_legacy_waiver(item)
         if asset_id and validation.get("active"):
             waived.add(asset_id)
-            waivers.append({"asset_id": asset_id, "type": "ppt_master_asset_usage", **validation})
+            waivers.append({"asset_id": asset_id, "type": "design_pattern_usage", **validation})
     return waived, waivers
 
 
-def ppt_master_asset_usage_summary(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
-    expected = collect_ppt_master_asset_ids(project, data)
+def strict_design_pattern_usage_required(
+    data: dict[str, Any], args: argparse.Namespace | None = None, project: Path | None = None
+) -> bool:
+    profile = resolved_validation_profile(data, args, project=project)
+    return is_production_lane(data, args, project=project) or profile == "golden"
+
+
+def design_pattern_usage_summary(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
+    expected = collect_design_pattern_ids(project, data)
     if not expected:
         return {"status": "not_configured", "selected_count": 0, "error_count": 0, "warning_count": 0}
 
-    report_path = project / "receipts" / "ppt-master-asset-usage.json"
+    report_path = project / "receipts" / "design-pattern-usage.json"
     if not report_path.exists():
         return {
             "status": "missing",
@@ -1161,9 +1615,11 @@ def ppt_master_asset_usage_summary(project: Path, data: dict[str, Any], args: ar
 
     report = read_json(report_path)
     if not isinstance(report, dict):
-        raise RunnerError("ppt-master-asset-usage.json must contain an object")
-    if report.get("schema_version") not in {"", None, PPT_MASTER_ASSET_USAGE_SCHEMA}:
-        raise RunnerError("ppt-master-asset-usage.json has unsupported schema_version")
+        raise RunnerError("design-pattern-usage.json must contain an object")
+    if strict_design_pattern_usage_required(data, args, project=project) and report.get("schema_version") != DESIGN_PATTERN_USAGE_SCHEMA:
+        raise RunnerError(f"design-pattern-usage.json schema_version must be {DESIGN_PATTERN_USAGE_SCHEMA}")
+    if report.get("schema_version") not in {"", None, DESIGN_PATTERN_USAGE_SCHEMA}:
+        raise RunnerError("design-pattern-usage.json has unsupported schema_version")
     status = text_from_any(report.get("status") or "passed")
     if status not in {"passed", "verified", "ok"}:
         return {
@@ -1174,11 +1630,11 @@ def ppt_master_asset_usage_summary(project: Path, data: dict[str, Any], args: ar
             "path": rel_to_project(project, report_path),
         }
 
-    used = collect_used_ppt_master_asset_ids(report)
-    waived, waivers = active_ppt_master_asset_waivers(report)
+    used = collect_used_design_pattern_ids(report)
+    waived, waivers = active_design_pattern_waivers(report)
     missing = sorted(expected - used - waived)
-    error_count = required_int(report.get("error_count", 0), "ppt_master_asset_usage.error_count")
-    warning_count = required_int(report.get("warning_count", 0), "ppt_master_asset_usage.warning_count")
+    error_count = required_int(report.get("error_count", 0), "design_pattern_usage.error_count")
+    warning_count = required_int(report.get("warning_count", 0), "design_pattern_usage.warning_count")
     if missing:
         error_count += 1
     if waivers and not dry_run_waiver_allowed(data, args, project=project):
@@ -1248,9 +1704,11 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         data, args, project=project
     )
     preflight_counts = extract_stage_counts("preflight", preflight)
+    strategist_contract = preflight_strategist_contract_summary(preflight)
     preview_counts = extract_stage_counts("preview_lint", preview_lint, allow_waived=preview_waiver_allowed)
     component_counts = component_report_summary(project, data, args)
-    ppt_master_usage = ppt_master_asset_usage_summary(project, data, args)
+    visual_contract = visual_design_contract_summary(project, data, args)
+    design_usage = design_pattern_usage_summary(project, data, args)
     raster_counts = raster_summary(project, data)
     allowlist = allowlist_summary(project, data)
     profile = quality_validation_profile(resolved_validation_profile(data, args, project=project))
@@ -1262,9 +1720,9 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         waivers.append({"type": "preview_lint", **preview_lint.get("waiver", {})})
     if component_counts["status"] == "waived" and isinstance(component_counts.get("waiver"), dict):
         waivers.append(component_counts["waiver"])
-    ppt_master_waivers = ppt_master_usage.get("waivers")
-    if isinstance(ppt_master_waivers, list):
-        for waiver in ppt_master_waivers:
+    design_waivers = design_usage.get("waivers")
+    if isinstance(design_waivers, list):
+        for waiver in design_waivers:
             if isinstance(waiver, dict):
                 waivers.append(waiver)
 
@@ -1275,8 +1733,10 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         failures.append("preview_lint.error_count must be 0")
     if component_counts["error_count"] != 0:
         failures.append("component_report.error_count must be 0")
-    if ppt_master_usage["error_count"] != 0:
-        failures.append("ppt-master asset usage must be proven")
+    if visual_contract["error_count"] != 0:
+        failures.append("SVGlide visual design contract must be proven")
+    if design_usage["error_count"] != 0:
+        failures.append("SVGlide design pattern usage must be proven")
     if raster_counts["error_count"] != 0:
         failures.append("raster.error_count must be 0")
     preview_score = preview_counts.get("visual_score")
@@ -1293,7 +1753,8 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         preflight_counts["warning_count"]
         + preview_counts["warning_count"]
         + component_counts["warning_count"]
-        + ppt_master_usage["warning_count"]
+        + visual_contract["warning_count"]
+        + design_usage["warning_count"]
         + raster_counts["warning_count"]
     )
     if production or profile == "golden":
@@ -1312,9 +1773,11 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         "schema_version": QUALITY_GATE_SCHEMA,
         "status": status,
         "preflight": preflight_counts,
+        "strategist_contract": strategist_contract,
         "preview_lint": preview_counts,
         "component_report": component_counts,
-        "ppt_master_asset_usage": ppt_master_usage,
+        "visual_design_contract": visual_contract,
+        "design_pattern_usage": design_usage,
         "raster": raster_counts,
         "allowlist": allowlist,
         "validation_profile": profile,
@@ -1329,12 +1792,21 @@ def run_dry_run(project: Path, data: dict[str, Any], cli: str, args: argparse.Na
     if args is None:
         args = default_runner_args()
         args.cli = cli
+    ensure_project_dirs(project)
     require_latest_quality_gate(project, data, args)
     args = build_create_svg_command(project, data, cli, dry_run=True)
     result = run_command(args, cwd=repo_root())
     log_path(project, "dry_run").write_text(result.stdout + result.stderr, encoding="utf-8")
-    parsed = parse_json_output(result.stdout)
+    parsed = parse_json_output(result.stdout) or parse_json_output(result.stderr)
     if result.returncode != 0:
+        if is_cli_auth_config_failure(result, parsed):
+            return {
+                "status": "blocked_by_auth",
+                "command": args,
+                "log": str(log_path(project, "dry_run").relative_to(project)),
+                "reason": "lark-cli auth/config is unavailable in this local execution environment",
+                "summary": parsed,
+            }
         raise RunnerError(f"dry-run failed: {result.returncode}; see {log_path(project, 'dry_run')}")
     return {
         "status": "passed",
@@ -2177,7 +2649,7 @@ def execute_stage(stage: str, project: Path, data: dict[str, Any], args: argpars
     started = now_ms()
     ensure_project_dirs(project)
     if stage == "generate":
-        body = run_manifest_command(project, data, "generate")
+        body = run_generate(project, data)
         return write_stage_receipt(project, data, stage, started, body, prepared_digest=False, args=args)
     if stage == "prepare":
         body = run_prepare(project, data)

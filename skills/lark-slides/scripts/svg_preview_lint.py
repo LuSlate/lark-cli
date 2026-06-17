@@ -36,6 +36,10 @@ NUMBER_RE = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
 STYLE_DECL_RE = re.compile(r"\s*([A-Za-z-]+)\s*:\s*([^;]+)")
 RGB_RE = re.compile(r"rgba?\(([^)]+)\)", re.IGNORECASE)
 TRANSFORM_RE = re.compile(r"(translate|scale)\s*\(([^)]*)\)", re.IGNORECASE)
+PLACEHOLDER_COPY_RE = re.compile(
+    r"\b(contract renderer|placeholder|lorem ipsum|todo|draft only|smoke deck)\b|SVGlide\s+contract\s+renderer",
+    re.IGNORECASE,
+)
 LOCAL_IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
 RENDERABLE_TAGS = {"rect", "circle", "ellipse", "line", "path", "polygon", "polyline", "image", "text", "foreignobject"}
 PRESENTATION_ATTRS = {
@@ -849,6 +853,27 @@ def is_label_text(element: RenderElement) -> bool:
     return any(token in ident for token in ["label", "name", "title", "badge", "pill"])
 
 
+def is_page_chrome(element: RenderElement, canvas_height: float) -> bool:
+    ident = element.element_id.lower()
+    if element.background:
+        return True
+    if ident in {"top-rule", "bottom-rule", "page-rule"}:
+        return True
+    if "footer" in ident:
+        return True
+    if element.tag in {"text", "foreignobject"} and element.box.y >= canvas_height - 52 and element.font_size <= 12:
+        return True
+    if element.tag in {"rect", "line"} and element.box.height <= 6 and element.box.width >= 0.5 * DEFAULT_CANVAS_WIDTH:
+        return True
+    return False
+
+
+def semantic_label_token_count(elements: list[RenderElement]) -> int:
+    text = " ".join(element.text for element in elements if element.text.strip())
+    parts = re.split(r"[/、,，;；|·\n]+", text)
+    return sum(1 for part in parts if len(part.strip()) >= 2)
+
+
 def element_path(project: Path, source: SvgSource) -> str:
     if source.path:
         return safe_rel(source.path, project)
@@ -861,9 +886,17 @@ def lint_svg_source(project: Path, source: SvgSource) -> list[dict[str, Any]]:
     elements = collect_render_elements(source)
     body_elements = [element for element in elements if not element.background and element.box.area > 4]
     text_elements = [element for element in elements if element.tag in {"text", "foreignobject"} and element.text.strip()]
+    semantic_text_elements = [element for element in text_elements if not is_page_chrome(element, canvas_height)]
     dark_backings = [element for element in elements if element.tag in {"rect", "path", "polygon"} and is_dark_color(element.fill)]
     label_backings = [element for element in elements if is_label_backing(element)]
     image_elements = [element for element in elements if element.tag == "image" and element.box.area > 0]
+    meaningful_visual_elements = [
+        element
+        for element in body_elements
+        if element.tag not in {"text", "foreignobject"}
+        and not is_page_chrome(element, canvas_height)
+        and element.box.area > 80
+    ]
     path = element_path(project, source)
 
     if body_elements:
@@ -889,6 +922,35 @@ def lint_svg_source(project: Path, source: SvgSource) -> list[dict[str, Any]]:
                 "warning",
                 "medium",
                 "page has only a thin visual idea; add data, structure, image, or a stronger SVG focal system",
+                page=source.page,
+                path=path,
+                source=source.label,
+            )
+        )
+    if any(PLACEHOLDER_COPY_RE.search(element.text) for element in text_elements):
+        checks.append(
+            check(
+                "placeholder_renderer_copy",
+                "warning",
+                "high",
+                "page exposes implementation, placeholder, or smoke-test copy",
+                page=source.page,
+                path=path,
+                source=source.label,
+            )
+        )
+    if (
+        not image_elements
+        and len(meaningful_visual_elements) >= 5
+        and len(semantic_text_elements) <= 2
+        and semantic_label_token_count(semantic_text_elements) < 4
+    ):
+        checks.append(
+            check(
+                "unlabeled_visual_system",
+                "warning",
+                "medium",
+                "page has many visual marks but too few semantic labels or annotations",
                 page=source.page,
                 path=path,
                 source=source.label,

@@ -1,6 +1,6 @@
 {
-  "schema_version": "svglide-ppt-master-asset-map/v1",
-  "generated_from": "ppt-master",
+  "schema_version": "svglide-design-pattern-map/v1",
+  "generated_from": "svglide_internal_design_patterns",
   "generation_policy": {
     "runtime_dependency": "none",
     "raw_svg_default": {
@@ -33,22 +33,21 @@
       "example_media_files": 259
     },
     "digests": {
-      "all_source_files": "42030551448bb8d1",
+      "all_source_files": "1963903edc7b8e2f",
       "brands": "e43ae292b361bac3",
       "layouts": "9be264ac4ac3699b",
       "decks": "4e5d701c8b5f949e",
       "charts": "ca05fc31a7a98182",
       "icons": "bf1ee25d54ae5702",
       "references": "f7c3b07574ea660b",
-      "examples": "33acfc6626f61c7e"
+      "examples": "da027942beb4521d"
     }
   },
   "resources": [
     {
       "id": "brand.anthropic",
-      "source_path": "ppt-master/skills/ppt-master/templates/brands/anthropic",
+      "source_path": "svglide-design-patterns/brand_preset/brand.anthropic",
       "kind": "brand_preset",
-      "ppt_master_role": "brand identity preset",
       "svglide_target": "style-presets.json/brand-visual-tokens",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract color, typography, spacing, and brand-tone contracts; do not copy brand marks into runtime output.",
@@ -96,13 +95,13 @@
         "svg_file_count": 3,
         "image_file_count": 0,
         "file_count": 4
-      }
+      },
+      "design_role": "brand identity preset"
     },
     {
       "id": "brand.google",
-      "source_path": "ppt-master/skills/ppt-master/templates/brands/google",
+      "source_path": "svglide-design-patterns/brand_preset/brand.google",
       "kind": "brand_preset",
-      "ppt_master_role": "brand identity preset",
       "svglide_target": "style-presets.json/brand-visual-tokens",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract color, typography, spacing, and brand-tone contracts; do not copy brand marks into runtime output.",
@@ -155,13 +154,13 @@
         "svg_file_count": 2,
         "image_file_count": 0,
         "file_count": 3
-      }
+      },
+      "design_role": "brand identity preset"
     },
     {
       "id": "chart.agenda_list",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/agenda_list.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.agenda_list",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -228,13 +227,13 @@
       "metadata": {
         "summary": "Pick for table of contents, meeting agendas, or presentation roadmap — numbered items + brief description + duration / owner per row. Skip for substantive content lists (use vertical_list) or single-page section dividers (use a cover layout).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.arc_anchored_list",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/arc_anchored_list.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.arc_anchored_list",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -301,13 +300,13 @@
       "metadata": {
         "summary": "Pick for 3-5 parallel tracks/pillars unified by a left-edge radial fan as visual anchor (each lane = numbered wedge + title + body + right-end color square). Skip for plain numbered enumeration without unifying core (use vertical_list or numbered_steps), or sequential phases (use process_flow).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.area_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/area_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.area_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -365,13 +364,13 @@
       "metadata": {
         "summary": "Pick for 1-2 cumulative trend series emphasizing volume over time. Skip for >=3 series (use stacked_area_chart) or pure direction without volume (use line_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.bar_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/bar_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.bar_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -429,13 +428,13 @@
       "metadata": {
         "summary": "Pick for single-series category value comparison, 3-8 categories. Skip for >12 long-label items (use horizontal_bar_chart) or multi-series (use grouped_bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.basic_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/basic_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.basic_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -496,13 +495,13 @@
       "metadata": {
         "summary": "Pick for plain tabular text/number grid, 3-8 columns. Skip if cells need visual bars (use consulting_table) or qualitative scores (use harvey_balls_table).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.box_plot_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/box_plot_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.box_plot_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -558,13 +557,13 @@
       "metadata": {
         "summary": "Pick for distribution shape per group (median, quartiles, outliers). Skip if only the average per group matters (use bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.bubble_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/bubble_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.bubble_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -616,13 +615,13 @@
       "metadata": {
         "summary": "Pick for 3-axis data (x position, y position, size). Skip for plain x-y correlation (use scatter_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.bullet_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/bullet_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.bullet_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -684,13 +683,13 @@
       "metadata": {
         "summary": "Pick for 3-7 KPIs each with explicit target + actual. Skip for single metric (use gauge_chart) or items with only completion % and no target baseline (use progress_bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.butterfly_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/butterfly_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.butterfly_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -749,13 +748,13 @@
       "metadata": {
         "summary": "Pick for two mirrored datasets sharing a common axis (age pyramid, A/B, income vs expense). Skip for >2 sides (use grouped_bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.chevron_chain_with_tail",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/chevron_chain_with_tail.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.chevron_chain_with_tail",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -823,13 +822,13 @@
       "metadata": {
         "summary": "Pick for 4-6 sequential chevron blocks plus a final wedge representing aggregate outcome — Porter's value chain (primary + support activities mapped to margin), process leading to a summary deliverable, contribution chain to a result. Skip for plain chevron flow without summary tail (use chevron_process) or non-chevron pipeline (use pipeline_with_stages).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.chevron_process",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/chevron_process.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.chevron_process",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -897,13 +896,13 @@
       "metadata": {
         "summary": "Pick for 3-6 phase methodology with chunky arrow-chain progression and deliverables per phase. Skip for <=2 phases or non-linear flow (use process_flow), or chain ending in an aggregate outcome wedge (use chevron_chain_with_tail).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.circular_stages",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/circular_stages.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.circular_stages",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -971,13 +970,13 @@
       "metadata": {
         "summary": "Pick for 4-6 stage closed loop where stages compose a cycle — PDCA, flywheel compounding loops (Attract → Engage → Delight), lifecycle, continuous improvement. Skip for linear flow (use process_flow), one-shot sequence (use numbered_steps), or wedge-based central topic (use segmented_wheel).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.client_server_flow",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/client_server_flow.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.client_server_flow",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1045,13 +1044,13 @@
       "metadata": {
         "summary": "Pick for left-side clients + right-side servers with labeled bidirectional arrows for key interactions (request/response/push). Each module = name + 1-line description; each arrow must have an action label. Skip for non-distributed flows (use process_flow).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.comparison_columns",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/comparison_columns.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.comparison_columns",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1108,13 +1107,13 @@
       "metadata": {
         "summary": "Pick for 2-4 pricing/service tier cards in side-by-side columns (marketing layout). Skip for dense feature comparison (use comparison_table).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.comparison_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/comparison_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.comparison_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1173,13 +1172,13 @@
       "metadata": {
         "summary": "Pick for 2-4 plans/products compared across many feature rows (dense matrix). Skip for pricing-tier marketing layout (use comparison_columns).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.concentric_circles",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/concentric_circles.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.concentric_circles",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1246,13 +1245,13 @@
       "metadata": {
         "summary": "Pick for 3-5 priority rings from core to periphery — bullseye/onion model, sphere of influence, stakeholder rings, core-to-ecosystem priority layers, target-vs-extended audience. Skip for non-prioritized layers (use pyramid_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.consulting_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/consulting_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.consulting_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1309,13 +1308,13 @@
       "metadata": {
         "summary": "Pick for high-density tables with embedded micro bar visuals (consulting/financial reports). Skip for plain text data (use basic_table).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.donut_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/donut_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.donut_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1374,13 +1373,13 @@
       "metadata": {
         "summary": "Pick for 3-6 part proportions where a center KPI/total deserves emphasis. Skip if no center value to feature (use pie_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.dual_axis_line_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/dual_axis_line_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.dual_axis_line_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1441,13 +1440,13 @@
       "metadata": {
         "summary": "Pick when 2 metrics with different units/scales must be compared over time. Skip if both metrics share the same unit (use line_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.dumbbell_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/dumbbell_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.dumbbell_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1505,13 +1504,13 @@
       "metadata": {
         "summary": "Pick for before-vs-after or two-state difference across 5-10 items. Skip for single snapshot (use bar_chart) or 3+ states (use grouped_bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.feature_matrix_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/feature_matrix_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.feature_matrix_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1571,13 +1570,13 @@
       "metadata": {
         "summary": "Pick for competitive feature checklist with checkmarks across products. Skip for qualitative scores (use harvey_balls_table) or pricing tier marketing (use comparison_columns).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.financial_statement_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/financial_statement_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.financial_statement_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1637,13 +1636,13 @@
       "metadata": {
         "summary": "Pick for income statement / balance sheet style with right-aligned numbers and strong total rows. Skip for non-financial tabular data (use basic_table).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.fishbone_diagram",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/fishbone_diagram.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.fishbone_diagram",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1700,13 +1699,13 @@
       "metadata": {
         "summary": "Pick for cause-and-effect root cause analysis with 4-6 cause branches (Ishikawa, 6M). Skip for sequential flow (use process_flow).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.funnel_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/funnel_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.funnel_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1769,13 +1768,13 @@
       "metadata": {
         "summary": "Pick for 3-5 sequential conversion stages with monotonic drop-off. Skip if flow branches/merges (use sankey_chart) or steps don't entail loss (use process_flow).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.gantt_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/gantt_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.gantt_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1834,13 +1833,13 @@
       "metadata": {
         "summary": "Pick for project schedule with 6-12 tasks, durations, and dependencies. Skip for simple milestones without duration (use timeline) or vertical roadmap (use roadmap_vertical).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.gauge_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/gauge_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.gauge_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1898,13 +1897,13 @@
       "metadata": {
         "summary": "Pick for one hero metric's goal achievement rate. Skip for multiple metrics (use bullet_chart for target+actual or progress_bar_chart for completion %).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.grouped_bar_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/grouped_bar_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.grouped_bar_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -1967,13 +1966,13 @@
       "metadata": {
         "summary": "Pick for 2-4 series side-by-side across the same categories (e.g. YoY/QoQ). Skip if showing composition within each category (use stacked_bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.harvey_balls_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/harvey_balls_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.harvey_balls_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2034,13 +2033,13 @@
       "metadata": {
         "summary": "Pick for qualitative scoring grid using 0-100% Harvey balls (vendor/skill assessment). Skip for binary checkmarks (use feature_matrix_table) or numeric values (use basic_table).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.heatmap_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/heatmap_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.heatmap_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2097,13 +2096,13 @@
       "metadata": {
         "summary": "Pick for 2D matrix where each cell is an intensity value (activity grid, correlation matrix). Skip for ranked categories (use bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.horizontal_bar_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/horizontal_bar_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.horizontal_bar_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2158,13 +2157,13 @@
       "metadata": {
         "summary": "Pick for ranking 5-12 items, especially with long labels. Skip if <=8 short-label items (use bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.hub_inward_arrows",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/hub_inward_arrows.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.hub_inward_arrows",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2232,13 +2231,13 @@
       "metadata": {
         "summary": "Pick for 1 center subject + 4-5 surrounding forces with arrows pointing inward — Porter's Five Forces (central rivalry, threat of new entrants/substitutes, bargaining power of buyers/suppliers), threat-model with central asset, pressure-on-core diagrams. Skip for outward radiation from center capability (use hub_spoke) or non-directional cluster (use mind_map).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.hub_spoke",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/hub_spoke.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.hub_spoke",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2306,13 +2305,13 @@
       "metadata": {
         "summary": "Pick for 1 core capability + 4-8 surrounding capabilities (platform/ecosystem); each spoke = title or title + 1-2 line description. Skip if center is a system containing parts with their own descriptions (use module_composition), or surroundings exert inward pressure on the center (use hub_inward_arrows).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.icon_grid",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/icon_grid.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.icon_grid",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2380,13 +2379,13 @@
       "metadata": {
         "summary": "Pick for 4-9 parallel features/capabilities/services as icon cards — feature grid, service lineup, benefits matrix, brand values, product highlights. Skip for sequential ordering (use numbered_steps) or hierarchical layers (use pyramid_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.isometric_stairs",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/isometric_stairs.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.isometric_stairs",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2446,13 +2445,13 @@
       "metadata": {
         "summary": "Pick for 4-7 ascending stages emphasizing growth/maturity progression visually. Skip for flat sequential steps (use numbered_steps) or formal hierarchy (use pyramid_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.journey_map",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/journey_map.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.journey_map",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2510,13 +2509,13 @@
       "metadata": {
         "summary": "Pick for multi-phase customer experience matrix with actions, emotion curve, and pain points per phase. Skip for simple linear funnel (use funnel_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.kpi_cards",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/kpi_cards.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.kpi_cards",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2584,13 +2583,13 @@
       "metadata": {
         "summary": "Pick for 4-8 standalone numeric metrics shown as overview cards (2x2 or 1x4) — exec summary opener, dashboard headline, quarterly recap, results-at-a-glance. Skip if metrics have target baselines (use bullet_chart) or single hero number (use gauge_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.labeled_card",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/labeled_card.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.labeled_card",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2658,13 +2657,13 @@
       "metadata": {
         "summary": "Pick for 3-4 parallel aspects of one subject with per-aspect titles + short body (self-introduction, four-pillar overview, capability quadrant). Skip for plain feature lists (use icon_grid), sequential steps (use numbered_steps), or strategic quadrants (use quadrant_text_bullets / matrix_2x2).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.layered_architecture",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/layered_architecture.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.layered_architecture",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2732,13 +2731,13 @@
       "metadata": {
         "summary": "Pick for 3-4 horizontal architecture layers (presentation/service/data), 2-4 module cards per layer, each card = title + 1-line description (description required, even if source brief). Skip if no per-module descriptions (use icon_grid) or no horizontal layering (use module_composition).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.line_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/line_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.line_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2799,13 +2798,13 @@
       "metadata": {
         "summary": "Pick for 1-3 time-series on a continuous axis showing direction. Skip if cumulative volume matters (use area_chart) or different units (use dual_axis_line_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.matrix_2x2",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/matrix_2x2.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.matrix_2x2",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2869,13 +2868,13 @@
       "metadata": {
         "summary": "Pick for items plotted on Impact x Effort or similar generic 2-axis prioritization. Skip for named-quadrant text frameworks (use quadrant_text_bullets) or bubble-sized portfolios (use quadrant_bubble_scatter).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.mind_map",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/mind_map.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.mind_map",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -2937,13 +2936,13 @@
       "metadata": {
         "summary": "Pick for one core topic radiating into 3-6 brainstorm branches. Skip for capability hub-and-spoke (use hub_spoke) or strict hierarchy (use top_down_tree).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.module_composition",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/module_composition.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.module_composition",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3011,13 +3010,13 @@
       "metadata": {
         "summary": "Pick for one parent container wrapping 3-N child module cards, each = title + 2-3 bullets — fits 'Feature X contains 3 parts, each with its own description'. Skip if source has only labels without descriptions (use numbered_steps or icon_grid).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.numbered_steps",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/numbered_steps.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.numbered_steps",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3085,13 +3084,13 @@
       "metadata": {
         "summary": "Pick for 3-6 horizontal sequential steps with numeric emphasis — how-it-works section, getting-started guide, methodology overview, implementation phases. Skip if steps need connector arrows (use process_flow) or named output artifacts (use pipeline_with_stages).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.pareto_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/pareto_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.pareto_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3146,13 +3145,13 @@
       "metadata": {
         "summary": "Pick to show 80/20 contribution: descending bars + cumulative line. Skip if cumulative line is not the message (use bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.pie_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/pie_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.pie_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3209,13 +3208,13 @@
       "metadata": {
         "summary": "Pick for simple 3-6 part proportions of one whole. Skip for >=7 parts (use donut_chart or treemap_chart) or hierarchical composition (use treemap_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.pipeline_with_stages",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/pipeline_with_stages.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.pipeline_with_stages",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3283,13 +3282,13 @@
       "metadata": {
         "summary": "Pick for 3-5 horizontal pipeline stages, each = title + 1-line description + output artifact, connected by arrows (data pipelines, ETL, build pipelines). Skip if any stage lacks an artifact (use process_flow or numbered_steps).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.process_flow",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/process_flow.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.process_flow",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3357,13 +3356,13 @@
       "metadata": {
         "summary": "Pick for 3-8 sequential steps connected by simple arrows — approval workflows, customer onboarding, request handling, lifecycle stages. Skip if cyclical (use circular_stages) or stages produce named outputs (use pipeline_with_stages).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.progress_bar_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/progress_bar_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.progress_bar_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3420,13 +3419,13 @@
       "metadata": {
         "summary": "Pick for 3-8 items each with a completion %. Skip if items have explicit target+actual values (use bullet_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.project_schedule_table",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/project_schedule_table.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.project_schedule_table",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3485,13 +3484,13 @@
       "metadata": {
         "summary": "Pick for table-style task tracker (task / owner / status / timeline). Skip for true Gantt with dependencies (use gantt_chart) or schedule without ownership (use roadmap_vertical).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.pros_cons_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/pros_cons_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.pros_cons_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3552,13 +3551,13 @@
       "metadata": {
         "summary": "Pick for bilateral pros/cons list, 2-5 items per side. Skip for full feature comparison (use comparison_table) or numeric A/B mirror data (use butterfly_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.pyramid_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/pyramid_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.pyramid_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3626,13 +3625,13 @@
       "metadata": {
         "summary": "Pick for 3-6 stratified hierarchy layers in flat 2D side-view — Maslow's hierarchy, maturity models, value hierarchy, capability tiers, market segments, audience pyramid. Skip for dramatic tone (use pyramid_isometric), flat priority list (use vertical_list), or org reporting (use top_down_tree).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.pyramid_isometric",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/pyramid_isometric.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.pyramid_isometric",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3696,13 +3695,13 @@
       "metadata": {
         "summary": "Pick for 4-tier maturity/achievement model with presentation drama (review reports, capability tiers). Tier count fixed at 4 (hand-tuned vertices). Skip for documentary tone (use pyramid_chart) or tier count != 4.",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.quadrant_bubble_scatter",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/quadrant_bubble_scatter.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.quadrant_bubble_scatter",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3769,13 +3768,13 @@
       "metadata": {
         "summary": "Pick for 2×2 portfolio where items are plotted as bubbles sized by a third metric — BCG Growth × Share with Stars/Cash Cows/Question Marks/Dogs, revenue-weighted portfolio matrix. Skip for textual named quadrants (use quadrant_text_bullets) or generic prioritization without bubble size (use matrix_2x2).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.quadrant_text_bullets",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/quadrant_text_bullets.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.quadrant_text_bullets",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3843,13 +3842,13 @@
       "metadata": {
         "summary": "Pick for any 2×2 framework where each quadrant holds a titled bullet list — SWOT (Strengths/Weaknesses/Opportunities/Threats, internal-external × helpful-harmful), Ansoff (Existing/New Markets × Existing/New Products), or any named two-axis matrix with text content. Skip for items plotted as points (use matrix_2x2) or bubble-sized portfolios (use quadrant_bubble_scatter).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.radar_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/radar_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.radar_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3905,13 +3904,13 @@
       "metadata": {
         "summary": "Pick for 4-8 capability dimensions scored across 1-3 entities. Skip for >3 entities (becomes unreadable; use grouped_bar_chart) or <4 dimensions.",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.roadmap_vertical",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/roadmap_vertical.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.roadmap_vertical",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -3970,13 +3969,13 @@
       "metadata": {
         "summary": "Pick for 4-8 milestones on a vertical timeline with status indicators. Skip for horizontal time emphasis (use timeline) or tasks with durations (use gantt_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.sankey_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/sankey_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.sankey_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4032,13 +4031,13 @@
       "metadata": {
         "summary": "Pick for 3-stage flow with magnitude (sources -> nodes -> sinks). Skip for simple linear conversion without splits (use funnel_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.scatter_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/scatter_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.scatter_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4094,13 +4093,13 @@
       "metadata": {
         "summary": "Pick for x-y correlation, cluster, or outlier scan. Skip if a size dimension also matters (use bubble_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.segmented_wheel",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/segmented_wheel.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.segmented_wheel",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4167,13 +4166,13 @@
       "metadata": {
         "summary": "Pick for one central topic split into 4-8 equally-weighted parallel dimensions (5W1H, 4P, 5S, 6-aspect review), each wedge paired with a description card. Skip for sequential cycles (use circular_stages), proportional shares (use pie_chart), or hub with non-wedge spokes (use hub_spoke).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.snake_flow",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/snake_flow.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.snake_flow",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4231,13 +4230,13 @@
       "metadata": {
         "summary": "Pick for 6-10 winding sequential steps fitting a long journey/lifecycle on one slide. Skip for <=5 steps (use numbered_steps).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.stacked_area_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/stacked_area_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.stacked_area_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4296,13 +4295,13 @@
       "metadata": {
         "summary": "Pick for 2-4 series showing both total and composition over time. Skip if individual series matter more than total (use line_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.stacked_bar_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/stacked_bar_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.stacked_bar_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4361,13 +4360,13 @@
       "metadata": {
         "summary": "Pick when each category splits into 2-4 internal parts and total still matters. Skip if only comparing totals (use bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.team_roster",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/team_roster.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.team_roster",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4426,13 +4425,13 @@
       "metadata": {
         "summary": "Pick for 3-12 leadership/team profile cards (photo + name + title + short bio). Skip for reporting hierarchy (use top_down_tree).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.timeline",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/timeline.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.timeline",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4495,13 +4494,13 @@
       "metadata": {
         "summary": "Pick for 3-8 milestone events on a horizontal time axis (no duration). Skip for tasks with start/end ranges (use gantt_chart) or vertical layout (use roadmap_vertical).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.top_down_tree",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/top_down_tree.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.top_down_tree",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4569,13 +4568,13 @@
       "metadata": {
         "summary": "Pick for hierarchical top-down tree 2-4 levels deep with parent→children reporting/decomposition lines — org charts (CEO → VPs → Directors), OKR cascades (Objective → Key Results → Initiatives), WBS decomposition. Skip for non-hierarchical brainstorm (use mind_map) or flat team showcase (use team_roster).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.treemap_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/treemap_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.treemap_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4633,13 +4632,13 @@
       "metadata": {
         "summary": "Pick for hierarchical/grouped area proportion with many parts of varying size. Skip for flat 3-6 parts (use pie_chart or donut_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.venn_diagram",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/venn_diagram.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.venn_diagram",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4697,13 +4696,13 @@
       "metadata": {
         "summary": "Pick for 2-3 overlapping sets where the intersection is the message. Skip if no overlap exists (use icon_grid).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.vertical_list",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/vertical_list.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.vertical_list",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4771,13 +4770,13 @@
       "metadata": {
         "summary": "Pick for 3-6 numbered key points each with a short description — design principles, core tenets, action items, key takeaways, recommendations, executive summary points. Skip for icon-style cards (use icon_grid) or sequential steps (use numbered_steps).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.vertical_pillars",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/vertical_pillars.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.vertical_pillars",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4845,13 +4844,13 @@
       "metadata": {
         "summary": "Pick for 1×3 / 1×4 / 1×5 vertical column layout where each pillar = one independent category with title + bullets — PEST (Political/Economic/Social/Technological), four-pillar strategy overview, side-by-side independent categories. Skip for 2×2 quadrant (use quadrant_text_bullets), pricing tiers (use comparison_columns), or 2×2 parallel aspects (use labeled_card).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.waterfall_chart",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/waterfall_chart.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.waterfall_chart",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4909,13 +4908,13 @@
       "metadata": {
         "summary": "Pick for stepwise additive/subtractive breakdown bridging a starting value to an ending value. Skip if no running total (use bar_chart).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "chart.word_cloud",
-      "source_path": "ppt-master/skills/ppt-master/templates/charts/word_cloud.svg",
+      "source_path": "svglide-design-patterns/chart_template/chart.word_cloud",
       "kind": "chart_template",
-      "ppt_master_role": "visualization template",
       "svglide_target": "svg-recipes.json/component-catalog",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract geometry slots and chart role contract; do not copy final SVG as a page template.",
@@ -4973,13 +4972,13 @@
       "metadata": {
         "summary": "Pick for 20-30 keywords sized by frequency/weight. Skip if individual keyword position carries meaning (use icon_grid).",
         "view_box": "0 0 1280 720"
-      }
+      },
+      "design_role": "visualization template"
     },
     {
       "id": "deck.中国电信",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/中国电信",
+      "source_path": "svglide-design-patterns/deck_template/deck.中国电信",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5025,18 +5024,18 @@
       "summary": "China Telecom related briefings, 政企数字化方案, 转型规划, 内部汇报.",
       "metadata": {
         "summary": "China Telecom related briefings, 政企数字化方案, 转型规划, 内部汇报.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#C00000",
         "svg_file_count": 5,
         "image_file_count": 6
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.中国电建_常规",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/中国电建_常规",
+      "source_path": "svglide-design-patterns/deck_template/deck.中国电建_常规",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5087,18 +5086,18 @@
       "summary": "Engineering project reports, technical proposal presentations, business negotiations, corporate promotion, annual summaries.",
       "metadata": {
         "summary": "Engineering project reports, technical proposal presentations, business negotiations, corporate promotion, annual summaries.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#00418D",
         "svg_file_count": 5,
         "image_file_count": 4
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.中国电建_现代",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/中国电建_现代",
+      "source_path": "svglide-design-patterns/deck_template/deck.中国电建_现代",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5150,18 +5149,18 @@
       "summary": "Major engineering reports, international market promotion, technology achievement showcases, high-end business negotiations.",
       "metadata": {
         "summary": "Major engineering reports, international market promotion, technology achievement showcases, high-end business negotiations.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#00418D",
         "svg_file_count": 5,
         "image_file_count": 4
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.中汽研_商务",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/中汽研_商务",
+      "source_path": "svglide-design-patterns/deck_template/deck.中汽研_商务",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5212,18 +5211,18 @@
       "summary": "Product certification display, evaluation presentations, technology promotion, high-end business reporting.",
       "metadata": {
         "summary": "Product certification display, evaluation presentations, technology promotion, high-end business reporting.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#003366",
         "svg_file_count": 5,
         "image_file_count": 2
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.中汽研_常规",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/中汽研_常规",
+      "source_path": "svglide-design-patterns/deck_template/deck.中汽研_常规",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5272,18 +5271,18 @@
       "summary": "Product certification display, evaluation presentations, technology promotion, business visits.",
       "metadata": {
         "summary": "Product certification display, evaluation presentations, technology promotion, business visits.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#004098",
         "svg_file_count": 5,
         "image_file_count": 2
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.中汽研_现代",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/中汽研_现代",
+      "source_path": "svglide-design-patterns/deck_template/deck.中汽研_现代",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5334,18 +5333,18 @@
       "summary": "Forward-looking technology showcases, strategic releases, high-end business reporting.",
       "metadata": {
         "summary": "Forward-looking technology showcases, strategic releases, high-end business reporting.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#001529",
         "svg_file_count": 5,
         "image_file_count": 2
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.招商银行",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/招商银行",
+      "source_path": "svglide-design-patterns/deck_template/deck.招商银行",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5388,18 +5387,18 @@
       "summary": "交易银行产品介绍、销售收款方案汇报、客户案例拆解、分行培训材料.",
       "metadata": {
         "summary": "交易银行产品介绍、销售收款方案汇报、客户案例拆解、分行培训材料.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#C8152D",
         "svg_file_count": 5,
         "image_file_count": 6
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
       "id": "deck.重庆大学",
-      "source_path": "ppt-master/skills/ppt-master/templates/decks/重庆大学",
+      "source_path": "svglide-design-patterns/deck_template/deck.重庆大学",
       "kind": "deck_template",
-      "ppt_master_role": "finished deck style and page-sequence template",
       "svglide_target": "deck-rhythm-pack/style-pack reference",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page sequence, rhythm, and style rules; do not copy finished deck SVG or logos.",
@@ -5446,18 +5445,18 @@
       "summary": "Academic defense, research reports, teaching presentations, scholarly exchange.",
       "metadata": {
         "summary": "Academic defense, research reports, teaching presentations, scholarly exchange.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "primary_color": "#006BB7",
         "svg_file_count": 5,
         "image_file_count": 2
-      }
+      },
+      "design_role": "finished deck style and page-sequence template"
     },
     {
-      "id": "example.ppt169_attention_is_all_you_need",
-      "source_path": "ppt-master/examples/ppt169_attention_is_all_you_need",
+      "id": "example.svglide_16x9_attention_is_all_you_need",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_attention_is_all_you_need",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -5489,7 +5488,7 @@
         "multi",
         "need",
         "overview",
-        "ppt169",
+        "svglide_16x9",
         "product",
         "rnn",
         "scaled",
@@ -5555,13 +5554,13 @@
           "sublayer_block.png"
         ],
         "project_digest": "38bc99f26cc47232"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_brutalist_ai_newspaper_2026",
-      "source_path": "ppt-master/examples/ppt169_brutalist_ai_newspaper_2026",
+      "id": "example.svglide_16x9_brutalist_ai_newspaper_2026",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_brutalist_ai_newspaper_2026",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -5592,7 +5591,7 @@
         "issue",
         "league",
         "newspaper",
-        "ppt169",
+        "svglide_16x9",
         "revenue",
         "rulebooks",
         "saturated",
@@ -5624,9 +5623,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "4d2b449dd8110214",
-      "summary": "brutalist_ai_newspaper_2026_ppt169_20260521",
+      "summary": "brutalist_ai_newspaper_2026_svglide_16x9_20260521",
       "metadata": {
-        "summary": "brutalist_ai_newspaper_2026_ppt169_20260521",
+        "summary": "brutalist_ai_newspaper_2026_svglide_16x9_20260521",
         "page_count": 10,
         "svg_final_count": 10,
         "svg_output_count": 10,
@@ -5654,13 +5653,13 @@
           "p08_regulation_table.png"
         ],
         "project_digest": "4d2b449dd8110214"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_building_effective_agents",
-      "source_path": "ppt-master/examples/ppt169_building_effective_agents",
+      "id": "example.svglide_16x9_building_effective_agents",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_building_effective_agents",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -5685,7 +5684,7 @@
         "llm",
         "orchestrator",
         "parallelization",
-        "ppt169",
+        "svglide_16x9",
         "prompt",
         "routing",
         "to",
@@ -5751,13 +5750,13 @@
           "image_7.png"
         ],
         "project_digest": "fb5afb97ba4c1718"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_cangzhuo",
-      "source_path": "ppt-master/examples/ppt169_cangzhuo",
+      "id": "example.svglide_16x9_cangzhuo",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_cangzhuo",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -5774,7 +5773,7 @@
         "cangzhuo",
         "cover",
         "example",
-        "ppt169",
+        "svglide_16x9",
         "什么是藏拙",
         "会藏拙的人怎么做",
         "年轻人最易犯的错",
@@ -5838,13 +5837,13 @@
           "zengguofan_lamp.png"
         ],
         "project_digest": "578f91a97e1c81b3"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_fashion_weekly_digest",
-      "source_path": "ppt-master/examples/ppt169_fashion_weekly_digest",
+      "id": "example.svglide_16x9_fashion_weekly_digest",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_fashion_weekly_digest",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -5861,7 +5860,7 @@
         "digest",
         "example",
         "fashion",
-        "ppt169",
+        "svglide_16x9",
         "weekly",
         "古驰记忆",
         "封面",
@@ -5933,13 +5932,13 @@
           "dior_fashion.jpg"
         ],
         "project_digest": "ba01eb82f8842691"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_general_dark_tech_claude_code_auto_mode",
-      "source_path": "ppt-master/examples/ppt169_general_dark_tech_claude_code_auto_mode",
+      "id": "example.svglide_16x9_general_dark_tech_claude_code_auto_mode",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_general_dark_tech_claude_code_auto_mode",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -5967,7 +5966,7 @@
         "mode",
         "model",
         "permissions",
-        "ppt169",
+        "svglide_16x9",
         "results",
         "tech",
         "threat"
@@ -5996,9 +5995,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "e9d6f351c60915cb",
-      "summary": "ppt169_general_dark_tech_claude_code_auto_mode",
+      "summary": "svglide_16x9_general_dark_tech_claude_code_auto_mode",
       "metadata": {
-        "summary": "ppt169_general_dark_tech_claude_code_auto_mode",
+        "summary": "svglide_16x9_general_dark_tech_claude_code_auto_mode",
         "page_count": 10,
         "svg_final_count": 10,
         "svg_output_count": 10,
@@ -6025,13 +6024,13 @@
           "image_3.png"
         ],
         "project_digest": "e9d6f351c60915cb"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_glassmorphism_demo",
-      "source_path": "ppt-master/examples/ppt169_glassmorphism_demo",
+      "id": "example.svglide_16x9_glassmorphism_demo",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_glassmorphism_demo",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6059,7 +6058,7 @@
         "modes",
         "orchestration",
         "pains",
-        "ppt169",
+        "svglide_16x9",
         "prod",
         "three",
         "to",
@@ -6122,13 +6121,13 @@
           "12_cta_horizon.png"
         ],
         "project_digest": "bb17f9a2001bcaca"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_global_ai_capital_2026",
-      "source_path": "ppt-master/examples/ppt169_global_ai_capital_2026",
+      "id": "example.svglide_16x9_editorial_ai_capital_2026",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_editorial_ai_capital_2026",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6161,7 +6160,7 @@
         "leap",
         "note",
         "openai",
-        "ppt169",
+        "svglide_16x9",
         "q1",
         "revenue",
         "three",
@@ -6191,9 +6190,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "3377a4a832f87b5f",
-      "summary": "global_ai_capital_2026_ppt169_20260516",
+      "summary": "editorial_ai_capital_2026_svglide_16x9_20260516",
       "metadata": {
-        "summary": "global_ai_capital_2026_ppt169_20260516",
+        "summary": "editorial_ai_capital_2026_svglide_16x9_20260516",
         "page_count": 20,
         "svg_final_count": 20,
         "svg_output_count": 20,
@@ -6219,13 +6218,13 @@
           "nvidia_circular.png"
         ],
         "project_digest": "3377a4a832f87b5f"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_high_rise_renewal",
-      "source_path": "ppt-master/examples/ppt169_high_rise_renewal",
+      "id": "example.svglide_16x9_high_rise_renewal",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_high_rise_renewal",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6252,7 +6251,7 @@
         "highrise",
         "igoe",
         "ii",
-        "ppt169",
+        "svglide_16x9",
         "pruitt",
         "quarter",
         "quay",
@@ -6284,9 +6283,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "ba8a732dc29cb2c1",
-      "summary": "high_rise_renewal_ppt169_20260516",
+      "summary": "high_rise_renewal_svglide_16x9_20260516",
       "metadata": {
-        "summary": "high_rise_renewal_ppt169_20260516",
+        "summary": "high_rise_renewal_svglide_16x9_20260516",
         "page_count": 15,
         "svg_final_count": 15,
         "svg_output_count": 15,
@@ -6319,13 +6318,13 @@
           "640_17.png"
         ],
         "project_digest": "ba8a732dc29cb2c1"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_home_design_trends_2026",
-      "source_path": "ppt-master/examples/ppt169_home_design_trends_2026",
+      "id": "example.svglide_16x9_home_design_trends_2026",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_home_design_trends_2026",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6344,7 +6343,7 @@
         "design",
         "example",
         "home",
-        "ppt169",
+        "svglide_16x9",
         "trends",
         "从网红风到人的尺度",
         "体系",
@@ -6414,13 +6413,13 @@
           "cmt_overview.png"
         ],
         "project_digest": "f1dc9774224cf00e"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_image_text_showcase",
-      "source_path": "ppt-master/examples/ppt169_image_text_showcase",
+      "id": "example.svglide_16x9_image_text_showcase",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_image_text_showcase",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6436,7 +6435,7 @@
         "08",
         "example",
         "image",
-        "ppt169",
+        "svglide_16x9",
         "showcase",
         "text",
         "z",
@@ -6508,13 +6507,13 @@
           "p10_bg_texture.png"
         ],
         "project_digest": "e077d46f669fac80"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_indie_bookstore_zine_guide",
-      "source_path": "ppt-master/examples/ppt169_indie_bookstore_zine_guide",
+      "id": "example.svglide_16x9_indie_bookstore_zine_guide",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_indie_bookstore_zine_guide",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6538,7 +6537,7 @@
         "history",
         "indie",
         "origin",
-        "ppt169",
+        "svglide_16x9",
         "process",
         "risograph",
         "toc",
@@ -6570,9 +6569,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "53d75c7fc3ff0b14",
-      "summary": "ppt169_indie_bookstore_zine_guide_20260517",
+      "summary": "svglide_16x9_indie_bookstore_zine_guide_20260517",
       "metadata": {
-        "summary": "ppt169_indie_bookstore_zine_guide_20260517",
+        "summary": "svglide_16x9_indie_bookstore_zine_guide_20260517",
         "page_count": 18,
         "svg_final_count": 18,
         "svg_output_count": 18,
@@ -6605,13 +6604,13 @@
           "zine_history_collage.png"
         ],
         "project_digest": "53d75c7fc3ff0b14"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_kimsoong_loyalty_programme",
-      "source_path": "ppt-master/examples/ppt169_kimsoong_loyalty_programme",
+      "id": "example.svglide_16x9_kimsoong_loyalty_programme",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_kimsoong_loyalty_programme",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6637,7 +6636,7 @@
         "kimsoong",
         "loyalty",
         "pillars",
-        "ppt169",
+        "svglide_16x9",
         "priorities",
         "profile",
         "programme",
@@ -6698,13 +6697,13 @@
           "roadmap_bg.png"
         ],
         "project_digest": "ebc6c414ab46be63"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_kubernetes_blueprint_2026",
-      "source_path": "ppt-master/examples/ppt169_kubernetes_blueprint_2026",
+      "id": "example.svglide_16x9_kubernetes_blueprint_2026",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_kubernetes_blueprint_2026",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6730,7 +6729,7 @@
         "plane",
         "planes",
         "pod",
-        "ppt169",
+        "svglide_16x9",
         "service",
         "storage",
         "topology",
@@ -6760,9 +6759,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "132c3d1a12c190c2",
-      "summary": "ppt169_kubernetes_blueprint",
+      "summary": "svglide_16x9_kubernetes_blueprint",
       "metadata": {
-        "summary": "ppt169_kubernetes_blueprint",
+        "summary": "svglide_16x9_kubernetes_blueprint",
         "page_count": 10,
         "svg_final_count": 10,
         "svg_output_count": 10,
@@ -6784,13 +6783,13 @@
         ],
         "media_samples": [],
         "project_digest": "132c3d1a12c190c2"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_lin_huiyin_architect",
-      "source_path": "ppt-master/examples/ppt169_lin_huiyin_architect",
+      "id": "example.svglide_16x9_lin_huiyin_architect",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_lin_huiyin_architect",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6808,7 +6807,7 @@
         "example",
         "huiyin",
         "lin",
-        "ppt169",
+        "svglide_16x9",
         "人生轨迹",
         "国之重器",
         "学术贡献一览",
@@ -6879,13 +6878,13 @@
           "lin_survey.png"
         ],
         "project_digest": "20b9855195eb7b96"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_lin_huiyin_architect_revised",
-      "source_path": "ppt-master/examples/ppt169_lin_huiyin_architect_revised",
+      "id": "example.svglide_16x9_lin_huiyin_architect_revised",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_lin_huiyin_architect_revised",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -6903,7 +6902,7 @@
         "example",
         "huiyin",
         "lin",
-        "ppt169",
+        "svglide_16x9",
         "revised",
         "为什么今天要重识林徽因",
         "作品现场",
@@ -6978,13 +6977,13 @@
           "lin_tomb.png"
         ],
         "project_digest": "cf255646e3ac6c65"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_liziqi_plant_dye_colors",
-      "source_path": "ppt-master/examples/ppt169_liziqi_plant_dye_colors",
+      "id": "example.svglide_16x9_liziqi_plant_dye_colors",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_liziqi_plant_dye_colors",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -7011,7 +7010,7 @@
         "natural",
         "plant",
         "poetic",
-        "ppt169",
+        "svglide_16x9",
         "zhanpao"
       ],
       "copy_policy": "derive_contract_only",
@@ -7073,13 +7072,13 @@
           "640_15.png"
         ],
         "project_digest": "f6b0d492a8afb107"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_lora_hu_2021",
-      "source_path": "ppt-master/examples/ppt169_lora_hu_2021",
+      "id": "example.svglide_16x9_lora_hu_2021",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_lora_hu_2021",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -7103,7 +7102,7 @@
         "limitations",
         "lora",
         "method",
-        "ppt169",
+        "svglide_16x9",
         "problem",
         "transformer"
       ],
@@ -7166,13 +7165,13 @@
           "subspace_heatmap.png"
         ],
         "project_digest": "5e0b0e096424d588"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_pritzker_2026",
-      "source_path": "ppt-master/examples/ppt169_pritzker_2026",
+      "id": "example.svglide_16x9_pritzker_2026",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_pritzker_2026",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -7195,7 +7194,7 @@
         "foster",
         "oma",
         "overview",
-        "ppt169",
+        "svglide_16x9",
         "pritzker",
         "sanaa",
         "test",
@@ -7261,13 +7260,13 @@
           "gehry_abu_dhabi_render1.png"
         ],
         "project_digest": "f629a8386f3c896c"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_sugar_rush_memphis",
-      "source_path": "ppt-master/examples/ppt169_sugar_rush_memphis",
+      "id": "example.svglide_16x9_sugar_rush_memphis",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_sugar_rush_memphis",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -7287,7 +7286,7 @@
         "headliners",
         "memphis",
         "numbers",
-        "ppt169",
+        "svglide_16x9",
         "principles",
         "rush",
         "sugar",
@@ -7353,13 +7352,13 @@
           "market.png"
         ],
         "project_digest": "bcdeafc36693f36d"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
-      "id": "example.ppt169_swiss_grid_systems",
-      "source_path": "ppt-master/examples/ppt169_swiss_grid_systems",
+      "id": "example.svglide_16x9_swiss_grid_systems",
+      "source_path": "svglide-design-patterns/example_project/example.svglide_16x9_swiss_grid_systems",
       "kind": "example_project",
-      "ppt_master_role": "finished example deck and mining corpus",
       "svglide_target": "golden/negative corpus and style-mining source",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Mine page rhythm, style signals, and failure cases; do not copy finished pages, images, base64, or PPTX exports.",
@@ -7380,7 +7379,7 @@
         "figures",
         "grid",
         "origin",
-        "ppt169",
+        "svglide_16x9",
         "principles",
         "quote",
         "swiss",
@@ -7412,9 +7411,9 @@
       "golden_example_required": false,
       "normalized_fixture": "",
       "source_digest": "1823080b6fef9ef4",
-      "summary": "swiss_grid_systems_ppt169_20260517",
+      "summary": "swiss_grid_systems_svglide_16x9_20260517",
       "metadata": {
-        "summary": "swiss_grid_systems_ppt169_20260517",
+        "summary": "swiss_grid_systems_svglide_16x9_20260517",
         "page_count": 14,
         "svg_final_count": 14,
         "svg_output_count": 14,
@@ -7440,13 +7439,13 @@
           "negative_space.png"
         ],
         "project_digest": "1823080b6fef9ef4"
-      }
+      },
+      "design_role": "finished example deck and mining corpus"
     },
     {
       "id": "icon_library.chunk-filled",
-      "source_path": "ppt-master/skills/ppt-master/templates/icons/chunk-filled",
+      "source_path": "svglide-design-patterns/icon_library/icon_library.chunk-filled",
       "kind": "icon_library",
-      "ppt_master_role": "icon library summary and searchable index",
       "svglide_target": "icon-registry/style-binding",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Expose a library-level summary and searchable index; select one style library per deck and never inject every SVG into the prompt.",
@@ -7526,13 +7525,13 @@
           "angle-right"
         ],
         "index_policy": "library_summary_only"
-      }
+      },
+      "design_role": "icon library summary and searchable index"
     },
     {
       "id": "icon_library.phosphor-duotone",
-      "source_path": "ppt-master/skills/ppt-master/templates/icons/phosphor-duotone",
+      "source_path": "svglide-design-patterns/icon_library/icon_library.phosphor-duotone",
       "kind": "icon_library",
-      "ppt_master_role": "icon library summary and searchable index",
       "svglide_target": "icon-registry/style-binding",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Expose a library-level summary and searchable index; select one style library per deck and never inject every SVG into the prompt.",
@@ -7612,13 +7611,13 @@
           "align-right"
         ],
         "index_policy": "library_summary_only"
-      }
+      },
+      "design_role": "icon library summary and searchable index"
     },
     {
       "id": "icon_library.simple-icons",
-      "source_path": "ppt-master/skills/ppt-master/templates/icons/simple-icons",
+      "source_path": "svglide-design-patterns/icon_library/icon_library.simple-icons",
       "kind": "icon_library",
-      "ppt_master_role": "icon library summary and searchable index",
       "svglide_target": "icon-registry/style-binding",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Expose a library-level summary and searchable index; select one style library per deck and never inject every SVG into the prompt.",
@@ -7698,13 +7697,13 @@
           "abbrobotstudio"
         ],
         "index_policy": "library_summary_only"
-      }
+      },
+      "design_role": "icon library summary and searchable index"
     },
     {
       "id": "icon_library.tabler-filled",
-      "source_path": "ppt-master/skills/ppt-master/templates/icons/tabler-filled",
+      "source_path": "svglide-design-patterns/icon_library/icon_library.tabler-filled",
       "kind": "icon_library",
-      "ppt_master_role": "icon library summary and searchable index",
       "svglide_target": "icon-registry/style-binding",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Expose a library-level summary and searchable index; select one style library per deck and never inject every SVG into the prompt.",
@@ -7785,13 +7784,13 @@
           "align-box-bottom-center"
         ],
         "index_policy": "library_summary_only"
-      }
+      },
+      "design_role": "icon library summary and searchable index"
     },
     {
       "id": "icon_library.tabler-outline",
-      "source_path": "ppt-master/skills/ppt-master/templates/icons/tabler-outline",
+      "source_path": "svglide-design-patterns/icon_library/icon_library.tabler-outline",
       "kind": "icon_library",
-      "ppt_master_role": "icon library summary and searchable index",
       "svglide_target": "icon-registry/style-binding",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Expose a library-level summary and searchable index; select one style library per deck and never inject every SVG into the prompt.",
@@ -7865,13 +7864,13 @@
           "adjustments-alt"
         ],
         "index_policy": "library_summary_only"
-      }
+      },
+      "design_role": "icon library summary and searchable index"
     },
     {
       "id": "image_palette.cool-corporate",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/cool-corporate.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.cool-corporate",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -7901,13 +7900,13 @@
       "metadata": {
         "summary": "Palette: cool-corporate",
         "bytes": 1697
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.dark-cinematic",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/dark-cinematic.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.dark-cinematic",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -7937,13 +7936,13 @@
       "metadata": {
         "summary": "Palette: dark-cinematic",
         "bytes": 2013
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.duotone",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/duotone.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.duotone",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -7972,13 +7971,13 @@
       "metadata": {
         "summary": "Palette: duotone",
         "bytes": 1495
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.earthy-dusty",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/earthy-dusty.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.earthy-dusty",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8008,13 +8007,13 @@
       "metadata": {
         "summary": "Palette: earthy-dusty",
         "bytes": 1897
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.editorial-classic",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/editorial-classic.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.editorial-classic",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8044,13 +8043,13 @@
       "metadata": {
         "summary": "Palette: editorial-classic",
         "bytes": 1470
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.frost-ice",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/frost-ice.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.frost-ice",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8080,13 +8079,13 @@
       "metadata": {
         "summary": "Palette: frost-ice",
         "bytes": 1673
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.jewel-tone",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/jewel-tone.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.jewel-tone",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8116,13 +8115,13 @@
       "metadata": {
         "summary": "Palette: jewel-tone",
         "bytes": 1793
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.macaron",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/macaron.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.macaron",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8151,13 +8150,13 @@
       "metadata": {
         "summary": "Palette: macaron",
         "bytes": 1676
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.mono-ink",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/mono-ink.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.mono-ink",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8187,13 +8186,13 @@
       "metadata": {
         "summary": "Palette: mono-ink",
         "bytes": 2584
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.nature-organic",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/nature-organic.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.nature-organic",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8223,13 +8222,13 @@
       "metadata": {
         "summary": "Palette: nature-organic",
         "bytes": 1335
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.sunset-gradient",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/sunset-gradient.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.sunset-gradient",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8259,13 +8258,13 @@
       "metadata": {
         "summary": "Palette: sunset-gradient",
         "bytes": 2193
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.tech-neon",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/tech-neon.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.tech-neon",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8295,13 +8294,13 @@
       "metadata": {
         "summary": "Palette: tech-neon",
         "bytes": 1550
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.vivid-launch",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/vivid-launch.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.vivid-launch",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8331,13 +8330,13 @@
       "metadata": {
         "summary": "Palette: vivid-launch",
         "bytes": 1478
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_palette.warm-earth",
-      "source_path": "ppt-master/skills/ppt-master/references/image-palettes/warm-earth.md",
+      "source_path": "svglide-design-patterns/image_palette/image_palette.warm-earth",
       "kind": "image_palette",
-      "ppt_master_role": "image palette reference",
       "svglide_target": "asset_strategy/image-palette-binding",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive palette tags and image-planning hints; do not copy generated images.",
@@ -8367,13 +8366,13 @@
       "metadata": {
         "summary": "Palette: warm-earth",
         "bytes": 1686
-      }
+      },
+      "design_role": "image palette reference"
     },
     {
       "id": "image_reference_collection.palette",
-      "source_path": "ppt-master/skills/ppt-master/references/ai-image-comparison/palette",
+      "source_path": "svglide-design-patterns/image_reference_collection/image_reference_collection.palette",
       "kind": "image_reference_collection",
-      "ppt_master_role": "image_palette_visual_references",
       "svglide_target": "asset_strategy/reference-oracle",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Summarize bitmap reference coverage; do not copy images into CLI runtime.",
@@ -8444,13 +8443,13 @@
           "sunset-gradient.png",
           "tech-neon.png"
         ]
-      }
+      },
+      "design_role": "image_palette_visual_references"
     },
     {
       "id": "image_reference_collection.rendering",
-      "source_path": "ppt-master/skills/ppt-master/references/ai-image-comparison/rendering",
+      "source_path": "svglide-design-patterns/image_reference_collection/image_reference_collection.rendering",
       "kind": "image_reference_collection",
-      "ppt_master_role": "image_rendering_visual_references",
       "svglide_target": "asset_strategy/reference-oracle",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Summarize bitmap reference coverage; do not copy images into CLI runtime.",
@@ -8524,13 +8523,13 @@
           "minimalist-swiss.png",
           "nature.png"
         ]
-      }
+      },
+      "design_role": "image_rendering_visual_references"
     },
     {
       "id": "image_reference_collection.type",
-      "source_path": "ppt-master/skills/ppt-master/references/ai-image-comparison/type",
+      "source_path": "svglide-design-patterns/image_reference_collection/image_reference_collection.type",
       "kind": "image_reference_collection",
-      "ppt_master_role": "image_type_visual_references",
       "svglide_target": "asset_strategy/reference-oracle",
       "protocol_compatibility": "reference_only",
       "conversion_strategy": "Summarize bitmap reference coverage; do not copy images into CLI runtime.",
@@ -8585,13 +8584,13 @@
           "scene.png",
           "timeline.png"
         ]
-      }
+      },
+      "design_role": "image_type_visual_references"
     },
     {
       "id": "image_rendering.3d-isometric",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/3d-isometric.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.3d-isometric",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8621,13 +8620,13 @@
       "metadata": {
         "summary": "Rendering: 3d-isometric",
         "bytes": 2738
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.blueprint",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/blueprint.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.blueprint",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8656,13 +8655,13 @@
       "metadata": {
         "summary": "Rendering: blueprint",
         "bytes": 2667
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.chalkboard",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/chalkboard.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.chalkboard",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8691,13 +8690,13 @@
       "metadata": {
         "summary": "Rendering: chalkboard",
         "bytes": 2566
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.corporate-photo",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/corporate-photo.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.corporate-photo",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8727,13 +8726,13 @@
       "metadata": {
         "summary": "Rendering: corporate-photo",
         "bytes": 3495
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.digital-dashboard",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/digital-dashboard.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.digital-dashboard",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8763,13 +8762,13 @@
       "metadata": {
         "summary": "Rendering: digital-dashboard",
         "bytes": 2652
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.editorial",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/editorial.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.editorial",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8798,13 +8797,13 @@
       "metadata": {
         "summary": "Rendering: editorial",
         "bytes": 2606
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.fantasy-animation",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/fantasy-animation.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.fantasy-animation",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8834,13 +8833,13 @@
       "metadata": {
         "summary": "Rendering: fantasy-animation",
         "bytes": 2840
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.flat",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/flat.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.flat",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8869,13 +8868,13 @@
       "metadata": {
         "summary": "Rendering: flat",
         "bytes": 2379
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.glassmorphism",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/glassmorphism.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.glassmorphism",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8904,13 +8903,13 @@
       "metadata": {
         "summary": "Rendering: glassmorphism",
         "bytes": 3181
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.ink-notes",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/ink-notes.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.ink-notes",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8940,13 +8939,13 @@
       "metadata": {
         "summary": "Rendering: ink-notes",
         "bytes": 3468
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.minimalist-swiss",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/minimalist-swiss.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.minimalist-swiss",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -8976,13 +8975,13 @@
       "metadata": {
         "summary": "Rendering: minimalist-swiss",
         "bytes": 2900
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.nature",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/nature.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.nature",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9011,13 +9010,13 @@
       "metadata": {
         "summary": "Rendering: nature",
         "bytes": 2637
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.paper-cut",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/paper-cut.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.paper-cut",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9047,13 +9046,13 @@
       "metadata": {
         "summary": "Rendering: paper-cut",
         "bytes": 2759
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.pixel-art",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/pixel-art.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.pixel-art",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9083,13 +9082,13 @@
       "metadata": {
         "summary": "Rendering: pixel-art",
         "bytes": 2536
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.screen-print",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/screen-print.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.screen-print",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9119,13 +9118,13 @@
       "metadata": {
         "summary": "Rendering: screen-print",
         "bytes": 2854
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.sketch-notes",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/sketch-notes.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.sketch-notes",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9155,13 +9154,13 @@
       "metadata": {
         "summary": "Rendering: sketch-notes",
         "bytes": 3467
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.vector-illustration",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/vector-illustration.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.vector-illustration",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9191,13 +9190,13 @@
       "metadata": {
         "summary": "Rendering: vector-illustration",
         "bytes": 2909
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.vintage-poster",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/vintage-poster.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.vintage-poster",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9227,13 +9226,13 @@
       "metadata": {
         "summary": "Rendering: vintage-poster",
         "bytes": 2975
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.warm-scene",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/warm-scene.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.warm-scene",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9263,13 +9262,13 @@
       "metadata": {
         "summary": "Rendering: warm-scene",
         "bytes": 3022
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_rendering.watercolor",
-      "source_path": "ppt-master/skills/ppt-master/references/image-renderings/watercolor.md",
+      "source_path": "svglide-design-patterns/image_rendering/image_rendering.watercolor",
       "kind": "image_rendering",
-      "ppt_master_role": "image rendering preset",
       "svglide_target": "asset_strategy/rendering-preset",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive rendering tags and fallback policy for image planning.",
@@ -9298,13 +9297,13 @@
       "metadata": {
         "summary": "Rendering: watercolor",
         "bytes": 2457
-      }
+      },
+      "design_role": "image rendering preset"
     },
     {
       "id": "image_type.comparison",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/comparison.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.comparison",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9334,13 +9333,13 @@
       "metadata": {
         "summary": "Type: comparison",
         "bytes": 3532
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.cycle",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/cycle.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.cycle",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9370,13 +9369,13 @@
       "metadata": {
         "summary": "Type: cycle",
         "bytes": 3371
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.flowchart",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/flowchart.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.flowchart",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9406,13 +9405,13 @@
       "metadata": {
         "summary": "Type: flowchart",
         "bytes": 2919
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.framework",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/framework.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.framework",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9442,13 +9441,13 @@
       "metadata": {
         "summary": "Type: framework",
         "bytes": 4727
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.funnel",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/funnel.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.funnel",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9478,13 +9477,13 @@
       "metadata": {
         "summary": "Type: funnel",
         "bytes": 3737
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.infographic",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/infographic.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.infographic",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9514,13 +9513,13 @@
       "metadata": {
         "summary": "Type: infographic",
         "bytes": 3538
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.map",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/map.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.map",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9550,13 +9549,13 @@
       "metadata": {
         "summary": "Type: map",
         "bytes": 3923
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.matrix",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/matrix.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.matrix",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9586,13 +9585,13 @@
       "metadata": {
         "summary": "Type: matrix",
         "bytes": 3867
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.pyramid",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/pyramid.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.pyramid",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9622,13 +9621,13 @@
       "metadata": {
         "summary": "Type: pyramid",
         "bytes": 3493
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.scene",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/scene.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.scene",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9658,13 +9657,13 @@
       "metadata": {
         "summary": "Type: scene",
         "bytes": 3475
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "image_type.timeline",
-      "source_path": "ppt-master/skills/ppt-master/references/image-type-templates/timeline.md",
+      "source_path": "svglide-design-patterns/image_type_template/image_type.timeline",
       "kind": "image_type_template",
-      "ppt_master_role": "image composition recipe",
       "svglide_target": "asset_strategy/image-composition-recipe",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive image composition contracts and prompt planning tags.",
@@ -9694,13 +9693,13 @@
       "metadata": {
         "summary": "Type: timeline",
         "bytes": 2849
-      }
+      },
+      "design_role": "image composition recipe"
     },
     {
       "id": "layout.academic_defense",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/academic_defense",
+      "source_path": "svglide-design-patterns/layout_template/layout.academic_defense",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -9749,7 +9748,7 @@
       "summary": "Thesis defense, academic presentations, research progress reports, grant applications.",
       "metadata": {
         "summary": "Thesis defense, academic presentations, research progress reports, grant applications.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "page_types": [
           "cover",
@@ -9759,13 +9758,13 @@
           "ending"
         ],
         "svg_file_count": 5
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "layout.ai_ops",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/ai_ops",
+      "source_path": "svglide-design-patterns/layout_template/layout.ai_ops",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -9821,7 +9820,7 @@
       "summary": "Telecom AI operations architecture, IT system overviews, digital transformation proposals, smart infrastructure reports.",
       "metadata": {
         "summary": "Telecom AI operations architecture, IT system overviews, digital transformation proposals, smart infrastructure reports.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 6,
         "page_types": [
           "cover",
@@ -9832,13 +9831,13 @@
           "reference_style"
         ],
         "svg_file_count": 6
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "layout.government_blue",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/government_blue",
+      "source_path": "svglide-design-patterns/layout_template/layout.government_blue",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -9893,7 +9892,7 @@
       "summary": "Key project briefings, Five-Year Plan presentations, work summaries, investment promotion, policy interpretation.",
       "metadata": {
         "summary": "Key project briefings, Five-Year Plan presentations, work summaries, investment promotion, policy interpretation.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "page_types": [
           "cover",
@@ -9903,13 +9902,13 @@
           "ending"
         ],
         "svg_file_count": 5
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "layout.government_red",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/government_red",
+      "source_path": "svglide-design-patterns/layout_template/layout.government_red",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -9960,7 +9959,7 @@
       "summary": "Government briefings, policy interpretation, work summaries, project introductions, investment promotion.",
       "metadata": {
         "summary": "Government briefings, policy interpretation, work summaries, project introductions, investment promotion.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "page_types": [
           "cover",
@@ -9970,13 +9969,13 @@
           "ending"
         ],
         "svg_file_count": 5
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "layout.medical_university",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/medical_university",
+      "source_path": "svglide-design-patterns/layout_template/layout.medical_university",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -10029,7 +10028,7 @@
       "summary": "Medical academic reports, case discussions, research presentations, hospital work reports, medical education and training.",
       "metadata": {
         "summary": "Medical academic reports, case discussions, research presentations, hospital work reports, medical education and training.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "page_types": [
           "cover",
@@ -10039,13 +10038,13 @@
           "ending"
         ],
         "svg_file_count": 5
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "layout.pixel_retro",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/pixel_retro",
+      "source_path": "svglide-design-patterns/layout_template/layout.pixel_retro",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -10097,7 +10096,7 @@
       "summary": "Tech talks, programming tutorials, game introductions, geek-style showcases.",
       "metadata": {
         "summary": "Tech talks, programming tutorials, game introductions, geek-style showcases.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "page_types": [
           "cover",
@@ -10107,13 +10106,13 @@
           "ending"
         ],
         "svg_file_count": 5
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "layout.psychology_attachment",
-      "source_path": "ppt-master/skills/ppt-master/templates/layouts/psychology_attachment",
+      "source_path": "svglide-design-patterns/layout_template/layout.psychology_attachment",
       "kind": "layout_template",
-      "ppt_master_role": "page skeleton and rhythm template",
       "svglide_target": "svg-seeds.json/layout-skeletons",
       "protocol_compatibility": "needs_normalization",
       "conversion_strategy": "Extract page slots, density, rhythm, and spacing contracts; regenerate as SVGlide seeds.",
@@ -10165,7 +10164,7 @@
       "summary": "Psychotherapy training, academic lectures, counseling case analysis, professional sharing.",
       "metadata": {
         "summary": "Psychotherapy training, academic lectures, counseling case analysis, professional sharing.",
-        "canvas_format": "ppt169",
+        "canvas_format": "svglide_16x9",
         "page_count": 5,
         "page_types": [
           "cover",
@@ -10175,13 +10174,13 @@
           "ending"
         ],
         "svg_file_count": 5
-      }
+      },
+      "design_role": "page skeleton and rhythm template"
     },
     {
       "id": "mode.briefing",
-      "source_path": "ppt-master/skills/ppt-master/references/modes/briefing.md",
+      "source_path": "svglide-design-patterns/narrative_mode/mode.briefing",
       "kind": "narrative_mode",
-      "ppt_master_role": "deck-level narrative mode",
       "svglide_target": "deck intent and page rhythm selector",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive narrative mode tags and page rhythm signals.",
@@ -10211,13 +10210,13 @@
       "metadata": {
         "summary": "Mode: briefing",
         "bytes": 2848
-      }
+      },
+      "design_role": "deck-level narrative mode"
     },
     {
       "id": "mode.instructional",
-      "source_path": "ppt-master/skills/ppt-master/references/modes/instructional.md",
+      "source_path": "svglide-design-patterns/narrative_mode/mode.instructional",
       "kind": "narrative_mode",
-      "ppt_master_role": "deck-level narrative mode",
       "svglide_target": "deck intent and page rhythm selector",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive narrative mode tags and page rhythm signals.",
@@ -10247,13 +10246,13 @@
       "metadata": {
         "summary": "Mode: instructional",
         "bytes": 1932
-      }
+      },
+      "design_role": "deck-level narrative mode"
     },
     {
       "id": "mode.narrative",
-      "source_path": "ppt-master/skills/ppt-master/references/modes/narrative.md",
+      "source_path": "svglide-design-patterns/narrative_mode/mode.narrative",
       "kind": "narrative_mode",
-      "ppt_master_role": "deck-level narrative mode",
       "svglide_target": "deck intent and page rhythm selector",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive narrative mode tags and page rhythm signals.",
@@ -10282,13 +10281,13 @@
       "metadata": {
         "summary": "Mode: narrative",
         "bytes": 2163
-      }
+      },
+      "design_role": "deck-level narrative mode"
     },
     {
       "id": "mode.pyramid",
-      "source_path": "ppt-master/skills/ppt-master/references/modes/pyramid.md",
+      "source_path": "svglide-design-patterns/narrative_mode/mode.pyramid",
       "kind": "narrative_mode",
-      "ppt_master_role": "deck-level narrative mode",
       "svglide_target": "deck intent and page rhythm selector",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive narrative mode tags and page rhythm signals.",
@@ -10318,13 +10317,13 @@
       "metadata": {
         "summary": "Mode: pyramid",
         "bytes": 2811
-      }
+      },
+      "design_role": "deck-level narrative mode"
     },
     {
       "id": "mode.showcase",
-      "source_path": "ppt-master/skills/ppt-master/references/modes/showcase.md",
+      "source_path": "svglide-design-patterns/narrative_mode/mode.showcase",
       "kind": "narrative_mode",
-      "ppt_master_role": "deck-level narrative mode",
       "svglide_target": "deck intent and page rhythm selector",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive narrative mode tags and page rhythm signals.",
@@ -10354,13 +10353,13 @@
       "metadata": {
         "summary": "Mode: showcase",
         "bytes": 1763
-      }
+      },
+      "design_role": "deck-level narrative mode"
     },
     {
       "id": "visual_style.blueprint",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/blueprint.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.blueprint",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10390,13 +10389,13 @@
       "metadata": {
         "summary": "Visual style: blueprint",
         "bytes": 2106
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.brutalist",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/brutalist.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.brutalist",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10426,13 +10425,13 @@
       "metadata": {
         "summary": "Visual style: brutalist",
         "bytes": 2143
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.chalkboard",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/chalkboard.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.chalkboard",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10462,13 +10461,13 @@
       "metadata": {
         "summary": "Visual style: chalkboard",
         "bytes": 1582
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.dark-tech",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/dark-tech.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.dark-tech",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10499,13 +10498,13 @@
       "metadata": {
         "summary": "Visual style: dark-tech",
         "bytes": 1429
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.data-journalism",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/data-journalism.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.data-journalism",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10536,13 +10535,13 @@
       "metadata": {
         "summary": "Visual style: data-journalism",
         "bytes": 2086
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.editorial",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/editorial.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.editorial",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10572,13 +10571,13 @@
       "metadata": {
         "summary": "Visual style: editorial",
         "bytes": 1408
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.glassmorphism",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/glassmorphism.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.glassmorphism",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10608,13 +10607,13 @@
       "metadata": {
         "summary": "Visual style: glassmorphism",
         "bytes": 1940
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.ink-notes",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/ink-notes.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.ink-notes",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10645,13 +10644,13 @@
       "metadata": {
         "summary": "Visual style: ink-notes",
         "bytes": 1859
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.ink-wash",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/ink-wash.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.ink-wash",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10682,13 +10681,13 @@
       "metadata": {
         "summary": "Visual style: ink-wash",
         "bytes": 1828
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.memphis",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/memphis.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.memphis",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10718,13 +10717,13 @@
       "metadata": {
         "summary": "Visual style: memphis",
         "bytes": 1983
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.paper-cut",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/paper-cut.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.paper-cut",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10755,13 +10754,13 @@
       "metadata": {
         "summary": "Visual style: paper-cut",
         "bytes": 1784
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.photo-editorial",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/photo-editorial.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.photo-editorial",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10792,13 +10791,13 @@
       "metadata": {
         "summary": "Visual style: photo-editorial",
         "bytes": 1799
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.pixel-art",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/pixel-art.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.pixel-art",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10829,13 +10828,13 @@
       "metadata": {
         "summary": "Visual style: pixel-art",
         "bytes": 1722
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.sketch-notes",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/sketch-notes.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.sketch-notes",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10866,13 +10865,13 @@
       "metadata": {
         "summary": "Visual style: sketch-notes",
         "bytes": 1638
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.soft-rounded",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/soft-rounded.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.soft-rounded",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10903,13 +10902,13 @@
       "metadata": {
         "summary": "Visual style: soft-rounded",
         "bytes": 1486
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.swiss-minimal",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/swiss-minimal.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.swiss-minimal",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10940,13 +10939,13 @@
       "metadata": {
         "summary": "Visual style: swiss-minimal",
         "bytes": 1674
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.vintage-poster",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/vintage-poster.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.vintage-poster",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -10977,13 +10976,13 @@
       "metadata": {
         "summary": "Visual style: vintage-poster",
         "bytes": 1808
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "visual_style.zine",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-styles/zine.md",
+      "source_path": "svglide-design-patterns/visual_style/visual_style.zine",
       "kind": "visual_style",
-      "ppt_master_role": "visual style guide",
       "svglide_target": "style-presets.json/quality-oracle",
       "protocol_compatibility": "documentation_reference",
       "conversion_strategy": "Derive style tags, visual anti-patterns, and quality-oracle signals.",
@@ -11013,16 +11012,16 @@
       "metadata": {
         "summary": "Visual style: zine",
         "bytes": 2057
-      }
+      },
+      "design_role": "visual style guide"
     },
     {
       "id": "workflow.executor-base",
-      "source_path": "ppt-master/skills/ppt-master/references/executor-base.md",
+      "source_path": "svglide-design-patterns/workflow_reference/workflow.executor-base",
       "kind": "workflow_reference",
-      "ppt_master_role": "pipeline and quality-gate reference",
       "svglide_target": "runner receipts, quality gate, and asset planning docs",
       "protocol_compatibility": "documentation_reference",
-      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing ppt-master as runtime dependency.",
+      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing svglide-design-patterns as runtime dependency.",
       "activation_status": "candidate",
       "selection_tags": [
         "base",
@@ -11051,16 +11050,16 @@
       "metadata": {
         "summary": "Executor Common Guidelines",
         "bytes": 34583
-      }
+      },
+      "design_role": "pipeline and quality-gate reference"
     },
     {
       "id": "workflow.image-layout-patterns",
-      "source_path": "ppt-master/skills/ppt-master/references/image-layout-patterns.md",
+      "source_path": "svglide-design-patterns/workflow_reference/workflow.image-layout-patterns",
       "kind": "workflow_reference",
-      "ppt_master_role": "pipeline and quality-gate reference",
       "svglide_target": "runner receipts, quality gate, and asset planning docs",
       "protocol_compatibility": "documentation_reference",
-      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing ppt-master as runtime dependency.",
+      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing svglide-design-patterns as runtime dependency.",
       "activation_status": "candidate",
       "selection_tags": [
         "image",
@@ -11089,16 +11088,16 @@
       "metadata": {
         "summary": "Image-Text Layout Patterns",
         "bytes": 21776
-      }
+      },
+      "design_role": "pipeline and quality-gate reference"
     },
     {
       "id": "workflow.image-layout-spec",
-      "source_path": "ppt-master/skills/ppt-master/references/image-layout-spec.md",
+      "source_path": "svglide-design-patterns/workflow_reference/workflow.image-layout-spec",
       "kind": "workflow_reference",
-      "ppt_master_role": "pipeline and quality-gate reference",
       "svglide_target": "runner receipts, quality gate, and asset planning docs",
       "protocol_compatibility": "documentation_reference",
-      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing ppt-master as runtime dependency.",
+      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing svglide-design-patterns as runtime dependency.",
       "activation_status": "candidate",
       "selection_tags": [
         "common",
@@ -11134,16 +11133,16 @@
       "metadata": {
         "summary": "> See shared-standards.md for common technical constraints.",
         "bytes": 8963
-      }
+      },
+      "design_role": "pipeline and quality-gate reference"
     },
     {
       "id": "workflow.shared-standards",
-      "source_path": "ppt-master/skills/ppt-master/references/shared-standards.md",
+      "source_path": "svglide-design-patterns/workflow_reference/workflow.shared-standards",
       "kind": "workflow_reference",
-      "ppt_master_role": "pipeline and quality-gate reference",
       "svglide_target": "runner receipts, quality gate, and asset planning docs",
       "protocol_compatibility": "documentation_reference",
-      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing ppt-master as runtime dependency.",
+      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing svglide-design-patterns as runtime dependency.",
       "activation_status": "candidate",
       "selection_tags": [
         "shared",
@@ -11171,16 +11170,16 @@
       "metadata": {
         "summary": "Shared Technical Standards",
         "bytes": 39041
-      }
+      },
+      "design_role": "pipeline and quality-gate reference"
     },
     {
       "id": "workflow.strategist",
-      "source_path": "ppt-master/skills/ppt-master/references/strategist.md",
+      "source_path": "svglide-design-patterns/workflow_reference/workflow.strategist",
       "kind": "workflow_reference",
-      "ppt_master_role": "pipeline and quality-gate reference",
       "svglide_target": "runner receipts, quality gate, and asset planning docs",
       "protocol_compatibility": "documentation_reference",
-      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing ppt-master as runtime dependency.",
+      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing svglide-design-patterns as runtime dependency.",
       "activation_status": "candidate",
       "selection_tags": [
         "role",
@@ -11207,16 +11206,16 @@
       "metadata": {
         "summary": "Role: Strategist",
         "bytes": 62729
-      }
+      },
+      "design_role": "pipeline and quality-gate reference"
     },
     {
       "id": "workflow.visual-review",
-      "source_path": "ppt-master/skills/ppt-master/references/visual-review.md",
+      "source_path": "svglide-design-patterns/workflow_reference/workflow.visual-review",
       "kind": "workflow_reference",
-      "ppt_master_role": "pipeline and quality-gate reference",
       "svglide_target": "runner receipts, quality gate, and asset planning docs",
       "protocol_compatibility": "documentation_reference",
-      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing ppt-master as runtime dependency.",
+      "conversion_strategy": "Derive process checks, receipt fields, and review heuristics without importing svglide-design-patterns as runtime dependency.",
       "activation_status": "candidate",
       "selection_tags": [
         "review",
@@ -11244,7 +11243,8 @@
       "metadata": {
         "summary": "Visual Review Rubric",
         "bytes": 15423
-      }
+      },
+      "design_role": "pipeline and quality-gate reference"
     }
   ]
 }

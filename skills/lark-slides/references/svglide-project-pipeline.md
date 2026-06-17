@@ -147,16 +147,16 @@ Disallowed P0 behavior:
 - mutate authoring `pages/*.svg`
 - replace images or tokens outside the existing `slides +create-svg` transport path
 
-## PPT Master Asset Receipt
+## SVGlide Design Pattern Receipt
 
-`ppt-master` references are allowed only as structure, rhythm, chart geometry,
+SVGlide design pattern references are allowed only as structure, rhythm, chart geometry,
 style, and review inspiration. They are not runtime dependencies and raw SVG/PPTX
 assets must not be copied into SVGlide output.
 
 For quality lanes, `selected_assets` means "actually used by the generated
 pages", not "interesting candidates found during research". Candidate assets
 stay in research notes. Used assets must be proven by
-`receipts/ppt-master-asset-usage.json` with page-level trace entries that point
+`receipts/design-pattern-usage.json` with page-level trace entries that point
 to the SVG evidence. The quality gate must fail when `selected_assets` includes
 an asset that is not present in the usage receipt.
 
@@ -195,9 +195,12 @@ without `preview/preview.html`, but it must not proceed to guarded live creation
 or production/golden delivery until preview lint and quality gate have passed.
 
 `quality_gate` reads the latest preflight receipt, preview lint receipt, raster
-report, allowlist, asset selection, and component report evidence. During P0
-migration, authoring/debug dry-run may use an unexpired legacy component waiver.
-Production, golden, and live lanes must not use that waiver.
+report, allowlist, asset selection, visual design contract, and component report
+evidence. If a slide declares `visual_design_contract.required_visual_evidence`,
+the same page in `receipts/emitted_components.json` must prove those evidence
+tokens through component `effects`, `primitives`, `renderer_id`, or component id.
+During P0 migration, authoring/debug dry-run may use an unexpired legacy
+component waiver. Production, golden, and live lanes must not use that waiver.
 
 ## PPE Proof
 
@@ -265,5 +268,5 @@ asset, or protocol values.
 - Do not introduce a fourth structure catalog.
 - Do not modify Open Design for this rollout.
 - Do not rewrite Go CLI code in P0.
-- Do not copy `ppt-master` runtime or assets.
+- Do not copy external runtime or raw assets.
 - Do not treat local preview as a replacement for live readback.

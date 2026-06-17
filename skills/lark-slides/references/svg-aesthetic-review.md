@@ -86,10 +86,9 @@ Project runner 中的 `svg_preview_lint.py` 负责缺 preview、破损 SVG、明
 - 图表/流程/表格选择是否适合它要表达的关系？
 - 颜色和强调方式是否和整套 deck 保持一致？
 
-## PPT Master / AI Capital Archetype Review
+## SVGlide Archetype Review
 
-从 `ppt-master` 样张和本地 AI Capital 多轮 preview 得到的经验要落在渲染后审查，
-而不是只写进 prompt。
+从 SVGlide archetype 样张和本地多轮 preview 得到的经验要落在渲染后审查，而不是只写进 prompt。
 
 - 第一眼必须看出页型：cover、contents、section、bubble chart、donut chart、
   sankey/flow、hub-spoke、table、closing 等不能互相退化成同一种卡片页。

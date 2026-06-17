@@ -54,7 +54,7 @@ def script_path() -> Path:
 
 
 def default_asset_map_path() -> Path:
-    return script_path().parents[1] / "references/ppt-master-asset-map.json"
+    return script_path().parents[1] / "references/svglide-design-pattern-map.json"
 
 
 def load_asset_map(path: Path) -> dict:
@@ -272,7 +272,7 @@ def estimate_prompt_tokens(selected_assets: list[dict]) -> int:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Select a small SVGlide active asset context from ppt-master-asset-map.json.")
+    parser = argparse.ArgumentParser(description="Select a small SVGlide active asset context from svglide-design-pattern-map.json.")
     parser.add_argument("--asset-map", type=Path, default=default_asset_map_path())
     parser.add_argument("--brief", default="", help="User brief or deck topic.")
     parser.add_argument("--tags", default="", help="Comma-separated explicit selector tags.")

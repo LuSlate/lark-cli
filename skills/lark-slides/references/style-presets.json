@@ -114,7 +114,7 @@
       "style_id": "data_journalism_editorial",
       "display_name": "Data Journalism Editorial",
       "group": "Restrained",
-      "source_token": "ppt-master/global_ai_capital_2026",
+      "source_token": "svglide/editorial_ai_capital_2026",
       "formality": "high",
       "vibe": ["editorial", "data_journalism", "financial", "cinematic"],
       "best_for": ["hero_typography", "infographic_scorecard", "path_flow", "geometric_composition", "icon_capability_map"],

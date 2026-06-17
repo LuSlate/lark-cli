@@ -581,6 +581,24 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertNotIn("safe_area", codes)
         self.assertEqual(result["summary"]["error_count"], 0)
 
+    def test_lint_svg_does_not_warn_safe_area_for_page_chrome_rule_and_footer(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect id="top-rule" slide:role="shape" x="48" y="32" width="864" height="4" fill="#2563EB" />
+          <foreignObject id="footer" slide:role="shape" slide:shape-type="text" x="64" y="500" width="832" height="24">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:9px;color:#64748B;">Demo footer · 01</div>
+          </foreignObject>
+          <rect id="badge" slide:role="shape" x="12" y="20" width="80" height="40" fill="#2563EB" />
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        safe_area_ids = [issue.get("element_id") for issue in result.get("issues", []) if issue.get("code") == "safe_area"]
+
+        self.assertEqual(["badge"], safe_area_ids)
+
     def test_lint_svg_reports_text_bbox_overlap(self) -> None:
         svg = """
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -1044,10 +1062,44 @@ class SvgPreflightTest(unittest.TestCase):
             "geometric_composition",
             ["geometric_shape", "path"],
             chart_type="",
-            reference_asset={"source": "ppt-master", "asset_id": "chart.agenda_list"},
+            reference_asset={"source": "svglide_design_pattern", "asset_id": "chart.agenda_list"},
         )
         result = svg_preflight.lint_plan(plan)
         self.assertNotIn("plan_unknown_chart_type", issue_codes(result))
+
+    def test_lint_plan_warns_when_multi_page_deck_missing_page_rhythm(self) -> None:
+        plan = single_slide_plan()
+        second_slide = dict(plan["slides"][0])
+        second_slide["page"] = 2
+        second_slide["title"] = "Route 2"
+        plan["page_count"] = 2
+        plan["slides"] = [plan["slides"][0], second_slide]
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertIn("plan_missing_page_rhythm", issue_codes(result))
+        self.assertEqual(issue_levels(result, "plan_missing_page_rhythm"), ["warning"])
+
+    def test_lint_plan_golden_requires_strategist_contract_fields(self) -> None:
+        plan = single_slide_plan()
+        second_slide = dict(plan["slides"][0])
+        second_slide["page"] = 2
+        plan["page_count"] = 2
+        plan["slides"] = [plan["slides"][0], second_slide]
+        plan["validation_profile"] = {"profile": "golden"}
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertEqual(issue_levels(result, "plan_missing_page_rhythm"), ["error"])
+        self.assertIn("plan_missing_page_type", issue_codes(result))
+        self.assertIn("plan_missing_main_visual_anchor", issue_codes(result))
+
+    def test_lint_plan_reports_unstructured_reference_asset(self) -> None:
+        plan = single_slide_plan(reference_asset="use the chart reference")
+
+        result = svg_preflight.lint_plan(plan)
+
+        self.assertIn("plan_reference_asset_unstructured", issue_codes(result))
 
     def test_public_recipe_registry_is_runtime_catalog_source(self) -> None:
         registry = read_json(PUBLIC_RECIPE_REGISTRY_PATH)
@@ -1763,6 +1815,22 @@ class SvgPreflightTest(unittest.TestCase):
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
         self.assertIn("plan_chart_type_contract_not_met", plan_issue_codes(result))
 
+    def test_lint_files_reports_main_visual_anchor_not_met_by_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            plan = single_slide_plan(
+                main_visual_anchor={"x": 880, "y": 450, "width": 40, "height": 40},
+            )
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+
+        self.assertIn("plan_main_visual_anchor_not_met", plan_issue_codes(result))
+
     def test_lint_files_reports_svg_input_count_mismatch_with_plan_page_count(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
@@ -1814,13 +1882,13 @@ class SvgPreflightTest(unittest.TestCase):
                 "geometric_composition",
                 list(svg_preflight.VISUAL_RECIPE_CATALOG["geometric_composition"]["required_primitives"]),
                 chart_type="bubble_chart",
-                ppt_master_reference_assets=[{"asset_id": "chart.bubble_chart", "source": "ppt-master"}],
+                design_reference_assets=[{"asset_id": "chart.bubble_chart", "source": "svglide_design_pattern"}],
             )
             donut_plan = single_slide_plan(
                 "infographic_scorecard",
                 ["typography", "micro_chart"],
                 chart_type="donut_chart",
-                ppt_master_reference_assets=[{"asset_id": "chart.donut_chart", "source": "ppt-master"}],
+                design_reference_assets=[{"asset_id": "chart.donut_chart", "source": "svglide_design_pattern"}],
             )
             slide7 = bubble_plan["slides"][0]
             slide8 = donut_plan["slides"][0]
@@ -2092,7 +2160,7 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result["plan"]["issues"]]
         self.assertIn("plan_asset_contract_missing_metadata", codes)
         self.assertEqual(result["summary"]["error_count"], 0)
-        self.assertEqual(result["summary"]["warning_count"], 1)
+        self.assertEqual(codes.count("plan_asset_contract_missing_metadata"), 1)
 
     def test_lint_files_accepts_preview_image_asset_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

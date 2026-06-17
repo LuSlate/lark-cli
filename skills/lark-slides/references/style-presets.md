@@ -1,6 +1,6 @@
 # SVGlide Style Presets
 
-`style-presets.json` is the runtime source of truth for the 35 `beautiful-feishu-whiteboard` style presets plus the SVGlide `data_journalism_editorial` preset distilled from ppt-master. This Markdown file is only a human-readable guide.
+`style-presets.json` is the runtime source of truth for the 35 `beautiful-feishu-whiteboard` style presets plus the SVGlide `data_journalism_editorial` preset. This Markdown file is only a human-readable guide.
 
 ## Boundary
 
@@ -57,9 +57,9 @@ Use `visual_plan` as a nested container when useful. `svg_preflight.py` accepts 
 3. Keep the semantic plan stable. Switching from `raw_grid` to `reading_room` should change visual treatment, not invent new facts or rearrange the story.
 4. Pick page-level overrides only for cover, section divider, or poster-like moments. Most slides should inherit the deck-level `style_preset`.
 
-## PPT Master Editorial Preset
+## SVGlide Editorial Preset
 
-Use `data_journalism_editorial` when a deck needs the dark, data-journalism feel seen in ppt-master's `ppt169_global_ai_capital_2026` example. Translate the reference into SVGlide-safe parts: dark graphite ground, large editorial title hierarchy, thin chart rules, small source/footer text, restrained red numeric emphasis, and real chart geometry. Do not copy ppt-master SVG paths, images, or PPTX export assumptions.
+Use `data_journalism_editorial` when a deck needs a dark data-journalism feel. Translate the preset into SVGlide-safe parts: dark graphite ground, large editorial title hierarchy, thin chart rules, small source/footer text, restrained red numeric emphasis, and real chart geometry. Do not copy raw SVG paths, images, or PPTX export assumptions.
 
 ## SVGlide-Safe Translation
 

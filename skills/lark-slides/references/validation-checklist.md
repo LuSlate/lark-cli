@@ -65,7 +65,9 @@ python3 skills/lark-slides/scripts/svg_preflight.py \
 - public `visual_recipe` 必须存在于 `references/svg-recipes.json`；研究文档里的 dotted recipe 名称不能直接写入 `slide_plan.json`。
 - `style_selection_reason` 必须说明为什么这个 preset 适合当前 deck。
 - `style_system` 必须包含 palette、typography、background strategy 和 motif。
+- 多页 deck 必须声明 `page_rhythm` / `deck_rhythm`，用于检查节奏、密度变化和重复页风险；authoring profile 下缺失会给 warning，`validation_profile=golden` 或 strict profile 下为 error。
 - 每页必须包含 `seed_id`、`layout_skeleton_id`、`layout_boxes`、`content_budget` 或 `text_capacity`、`text_budget_by_role`、`one_idea` 或 `key_message`、`reserved_bands.footer`、`footer_safe_zone`、`vertical_text_policy`、`visual_recipe`、`visual_signature`、`svg_effects`、`required_primitives`、`svg_primitives`、`xml_like_risk`、`content_density_contract`、`risk_flags`、`source_policy`。
+- Strategist contract 字段必须可检查：每页声明 `page_type`、可定位到 layout box / SVG element / component / bbox 的 `main_visual_anchor`；`reference_asset` 不能只写描述性文字，必须是 `{source, asset_id/id}` 或带 source/license/path 的资产元数据。
 - declared `svg_effects` 和 `required_primitives` 必须能在对应 SVG source 中命中。
 - 可见 slide 文本不得泄漏 preset 名称、source token、prompt、tool name 或本地文件路径。
 
@@ -96,6 +98,11 @@ python3 skills/lark-slides/scripts/svg_preflight.py \
 | `plan_missing_visual_signature` | 页面没有声明 SVG 视觉记忆点 | 写清这页相对普通 PPT/XML 模板的独特视觉结构 |
 | `plan_missing_svg_effects` | 页面没有声明 SVG 表达能力 | 声明真实会绘制的 `path`、`connector_flow`、`gradient`、`texture`、`chart_geometry` 等 |
 | `plan_svg_effect_not_found` | plan 声明的 effect 没在 SVG source 中出现 | 修改 SVG source，或删除不真实的 effect 声明 |
+| `plan_missing_page_rhythm` | 多页 deck 没有声明节奏合同 | 添加 deck-level `page_rhythm`，说明封面/章节/内容/总结节奏和重复页约束 |
+| `plan_missing_page_type` | 页面缺少可检查页型 | 添加 `page_type`，并让 renderer/layout/visual_recipe 与页型一致 |
+| `plan_missing_main_visual_anchor` | 主视觉锚点缺失或只是自然语言 | 指向 layout box role、`#svg-element-id`、component_id，或写明确 bbox |
+| `plan_main_visual_anchor_not_met` | SVG source 没有在主视觉锚点区域生成可见几何 | 调整 source SVG，把主视觉放回声明的锚点区域，或先更新 plan anchor |
+| `plan_reference_asset_unstructured` | `reference_asset` 是纯文字或缺少 source/id/path | 改成结构化 source metadata；没有参考资产时显式写 no_asset |
 | `plan_style_preset_visible_leak` | 可见文本泄漏 preset 名/source token | 仅在 plan metadata 中保留 preset 信息，画面只写用户主题内容 |
 
 ## SVGlide Aesthetic Preview Review
@@ -116,14 +123,22 @@ SVGlide 项目必须同时检查计划、执行 manifest、SVG source 和 receip
   preflight 只检查已传入的子集。
 - `prepare` receipt 在 plan、manifest 或 source SVG 变化后必须失效；后续
   `preflight`、`preview_lint`、`quality_gate`、`dry_run` 不得复用旧 prepare。
-- 声明 `chart_type` 或 ppt-master chart 参考时，SVG 必须命中对应几何合同：
+- 声明 `chart_type` 或 SVGlide design pattern chart 参考时，SVG 必须命中对应几何合同：
   `bubble_chart` 至少有多枚圆形节点，`donut_chart` 至少有环形/圆形结构和中心
   文本，`bar_chart` 至少有可识别轴/条形/数值区域。不能把图表页退化成普通
   卡片、closing 或 bullet list。
-- `ppt_master_asset_selection.selected_assets` 只放真正启用并落地的参考资产；
+- `design_pattern_selection.selected_assets` 只放真正启用并落地的参考资产；
   `enabled:false` 可作为候选保留，但不进入 quality gate。启用资产必须由
-  `receipts/ppt-master-asset-usage.json` 的 page-level trace 证明。
-- `ppt-master` 参考只允许变成 SVGlide-safe 的页型、图表几何、节奏、色彩纪律
+  `receipts/design-pattern-usage.json` 的 page-level trace 证明。
+- `visual_design_contract.required_visual_evidence` 必须由
+  `receipts/emitted_components.json` 的 page-level component `effects`、
+  `primitives`、`renderer_id` 或 component id 证明。缺少 evidence 时
+  `quality_gate` 失败；这类问题不能只改 plan 字段，必须修 renderer 或 SVG。
+- `quality_gate` 会把 preflight 中的 Strategist contract issue codes 写入
+  `strategist_contract` 摘要，并把 visual design contract 证明写入
+  `visual_design_contract` 摘要；`validation_profile=golden` 要求零 warning、结构化
+  component report，以及正式 schema 的 design-pattern usage receipt。
+- SVGlide design pattern 参考只允许变成 SVGlide-safe 的页型、图表几何、节奏、色彩纪律
   和审查规则；不要复制 raw SVG、图片或 PPTX/DrawingML 导出实现。
 
 通过标准：

@@ -1025,8 +1025,8 @@ def validate_chart_markers(root: ET.Element) -> list[dict[str, Any]]:
 
 
 def bbox_for_element(element: ET.Element) -> dict[str, float] | None:
-    name = local_name(element.tag)
-    if name in {"rect", "foreignObject", "image"}:
+    name = local_name(element.tag).lower()
+    if name in {"rect", "foreignobject", "image"}:
         x = parse_required_number(element, "x")
         y = parse_required_number(element, "y")
         width = parse_required_number(element, "width")
@@ -1093,6 +1093,16 @@ def is_safe_area_exempt_backing(element: ET.Element, bbox: dict[str, float], can
         large_frame = bbox["width"] >= canvas_width * 0.85 and bbox["height"] >= canvas_height * 0.85
         near_canvas_edge = bbox["x"] <= SAFE_AREA["x"] and bbox["y"] <= SAFE_AREA["y"]
         return has_no_fill and has_stroke and large_frame and near_canvas_edge
+    return False
+
+
+def is_safe_area_exempt_page_chrome(element: ET.Element, bbox: dict[str, float], canvas_width: float, canvas_height: float) -> bool:
+    identifier = normalize_name(element_identifier_text(element))
+    name = local_name(element.tag).lower()
+    if re.search(r"(^|_)(top|bottom|page)_(rule|line)$", identifier):
+        return bbox["height"] <= 8 and bbox["width"] >= canvas_width * 0.5
+    if "footer" in identifier and name in {"foreignobject", "text"}:
+        return bbox["y"] >= SAFE_AREA["y"] + SAFE_AREA["height"] - 2 and bbox["x"] >= SAFE_AREA["x"] and bbox_right(bbox) <= SAFE_AREA["x"] + SAFE_AREA["width"]
     return False
 
 
@@ -1289,7 +1299,11 @@ def validate_geometry(elements: list[ET.Element], canvas_width: float, canvas_he
                     "Non-background elements must fit inside the slide canvas.",
                 )
             )
-        elif bbox_outside(bbox, SAFE_AREA) and not is_safe_area_exempt_backing(element, bbox, canvas_width, canvas_height):
+        elif (
+            bbox_outside(bbox, SAFE_AREA)
+            and not is_safe_area_exempt_backing(element, bbox, canvas_width, canvas_height)
+            and not is_safe_area_exempt_page_chrome(element, bbox, canvas_width, canvas_height)
+        ):
             issues.append(
                 issue(
                     "warning",
@@ -1938,6 +1952,7 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
     semi_transparent_rects: list[dict[str, float]] = []
     primitive_areas: dict[str, float] = {}
     hidden_counts: dict[str, int] = {}
+    element_bboxes: list[dict[str, Any]] = []
 
     for element in elements:
         name = local_name(element.tag)
@@ -1952,6 +1967,15 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
                 for primitive in ["path"] if name == "path" else []:
                     hidden_counts[primitive] = hidden_counts.get(primitive, 0) + 1
             continue
+        if not is_background_bbox(bbox, canvas_width, canvas_height):
+            element_bboxes.append(
+                {
+                    "tag": name,
+                    "role": svg_role(element) or "",
+                    "element_id": get_attr(element, "id") or "",
+                    "bbox": {key: round(value, 2) for key, value in bbox.items()},
+                }
+            )
         area = bbox["width"] * bbox["height"]
         signal_area = primitive_signal_area(element, bbox)
         hidden = element_is_hidden(element)
@@ -2102,6 +2126,7 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         "counts": counts,
         "primitive_areas": {key: round(value, 2) for key, value in sorted(primitive_areas.items())},
         "hidden_counts": dict(sorted(hidden_counts.items())),
+        "bboxes": element_bboxes,
         "gradient_count": gradients,
         "gradient_ref_count": gradient_refs,
         "filter_count": filters + filter_refs,
@@ -2397,10 +2422,23 @@ def validation_profile(plan: dict[str, Any]) -> dict[str, Any]:
     return profile if isinstance(profile, dict) else {}
 
 
+def validation_profile_name(plan: dict[str, Any]) -> str:
+    profile = plan.get("validation_profile")
+    if isinstance(profile, str):
+        raw = normalize_name(profile)
+    elif isinstance(profile, dict):
+        raw = normalize_name(profile.get("profile") or profile.get("name") or profile.get("mode"))
+    else:
+        raw = ""
+    if raw in {"gold", "golden_regression"}:
+        return "golden"
+    return raw
+
+
 def seed_gate_level(plan: dict[str, Any]) -> str:
     profile = validation_profile(plan)
     drift_policy = normalize_name(profile.get("drift_policy") or profile.get("seed_policy") or profile.get("mode"))
-    if profile.get("strict") is True or drift_policy in {"error", "errors", "strict", "fail", "fail_closed"}:
+    if profile.get("strict") is True or validation_profile_name(plan) == "golden" or drift_policy in {"error", "errors", "strict", "fail", "fail_closed"}:
         return "error"
     return "warning"
 
@@ -3005,12 +3043,12 @@ def slide_chart_type(slide: dict[str, Any]) -> str:
     for key in ["chart_type", "chartType", "primary_chart_type", "primaryChartType"]:
         if key in slide:
             return normalize_name(slide.get(key))
-    reference = slide.get("reference_asset") or slide.get("ppt_master_reference_asset")
+    reference = slide.get("reference_asset") or slide.get("design_reference_asset")
     if isinstance(reference, dict):
         asset_id = textify(reference.get("asset_id") or reference.get("id")).strip()
         if asset_id.startswith("chart."):
             return normalize_name(asset_id.split(".", 1)[1])
-    references = slide.get("ppt_master_reference_assets")
+    references = slide.get("design_reference_assets")
     if isinstance(references, list):
         for item in references:
             if not isinstance(item, dict):
@@ -3019,6 +3057,146 @@ def slide_chart_type(slide: dict[str, Any]) -> str:
             if asset_id.startswith("chart."):
                 return normalize_name(asset_id.split(".", 1)[1])
     return ""
+
+
+def strategist_contract_level(plan: dict[str, Any]) -> str:
+    return "error" if seed_gate_level(plan) == "error" or validation_profile_name(plan) == "golden" else "warning"
+
+
+def page_rhythm_contract(plan: dict[str, Any]) -> Any:
+    for key in ["page_rhythm", "deck_rhythm", "rhythm_plan", "narrative_rhythm"]:
+        value = plan.get(key)
+        if value is not None and textify(value).strip():
+            return value
+    return None
+
+
+def slide_page_type(slide: dict[str, Any]) -> str:
+    for key in ["page_type", "slide_type", "archetype", "layout_type"]:
+        value = normalize_name(slide.get(key))
+        if value:
+            return value
+    return ""
+
+
+def slide_main_visual_anchor(slide: dict[str, Any]) -> Any:
+    for key in ["main_visual_anchor", "visual_anchor", "visual_focal_anchor", "primary_visual_anchor"]:
+        if key in slide:
+            return slide.get(key)
+    return None
+
+
+def slide_reference_assets(slide: dict[str, Any]) -> list[Any]:
+    out: list[Any] = []
+    for key in ["reference_asset", "design_reference_asset"]:
+        if key in slide:
+            out.append(slide.get(key))
+    references = slide.get("reference_assets")
+    if isinstance(references, list):
+        out.extend(references)
+    references = slide.get("design_reference_assets")
+    if isinstance(references, list):
+        out.extend(references)
+    return out
+
+
+def reference_asset_is_structured(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return bool(NO_ASSET_RE.search(value))
+    if isinstance(value, list):
+        return all(reference_asset_is_structured(item) for item in value)
+    if not isinstance(value, dict):
+        return False
+    if value.get("enabled") is False:
+        return True
+    identity = textify(
+        value.get("asset_id")
+        or value.get("id")
+        or value.get("source_id")
+        or value.get("local_path")
+        or value.get("local_path_or_href")
+        or value.get("href")
+        or value.get("path")
+    ).strip()
+    source = textify(value.get("source") or value.get("source_type") or value.get("kind")).strip()
+    return bool(identity and source)
+
+
+def anchor_matches_layout_box(anchor: str, layout_boxes: list[dict[str, Any]]) -> bool:
+    normalized_anchor = normalize_name(anchor.removeprefix("#"))
+    if not normalized_anchor:
+        return False
+    for box in layout_boxes:
+        if not isinstance(box, dict):
+            continue
+        candidates = [
+            box.get("role"),
+            box.get("id"),
+            box.get("name"),
+            box.get("layout_box_role"),
+        ]
+        if normalized_anchor in {normalize_name(candidate) for candidate in candidates if textify(candidate).strip()}:
+            return True
+    return anchor.strip().startswith("#")
+
+
+def anchor_contract_is_checkable(anchor: Any, layout_boxes: list[dict[str, Any]]) -> bool:
+    if isinstance(anchor, dict):
+        if layout_box_has_positive_bbox(anchor):
+            return True
+        for key in ["layout_box_role", "role", "element_id", "svg_element_id", "component_id"]:
+            if textify(anchor.get(key)).strip():
+                return True
+        return False
+    if isinstance(anchor, str):
+        return anchor_matches_layout_box(anchor, layout_boxes)
+    return False
+
+
+def anchor_bbox(anchor: Any, layout_boxes: list[dict[str, Any]]) -> dict[str, float] | None:
+    if isinstance(anchor, dict) and layout_box_has_positive_bbox(anchor):
+        return bbox_from_mapping(anchor)
+    role = ""
+    if isinstance(anchor, dict):
+        role = textify(anchor.get("layout_box_role") or anchor.get("role")).strip()
+    elif isinstance(anchor, str):
+        role = anchor.removeprefix("#").strip()
+    normalized_role = normalize_name(role)
+    if not normalized_role:
+        return None
+    for box in layout_boxes:
+        if not isinstance(box, dict):
+            continue
+        candidates = [box.get("role"), box.get("id"), box.get("name"), box.get("layout_box_role")]
+        if normalized_role in {normalize_name(candidate) for candidate in candidates if textify(candidate).strip()} and layout_box_has_positive_bbox(box):
+            return bbox_from_mapping(box)
+    return None
+
+
+def source_has_geometry_in_bbox(file: dict[str, Any], bbox: dict[str, float]) -> bool:
+    visual = file.get("visual_primitives", {})
+    boxes = visual.get("bboxes") if isinstance(visual, dict) else None
+    if not isinstance(boxes, list):
+        return False
+    for item in boxes:
+        if not isinstance(item, dict):
+            continue
+        item_bbox = item.get("bbox")
+        if not isinstance(item_bbox, dict):
+            continue
+        try:
+            candidate = {key: float(item_bbox[key]) for key in ["x", "y", "width", "height"]}
+        except (KeyError, TypeError, ValueError):
+            continue
+        if candidate["width"] <= 0 or candidate["height"] <= 0:
+            continue
+        if is_background_bbox(candidate, CANVAS_WIDTH, CANVAS_HEIGHT):
+            continue
+        if overlap_area(candidate, bbox) >= min(candidate["width"] * candidate["height"], bbox["width"] * bbox["height"]) * 0.2:
+            return True
+    return False
 
 
 def required_plan_primitives(slide: dict[str, Any]) -> set[str]:
@@ -3165,6 +3343,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
     is_create_svg_route = context.get("route_id") == CREATE_SVG_ROUTE_ID
     is_svg_plan = plan.get("output_mode") == "svglide-svg" or is_create_svg_route
     seed_level = seed_gate_level(plan)
+    strategist_level = strategist_contract_level(plan)
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
     if is_svg_plan:
@@ -3238,6 +3417,16 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
                             f"SVGlide style_system must include {field}",
                         )
                     )
+        if len(slides) > 1 and page_rhythm_contract(plan) is None:
+            issues.append(
+                plan_issue(
+                    strategist_level,
+                    "plan_missing_page_rhythm",
+                    "multi-page SVGlide plans must declare page_rhythm so deck pacing can be checked",
+                    None,
+                    "Add page_rhythm/deck_rhythm with per-section rhythm, density changes, and repeated-page guardrails.",
+                )
+            )
 
     renderer_ids: list[str] = []
     layout_families: list[str] = []
@@ -3255,6 +3444,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
             continue
 
         visual_plan = slide_visual_plan(slide)
+        layout_boxes = slide_layout_boxes(visual_plan)
 
         renderer_id = slide_renderer_id(visual_plan)
         renderer_ids.append(renderer_id)
@@ -3280,14 +3470,47 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
                         "SVGlide plan slides must include layout_family so deck-level layout diversity is enforceable",
                         slide,
                         "Use layout families such as hero, agenda_matrix, dashboard, table, timeline, flow, risk_grid, swimlane, or closing.",
+                        )
                     )
-                )
 
             raw_visual_recipe = normalize_name(visual_plan.get("visual_recipe"))
             visual_recipe = raw_visual_recipe
             route_private_requested = raw_visual_recipe == ROUTE_PRIVATE_VISUAL_RECIPE
             seed_id = slide_seed_id(visual_plan)
             seed_data = None
+            page_type = slide_page_type(visual_plan)
+            if not page_type:
+                issues.append(
+                    plan_issue(
+                        strategist_level,
+                        "plan_missing_page_type",
+                        "SVGlide plan slides must declare page_type so Strategist intent is checkable",
+                        slide,
+                        "Use page_type values such as cover, section, process, comparison, data_story, image_story, dashboard, chart, or closing.",
+                    )
+                )
+            anchor = slide_main_visual_anchor(visual_plan)
+            if not anchor_contract_is_checkable(anchor, layout_boxes):
+                issues.append(
+                    plan_issue(
+                        strategist_level,
+                        "plan_missing_main_visual_anchor",
+                        "SVGlide plan slides must declare a checkable main_visual_anchor",
+                        slide,
+                        "Point main_visual_anchor at a layout box role, #svg-element-id, component_id, or explicit x/y/width/height bbox.",
+                    )
+                )
+            for reference in slide_reference_assets(visual_plan):
+                if not reference_asset_is_structured(reference):
+                    issues.append(
+                        plan_issue(
+                            strategist_level,
+                            "plan_reference_asset_unstructured",
+                            "reference_asset must be structured source metadata, not prose",
+                            slide,
+                            "Use {source, asset_id/id} for design references or source/license/path metadata for concrete assets.",
+                        )
+                    )
             if not seed_id:
                 issues.append(
                     plan_issue(
@@ -3332,7 +3555,6 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
                             "Seed and visual_recipe must describe the same structure; choose a different seed or update the recipe.",
                         )
                     )
-            layout_boxes = slide_layout_boxes(visual_plan)
             if not layout_boxes:
                 issues.append(
                     plan_issue(
@@ -4103,6 +4325,7 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
     chart_type_contracts = context.get("chart_type_contracts", CHART_TYPE_CONTRACTS)
     for slide_index, slide, file in alignments:
         visual_plan = slide_visual_plan(slide)
+        layout_boxes = slide_layout_boxes(visual_plan)
         recipe = resolved_visual_recipe_for_slide(visual_plan, slide_index, context)
         seed_id = slide_seed_id(visual_plan)
         seed_data = seed_catalog.get(seed_id) if seed_id in seed_catalog else None
@@ -4209,7 +4432,19 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
                     "plan_chart_type_contract_not_met",
                     f'chart_type "{chart_type}" geometry contract is not met: {", ".join(chart_failures)}',
                     slide,
-                    f"SVG file {file.get('path')} does not expose enough chart geometry for the declared ppt-master-style page type.",
+                    f"SVG file {file.get('path')} does not expose enough chart geometry for the declared design-pattern page type.",
+                )
+            )
+        anchor = slide_main_visual_anchor(visual_plan)
+        visual_anchor_bbox = anchor_bbox(anchor, layout_boxes)
+        if visual_anchor_bbox is not None and not source_has_geometry_in_bbox(file, visual_anchor_bbox):
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_main_visual_anchor_not_met",
+                    "main_visual_anchor does not overlap visible SVG source geometry",
+                    slide,
+                    f"SVG file {file.get('path')} must place the declared main visual inside the anchored layout box or bbox.",
                 )
             )
         if "image" in source_primitives:

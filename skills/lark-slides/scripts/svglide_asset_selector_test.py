@@ -25,7 +25,7 @@ def resource(
 ) -> dict:
     return {
         "id": resource_id,
-        "source_path": f"ppt-master/{resource_id}.svg",
+        "source_path": f"svglide-design-patterns/{resource_id}.svg",
         "kind": kind,
         "summary": summary,
         "selection_tags": tags or ["business", "strategy", "roadmap", "chart"],
@@ -40,13 +40,34 @@ def resource(
 
 def asset_map(resources: list[dict]) -> dict:
     return {
-        "schema_version": "svglide-ppt-master-asset-map/v1",
+        "schema_version": "svglide-design-pattern-map/v1",
         "summary": {"digests": {"all_source_files": "fixture"}},
         "resources": resources,
     }
 
 
 class SVGlideAssetSelectorTest(unittest.TestCase):
+    def test_skill_sources_do_not_reference_external_reference_project_names(self) -> None:
+        skill_root = SCRIPT_DIR.parent
+        banned_tokens = [
+            "ppt" + "-master",
+            "ppt" + "_master",
+            "ppt" + " master",
+            "hugo" + "he3",
+            "ppt" + "169",
+            "global" + "_ai" + "_capital",
+        ]
+        hits: list[str] = []
+        for path in skill_root.rglob("*"):
+            if path.suffix not in {".py", ".md", ".json"} or not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8").lower()
+            for token in banned_tokens:
+                if token in text:
+                    hits.append(f"{path.relative_to(skill_root)} contains {token}")
+
+        self.assertEqual([], hits)
+
     def test_reference_only_is_excluded_from_production(self) -> None:
         data = asset_map(
             [

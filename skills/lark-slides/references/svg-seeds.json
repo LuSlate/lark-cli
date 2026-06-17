@@ -383,7 +383,7 @@
         "body": 180,
         "footer": 34,
         "max_text_boxes": 8,
-        "min_text_boxes": 4
+        "min_text_boxes": 3
       },
       "default_text_capacity": {
         "max_visible_chars": 260,
@@ -391,7 +391,7 @@
         "body": 180,
         "footer": 34,
         "max_text_boxes": 8,
-        "min_text_boxes": 4
+        "min_text_boxes": 3
       },
       "reserved_bands": {
         "footer": {
@@ -677,7 +677,7 @@
         },
         {
           "id": "left-panel",
-          "role": "body",
+          "role": "visual",
           "x": 72,
           "y": 136,
           "width": 384,
@@ -685,7 +685,7 @@
         },
         {
           "id": "right-panel",
-          "role": "body",
+          "role": "visual",
           "x": 504,
           "y": 136,
           "width": 384,
@@ -739,7 +739,6 @@
       ],
       "required_layout_box_roles": [
         "title",
-        "body",
         "table",
         "footer"
       ],
@@ -752,13 +751,11 @@
         "id": "comparison_two_column_decision_skeleton",
         "reading_order": [
           "title",
-          "body",
           "table",
           "footer"
         ],
         "locked_roles": [
           "title",
-          "body",
           "table",
           "footer"
         ],
@@ -799,6 +796,18 @@
           "max_lines": 6,
           "max_boxes": 2,
           "min_font_px": 12
+        },
+        "table": {
+          "max_chars": 180,
+          "max_lines": 2,
+          "max_boxes": 9,
+          "min_font_px": 11
+        },
+        "visual": {
+          "max_chars": 180,
+          "max_lines": 2,
+          "max_boxes": 9,
+          "min_font_px": 11
         },
         "footer": {
           "max_chars": 36,
@@ -1128,10 +1137,16 @@
           "min_font_px": 12
         },
         "metric": {
-          "max_chars": 80,
+          "max_chars": 110,
           "max_lines": 3,
-          "max_boxes": 1,
-          "min_font_px": 12
+          "max_boxes": 7,
+          "min_font_px": 9
+        },
+        "chart": {
+          "max_chars": 40,
+          "max_lines": 1,
+          "max_boxes": 4,
+          "min_font_px": 8
         },
         "footer": {
           "max_chars": 34,
@@ -1358,6 +1373,14 @@
           "height": 128
         },
         {
+          "id": "secondary-metric-grid",
+          "role": "metric",
+          "x": 348,
+          "y": 106,
+          "width": 548,
+          "height": 128
+        },
+        {
           "id": "chart-row",
           "role": "chart",
           "x": 64,
@@ -1481,10 +1504,16 @@
           "min_font_px": 12
         },
         "metric": {
-          "max_chars": 80,
+          "max_chars": 110,
           "max_lines": 3,
-          "max_boxes": 1,
-          "min_font_px": 12
+          "max_boxes": 7,
+          "min_font_px": 9
+        },
+        "chart": {
+          "max_chars": 40,
+          "max_lines": 1,
+          "max_boxes": 4,
+          "min_font_px": 8
         },
         "footer": {
           "max_chars": 36,

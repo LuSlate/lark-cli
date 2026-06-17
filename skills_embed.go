@@ -24,9 +24,12 @@ import (
 //go:embed skills/lark-slides/scripts/svg_safe_rewrite.py
 //go:embed skills/lark-slides/scripts/svg_raster_renderer.py
 //go:embed skills/lark-slides/scripts/svglide_project_runner.py
+//go:embed skills/lark-slides/scripts/svg_preflight.py
 //go:embed skills/lark-slides/scripts/svg_preview_lint.py
-//go:embed skills/lark-slides/scripts/ppt_master_asset_inventory.py
 //go:embed skills/lark-slides/scripts/svglide_asset_selector.py
+//go:embed skills/lark-slides/scripts/svglide_strategist.py
+//go:embed skills/lark-slides/scripts/svglide_gen_runtime.py
+//go:embed skills/lark-slides/scripts/svglide_golden_suite.py
 var skillsEmbedFS embed.FS
 
 // init wires the embedded tree in as the default skill content. It compiles into

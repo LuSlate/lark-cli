@@ -38,9 +38,9 @@ choose style_preset
 
 	每页 plan 必须有 `seed_id`、`layout_skeleton_id`、`layout_boxes`、`content_budget` 或 `text_capacity`、`text_budget_by_role`、`one_idea` 或 `key_message`、`reserved_bands.footer`、`footer_safe_zone`、`vertical_text_policy`。如果内容放不进 seed，不要从空白画布重画；先删内容、拆页，或换一个更合适的 seed。
 
-## PPT Master Lessons
+## SVGlide Design Pattern Lessons
 
-`ppt-master` 好看的关键是页型先行和节奏先行。SVGlide 只能借鉴流程与结构合同，不复制 PPTX 导出、DrawingML 限制或 raw SVG path。
+SVGlide 内置设计模式的关键是页型先行和节奏先行。生成时只能借鉴流程与结构合同，不复制 PPTX 导出、DrawingML 限制或 raw SVG path。
 
 每页先锁定：
 
@@ -51,7 +51,7 @@ choose style_preset
   "chart_type": "bar_chart | sankey_chart | hub_spoke | ...",
   "main_visual_anchor": "the visible chart/scene/motif that makes this page memorable",
   "annotation_zone": {"role": "right_observation", "x": 690, "y": 126, "width": 206, "height": 246},
-  "reference_asset": {"source": "ppt-master", "asset_id": "chart.bar_chart", "usage": "geometry pattern only"}
+  "reference_asset": {"source": "svglide_design_pattern", "asset_id": "chart.bar_chart", "usage": "geometry pattern only"}
 }
 ```
 
