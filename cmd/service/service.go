@@ -566,6 +566,7 @@ func buildServiceRequest(opts *ServiceMethodOptions) (client.RawApiRequest, *cmd
 	for name, value := range params {
 		queryParams[name] = value
 	}
+	normalizeServiceQueryParams(opts.SchemaPath, queryParams)
 
 	request := client.RawApiRequest{
 		Method: httpMethod,
@@ -621,6 +622,15 @@ func buildServiceRequest(opts *ServiceMethodOptions) (client.RawApiRequest, *cmd
 	}
 
 	return request, nil, nil
+}
+
+func normalizeServiceQueryParams(schemaPath string, queryParams map[string]interface{}) {
+	if schemaPath != "slides.xml_presentation.slide.get" {
+		return
+	}
+	if slideID, ok := queryParams["slide_id"]; ok && !unusableParamValue(slideID) {
+		delete(queryParams, "slide_number")
+	}
 }
 
 func serviceDryRun(f *cmdutil.Factory, request client.RawApiRequest, config *core.CliConfig, format string) error {

@@ -347,6 +347,89 @@ func boolIntQueryMethod(required bool) meta.Method {
 	})
 }
 
+func slidesSpec() meta.Service {
+	return meta.ServiceFromMap(map[string]interface{}{
+		"name":        "slides",
+		"servicePath": "/open-apis/slides_ai/v1",
+	})
+}
+
+func slidesXMLPresentationSlideGetMethod() meta.Method {
+	return meta.FromMap(map[string]interface{}{
+		"path":       "xml_presentations/{xml_presentation_id}/slide",
+		"httpMethod": "GET",
+		"parameters": map[string]interface{}{
+			"xml_presentation_id": map[string]interface{}{"type": "string", "location": "path", "required": true},
+			"slide_id":            map[string]interface{}{"type": "string", "location": "query"},
+			"slide_number":        map[string]interface{}{"type": "integer", "location": "query"},
+		},
+	})
+}
+
+func slidesXMLPresentationsGetMethod() meta.Method {
+	return meta.FromMap(map[string]interface{}{
+		"path":       "xml_presentations/{xml_presentation_id}",
+		"httpMethod": "GET",
+		"parameters": map[string]interface{}{
+			"xml_presentation_id": map[string]interface{}{"type": "string", "location": "path", "required": true},
+			"revision_id":         map[string]interface{}{"type": "integer", "location": "query"},
+			"remove_attr_id":      map[string]interface{}{"type": "boolean", "location": "query"},
+		},
+	})
+}
+
+func TestSlidesXMLPresentationsGet_RemoveAttrID(t *testing.T) {
+	f, stdout, _, _ := cmdutil.TestFactory(t, testConfig)
+	cmd := NewCmdServiceMethod(f, slidesSpec(), slidesXMLPresentationsGetMethod(), "get", "xml_presentations", nil)
+	cmd.SetArgs([]string{"--xml-presentation-id", "pid_123", "--remove-attr-id", "--dry-run"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	out := stdout.String()
+	for _, want := range []string{"/open-apis/slides_ai/v1/xml_presentations/pid_123", `"remove_attr_id": true`} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected dry-run output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestSlidesXMLPresentationSlideGet_BySlideNumber(t *testing.T) {
+	f, stdout, _, _ := cmdutil.TestFactory(t, testConfig)
+	cmd := NewCmdServiceMethod(f, slidesSpec(), slidesXMLPresentationSlideGetMethod(), "get", "xml_presentation.slide", nil)
+	cmd.SetArgs([]string{"--xml-presentation-id", "pid_123", "--slide-number", "2", "--dry-run"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	out := stdout.String()
+	for _, want := range []string{"/open-apis/slides_ai/v1/xml_presentations/pid_123/slide", `"slide_number": 2`} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected dry-run output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "slide_id") {
+		t.Errorf("slide_number-only request should not include slide_id, got:\n%s", out)
+	}
+}
+
+func TestSlidesXMLPresentationSlideGet_SlideIDWinsOverSlideNumber(t *testing.T) {
+	f, stdout, _, _ := cmdutil.TestFactory(t, testConfig)
+	cmd := NewCmdServiceMethod(f, slidesSpec(), slidesXMLPresentationSlideGetMethod(), "get", "xml_presentation.slide", nil)
+	cmd.SetArgs([]string{"--xml-presentation-id", "pid_123", "--slide-id", "sld_123", "--slide-number", "2", "--dry-run"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	out := stdout.String()
+	if !strings.Contains(out, `"slide_id": "sld_123"`) {
+		t.Errorf("expected slide_id in dry-run output, got:\n%s", out)
+	}
+	if strings.Contains(out, "slide_number") {
+		t.Errorf("slide_id should take precedence over slide_number, got:\n%s", out)
+	}
+}
+
 // Presence is intent: a typed flag is only overlaid when explicitly Changed,
 // so --flag=false / --flag 0 are real values and must be sent — not silently
 // dropped as "empty", which would let the API default win over an explicit

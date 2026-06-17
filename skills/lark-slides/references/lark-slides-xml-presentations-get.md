@@ -21,7 +21,8 @@ lark-cli slides xml_presentations get --as user --params '<json_params>'
 ```json
 {
   "xml_presentation_id": "slides_example_presentation_id",
-  "revision_id": -1
+  "revision_id": -1,
+  "remove_attr_id": false
 }
 ```
 
@@ -29,6 +30,7 @@ lark-cli slides xml_presentations get --as user --params '<json_params>'
 |------|------|------|------|
 | `xml_presentation_id` | string | 是 | 演示文稿的唯一标识符 |
 | `revision_id` | integer | 否 | 版本号，`-1` 表示最新版本 |
+| `remove_attr_id` | boolean | 否 | 是否移除返回 XML 中的 `id` 属性；默认 `false` |
 
 ## 使用示例
 
@@ -42,6 +44,15 @@ lark-cli slides xml_presentations get --as user --params '{"xml_presentation_id"
 
 ```bash
 lark-cli slides xml_presentations get --as user --params '{"xml_presentation_id":"slides_example_presentation_id"}' | jq -r '.data.xml_presentation.content'
+```
+
+### 移除 XML id 属性读取
+
+```bash
+lark-cli slides xml_presentations get --as user --params '{
+  "xml_presentation_id": "slides_example_presentation_id",
+  "remove_attr_id": true
+}'
 ```
 
 ### 保存到文件
@@ -88,8 +99,9 @@ lark-cli slides xml_presentations get --as user --params '{"xml_presentation_id"
 
 1. **执行前必做**: 使用 `lark-cli schema slides.xml_presentations.get` 查看最新的参数结构
 2. 返回的 XML 在 `data.xml_presentation.content` 字段中
-3. 如果只需要部分信息，可以使用 `jq` 等工具过滤返回结果
-4. 建议将获取的 XML 保存为文件，便于后续编辑或备份
+3. `remove_attr_id=true` 会移除返回 XML 中的元素 `id` 属性，适合在重复 id 导致全文读取失败时兜底；但返回内容无法直接用于依赖 `block_id` 的精确替换、插入、评论定位等操作
+4. 如果只需要部分信息，可以使用 `jq` 等工具过滤返回结果
+5. 建议将获取的 XML 保存为文件，便于后续编辑或备份
 
 ## 相关命令
 
