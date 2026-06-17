@@ -52,11 +52,17 @@ describe("getExpectedChecksum", () => {
     );
   });
 
-  it("returns null when checksums.txt does not exist", () => {
+  it("throws [SECURITY] when checksums.txt does not exist (fail-closed)", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "checksum-test-"));
     // No checksums.txt in dir
-    const result = getExpectedChecksum("anything.tar.gz", dir);
-    assert.equal(result, null);
+    assert.throws(
+      () => getExpectedChecksum("anything.tar.gz", dir),
+      (err) => {
+        assert.match(err.message, /^\[SECURITY\]/);
+        assert.match(err.message, /checksums\.txt not found/);
+        return true;
+      }
+    );
   });
 
   it("skips malformed lines and still finds valid entry", () => {

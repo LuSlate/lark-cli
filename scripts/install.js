@@ -265,10 +265,9 @@ function getExpectedChecksum(archiveName, checksumsDir) {
   const checksumsPath = path.join(dir, "checksums.txt");
 
   if (!fs.existsSync(checksumsPath)) {
-    console.error(
-      "[WARN] checksums.txt not found, skipping checksum verification"
+    throw new Error(
+      "[SECURITY] checksums.txt not found; refusing to install an unverified binary."
     );
-    return null;
   }
 
   const content = fs.readFileSync(checksumsPath, "utf8");
