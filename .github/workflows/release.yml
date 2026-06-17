@@ -9,8 +9,11 @@ permissions:
   contents: read
 
 jobs:
+  # The whole release runs on macOS so the darwin keychain_signer can build
+  # natively with cgo; linux/windows stay CGO-free and cross-compile from the
+  # same host, keeping every platform in one goreleaser run (one checksums.txt).
   goreleaser:
-    runs-on: ubuntu-22.04
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
