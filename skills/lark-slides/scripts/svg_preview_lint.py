@@ -23,6 +23,13 @@ SCHEMA_VERSION = "svglide-preview-lint/v1"
 DEFAULT_CANVAS_WIDTH = 960.0
 DEFAULT_CANVAS_HEIGHT = 540.0
 MIN_BODY_ELEMENTS = 2
+MIN_VARIETY_PAGE_COUNT = 4
+DEFAULT_VALIDATION_PROFILE = "authoring"
+VISUAL_SCORE_THRESHOLDS = {
+    "authoring": 75,
+    "production": 85,
+    "golden": 90,
+}
 
 SVG_BLOCK_RE = re.compile(r"<svg\b[\s\S]*?</svg>", re.IGNORECASE)
 NUMBER_RE = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
@@ -86,6 +93,7 @@ class Transform:
 
 @dataclass(frozen=True)
 class RenderElement:
+    element_id: str
     tag: str
     box: Box
     page: int
@@ -300,6 +308,49 @@ def read_json(path: Path) -> tuple[dict[str, Any] | None, str]:
     if not isinstance(data, dict):
         return None, "plan root must be a JSON object"
     return data, ""
+
+
+def text_from_any(value: Any) -> str:
+    return str(value).strip() if value is not None else ""
+
+
+def normalize_validation_profile(value: Any) -> str:
+    raw = ""
+    if isinstance(value, dict):
+        for key in ("profile", "lane", "level", "mode"):
+            raw = text_from_any(value.get(key)).lower()
+            if raw:
+                break
+    else:
+        raw = text_from_any(value).lower()
+    raw = raw.replace("-", "_")
+    if raw in {"prod", "production_asset_strict"}:
+        return "production"
+    if raw in {"gold", "golden_regression"}:
+        return "golden"
+    if raw in VISUAL_SCORE_THRESHOLDS:
+        return raw
+    return DEFAULT_VALIDATION_PROFILE
+
+
+def validation_profile_from_plan(plan: Path) -> str:
+    data, _ = read_json(plan)
+    if not isinstance(data, dict):
+        return DEFAULT_VALIDATION_PROFILE
+    return normalize_validation_profile(data.get("validation_profile"))
+
+
+def resolve_validation_profile(plan: Path, override: str = "") -> str:
+    explicit = normalize_validation_profile(override) if override else ""
+    return explicit or validation_profile_from_plan(plan)
+
+
+def visual_score_threshold(profile: str) -> int:
+    return VISUAL_SCORE_THRESHOLDS.get(normalize_validation_profile(profile), VISUAL_SCORE_THRESHOLDS[DEFAULT_VALIDATION_PROFILE])
+
+
+def visual_score_enforced(profile: str) -> bool:
+    return normalize_validation_profile(profile) in {"production", "golden"}
 
 
 def extract_plan_svg_refs(data: dict[str, Any]) -> list[tuple[int, str]]:
@@ -706,6 +757,7 @@ def collect_render_elements(source: SvgSource) -> list[RenderElement]:
                 text = text_from_element(element) if tag in {"text", "foreignobject"} else ""
                 elements.append(
                     RenderElement(
+                        element_id=attr_value(element, "id"),
                         tag=tag,
                         box=box,
                         page=source.page,
@@ -725,6 +777,39 @@ def collect_render_elements(source: SvgSource) -> list[RenderElement]:
 
     walk(source.root, {}, Transform())
     return elements
+
+
+def quantize(value: float, total: float, buckets: int = 8) -> int:
+    if total <= 0:
+        return 0
+    return max(0, min(buckets - 1, int((value / total) * buckets)))
+
+
+def color_tone(value: str) -> str:
+    parsed = parse_color(value)
+    if parsed is None:
+        return "none"
+    if luminance(parsed) <= 0.28:
+        return "dark"
+    if luminance(parsed) >= 0.78:
+        return "light"
+    return "mid"
+
+
+def visual_fingerprint(source: SvgSource) -> str:
+    canvas_width, canvas_height = canvas_size(source.root)
+    elements = [element for element in collect_render_elements(source) if not element.background and element.box.area > 16]
+    tokens: list[str] = []
+    for element in elements:
+        center_x = element.box.x + element.box.width / 2
+        center_y = element.box.y + element.box.height / 2
+        width_bucket = quantize(element.box.width, canvas_width, 6)
+        height_bucket = quantize(element.box.height, canvas_height, 6)
+        x_bucket = quantize(center_x, canvas_width)
+        y_bucket = quantize(center_y, canvas_height)
+        tone = color_tone(element.fill or element.color)
+        tokens.append(f"{element.tag}:{x_bucket}:{y_bucket}:{width_bucket}:{height_bucket}:{tone}")
+    return "|".join(sorted(tokens))
 
 
 def intersection(a: Box, b: Box) -> Box:
@@ -748,6 +833,22 @@ def box_covers(backing: Box, target: Box, threshold: float = 0.78) -> bool:
     return intersection(backing, target).area / target.area >= threshold
 
 
+def is_label_backing(element: RenderElement) -> bool:
+    ident = element.element_id.lower()
+    if element.tag != "rect" or element.box.area <= 0:
+        return False
+    if element.background:
+        return False
+    if element.box.width > 260 or element.box.height > 96:
+        return False
+    return any(token in ident for token in ["name-plate", "label-back", "label-bg", "badge", "pill"])
+
+
+def is_label_text(element: RenderElement) -> bool:
+    ident = element.element_id.lower()
+    return any(token in ident for token in ["label", "name", "title", "badge", "pill"])
+
+
 def element_path(project: Path, source: SvgSource) -> str:
     if source.path:
         return safe_rel(source.path, project)
@@ -761,6 +862,8 @@ def lint_svg_source(project: Path, source: SvgSource) -> list[dict[str, Any]]:
     body_elements = [element for element in elements if not element.background and element.box.area > 4]
     text_elements = [element for element in elements if element.tag in {"text", "foreignobject"} and element.text.strip()]
     dark_backings = [element for element in elements if element.tag in {"rect", "path", "polygon"} and is_dark_color(element.fill)]
+    label_backings = [element for element in elements if is_label_backing(element)]
+    image_elements = [element for element in elements if element.tag == "image" and element.box.area > 0]
     path = element_path(project, source)
 
     if body_elements:
@@ -774,6 +877,18 @@ def lint_svg_source(project: Path, source: SvgSource) -> list[dict[str, Any]]:
                 "error",
                 "high",
                 f"page has {body_count} visible body elements; expected at least {MIN_BODY_ELEMENTS}",
+                page=source.page,
+                path=path,
+                source=source.label,
+            )
+        )
+    elif not image_elements and len(text_elements) <= 2 and body_count <= 4:
+        checks.append(
+            check(
+                "low_information_density",
+                "warning",
+                "medium",
+                "page has only a thin visual idea; add data, structure, image, or a stronger SVG focal system",
                 page=source.page,
                 path=path,
                 source=source.label,
@@ -880,6 +995,28 @@ def lint_svg_source(project: Path, source: SvgSource) -> list[dict[str, Any]]:
                     )
                 )
 
+    for backing in label_backings:
+        for element in text_elements:
+            if is_label_text(element) and box_covers(backing.box, element.box, threshold=0.55):
+                continue
+            overlap = intersection(backing.box, element.box)
+            if overlap.area <= 0:
+                continue
+            smaller = min(backing.box.area, element.box.area)
+            if smaller > 0 and overlap.area / smaller >= 0.2 and overlap.width >= 8 and overlap.height >= 8:
+                checks.append(
+                    check(
+                        "shape_text_overlap",
+                        "error",
+                        "high",
+                        "label backing shape overlaps a separate text block",
+                        page=source.page,
+                        bbox=overlap,
+                        path=path,
+                        source=source.label,
+                    )
+                )
+
     for element in text_elements:
         color = element.color or element.fill
         if not is_light_color(color):
@@ -901,30 +1038,68 @@ def lint_svg_source(project: Path, source: SvgSource) -> list[dict[str, Any]]:
     return checks
 
 
+def lint_visual_variety(project: Path, sources: list[SvgSource]) -> list[dict[str, Any]]:
+    if len(sources) < MIN_VARIETY_PAGE_COUNT:
+        return []
+    groups: dict[str, list[SvgSource]] = {}
+    for source in sources:
+        fingerprint = visual_fingerprint(source)
+        if not fingerprint:
+            continue
+        groups.setdefault(fingerprint, []).append(source)
+    repeated = max((items for items in groups.values()), key=len, default=[])
+    if len(repeated) < math.ceil(len(sources) * 0.75):
+        return []
+    pages = [source.page for source in repeated]
+    return [
+        check(
+            "low_visual_variety",
+            "warning",
+            "medium",
+            f"{len(repeated)} of {len(sources)} pages share the same coarse visual fingerprint",
+            page=pages[0] if pages else None,
+            path=safe_rel(repeated[0].path, project) if repeated and repeated[0].path else None,
+            source="preview",
+        )
+    ]
+
+
 def visual_score(checks: list[dict[str, Any]]) -> int:
     errors = sum(1 for item in checks if item.get("level") == "error")
     warnings = sum(1 for item in checks if item.get("level") == "warning")
     return max(0, min(100, 100 - errors * 22 - warnings * 7))
 
 
-def lint_project(project: Path, preview: Path, plan: Path) -> dict[str, Any]:
+def lint_project(project: Path, preview: Path, plan: Path, validation_profile: str = "") -> dict[str, Any]:
     project = project.resolve()
     preview = preview.resolve()
     plan = plan.resolve()
+    profile = resolve_validation_profile(plan, validation_profile)
+    threshold = visual_score_threshold(profile)
     checks: list[dict[str, Any]] = []
     sources = collect_preview_sources(project, preview, plan, checks)
     for source in sources:
         checks.extend(lint_svg_source(project, source))
+    checks.extend(lint_visual_variety(project, sources))
     error_count = sum(1 for item in checks if item.get("level") == "error")
     warning_count = sum(1 for item in checks if item.get("level") == "warning")
+    score = visual_score(checks)
+    score_passed = score >= threshold
+    score_enforced = visual_score_enforced(profile)
+    warning_gate_passed = profile != "golden" or warning_count == 0
+    status = "passed" if error_count == 0 and (score_passed or not score_enforced) and warning_gate_passed else "failed"
     return {
         "schema_version": SCHEMA_VERSION,
-        "status": "failed" if error_count else "passed",
+        "status": status,
         "error_count": error_count,
         "warning_count": warning_count,
         "checks": checks,
-        "visual_score": visual_score(checks),
-        "visual_score_mode": "advisory",
+        "visual_score": score,
+        "visual_score_threshold": threshold,
+        "visual_score_passed": score_passed,
+        "visual_score_mode": "enforced" if score_enforced else "advisory",
+        "validation_profile": profile,
+        "warning_gate_passed": warning_gate_passed,
         "project": str(project),
         "preview": safe_rel(preview, project),
         "plan": safe_rel(plan, project),
@@ -938,6 +1113,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--project", help="SVGlide project root.")
     parser.add_argument("--preview", help="Preview HTML file, usually preview/preview.html.")
     parser.add_argument("--plan", help="Slide plan JSON file, usually slide_plan.json.")
+    parser.add_argument("--validation-profile", default="", help="Quality profile: authoring, production, or golden.")
     args = parser.parse_args(argv)
     if args.legacy_preview and not args.preview:
         args.preview = args.legacy_preview
@@ -958,9 +1134,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    result = lint_project(Path(args.project), Path(args.preview), Path(args.plan))
+    result = lint_project(Path(args.project), Path(args.preview), Path(args.plan), args.validation_profile)
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
-    return 1 if result["error_count"] else 0
+    return 1 if result["status"] != "passed" else 0
 
 
 if __name__ == "__main__":

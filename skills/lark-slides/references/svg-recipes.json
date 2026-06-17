@@ -55,5 +55,73 @@
       "family": "brand",
       "required_primitives": ["typography", "geometric_shape"]
     }
+  },
+  "chart_type_contracts": {
+    "kpi_cards": {
+      "description": "2x2 or 1x4 KPI scorecard with readable hero numbers and micro chart evidence.",
+      "min_card_like_rect": 2,
+      "min_typography_boxes": 4,
+      "recommended_visual_recipe": "infographic_scorecard"
+    },
+    "bar_chart": {
+      "description": "Single-series vertical bar chart with at least three visible bars.",
+      "min_bar_like_rect": 3,
+      "recommended_visual_recipe": "infographic_scorecard"
+    },
+    "horizontal_bar_chart": {
+      "description": "Ranking chart with at least three visible horizontal or bar-like rows.",
+      "min_bar_like_rect": 3,
+      "recommended_visual_recipe": "infographic_scorecard"
+    },
+    "dumbbell_chart": {
+      "description": "Before/after comparison with repeated connector lines and endpoint nodes.",
+      "min_line_or_path": 3,
+      "min_round_nodes": 4,
+      "recommended_visual_recipe": "path_flow"
+    },
+    "bubble_chart": {
+      "description": "Multi-axis bubble layout with at least three round data marks.",
+      "min_round_nodes": 3,
+      "recommended_visual_recipe": "geometric_composition"
+    },
+    "donut_chart": {
+      "description": "Donut or ring composition with a center KPI and segment evidence.",
+      "min_round_nodes": 2,
+      "min_typography_boxes": 3,
+      "recommended_visual_recipe": "infographic_scorecard"
+    },
+    "comparison_table": {
+      "description": "Dense row/column comparison matrix.",
+      "min_typography_boxes": 6,
+      "recommended_visual_recipe": "geometric_composition"
+    },
+    "sankey_chart": {
+      "description": "Magnitude flow from source to nodes to sink.",
+      "min_path": 3,
+      "min_typography_boxes": 3,
+      "recommended_visual_recipe": "path_flow"
+    },
+    "pareto_chart": {
+      "description": "Descending bars plus cumulative or risk line.",
+      "min_bar_like_rect": 3,
+      "min_line_or_path": 1,
+      "recommended_visual_recipe": "infographic_scorecard"
+    },
+    "hub_spoke": {
+      "description": "Central hub with at least four surrounding nodes and spoke evidence.",
+      "min_round_nodes": 5,
+      "min_line_or_path": 3,
+      "recommended_visual_recipe": "icon_capability_map"
+    },
+    "dual_axis_line_chart": {
+      "description": "Two line series showing divergence or comparison over time.",
+      "min_path": 2,
+      "recommended_visual_recipe": "path_flow"
+    },
+    "quadrant_text_bullets": {
+      "description": "2x2 framework with four visible cells.",
+      "min_card_like_rect": 4,
+      "recommended_visual_recipe": "geometric_composition"
+    }
   }
 }

@@ -86,6 +86,23 @@ Project runner 中的 `svg_preview_lint.py` 负责缺 preview、破损 SVG、明
 - 图表/流程/表格选择是否适合它要表达的关系？
 - 颜色和强调方式是否和整套 deck 保持一致？
 
+## PPT Master / AI Capital Archetype Review
+
+从 `ppt-master` 样张和本地 AI Capital 多轮 preview 得到的经验要落在渲染后审查，
+而不是只写进 prompt。
+
+- 第一眼必须看出页型：cover、contents、section、bubble chart、donut chart、
+  sankey/flow、hub-spoke、table、closing 等不能互相退化成同一种卡片页。
+- 图表页必须让几何承载信息：bubble 用圆形节点大小/位置表达关系，donut 用环形
+  分段和中心 KPI 表达构成，flow/sankey 用流线宽度和方向表达转移。
+- 白字或浅字必须有足够暗的 backing；name-plate、label-back、badge、pill 不能
+  压住 note、source、正文或图表标签。
+- connector、趋势线、轨道线、坐标轴不能穿过标题、中心数字、label 或说明文字；
+  必要时改成折线、短 leader line 或降低为 decorative background。
+- 红色和高饱和强调色只打关键数字、风险或章节标记。不要让每个图形都同等抢眼。
+- 如果 preview 分数低，优先修 renderer/source SVG 和资产选择，而不是只改
+  `slide_plan.json` 的文案描述。
+
 ## 修复优先级
 
 1. 布局正确性：画布、safe area、重叠、溢出、裁切。

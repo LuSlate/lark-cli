@@ -106,6 +106,26 @@ Project runner quality lane 还必须在 `dry_run` 前运行 `preview_lint` 和
 `quality_gate`。手工排障路径可以不跑 preview lint 继续定位问题，但该路径
 不得进入 guarded live creation、production delivery 或 golden regression promotion。
 
+## SVGlide Archetype Drift Checks
+
+SVGlide 项目必须同时检查计划、执行 manifest、SVG source 和 receipts。不要只
+验证单个文件。
+
+- `slide_plan.page_count`、`slide_plan.slides`、`slide_plan.svg_files` 和
+  `project_manifest.pages` 的数量必须一致；少传 SVG input 是 error，不允许
+  preflight 只检查已传入的子集。
+- `prepare` receipt 在 plan、manifest 或 source SVG 变化后必须失效；后续
+  `preflight`、`preview_lint`、`quality_gate`、`dry_run` 不得复用旧 prepare。
+- 声明 `chart_type` 或 ppt-master chart 参考时，SVG 必须命中对应几何合同：
+  `bubble_chart` 至少有多枚圆形节点，`donut_chart` 至少有环形/圆形结构和中心
+  文本，`bar_chart` 至少有可识别轴/条形/数值区域。不能把图表页退化成普通
+  卡片、closing 或 bullet list。
+- `ppt_master_asset_selection.selected_assets` 只放真正启用并落地的参考资产；
+  `enabled:false` 可作为候选保留，但不进入 quality gate。启用资产必须由
+  `receipts/ppt-master-asset-usage.json` 的 page-level trace 证明。
+- `ppt-master` 参考只允许变成 SVGlide-safe 的页型、图表几何、节奏、色彩纪律
+  和审查规则；不要复制 raw SVG、图片或 PPTX/DrawingML 导出实现。
+
 通过标准：
 
 - 所有页面都检查过，不只检查封面。

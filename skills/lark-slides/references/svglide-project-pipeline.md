@@ -111,6 +111,18 @@ Stage commands are parsed as argv and executed with `shell=False`. Project-local
 commands run from the project directory. Commands under `skills/lark-slides/`
 run from the CLI worktree root.
 
+`slide_plan.json` is still the design source of truth. `project_manifest.json`
+is the execution index. Before `prepare`, these counts must agree:
+
+- `slide_plan.page_count`
+- `len(slide_plan.slides)` when `slides` is present
+- `len(slide_plan.svg_files)` when `svg_files` is present
+- `len(project_manifest.pages)`
+
+When the plan changes, regenerate or update the manifest in the same step.
+Do not let `prepare`, `preflight`, `dry_run`, or `live_create` consume a stale
+manifest after pages were added, deleted, or reordered.
+
 `preview_lint`, `preflight`, `quality_gate`, `ppe_proof`, `dry_run`,
 `live_create`, and `readback` are runner-owned stages. Do not override
 `preview_lint` through `stage_commands`; the runner calls the bundled
@@ -119,6 +131,8 @@ run from the CLI worktree root.
 ## Prepare
 
 `prepare` creates deterministic CLI-ready SVG files under `prepared/`.
+`dry_run` and `live_create` must consume `prepared/*.svg`, never authoring
+`pages/*.svg` directly.
 
 Allowed P0 behavior:
 
@@ -132,6 +146,19 @@ Disallowed P0 behavior:
 - apply PPTX/DrawingML compatibility rewrites
 - mutate authoring `pages/*.svg`
 - replace images or tokens outside the existing `slides +create-svg` transport path
+
+## PPT Master Asset Receipt
+
+`ppt-master` references are allowed only as structure, rhythm, chart geometry,
+style, and review inspiration. They are not runtime dependencies and raw SVG/PPTX
+assets must not be copied into SVGlide output.
+
+For quality lanes, `selected_assets` means "actually used by the generated
+pages", not "interesting candidates found during research". Candidate assets
+stay in research notes. Used assets must be proven by
+`receipts/ppt-master-asset-usage.json` with page-level trace entries that point
+to the SVG evidence. The quality gate must fail when `selected_assets` includes
+an asset that is not present in the usage receipt.
 
 Every mutation must be recorded in `receipts/prepare.json`.
 

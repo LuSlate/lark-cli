@@ -328,7 +328,24 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result.get("issues", [])]
         self.assertIn("root_canvas_mismatch", codes)
         self.assertIn("root_viewbox_mismatch", codes)
-        self.assertEqual(result["summary"]["error_count"], 2)
+
+    def test_visual_primitives_count_vertical_bars_as_bar_geometry(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             slide:contract-version="svglide-authoring-contract/v1"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <rect id="bar-a" slide:role="shape" x="120" y="220" width="56" height="190" fill="#e63946" />
+          <rect id="bar-b" slide:role="shape" x="220" y="260" width="56" height="150" fill="#f4a261" />
+          <rect id="bar-c" slide:role="shape" x="320" y="310" width="56" height="100" fill="#52b788" />
+        </svg>
+        """
+        result = svg_preflight.lint_svg(svg)
+        primitives = result["visual_primitives"]
+        self.assertGreaterEqual(primitives["counts"]["bar_like_rect"], 3)
+        self.assertIn("micro_chart", primitives["present"])
 
     def test_lint_svg_reports_missing_contract_version(self) -> None:
         svg = VALID_SVG.replace('     slide:contract-version="svglide-authoring-contract/v1"\n', "")
@@ -394,6 +411,22 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertEqual(result["summary"]["error_count"], 0)
         self.assertIn("micro_chart", result["visual_primitives"]["present"])
         self.assertIn("chart_geometry", result["visual_primitives"]["effects"])
+
+    def test_lint_svg_counts_regular_foreign_object_text_as_typography(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <foreignObject id="small-label" slide:role="shape" slide:shape-type="text" x="120" y="160" width="180" height="28">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;font-weight:700;color:#111827;">Regular label</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        self.assertEqual(result["summary"]["error_count"], 0)
+        self.assertIn("typography", result["visual_primitives"]["present"])
+        self.assertIn("typography", result["visual_primitives"]["effects"])
 
     def test_lint_svg_rejects_invalid_chart_marker(self) -> None:
         svg = f"""
@@ -954,9 +987,9 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertGreaterEqual(result["distinct_renderer_count"], 5)
         self.assertGreaterEqual(result["distinct_visual_recipe_family_count"], 5)
 
-    def test_style_preset_catalog_has_35_complete_entries(self) -> None:
+    def test_style_preset_catalog_has_36_complete_entries(self) -> None:
         catalog = svg_preflight.STYLE_PRESET_CATALOG
-        self.assertEqual(len(catalog), 35)
+        self.assertEqual(len(catalog), 36)
         group_counts: dict[str, int] = {}
         tokens = set()
         for style_id, preset in catalog.items():
@@ -974,8 +1007,47 @@ class SvgPreflightTest(unittest.TestCase):
             self.assertIn("density", preset)
             self.assertIn("slide_translation", preset)
             self.assertIn("quality_oracle", preset)
-        self.assertEqual(group_counts, {"Restrained": 9, "Balanced": 15, "Bold": 11})
-        self.assertEqual(len(tokens), 35)
+        self.assertEqual(group_counts, {"Restrained": 10, "Balanced": 15, "Bold": 11})
+        self.assertEqual(len(tokens), 36)
+        self.assertIn("data_journalism_editorial", catalog)
+
+    def test_chart_type_contracts_are_runtime_catalog_source(self) -> None:
+        registry = read_json(PUBLIC_RECIPE_REGISTRY_PATH)
+        contracts = registry.get("chart_type_contracts")
+        self.assertIsInstance(contracts, dict)
+        assert isinstance(contracts, dict)
+        self.assertEqual(set(contracts), set(svg_preflight.CHART_TYPE_CONTRACTS))
+        for chart_type, contract in contracts.items():
+            self.assertIsInstance(chart_type, str)
+            self.assertIsInstance(contract, dict)
+            assert isinstance(contract, dict)
+            recommended_recipe = contract.get("recommended_visual_recipe")
+            if recommended_recipe:
+                self.assertIn(recommended_recipe, svg_preflight.VISUAL_RECIPE_CATALOG)
+            minimum_keys = [key for key in contract if key.startswith("min_")]
+            self.assertTrue(minimum_keys)
+            for key in minimum_keys:
+                self.assertIsInstance(contract[key], int)
+                self.assertGreater(contract[key], 0)
+
+    def test_lint_plan_reports_unknown_chart_type(self) -> None:
+        plan = single_slide_plan(
+            "infographic_scorecard",
+            ["typography", "micro_chart"],
+            chart_type="spider_radar",
+        )
+        result = svg_preflight.lint_plan(plan)
+        self.assertIn("plan_unknown_chart_type", issue_codes(result))
+
+    def test_lint_plan_respects_explicit_empty_chart_type(self) -> None:
+        plan = single_slide_plan(
+            "geometric_composition",
+            ["geometric_shape", "path"],
+            chart_type="",
+            reference_asset={"source": "ppt-master", "asset_id": "chart.agenda_list"},
+        )
+        result = svg_preflight.lint_plan(plan)
+        self.assertNotIn("plan_unknown_chart_type", issue_codes(result))
 
     def test_public_recipe_registry_is_runtime_catalog_source(self) -> None:
         registry = read_json(PUBLIC_RECIPE_REGISTRY_PATH)
@@ -1673,6 +1745,145 @@ class SvgPreflightTest(unittest.TestCase):
             }
             plan_path.write_text(json.dumps(plan), encoding="utf-8")
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertEqual(result["summary"]["error_count"], 0)
+
+    def test_lint_files_reports_chart_type_contract_not_met_by_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            plan = single_slide_plan(
+                "infographic_scorecard",
+                ["typography", "micro_chart"],
+                chart_type="bar_chart",
+            )
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertIn("plan_chart_type_contract_not_met", plan_issue_codes(result))
+
+    def test_lint_files_reports_svg_input_count_mismatch_with_plan_page_count(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            plan = single_slide_plan()
+            second_slide = dict(plan["slides"][0])
+            second_slide["page"] = 2
+            second_slide["title"] = "Route 2"
+            plan["page_count"] = 2
+            plan["slides"] = [plan["slides"][0], second_slide]
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}, {"page": 2, "path": "page-002.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+
+        self.assertIn("plan_svg_file_count_mismatch", plan_issue_codes(result))
+
+    def test_lint_files_rejects_ai_capital_p07_p08_archetype_degradation(self) -> None:
+        plain_card_svg = with_contract(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 xmlns:slide="https://slides.bytedance.com/ns"
+                 slide:role="slide"
+                 width="960" height="540" viewBox="0 0 960 540">
+              <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#111827" />
+              <rect slide:role="shape" x="80" y="150" width="260" height="170" fill="#1f2937" />
+              <rect slide:role="shape" x="360" y="150" width="260" height="170" fill="#1f2937" />
+              <foreignObject slide:role="shape" slide:shape-type="text" x="80" y="72" width="560" height="48">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:28px;color:#f9fafb;">AI capital card summary</div>
+              </foreignObject>
+              <foreignObject slide:role="shape" slide:shape-type="text" x="100" y="182" width="220" height="60">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;color:#e5e7eb;">Generic card, not the declared chart geometry.</div>
+              </foreignObject>
+              <foreignObject slide:role="shape" slide:shape-type="text" x="380" y="182" width="220" height="60">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;color:#e5e7eb;">Generic card, not the declared chart geometry.</div>
+              </foreignObject>
+            </svg>
+            """
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            page7 = tmp / "page-007.svg"
+            page8 = tmp / "page-008.svg"
+            plan_path = tmp / "slide_plan.json"
+            page7.write_text(plain_card_svg, encoding="utf-8")
+            page8.write_text(plain_card_svg, encoding="utf-8")
+            bubble_plan = single_slide_plan(
+                "geometric_composition",
+                list(svg_preflight.VISUAL_RECIPE_CATALOG["geometric_composition"]["required_primitives"]),
+                chart_type="bubble_chart",
+                ppt_master_reference_assets=[{"asset_id": "chart.bubble_chart", "source": "ppt-master"}],
+            )
+            donut_plan = single_slide_plan(
+                "infographic_scorecard",
+                ["typography", "micro_chart"],
+                chart_type="donut_chart",
+                ppt_master_reference_assets=[{"asset_id": "chart.donut_chart", "source": "ppt-master"}],
+            )
+            slide7 = bubble_plan["slides"][0]
+            slide8 = donut_plan["slides"][0]
+            slide7["page"] = 7
+            slide8["page"] = 8
+            plan = {
+                "output_mode": "svglide-svg",
+                "page_count": 2,
+                **style_plan_fields(),
+                "slides": [slide7, slide8],
+                "svg_files": [{"page": 7, "path": "page-007.svg"}, {"page": 8, "path": "page-008.svg"}],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(page7), str(page8)], str(plan_path))
+
+        messages = [
+            str(issue.get("message"))
+            for issue in result.get("plan", {}).get("issues", [])
+            if isinstance(issue, dict) and issue.get("code") == "plan_chart_type_contract_not_met"
+        ]
+        self.assertGreaterEqual(len(messages), 2)
+        self.assertTrue(any("round_nodes 0 < 3" in message for message in messages))
+        self.assertTrue(any("round_nodes 0 < 2" in message for message in messages))
+
+    def test_lint_files_accepts_chart_type_contract_geometry(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="64" y="42" width="520" height="42">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:26px;font-weight:800;color:#111827;line-height:1.1;">Market concentration</div>
+          </foreignObject>
+          <foreignObject id="body-takeaway" slide:role="shape" slide:shape-type="text" x="66" y="94" width="620" height="30">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:15px;font-weight:700;color:#334155;line-height:1.15;">Top cohorts drive the majority of adoption</div>
+          </foreignObject>
+          <rect id="chart-frame" slide:role="shape" x="86" y="154" width="650" height="296" fill="#ffffff" stroke="#cbd5e1" />
+          <rect id="bar-a" slide:role="shape" x="120" y="214" width="224" height="24" fill="#e63946" />
+          <rect id="bar-b" slide:role="shape" x="120" y="266" width="176" height="24" fill="#f4a261" />
+          <rect id="bar-c" slide:role="shape" x="120" y="318" width="132" height="24" fill="#52b788" />
+          <foreignObject id="annotation" slide:role="shape" slide:shape-type="text" x="748" y="168" width="150" height="58">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;font-weight:700;color:#334155;line-height:1.2;">Visible bars prove the declared type.</div>
+          </foreignObject>
+          <foreignObject id="footer" slide:role="shape" slide:shape-type="text" x="64" y="500" width="300" height="18">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:10px;color:#64748b;line-height:1.1;">Source: unit test</div>
+          </foreignObject>
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            plan = single_slide_plan(
+                "infographic_scorecard",
+                ["typography", "micro_chart"],
+                chart_type="bar_chart",
+            )
+            plan["svg_files"] = [{"page": 1, "path": "page-001.svg"}]
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        self.assertNotIn("plan_chart_type_contract_not_met", plan_issue_codes(result))
         self.assertEqual(result["summary"]["error_count"], 0)
 
     def test_lint_files_reports_footer_reserved_band_violation(self) -> None:

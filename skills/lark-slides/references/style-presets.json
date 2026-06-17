@@ -15,7 +15,7 @@
     "connector_policy": "connector line/path must terminate at card, node, or chart edges and must not cross visible text boxes"
   },
   "groups": {
-    "Restrained": {"expected_count": 9, "use_when": "Serious, quiet, editorial, institutional, or text-first decks."},
+    "Restrained": {"expected_count": 10, "use_when": "Serious, quiet, editorial, institutional, or text-first decks."},
     "Balanced": {"expected_count": 15, "use_when": "General business, technical, educational, and explanatory decks."},
     "Bold": {"expected_count": 11, "use_when": "Posters, showcases, events, playful explainers, and high-energy visual impact."}
   },
@@ -109,6 +109,21 @@
       "density": {"text_density": "medium", "label_density": "medium", "connector_density": "medium", "node_budget": {"source_nodes": 48, "source_text": 37, "source_shapes": 3, "source_connectors": 8}},
       "slide_translation": {"recommended_layouts": ["architecture", "quote", "agenda"], "svglide_primitives": ["typography", "geometric_shape", "connector_flow"], "fallback_policy": "Rely on black/gray hierarchy and simple connectors; avoid fake color accents."},
       "quality_oracle": {"expected_style_signals": ["black text hierarchy", "single neutral accent", "minimal blocks"], "warning_thresholds": {"text_boxes_max": 22, "accent_colors_max": 1}}
+    },
+    {
+      "style_id": "data_journalism_editorial",
+      "display_name": "Data Journalism Editorial",
+      "group": "Restrained",
+      "source_token": "ppt-master/global_ai_capital_2026",
+      "formality": "high",
+      "vibe": ["editorial", "data_journalism", "financial", "cinematic"],
+      "best_for": ["hero_typography", "infographic_scorecard", "path_flow", "geometric_composition", "icon_capability_map"],
+      "avoid_for": ["mask_clip_showcase"],
+      "palette": {"background": "#0E1116", "text": "#E8E6E1", "muted": "#8A857E", "accent": "#E63946", "support": ["#1A1F26", "#F4A261", "#52B788", "#2A2F36"]},
+      "shape_language": {"panel_treatment": "dark editorial chart surfaces with thin rules, sparse grid texture, and one red risk accent", "corner_radius": "low", "border_weight": "hairline", "texture": "newspaper grid, paper grain, restrained infrastructure particles"},
+      "density": {"text_density": "high", "label_density": "high", "connector_density": "medium", "node_budget": {"source_nodes": 72, "source_text": 34, "source_shapes": 28, "source_connectors": 10}},
+      "slide_translation": {"recommended_layouts": ["cover", "editor_note", "contents", "chart_takeaway", "chapter", "closing"], "svglide_primitives": ["typography", "geometric_shape", "micro_chart", "path", "annotation", "texture"], "fallback_policy": "Keep the main chart geometry first; if atmosphere assets are unavailable, preserve negative space, thin rules, and red numeric emphasis with SVG-native shapes."},
+      "quality_oracle": {"expected_style_signals": ["dark graphite ground", "large serif or editorial title hierarchy", "red numeric emphasis", "thin chart rules", "small source/footer text"], "warning_thresholds": {"text_boxes_max": 32, "accent_colors_max": 3}}
     },
     {
       "style_id": "papier_bleu",

@@ -49,12 +49,33 @@ STAGE_ALIASES = {
     "render-contact-sheet": "render_contact_sheet",
     "render_contact_sheet": "render_contact_sheet",
 }
+STAGE_TARGET_MS = {
+    "generate": 30_000,
+    "prepare": 5_000,
+    "preview": 10_000,
+    "preflight": 10_000,
+    "preview_lint": 10_000,
+    "quality_gate": 3_000,
+    "dry_run": 30_000,
+    "ppe_proof": 30_000,
+    "live_create": 60_000,
+    "readback": 30_000,
+    "render_contact_sheet": 30_000,
+}
 CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 STAGE_FINGERPRINT_SCHEMA = "svglide-stage-fingerprint/v1"
 QUALITY_GATE_SCHEMA = "svglide-quality-gate/v1"
 ENV_PROOF_SCHEMA = "svglide-env-proof/v1"
+PPT_MASTER_ASSET_USAGE_SCHEMA = "svglide-ppt-master-asset-usage/v1"
+COMPONENT_REPORT_SCHEMA = "svglide-component-report/v1"
 PREVIEW_LINT_WAIVER_TTL_MS = 30 * 60 * 1000
+DEFAULT_VALIDATION_PROFILE = "authoring"
+VISUAL_SCORE_THRESHOLDS = {
+    "authoring": 75,
+    "production": 85,
+    "golden": 90,
+}
 
 
 class RunnerError(RuntimeError):
@@ -338,6 +359,34 @@ def project_pages(project: Path, data: dict[str, Any], *, prepared: bool) -> lis
     return sorted(folder.glob("page-*.svg"))
 
 
+def validate_project_page_contract(project: Path, data: dict[str, Any]) -> None:
+    manifest_pages = data.get("pages")
+    if not isinstance(manifest_pages, list):
+        return
+    plan = read_json(plan_file(project, data), {})
+    if not isinstance(plan, dict):
+        return
+    page_count = plan.get("page_count")
+    if isinstance(page_count, bool) or not isinstance(page_count, int):
+        return
+    actual = len(manifest_pages)
+    if actual != page_count:
+        raise RunnerError(
+            f"project_manifest.pages count {actual} does not match slide_plan.page_count {page_count}; "
+            "sync project_manifest.json after changing slide_plan.json"
+        )
+    slides = plan.get("slides")
+    if isinstance(slides, list) and len(slides) != page_count:
+        raise RunnerError(
+            f"slide_plan.slides count {len(slides)} does not match slide_plan.page_count {page_count}"
+        )
+    svg_files = plan.get("svg_files")
+    if isinstance(svg_files, list) and len(svg_files) != page_count:
+        raise RunnerError(
+            f"slide_plan.svg_files count {len(svg_files)} does not match slide_plan.page_count {page_count}"
+        )
+
+
 def plan_file(project: Path, data: dict[str, Any]) -> Path:
     value = data.get("plan")
     if isinstance(value, str) and value.strip():
@@ -550,17 +599,19 @@ def stage_input_fingerprint(stage: str, project: Path, args: argparse.Namespace)
         add_file_fingerprint(inputs, project, "preview_html", project / "preview" / "preview.html")
         add_file_fingerprint(inputs, project, "script", scripts / "svg_preview_lint.py")
         add_value_fingerprint(inputs, "allow_missing_preview_lint", bool(get_arg(args, "allow_missing_preview_lint", False)))
+        add_value_fingerprint(inputs, "validation_profile", quality_validation_profile(resolved_validation_profile(data, args, project=project)))
     if stage == "quality_gate":
         for dependency in ["preflight", "preview_lint"]:
             add_file_fingerprint(inputs, project, f"{dependency}_receipt", receipt_path(project, dependency, data))
         add_file_fingerprint(inputs, project, "component_report", project / "receipts" / "emitted_components.json")
+        add_file_fingerprint(inputs, project, "ppt_master_asset_usage", project / "receipts" / "ppt-master-asset-usage.json")
         add_file_fingerprint(inputs, project, "component_waiver", project / "receipts" / "emitted-components-waiver.json")
         add_file_fingerprint(inputs, project, "allowlist_receipt", project / "receipts" / "allowlist.json")
         try:
             add_file_fingerprint(inputs, project, "raster_report", raster_report_path(project, data))
         except RunnerError:
             pass
-        add_value_fingerprint(inputs, "validation_profile", resolved_validation_profile(data, args))
+        add_value_fingerprint(inputs, "validation_profile", quality_validation_profile(resolved_validation_profile(data, args, project=project)))
     if stage in {"dry_run", "live_create"}:
         add_file_fingerprint(inputs, project, "quality_gate_receipt", receipt_path(project, "quality_gate", data))
     if stage in {"dry_run", "ppe_proof", "live_create", "readback"}:
@@ -628,17 +679,24 @@ def update_timings(project: Path, stage: str, receipt: dict[str, Any]) -> None:
         if isinstance(item, dict) and item.get("name") != stage and item.get("stage") != stage
     ]
     fingerprint = receipt.get("input_fingerprint") if isinstance(receipt.get("input_fingerprint"), dict) else {}
+    elapsed_ms = int(receipt.get("elapsed_ms") or 0)
+    target_ms = int(receipt.get("target_ms") or STAGE_TARGET_MS.get(stage, 0))
     stages.append(
         {
             "name": stage,
             "stage": stage,
             "status": receipt.get("status"),
-            "elapsed_ms": receipt.get("elapsed_ms", 0),
+            "started_at_ms": receipt.get("started_at_ms"),
+            "ended_at_ms": receipt.get("ended_at_ms"),
+            "elapsed_ms": elapsed_ms,
+            "target_ms": target_ms,
+            "over_budget": bool(target_ms and elapsed_ms > target_ms),
             "cache_hit": bool(receipt.get("cache_hit")),
             "input_count": len(fingerprint.get("inputs", [])) if isinstance(fingerprint.get("inputs"), list) else 0,
             "output_count": receipt_output_count(receipt),
             "error_count": receipt_count(receipt, "error_count"),
             "warning_count": receipt_count(receipt, "warning_count"),
+            "next_command": next_stage_command(project, stage),
         }
     )
     order = {name: index for index, name in enumerate(STAGES)}
@@ -647,6 +705,15 @@ def update_timings(project: Path, stage: str, receipt: dict[str, Any]) -> None:
     timings["stages"] = stages
     timings["total_elapsed_ms"] = sum(int(item.get("elapsed_ms") or 0) for item in stages)
     write_json(path, timings)
+
+
+def next_stage_command(project: Path, stage: str) -> str:
+    stage = normalize_stage(stage)
+    index = STAGES.index(stage)
+    if index + 1 >= len(STAGES):
+        return ""
+    next_stage = STAGES[index + 1]
+    return f"python3 skills/lark-slides/scripts/svglide_project_runner.py {next_stage} --project {project}"
 
 
 def receipt_count(receipt: dict[str, Any], key: str) -> int:
@@ -690,11 +757,18 @@ def write_stage_receipt(
 ) -> dict[str, Any]:
     if args is None:
         args = default_runner_args()
+    ended_ms = now_ms()
+    elapsed_ms = ended_ms - started_ms
+    target_ms = STAGE_TARGET_MS.get(stage, 0)
     fingerprint = stage_input_fingerprint(stage, project, args)
     receipt = {
         "stage": stage,
         "status": body.get("status", "passed"),
-        "elapsed_ms": now_ms() - started_ms,
+        "started_at_ms": started_ms,
+        "ended_at_ms": ended_ms,
+        "elapsed_ms": elapsed_ms,
+        "target_ms": target_ms,
+        "over_budget": bool(target_ms and elapsed_ms > target_ms),
         "input_digest": fingerprint["digest"],
         "input_fingerprint": fingerprint,
         **body,
@@ -710,6 +784,7 @@ def stage_uses_prepared_digest(stage: str) -> bool:
 
 
 def builtin_prepare(project: Path, data: dict[str, Any]) -> dict[str, Any]:
+    validate_project_page_contract(project, data)
     source_pages = project_pages(project, data, prepared=False)
     if not source_pages:
         raise RunnerError("prepare found no pages/*.svg source files")
@@ -846,6 +921,61 @@ def required_int(value: Any, field: str) -> int:
     return value
 
 
+def optional_int(value: Any, field: str) -> int | None:
+    if value is None:
+        return None
+    return required_int(value, field)
+
+
+def positive_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
+
+
+def validate_component_bbox(value: Any, field: str) -> None:
+    if not isinstance(value, dict):
+        raise RunnerError(f"{field}.bbox must be an object")
+    for key in ["x", "y", "width", "height"]:
+        if key not in value or not isinstance(value.get(key), (int, float)) or isinstance(value.get(key), bool):
+            raise RunnerError(f"{field}.bbox.{key} must be a number")
+    if not positive_number(value.get("width")) or not positive_number(value.get("height")):
+        raise RunnerError(f"{field}.bbox width and height must be positive")
+
+
+def strict_component_report_required(
+    data: dict[str, Any], args: argparse.Namespace | None = None, project: Path | None = None
+) -> bool:
+    profile = resolved_validation_profile(data, args, project=project)
+    return is_production_lane(data, args, project=project) or profile == "golden"
+
+
+def validate_strict_component_report(report: dict[str, Any]) -> None:
+    if report.get("schema_version") != COMPONENT_REPORT_SCHEMA:
+        raise RunnerError(f"component report schema_version must be {COMPONENT_REPORT_SCHEMA}")
+    pages = report.get("pages")
+    if not isinstance(pages, list) or not pages:
+        raise RunnerError("component report pages must be a non-empty list")
+    for page_index, page in enumerate(pages):
+        if not isinstance(page, dict):
+            raise RunnerError(f"component report pages[{page_index}] must be an object")
+        if not isinstance(page.get("page"), int) or isinstance(page.get("page"), bool):
+            raise RunnerError(f"component report pages[{page_index}].page must be an integer")
+        components = page.get("components")
+        if not isinstance(components, list) or not components:
+            raise RunnerError(f"component report pages[{page_index}].components must be a non-empty list")
+        for component_index, component in enumerate(components):
+            field = f"component report pages[{page_index}].components[{component_index}]"
+            if not isinstance(component, dict):
+                raise RunnerError(f"{field} must be an object")
+            if not text_from_any(component.get("id")):
+                raise RunnerError(f"{field}.id is required")
+            if not text_from_any(component.get("renderer_id") or component.get("source_trace")):
+                raise RunnerError(f"{field} renderer_id or source_trace is required")
+            validate_component_bbox(component.get("bbox"), field)
+            primitives = component.get("primitives")
+            if not isinstance(primitives, list) or not any(text_from_any(item) for item in primitives):
+                raise RunnerError(f"{field}.primitives must be a non-empty list")
+
+
 def extract_stage_counts(stage: str, receipt: dict[str, Any], *, allow_waived: bool = False) -> dict[str, Any]:
     status = text_from_any(receipt.get("status"))
     if status == "waived" and stage == "preview_lint" and allow_waived:
@@ -867,17 +997,32 @@ def extract_stage_counts(stage: str, receipt: dict[str, Any], *, allow_waived: b
         summary = receipt.get("summary")
         if not isinstance(summary, dict):
             raise RunnerError("preview_lint receipt missing summary")
-        return {
+        out = {
             "status": "passed",
             "error_count": required_int(summary.get("error_count"), "preview_lint.summary.error_count"),
             "warning_count": required_int(summary.get("warning_count"), "preview_lint.summary.warning_count"),
         }
+        visual_score = optional_int(summary.get("visual_score"), "preview_lint.summary.visual_score")
+        visual_threshold = optional_int(summary.get("visual_score_threshold"), "preview_lint.summary.visual_score_threshold")
+        if visual_score is not None:
+            out["visual_score"] = visual_score
+        if visual_threshold is not None:
+            out["visual_score_threshold"] = visual_threshold
+        profile = text_from_any(summary.get("validation_profile"))
+        if profile:
+            out["validation_profile"] = profile
+        mode = text_from_any(summary.get("visual_score_mode"))
+        if mode:
+            out["visual_score_mode"] = mode
+        return out
     raise RunnerError(f"cannot extract counts for stage: {stage}")
 
 
-def dry_run_waiver_allowed(data: dict[str, Any], args: argparse.Namespace | None = None) -> bool:
+def dry_run_waiver_allowed(
+    data: dict[str, Any], args: argparse.Namespace | None = None, *, project: Path | None = None
+) -> bool:
     until = normalize_stage(text_from_any(get_arg(args, "until", "dry_run")) or "dry_run")
-    return is_authoring_or_debug_lane(data, args) and STAGES.index(until) <= STAGES.index("dry_run")
+    return is_authoring_or_debug_lane(data, args, project=project) and STAGES.index(until) <= STAGES.index("dry_run")
 
 
 def component_report_summary(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
@@ -886,6 +1031,8 @@ def component_report_summary(project: Path, data: dict[str, Any], args: argparse
         report = read_json(report_path)
         if not isinstance(report, dict):
             raise RunnerError("emitted_components.json must contain an object")
+        if strict_component_report_required(data, args, project=project):
+            validate_strict_component_report(report)
         status = text_from_any(report.get("status") or "passed")
         if status not in {"passed", "verified", "ok"}:
             raise RunnerError(f"component report status must be passed: {status}")
@@ -901,7 +1048,7 @@ def component_report_summary(project: Path, data: dict[str, Any], args: argparse
 
     waiver_path = project / "receipts" / "emitted-components-waiver.json"
     waiver = validate_legacy_waiver(read_json(waiver_path, {}) if waiver_path.exists() else {})
-    if waiver.get("active") and dry_run_waiver_allowed(data, args):
+    if waiver.get("active") and dry_run_waiver_allowed(data, args, project=project):
         return {
             "status": "waived",
             "error_count": 0,
@@ -909,9 +1056,144 @@ def component_report_summary(project: Path, data: dict[str, Any], args: argparse
             "waiver": {"type": "legacy_component_report", **waiver},
             "path": rel_to_project(project, waiver_path),
         }
-    if is_production_lane(data, args):
+    if is_production_lane(data, args, project=project):
         raise RunnerError("production quality gate requires receipts/emitted_components.json")
     raise RunnerError("quality gate requires receipts/emitted_components.json or active legacy component waiver")
+
+
+def asset_id_from(value: Any) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, dict):
+        if value.get("enabled") is False:
+            return ""
+        return text_from_any(value.get("asset_id") or value.get("id"))
+    return ""
+
+
+def add_asset_ids(output: set[str], value: Any) -> None:
+    if isinstance(value, list):
+        for item in value:
+            add_asset_ids(output, item)
+        return
+    asset_id = asset_id_from(value)
+    if asset_id:
+        output.add(asset_id)
+
+
+def collect_ppt_master_asset_ids(project: Path, data: dict[str, Any]) -> set[str]:
+    plan = read_json(plan_file(project, data), {})
+    if not isinstance(plan, dict):
+        return set()
+    asset_ids: set[str] = set()
+    selection = plan.get("ppt_master_asset_selection")
+    if isinstance(selection, dict):
+        add_asset_ids(asset_ids, selection.get("selected_assets"))
+    slides = plan.get("slides")
+    if not isinstance(slides, list):
+        slides = []
+    for slide in slides:
+        if not isinstance(slide, dict):
+            continue
+        add_asset_ids(asset_ids, slide.get("ppt_master_reference_assets"))
+        visual_plan = slide.get("visual_plan")
+        if isinstance(visual_plan, dict):
+            add_asset_ids(asset_ids, visual_plan.get("ppt_master_reference_assets"))
+    svg_files = plan.get("svg_files")
+    if not isinstance(svg_files, list):
+        svg_files = []
+    for slide in svg_files:
+        if isinstance(slide, dict):
+            add_asset_ids(asset_ids, slide.get("ppt_master_reference_assets"))
+    return asset_ids
+
+
+def collect_used_ppt_master_asset_ids(report: dict[str, Any]) -> set[str]:
+    used: set[str] = set()
+    usages = report.get("page_usages")
+    if isinstance(usages, list):
+        for usage in usages:
+            if not isinstance(usage, dict):
+                continue
+            component_ids = usage.get("component_ids")
+            if component_ids is not None and not isinstance(component_ids, list):
+                continue
+            if component_ids == []:
+                continue
+            if not text_from_any(usage.get("source_trace")):
+                continue
+            add_asset_ids(used, usage)
+    return used
+
+
+def active_ppt_master_asset_waivers(report: dict[str, Any]) -> tuple[set[str], list[dict[str, Any]]]:
+    waived: set[str] = set()
+    waivers: list[dict[str, Any]] = []
+    raw_waivers = report.get("waived_assets")
+    if not isinstance(raw_waivers, list):
+        return waived, waivers
+    for item in raw_waivers:
+        if not isinstance(item, dict):
+            continue
+        asset_id = asset_id_from(item)
+        validation = validate_legacy_waiver(item)
+        if asset_id and validation.get("active"):
+            waived.add(asset_id)
+            waivers.append({"asset_id": asset_id, "type": "ppt_master_asset_usage", **validation})
+    return waived, waivers
+
+
+def ppt_master_asset_usage_summary(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
+    expected = collect_ppt_master_asset_ids(project, data)
+    if not expected:
+        return {"status": "not_configured", "selected_count": 0, "error_count": 0, "warning_count": 0}
+
+    report_path = project / "receipts" / "ppt-master-asset-usage.json"
+    if not report_path.exists():
+        return {
+            "status": "missing",
+            "selected_count": len(expected),
+            "missing_asset_ids": sorted(expected),
+            "error_count": 1,
+            "warning_count": 0,
+            "path": rel_to_project(project, report_path),
+        }
+
+    report = read_json(report_path)
+    if not isinstance(report, dict):
+        raise RunnerError("ppt-master-asset-usage.json must contain an object")
+    if report.get("schema_version") not in {"", None, PPT_MASTER_ASSET_USAGE_SCHEMA}:
+        raise RunnerError("ppt-master-asset-usage.json has unsupported schema_version")
+    status = text_from_any(report.get("status") or "passed")
+    if status not in {"passed", "verified", "ok"}:
+        return {
+            "status": status or "failed",
+            "selected_count": len(expected),
+            "error_count": 1,
+            "warning_count": 0,
+            "path": rel_to_project(project, report_path),
+        }
+
+    used = collect_used_ppt_master_asset_ids(report)
+    waived, waivers = active_ppt_master_asset_waivers(report)
+    missing = sorted(expected - used - waived)
+    error_count = required_int(report.get("error_count", 0), "ppt_master_asset_usage.error_count")
+    warning_count = required_int(report.get("warning_count", 0), "ppt_master_asset_usage.warning_count")
+    if missing:
+        error_count += 1
+    if waivers and not dry_run_waiver_allowed(data, args, project=project):
+        error_count += 1
+    return {
+        "status": "passed" if error_count == 0 else "failed",
+        "selected_count": len(expected),
+        "used_count": len(expected & used),
+        "waived_count": len(expected & waived),
+        "missing_asset_ids": missing,
+        "error_count": error_count,
+        "warning_count": warning_count,
+        "path": rel_to_project(project, report_path),
+        "waivers": waivers,
+    }
 
 
 def allowlist_entries(project: Path, data: dict[str, Any]) -> list[Any]:
@@ -962,18 +1244,29 @@ def raster_summary(project: Path, data: dict[str, Any]) -> dict[str, Any]:
 def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
     preflight = require_fresh_receipt(project, data, "preflight", {"passed"}, args)
     preview_lint = require_fresh_receipt(project, data, "preview_lint", {"passed", "waived"}, args)
-    preview_waiver_allowed = allow_preview_lint_waiver(data, args) and dry_run_waiver_allowed(data, args)
+    preview_waiver_allowed = allow_preview_lint_waiver(data, args, project=project) and dry_run_waiver_allowed(
+        data, args, project=project
+    )
     preflight_counts = extract_stage_counts("preflight", preflight)
     preview_counts = extract_stage_counts("preview_lint", preview_lint, allow_waived=preview_waiver_allowed)
     component_counts = component_report_summary(project, data, args)
+    ppt_master_usage = ppt_master_asset_usage_summary(project, data, args)
     raster_counts = raster_summary(project, data)
     allowlist = allowlist_summary(project, data)
-    production = is_production_lane(data, args)
+    profile = quality_validation_profile(resolved_validation_profile(data, args, project=project))
+    threshold = visual_score_threshold(profile)
+    score_enforced = visual_score_enforced(profile)
+    production = is_production_lane(data, args, project=project)
     waivers: list[dict[str, Any]] = []
     if preview_counts["status"] == "waived":
         waivers.append({"type": "preview_lint", **preview_lint.get("waiver", {})})
     if component_counts["status"] == "waived" and isinstance(component_counts.get("waiver"), dict):
         waivers.append(component_counts["waiver"])
+    ppt_master_waivers = ppt_master_usage.get("waivers")
+    if isinstance(ppt_master_waivers, list):
+        for waiver in ppt_master_waivers:
+            if isinstance(waiver, dict):
+                waivers.append(waiver)
 
     failures: list[str] = []
     if preflight_counts["error_count"] != 0:
@@ -982,20 +1275,34 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         failures.append("preview_lint.error_count must be 0")
     if component_counts["error_count"] != 0:
         failures.append("component_report.error_count must be 0")
+    if ppt_master_usage["error_count"] != 0:
+        failures.append("ppt-master asset usage must be proven")
     if raster_counts["error_count"] != 0:
         failures.append("raster.error_count must be 0")
-    if production:
-        total_warnings = (
-            preflight_counts["warning_count"]
-            + preview_counts["warning_count"]
-            + component_counts["warning_count"]
-            + raster_counts["warning_count"]
-        )
+    preview_score = preview_counts.get("visual_score")
+    if preview_counts["status"] != "waived":
+        if not isinstance(preview_score, int) or isinstance(preview_score, bool):
+            failures.append("preview_lint.visual_score is required")
+        elif score_enforced and preview_score < threshold:
+            failures.append(f"preview_lint.visual_score must be >= {threshold} for {profile}")
+        preview_profile = text_from_any(preview_counts.get("validation_profile"))
+        if preview_profile and quality_validation_profile(preview_profile) != profile:
+            failures.append("preview_lint.validation_profile must match quality_gate")
+
+    total_warnings = (
+        preflight_counts["warning_count"]
+        + preview_counts["warning_count"]
+        + component_counts["warning_count"]
+        + ppt_master_usage["warning_count"]
+        + raster_counts["warning_count"]
+    )
+    if production or profile == "golden":
         if total_warnings != 0:
-            failures.append("production warning_budget must be 0")
+            failures.append(f"{profile} warning_budget must be 0")
+    if production:
         if waivers:
             failures.append("production quality gate does not allow waivers")
-    if waivers and not dry_run_waiver_allowed(data, args):
+    if waivers and not dry_run_waiver_allowed(data, args, project=project):
         failures.append("quality gate waivers are only allowed for authoring/debug dry_run")
     if failures:
         raise RunnerError("quality gate failed: " + "; ".join(failures))
@@ -1007,10 +1314,13 @@ def run_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespa
         "preflight": preflight_counts,
         "preview_lint": preview_counts,
         "component_report": component_counts,
+        "ppt_master_asset_usage": ppt_master_usage,
         "raster": raster_counts,
         "allowlist": allowlist,
-        "visual_score": None,
-        "visual_score_mode": "advisory",
+        "validation_profile": profile,
+        "visual_score": preview_score if isinstance(preview_score, int) and not isinstance(preview_score, bool) else None,
+        "visual_score_threshold": threshold,
+        "visual_score_mode": "enforced" if score_enforced else "advisory",
         "waivers": waivers,
     }
 
@@ -1407,20 +1717,70 @@ def validate_legacy_waiver(waiver: Any, *, now: int | None = None, require_codes
     }
 
 
-def resolved_validation_profile(data: dict[str, Any], args: argparse.Namespace | None = None) -> str:
+def normalize_validation_profile(value: Any) -> str:
+    raw = ""
+    if isinstance(value, dict):
+        for key in ["profile", "lane", "level", "mode"]:
+            raw = text_from_any(value.get(key)).lower()
+            if raw:
+                break
+    else:
+        raw = text_from_any(value).lower()
+    raw = raw.replace("-", "_")
+    if raw in {"prod", "production_asset_strict"}:
+        return "production"
+    if raw in {"gold", "golden_regression"}:
+        return "golden"
+    if raw in {"authoring", "production", "golden", "debug", "dev", "development", "local"}:
+        return raw
+    return DEFAULT_VALIDATION_PROFILE
+
+
+def quality_validation_profile(profile: str) -> str:
+    normalized = normalize_validation_profile(profile)
+    return normalized if normalized in VISUAL_SCORE_THRESHOLDS else DEFAULT_VALIDATION_PROFILE
+
+
+def visual_score_threshold(profile: str) -> int:
+    return VISUAL_SCORE_THRESHOLDS[quality_validation_profile(profile)]
+
+
+def visual_score_enforced(profile: str) -> bool:
+    return quality_validation_profile(profile) in {"production", "golden"}
+
+
+def plan_validation_profile(project: Path, data: dict[str, Any]) -> str:
+    plan = read_json(plan_file(project, data), {})
+    if not isinstance(plan, dict):
+        return ""
+    profile = plan.get("validation_profile")
+    if profile is None:
+        return ""
+    return normalize_validation_profile(profile)
+
+
+def resolved_validation_profile(
+    data: dict[str, Any], args: argparse.Namespace | None = None, *, project: Path | None = None
+) -> str:
     explicit = text_from_any(get_arg(args, "validation_profile", ""))
     if explicit:
-        return explicit
+        return normalize_validation_profile(explicit)
     profile = data.get("validation_profile")
     if isinstance(profile, dict):
-        return text_from_any(profile.get("profile") or profile.get("mode")) or "authoring"
+        return normalize_validation_profile(profile)
     if isinstance(profile, str):
-        return profile.strip() or "authoring"
-    return "authoring"
+        return normalize_validation_profile(profile)
+    if project is not None:
+        plan_profile = plan_validation_profile(project, data)
+        if plan_profile:
+            return plan_profile
+    return DEFAULT_VALIDATION_PROFILE
 
 
-def is_production_lane(data: dict[str, Any], args: argparse.Namespace | None = None) -> bool:
-    if resolved_validation_profile(data, args) == "production":
+def is_production_lane(
+    data: dict[str, Any], args: argparse.Namespace | None = None, *, project: Path | None = None
+) -> bool:
+    if resolved_validation_profile(data, args, project=project) == "production":
         return True
     strategy = data.get("asset_strategy")
     if isinstance(strategy, dict) and strategy.get("mode") == "production_asset_strict":
@@ -1436,8 +1796,10 @@ def is_production_lane(data: dict[str, Any], args: argparse.Namespace | None = N
     return False
 
 
-def is_authoring_or_debug_lane(data: dict[str, Any], args: argparse.Namespace | None = None) -> bool:
-    return not is_production_lane(data, args) and resolved_validation_profile(data, args) in {
+def is_authoring_or_debug_lane(
+    data: dict[str, Any], args: argparse.Namespace | None = None, *, project: Path | None = None
+) -> bool:
+    return not is_production_lane(data, args, project=project) and resolved_validation_profile(data, args, project=project) in {
         "authoring",
         "debug",
         "dev",
@@ -1447,10 +1809,12 @@ def is_authoring_or_debug_lane(data: dict[str, Any], args: argparse.Namespace | 
     }
 
 
-def allow_preview_lint_waiver(data: dict[str, Any], args: argparse.Namespace | None = None) -> bool:
-    if is_production_lane(data, args):
+def allow_preview_lint_waiver(
+    data: dict[str, Any], args: argparse.Namespace | None = None, *, project: Path | None = None
+) -> bool:
+    if is_production_lane(data, args, project=project) or resolved_validation_profile(data, args, project=project) == "golden":
         return False
-    return bool(get_arg(args, "allow_missing_preview_lint", False)) or resolved_validation_profile(data, args) == "debug"
+    return bool(get_arg(args, "allow_missing_preview_lint", False)) or resolved_validation_profile(data, args, project=project) == "debug"
 
 
 def preview_lint_waiver_receipt(reason: str) -> dict[str, Any]:
@@ -1492,17 +1856,18 @@ def quality_gate_waivers_active(receipt: dict[str, Any]) -> bool:
 
 
 def require_latest_prepare(project: Path, data: dict[str, Any]) -> None:
+    validate_project_page_contract(project, data)
     prepare = last_receipt(project, data, "prepare")
     if prepare.get("status") != "passed":
         raise RunnerError("stage requires a passed prepare receipt")
     if not receipt_matches_current_fingerprint(project, data, "prepare"):
-        raise RunnerError("prepare receipt is stale after source SVG changes")
+        raise RunnerError("prepare receipt is stale after source SVG, plan, or manifest changes")
 
 
 def require_latest_quality_gate(project: Path, data: dict[str, Any], args: argparse.Namespace | None = None) -> dict[str, Any]:
     quality = require_fresh_receipt(project, data, "quality_gate", {"passed", "passed_with_waiver"}, args)
     if quality.get("status") == "passed_with_waiver":
-        if is_production_lane(data, args) or not quality_gate_waivers_active(quality):
+        if is_production_lane(data, args, project=project) or not quality_gate_waivers_active(quality):
             raise RunnerError("quality_gate waiver is not reusable")
     return quality
 
@@ -1777,16 +2142,28 @@ def run_preview_lint(project: Path, data: dict[str, Any], args: argparse.Namespa
         raise RunnerError("stage_commands.preview_lint is not supported; preview_lint is runner-owned")
     script = repo_root() / "skills" / "lark-slides" / "scripts" / "svg_preview_lint.py"
     if not script.exists():
-        if allow_preview_lint_waiver(data, args):
+        if allow_preview_lint_waiver(data, args, project=project):
             return preview_lint_waiver_receipt("skipped_missing_tool")
         raise RunnerError("preview_lint requires bundled svg_preview_lint.py")
     preview = project / "preview" / "preview.html"
     if not preview.exists():
-        if allow_preview_lint_waiver(data, args):
+        if allow_preview_lint_waiver(data, args, project=project):
             return preview_lint_waiver_receipt("missing preview/preview.html")
         raise RunnerError("preview_lint requires preview/preview.html")
+    profile = quality_validation_profile(resolved_validation_profile(data, args, project=project))
     result = run_command(
-        [sys.executable, str(script), "--project", str(project), "--preview", str(preview), "--plan", str(plan_file(project, data))],
+        [
+            sys.executable,
+            str(script),
+            "--project",
+            str(project),
+            "--preview",
+            str(preview),
+            "--plan",
+            str(plan_file(project, data)),
+            "--validation-profile",
+            profile,
+        ],
         cwd=repo_root(),
     )
     log_path(project, "preview_lint").write_text(result.stdout + result.stderr, encoding="utf-8")
@@ -1847,10 +2224,10 @@ def should_skip_existing(project: Path, data: dict[str, Any], stage: str, args: 
     if status == "skipped":
         return False
     if status == "waived":
-        if stage != "preview_lint" or not allow_preview_lint_waiver(data, args) or not preview_lint_waiver_active(receipt):
+        if stage != "preview_lint" or not allow_preview_lint_waiver(data, args, project=project) or not preview_lint_waiver_active(receipt):
             return False
     elif status == "passed_with_waiver":
-        if stage != "quality_gate" or is_production_lane(data, args) or not quality_gate_waivers_active(receipt):
+        if stage != "quality_gate" or is_production_lane(data, args, project=project) or not quality_gate_waivers_active(receipt):
             return False
     elif status != "passed":
         return False

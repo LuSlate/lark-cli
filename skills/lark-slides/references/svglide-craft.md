@@ -36,7 +36,35 @@ choose style_preset
 -> run svg_preflight.py
 ```
 
-每页 plan 必须有 `seed_id`、`layout_skeleton_id`、`layout_boxes`、`content_budget` 或 `text_capacity`、`text_budget_by_role`、`one_idea` 或 `key_message`、`reserved_bands.footer`、`footer_safe_zone`、`vertical_text_policy`。如果内容放不进 seed，不要从空白画布重画；先删内容、拆页，或换一个更合适的 seed。
+	每页 plan 必须有 `seed_id`、`layout_skeleton_id`、`layout_boxes`、`content_budget` 或 `text_capacity`、`text_budget_by_role`、`one_idea` 或 `key_message`、`reserved_bands.footer`、`footer_safe_zone`、`vertical_text_policy`。如果内容放不进 seed，不要从空白画布重画；先删内容、拆页，或换一个更合适的 seed。
+
+## PPT Master Lessons
+
+`ppt-master` 好看的关键是页型先行和节奏先行。SVGlide 只能借鉴流程与结构合同，不复制 PPTX 导出、DrawingML 限制或 raw SVG path。
+
+每页先锁定：
+
+```json
+{
+  "page_rhythm": "anchor | breathing | dense",
+  "page_type": "cover | editor_note | contents | chart_takeaway | chapter | closing",
+  "chart_type": "bar_chart | sankey_chart | hub_spoke | ...",
+  "main_visual_anchor": "the visible chart/scene/motif that makes this page memorable",
+  "annotation_zone": {"role": "right_observation", "x": 690, "y": 126, "width": 206, "height": 246},
+  "reference_asset": {"source": "ppt-master", "asset_id": "chart.bar_chart", "usage": "geometry pattern only"}
+}
+```
+
+硬规则：
+
+- `page_rhythm` 要有起伏：anchor/breathing 页给叙事留气口，dense 页才承载图表密度。
+- `main_visual_anchor` 必须能在截图里一眼看到；标题、三 bullet、普通卡片不算 anchor。
+- `chart_type` 一旦声明，SVG source 必须画出对应几何：bar 要有多根 bar，sankey 要有多条 flow path，hub 要有中心节点和 spokes，quadrant 要有 2x2 区块。
+- `bubble_chart` 和 `donut_chart` 不能退化成普通卡片页：bubble 至少用多枚圆形节点表达规模/关系，donut 至少用环形/圆形结构、分段和中心 KPI 表达构成。
+- dense 页的信息密度必须由 chart/table/flow/hub/quadrant 承担，不能靠堆文字或装饰线。
+- 图片 atmosphere 只服务 cover/chapter/showcase；图片必须无可见文字、预留 SVG 标题负空间，并有 asset_contract。
+- 浅字、白字、name-plate、label-back、badge 和 pill 必须有独立承载面；底板不能压住 note、source、正文或图表标签。
+- 高饱和红/金等强调色只用于核心数字、风险、章节锚点或极少数对比线，不能把每个组件都染成同等权重。
 
 硬默认：
 

@@ -92,6 +92,31 @@ def load_visual_recipe_catalog() -> dict[str, dict[str, Any]]:
 VISUAL_RECIPE_CATALOG: dict[str, dict[str, Any]] = load_visual_recipe_catalog()
 
 
+def load_chart_type_contracts() -> dict[str, dict[str, Any]]:
+    path = Path(__file__).resolve().parent.parent / "references" / "svg-recipes.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"failed to load SVG chart type contracts: {path}: {error}") from error
+    contracts = data.get("chart_type_contracts") if isinstance(data, dict) else None
+    if contracts is None:
+        return {}
+    if not isinstance(contracts, dict):
+        raise RuntimeError(f"invalid SVG chart type contracts: {path}: chart_type_contracts must be an object")
+    out: dict[str, dict[str, Any]] = {}
+    for chart_type, raw_contract in contracts.items():
+        normalized_id = _normalized_public_id(chart_type)
+        if not normalized_id:
+            raise RuntimeError("invalid SVG chart type contracts: chart_type id must not be empty")
+        if not isinstance(raw_contract, dict):
+            raise RuntimeError(f"invalid SVG chart type contract: {chart_type} must be an object")
+        out[normalized_id] = dict(raw_contract)
+    return out
+
+
+CHART_TYPE_CONTRACTS: dict[str, dict[str, Any]] = load_chart_type_contracts()
+
+
 def load_svg_seed_catalog() -> dict[str, dict[str, Any]]:
     path = Path(__file__).resolve().parent.parent / "references" / "svg-seeds.json"
     try:
@@ -409,6 +434,7 @@ def default_preflight_context(report_scope: str = PUBLIC_REPORT_SCOPE) -> dict[s
         "route_id": "",
         "recipe_catalog": VISUAL_RECIPE_CATALOG,
         "public_recipe_catalog": VISUAL_RECIPE_CATALOG,
+        "chart_type_contracts": CHART_TYPE_CONTRACTS,
         "seed_catalog": SVG_SEED_CATALOG,
         "private_recipe_catalog": {},
         "private_id_set": set(),
@@ -1820,6 +1846,14 @@ def is_card_like_rect(element: ET.Element, bbox: dict[str, float], canvas_width:
     return 70 <= bbox["width"] <= 420 and 40 <= bbox["height"] <= 240
 
 
+def is_bar_like_rect(element: ET.Element, bbox: dict[str, float]) -> bool:
+    if local_name(element.tag) != "rect" or svg_role(element) != "shape":
+        return False
+    horizontal_bar = 18 <= bbox["width"] <= 760 and 4 <= bbox["height"] <= 70
+    vertical_bar = 8 <= bbox["width"] <= 140 and 16 <= bbox["height"] <= 300
+    return horizontal_bar or vertical_bar
+
+
 def element_is_hidden(element: ET.Element) -> bool:
     return get_attr(element, INTERNAL_INHERITED_HIDDEN_ATTR) == "1" or element_self_hidden(element)
 
@@ -1937,7 +1971,7 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         if svg_role(element) == "shape" and name in {"rect", "circle", "ellipse", "line", "path"} and area <= 3600:
             counts["small_shape"] += 1
             element_primitives.add("icon")
-        if name == "rect" and 8 <= bbox["width"] <= 240 and 4 <= bbox["height"] <= 70:
+        if is_bar_like_rect(element, bbox):
             counts["bar_like_rect"] += 1
             element_primitives.add("micro_chart")
         if name == "rect":
@@ -2008,7 +2042,7 @@ def summarize_visual_primitives(root: ET.Element, elements: list[ET.Element], te
         primitive_areas["gradient"] = max(primitive_areas.get("gradient", 0.0), canvas_width * canvas_height * 0.01)
     if filters or filter_refs:
         primitives.add("spotlight")
-    if large_text:
+    if text_boxes:
         primitives.add("typography")
     if counts["bar_like_rect"] >= 3 or re.search(r"(chart|metric|score|kpi|bar)", root_identifiers):
         primitives.add("micro_chart")
@@ -2967,6 +3001,26 @@ def slide_layout_family(slide: dict[str, Any]) -> str:
     return textify(slide.get("layout_family")).strip()
 
 
+def slide_chart_type(slide: dict[str, Any]) -> str:
+    for key in ["chart_type", "chartType", "primary_chart_type", "primaryChartType"]:
+        if key in slide:
+            return normalize_name(slide.get(key))
+    reference = slide.get("reference_asset") or slide.get("ppt_master_reference_asset")
+    if isinstance(reference, dict):
+        asset_id = textify(reference.get("asset_id") or reference.get("id")).strip()
+        if asset_id.startswith("chart."):
+            return normalize_name(asset_id.split(".", 1)[1])
+    references = slide.get("ppt_master_reference_assets")
+    if isinstance(references, list):
+        for item in references:
+            if not isinstance(item, dict):
+                continue
+            asset_id = textify(item.get("asset_id") or item.get("id")).strip()
+            if asset_id.startswith("chart."):
+                return normalize_name(asset_id.split(".", 1)[1])
+    return ""
+
+
 def required_plan_primitives(slide: dict[str, Any]) -> set[str]:
     return normalize_primitives(slide.get("required_primitives"))
 
@@ -3050,6 +3104,37 @@ def source_density_count(kind: str, primitive_summary: dict[str, Any]) -> int:
     return 0
 
 
+def chart_type_contract_failures(chart_type: str, primitive_summary: dict[str, Any], contracts: dict[str, dict[str, Any]]) -> list[str]:
+    contract = contracts.get(normalize_name(chart_type), {})
+    if not contract:
+        return []
+    counts = primitive_summary.get("counts", {}) if isinstance(primitive_summary.get("counts"), dict) else {}
+    metrics = {
+        "card_like_rect": int(counts.get("card_like_rect", 0)),
+        "bar_like_rect": int(counts.get("bar_like_rect", 0)),
+        "typography_boxes": int(counts.get("foreignObject", 0)),
+        "path": int(counts.get("path", 0)),
+        "line": int(counts.get("line", 0)),
+        "line_or_path": int(counts.get("line", 0)) + int(counts.get("path", 0)),
+        "round_nodes": int(counts.get("circle", 0)) + int(counts.get("ellipse", 0)),
+        "chart_marker": int(counts.get("chart_marker", 0)),
+    }
+    failures: list[str] = []
+    for key, value in contract.items():
+        normalized_key = normalize_name(key)
+        if not normalized_key.startswith("min_"):
+            continue
+        metric = normalized_key[4:]
+        try:
+            minimum = int(value)
+        except (TypeError, ValueError):
+            continue
+        actual = metrics.get(metric, int(counts.get(metric, 0)))
+        if actual < minimum:
+            failures.append(f"{metric} {actual} < {minimum}")
+    return failures
+
+
 def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any] | None = None) -> dict[str, Any]:
     context = context or default_preflight_context()
     issues: list[dict[str, Any]] = []
@@ -3100,7 +3185,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
                     "plan_style_preset_catalog_unavailable",
                     "SVGlide style preset catalog is unavailable",
                     None,
-                    "Ensure references/style-presets.json exists and contains the 35 beautiful-feishu-whiteboard presets.",
+                    "Ensure references/style-presets.json exists and contains the expected beautiful-feishu-whiteboard and SVGlide style presets.",
                 )
             )
         if not deck_preset_id:
@@ -3158,8 +3243,10 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
     layout_families: list[str] = []
     visual_recipes: list[str] = []
     visual_recipe_families: list[str] = []
+    chart_types: list[str] = []
     recipe_catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
     public_recipe_catalog = context.get("public_recipe_catalog", VISUAL_RECIPE_CATALOG)
+    chart_type_contracts = context.get("chart_type_contracts", CHART_TYPE_CONTRACTS)
     private_id_set = context.get("private_id_set", set())
     seed_catalog = context.get("seed_catalog", SVG_SEED_CATALOG)
     for slide_index, slide in enumerate(slides, 1):
@@ -3602,6 +3689,32 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
                             )
                         )
 
+            chart_type = slide_chart_type(visual_plan)
+            if chart_type:
+                if chart_type not in chart_type_contracts:
+                    issues.append(
+                        plan_issue(
+                            "error",
+                            "plan_unknown_chart_type",
+                            f'unknown chart_type "{chart_type}"',
+                            slide,
+                            "Use one of: " + ", ".join(sorted(chart_type_contracts)),
+                        )
+                    )
+                else:
+                    chart_types.append(chart_type)
+                    recommended_recipe = normalize_name(chart_type_contracts[chart_type].get("recommended_visual_recipe"))
+                    if recommended_recipe and visual_recipe in recipe_catalog and visual_recipe != recommended_recipe:
+                        issues.append(
+                            plan_issue(
+                                "warning",
+                                "plan_chart_type_recipe_mismatch",
+                                f'chart_type "{chart_type}" is usually paired with visual_recipe "{recommended_recipe}"',
+                                slide,
+                                "Keep this only if the page has a deliberate alternate visual carrier and the SVG source satisfies the chart geometry contract.",
+                            )
+                        )
+
             for field in ["visual_intent", "visual_focal_point", "visual_signature", "xml_like_risk"]:
                 if not textify(visual_plan.get(field)).strip():
                     issues.append(
@@ -3866,6 +3979,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>", context: dict[str, Any
         "distinct_layout_family_count": len(set(comparable_layout_families)),
         "distinct_visual_recipe_count": len(set(visual_recipes)),
         "distinct_visual_recipe_family_count": len(set(visual_recipe_families)),
+        "distinct_chart_type_count": len(set(chart_types)),
         "summary": {
             "error_count": sum(1 for item in issues if item["level"] == "error"),
             "warning_count": sum(1 for item in issues if item["level"] == "warning"),
@@ -3945,6 +4059,31 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
     if not isinstance(slides, list) or not slides:
         return []
 
+    issues: list[dict[str, Any]] = []
+    page_count = plan.get("page_count") or plan.get("target_slide_count")
+    if page_count is not None:
+        try:
+            expected_count = int(page_count)
+            if expected_count != len(files):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_svg_file_count_mismatch",
+                        f"plan page_count is {expected_count}, but preflight received {len(files)} SVG input files",
+                    )
+                )
+        except (TypeError, ValueError):
+            pass
+    svg_files = plan.get("svg_files")
+    if isinstance(svg_files, list) and len(svg_files) != len(files):
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_svg_file_count_mismatch",
+                f"plan svg_files has {len(svg_files)} items, but preflight received {len(files)} SVG input files",
+            )
+        )
+
     files_by_name = {Path(textify(file.get("path"))).name: file for file in files if textify(file.get("path"))}
     alignments: list[tuple[int, dict[str, Any], dict[str, Any]]] = []
     for index, slide in enumerate(slides):
@@ -3959,9 +4098,9 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
         if len(files) == len(slides):
             alignments.append((index + 1, slide, files[index]))
 
-    issues: list[dict[str, Any]] = []
     recipe_catalog = context.get("recipe_catalog", VISUAL_RECIPE_CATALOG)
     seed_catalog = context.get("seed_catalog", SVG_SEED_CATALOG)
+    chart_type_contracts = context.get("chart_type_contracts", CHART_TYPE_CONTRACTS)
     for slide_index, slide, file in alignments:
         visual_plan = slide_visual_plan(slide)
         recipe = resolved_visual_recipe_for_slide(visual_plan, slide_index, context)
@@ -4061,6 +4200,18 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]], c
                         f"Detected count is {source_count} in {file.get('path')}; add real cells/nodes/metrics/stages/items before rendering.",
                     )
                 )
+        chart_type = slide_chart_type(visual_plan)
+        chart_failures = chart_type_contract_failures(chart_type, file.get("visual_primitives", {}), chart_type_contracts) if chart_type else []
+        if chart_failures:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_chart_type_contract_not_met",
+                    f'chart_type "{chart_type}" geometry contract is not met: {", ".join(chart_failures)}',
+                    slide,
+                    f"SVG file {file.get('path')} does not expose enough chart geometry for the declared ppt-master-style page type.",
+                )
+            )
         if "image" in source_primitives:
             contract_value = visual_plan.get("asset_contract")
             if asset_contract_declares_no_asset(contract_value) or not asset_contract_has_metadata(contract_value):

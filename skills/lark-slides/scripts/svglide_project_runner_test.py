@@ -68,7 +68,19 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         body = runner.builtin_prepare(project, data)
         runner.write_stage_receipt(project, data, "prepare", runner.now_ms(), body, prepared_digest=False, args=self.args(project))
 
-    def write_gate_inputs(self, project: Path, data: dict[str, object], args: Namespace) -> None:
+    def write_gate_inputs(
+        self,
+        project: Path,
+        data: dict[str, object],
+        args: Namespace,
+        *,
+        preview_warning_count: int = 0,
+        visual_score: int = 100,
+        validation_profile: str | None = None,
+    ) -> None:
+        profile = validation_profile or runner.quality_validation_profile(
+            runner.resolved_validation_profile(data, args, project=project)
+        )
         self.write_prepare_receipt(project, data)
         runner.write_stage_receipt(
             project,
@@ -83,7 +95,17 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             data,
             "preview_lint",
             runner.now_ms(),
-            {"status": "passed", "summary": {"error_count": 0, "warning_count": 0}},
+            {
+                "status": "passed",
+                "summary": {
+                    "error_count": 0,
+                    "warning_count": preview_warning_count,
+                    "visual_score": visual_score,
+                    "visual_score_threshold": runner.visual_score_threshold(profile),
+                    "visual_score_mode": "enforced" if runner.visual_score_enforced(profile) else "advisory",
+                    "validation_profile": profile,
+                },
+            },
             args=args,
         )
 
@@ -91,6 +113,35 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         write_json(
             project / "receipts" / "emitted-components-waiver.json",
             {"owner": "test", "reason": "legacy fixture", "expires_at": runner.now_ms() + 60_000},
+        )
+
+    def write_component_report(self, project: Path) -> None:
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {"status": "passed", "summary": {"error_count": 0, "warning_count": 0}},
+        )
+
+    def write_structured_component_report(self, project: Path) -> None:
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "page-1.title",
+                                "renderer_id": "demo.cover",
+                                "bbox": {"x": 80, "y": 80, "width": 420, "height": 48},
+                                "primitives": ["typography"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
         )
 
     def write_fake_cli(self, project: Path, version: str = "lark-cli 1.2.3") -> Path:
@@ -163,6 +214,23 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         with self.assertRaisesRegex(runner.RunnerError, "stale"):
             runner.require_latest_prepare(project, data)
 
+    def test_timing_receipt_records_v2_fields(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        body = runner.builtin_prepare(project, data)
+
+        runner.write_stage_receipt(project, data, "prepare", runner.now_ms(), body, prepared_digest=False)
+
+        timings = json.loads((project / "receipts" / "timings.json").read_text(encoding="utf-8"))
+        stage = next(item for item in timings["stages"] if item["stage"] == "prepare")
+        self.assertIn("started_at_ms", stage)
+        self.assertIn("ended_at_ms", stage)
+        self.assertIn("target_ms", stage)
+        self.assertIn("over_budget", stage)
+        self.assertIn("next_command", stage)
+        self.assertGreater(stage["target_ms"], 0)
+        self.assertIn("svglide_project_runner.py", stage["next_command"])
+
     def test_prepare_rejects_prepared_svg_outside_project_before_copy(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
@@ -173,6 +241,84 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             runner.builtin_prepare(project, data)
 
         self.assertFalse(outside.exists())
+
+    def test_prepare_rejects_manifest_page_count_drift_from_slide_plan(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "page_count": 2,
+                "slides": [{"page": 1}, {"page": 2}],
+                "svg_files": [{"page": 1}, {"page": 2}],
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "project_manifest.pages count 1.*slide_plan.page_count 2"):
+            runner.builtin_prepare(project, data)
+
+    def test_prepare_resume_is_invalidated_by_slide_plan_page_count_changes(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "page_count": 1,
+                "slides": [{"page": 1}],
+                "svg_files": [{"page": 1}],
+            },
+        )
+        args = self.args(project)
+        self.write_prepare_receipt(project, data)
+
+        self.assertTrue(runner.should_skip_existing(project, data, "prepare", args))
+
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "page_count": 2,
+                "slides": [{"page": 1}, {"page": 2}],
+                "svg_files": [{"page": 1}, {"page": 2}],
+            },
+        )
+
+        self.assertFalse(runner.should_skip_existing(project, data, "prepare", args))
+        with self.assertRaisesRegex(runner.RunnerError, "project_manifest.pages count 1.*slide_plan.page_count 2"):
+            runner.require_latest_prepare(project, data)
+
+    def test_preflight_rejects_manifest_page_count_drift_after_existing_prepare_receipt(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "page_count": 1,
+                "slides": [{"page": 1}],
+                "svg_files": [{"page": 1}],
+            },
+        )
+        self.write_prepare_receipt(project, data)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "page_count": 2,
+                "slides": [{"page": 1}, {"page": 2}],
+                "svg_files": [{"page": 1}, {"page": 2}],
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "project_manifest.pages count 1.*slide_plan.page_count 2"):
+            runner.run_preflight(project, data)
 
     def test_receipt_path_rejects_paths_outside_project(self) -> None:
         project = self.make_project()
@@ -297,6 +443,308 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_component_waiver(project)
 
         with self.assertRaisesRegex(runner.RunnerError, "production"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_resolved_validation_profile_reads_slide_plan(self) -> None:
+        project = self.make_project()
+        write_json(
+            project / "slide_plan.json",
+            {"output_mode": "svglide-svg", "title": "Demo Deck", "validation_profile": {"profile": "golden"}},
+        )
+        data = runner.manifest(project)
+
+        self.assertEqual(runner.resolved_validation_profile(data, self.args(project), project=project), "golden")
+
+    def test_quality_gate_accepts_authoring_score_below_threshold_as_advisory(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args, visual_score=72)
+        self.write_component_report(project)
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["validation_profile"], "authoring")
+        self.assertEqual(body["visual_score"], 72)
+        self.assertEqual(body["visual_score_threshold"], 75)
+        self.assertEqual(body["visual_score_mode"], "advisory")
+
+    def test_quality_gate_rejects_production_score_below_threshold(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["validation_profile"] = {"profile": "production"}
+        write_json(project / "project_manifest.json", data)
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args, visual_score=84)
+        self.write_structured_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual_score must be >= 85"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_golden_preview_warnings(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["validation_profile"] = {"profile": "golden"}
+        write_json(project / "project_manifest.json", data)
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args, preview_warning_count=1, visual_score=93)
+        self.write_structured_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "golden warning_budget must be 0"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_unproven_ppt_master_asset_selection(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "ppt_master_asset_selection": {
+                    "selected_assets": [
+                        {"id": "chart.timeline", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_accepts_proven_ppt_master_asset_selection(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "ppt_master_asset_selection": {
+                    "selected_assets": [
+                        {"id": "chart.timeline", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+        write_json(
+            project / "receipts" / "ppt-master-asset-usage.json",
+            {
+                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "status": "passed",
+                "used_asset_ids": ["chart.timeline"],
+                "page_usages": [
+                    {
+                        "page": 1,
+                        "asset_id": "chart.timeline",
+                        "component_ids": ["component.timeline.1"],
+                        "source_trace": "derived_renderer_contract",
+                    }
+                ],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["ppt_master_asset_usage"]["used_count"], 1)
+
+    def test_quality_gate_rejects_selected_assets_not_used_by_receipt(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "ppt_master_asset_selection": {
+                    "selected_assets": [
+                        {"id": "chart.bubble_chart", "kind": "chart_template"},
+                        {"id": "chart.hub_spoke", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+        write_json(
+            project / "receipts" / "ppt-master-asset-usage.json",
+            {
+                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "status": "passed",
+                "page_usages": [
+                    {
+                        "page": 1,
+                        "asset_id": "chart.bubble_chart",
+                        "component_ids": ["bubble-chart"],
+                        "source_trace": "chart.bubble_chart",
+                    }
+                ],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_ignores_disabled_ppt_master_selected_assets(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "ppt_master_asset_selection": {
+                    "selected_assets": [
+                        {"id": "chart.bubble_chart", "kind": "chart_template", "enabled": True},
+                        {"id": "chart.hub_spoke", "kind": "chart_template", "enabled": False},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+        write_json(
+            project / "receipts" / "ppt-master-asset-usage.json",
+            {
+                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "status": "passed",
+                "page_usages": [
+                    {
+                        "page": 1,
+                        "asset_id": "chart.bubble_chart",
+                        "component_ids": ["bubble-chart"],
+                        "source_trace": "chart.bubble_chart",
+                    }
+                ],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["ppt_master_asset_usage"]["selected_count"], 1)
+        self.assertNotIn("chart.hub_spoke", body["ppt_master_asset_usage"]["missing_asset_ids"])
+
+    def test_quality_gate_rejects_shallow_component_report_for_golden(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["validation_profile"] = {"profile": "golden"}
+        write_json(project / "project_manifest.json", data)
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "component report schema_version"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_accepts_structured_component_report_for_golden(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["validation_profile"] = {"profile": "golden"}
+        write_json(project / "project_manifest.json", data)
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "page-1.title",
+                                "renderer_id": "demo.cover",
+                                "bbox": {"x": 80, "y": 80, "width": 420, "height": 48},
+                                "primitives": ["typography"],
+                                "effects": ["text_hierarchy"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["component_report"]["status"], "passed")
+
+    def test_quality_gate_rejects_ppt_master_usage_without_page_trace(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "ppt_master_asset_selection": {
+                    "selected_assets": [
+                        {"id": "chart.timeline", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+        write_json(
+            project / "receipts" / "ppt-master-asset-usage.json",
+            {
+                "schema_version": "svglide-ppt-master-asset-usage/v1",
+                "status": "passed",
+                "used_asset_ids": ["chart.timeline"],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_unproven_slide_level_ppt_master_reference(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_plan": {
+                            "ppt_master_reference_assets": [
+                                {"id": "layout.government_blue", "kind": "layout_template"},
+                            ],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        self.write_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "ppt-master asset usage"):
             runner.run_quality_gate(project, data, args)
 
     def test_dry_run_requires_latest_quality_gate(self) -> None:
