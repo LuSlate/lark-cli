@@ -632,6 +632,34 @@ var flagDefs = map[string]commandDef{
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},
+	"+history-list": {
+		Risk: "read",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
+			{Name: "cursor", Kind: "own", Type: "string", Required: "optional", Desc: "Pagination cursor; pass the previous page's next_cursor, omit for first page"},
+			{Name: "count", Kind: "own", Type: "int", Required: "optional", Desc: "History versions per page, default 20"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
+	"+history-revert": {
+		Risk: "write",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
+			{Name: "revision-id", Kind: "own", Type: "int", Required: "required", Desc: "Restore the whole spreadsheet to this revision (a revision_id from +history-list)"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
+	"+history-revert-status": {
+		Risk: "read",
+		Flags: []flagDef{
+			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
+			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
+			{Name: "task-id", Kind: "own", Type: "string", Required: "required", Desc: "Revert task id returned by +history-revert"},
+			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
+		},
+	},
 	"+pivot-create": {
 		Risk: "write",
 		Flags: []flagDef{

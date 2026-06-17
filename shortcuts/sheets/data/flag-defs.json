@@ -25,6 +25,112 @@
       }
     ]
   },
+  "+history-list": {
+    "risk": "read",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "cursor",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Pagination cursor; pass the previous page's next_cursor, omit for first page"
+      },
+      {
+        "name": "count",
+        "kind": "own",
+        "type": "int",
+        "required": "optional",
+        "desc": "History versions per page, default 20"
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
+  "+history-revert": {
+    "risk": "write",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "revision-id",
+        "kind": "own",
+        "type": "int",
+        "required": "required",
+        "desc": "Restore the whole spreadsheet to this revision (a revision_id from +history-list)"
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
+  "+history-revert-status": {
+    "risk": "read",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "task-id",
+        "kind": "own",
+        "type": "string",
+        "required": "required",
+        "desc": "Revert task id returned by +history-revert"
+      },
+      {
+        "name": "dry-run",
+        "kind": "system",
+        "type": "bool",
+        "required": "optional",
+        "desc": ""
+      }
+    ]
+  },
   "+sheet-create": {
     "risk": "write",
     "flags": [
