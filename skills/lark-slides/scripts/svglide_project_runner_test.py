@@ -21,6 +21,8 @@ import svglide_project_runner as runner
 
 SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /></svg>"""
 CHART_SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><rect id="chart-plot-backplane" slide:role="shape" x="70" y="110" width="780" height="320" fill="#eef6ff" /><rect id="chart-bar-1" slide:role="shape" x="120" y="260" width="92" height="130" fill="#4A90E2" /><rect id="chart-bar-2" slide:role="shape" x="250" y="220" width="92" height="170" fill="#4A90E2" /><rect id="chart-insight-strip" slide:role="shape" x="610" y="145" width="190" height="72" fill="#E91E63" /><foreignObject id="chart-insight-label" slide:role="shape" slide:shape-type="text" x="628" y="160" width="150" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px">核心洞察</div></foreignObject></svg>"""
+THEME_SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><path id="theme-oasis-water-ribbon" slide:role="shape" d="M56 426 C190 364 294 454 430 382 C560 314 682 388 902 286" fill="none" stroke="#4A90E2" stroke-width="15" /><rect id="theme-oasis-poplar-texture-1" slide:role="shape" x="812" y="64" width="12" height="334" fill="#8A5A2B" /><rect id="theme-oasis-adras-band" slide:role="shape" x="720" y="492" width="160" height="12" fill="#E91E63" /></svg>"""
+FOOTER_ONLY_SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><foreignObject id="footer" slide:role="shape" slide:shape-type="text" x="64" y="500" width="832" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:9px">Demo Deck · 01</div></foreignObject></svg>"""
 
 
 def write_json(path: Path, data: object) -> None:
@@ -575,6 +577,25 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         with self.assertRaisesRegex(runner.RunnerError, "golden warning_budget must be 0"):
             runner.run_quality_gate(project, data, args)
 
+    def test_quality_gate_rejects_golden_preflight_warnings(self) -> None:
+        project = self.make_project()
+        data = runner.manifest(project)
+        data["validation_profile"] = {"profile": "golden"}
+        write_json(project / "project_manifest.json", data)
+        args = self.args(project)
+        self.write_gate_inputs(
+            project,
+            data,
+            args,
+            preflight_plan_issues=[
+                {"level": "warning", "code": "plan_text_box_count_below_seed_minimum", "message": "warning fixture"}
+            ],
+        )
+        self.write_structured_component_report(project)
+
+        with self.assertRaisesRegex(runner.RunnerError, "golden warning_budget must be 0"):
+            runner.run_quality_gate(project, data, args)
+
     def test_quality_gate_rejects_unproven_design_pattern_selection(self) -> None:
         project = self.make_project()
         data = runner.manifest(project)
@@ -599,6 +620,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
     def test_quality_gate_accepts_proven_design_pattern_selection(self) -> None:
         project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(CHART_SVG, encoding="utf-8")
         data = runner.manifest(project)
         write_json(
             project / "slide_plan.json",
@@ -607,26 +629,48 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                 "title": "Demo Deck",
                 "design_pattern_selection": {
                     "selected_assets": [
-                        {"id": "chart.timeline", "kind": "chart_template"},
+                        {"id": "chart.bar_chart", "kind": "chart_template"},
                     ],
                 },
             },
         )
         args = self.args(project)
         self.write_gate_inputs(project, data, args)
-        self.write_component_report(project)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "chart-plot-backplane",
+                                "asset_id": "chart.bar_chart",
+                                "renderer_id": "chart.bar",
+                                "source_trace": "chart.bar",
+                                "bbox": {"x": 70, "y": 110, "width": 780, "height": 320},
+                                "primitives": ["geometric_shape", "micro_chart"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
         write_json(
             project / "receipts" / "design-pattern-usage.json",
             {
                 "schema_version": "svglide-design-pattern-usage/v1",
                 "status": "passed",
-                "used_asset_ids": ["chart.timeline"],
+                "used_asset_ids": ["chart.bar_chart"],
                 "page_usages": [
                     {
                         "page": 1,
-                        "asset_id": "chart.timeline",
-                        "component_ids": ["component.timeline.1"],
-                        "source_trace": "derived_renderer_contract",
+                        "asset_id": "chart.bar_chart",
+                        "component_ids": ["chart-plot-backplane"],
+                        "source_trace": "chart.bar",
                     }
                 ],
                 "error_count": 0,
@@ -638,6 +682,130 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
         self.assertEqual(body["status"], "passed")
         self.assertEqual(body["design_pattern_usage"]["used_count"], 1)
+
+    def test_quality_gate_rejects_design_pattern_receipt_with_fake_component_id(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(CHART_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "design_pattern_selection": {
+                    "selected_assets": [
+                        {"id": "chart.bar_chart", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "real-chart-component",
+                                "asset_id": "chart.bar_chart",
+                                "renderer_id": "chart.bar",
+                                "source_trace": "chart.bar",
+                                "bbox": {"x": 70, "y": 110, "width": 780, "height": 320},
+                                "primitives": ["geometric_shape", "micro_chart"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+        write_json(
+            project / "receipts" / "design-pattern-usage.json",
+            {
+                "schema_version": "svglide-design-pattern-usage/v1",
+                "status": "passed",
+                "page_usages": [
+                    {
+                        "page": 1,
+                        "asset_id": "chart.bar_chart",
+                        "component_ids": ["fake-chart-component"],
+                        "source_trace": "chart.bar",
+                    }
+                ],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "SVGlide design pattern usage"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_design_pattern_receipt_with_mismatched_component_asset(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(CHART_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "output_mode": "svglide-svg",
+                "title": "Demo Deck",
+                "design_pattern_selection": {
+                    "selected_assets": [
+                        {"id": "chart.bubble_chart", "kind": "chart_template"},
+                    ],
+                },
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "chart-plot-backplane",
+                                "asset_id": "chart.bar_chart",
+                                "renderer_id": "chart.bar",
+                                "source_trace": "chart.bar",
+                                "bbox": {"x": 70, "y": 110, "width": 780, "height": 320},
+                                "primitives": ["geometric_shape", "micro_chart"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+        write_json(
+            project / "receipts" / "design-pattern-usage.json",
+            {
+                "schema_version": "svglide-design-pattern-usage/v1",
+                "status": "passed",
+                "page_usages": [
+                    {
+                        "page": 1,
+                        "asset_id": "chart.bubble_chart",
+                        "component_ids": ["chart-plot-backplane"],
+                        "source_trace": "chart.bubble",
+                    }
+                ],
+                "error_count": 0,
+                "warning_count": 0,
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "SVGlide design pattern usage"):
+            runner.run_quality_gate(project, data, args)
 
     def test_quality_gate_rejects_unproven_visual_design_contract(self) -> None:
         project = self.make_project()
@@ -719,6 +887,111 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(body["status"], "passed")
         self.assertEqual(body["visual_design_contract"]["status"], "passed")
         self.assertEqual(body["visual_design_contract"]["page_count"], 1)
+
+    def test_quality_gate_accepts_theme_motif_evidence_backed_by_prepared_svg(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(THEME_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show the Aksu oasis living district motif",
+                            "composition_archetype": "regional_cover",
+                            "primary_motif": "water_ribbon",
+                            "required_visual_evidence": ["oasis_water_ribbon", "oasis_poplar_texture", "oasis_adras_band"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "theme-oasis-residential",
+                                "renderer_id": "theme.visual_language",
+                                "bbox": {"x": 0, "y": 0, "width": 960, "height": 540},
+                                "primitives": ["path", "geometric_shape"],
+                                "effects": ["oasis_water_ribbon", "oasis_poplar_texture", "oasis_adras_band"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["status"], "passed")
+        self.assertEqual(body["visual_design_contract"]["status"], "passed")
+
+    def test_quality_gate_rejects_tiny_named_theme_motif_as_visual_evidence(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(
+            """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><rect id="theme-oasis-poplar-texture-1" slide:role="shape" x="80" y="120" width="2" height="2" fill="#8A5A2B" /></svg>""",
+            encoding="utf-8",
+        )
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show a regional motif",
+                            "composition_archetype": "regional_cover",
+                            "primary_motif": "poplar texture",
+                            "required_visual_evidence": ["oasis_poplar_texture"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "theme-oasis-residential",
+                                "renderer_id": "theme.visual_language",
+                                "bbox": {"x": 0, "y": 0, "width": 960, "height": 540},
+                                "primitives": ["geometric_shape"],
+                                "effects": ["oasis_poplar_texture"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
 
     def test_quality_gate_rejects_visual_contract_receipt_not_backed_by_prepared_svg(self) -> None:
         project = self.make_project()
@@ -817,6 +1090,217 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
         with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
             runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_rejects_footer_as_semantic_label_evidence(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(FOOTER_ONLY_SVG, encoding="utf-8")
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show semantic labels",
+                            "composition_archetype": "agenda",
+                            "primary_motif": "labels",
+                            "required_visual_evidence": ["semantic_labels"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "footer-only",
+                                "renderer_id": "contract.fake",
+                                "bbox": {"x": 64, "y": 500, "width": 832, "height": 24},
+                                "primitives": ["typography"],
+                                "effects": [],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_accepts_agenda_labels_as_section_index_evidence(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(
+            """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><rect id="agenda-route-backplane" slide:role="shape" x="80" y="120" width="760" height="300" fill="#fff" /><path id="agenda-route-path" slide:role="shape" d="M120 150 L120 360" fill="none" stroke="#4A90E2" stroke-width="4" /><foreignObject id="agenda-labels" slide:role="shape" slide:shape-type="text" x="150" y="150" width="620" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px">01 核心定位 / 02 春之地块 / 03 夏之地块</div></foreignObject></svg>""",
+            encoding="utf-8",
+        )
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show agenda section sequence",
+                            "composition_archetype": "agenda",
+                            "primary_motif": "numbered route",
+                            "required_visual_evidence": ["section_index"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "contract-agenda",
+                                "renderer_id": "contract.agenda",
+                                "bbox": {"x": 80, "y": 120, "width": 760, "height": 300},
+                                "primitives": ["typography"],
+                                "effects": ["section_index"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["visual_design_contract"]["status"], "passed")
+
+    def test_quality_gate_rejects_plain_numbers_as_section_index_evidence(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(
+            """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><foreignObject id="body" slide:role="shape" slide:shape-type="text" x="120" y="150" width="620" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px">Q1 includes 3 risks and 5 options for review.</div></foreignObject></svg>""",
+            encoding="utf-8",
+        )
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show section sequence",
+                            "composition_archetype": "agenda",
+                            "primary_motif": "numbered route",
+                            "required_visual_evidence": ["section_index"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "contract-text",
+                                "renderer_id": "contract.fake",
+                                "bbox": {"x": 100, "y": 120, "width": 680, "height": 140},
+                                "primitives": ["typography"],
+                                "effects": ["section_index"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        with self.assertRaisesRegex(runner.RunnerError, "visual design contract"):
+            runner.run_quality_gate(project, data, args)
+
+    def test_quality_gate_accepts_section_title_with_single_structured_index(self) -> None:
+        project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(
+            """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" width="960" height="540" viewBox="0 0 960 540"><rect id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" /><rect id="section-signal-field" slide:role="shape" x="48" y="66" width="864" height="386" fill="#fff" /><foreignObject id="title" slide:role="shape" slide:shape-type="text" x="120" y="150" width="620" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:30px">01 项目核心定位与愿景</div></foreignObject></svg>""",
+            encoding="utf-8",
+        )
+        data = runner.manifest(project)
+        write_json(
+            project / "slide_plan.json",
+            {
+                "schema_version": "svglide-strategist-contract/v1",
+                "output_mode": "svglide-svg",
+                "slides": [
+                    {
+                        "page": 1,
+                        "visual_design_contract": {
+                            "visual_thesis": "Show section transition",
+                            "composition_archetype": "section_divider",
+                            "primary_motif": "section index",
+                            "required_visual_evidence": ["section_index"],
+                        },
+                    }
+                ],
+            },
+        )
+        args = self.args(project)
+        self.write_gate_inputs(project, data, args)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "contract-section",
+                                "renderer_id": "contract.section",
+                                "bbox": {"x": 48, "y": 66, "width": 864, "height": 386},
+                                "primitives": ["typography", "geometric_shape"],
+                                "effects": ["section_index"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
+
+        body = runner.run_quality_gate(project, data, args)
+
+        self.assertEqual(body["visual_design_contract"]["status"], "passed")
 
     def test_quality_gate_binds_source_proof_by_manifest_page_number(self) -> None:
         project = self.make_project()
@@ -974,6 +1458,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
     def test_quality_gate_ignores_disabled_design_pattern_selected_assets(self) -> None:
         project = self.make_project()
+        (project / "pages" / "page-001.svg").write_text(CHART_SVG, encoding="utf-8")
         data = runner.manifest(project)
         write_json(
             project / "slide_plan.json",
@@ -990,7 +1475,29 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         )
         args = self.args(project)
         self.write_gate_inputs(project, data, args)
-        self.write_component_report(project)
+        write_json(
+            project / "receipts" / "emitted_components.json",
+            {
+                "schema_version": "svglide-component-report/v1",
+                "status": "passed",
+                "pages": [
+                    {
+                        "page": 1,
+                        "components": [
+                            {
+                                "id": "chart-plot-backplane",
+                                "asset_id": "chart.bubble_chart",
+                                "renderer_id": "chart.bubble",
+                                "source_trace": "chart.bubble",
+                                "bbox": {"x": 70, "y": 110, "width": 780, "height": 320},
+                                "primitives": ["geometric_shape", "micro_chart"],
+                            }
+                        ],
+                    }
+                ],
+                "summary": {"error_count": 0, "warning_count": 0},
+            },
+        )
         write_json(
             project / "receipts" / "design-pattern-usage.json",
             {
@@ -1000,7 +1507,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                     {
                         "page": 1,
                         "asset_id": "chart.bubble_chart",
-                        "component_ids": ["bubble-chart"],
+                        "component_ids": ["chart-plot-backplane"],
                         "source_trace": "chart.bubble_chart",
                     }
                 ],

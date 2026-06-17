@@ -302,6 +302,44 @@ class SVGlideGenRuntimeTest(unittest.TestCase):
                 self.assertIn(required_id, svg)
                 self.assertIn(required_copy, svg)
 
+    def test_insight_callout_contract_uses_annotation_renderer_not_flow_fallback(self) -> None:
+        spec = {
+            "schema_version": "svglide-strategist-contract/v1",
+            "page_type": "insight_callout",
+            "title": "关键洞察",
+            "key_message": "企业战略复盘需要把核心诊断、证据和下一步判断放在一个聚焦视场里",
+            "visual_design_contract": {
+                "required_visual_evidence": ["spotlight", "annotation", "semantic_labels"],
+            },
+            "layout_boxes": [
+                {"id": "title", "role": "title", "x": 64, "y": 56, "width": 640, "height": 56},
+                {"id": "spotlight", "role": "spotlight", "x": 88, "y": 146, "width": 532, "height": 248},
+                {"id": "callout", "role": "callout", "x": 650, "y": 168, "width": 218, "height": 176},
+                {"id": "caption", "role": "caption", "x": 104, "y": 418, "width": 720, "height": 38},
+                {"id": "footer", "role": "footer", "x": 64, "y": 500, "width": 832, "height": 24},
+            ],
+        }
+        report = runtime.ComponentReport()
+
+        svg = runtime.render_contract_slide(
+            page=2,
+            kind="insight_callout",
+            title="",
+            summary="",
+            asset_id="chart.labeled_card",
+            accent="#2563EB",
+            spec=spec,
+            report=report,
+            deck_title="企业战略复盘",
+        )
+        encoded_report = json.dumps(report.to_dict(), ensure_ascii=False)
+
+        self.assertIn('id="spotlight-stage"', svg)
+        self.assertIn('id="annotation-callout-panel"', svg)
+        self.assertIn("contract.annotation", encoded_report)
+        self.assertIn("semantic_labels", encoded_report)
+        self.assertNotIn("contract.flow", encoded_report)
+
     def test_strategist_contract_uses_full_page_archetype_geometry(self) -> None:
         base_spec = {
             "schema_version": "svglide-strategist-contract/v1",
@@ -360,6 +398,9 @@ class SVGlideGenRuntimeTest(unittest.TestCase):
 
                 for required_id in required_ids:
                     self.assertIn(f'id="{required_id}"', svg)
+                if page_type == "agenda":
+                    self.assertIn('id="agenda-index-tick-1"', svg)
+                    self.assertNotIn('id="agenda-number-label-1"', svg)
                 encoded_report = json.dumps(report.to_dict())
                 for evidence in spec["visual_design_contract"]["required_visual_evidence"]:
                     self.assertIn(evidence, encoded_report)
@@ -409,6 +450,69 @@ class SVGlideGenRuntimeTest(unittest.TestCase):
         self.assertIn("#4A90E2", blue)
         self.assertIn("#E91E63", red)
         self.assertNotEqual(blue, red)
+
+    def test_contract_theme_visual_language_varies_by_domain(self) -> None:
+        base_spec = {
+            "schema_version": "svglide-strategist-contract/v1",
+            "page_type": "cover",
+            "title": "Theme Cover",
+            "key_message": "Theme-specific visual language should alter the SVG motif.",
+            "layout_boxes": [
+                {"id": "title", "role": "title", "x": 72, "y": 150, "width": 560, "height": 120},
+                {"id": "body", "role": "body", "x": 76, "y": 284, "width": 520, "height": 72},
+                {"id": "visual", "role": "visual", "x": 600, "y": 84, "width": 288, "height": 360},
+                {"id": "footer", "role": "footer", "x": 64, "y": 500, "width": 832, "height": 24},
+            ],
+        }
+        cases = [
+            ("新疆阿克苏城区生态居住区策划案", "theme-oasis-water-ribbon", "oasis_water_ribbon", "theme-ai-grid-field"),
+            ("Global AI Capital 2026", "theme-ai-grid-field", "ai_grid_field", "theme-oasis-water-ribbon"),
+            ("城市级低空物流网络策划案", "theme-logistics-air-lane-1", "logistics_air_lane", "theme-oasis-water-ribbon"),
+        ]
+
+        for deck_title, required_id, required_effect, forbidden_id in cases:
+            with self.subTest(deck_title=deck_title):
+                report = runtime.ComponentReport()
+                svg = runtime.render_contract_slide(
+                    page=1,
+                    kind="cover",
+                    title="",
+                    summary="",
+                    asset_id="layout.page_type.cover",
+                    accent="#4A90E2",
+                    spec=base_spec,
+                    report=report,
+                    deck_title=deck_title,
+                )
+                encoded_report = json.dumps(report.to_dict(), ensure_ascii=False)
+                self.assertIn(f'id="{required_id}"', svg)
+                self.assertIn(required_effect, encoded_report)
+                self.assertNotIn(f'id="{forbidden_id}"', svg)
+
+    def test_unseen_topics_extract_labels_from_brief_instead_of_defaulting(self) -> None:
+        tea = {
+            "title": "茶产业出海品牌策划",
+            "key_message": "茶产业出海需要围绕产地故事、品牌信任、渠道试销、内容种草形成闭环",
+        }
+        ecommerce = {
+            "title": "跨境电商增长方案",
+            "key_message": "跨境电商增长聚焦选品矩阵、达人内容、物流履约、复购会员形成闭环",
+        }
+
+        tea_labels = runtime.topic_node_labels(tea, "茶产业出海品牌策划", count=4)
+        ecommerce_labels = runtime.topic_node_labels(ecommerce, "跨境电商增长方案", count=4)
+        tea_metrics = runtime.dashboard_metrics_for_topic(tea, "茶产业出海品牌策划")
+        ecommerce_metrics = runtime.dashboard_metrics_for_topic(ecommerce, "跨境电商增长方案")
+        tea_rows = runtime.comparison_rows_for_topic(tea, "茶产业出海品牌策划")
+
+        self.assertIn("产地故事", tea_labels)
+        self.assertIn("品牌信任", tea_labels)
+        self.assertIn("选品矩阵", ecommerce_labels)
+        self.assertIn("物流履约", ecommerce_labels)
+        self.assertNotEqual(tea_labels, ecommerce_labels)
+        self.assertNotEqual(tea_metrics, ecommerce_metrics)
+        self.assertNotIn(("4", "关键抓手"), tea_metrics)
+        self.assertEqual("产地故事", tea_rows[0][0])
 
     def test_contract_navigation_pages_emit_enough_semantic_labels_for_preview_lint(self) -> None:
         deck_title = "新疆阿克苏城区居住区策划案"

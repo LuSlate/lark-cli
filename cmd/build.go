@@ -55,9 +55,8 @@ func WithKeychain(kc keychain.KeychainAccess) BuildOption {
 
 // embeddedSkillContent is the skill tree wired into cmdutil.Factory.SkillContent
 // at build time. It is registered by the repo-root package main's init via
-// SetEmbeddedSkillContent — it cannot be threaded through main.go without
-// breaking the single-file preview build (see skills_embed.go). nil in builds
-// that embed no skills; the `skills` commands then return a typed internal error.
+// SetEmbeddedSkillContent. nil in builds that embed no skills; the `skills`
+// commands then return a typed internal error.
 var embeddedSkillContent fs.FS
 
 // SetEmbeddedSkillContent registers the embedded skill tree. Called from the

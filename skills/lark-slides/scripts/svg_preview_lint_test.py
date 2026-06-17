@@ -117,6 +117,59 @@ class SvgPreviewLintTest(unittest.TestCase):
         self.assertEqual(result["status"], "failed")
         self.assertIn("svg_parse_failed", self.codes(result))
 
+    def test_plan_refs_do_not_duplicate_preview_pages(self) -> None:
+        project = self.make_project()
+        (project / "pages").mkdir()
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+          <rect x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <rect x="80" y="120" width="220" height="120" fill="#dbeafe" />
+          <rect x="340" y="120" width="220" height="120" fill="#dcfce7" />
+          <text x="80" y="90" font-size="30" fill="#111827">Page title</text>
+          <text x="80" y="290" font-size="18" fill="#334155">Semantic label and supporting copy.</text>
+        </svg>
+        """
+        preview_images = []
+        plan_refs = []
+        for page in (1, 2):
+            name = f"page-{page:03d}.svg"
+            (project / "prepared" / name).write_text(svg, encoding="utf-8")
+            (project / "pages" / name).write_text(svg, encoding="utf-8")
+            preview_images.append(f'<img src="../prepared/{name}" />')
+            plan_refs.append({"page": page, "path": f"pages/{name}"})
+        write_json(project / "slide_plan.json", {"svg_files": plan_refs})
+        (project / "preview" / "preview.html").write_text("<html><body>" + "".join(preview_images) + "</body></html>", encoding="utf-8")
+
+        result = self.lint(project)
+
+        self.assertEqual(result["page_count"], 2)
+
+    def test_preview_missing_plan_page_fails_even_when_plan_svg_exists(self) -> None:
+        project = self.make_project()
+        (project / "pages").mkdir()
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+          <rect x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <rect x="80" y="120" width="220" height="120" fill="#dbeafe" />
+          <text x="80" y="90" font-size="30" fill="#111827">Page title</text>
+          <text x="80" y="290" font-size="18" fill="#334155">Semantic label and supporting copy.</text>
+        </svg>
+        """
+        plan_refs = []
+        for page in (1, 2):
+            name = f"page-{page:03d}.svg"
+            (project / "prepared" / name).write_text(svg, encoding="utf-8")
+            (project / "pages" / name).write_text(svg, encoding="utf-8")
+            plan_refs.append({"page": page, "path": f"pages/{name}"})
+        write_json(project / "slide_plan.json", {"svg_files": plan_refs})
+        (project / "preview" / "preview.html").write_text('<html><body><img src="../prepared/page-001.svg" /></body></html>', encoding="utf-8")
+
+        result = self.lint(project)
+
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["page_count"], 2)
+        self.assertIn("preview_missing_plan_page", self.codes(result))
+
     def test_detects_obvious_text_overlap(self) -> None:
         project = self.make_project()
         self.write_preview(project)

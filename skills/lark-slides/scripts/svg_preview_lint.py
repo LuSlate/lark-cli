@@ -36,6 +36,7 @@ NUMBER_RE = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
 STYLE_DECL_RE = re.compile(r"\s*([A-Za-z-]+)\s*:\s*([^;]+)")
 RGB_RE = re.compile(r"rgba?\(([^)]+)\)", re.IGNORECASE)
 TRANSFORM_RE = re.compile(r"(translate|scale)\s*\(([^)]*)\)", re.IGNORECASE)
+PAGE_REF_RE = re.compile(r"(?:^|[-_])page[-_]?0*([1-9]\d*)\.svg$", re.IGNORECASE)
 PLACEHOLDER_COPY_RE = re.compile(
     r"\b(contract renderer|placeholder|lorem ipsum|todo|draft only|smoke deck)\b|SVGlide\s+contract\s+renderer",
     re.IGNORECASE,
@@ -379,6 +380,20 @@ def extract_plan_svg_refs(data: dict[str, Any]) -> list[tuple[int, str]]:
     return refs
 
 
+def page_number_from_svg_ref(ref: str, fallback: int) -> int:
+    try:
+        name = urllib.parse.urlparse(ref).path.rsplit("/", 1)[-1]
+    except Exception:
+        name = ref.rsplit("/", 1)[-1]
+    match = PAGE_REF_RE.search(name)
+    if not match:
+        return fallback
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return fallback
+
+
 def parse_svg_text(text: str, label: str, checks: list[dict[str, Any]], *, page: int, path: Path | None = None) -> ET.Element | None:
     try:
         return ET.fromstring(text)
@@ -455,7 +470,10 @@ def collect_preview_sources(project: Path, preview: Path, plan: Path, checks: li
         )
 
     seen_paths: set[Path] = set()
+    seen_pages: set[int] = set()
+    preview_pages: set[int] = set()
     for index, ref in enumerate(collector.svg_refs, start=1):
+        page = page_number_from_svg_ref(ref, index)
         path, display = resolve_existing_ref(ref, preview.parent, project, svg_ref=True)
         if path is None:
             checks.append(
@@ -464,7 +482,7 @@ def collect_preview_sources(project: Path, preview: Path, plan: Path, checks: li
                     "error",
                     "high",
                     "preview references an SVG file that does not exist",
-                    page=index,
+                    page=page,
                     path=safe_rel(display, project) if display else ref,
                     source="preview",
                 )
@@ -483,15 +501,17 @@ def collect_preview_sources(project: Path, preview: Path, plan: Path, checks: li
                     "error",
                     "high",
                     f"referenced SVG could not be read: {error}",
-                    page=index,
+                    page=page,
                     path=safe_rel(path, project),
                     source="preview",
                 )
             )
             continue
-        root = parse_svg_text(svg_text, safe_rel(path, project), checks, page=index, path=path)
+        root = parse_svg_text(svg_text, safe_rel(path, project), checks, page=page, path=path)
         if root is not None:
-            sources.append(SvgSource(page=index, label=safe_rel(path, project), root=root, base_dir=path.parent, path=path))
+            sources.append(SvgSource(page=page, label=safe_rel(path, project), root=root, base_dir=path.parent, path=path))
+            seen_pages.add(page)
+            preview_pages.add(page)
 
     for index, value in enumerate(collector.svg_data_uris, start=len(sources) + 1):
         try:
@@ -511,11 +531,15 @@ def collect_preview_sources(project: Path, preview: Path, plan: Path, checks: li
         root = parse_svg_text(svg_text, f"preview:data-uri:{index}", checks, page=index)
         if root is not None:
             sources.append(SvgSource(page=index, label=f"preview:data-uri:{index}", root=root, base_dir=preview.parent))
+            seen_pages.add(index)
+            preview_pages.add(index)
 
     for index, svg_text in enumerate(inline_blocks, start=len(sources) + 1):
         root = parse_svg_text(svg_text, f"preview:inline-svg:{index}", checks, page=index)
         if root is not None:
             sources.append(SvgSource(page=index, label=f"preview:inline-svg:{index}", root=root, base_dir=preview.parent))
+            seen_pages.add(index)
+            preview_pages.add(index)
 
     plan_data, plan_error = read_json(plan)
     if plan_data is None:
@@ -534,6 +558,20 @@ def collect_preview_sources(project: Path, preview: Path, plan: Path, checks: li
         plan_refs = extract_plan_svg_refs(plan_data)
 
     for page, ref in plan_refs:
+        if preview_pages and page not in preview_pages:
+            checks.append(
+                check(
+                    "preview_missing_plan_page",
+                    "error",
+                    "high",
+                    "preview HTML does not include this slide plan page",
+                    page=page,
+                    path=ref,
+                    source="preview",
+                )
+            )
+        if page in seen_pages:
+            continue
         path, display = resolve_existing_ref(ref, project, project, svg_ref=True)
         if path is None:
             checks.append(

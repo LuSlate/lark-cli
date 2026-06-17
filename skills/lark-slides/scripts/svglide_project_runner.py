@@ -1295,6 +1295,20 @@ def source_element_tokens(element: ET.Element) -> set[str]:
         tokens.add("icon")
     if re.search(r"(spotlight|hotspot|highlight|focus)", identifier):
         tokens.add("spotlight")
+    theme_tokens = {
+        "oasis_water_ribbon": r"(theme[-_]oasis[-_]water[-_]ribbon|theme[-_]oasis[-_]water[-_]highlight)",
+        "oasis_poplar_texture": r"theme[-_]oasis[-_]poplar[-_]texture",
+        "oasis_adras_band": r"(theme[-_]oasis[-_]adras[-_]band|theme[-_]oasis[-_](spring|autumn)[-_]swatch)",
+        "ai_grid_field": r"theme[-_]ai[-_]grid[-_]field",
+        "ai_capital_rail": r"theme[-_]ai[-_](capital[-_]rail|data[-_]band)",
+        "ai_compute_nodes": r"theme[-_]ai[-_]compute[-_]node",
+        "logistics_air_lane": r"theme[-_]logistics[-_]air[-_]lane",
+        "logistics_dispatch_nodes": r"theme[-_]logistics[-_]dispatch[-_]node",
+        "logistics_route_mesh": r"theme[-_]logistics[-_]route[-_]mesh",
+    }
+    for token, pattern in theme_tokens.items():
+        if re.search(pattern, identifier):
+            tokens.add(token)
     return tokens
 
 
@@ -1334,6 +1348,7 @@ def collect_source_page_elements(project: Path, data: dict[str, Any]) -> dict[in
                     "id": svg_preflight.element_identifier_text(element),
                     "tag": svg_preflight.local_name(element.tag).lower(),
                     "bbox": bbox,
+                    "text": "".join(element.itertext()).strip(),
                     "tokens": source_element_tokens(element),
                 }
             )
@@ -1362,9 +1377,107 @@ def source_tokens_for_component(component: dict[str, Any], source_elements: list
     return tokens, token_area
 
 
+def source_entries_for_component(component: dict[str, Any], source_elements: list[dict[str, Any]]) -> list[tuple[dict[str, Any], float]]:
+    box = component_bbox(component)
+    if box is None:
+        return []
+    entries: list[tuple[dict[str, Any], float]] = []
+    for entry in source_elements:
+        source_bbox = entry.get("bbox")
+        if not isinstance(source_bbox, dict):
+            continue
+        overlap = bbox_overlap_area(box, source_bbox)
+        if overlap > 4:
+            entries.append((entry, overlap))
+    return entries
+
+
+def source_entry_text(entry: dict[str, Any]) -> str:
+    return text_from_any(entry.get("text"))
+
+
+def source_entry_identifier(entry: dict[str, Any]) -> str:
+    return text_from_any(entry.get("id")).lower()
+
+
+def source_entry_is_footer(entry: dict[str, Any]) -> bool:
+    identifier = source_entry_identifier(entry)
+    text = source_entry_text(entry)
+    return svg_preflight.is_footer_identifier(identifier, text)
+
+
+def text_entry_matches(entry: dict[str, Any], pattern: str) -> bool:
+    if source_entry_is_footer(entry):
+        return False
+    combined = f"{source_entry_identifier(entry)} {source_entry_text(entry).lower()}"
+    return bool(re.search(pattern, combined, re.IGNORECASE))
+
+
+def source_text_supports_evidence(component: dict[str, Any], source_elements: list[dict[str, Any]], evidence: str) -> bool:
+    entries = source_entries_for_component(component, source_elements)
+    text_entries = [
+        (entry, overlap)
+        for entry, overlap in entries
+        if "typography" in entry.get("tokens", set()) and overlap >= 1_000 and not source_entry_is_footer(entry)
+    ]
+    component_identity = " ".join(
+        text_from_any(component.get(key)).lower()
+        for key in ("id", "renderer_id", "asset_id", "source_trace")
+    )
+    if evidence == "title_field":
+        return any(text_entry_matches(entry, r"(title|headline|hero|cover|主题|标题)") for entry, _ in text_entries)
+    if evidence == "section_index":
+        for entry, _ in text_entries:
+            identifier = source_entry_identifier(entry)
+            text = source_entry_text(entry)
+            if re.search(r"(agenda[-_]labels|agenda[-_]number|section[-_]index|chapter[-_]index|kicker)", identifier, re.IGNORECASE):
+                return True
+            numbered_items = re.findall(r"(?:^|[^\d])0[1-9](?:[\.、\s]|$)", text)
+            if len(numbered_items) >= 2:
+                return True
+            if numbered_items and re.search(r"(section|chapter|章节|篇章)", text, re.IGNORECASE):
+                return True
+            if "section" in component_identity and re.search(r"^\s*(?:0[1-9]|[一二三四五六七八九十]{1,3})[\s.、-]", text):
+                return True
+        return False
+    if evidence == "semantic_labels":
+        label_entries = [
+            entry
+            for entry, _ in text_entries
+            if text_entry_matches(entry, r"(label|legend|caption|axis|callout|annotation|agenda|dimension|node|card|metric|标签|图例|目录|维度|节点|指标|要点)")
+        ]
+        if label_entries:
+            return True
+        return sum(1 for entry, _ in text_entries if source_entry_identifier(entry) not in {"title", "body"}) >= 2
+    return False
+
+
+def source_action_cards_support(component: dict[str, Any], source_elements: list[dict[str, Any]]) -> bool:
+    entries = source_entries_for_component(component, source_elements)
+    matched_area = 0.0
+    for entry, overlap in entries:
+        identifier = source_entry_identifier(entry)
+        if re.search(r"(action|step|card|cta|next|closing|takeaway|行动|步骤|结论)", identifier, re.IGNORECASE):
+            matched_area += overlap
+    return matched_area >= 2_000
+
+
 def source_supports_visual_evidence(component: dict[str, Any], source_elements: list[dict[str, Any]], evidence: str) -> bool:
     tokens, token_area = source_tokens_for_component(component, source_elements)
     area = component_bbox_area(component)
+    motif_area_thresholds = {
+        "oasis_water_ribbon": 1_000.0,
+        "oasis_poplar_texture": 1_000.0,
+        "oasis_adras_band": 300.0,
+        "ai_grid_field": 5_000.0,
+        "ai_capital_rail": 500.0,
+        "ai_compute_nodes": 150.0,
+        "logistics_air_lane": 100.0,
+        "logistics_dispatch_nodes": 100.0,
+        "logistics_route_mesh": 100.0,
+    }
+    if evidence in motif_area_thresholds:
+        return token_area.get(evidence, 0.0) >= motif_area_thresholds[evidence]
     if evidence in {"chart_geometry", "metric_hierarchy", "dashboard_grid"}:
         return bool({"micro_chart", "dashboard"} & tokens) and max(token_area.get("micro_chart", 0.0), token_area.get("dashboard", 0.0)) >= min(area, 5_000)
     if evidence in {"numbered_path", "hero_route", "connector_flow", "flow_lanes", "phase_spine", "closing_ribbon"}:
@@ -1377,8 +1490,10 @@ def source_supports_visual_evidence(component: dict[str, Any], source_elements: 
         return bool({"connector", "icon", "geometric_shape"} & tokens) and sum(token_area.get(token, 0.0) for token in {"connector", "icon", "geometric_shape"}) >= min(area, 10_000)
     if evidence == "insight_strip":
         return bool({"micro_chart", "geometric_shape"} & tokens) and max(token_area.get("micro_chart", 0.0), token_area.get("geometric_shape", 0.0)) >= min(area, 5_000)
-    if evidence in {"title_field", "section_index", "semantic_labels", "action_cards"}:
-        return "typography" in tokens and token_area.get("typography", 0.0) >= 1_000
+    if evidence in {"title_field", "section_index", "semantic_labels"}:
+        return source_text_supports_evidence(component, source_elements, evidence)
+    if evidence == "action_cards":
+        return source_action_cards_support(component, source_elements)
     if evidence == "spotlight":
         return bool({"annotation", "geometric_shape", "spotlight"} & tokens) and sum(token_area.get(token, 0.0) for token in {"annotation", "geometric_shape", "spotlight"}) >= min(area, 5_000)
     return evidence in tokens
@@ -1400,8 +1515,10 @@ def component_supports_visual_evidence(component: dict[str, Any], evidence: str)
         return bool({"connector", "icon", "geometric_shape"} & primitives) and area >= 10_000
     if evidence == "insight_strip":
         return bool({"micro_chart", "geometric_shape"} & primitives) and area >= 5_000
-    if evidence in {"title_field", "section_index", "semantic_labels", "action_cards"}:
+    if evidence in {"title_field", "section_index", "semantic_labels"}:
         return "typography" in primitives and area >= 1_000
+    if evidence == "action_cards":
+        return bool({"geometric_shape", "annotation", "typography"} & primitives) and area >= 5_000
     if evidence == "spotlight":
         return bool({"annotation", "geometric_shape"} & primitives) and area >= 5_000
     return evidence in primitives or evidence in effects
@@ -1573,6 +1690,134 @@ def collect_used_design_pattern_ids(report: dict[str, Any]) -> set[str]:
     return used
 
 
+def collect_component_lookup(report: dict[str, Any]) -> dict[int, dict[str, dict[str, Any]]]:
+    lookup: dict[int, dict[str, dict[str, Any]]] = {}
+    pages = report.get("pages")
+    if not isinstance(pages, list):
+        return lookup
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        try:
+            page_number = int(page.get("page"))
+        except (TypeError, ValueError):
+            continue
+        components = page.get("components")
+        if not isinstance(components, list):
+            continue
+        for component in components:
+            if not isinstance(component, dict):
+                continue
+            component_id = text_from_any(component.get("id"))
+            if component_id:
+                lookup.setdefault(page_number, {})[component_id] = component
+    return lookup
+
+
+def component_has_source_geometry(component: dict[str, Any], source_elements: list[dict[str, Any]]) -> bool:
+    box = component_bbox(component)
+    if box is None:
+        return False
+    component_area = bbox_area(box)
+    if component_area <= 0:
+        return False
+    threshold = min(component_area * 0.02, 5_000.0)
+    threshold = max(64.0, threshold)
+    for entry in source_elements:
+        source_bbox = entry.get("bbox")
+        if not isinstance(source_bbox, dict):
+            continue
+        if text_from_any(entry.get("id")).lower() == "background":
+            continue
+        if bbox_overlap_area(box, source_bbox) >= threshold:
+            return True
+    return False
+
+
+def component_matches_usage_asset(component: dict[str, Any], asset_id: str, usage: dict[str, Any]) -> bool:
+    component_asset_id = text_from_any(component.get("asset_id"))
+    return component_asset_id == asset_id
+
+
+def collect_verified_design_pattern_ids(
+    report: dict[str, Any],
+    component_report: dict[str, Any],
+    source_elements_by_page: dict[int, list[dict[str, Any]]],
+) -> tuple[set[str], list[dict[str, Any]]]:
+    used: set[str] = set()
+    issues: list[dict[str, Any]] = []
+    component_lookup = collect_component_lookup(component_report)
+    usages = report.get("page_usages")
+    if not isinstance(usages, list):
+        return used, [{"code": "missing_page_usages"}]
+    for usage_index, usage in enumerate(usages, 1):
+        if not isinstance(usage, dict):
+            issues.append({"code": "invalid_page_usage", "index": usage_index})
+            continue
+        asset_id = asset_id_from(usage)
+        if not asset_id:
+            issues.append({"code": "missing_usage_asset_id", "index": usage_index})
+            continue
+        try:
+            page_number = int(usage.get("page"))
+        except (TypeError, ValueError):
+            issues.append({"code": "invalid_usage_page", "asset_id": asset_id, "index": usage_index})
+            continue
+        if not text_from_any(usage.get("source_trace")):
+            issues.append({"code": "missing_usage_source_trace", "asset_id": asset_id, "page": page_number})
+            continue
+        component_ids = usage.get("component_ids")
+        if not isinstance(component_ids, list) or not component_ids:
+            issues.append({"code": "missing_usage_component_ids", "asset_id": asset_id, "page": page_number})
+            continue
+        page_components = component_lookup.get(page_number, {})
+        source_elements = source_elements_by_page.get(page_number, [])
+        usage_ok = True
+        for raw_component_id in component_ids:
+            component_id = text_from_any(raw_component_id)
+            if not component_id:
+                usage_ok = False
+                issues.append({"code": "invalid_usage_component_id", "asset_id": asset_id, "page": page_number})
+                continue
+            component = page_components.get(component_id)
+            if component is None:
+                usage_ok = False
+                issues.append(
+                    {
+                        "code": "missing_usage_component_report",
+                        "asset_id": asset_id,
+                        "page": page_number,
+                        "component_id": component_id,
+                    }
+                )
+                continue
+            if not component_matches_usage_asset(component, asset_id, usage):
+                usage_ok = False
+                issues.append(
+                    {
+                        "code": "usage_component_asset_mismatch",
+                        "asset_id": asset_id,
+                        "page": page_number,
+                        "component_id": component_id,
+                        "component_asset_id": text_from_any(component.get("asset_id")),
+                    }
+                )
+                continue
+            if not component_has_source_geometry(component, source_elements):
+                usage_ok = False
+                issues.append(
+                    {
+                        "code": "usage_component_not_backed_by_svg",
+                        "asset_id": asset_id,
+                        "page": page_number,
+                        "component_id": component_id,
+                    }
+                )
+        if usage_ok:
+            used.add(asset_id)
+    return used, issues
+
+
 def active_design_pattern_waivers(report: dict[str, Any]) -> tuple[set[str], list[dict[str, Any]]]:
     waived: set[str] = set()
     waivers: list[dict[str, Any]] = []
@@ -1630,11 +1875,18 @@ def design_pattern_usage_summary(project: Path, data: dict[str, Any], args: argp
             "path": rel_to_project(project, report_path),
         }
 
-    used = collect_used_design_pattern_ids(report)
+    component_report_path = project / "receipts" / "emitted_components.json"
+    component_report = read_json(component_report_path, {})
+    if not isinstance(component_report, dict):
+        raise RunnerError("emitted_components.json must contain an object")
+    source_elements_by_page = collect_source_page_elements(project, data)
+    used, proof_issues = collect_verified_design_pattern_ids(report, component_report, source_elements_by_page)
     waived, waivers = active_design_pattern_waivers(report)
     missing = sorted(expected - used - waived)
     error_count = required_int(report.get("error_count", 0), "design_pattern_usage.error_count")
     warning_count = required_int(report.get("warning_count", 0), "design_pattern_usage.warning_count")
+    if proof_issues:
+        error_count += len(proof_issues)
     if missing:
         error_count += 1
     if waivers and not dry_run_waiver_allowed(data, args, project=project):
@@ -1649,6 +1901,7 @@ def design_pattern_usage_summary(project: Path, data: dict[str, Any], args: argp
         "warning_count": warning_count,
         "path": rel_to_project(project, report_path),
         "waivers": waivers,
+        "issues": proof_issues,
     }
 
 

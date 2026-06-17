@@ -32,10 +32,10 @@ import (
 //go:embed skills/lark-slides/scripts/svglide_golden_suite.py
 var skillsEmbedFS embed.FS
 
-// init wires the embedded tree in as the default skill content. It compiles into
-// `go build .` but not the single-file preview build (`go build ./main.go`), so
-// main.go stays self-contained and that build still compiles (shipping no
-// embedded skills). Assembly failure warns on stderr rather than panicking.
+// init wires the embedded tree in as the default skill content. Packaged builds
+// must compile the package (`go build .`) so this file is included; otherwise
+// skill commands have no embedded runtime content. Assembly failure warns on
+// stderr rather than panicking.
 func init() {
 	sub, err := fs.Sub(skillsEmbedFS, "skills")
 	if err != nil {

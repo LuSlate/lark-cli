@@ -31,9 +31,15 @@ SUPPORTED_PAGE_KINDS = (
     "donut_chart",
     "sankey_chart",
     "hub_spoke",
+    "insight_callout",
     "closing",
 )
 DEFAULT_ACCENTS = ("#2563EB", "#0F9F8E", "#F59E0B", "#E11D48", "#7C3AED", "#0891B2", "#65A30D", "#334155")
+THEME_MOTIF_EFFECTS = {
+    "oasis_residential": ["oasis_water_ribbon", "oasis_poplar_texture", "oasis_adras_band"],
+    "ai_capital": ["ai_grid_field", "ai_capital_rail", "ai_compute_nodes"],
+    "low_altitude_logistics": ["logistics_air_lane", "logistics_dispatch_nodes", "logistics_route_mesh"],
+}
 PAGE_KIND_ALIASES = {
     "cover_slide": "cover",
     "contents": "agenda",
@@ -55,6 +61,10 @@ PAGE_KIND_ALIASES = {
     "hub": "hub_spoke",
     "hub-and-spoke": "hub_spoke",
     "hub_and_spoke": "hub_spoke",
+    "annotation": "insight_callout",
+    "insight": "insight_callout",
+    "spotlight": "insight_callout",
+    "spotlight_diagnosis_callout": "insight_callout",
     "ending": "closing",
     "summary": "closing",
 }
@@ -68,6 +78,7 @@ DEFAULT_ASSET_BY_KIND = {
     "bubble_chart": "chart.bubble_chart",
     "donut_chart": "chart.donut_chart",
     "hub_spoke": "chart.hub_spoke",
+    "insight_callout": "chart.labeled_card",
     "kpi_cards": "chart.kpi_cards",
     "sankey_chart": "chart.sankey_chart",
 }
@@ -470,16 +481,116 @@ def topic_context(spec: dict[str, Any], deck_title: str = "") -> str:
     ).lower()
 
 
+def is_low_altitude_context(context: str) -> bool:
+    return any(token in context for token in ["低空", "无人机", "空域", "drone", "uav"])
+
+
+DEFAULT_TOPIC_LABELS = {"核心节点", "资源配置", "执行路径", "价值回收", "风险控制", "下一步"}
+TOPIC_STOPWORDS = {
+    "需要",
+    "围绕",
+    "包括",
+    "包含",
+    "通过",
+    "聚焦",
+    "形成",
+    "闭环",
+    "方案",
+    "策划",
+    "项目",
+    "核心",
+    "关键",
+    "the",
+    "and",
+    "with",
+    "for",
+    "from",
+}
+
+
+def topic_label_from_item(item: Any) -> str:
+    if isinstance(item, dict):
+        return text_from_any(item.get("title") or item.get("label") or item.get("name") or item.get("metric") or item.get("value"))
+    return text_from_any(item)
+
+
+def structured_topic_labels(spec: dict[str, Any], *, count: int) -> list[str]:
+    labels: list[str] = []
+    for key in ("items", "sections", "agenda", "nodes", "spokes", "metrics", "kpis", "cards", "targets", "segments"):
+        value = spec.get(key)
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            label_text = topic_label_from_item(item)
+            if label_text and label_text not in labels:
+                labels.append(shorten(label_text, 12))
+            if len(labels) >= count:
+                return labels
+    return labels
+
+
+def split_topic_phrases(text: str) -> list[str]:
+    candidates: list[str] = []
+    for match in re.finditer(r"(?:围绕|包括|包含|聚焦|通过|覆盖)([^。；;：:\n]+)", text):
+        candidates.extend(re.split(r"[、,，/／和与及]+", match.group(1)))
+    candidates.extend(re.split(r"[。；;：:\n、,，/／]+", text))
+    out: list[str] = []
+    for raw in candidates:
+        phrase = re.sub(r"\s+", " ", raw.strip(" -—·:：。；;，,"))
+        if not phrase:
+            continue
+        phrase = re.sub(r"^(需要|围绕|包括|包含|通过|聚焦|形成|打造|构建)", "", phrase)
+        phrase = re.sub(r"(形成闭环|形成体系|形成系统|闭环)$", "", phrase).strip()
+        if not phrase:
+            continue
+        lowered = phrase.lower()
+        if lowered in TOPIC_STOPWORDS:
+            continue
+        if len(phrase) > 12:
+            continue
+        if len(phrase) < 2:
+            continue
+        if phrase not in out:
+            out.append(phrase)
+    return out
+
+
+def inferred_topic_labels(spec: dict[str, Any], deck_title: str = "", *, count: int) -> list[str]:
+    labels = structured_topic_labels(spec, count=count)
+    if len(labels) >= count:
+        return labels[:count]
+    context = " ".join(
+        part
+        for part in [
+            deck_title,
+            compact_text(spec.get("title")),
+            compact_text(spec.get("key_message")),
+            compact_text(spec.get("summary")),
+            compact_text(spec.get("description")),
+            compact_text(spec.get("body")),
+        ]
+        if part
+    )
+    for phrase in split_topic_phrases(context):
+        if phrase not in labels and phrase not in DEFAULT_TOPIC_LABELS:
+            labels.append(phrase)
+        if len(labels) >= count:
+            break
+    return labels[:count]
+
+
 def topic_node_labels(spec: dict[str, Any], deck_title: str = "", *, count: int = 5) -> list[str]:
     context = topic_context(spec, deck_title)
     if any(token in context for token in ["阿克苏", "绿洲", "胡杨", "四季", "水系", "oasis"]):
         labels = ["水系入口", "春配套", "夏活力", "胡杨秋境", "暖廊冬居", "地域纹样"]
-    elif any(token in context for token in ["低空", "物流", "无人机", "空域", "配送", "drone"]):
+    elif is_low_altitude_context(context):
         labels = ["订单入口", "空域调度", "无人机执行", "末端交付", "安全冗余", "运营回收"]
     elif any(token in context for token in ["ai", "capital", "compute", "gpu", "stargate", "openai"]):
         labels = ["资本入口", "算力承诺", "模型平台", "收入兑现", "生态回流", "风险折扣"]
     else:
-        labels = ["核心节点", "资源配置", "执行路径", "价值回收", "风险控制", "下一步"]
+        labels = inferred_topic_labels(spec, deck_title, count=count)
+        if not labels:
+            labels = ["核心节点", "资源配置", "执行路径", "价值回收", "风险控制", "下一步"]
     return labels[:count]
 
 
@@ -541,7 +652,7 @@ def comparison_rows_for_topic(spec: dict[str, Any], deck_title: str = "") -> lis
             ("生活", "配套平均铺开", "春夏秋冬差异体验"),
             ("文化", "弱地域识别", "胡杨与纹样成为记忆点"),
         ]
-    if any(token in context for token in ["低空", "物流", "无人机", "空域", "配送", "drone"]):
+    if is_low_altitude_context(context):
         return [
             ("效率", "地面高峰拥堵", "低空走廊直达"),
             ("成本", "线性增车扩张", "平台调度摊薄成本"),
@@ -552,6 +663,13 @@ def comparison_rows_for_topic(spec: dict[str, Any], deck_title: str = "") -> lis
             ("资本", "财务投资分散", "算力绑定资本闭环"),
             ("供给", "GPU 采购排队", "云厂商承诺前置"),
             ("回报", "估值叙事驱动", "收入兑现重新定价"),
+        ]
+    labels = inferred_topic_labels(spec, deck_title, count=3)
+    if len(labels) >= 3:
+        return [
+            (labels[0], "单点动作分散", f"{labels[0]}成为主线"),
+            (labels[1], "触点缺少协同", f"{labels[1]}形成抓手"),
+            (labels[2], "价值表达模糊", f"{labels[2]}沉淀记忆"),
         ]
     return [
         ("效率", "资源分散推进", "主路径集中突破"),
@@ -564,10 +682,13 @@ def dashboard_metrics_for_topic(spec: dict[str, Any], deck_title: str = "") -> l
     context = topic_context(spec, deck_title)
     if any(token in context for token in ["阿克苏", "绿洲", "胡杨", "四季", "水系", "oasis"]):
         return [("4境", "四季地块"), ("1环", "水系闭环"), ("3核", "价值引擎"), ("全年龄", "人群覆盖")]
-    if any(token in context for token in ["低空", "物流", "无人机", "空域", "配送", "drone"]):
+    if is_low_altitude_context(context):
         return [("92%", "准点率"), ("18m", "时效"), ("4.2k", "日单量"), ("-23%", "单均成本")]
     if any(token in context for token in ["ai", "capital", "compute", "gpu", "stargate", "openai"]):
         return [("$122B", "融资规模"), ("10GW", "算力承诺"), ("4家", "核心投资人"), ("2026", "资本窗口")]
+    labels = inferred_topic_labels(spec, deck_title, count=4)
+    if len(labels) >= 4:
+        return [(f"{index:02d}", label) for index, label in enumerate(labels[:4], 1)]
     return [("4", "关键抓手"), ("1", "主路径"), ("3", "价值层"), ("90d", "推进节奏")]
 
 
@@ -633,10 +754,60 @@ def contract_title(spec: dict[str, Any], kind: str, deck_title: str) -> str:
     return strip_prompt_prefix(page_type or kind.replace("_", " ").title() or deck_title)
 
 
-def contract_background(page: int, accent: str) -> list[str]:
+def theme_key(spec: dict[str, Any] | None = None, deck_title: str = "") -> str:
+    data = spec if isinstance(spec, dict) else {}
+    context = topic_context(data, deck_title or text_from_any(data.get("_deck_title")))
+    if any(token in context for token in ["阿克苏", "绿洲", "胡杨", "四季", "水系", "oasis", "adras", "艾德莱斯"]):
+        return "oasis_residential"
+    if is_low_altitude_context(context):
+        return "low_altitude_logistics"
+    if any(token in context for token in ["ai", "capital", "compute", "gpu", "stargate", "openai", "算力", "资本"]):
+        return "ai_capital"
+    return "general_editorial"
+
+
+def theme_effects(spec: dict[str, Any] | None = None, deck_title: str = "") -> list[str]:
+    return list(THEME_MOTIF_EFFECTS.get(theme_key(spec, deck_title), []))
+
+
+def theme_background_motifs(page: int, accent: str, spec: dict[str, Any] | None = None) -> list[str]:
+    key = theme_key(spec, text_from_any(spec.get("_deck_title")) if isinstance(spec, dict) else "")
+    if key == "oasis_residential":
+        return [
+            path("theme-oasis-water-ribbon", "M824 122 C848 102 868 134 890 108 C900 96 904 98 908 92", stroke="#4A90E2", **{"stroke-width": 15, "stroke-linecap": "round", "opacity": 0.18}),
+            path("theme-oasis-water-highlight", "M828 128 C850 112 870 140 892 114 C900 106 904 106 908 100", stroke=accent, **{"stroke-width": 4, "stroke-linecap": "round", "opacity": 0.42}),
+            rect("theme-oasis-poplar-texture-1", 872, 160, 10, 230, "#8A5A2B", rx=0, opacity=0.12),
+            rect("theme-oasis-poplar-texture-2", 890, 188, 7, 202, "#8A5A2B", rx=0, opacity=0.10),
+            rect("theme-oasis-poplar-texture-3", 902, 172, 8, 218, "#FFC107", rx=0, opacity=0.12),
+            rect("theme-oasis-adras-band", 824, 142, 54, 9, "#E91E63", rx=0, opacity=0.22),
+            rect("theme-oasis-spring-swatch", 884, 142, 10, 9, "#8BC34A", rx=0, opacity=0.55),
+            rect("theme-oasis-autumn-swatch", 898, 142, 10, 9, "#FFC107", rx=0, opacity=0.55),
+        ]
+    if key == "ai_capital":
+        motifs: list[str] = [
+            rect("theme-ai-grid-field", 674, 58, 206, 342, "#0F172A", rx=0, opacity=0.055),
+            rect("theme-ai-capital-rail", 706, 76, 4, 306, accent, rx=0, opacity=0.38),
+            rect("theme-ai-data-band", 736, 102, 104, 8, "#E11D48", rx=0, opacity=0.30),
+        ]
+        for index, (x, y) in enumerate(((742, 150), (814, 184), (766, 256), (836, 318)), 1):
+            motifs.append(circle(f"theme-ai-compute-node-{index}", x, y, 7, accent, opacity=0.42))
+        return motifs
+    if key == "low_altitude_logistics":
+        return [
+            path("theme-logistics-air-lane-1", "M900 112 C903 96 905 124 908 108", stroke=accent, **{"stroke-width": 4, "stroke-linecap": "round", "opacity": 0.26}),
+            path("theme-logistics-air-lane-2", "M900 138 C903 122 905 152 908 136", stroke="#0F9F8E", **{"stroke-width": 4, "stroke-linecap": "round", "opacity": 0.18}),
+            rect("theme-logistics-dispatch-node-1", 900, 158, 8, 8, "#FFFFFF", rx=0, stroke=accent, **{"stroke-width": 2, "opacity": 0.74}),
+            rect("theme-logistics-dispatch-node-2", 900, 176, 8, 8, "#FFFFFF", rx=0, stroke=accent, **{"stroke-width": 2, "opacity": 0.74}),
+            rect("theme-logistics-route-mesh", 900, 196, 8, 28, accent, rx=0, opacity=0.08),
+        ]
+    return []
+
+
+def contract_background(page: int, accent: str, spec: dict[str, Any] | None = None) -> list[str]:
     return [
         rect("background", 0, 0, W, H, "#F8FAFC"),
         rect("accent-page-wash", 720, 0, 240, H, accent, rx=0, opacity=0.085),
+        *theme_background_motifs(page, accent, spec),
         rect("accent-wash-left", 48, 44, 10, 436, accent, rx=0, opacity=0.26),
         rect("accent-wash-bottom", 48, 476, 864, 4, accent, rx=0, opacity=0.18),
         rect("top-rule", 48, 32, 864, 4, accent, rx=0),
@@ -660,7 +831,7 @@ def render_contract_cover(page: int, accent: str, spec: dict[str, Any], boxes: d
     visual = visual_box_for_contract(spec, boxes, (600, 84, 288, 360))
     body_copy = add_semantic_caption(summary, spec, deck_title, max_chars=role_text_limit(spec, "body", 96))
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         rect("cover-title-field", 64, 132, 584, 160, accent, rx=0, opacity=0.055),
         rect("cover-map-field", 592, 72, 308, 386, "#DBEAFE", rx=0, opacity=0.88),
         rect("cover-coordinate-stack-1", 616, 112, 236, 1, accent, rx=0, opacity=0.16),
@@ -703,7 +874,7 @@ def render_contract_agenda(page: int, accent: str, spec: dict[str, Any], boxes: 
     backplane_right = max(timeline["x"] + timeline["width"], body_box["x"] + body_box["width"]) + 18
     backplane_bottom = max(timeline["y"] + timeline["height"], body_box["y"] + body_box["height"]) + 18
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         rect("agenda-route-backplane", backplane_x, backplane_y, backplane_right - backplane_x, backplane_bottom - backplane_y, "#FFFFFF", rx=0, stroke="#D8E2EE", **{"stroke-width": 1, "opacity": 0.96}),
         rect("agenda-side-index-field", visual["x"], visual["y"], visual["width"], visual["height"], accent, rx=0, opacity=0.10),
         contract_text(spec, "title", title_box, title, role="title", size=24, weight=900, color="#0F172A"),
@@ -715,6 +886,7 @@ def render_contract_agenda(page: int, accent: str, spec: dict[str, Any], boxes: 
         y = timeline["y"] + 20 + (index - 1) * y_step
         points.append((x, y))
         body.append(rect(f"agenda-number-{index}", x - 13, y - 13, 26, 26, "#FFFFFF", rx=0, stroke=accent, **{"stroke-width": 2}))
+        body.append(rect(f"agenda-index-tick-{index}", x - 30, y - 3, 16, 6, accent, rx=0, opacity=0.48))
     if points:
         route_d = "M" + " L".join(f"{x} {y}" for x, y in points)
         body.append(path("agenda-route-shadow", route_d, stroke="#94A3B8", **{"stroke-width": 12, "stroke-linecap": "round", "opacity": 0.12}))
@@ -722,7 +894,7 @@ def render_contract_agenda(page: int, accent: str, spec: dict[str, Any], boxes: 
     body.extend(
         [
             rect("agenda-visual-mark", visual["x"], visual["y"], visual["width"], visual["height"], accent, rx=0, opacity=0.36),
-            contract_text(spec, "body", body_text_box, " / ".join(f"{index:02d} {label}" for index, label in enumerate(labels, 1)), role="body", size=17, weight=750, color="#0F172A"),
+            contract_text(spec, "agenda-labels", body_text_box, " / ".join(f"{index:02d} {label}" for index, label in enumerate(labels, 1)), role="body", size=17, weight=750, color="#0F172A"),
             contract_footer(page, spec, boxes),
         ]
     )
@@ -738,9 +910,9 @@ def render_contract_section(page: int, accent: str, spec: dict[str, Any], boxes:
     hero_width = min(220, max(120, visual["width"] // 3))
     hero_x = max(48, min(visual["x"] + visual["width"] - hero_width - 48, 912 - hero_width))
     hero_y = max(visual["y"] + 18, min(visual["y"] + 34, 414))
-    body_copy = add_semantic_caption(summary, spec, deck_title, max_chars=role_text_limit(spec, "body", 60))
+    body_copy = add_semantic_caption(summary, spec, deck_title, max_chars=max(36, role_text_limit(spec, "body", 60) - 8))
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         rect("section-signal-field", 48, 66, 864, 386, "#FFFFFF", rx=0, stroke="#D8E2EE", **{"stroke-width": 1, "opacity": 0.95}),
         rect("section-index-rail", visual["x"], visual["y"], visual["width"], visual["height"], accent, rx=0, opacity=0.13),
         rect("section-motif-block", visual["x"] + 64, visual["y"] + 42, max(80, visual["width"] - 128), 16, accent, rx=0, opacity=0.26),
@@ -751,7 +923,7 @@ def render_contract_section(page: int, accent: str, spec: dict[str, Any], boxes:
         rect("section-bottom-rule", 82, 394, 520, 5, accent, rx=0, opacity=0.58),
         contract_footer(page, spec, boxes),
     ]
-    report.add(page, "contract-section", "contract.section", bbox(visual["x"], visual["y"], visual["width"], visual["height"]), ["path", "geometric_shape", "typography"], effects=evidence_effects(spec, ["section_index", "hero_signal", "full_page_archetype"]), source_trace=source_trace, asset_id=asset_id)
+    report.add(page, "contract-section", "contract.section", bbox(48, 66, 864, 386), ["path", "geometric_shape", "typography"], effects=evidence_effects(spec, ["section_index", "hero_signal", "full_page_archetype"]), source_trace=source_trace, asset_id=asset_id)
     return body
 
 
@@ -761,7 +933,7 @@ def render_contract_dashboard(page: int, accent: str, spec: dict[str, Any], boxe
     grid = contract_box(boxes, "grid", fallback=(348, 106, 548, 128))
     chart = contract_box(boxes, "chart", fallback=(64, 258, 832, 150))
     body_box = contract_box(boxes, "body", fallback=(64, 426, 832, 56))
-    body = [*contract_background(page, accent), contract_text(spec, "title", title_box, title, role="title", size=22, weight=900)]
+    body = [*contract_background(page, accent, spec), contract_text(spec, "title", title_box, title, role="title", size=22, weight=900)]
     metrics = dashboard_metrics_for_topic(spec, text_from_any(spec.get("_deck_title")))
     body.append(rect("metric-hero-card", metric["x"], metric["y"], metric["width"], metric["height"], "#E0F2FE", rx=0, stroke=accent, **{"stroke-width": 2}))
     body.append(contract_text(spec, "metric", {"x": metric["x"] + 18, "y": metric["y"] + 20, "width": metric["width"] - 36, "height": 78}, f"{metrics[0][0]}\n{metrics[0][1]}", role="metric", size=27, weight=900, color=accent))
@@ -799,7 +971,7 @@ def render_contract_flow(page: int, accent: str, spec: dict[str, Any], boxes: di
     body_box = contract_box(boxes, "body", fallback=(96, 380, 768, 48))
     callout_box = contract_box(boxes, "callout", "note", fallback=(flow["x"] + flow["width"] - 260, flow["y"] + flow["height"] + 22, 250, 48))
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         contract_text(spec, "title", title_box, title, role="title", size=22, weight=900),
         rect("flow-backplane", flow["x"], flow["y"] - 18, flow["width"], flow["height"] + 84, "#FFFFFF", rx=0, stroke="#D8E2EE", **{"stroke-width": 1, "opacity": 0.96}),
         rect("flow-lane-upper", flow["x"] + 24, flow["y"] + 22, flow["width"] - 48, 44, accent, rx=0, opacity=0.11),
@@ -841,7 +1013,7 @@ def render_contract_comparison(page: int, accent: str, spec: dict[str, Any], box
     right_panel = contract_box(boxes, "right_panel", "right-panel", fallback=(504, 136, 384, 300))
     rows_data = comparison_rows_for_topic(spec, text_from_any(spec.get("_deck_title")))
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         contract_text(spec, "title", title_box, title, role="title", size=22, weight=900),
         rect("comparison-left-panel", left_panel["x"], left_panel["y"], left_panel["width"], left_panel["height"], "#EEF2FF", rx=0, opacity=0.72),
         rect("comparison-right-panel", right_panel["x"], right_panel["y"], right_panel["width"], right_panel["height"], "#ECFDF5", rx=0, opacity=0.72),
@@ -874,7 +1046,7 @@ def render_contract_hub(page: int, accent: str, spec: dict[str, Any], boxes: dic
     radius = min(118, max(70, min(visual["width"], visual["height"]) // 3))
     labels = topic_node_labels(spec, text_from_any(spec.get("_deck_title")), count=5)
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         contract_text(spec, "title", title_box, title, role="title", size=22, weight=900),
         rect("hub-backplane", visual["x"], visual["y"], visual["width"], visual["height"], "#F8FAFC", rx=0, stroke="#D8E2EE", **{"stroke-width": 1}),
         path("hub-sector-1", f"M{cx} {cy} L{cx + radius + 58} {cy - 82} L{cx + radius + 80} {cy + 28} Z", fill=accent, opacity=0.12),
@@ -910,7 +1082,7 @@ def render_contract_bar(page: int, accent: str, spec: dict[str, Any], boxes: dic
     callout = contract_box(boxes, "callout", "annotation", fallback=(748, 168, 150, 168))
     labels = topic_node_labels(spec, text_from_any(spec.get("_deck_title")), count=4)
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         contract_text(spec, "title", title_box, title, role="title", size=22, weight=900),
         contract_text(spec, "body", takeaway, summary, role="body", size=12, weight=600, color="#334155"),
         rect("bar-plot-backplane", chart["x"] - 18, chart["y"] - 20, chart["width"] + 38, chart["height"] + 34, "#FFFFFF", rx=0, stroke="#D8E2EE", **{"stroke-width": 1}),
@@ -932,13 +1104,40 @@ def render_contract_bar(page: int, accent: str, spec: dict[str, Any], boxes: dic
     return body
 
 
+def render_contract_annotation(page: int, accent: str, spec: dict[str, Any], boxes: dict[str, dict[str, int]], title: str, summary: str, report: ComponentReport, source_trace: str, asset_id: str) -> list[str]:
+    title_box = contract_box(boxes, "title", fallback=(64, 56, 640, 56))
+    spotlight = contract_box(boxes, "spotlight", "visual", fallback=(88, 146, 532, 248))
+    callout = contract_box(boxes, "callout", "note", fallback=(650, 168, 218, 176))
+    caption = contract_box(boxes, "caption", "body", fallback=(104, 418, 720, 38))
+    labels = topic_node_labels(spec, text_from_any(spec.get("_deck_title")), count=4)
+    body_copy = summary or " / ".join(labels)
+    body = [
+        *contract_background(page, accent, spec),
+        contract_text(spec, "title", title_box, title, role="title", size=24, weight=900),
+        rect("spotlight-stage", spotlight["x"], spotlight["y"], spotlight["width"], spotlight["height"], "#FFFFFF", rx=0, stroke="#D8E2EE", **{"stroke-width": 1, "opacity": 0.96}),
+        rect("spotlight-focus-field", spotlight["x"] + 38, spotlight["y"] + 42, spotlight["width"] - 76, spotlight["height"] - 84, accent, rx=0, opacity=0.10),
+        rect("spotlight-focus-core", spotlight["x"] + spotlight["width"] // 2 - 56, spotlight["y"] + spotlight["height"] // 2 - 40, 112, 80, "#FFFFFF", rx=0, stroke=accent, **{"stroke-width": 4}),
+        path("spotlight-annotation-line-1", f"M{spotlight['x'] + spotlight['width'] // 2 + 56} {spotlight['y'] + spotlight['height'] // 2 - 12} L{callout['x'] - 24} {callout['y'] + 36}", stroke=accent, **{"stroke-width": 4, "stroke-linecap": "round", "opacity": 0.58}),
+        path("spotlight-annotation-line-2", f"M{spotlight['x'] + spotlight['width'] // 2 + 56} {spotlight['y'] + spotlight['height'] // 2 + 28} L{callout['x'] - 24} {callout['y'] + 108}", stroke=accent, **{"stroke-width": 3, "stroke-linecap": "round", "opacity": 0.42}),
+        rect("annotation-callout-panel", callout["x"], callout["y"], callout["width"], callout["height"], "#E0F2FE", rx=0, stroke=accent, **{"stroke-width": 3}),
+        rect("annotation-callout-rail", callout["x"], callout["y"], 10, callout["height"], accent, rx=0, opacity=0.62),
+        text_box("spotlight-label", spotlight["x"] + spotlight["width"] // 2 - 82, spotlight["y"] + spotlight["height"] // 2 - 8, 164, 18, labels[0], size=12, weight=900, color=accent, align="center"),
+        text_box("annotation-callout-label", callout["x"] + 24, callout["y"] + 24, callout["width"] - 44, 20, labels[1] if len(labels) > 1 else "关键观察", size=11, weight=900, color=accent),
+        text_box("annotation-callout-copy", callout["x"] + 24, callout["y"] + 58, callout["width"] - 44, 70, body_copy, size=13, weight=700, color="#334155"),
+        text_box("annotation-caption", caption["x"], caption["y"], caption["width"], caption["height"], " / ".join(labels), size=12, weight=750, color="#475569", align="center"),
+        contract_footer(page, spec, boxes),
+    ]
+    report.add(page, "contract-annotation", "contract.annotation", bbox(spotlight["x"], spotlight["y"], callout["x"] + callout["width"] - spotlight["x"], max(spotlight["height"], callout["y"] + callout["height"] - spotlight["y"])), ["geometric_shape", "annotation", "typography"], effects=evidence_effects(spec, ["spotlight", "annotation", "semantic_labels"]), source_trace=source_trace, asset_id=asset_id)
+    return body
+
+
 def render_contract_closing(page: int, accent: str, spec: dict[str, Any], boxes: dict[str, dict[str, int]], title: str, summary: str, report: ComponentReport, source_trace: str, asset_id: str) -> list[str]:
     title_box = contract_box(boxes, "title", fallback=(72, 96, 620, 104))
     body_box = contract_box(boxes, "body", fallback=(76, 240, 520, 96))
     cta = contract_box(boxes, "callout", "cta", fallback=(628, 248, 236, 88))
     steps = ["双走廊", "三场景", "一中台"]
     body = [
-        *contract_background(page, accent),
+        *contract_background(page, accent, spec),
         rect("closing-backplane", 64, 74, 832, 374, "#FFFFFF", rx=0, stroke="#D8E2EE", **{"stroke-width": 1, "opacity": 0.94}),
         path("closing-route-ribbon", "M84 392 C220 356 348 414 496 382 C622 354 730 386 862 338 L862 372 C724 412 624 382 504 410 C348 444 218 386 84 422 Z", fill=accent, opacity=0.10),
         path("closing-horizon-path", f"M76 390 C210 360 360 420 500 386 C640 348 760 408 864 360", stroke=accent, **{"stroke-width": 11, "stroke-linecap": "round", "opacity": 0.24}),
@@ -981,10 +1180,24 @@ def render_contract_slide(page: int, kind: str, title: str, summary: str, asset_
         body = render_contract_hub(page, accent, spec, boxes, title, summary, report, source_trace, asset_id)
     elif page_type == "chart_takeaway" or kind == "bar_chart":
         body = render_contract_bar(page, accent, spec, boxes, title, summary, report, source_trace, asset_id)
+    elif page_type == "insight_callout" or kind == "insight_callout":
+        body = render_contract_annotation(page, accent, spec, boxes, title, summary, report, source_trace, asset_id)
     elif page_type == "closing" or kind == "closing":
         body = render_contract_closing(page, accent, spec, boxes, title, summary, report, source_trace, asset_id)
     else:
         body = render_contract_flow(page, accent, spec, boxes, title, summary, report, source_trace, asset_id)
+    motifs = theme_effects(spec, deck_title)
+    if motifs:
+        report.add(
+            page,
+            f"theme-{theme_key(spec, deck_title)}",
+            "theme.visual_language",
+            bbox(0, 0, W, H),
+            ["path", "geometric_shape"],
+            effects=motifs,
+            source_trace=f"theme:{theme_key(spec, deck_title)}",
+            asset_id=asset_id,
+        )
     return svg_wrap(page, accent, body)
 
 
@@ -1115,6 +1328,8 @@ def numeric_weight(value: str, fallback: float) -> float:
 def renderer_family(kind: str) -> str:
     if kind in {"cover", "editor_note", "closing"}:
         return f"layout.{kind}"
+    if kind == "insight_callout":
+        return "contract.annotation"
     if kind == "kpi_cards":
         return "chart.kpi"
     if kind == "bubble_chart":
