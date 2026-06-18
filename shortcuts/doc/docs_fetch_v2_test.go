@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/larksuite/cli/internal/cmdutil"
+	"github.com/larksuite/cli/internal/core"
 	"github.com/larksuite/cli/internal/httpmock"
 	"github.com/larksuite/cli/shortcuts/common"
 	"github.com/spf13/cobra"
@@ -59,6 +60,47 @@ func TestBuildFetchBodyOmitsEmptyScene(t *testing.T) {
 	body := buildFetchBody(runtime)
 	if _, ok := body["scene"]; ok {
 		t.Fatalf("did not expect empty scene in fetch body: %#v", body)
+	}
+}
+
+func TestBuildFetchBodyIncludesExplicitLang(t *testing.T) {
+	t.Parallel()
+
+	runtime := newFetchBodyTestRuntime(context.Background())
+	if err := runtime.Cmd.Flags().Set("lang", "en-US"); err != nil {
+		t.Fatalf("set lang: %v", err)
+	}
+
+	body := buildFetchBody(runtime)
+	if got := body["lang"]; got != "en-US" {
+		t.Fatalf("lang = %#v, want %q", got, "en-US")
+	}
+}
+
+func TestBuildFetchBodyUsesRuntimeConfigLang(t *testing.T) {
+	t.Parallel()
+
+	runtime := newFetchBodyTestRuntime(context.Background())
+	runtime.Config = &core.CliConfig{Lang: "zh_cn"}
+
+	body := buildFetchBody(runtime)
+	if got := body["lang"]; got != "zh_cn" {
+		t.Fatalf("lang = %#v, want %q", got, "zh_cn")
+	}
+}
+
+func TestBuildFetchBodyExplicitBlankLangOmitsLang(t *testing.T) {
+	t.Parallel()
+
+	runtime := newFetchBodyTestRuntime(context.Background())
+	runtime.Config = &core.CliConfig{Lang: "zh_cn"}
+	if err := runtime.Cmd.Flags().Set("lang", ""); err != nil {
+		t.Fatalf("set lang: %v", err)
+	}
+
+	body := buildFetchBody(runtime)
+	if _, ok := body["lang"]; ok {
+		t.Fatalf("did not expect blank explicit lang in fetch body: %#v", body)
 	}
 }
 
@@ -262,6 +304,7 @@ func newFetchBodyTestRuntime(ctx context.Context) *common.RuntimeContext {
 	cmd := &cobra.Command{Use: "+fetch"}
 	cmd.Flags().String("doc-format", "xml", "")
 	cmd.Flags().String("detail", "simple", "")
+	cmd.Flags().String("lang", "", "")
 	cmd.Flags().Int("revision-id", -1, "")
 	cmd.Flags().String("scope", "full", "")
 	cmd.Flags().String("start-block-id", "", "")
@@ -281,6 +324,7 @@ func newFetchShortcutTestRuntime(t *testing.T, apiVersion string, setFlags map[s
 	cmd.Flags().String("doc", "doxcnFetchDryRun", "")
 	cmd.Flags().String("doc-format", "xml", "")
 	cmd.Flags().String("detail", "simple", "")
+	cmd.Flags().String("lang", "", "")
 	cmd.Flags().Int("revision-id", -1, "")
 	cmd.Flags().String("scope", "full", "")
 	cmd.Flags().String("start-block-id", "", "")
