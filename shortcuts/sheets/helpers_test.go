@@ -293,6 +293,8 @@ func TestParseSpreadsheetRef(t *testing.T) {
 		{name: "wiki url", url: "https://x.feishu.cn/wiki/wikDEF", wantKind: spreadsheetRefWiki, wantToken: "wikDEF"},
 		{name: "wiki url with query", url: "https://x.feishu.cn/wiki/wikDEF?sheet=xxxxxx", wantKind: spreadsheetRefWiki, wantToken: "wikDEF"},
 		{name: "raw token", tok: "shtRAW", wantKind: spreadsheetRefSheet, wantToken: "shtRAW"},
+		{name: "sheets url with /wiki/ in query stays sheet", url: "https://x.feishu.cn/sheets/shtABC?from=/wiki/wikX", wantKind: spreadsheetRefSheet, wantToken: "shtABC"},
+		{name: "sheets url with /wiki/ in fragment stays sheet", url: "https://x.feishu.cn/sheets/shtABC#/wiki/wikX", wantKind: spreadsheetRefSheet, wantToken: "shtABC"},
 		{name: "docx url unsupported", url: "https://x.feishu.cn/docx/docABC", wantErr: true},
 		{name: "neither provided", wantErr: true},
 	}

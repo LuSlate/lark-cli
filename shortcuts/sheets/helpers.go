@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neturl "net/url"
 	"strings"
 
 	"github.com/larksuite/cli/errs"
@@ -86,37 +87,56 @@ func parseSpreadsheetRef(runtime *common.RuntimeContext) (spreadsheetRef, error)
 		return spreadsheetRef{Kind: spreadsheetRefSheet, Token: token}, nil
 	}
 
-	url := strings.TrimSpace(runtime.Str("url"))
-	if node := tokenAfterURLPrefix(url, "/wiki/"); node != "" {
-		if err := validate.RejectControlChars(node, "url"); err != nil {
-			return spreadsheetRef{}, sheetsValidationCauseForFlag("url", err)
-		}
-		return spreadsheetRef{Kind: spreadsheetRefWiki, Token: node}, nil
-	}
-	token := extractSpreadsheetToken(url)
-	if token == "" || token == url {
+	rawURL := strings.TrimSpace(runtime.Str("url"))
+	token, kind, ok := spreadsheetURLToken(rawURL)
+	if !ok {
 		return spreadsheetRef{}, sheetsValidationForFlag("url", "--url must be a spreadsheet URL like https://.../sheets/<token> or a wiki URL like https://.../wiki/<token>")
 	}
 	if err := validate.RejectControlChars(token, "url"); err != nil {
 		return spreadsheetRef{}, sheetsValidationCauseForFlag("url", err)
 	}
-	return spreadsheetRef{Kind: spreadsheetRefSheet, Token: token}, nil
+	return spreadsheetRef{Kind: kind, Token: token}, nil
 }
 
-// tokenAfterURLPrefix returns the path segment following the first occurrence of
-// prefix in input, stopping at the next /?# boundary. Returns "" when prefix is
-// absent or the following segment is empty. Substring-based to match
-// extractSpreadsheetToken's lenient, host-agnostic parsing.
-func tokenAfterURLPrefix(input, prefix string) string {
-	idx := strings.Index(input, prefix)
-	if idx < 0 {
-		return ""
+// spreadsheetURLToken extracts the token and its kind from a Lark URL, matching
+// only on the URL *path* segment (parsed via net/url). A /wiki/ or /sheets/ that
+// appears only in the query or fragment (e.g. a redirect or anchor param) never
+// hijacks classification. Returns ok=false when no known prefix heads the path.
+func spreadsheetURLToken(rawURL string) (token, kind string, ok bool) {
+	u, err := neturl.Parse(rawURL)
+	if err != nil || u.Path == "" {
+		return "", "", false
 	}
-	token := input[idx+len(prefix):]
-	if j := strings.IndexAny(token, "/?#"); j >= 0 {
-		token = token[:j]
+	for _, m := range []struct {
+		prefix string
+		kind   string
+	}{
+		{"/sheets/", spreadsheetRefSheet},
+		{"/spreadsheets/", spreadsheetRefSheet},
+		{"/wiki/", spreadsheetRefWiki},
+	} {
+		if seg, found := pathSegmentAfter(u.Path, m.prefix); found {
+			return seg, m.kind, true
+		}
 	}
-	return strings.TrimSpace(token)
+	return "", "", false
+}
+
+// pathSegmentAfter returns the first path segment after prefix when path begins
+// with prefix, else ("", false).
+func pathSegmentAfter(path, prefix string) (string, bool) {
+	if !strings.HasPrefix(path, prefix) {
+		return "", false
+	}
+	rest := path[len(prefix):]
+	if i := strings.IndexByte(rest, '/'); i >= 0 {
+		rest = rest[:i]
+	}
+	rest = strings.TrimSpace(rest)
+	if rest == "" {
+		return "", false
+	}
+	return rest, true
 }
 
 // resolveSpreadsheetToken applies the public --url / --spreadsheet-token XOR pair
@@ -160,7 +180,7 @@ func resolveWikiNodeToSpreadsheetToken(runtime *common.RuntimeContext, nodeToken
 	if err := runtime.EnsureScopes([]string{"wiki:node:read"}); err != nil {
 		return "", err
 	}
-	data, err := runtime.CallAPI("GET", "/open-apis/wiki/v2/spaces/get_node",
+	data, err := runtime.CallAPITyped("GET", "/open-apis/wiki/v2/spaces/get_node",
 		map[string]interface{}{"token": nodeToken}, nil)
 	if err != nil {
 		return "", err
@@ -169,29 +189,12 @@ func resolveWikiNodeToSpreadsheetToken(runtime *common.RuntimeContext, nodeToken
 	objType := common.GetString(node, "obj_type")
 	objToken := common.GetString(node, "obj_token")
 	if objType == "" || objToken == "" {
-		return "", sheetsValidationForFlag("url", "wiki node %q returned incomplete data from get_node", nodeToken)
+		return "", errs.NewInternalError(errs.SubtypeInvalidResponse, "wiki get_node returned incomplete node data for %q", nodeToken)
 	}
 	if objType != "sheet" {
 		return "", sheetsValidationForFlag("url", "wiki URL resolves to obj_type=%q, but a spreadsheet (obj_type=sheet) is required", objType)
 	}
 	return objToken, nil
-}
-
-// extractSpreadsheetToken pulls the token segment out of a /sheets/<token>
-// or /spreadsheets/<token> URL. Returns the input unchanged when no known
-// prefix is present (callers must check token != originalInput).
-func extractSpreadsheetToken(input string) string {
-	input = strings.TrimSpace(input)
-	for _, prefix := range []string{"/sheets/", "/spreadsheets/"} {
-		if idx := strings.Index(input, prefix); idx >= 0 {
-			token := input[idx+len(prefix):]
-			if idx2 := strings.IndexAny(token, "/?#"); idx2 >= 0 {
-				token = token[:idx2]
-			}
-			return token
-		}
-	}
-	return input
 }
 
 // resolveSheetSelector validates the --sheet-id / --sheet-name XOR and

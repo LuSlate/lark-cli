@@ -121,6 +121,37 @@ func TestExecute_WikiURLWrongObjType(t *testing.T) {
 	if !strings.Contains(err.Error(), "obj_type") {
 		t.Fatalf("error = %v, want mention of obj_type", err)
 	}
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("wrong-obj_type error = %T, want *errs.ValidationError", err)
+	}
+}
+
+// TestExecute_WikiURLIncompleteNode treats an incomplete get_node response
+// (missing obj_type/obj_token) as an internal/server error, not a user --url
+// validation error.
+func TestExecute_WikiURLIncompleteNode(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{},
+			},
+		},
+	}
+	_, err := runShortcutWithStubs(t, WorkbookInfo,
+		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode)
+	if err == nil {
+		t.Fatal("want error for incomplete get_node node data")
+	}
+	var ve *errs.ValidationError
+	if errors.As(err, &ve) {
+		t.Fatalf("incomplete-data error classified as validation (%v); want internal", err)
+	}
 }
 
 // TestExecute_SheetMove_LookupsIndex covers the two-step path: SheetMove
