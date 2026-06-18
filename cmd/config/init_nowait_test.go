@@ -387,6 +387,39 @@ func TestResumeAppRegistration_Success(t *testing.T) {
 	}
 }
 
+// A profile-name conflict on the resume save path must surface as the typed
+// ValidationError(--name), not be downgraded to an internal/storage error.
+func TestResumeAppRegistration_ProfileNameConflict_PreservesValidationError(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, _, _, _ := cmdutil.TestFactory(t, nil)
+	withStubRegistrationClient(t, stubRT{200, `{"client_id":"cli_new","client_secret":"sec","user_info":{"tenant_brand":"feishu"}}`})
+
+	// Seed a config whose app id collides with the profile name we resume into.
+	seeded := &core.MultiAppConfig{Apps: []core.AppConfig{
+		{AppId: "cli_existing", AppSecret: core.PlainSecret("s"), Brand: core.BrandFeishu},
+	}}
+	if err := core.SaveMultiAppConfig(seeded); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	loaded, _ := core.LoadMultiAppConfig() // digest must match what resume recomputes
+
+	const dc = "conflict-dc"
+	rec := initNoWaitRecord{
+		Version:      initNoWaitCacheVersion,
+		Brand:        "feishu",
+		ProfileName:  "cli_existing", // collides with the existing appId in saveAsProfile
+		Interval:     1,
+		ExpiresAt:    time.Now().Unix() + 300,
+		ConfigDigest: computeConfigDigest(loaded),
+	}
+	if err := saveInitNoWaitRecord(dc, rec); err != nil {
+		t.Fatalf("save cache: %v", err)
+	}
+
+	opts := &ConfigInitOptions{Factory: f, Ctx: context.Background(), DeviceCode: dc}
+	assertValidationParam(t, resumeAppRegistration(opts), "--name")
+}
+
 // --- flag validation (returns before any network) ---
 
 func TestConfigInitRun_NoWaitAndDeviceCodeMutuallyExclusive(t *testing.T) {

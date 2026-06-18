@@ -193,7 +193,10 @@ func resumeAppRegistration(opts *ConfigInitOptions) error {
 		return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 	}
 	if err := saveInitConfig(rec.ProfileName, existing, f, result.ClientID, secret, finalBrand, rec.Lang); err != nil {
-		return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+		// Preserve a typed error (e.g. the --name conflict ValidationError) via
+		// the shared helper instead of downgrading everything to storage —
+		// matching the blocking init paths.
+		return wrapSaveConfigError(err)
 	}
 
 	// Config persisted — only now is it safe to drop the resume cache. Clearing
