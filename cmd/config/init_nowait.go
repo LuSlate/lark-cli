@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/larksuite/cli/errs"
@@ -43,6 +44,11 @@ func initiateNoWaitAppRegistration(opts *ConfigInitOptions, existing *core.Multi
 	httpClient := newRegistrationHTTPClient()
 	authResp, err := larkauth.RequestAppRegistration(httpClient, brand, f.IOStreams.ErrOut)
 	if err != nil {
+		// Pass a lower-layer typed error (e.g. a network/transport error) through
+		// unchanged; only wrap genuinely-untyped failures as invalid_client.
+		if _, ok := errs.ProblemOf(err); ok {
+			return err
+		}
 		return errs.NewConfigError(errs.SubtypeInvalidClient, "app registration failed: %v", err).WithCause(err)
 	}
 
@@ -124,7 +130,10 @@ func resumeAppRegistration(opts *ConfigInitOptions) error {
 
 	// Drift guard (fast path): bail out before the long poll if the config
 	// already changed since initiation, so we don't waste minutes polling.
-	existing, _ := core.LoadMultiAppConfig()
+	existing, err := loadConfigForDriftCheck()
+	if err != nil {
+		return err
+	}
 	if computeConfigDigest(existing) != rec.ConfigDigest {
 		return errs.NewValidationError(errs.SubtypeInvalidArgument,
 			"configuration changed since this app creation was started; re-initiate with `lark-cli config init --new --no-wait` to avoid overwriting it").
@@ -145,6 +154,12 @@ func resumeAppRegistration(opts *ConfigInitOptions) error {
 		if appRegShouldClearCache(pollErr) {
 			_ = removeInitNoWaitRecord(opts.DeviceCode)
 		}
+		// Pass an already-typed error through unchanged (e.g. the ConfigError
+		// for a missing client_id/secret) instead of downgrading it to
+		// authentication/unknown — matching runCreateAppFlow.
+		if _, ok := errs.ProblemOf(pollErr); ok {
+			return pollErr
+		}
 		return errs.NewAuthenticationError(errs.SubtypeUnknown, "%v", pollErr).WithCause(pollErr)
 	}
 
@@ -152,7 +167,10 @@ func resumeAppRegistration(opts *ConfigInitOptions) error {
 	// for minutes while the user finishes in the browser, and a concurrent
 	// process may have changed config.json in that window — saving the stale
 	// pre-poll snapshot would drop those edits. Reload and compare again.
-	existing, _ = core.LoadMultiAppConfig()
+	existing, err = loadConfigForDriftCheck()
+	if err != nil {
+		return err
+	}
 	if computeConfigDigest(existing) != rec.ConfigDigest {
 		return errs.NewValidationError(errs.SubtypeInvalidArgument,
 			"configuration changed while the app was being created, so it was not saved (to avoid overwriting that change); re-run `lark-cli config init --new --no-wait`").
@@ -229,4 +247,16 @@ func appRegShouldClearCache(err error) bool {
 	return errors.Is(err, larkauth.ErrAppRegDenied) ||
 		errors.Is(err, larkauth.ErrAppRegExpired) ||
 		errors.Is(err, larkauth.ErrAppRegTimeout)
+}
+
+// loadConfigForDriftCheck loads the config for the drift comparison. A missing
+// config (first-time setup) is fine — it yields a nil config and an empty
+// digest. A genuine storage failure (permission denied, corruption) is surfaced
+// as a typed storage error rather than being silently read as "config drift".
+func loadConfigForDriftCheck() (*core.MultiAppConfig, error) {
+	existing, err := core.LoadMultiAppConfig()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return nil, errs.NewInternalError(errs.SubtypeStorage, "failed to load config for the drift check: %v", err).WithCause(err)
+	}
+	return existing, nil
 }

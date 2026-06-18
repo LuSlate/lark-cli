@@ -294,8 +294,9 @@ func TestConfigInitRun_NonTerminal_NoFlags_RejectsWithHint(t *testing.T) {
 	if !ok || p.Subtype != errs.SubtypeFailedPrecondition {
 		t.Fatalf("expected subtype=%q, got problem=%+v", errs.SubtypeFailedPrecondition, p)
 	}
-	if !strings.Contains(p.Hint, "--new") {
-		t.Errorf("expected hint to mention --new, got hint: %s", p.Hint)
+	// Lock the two-step guidance contract: the hint must point at both flags.
+	if !strings.Contains(p.Hint, "--no-wait") || !strings.Contains(p.Hint, "--device-code") {
+		t.Errorf("hint should describe the two-step flow (--no-wait / --device-code), got: %s", p.Hint)
 	}
 }
 

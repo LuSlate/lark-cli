@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/core"
 )
 
@@ -78,7 +79,7 @@ func RequestAppRegistration(httpClient *http.Client, brand core.LarkBrand, errOu
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewNetworkError(errs.SubtypeNetworkTransport, "app registration request failed: %v", err).WithCause(err)
 	}
 	defer resp.Body.Close()
 	logHTTPResponse(resp)
