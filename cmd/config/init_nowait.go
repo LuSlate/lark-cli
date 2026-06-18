@@ -213,7 +213,7 @@ func pollAppRegistrationResume(ctx context.Context, httpClient *http.Client, dev
 		}
 	}
 	if result.ClientID == "" || result.ClientSecret == "" {
-		return nil, fmt.Errorf("app registration succeeded but missing client_id or client_secret")
+		return nil, errs.NewConfigError(errs.SubtypeInvalidClient, "app registration succeeded but missing client_id or client_secret")
 	}
 	return result, nil
 }
