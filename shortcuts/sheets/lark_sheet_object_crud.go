@@ -155,7 +155,7 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			return dr
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -244,7 +244,7 @@ func newObjectUpdateShortcut(spec objectCRUDSpec) common.Shortcut {
 			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -328,7 +328,7 @@ func newObjectDeleteShortcut(spec objectCRUDSpec) common.Shortcut {
 			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -876,7 +876,7 @@ func newFloatImageWriteShortcut(command, description, op string, withIDFlag, isH
 			return invokeToolDryRun(token, ToolKindWrite, "manage_float_image_object", input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -1026,7 +1026,7 @@ var FilterCreate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "manage_filter_object", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -1101,7 +1101,7 @@ var FilterUpdate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "manage_filter_object", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -1169,7 +1169,7 @@ var FilterDelete = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "manage_filter_object", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}

@@ -63,6 +63,66 @@ func TestExecute_WorkbookInfo_ToolError(t *testing.T) {
 	}
 }
 
+// TestExecute_WikiURLResolvesToSheet covers the two-step wiki path: a /wiki/
+// URL is resolved via get_node to its spreadsheet obj_token, which then feeds
+// the tool invoke. The tool stub is keyed on the resolved obj_token, so the
+// test would fail if the node_token were used unresolved.
+func TestExecute_WikiURLResolvesToSheet(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{
+					"obj_type":  "sheet",
+					"obj_token": testToken,
+				},
+			},
+		},
+	}
+	tool := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"sh1","title":"Sheet1","index":0}]}`)
+	out, err := runShortcutWithStubs(t, WorkbookInfo,
+		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode, tool)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
+	}
+	data := decodeEnvelopeData(t, out)
+	if sheets, _ := data["sheets"].([]interface{}); len(sheets) != 1 {
+		t.Fatalf("sheets len = %d, want 1; out=%s", len(sheets), out)
+	}
+}
+
+// TestExecute_WikiURLWrongObjType rejects a wiki node that resolves to a
+// non-spreadsheet obj_type before any tool invoke.
+func TestExecute_WikiURLWrongObjType(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{
+					"obj_type":  "docx",
+					"obj_token": "docABC",
+				},
+			},
+		},
+	}
+	out, err := runShortcutWithStubs(t, WorkbookInfo,
+		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode)
+	if err == nil {
+		t.Fatalf("want error for non-sheet wiki node; out=%s", out)
+	}
+	if !strings.Contains(err.Error(), "obj_type") {
+		t.Fatalf("error = %v, want mention of obj_type", err)
+	}
+}
+
 // TestExecute_SheetMove_LookupsIndex covers the two-step path: SheetMove
 // when only --sheet-name is given (and --source-index omitted) first
 // reads the workbook structure to derive sheet_id + source_index, then

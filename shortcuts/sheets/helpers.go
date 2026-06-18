@@ -49,29 +49,132 @@ func sheetsInputStatError(flag string, err error) error {
 	return wrapped
 }
 
-// resolveSpreadsheetToken applies the public --url / --spreadsheet-token XOR
-// pair shared by every sheets canonical shortcut and returns the resolved
-// token. Network-free, safe to call from Validate and DryRun.
-func resolveSpreadsheetToken(runtime *common.RuntimeContext) (string, error) {
+// spreadsheetRef classification: a --url / --spreadsheet-token input names a
+// spreadsheet either directly (a /sheets/ URL or raw token) or indirectly via a
+// wiki node that must be resolved to its backing spreadsheet at Execute time.
+const (
+	spreadsheetRefSheet = "sheet"
+	spreadsheetRefWiki  = "wiki"
+)
+
+// spreadsheetRef is a parsed --url / --spreadsheet-token input. A wiki ref holds
+// the still-unresolved wiki node_token; resolveSpreadsheetTokenExec turns it
+// into the real spreadsheet token at Execute time.
+type spreadsheetRef struct {
+	Kind  string // spreadsheetRefSheet | spreadsheetRefWiki
+	Token string
+}
+
+// parseSpreadsheetRef applies the public --url / --spreadsheet-token XOR pair and
+// classifies the input. Network-free, safe to call from Validate and DryRun.
+//
+// Recognized --url shapes:
+//   - https://.../sheets/<token>        → {sheet, token}
+//   - https://.../spreadsheets/<token>  → {sheet, token}
+//   - https://.../wiki/<node_token>     → {wiki, node_token}  (resolved at Execute)
+//
+// A raw --spreadsheet-token is always treated as a spreadsheet token; wiki nodes
+// only ever arrive as a /wiki/ URL.
+func parseSpreadsheetRef(runtime *common.RuntimeContext) (spreadsheetRef, error) {
 	if err := common.ExactlyOneTyped(runtime, "url", "spreadsheet-token"); err != nil {
-		return "", err
+		return spreadsheetRef{}, err
 	}
 	if token := strings.TrimSpace(runtime.Str("spreadsheet-token")); token != "" {
 		if err := validate.RejectControlChars(token, "spreadsheet-token"); err != nil {
-			return "", sheetsValidationCauseForFlag("spreadsheet-token", err)
+			return spreadsheetRef{}, sheetsValidationCauseForFlag("spreadsheet-token", err)
 		}
-		return token, nil
+		return spreadsheetRef{Kind: spreadsheetRefSheet, Token: token}, nil
 	}
 
 	url := strings.TrimSpace(runtime.Str("url"))
+	if node := tokenAfterURLPrefix(url, "/wiki/"); node != "" {
+		if err := validate.RejectControlChars(node, "url"); err != nil {
+			return spreadsheetRef{}, sheetsValidationCauseForFlag("url", err)
+		}
+		return spreadsheetRef{Kind: spreadsheetRefWiki, Token: node}, nil
+	}
 	token := extractSpreadsheetToken(url)
 	if token == "" || token == url {
-		return "", sheetsValidationForFlag("url", "--url must be a spreadsheet URL like https://.../sheets/<token>")
+		return spreadsheetRef{}, sheetsValidationForFlag("url", "--url must be a spreadsheet URL like https://.../sheets/<token> or a wiki URL like https://.../wiki/<token>")
 	}
 	if err := validate.RejectControlChars(token, "url"); err != nil {
-		return "", sheetsValidationCauseForFlag("url", err)
+		return spreadsheetRef{}, sheetsValidationCauseForFlag("url", err)
 	}
-	return token, nil
+	return spreadsheetRef{Kind: spreadsheetRefSheet, Token: token}, nil
+}
+
+// tokenAfterURLPrefix returns the path segment following the first occurrence of
+// prefix in input, stopping at the next /?# boundary. Returns "" when prefix is
+// absent or the following segment is empty. Substring-based to match
+// extractSpreadsheetToken's lenient, host-agnostic parsing.
+func tokenAfterURLPrefix(input, prefix string) string {
+	idx := strings.Index(input, prefix)
+	if idx < 0 {
+		return ""
+	}
+	token := input[idx+len(prefix):]
+	if j := strings.IndexAny(token, "/?#"); j >= 0 {
+		token = token[:j]
+	}
+	return strings.TrimSpace(token)
+}
+
+// resolveSpreadsheetToken applies the public --url / --spreadsheet-token XOR pair
+// and returns the resolved token. Network-free, safe to call from Validate and
+// DryRun.
+//
+// A /wiki/ URL yields the still-unresolved wiki node_token: turning it into the
+// backing spreadsheet token needs a get_node call, which only Execute may make.
+// Validate/DryRun only need a non-empty, control-char-clean token, so the
+// node_token passes through unchanged here; Execute paths call
+// resolveSpreadsheetTokenExec instead.
+func resolveSpreadsheetToken(runtime *common.RuntimeContext) (string, error) {
+	ref, err := parseSpreadsheetRef(runtime)
+	if err != nil {
+		return "", err
+	}
+	return ref.Token, nil
+}
+
+// resolveSpreadsheetTokenExec is the Execute-time counterpart of
+// resolveSpreadsheetToken: it additionally resolves a /wiki/ URL's node_token to
+// the backing spreadsheet token via wiki get_node, verifying obj_type=sheet.
+// Non-wiki inputs make no API call. Use this from every sheets Execute hook and
+// keep resolveSpreadsheetToken in Validate/DryRun so those stay network-free.
+func resolveSpreadsheetTokenExec(runtime *common.RuntimeContext) (string, error) {
+	ref, err := parseSpreadsheetRef(runtime)
+	if err != nil {
+		return "", err
+	}
+	if ref.Kind != spreadsheetRefWiki {
+		return ref.Token, nil
+	}
+	return resolveWikiNodeToSpreadsheetToken(runtime, ref.Token)
+}
+
+// resolveWikiNodeToSpreadsheetToken resolves a wiki node_token to the spreadsheet
+// obj_token it points at, erroring when the node is not a spreadsheet. The
+// wiki:node:read scope is only needed on this path, so it is enforced here rather
+// than declared unconditionally on every sheets shortcut.
+func resolveWikiNodeToSpreadsheetToken(runtime *common.RuntimeContext, nodeToken string) (string, error) {
+	if err := runtime.EnsureScopes([]string{"wiki:node:read"}); err != nil {
+		return "", err
+	}
+	data, err := runtime.CallAPI("GET", "/open-apis/wiki/v2/spaces/get_node",
+		map[string]interface{}{"token": nodeToken}, nil)
+	if err != nil {
+		return "", err
+	}
+	node := common.GetMap(data, "node")
+	objType := common.GetString(node, "obj_type")
+	objToken := common.GetString(node, "obj_token")
+	if objType == "" || objToken == "" {
+		return "", sheetsValidationForFlag("url", "wiki node %q returned incomplete data from get_node", nodeToken)
+	}
+	if objType != "sheet" {
+		return "", sheetsValidationForFlag("url", "wiki URL resolves to obj_type=%q, but a spreadsheet (obj_type=sheet) is required", objType)
+	}
+	return objToken, nil
 }
 
 // extractSpreadsheetToken pulls the token segment out of a /sheets/<token>

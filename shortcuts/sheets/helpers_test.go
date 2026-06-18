@@ -268,3 +268,51 @@ const (
 	testSheetID  = "shtSubA"
 	testSheetID2 = "shtSubB"
 )
+
+// TestParseSpreadsheetRef locks the network-free classification of
+// --url / --spreadsheet-token into a sheet token vs an (unresolved) wiki
+// node_token. The wiki node is resolved later, at Execute time only.
+func TestParseSpreadsheetRef(t *testing.T) {
+	t.Parallel()
+	mk := func(url, tok string) *common.RuntimeContext {
+		cmd := &cobra.Command{Use: "sheets"}
+		cmd.Flags().String("url", url, "")
+		cmd.Flags().String("spreadsheet-token", tok, "")
+		return common.TestNewRuntimeContext(cmd, testConfig(t))
+	}
+	cases := []struct {
+		name      string
+		url       string
+		tok       string
+		wantKind  string
+		wantToken string
+		wantErr   bool
+	}{
+		{name: "sheets url", url: "https://x.feishu.cn/sheets/shtABC", wantKind: spreadsheetRefSheet, wantToken: "shtABC"},
+		{name: "spreadsheets url", url: "https://x.feishu.cn/spreadsheets/shtABC", wantKind: spreadsheetRefSheet, wantToken: "shtABC"},
+		{name: "wiki url", url: "https://x.feishu.cn/wiki/wikDEF", wantKind: spreadsheetRefWiki, wantToken: "wikDEF"},
+		{name: "wiki url with query", url: "https://x.feishu.cn/wiki/wikDEF?sheet=xxxxxx", wantKind: spreadsheetRefWiki, wantToken: "wikDEF"},
+		{name: "raw token", tok: "shtRAW", wantKind: spreadsheetRefSheet, wantToken: "shtRAW"},
+		{name: "docx url unsupported", url: "https://x.feishu.cn/docx/docABC", wantErr: true},
+		{name: "neither provided", wantErr: true},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ref, err := parseSpreadsheetRef(mk(tc.url, tc.tok))
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("want error, got ref=%+v", ref)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if ref.Kind != tc.wantKind || ref.Token != tc.wantToken {
+				t.Fatalf("ref = %+v, want {Kind:%s Token:%s}", ref, tc.wantKind, tc.wantToken)
+			}
+		})
+	}
+}

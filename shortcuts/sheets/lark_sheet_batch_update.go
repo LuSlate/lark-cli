@@ -67,7 +67,7 @@ var BatchUpdate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "batch_update", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -180,7 +180,7 @@ var CellsBatchSetStyle = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "batch_update", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -270,7 +270,7 @@ var CellsBatchClear = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "batch_update", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -350,7 +350,7 @@ var DropdownUpdate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "batch_update", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -396,7 +396,7 @@ var DropdownDelete = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "batch_update", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
