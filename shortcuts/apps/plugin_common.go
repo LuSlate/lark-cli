@@ -506,6 +506,47 @@ func pluginRemoveActionPlugin(pkg map[string]interface{}, key string) {
 	delete(m, key)
 }
 
+// pluginSyncActionPlugins ensures the actionPlugins record in package.json
+// matches the actually installed version, even when install is skipped.
+func pluginSyncActionPlugins(projectPath, key, version string) {
+	pkg, err := pluginReadPackageJSON(projectPath)
+	if err != nil {
+		return
+	}
+	ap := pluginGetActionPlugins(pkg)
+	if ap[key] == version {
+		return
+	}
+	pluginSetActionPlugin(pkg, key, version)
+	_ = pluginWritePackageJSON(projectPath, pkg)
+}
+
+// pluginCheckPeerDeps reads peerDependencies from the installed plugin's
+// package.json and returns the names of any that are missing from node_modules.
+func pluginCheckPeerDeps(projectPath, pluginKey string) []string {
+	pkgPath := filepath.Join(projectPath, "node_modules", pluginKey, "package.json")
+	data, err := os.ReadFile(pkgPath) //nolint:forbidigo // shortcuts cannot import internal/vfs; local package read.
+	if err != nil {
+		return nil
+	}
+	var pkg map[string]interface{}
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return nil
+	}
+	peerDeps, ok := pkg["peerDependencies"].(map[string]interface{})
+	if !ok || len(peerDeps) == 0 {
+		return nil
+	}
+	var missing []string
+	for dep := range peerDeps {
+		depDir := filepath.Join(projectPath, "node_modules", dep)
+		if !pluginDirExists(depDir) {
+			missing = append(missing, dep)
+		}
+	}
+	return missing
+}
+
 // pluginParseInstallTarget parses "key[@version]" where version is optional.
 // For scoped packages like "@scope/name@1.0.0", the split is at the last "@".
 func pluginParseInstallTarget(s string) (key string, version string) {

@@ -77,9 +77,10 @@ func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectP
 		return appsValidationParamError("--name", "invalid plugin name %q", name)
 	}
 
-	// Check if already installed with same version
+	// Check if already installed with same version (pre-API fast path)
 	if version != "" && version != "latest" {
 		if installed := pluginInstalledVersion(projectPath, key); installed == version {
+			pluginSyncActionPlugins(projectPath, key, version)
 			result := map[string]interface{}{
 				"key": key, "version": version, "status": "already_installed",
 			}
@@ -94,6 +95,18 @@ func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectP
 	resolvedVersion, downloadURL, approach, err := pluginResolveVersion(ctx, rctx, key, version)
 	if err != nil {
 		return err
+	}
+
+	// Post-API check: latest may resolve to the already-installed version
+	if installed := pluginInstalledVersion(projectPath, key); installed == resolvedVersion {
+		pluginSyncActionPlugins(projectPath, key, resolvedVersion)
+		result := map[string]interface{}{
+			"key": key, "version": resolvedVersion, "status": "already_installed",
+		}
+		rctx.OutFormat(result, nil, func(w io.Writer) {
+			fmt.Fprintf(w, "✓ %s@%s is already up to date\n", key, resolvedVersion)
+		})
+		return nil
 	}
 
 	// Download tgz
@@ -114,6 +127,9 @@ func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectP
 		return appsFileIOError(err, "cannot extract plugin package for %s", key)
 	}
 
+	// Check peer dependencies
+	missingPeers := pluginCheckPeerDeps(projectPath, key)
+
 	// Update package.json
 	pkg, err := pluginReadPackageJSON(projectPath)
 	if err != nil {
@@ -127,8 +143,15 @@ func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectP
 	result := map[string]interface{}{
 		"key": key, "version": resolvedVersion, "status": "installed",
 	}
+	if len(missingPeers) > 0 {
+		result["missing_peer_dependencies"] = missingPeers
+	}
 	rctx.OutFormat(result, nil, func(w io.Writer) {
 		fmt.Fprintf(w, "✓ Installed %s@%s\n", key, resolvedVersion)
+		if len(missingPeers) > 0 {
+			fmt.Fprintf(w, "⚠ Missing peer dependencies: %s\n", strings.Join(missingPeers, ", "))
+			fmt.Fprintln(w, "  Run 'npm install' in the project directory to install them.")
+		}
 	})
 	return nil
 }
