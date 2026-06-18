@@ -40,5 +40,6 @@ func Shortcuts() []common.Shortcut {
 		AppsPluginInstanceCreate,
 		AppsPluginInstanceUpdate,
 		AppsPluginInstanceDelete,
+		AppsPluginInstanceTypes,
 	}
 }

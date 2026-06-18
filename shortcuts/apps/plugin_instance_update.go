@@ -117,14 +117,24 @@ var AppsPluginInstanceUpdate = common.Shortcut{
 			return appsFileIOError(err, "cannot write %s", capPath)
 		}
 
+		// Auto-regenerate TypeScript types
+		typesPath, typeNames, typesErr := pluginGenerateAndPersistTypes(projectPath, cap)
+
 		result := map[string]interface{}{
 			"id":        id,
 			"pluginKey": cap["pluginKey"],
 			"name":      cap["name"],
 			"updatedAt": cap["updatedAt"],
 		}
+		if typesErr == nil {
+			result["typesPath"] = typesPath
+			result["types"] = typeNames
+		}
 		rctx.OutFormat(result, nil, func(w io.Writer) {
 			fmt.Fprintf(w, "✓ Plugin instance updated: %s\n", id)
+			if typesErr == nil {
+				fmt.Fprintf(w, "  Types:   %s → %s\n", strings.Join(typeNames, ", "), typesPath)
+			}
 		})
 		return nil
 	},

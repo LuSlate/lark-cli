@@ -144,6 +144,9 @@ var AppsPluginInstanceCreate = common.Shortcut{
 			return appsFileIOError(err, "cannot write %s", capPath)
 		}
 
+		// Auto-generate TypeScript types
+		typesPath, typeNames, typesErr := pluginGenerateAndPersistTypes(projectPath, cap)
+
 		relPath := pluginCapRelPath(projectPath, capPath)
 		result := map[string]interface{}{
 			"id":            id,
@@ -155,6 +158,10 @@ var AppsPluginInstanceCreate = common.Shortcut{
 		if len(warnings) > 0 {
 			result["warnings"] = warnings
 		}
+		if typesErr == nil {
+			result["typesPath"] = typesPath
+			result["types"] = typeNames
+		}
 		rctx.OutFormat(result, nil, func(w io.Writer) {
 			for _, w2 := range warnings {
 				fmt.Fprintf(w, "⚠ %s\n", w2)
@@ -162,6 +169,9 @@ var AppsPluginInstanceCreate = common.Shortcut{
 			fmt.Fprintf(w, "✓ Plugin instance created: %s\n", id)
 			fmt.Fprintf(w, "  Plugin:  %s@%s\n", pluginKey, pluginVersion)
 			fmt.Fprintf(w, "  Path:    %s\n", relPath)
+			if typesErr == nil {
+				fmt.Fprintf(w, "  Types:   %s → %s\n", strings.Join(typeNames, ", "), typesPath)
+			}
 		})
 		return nil
 	},

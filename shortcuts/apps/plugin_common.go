@@ -645,3 +645,255 @@ func pluginStripFirstComponent(name string) string {
 	}
 	return ""
 }
+
+// ── TypeScript type generation ──
+
+const pluginTypesFile = "shared/plugin-types.ts"
+const pluginBlockStartPrefix = "// ---- plugin:"
+const pluginBlockEndPrefix = "// ---- end:"
+
+// pluginGenerateAndPersistTypes reads manifest + capability, generates TypeScript
+// interfaces, and writes them to shared/plugin-types.ts with per-id block replacement.
+// Returns (outputPath, typeNames, error).
+func pluginGenerateAndPersistTypes(projectPath string, cap map[string]interface{}) (string, []string, error) {
+	pluginKey, _ := cap["pluginKey"].(string)
+	id, _ := cap["id"].(string)
+	name, _ := cap["name"].(string)
+	if pluginKey == "" || id == "" {
+		return "", nil, fmt.Errorf("capability missing pluginKey or id")
+	}
+
+	manifest, err := pluginReadManifest(projectPath, pluginKey)
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot read manifest for %s: %w", pluginKey, err)
+	}
+
+	actions, _ := manifest["actions"].([]interface{})
+	if len(actions) == 0 {
+		return "", nil, fmt.Errorf("plugin %s has no actions defined", pluginKey)
+	}
+
+	prefix := pluginToPascalCase(id)
+	var typeNames []string
+	var parts []string
+	parts = append(parts,
+		"// ============================================================",
+		fmt.Sprintf("// 插件 %s (%s) 的类型定义", id, name),
+		"// 由 lark-cli +plugin-instance-types 自动生成",
+		"// ============================================================",
+	)
+
+	paramsSchema, _ := cap["paramsSchema"].(map[string]interface{})
+
+	for i, rawAction := range actions {
+		action, ok := rawAction.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		actionKey, _ := action["key"].(string)
+		actionSuffix := ""
+		if len(actions) > 1 {
+			actionSuffix = pluginToPascalCase(actionKey)
+		}
+		inputName := prefix + actionSuffix + "Input"
+		outputName := prefix + actionSuffix + "Output"
+
+		// inputSchema: first action uses paramsSchema if available
+		var inputSchema map[string]interface{}
+		if i == 0 && paramsSchema != nil && len(paramsSchema) > 0 {
+			inputSchema = paramsSchema
+		} else {
+			inputSchema, _ = action["inputSchema"].(map[string]interface{})
+		}
+
+		if inputSchema != nil {
+			if iface := pluginGenerateInterface(inputName, inputSchema); iface != "" {
+				parts = append(parts, "", iface)
+				typeNames = append(typeNames, inputName)
+			}
+		}
+
+		outputSchema, _ := action["outputSchema"].(map[string]interface{})
+		if outputSchema != nil {
+			if props, ok := outputSchema["properties"].(map[string]interface{}); ok && len(props) > 0 {
+				keys := make([]string, 0, 3)
+				for k := range props {
+					if len(keys) < 3 {
+						keys = append(keys, k)
+					}
+				}
+				parts = append(parts, "",
+					"/**",
+					fmt.Sprintf(" * capabilityClient.load('%s').call<%s>('%s', input)", id, outputName, actionKey),
+					fmt.Sprintf(" * const { %s } = result;", strings.Join(keys, ", ")),
+					" */",
+				)
+			}
+			if iface := pluginGenerateInterface(outputName, outputSchema); iface != "" {
+				parts = append(parts, iface)
+				typeNames = append(typeNames, outputName)
+			}
+		}
+	}
+
+	typesCode := strings.Join(parts, "\n")
+	outputPath := filepath.Join(projectPath, pluginTypesFile)
+
+	if err := pluginPersistTypesBlock(outputPath, id, typesCode); err != nil {
+		return "", nil, err
+	}
+
+	return pluginTypesFile, typeNames, nil
+}
+
+// pluginToPascalCase converts "task-text-summary" → "TaskTextSummary".
+// Handles digit-prefixed segments: "4s-store" → "FourSStore".
+func pluginToPascalCase(id string) string {
+	digitWords := map[byte]string{
+		'0': "Zero", '1': "One", '2': "Two", '3': "Three", '4': "Four",
+		'5': "Five", '6': "Six", '7': "Seven", '8': "Eight", '9': "Nine",
+	}
+	parts := strings.FieldsFunc(id, func(r rune) bool { return r == '-' || r == '_' })
+	var result strings.Builder
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		if part[0] >= '0' && part[0] <= '9' {
+			i := 0
+			for i < len(part) && part[i] >= '0' && part[i] <= '9' {
+				if w, ok := digitWords[part[i]]; ok {
+					result.WriteString(w)
+				}
+				i++
+			}
+			if i < len(part) {
+				result.WriteByte(part[i] - 32) // uppercase
+				result.WriteString(strings.ToLower(part[i+1:]))
+			}
+		} else {
+			result.WriteByte(part[0] &^ 0x20) // uppercase first char
+			result.WriteString(strings.ToLower(part[1:]))
+		}
+	}
+	return result.String()
+}
+
+// pluginGenerateInterface generates "export interface Name { ... }" from a JSON Schema.
+func pluginGenerateInterface(name string, schema map[string]interface{}) string {
+	props, ok := schema["properties"].(map[string]interface{})
+	if !ok || len(props) == 0 {
+		return ""
+	}
+	requiredSet := make(map[string]bool)
+	if req, ok := schema["required"].([]interface{}); ok {
+		for _, r := range req {
+			if s, ok := r.(string); ok {
+				requiredSet[s] = true
+			}
+		}
+	}
+	var lines []string
+	for key, val := range props {
+		propMap, _ := val.(map[string]interface{})
+		optional := ""
+		if !requiredSet[key] {
+			optional = "?"
+		}
+		tsType := pluginSchemaToTS(propMap, "  ")
+		desc, _ := propMap["description"].(string)
+		if desc != "" {
+			lines = append(lines, fmt.Sprintf("  /** %s */", desc))
+		}
+		safeKey := pluginQuoteKey(key)
+		lines = append(lines, fmt.Sprintf("  %s%s: %s;", safeKey, optional, tsType))
+	}
+	return fmt.Sprintf("export interface %s {\n%s\n}", name, strings.Join(lines, "\n"))
+}
+
+// pluginSchemaToTS converts a JSON Schema property to a TypeScript type string.
+func pluginSchemaToTS(prop map[string]interface{}, indent string) string {
+	if prop == nil {
+		return "unknown"
+	}
+	t, _ := prop["type"].(string)
+	switch t {
+	case "string":
+		return "string"
+	case "number", "integer":
+		return "number"
+	case "boolean":
+		return "boolean"
+	case "array":
+		if items, ok := prop["items"].(map[string]interface{}); ok {
+			return pluginSchemaToTS(items, indent) + "[]"
+		}
+		return "unknown[]"
+	case "object":
+		if innerProps, ok := prop["properties"].(map[string]interface{}); ok && len(innerProps) > 0 {
+			inner := indent + "  "
+			var fields []string
+			for k, v := range innerProps {
+				vm, _ := v.(map[string]interface{})
+				fields = append(fields, fmt.Sprintf("%s%s: %s;", inner, pluginQuoteKey(k), pluginSchemaToTS(vm, inner)))
+			}
+			return fmt.Sprintf("{\n%s\n%s}", strings.Join(fields, "\n"), indent)
+		}
+		return "Record<string, unknown>"
+	}
+	// No explicit type: infer from structure
+	if _, ok := prop["properties"]; ok {
+		return pluginSchemaToTS(map[string]interface{}{"type": "object", "properties": prop["properties"]}, indent)
+	}
+	if _, ok := prop["items"]; ok {
+		return pluginSchemaToTS(map[string]interface{}{"type": "array", "items": prop["items"]}, indent)
+	}
+	return "unknown"
+}
+
+// pluginQuoteKey returns the key as-is if it's a valid JS identifier, else quoted.
+func pluginQuoteKey(key string) string {
+	clean := strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\r' || r == '\t' {
+			return ' '
+		}
+		return r
+	}, strings.TrimSpace(key))
+	if regexp.MustCompile(`^[a-zA-Z_$][a-zA-Z0-9_$]*$`).MatchString(clean) {
+		return clean
+	}
+	return "'" + strings.ReplaceAll(clean, "'", "\\'") + "'"
+}
+
+// pluginPersistTypesBlock writes a type block to the types file, replacing existing
+// blocks for the same id or appending if new.
+func pluginPersistTypesBlock(outputPath, id, typesCode string) error {
+	blockStart := pluginBlockStartPrefix + id + " ----"
+	blockEnd := pluginBlockEndPrefix + id + " ----"
+	newBlock := blockStart + "\n" + typesCode + "\n" + blockEnd
+
+	existing, err := os.ReadFile(outputPath) //nolint:forbidigo // shortcuts cannot import internal/vfs; local types file read.
+	if err != nil && !os.IsNotExist(err) {
+		return appsFileIOError(err, "cannot read %s", outputPath)
+	}
+	content := string(existing)
+
+	var updated string
+	if startIdx := strings.Index(content, blockStart); startIdx >= 0 {
+		endIdx := strings.Index(content, blockEnd)
+		if endIdx >= 0 {
+			updated = content[:startIdx] + newBlock + content[endIdx+len(blockEnd):]
+		} else {
+			updated = content + "\n\n" + newBlock
+		}
+	} else if content != "" {
+		updated = content + "\n\n" + newBlock
+	} else {
+		updated = newBlock + "\n"
+	}
+
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil { //nolint:forbidigo
+		return appsFileIOError(err, "cannot create directory for %s", outputPath)
+	}
+	return validate.AtomicWrite(outputPath, []byte(updated), 0o644)
+}
