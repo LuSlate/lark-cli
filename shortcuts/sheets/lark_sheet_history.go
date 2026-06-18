@@ -60,7 +60,7 @@ var HistoryList = common.Shortcut{
 	},
 	Tips: []string{
 		"Omit --cursor for the first page; pass the previous response's next_cursor to fetch the next page.",
-		"Pick a revision_id from the listing and pass it to +history-revert --revision-id to roll the whole spreadsheet back.",
+		"Pick a revision_id from a listing entry and pass it (plus that entry's edit_time to --edit-time) to +history-revert to roll the whole spreadsheet back.",
 	},
 }
 
@@ -104,8 +104,8 @@ var HistoryRevert = common.Shortcut{
 		return nil
 	},
 	Tips: []string{
-		"+history-revert is a FULL-DOCUMENT rollback — it discards every edit made after --revision-id, including other collaborators'.",
-		"--revision-id takes a revision_id from +history-list. The revert runs async; poll its task id with +history-revert-status.",
+		"+history-revert is a FULL-DOCUMENT rollback — it discards every edit made after the target version, including other collaborators'.",
+		"--revision-id takes a revision_id (minor id) from +history-list; pass the same entry's edit_time to --edit-time to locate the version faster. Poll the returned task id with +history-revert-status.",
 	},
 }
 
@@ -168,15 +168,20 @@ func historyListInput(runtime flagView) map[string]interface{} {
 }
 
 // historyRevertInput builds the revert_to_revision tool body. Network-free;
-// shared by Validate, DryRun, and Execute.
+// shared by Validate, DryRun, and Execute. revision_id 是 +history-list 返回的
+// revision_id（minor id）；edit_time 可选，传同一条 entry 的 edit_time 让服务端更快定位该版本。
 func historyRevertInput(runtime flagView) (map[string]interface{}, error) {
-	rev := runtime.Int("revision-id")
-	if rev < 1 {
-		return nil, common.FlagErrorf("--revision-id must be a positive revision number")
+	rev := strings.TrimSpace(runtime.Str("revision-id"))
+	if rev == "" {
+		return nil, common.FlagErrorf("--revision-id is required (a revision_id from +history-list)")
 	}
-	return map[string]interface{}{
+	input := map[string]interface{}{
 		"revision_id": rev,
-	}, nil
+	}
+	if et := strings.TrimSpace(runtime.Str("edit-time")); et != "" {
+		input["edit_time"] = et
+	}
+	return input, nil
 }
 
 // historyRevertStatusInput builds the get_revert_status tool body.

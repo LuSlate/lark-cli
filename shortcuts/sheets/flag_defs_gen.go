@@ -647,7 +647,8 @@ var flagDefs = map[string]commandDef{
 		Flags: []flagDef{
 			{Name: "url", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet URL (XOR with `--spreadsheet-token`)"},
 			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
-			{Name: "revision-id", Kind: "own", Type: "int", Required: "required", Desc: "Restore the whole spreadsheet to this revision (a revision_id from +history-list)"},
+			{Name: "revision-id", Kind: "own", Type: "string", Required: "required", Desc: "Restore the whole spreadsheet to this version: a revision_id (minor id) from +history-list"},
+			{Name: "edit-time", Kind: "own", Type: "string", Required: "optional", Desc: "The matching edit_time from the same +history-list entry; pass it to locate the version faster"},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},

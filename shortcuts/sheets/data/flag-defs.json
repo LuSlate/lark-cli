@@ -85,9 +85,16 @@
       {
         "name": "revision-id",
         "kind": "own",
-        "type": "int",
+        "type": "string",
         "required": "required",
-        "desc": "Restore the whole spreadsheet to this revision (a revision_id from +history-list)"
+        "desc": "Restore the whole spreadsheet to this version: a revision_id (minor id) from +history-list"
+      },
+      {
+        "name": "edit-time",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "The matching edit_time from the same +history-list entry; pass it to locate the version faster"
       },
       {
         "name": "dry-run",
