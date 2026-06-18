@@ -20,6 +20,7 @@ var AppsPluginInstanceTypes = common.Shortcut{
 	Command:     "+plugin-instance-types",
 	Description: "Generate TypeScript types for a plugin instance",
 	Risk:        "write",
+	Hidden:      true,
 	Flags: []common.Flag{
 		{Name: "id", Desc: "instance id", Required: true},
 		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
