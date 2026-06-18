@@ -32,5 +32,13 @@ func Shortcuts() []common.Shortcut {
 		AppsSessionStop,
 		AppsSessionMessagesList,
 		AppsChat,
+		AppsPluginInstall,
+		AppsPluginUninstall,
+		AppsPluginList,
+		AppsPluginInstanceList,
+		AppsPluginInstanceGet,
+		AppsPluginInstanceCreate,
+		AppsPluginInstanceUpdate,
+		AppsPluginInstanceDelete,
 	}
 }

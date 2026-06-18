@@ -1,0 +1,606 @@
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
+
+package apps
+
+import (
+	"archive/tar"
+	"compress/gzip"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+
+	"github.com/larksuite/cli/errs"
+	"github.com/larksuite/cli/internal/validate"
+)
+
+// pluginIDPattern validates semantic instance ids: lowercase alphanumeric + hyphens,
+// not starting or ending with a hyphen.
+var pluginIDPattern = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`)
+
+// pluginResolveProjectPath resolves --project-path to an absolute path,
+// defaulting to cwd when empty.
+func pluginResolveProjectPath(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		cwd, err := os.Getwd() //nolint:forbidigo // shortcuts cannot import internal/vfs; cwd lookup is local-only and bounded.
+		if err != nil {
+			return "", errs.NewInternalError(errs.SubtypeUnknown, "cannot determine working directory: %v", err).WithCause(err)
+		}
+		return cwd, nil
+	}
+	if err := validate.RejectControlChars(raw, "--project-path"); err != nil {
+		return "", err
+	}
+	return filepath.Clean(raw), nil
+}
+
+// pluginCheckProjectDir validates that projectPath contains a package.json.
+func pluginCheckProjectDir(projectPath string) error {
+	info, err := os.Stat(filepath.Join(projectPath, "package.json")) //nolint:forbidigo // shortcuts cannot import internal/vfs; local stat for project dir check.
+	if err != nil {
+		if os.IsNotExist(err) {
+			return appsFailedPreconditionError("package.json not found in %s", projectPath).
+				WithHint("run 'lark-cli apps +init' to initialize the project first")
+		}
+		return appsFileIOError(err, "cannot access package.json in %s", projectPath)
+	}
+	if !info.Mode().IsRegular() {
+		return appsFailedPreconditionError("package.json in %s is not a regular file", projectPath)
+	}
+	return nil
+}
+
+// pluginResolveCapDir resolves the capabilities directory using a 4-level fallback:
+//  1. capDirFlag (explicit --capabilities-dir)
+//  2. MIAODA_CAPABILITIES_DIR env var
+//  3. MIAODA_APP_TYPE env var (2→server/capabilities, 6→shared/capabilities)
+//     3.5 Read .env.local for MIAODA_APP_TYPE
+//  4. Detect by checking which directories exist under projectPath
+func pluginResolveCapDir(projectPath, capDirFlag string) (string, error) {
+	if dir := strings.TrimSpace(capDirFlag); dir != "" {
+		if filepath.IsAbs(dir) {
+			return dir, nil
+		}
+		return filepath.Join(projectPath, dir), nil
+	}
+
+	if dir := os.Getenv("MIAODA_CAPABILITIES_DIR"); dir != "" { //nolint:forbidigo // env-based config lookup is intentional.
+		if filepath.IsAbs(dir) {
+			return dir, nil
+		}
+		return filepath.Join(projectPath, dir), nil
+	}
+
+	// 3. MIAODA_APP_TYPE: only appType=6 (Modern) uses shared/; everything else uses server/
+	appType := os.Getenv("MIAODA_APP_TYPE") //nolint:forbidigo // env-based config lookup is intentional.
+	if appType == "" {
+		appType = pluginReadEnvLocalValue(projectPath, "MIAODA_APP_TYPE")
+	}
+	if appType == "6" {
+		return filepath.Join(projectPath, "shared", "capabilities"), nil
+	}
+	if appType != "" {
+		return filepath.Join(projectPath, "server", "capabilities"), nil
+	}
+
+	// 4. Directory detection
+	serverDir := filepath.Join(projectPath, "server", "capabilities")
+	sharedDir := filepath.Join(projectPath, "shared", "capabilities")
+	serverOK := pluginDirExists(serverDir)
+	sharedOK := pluginDirExists(sharedDir)
+
+	switch {
+	case serverOK && sharedOK:
+		return "", appsFailedPreconditionError(
+			"ambiguous capabilities path: both server/capabilities/ and shared/capabilities/ exist",
+		).WithHint("use --capabilities-dir to specify which capabilities directory to use")
+	case serverOK:
+		return serverDir, nil
+	case sharedOK:
+		return sharedDir, nil
+	default:
+		// Default to server/capabilities/ (most common app type)
+		return filepath.Join(projectPath, "server", "capabilities"), nil
+	}
+}
+
+// pluginReadEnvLocalValue reads a value from .env.local by key name.
+func pluginReadEnvLocalValue(projectPath, key string) string {
+	data, err := os.ReadFile(filepath.Join(projectPath, ".env.local")) //nolint:forbidigo // shortcuts cannot import internal/vfs; local env file read.
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		k, v, ok := strings.Cut(line, "=")
+		if !ok || strings.TrimSpace(k) != key {
+			continue
+		}
+		v = strings.TrimSpace(v)
+		v = strings.Trim(v, "\"'")
+		return v
+	}
+	return ""
+}
+
+func pluginDirExists(path string) bool {
+	info, err := os.Stat(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local dir existence check.
+	return err == nil && info.IsDir()
+}
+
+// pluginReadCapJSON reads and parses a single capability JSON file.
+func pluginReadCapJSON(path string) (map[string]interface{}, error) {
+	data, err := os.ReadFile(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local capability file read.
+	if err != nil {
+		return nil, err
+	}
+	var cap map[string]interface{}
+	if err := json.Unmarshal(data, &cap); err != nil {
+		return nil, fmt.Errorf("invalid JSON in %s: %w", filepath.Base(path), err)
+	}
+	return cap, nil
+}
+
+// pluginListCapabilities reads all *.json files from capDir.
+// Returns nil (not error) if the directory does not exist.
+func pluginListCapabilities(capDir string) ([]map[string]interface{}, error) {
+	entries, err := os.ReadDir(capDir) //nolint:forbidigo // shortcuts cannot import internal/vfs; local dir listing.
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, appsFileIOError(err, "cannot read capabilities directory %s", capDir)
+	}
+
+	var caps []map[string]interface{}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
+			continue
+		}
+		cap, err := pluginReadCapJSON(filepath.Join(capDir, entry.Name()))
+		if err != nil {
+			continue
+		}
+		caps = append(caps, cap)
+	}
+	return caps, nil
+}
+
+// pluginGetCapability reads a single capability by id from capDir.
+// The file is expected at capDir/{id}.json.
+func pluginGetCapability(capDir, id string) (map[string]interface{}, error) {
+	path := filepath.Join(capDir, id+".json")
+	cap, err := pluginReadCapJSON(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, appsValidationError("instance %q not found", id).
+				WithHint("list instances with 'lark-cli apps +plugin-instance-list'")
+		}
+		return nil, appsFileIOError(err, "cannot read capability %s", path)
+	}
+	return cap, nil
+}
+
+// pluginReadManifest reads manifest.json from node_modules for the given pluginKey.
+func pluginReadManifest(projectPath, pluginKey string) (map[string]interface{}, error) {
+	path := filepath.Join(projectPath, "node_modules", pluginKey, "manifest.json")
+	data, err := os.ReadFile(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local manifest read.
+	if err != nil {
+		return nil, err
+	}
+	var manifest map[string]interface{}
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		return nil, fmt.Errorf("invalid manifest.json for %s: %w", pluginKey, err)
+	}
+	return manifest, nil
+}
+
+// pluginParseKeyVersion splits "key@version" into (key, version).
+// The key may start with "@" (scoped npm package), so the split is at the last "@".
+func pluginParseKeyVersion(s string) (string, string, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", "", appsValidationParamError("--plugin", "--plugin is required")
+	}
+	idx := strings.LastIndex(s, "@")
+	if idx <= 0 {
+		return "", "", appsValidationParamError("--plugin",
+			"invalid format %q; expected key@version (e.g. @official-plugins/ai-text-generate@1.0.0)", s)
+	}
+	key, version := s[:idx], s[idx+1:]
+	if key == "" || version == "" {
+		return "", "", appsValidationParamError("--plugin",
+			"invalid format %q; expected key@version", s)
+	}
+	return key, version, nil
+}
+
+// pluginDeriveID derives an instance id from a plugin key.
+// "@official-plugins/ai-text-generate" → "official-plugins-ai-text-generate"
+func pluginDeriveID(pluginKey string) string {
+	id := strings.TrimPrefix(pluginKey, "@")
+	id = strings.ReplaceAll(id, "/", "-")
+	return id
+}
+
+// pluginValidateID checks that id is a valid semantic instance id.
+func pluginValidateID(id string) error {
+	if !pluginIDPattern.MatchString(id) {
+		return appsValidationParamError("--id",
+			"invalid id %q; must be lowercase alphanumeric with hyphens, not starting/ending with hyphen", id)
+	}
+	return nil
+}
+
+// pluginValidateJSONFlag checks that value is non-empty valid JSON.
+func pluginValidateJSONFlag(flagName, value string) error {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return appsValidationParamError(flagName, "%s value is required", flagName)
+	}
+	if !json.Valid([]byte(value)) {
+		return appsValidationParamError(flagName, "%s must be valid JSON", flagName)
+	}
+	return nil
+}
+
+// pluginCheckInstalled verifies that the plugin package is installed in node_modules.
+func pluginCheckInstalled(projectPath, pluginKey string) error {
+	manifestPath := filepath.Join(projectPath, "node_modules", pluginKey, "manifest.json")
+	if _, err := os.Stat(manifestPath); err != nil { //nolint:forbidigo // shortcuts cannot import internal/vfs; local stat for plugin check.
+		if os.IsNotExist(err) {
+			return appsFailedPreconditionError("plugin %q is not installed", pluginKey).
+				WithHint("run 'lark-cli apps +plugin-install %s' first", pluginKey)
+		}
+		return appsFileIOError(err, "cannot check plugin installation for %s", pluginKey)
+	}
+	return nil
+}
+
+// pluginCheckInstalledVersion checks that the plugin is installed and warns if
+// the installed version differs from the declared version. Returns (warnings, error).
+func pluginCheckInstalledVersion(projectPath, pluginKey, declaredVersion string) ([]string, error) {
+	if err := pluginCheckInstalled(projectPath, pluginKey); err != nil {
+		return nil, err
+	}
+	var warnings []string
+	if installed := pluginInstalledVersion(projectPath, pluginKey); installed != "" && installed != declaredVersion {
+		warnings = append(warnings, fmt.Sprintf("installed %s differs from declared %s", installed, declaredVersion))
+	}
+	return warnings, nil
+}
+
+// ── formValue validation (aligned with feida-ai validatePluginInstance) ──
+
+// Forbidden Handlebars block-level helpers.
+var pluginForbiddenTemplatePatterns = []*regexp.Regexp{
+	regexp.MustCompile(`\{\{#if\b`),
+	regexp.MustCompile(`\{\{#each\b`),
+	regexp.MustCompile(`\{\{#unless\b`),
+	regexp.MustCompile(`\{\{/if\}\}`),
+	regexp.MustCompile(`\{\{/each\}\}`),
+	regexp.MustCompile(`\{\{/unless\}\}`),
+	regexp.MustCompile(`\{\{else\}\}`),
+}
+
+// pluginInputRefPattern matches {{input.xxx}} template references.
+var pluginInputRefPattern = regexp.MustCompile(`\{\{input\.(\w+)\}\}`)
+
+// pluginTemplateRefExact matches a string that is exactly one {{input.xxx}} with no surrounding text.
+var pluginTemplateRefExact = regexp.MustCompile(`^\{\{input\.(\w+)\}\}$`)
+
+// pluginValidateFormValue validates formValue and paramsSchema following feida-ai's
+// validatePluginInstance rules. Returns all violations; empty means valid.
+// Also auto-fixes array double-wrapping in formValue (mutates fvMap in place).
+func pluginValidateFormValue(formValue, paramsSchema interface{}) []string {
+	var errors []string
+
+	fvMap, _ := formValue.(map[string]interface{})
+
+	// Rule 1: Forbidden Handlebars control syntax (recursive)
+	pluginTraverseValues(formValue, "formValue", func(s, path string) {
+		for _, pat := range pluginForbiddenTemplatePatterns {
+			if pat.MatchString(s) {
+				errors = append(errors, fmt.Sprintf("forbidden Handlebars syntax at %s: %s", path, pat.FindString(s)))
+			}
+		}
+	})
+
+	// If no paramsSchema provided, skip schema-dependent rules
+	psMap, _ := paramsSchema.(map[string]interface{})
+	properties, _ := psMap["properties"].(map[string]interface{})
+	definedParams := make(map[string]bool, len(properties))
+	for k := range properties {
+		definedParams[k] = true
+	}
+
+	// Rule 2: paramsSchema property type validation
+	allowedTypes := map[string]bool{"string": true, "array": true}
+	allowedFormats := map[string]bool{"plugin-image-url": true, "plugin-file-url": true}
+	for paramName, paramDef := range properties {
+		def, ok := paramDef.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		paramType, _ := def["type"].(string)
+		if !allowedTypes[paramType] {
+			errors = append(errors, fmt.Sprintf("paramsSchema property %q type %q is invalid; only string or array allowed", paramName, paramType))
+		}
+		if paramType == "array" {
+			if _, hasItems := def["items"]; !hasItems {
+				errors = append(errors, fmt.Sprintf("paramsSchema property %q is array but missing items", paramName))
+			}
+		}
+		if f, ok := def["format"].(string); ok && !allowedFormats[f] {
+			errors = append(errors, fmt.Sprintf("paramsSchema property %q format %q is invalid; only plugin-image-url or plugin-file-url allowed", paramName, f))
+		}
+		if _, hasDesc := def["description"]; !hasDesc {
+			errors = append(errors, fmt.Sprintf("paramsSchema property %q missing description", paramName))
+		}
+	}
+
+	// Rule 3: {{input.xxx}} references must exist in paramsSchema
+	pluginTraverseValues(formValue, "formValue", func(s, path string) {
+		for _, match := range pluginInputRefPattern.FindAllStringSubmatch(s, -1) {
+			if !definedParams[match[1]] {
+				errors = append(errors, fmt.Sprintf("{{input.%s}} at %s is not defined in paramsSchema", match[1], path))
+			}
+		}
+	})
+
+	// Rule 4: every paramsSchema property must be consumed by {{input.xxx}} in formValue
+	if len(definedParams) > 0 && fvMap != nil {
+		fvStr, _ := json.Marshal(fvMap)
+		fvJSON := string(fvStr)
+		for paramName := range definedParams {
+			ref := "{{input." + paramName + "}}"
+			if !strings.Contains(fvJSON, ref) {
+				errors = append(errors, fmt.Sprintf("paramsSchema property %q is never referenced as %s in formValue", paramName, ref))
+			}
+		}
+	}
+
+	// Rule 5: array double-wrapping auto-fix
+	// If paramsSchema declares a field as type:array, and formValue wraps it in
+	// ["{{input.xxx}}"], auto-fix to "{{input.xxx}}" to prevent runtime [[val]] nesting.
+	if fvMap != nil {
+		arrayParams := make(map[string]bool)
+		for paramName, paramDef := range properties {
+			if def, ok := paramDef.(map[string]interface{}); ok {
+				if t, _ := def["type"].(string); t == "array" {
+					arrayParams[paramName] = true
+				}
+			}
+		}
+		if len(arrayParams) > 0 {
+			pluginAutoFixArrayWrapping(fvMap, arrayParams)
+		}
+	}
+
+	return errors
+}
+
+// pluginTraverseValues recursively visits all string leaf values in a nested
+// structure (object / array / string), calling visitor for each.
+func pluginTraverseValues(value interface{}, path string, visitor func(s, path string)) {
+	switch v := value.(type) {
+	case string:
+		visitor(v, path)
+	case []interface{}:
+		for i, item := range v {
+			pluginTraverseValues(item, fmt.Sprintf("%s[%d]", path, i), visitor)
+		}
+	case map[string]interface{}:
+		for key, val := range v {
+			pluginTraverseValues(val, path+"."+key, visitor)
+		}
+	}
+}
+
+// pluginAutoFixArrayWrapping fixes ["{{input.xxx}}"] → "{{input.xxx}}" for
+// array-typed params to prevent runtime double-wrapping.
+func pluginAutoFixArrayWrapping(obj map[string]interface{}, arrayParams map[string]bool) {
+	for key, value := range obj {
+		arr, ok := value.([]interface{})
+		if ok && len(arr) == 1 {
+			if s, ok := arr[0].(string); ok {
+				if m := pluginTemplateRefExact.FindStringSubmatch(s); m != nil && arrayParams[m[1]] {
+					obj[key] = s
+				}
+			}
+		}
+		if nested, ok := value.(map[string]interface{}); ok {
+			pluginAutoFixArrayWrapping(nested, arrayParams)
+		}
+	}
+}
+
+// pluginWriteCapJSON writes a capability map to capDir/{id}.json atomically.
+func pluginWriteCapJSON(capPath string, cap map[string]interface{}) error {
+	data, err := json.MarshalIndent(cap, "", "  ")
+	if err != nil {
+		return appsFileIOError(err, "cannot marshal capability JSON")
+	}
+	data = append(data, '\n')
+	return validate.AtomicWrite(capPath, data, 0o644)
+}
+
+// pluginCapRelPath returns the capability file path relative to projectPath.
+func pluginCapRelPath(projectPath, capPath string) string {
+	rel, err := filepath.Rel(projectPath, capPath)
+	if err != nil {
+		return capPath
+	}
+	return rel
+}
+
+// ── package.json helpers ──
+
+// pluginReadPackageJSON reads and parses the project's package.json.
+func pluginReadPackageJSON(projectPath string) (map[string]interface{}, error) {
+	path := filepath.Join(projectPath, "package.json")
+	data, err := os.ReadFile(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local package.json read.
+	if err != nil {
+		return nil, appsFileIOError(err, "cannot read package.json")
+	}
+	var pkg map[string]interface{}
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return nil, appsValidationError("invalid package.json: %v", err).WithCause(err)
+	}
+	return pkg, nil
+}
+
+// pluginWritePackageJSON writes package.json atomically, preserving formatting.
+func pluginWritePackageJSON(projectPath string, pkg map[string]interface{}) error {
+	data, err := json.MarshalIndent(pkg, "", "  ")
+	if err != nil {
+		return appsFileIOError(err, "cannot marshal package.json")
+	}
+	data = append(data, '\n')
+	return validate.AtomicWrite(filepath.Join(projectPath, "package.json"), data, 0o644)
+}
+
+// pluginGetActionPlugins extracts actionPlugins from package.json as key→version.
+func pluginGetActionPlugins(pkg map[string]interface{}) map[string]string {
+	raw, ok := pkg["actionPlugins"]
+	if !ok {
+		return nil
+	}
+	m, ok := raw.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	out := make(map[string]string, len(m))
+	for k, v := range m {
+		if s, ok := v.(string); ok {
+			out[k] = s
+		}
+	}
+	return out
+}
+
+// pluginSetActionPlugin adds or updates a plugin entry in actionPlugins.
+func pluginSetActionPlugin(pkg map[string]interface{}, key, version string) {
+	m, ok := pkg["actionPlugins"].(map[string]interface{})
+	if !ok {
+		m = make(map[string]interface{})
+		pkg["actionPlugins"] = m
+	}
+	m[key] = version
+}
+
+// pluginRemoveActionPlugin removes a plugin entry from actionPlugins.
+func pluginRemoveActionPlugin(pkg map[string]interface{}, key string) {
+	m, ok := pkg["actionPlugins"].(map[string]interface{})
+	if !ok {
+		return
+	}
+	delete(m, key)
+}
+
+// pluginParseInstallTarget parses "key[@version]" where version is optional.
+// For scoped packages like "@scope/name@1.0.0", the split is at the last "@".
+func pluginParseInstallTarget(s string) (key string, version string) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", ""
+	}
+	idx := strings.LastIndex(s, "@")
+	if idx <= 0 {
+		return s, ""
+	}
+	return s[:idx], s[idx+1:]
+}
+
+// pluginInstalledVersion reads the version of an installed plugin from its
+// package.json in node_modules. Returns "" if not found or unreadable.
+func pluginInstalledVersion(projectPath, pluginKey string) string {
+	path := filepath.Join(projectPath, "node_modules", pluginKey, "package.json")
+	data, err := os.ReadFile(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local package read.
+	if err != nil {
+		return ""
+	}
+	var pkg map[string]interface{}
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return ""
+	}
+	v, _ := pkg["version"].(string)
+	return v
+}
+
+// ── tgz extraction ──
+
+// pluginExtractTGZ extracts a gzipped tar archive into destDir, stripping the
+// first path component (npm convention: tarballs contain a "package/" prefix).
+// Path traversal entries are silently skipped.
+func pluginExtractTGZ(r io.Reader, destDir string) error {
+	gz, err := gzip.NewReader(r)
+	if err != nil {
+		return fmt.Errorf("gzip: %w", err)
+	}
+	defer gz.Close()
+
+	cleanDest := filepath.Clean(destDir) + string(filepath.Separator)
+	tr := tar.NewReader(gz)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("tar: %w", err)
+		}
+
+		name := pluginStripFirstComponent(hdr.Name)
+		if name == "" {
+			continue
+		}
+		if strings.Contains(name, "..") {
+			continue
+		}
+
+		target := filepath.Join(destDir, name)
+		if !strings.HasPrefix(filepath.Clean(target)+string(filepath.Separator), cleanDest) &&
+			filepath.Clean(target) != filepath.Clean(destDir) {
+			continue
+		}
+
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(target, 0o755); err != nil { //nolint:forbidigo // shortcuts cannot import internal/vfs; tgz extraction.
+				return err
+			}
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil { //nolint:forbidigo
+				return err
+			}
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(hdr.Mode)&0o755) //nolint:forbidigo
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(f, tr); err != nil { //nolint:gosec // bounded by tar entry size
+				f.Close()
+				return err
+			}
+			f.Close()
+		}
+	}
+	return nil
+}
+
+// pluginStripFirstComponent removes the first path component ("package/foo" → "foo").
+func pluginStripFirstComponent(name string) string {
+	name = filepath.ToSlash(name)
+	if i := strings.Index(name, "/"); i >= 0 {
+		return name[i+1:]
+	}
+	return ""
+}
