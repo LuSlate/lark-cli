@@ -1206,9 +1206,8 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Safety cap; default 500000",
-        "default": "500000",
-        "hidden": true
+        "desc": "Max output chars per call; default 500000 (safety cap). Large reads are usually better redirected to a file; only lower it (e.g. 25000) when you want results inline without triggering file offload, paging via has_more",
+        "default": "500000"
       },
       {
         "name": "skip-hidden",
@@ -1316,9 +1315,8 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Safety cap; default 500000",
-        "default": "500000",
-        "hidden": true
+        "desc": "Max output chars per call; default 500000 (safety cap). Large reads are usually better redirected to a file; only lower it (e.g. 25000) when you want results inline without triggering file offload, paging via has_more",
+        "default": "500000"
       },
       {
         "name": "include-row-prefix",

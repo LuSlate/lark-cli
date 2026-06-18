@@ -32,7 +32,7 @@
 - 需要公式/样式/批注 → `+cells-get`
 - 只想知道某区域下拉框有哪些选项 → `+dropdown-get`
 
-⚠️ 超大数据请走"`+csv-get` 按 `--range` 行窗口（如 `A1:Z500` / `A501:Z1000` …）分批读到本地文件 + 本地脚本处理 + `+csv-put` 分批回写"。
+⚠️ **大数据优先落盘、别灌进上下文**：`+csv-get` / `+cells-get` 都受调用方 Bash / 终端的单命令 stdout 输出上限约束（常见默认约 30000 字符，超过会被截断或转存为文件）。纯值分析优先 `+csv-get --format csv` 按 `--range` 行窗口（`A1:Z500` / `A501:Z1000` …）分批重定向到文件 + 本地脚本处理 + `+csv-put` 分批回写；若确实要让结果直接进上下文又不想触发转存，给任一命令把 `--max-chars`（默认 500000）调小到略低于该上限（如 `25000`），CLI 改为优雅截断 + `has_more` 分页。
 
 **`+csv-get` 返回值核心设计**：
 - `annotated_csv` — **CSV 数据唯一入口**。每一逻辑行前加 `[row=N] ` 前缀（N = 真实表格行号）。任何需要行号的下游操作（合并、写入、清空、格式化、插入/删除、条件格式、筛选、图表/透视表范围、搜索替换等），**行号一律直接从 `[row=N]` 读取**。若需要纯 CSV（如喂给本地脚本做解析），去前缀即可：`line.replace(/^\[row=\d+\] /, '')`。
@@ -100,7 +100,7 @@ _公共四件套 · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `A1:F10`（不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet） |
 | `--include` | string_slice | optional | 要返回的信息类别，逗号分隔多个（可选值：`value` / `formula` / `style` / `comment` / `data_validation`） |
-| `--max-chars` | int | optional | 防爆，默认 500000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
+| `--max-chars` | int | optional | 单次返回字符上限，默认 500000（兜底防爆）。大数据通常宜重定向落盘做分析；仅当要让结果直接进上下文、又不触发文件转存时才调小（如 25000），以 has_more 分页 |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
 ### `+dropdown-get`
@@ -118,7 +118,7 @@ _公共四件套 · 系统：`--dry-run`_
 | Flag | Type | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `--range` | string | required | A1 范围，如 `A1:F30`（不带 sheet 前缀；用 `--sheet-id` / `--sheet-name` 指定 sheet） |
-| `--max-chars` | int | optional | 防爆，默认 500000（隐藏 flag：不在 `--help` 列出，但可正常传入） |
+| `--max-chars` | int | optional | 单次返回字符上限，默认 500000（兜底防爆）。大数据通常宜重定向落盘做分析；仅当要让结果直接进上下文、又不触发文件转存时才调小（如 25000），以 has_more 分页 |
 | `--include-row-prefix` | bool | optional | 是否在每行前加 `[row=N]` 前缀，默认 `true` |
 | `--skip-hidden` | bool | optional | 跳过隐藏行列，默认 `false` |
 
