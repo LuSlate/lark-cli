@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-template-admission.schema.json",
+  "title": "SVGlide template and seed admission",
+  "type": "object",
+  "required": ["schema_version", "items"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-template-admission/v1"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "kind", "activation_status", "copy_policy", "compatibility", "usage_proof"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["seed", "template", "recipe", "style", "reference"]},
+          "activation_status": {"enum": ["active", "candidate", "reference_only", "blocked"]},
+          "copy_policy": {"enum": ["svglide_native", "reference_only", "blocked_raw_runtime"]},
+          "compatibility": {"type": "object"},
+          "usage_proof": {"type": "object"},
+          "license_status": {"enum": ["cleared", "unknown", "restricted"]},
+          "unsupported_features": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

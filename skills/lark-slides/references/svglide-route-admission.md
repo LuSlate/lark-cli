@@ -18,23 +18,30 @@ Before activation, top-level skill instructions may refer only to:
 
 - `slides +create-svg` as the route command name.
 - `svglide-route-admission.md` as this gate.
-- `svg-private-manifest.json` as the private-file index.
+- `svglide-svg-private.rules.json` as the primary private-file index.
+- `svg-private-manifest.json` as the compatibility private-file index.
 
 Do not read or summarize private SVG strategy files for XML route work.
 
 ## Allowed After Activation
 
-After activation, load SVG private files through `svg-private-manifest.json`.
+After activation, load SVG private files through `svglide-svg-private.rules.json`. `svg-private-manifest.json` remains as a compatibility index for older tooling.
 
 Primary route entrypoints:
 
 - `lark-slides-create-svg.md`
 - `svg-protocol.md`
+- `svglide-svg-private.rules.json`
 
 Private planning and validation:
 
 - `svglide-planning-layer.md`
+- `svglide-plan.contract.md`
+- `svglide-artifacts.spec.md`
+- `svglide-workflow.spec.md`
 - `svglide-validation-checklist.md`
+- `svglide-checks.checklist.md`
+- `svglide-preview.spec.md`
 - `svglide-visual-planning.md`
 - `svglide-asset-planning.md`
 

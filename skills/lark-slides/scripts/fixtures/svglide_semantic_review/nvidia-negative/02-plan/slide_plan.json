@@ -1,0 +1,16 @@
+{
+  "language": null,
+  "audience": null,
+  "deck_structure": ["content"],
+  "slides": [
+    {
+      "page": 1,
+      "layout_family": "chart",
+      "visual_recipe": "bends",
+      "title": "NVIDIA Supply Chain Inflection",
+      "key_message": "Three bends define the next phase",
+      "body_points": ["From graphics leader to AI infrastructure"],
+      "source_refs": []
+    }
+  ]
+}

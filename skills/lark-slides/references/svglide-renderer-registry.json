@@ -1,0 +1,68 @@
+{
+  "schema_version": "svglide-renderer-registry/v1",
+  "renderers": [
+    {
+      "id": "cover",
+      "status": "active",
+      "family": "cover",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "cover_full_bleed",
+      "status": "active",
+      "family": "cover",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "chart",
+      "status": "active",
+      "family": "chart",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "dashboard_scorecard",
+      "status": "active",
+      "family": "chart",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "timeline",
+      "status": "active",
+      "family": "timeline",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "timeline_rail",
+      "status": "active",
+      "family": "timeline",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "closing",
+      "status": "active",
+      "family": "closing",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "closing_cta",
+      "status": "active",
+      "family": "closing",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "test-renderer",
+      "status": "active",
+      "family": "test",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-semantic-review.schema.json",
+  "title": "SVGlide semantic review receipt",
+  "type": "object",
+  "required": ["schema_version", "status", "action", "inputs", "prepared_files", "text_inventory", "summary", "issues"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-semantic-review/v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "action": {"enum": ["create_live", "repair_and_rerun"]},
+    "profile": {"type": "string", "minLength": 1},
+    "inputs": {
+      "type": "object",
+      "required": ["slide_plan", "plan_sha256", "svg_dir"],
+      "additionalProperties": true,
+      "properties": {
+        "slide_plan": {"type": "string", "minLength": 1},
+        "plan_sha256": {"type": "string", "minLength": 1},
+        "evidence": {"type": ["string", "null"]},
+        "evidence_sha256": {"type": ["string", "null"]},
+        "svg_dir": {"type": "string", "minLength": 1}
+      }
+    },
+    "prepared_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "additionalProperties": true,
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "text_inventory": {"type": "string", "minLength": 1},
+    "summary": {
+      "type": "object",
+      "required": ["error_count", "warning_count", "slide_count", "prepared_svg_count", "unmatched_text_count"],
+      "additionalProperties": true,
+      "properties": {
+        "error_count": {"type": "integer", "minimum": 0},
+        "warning_count": {"type": "integer", "minimum": 0},
+        "slide_count": {"type": "integer", "minimum": 0},
+        "prepared_svg_count": {"type": "integer", "minimum": 0},
+        "unmatched_text_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message"],
+        "additionalProperties": true,
+        "properties": {
+          "code": {"type": "string", "minLength": 1},
+          "message": {"type": "string", "minLength": 1},
+          "page": {"type": "integer", "minimum": 1},
+          "path": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

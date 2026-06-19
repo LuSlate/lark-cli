@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-quality-gate.schema.json",
+  "title": "SVGlide quality gate receipt",
+  "type": "object",
+  "required": ["version", "status", "profile", "inputs", "prepared_files", "summary", "checks"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-quality-gate/v1"},
+    "status": {"enum": ["passed", "failed", "passed_with_waiver"]},
+    "profile": {"type": "string", "minLength": 1},
+    "inputs": {"type": "object"},
+    "prepared_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "additionalProperties": true,
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["check_count", "failed_check_count", "waiver_check_count", "source_error_count"],
+      "additionalProperties": true,
+      "properties": {
+        "check_count": {"type": "integer", "minimum": 0},
+        "failed_check_count": {"type": "integer", "minimum": 0},
+        "waiver_check_count": {"type": "integer", "minimum": 0},
+        "source_error_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "checks": {"type": "array"}
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-preview-annotations.schema.json",
+  "title": "SVGlide preview annotations",
+  "type": "object",
+  "required": ["schema_version", "annotations"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-preview-annotations/v1"},
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page", "severity", "message"],
+        "additionalProperties": true,
+        "properties": {
+          "page": {"type": "integer", "minimum": 1},
+          "severity": {"enum": ["info", "warning", "error"]},
+          "message": {"type": "string", "minLength": 1},
+          "status": {"enum": ["open", "resolved", "wont_fix"]}
+        }
+      }
+    }
+  }
+}

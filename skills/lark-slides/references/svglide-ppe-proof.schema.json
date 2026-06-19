@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-ppe-proof.schema.json",
+  "title": "SVGlide PPE proof receipt",
+  "type": "object",
+  "required": ["schema_version", "status", "inputs", "proof", "summary", "issues"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-ppe-proof/v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "inputs": {"type": "object"},
+    "proof": {"type": "object"},
+    "summary": {
+      "type": "object",
+      "required": ["error_count"],
+      "additionalProperties": true,
+      "properties": {
+        "error_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "issues": {"type": "array"}
+  }
+}

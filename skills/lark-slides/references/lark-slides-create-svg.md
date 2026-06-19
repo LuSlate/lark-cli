@@ -2,6 +2,8 @@
 
 从一个或多个 SVGlide SVG 文件创建飞书幻灯片：
 
+> 兼容说明：新建或大幅重生成 SVG deck 时，调用本命令前先使用 `svglide_project_runner.py` 和 `svglide-artifacts.spec.md` 的分阶段产物目录。本页保留为最终 create 步骤的命令级契约。
+
 ```bash
 lark-cli slides +create-svg \
   --as user \
@@ -132,7 +134,7 @@ CLI 校验范围只包括：
 
 ### 与现有规划层对齐
 
-SVG 创建不使用单独的规划目录。新建或大幅改写 SVG deck 时，仍然复用 [planning-layer.md](planning-layer.md) 规定的 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，不要另建 `.lark-slides/svg-plan` 或只保留散落的 `.svg` 文件。
+SVG 创建不使用单独的规划目录。新建或大幅改写 SVG deck 时，仍然复用 [planning-layer.md](planning-layer.md) 规定的 `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json`，不要另建 `.lark-slides/svg-plan` 或只保留散落的 `.svg` 文件。
 
 在通用 plan 字段基础上，SVG deck 还应补充这些 SVG 专属字段：
 
@@ -160,10 +162,10 @@ SVG 创建不使用单独的规划目录。新建或大幅改写 SVG deck 时，
     "css": "explicit font-size/font-weight/color/line-height/text-align; no font shorthand"
   },
   "svg_files": [
-    {"page": 1, "path": ".lark-slides/plan/<deck-id>/pages/page-001.svg"}
+    {"page": 1, "path": ".lark-slides/plan/<deck-id>/04-svg/prepared/page-001.svg"}
   ],
   "preflight": {
-    "command": "python3 skills/lark-slides/scripts/svg_preflight.py --plan .lark-slides/plan/<deck-id>/slide_plan.json --input .lark-slides/plan/<deck-id>/pages/page-001.svg",
+    "command": "python3 skills/lark-slides/scripts/svg_preflight.py --plan .lark-slides/plan/<deck-id>/02-plan/slide_plan.json --input .lark-slides/plan/<deck-id>/04-svg/prepared/page-001.svg",
     "status": "pending"
   },
   "readback_verification": {
@@ -358,8 +360,8 @@ deck/page plan
 
 HTML 预览是生成阶段的轻量质检，不是 SVGlide 协议或 CLI API 的硬依赖。
 
-- SHOULD: 生成 SVGlide deck 后、调用 `slides +create-svg` 前，生成一个本地 `preview.html`，把每页 SVG 按 16:9 画布嵌入，并展示页码、标题、`renderer_id` / `visual_recipe`、图片资产状态、preview-only 图片来源和明显 warning。
-- SHOULD: 如果当前 agent、IDE 或浏览器工具支持打开本地文件，打开 `preview.html` 进行人工或截图式预览，优先检查：
+- SHOULD: 生成 SVGlide deck 后、调用 `slides +create-svg` 前，生成本地 `05-preview/preview.html`，把每页 SVG 按 16:9 画布嵌入，并展示页码、标题、`renderer_id` / `visual_recipe`、图片资产状态、preview-only 图片来源和明显 warning。
+- SHOULD: 如果当前 agent、IDE 或浏览器工具支持打开本地文件，打开 `05-preview/preview.html` 进行人工或截图式预览，优先检查：
   - 页面是否空白、明显裁切或整体偏大。
   - 标题、正文、图片和装饰元素是否重叠。
   - 白色/浅色文字是否压到浅色背景或图片亮部。
@@ -367,14 +369,14 @@ HTML 预览是生成阶段的轻量质检，不是 SVGlide 协议或 CLI API 的
   - 信息密度是否明显不足，尤其是高密度页是否真的有 matrix/table/timeline/dashboard/flow/risk grid。
   - 结尾页是否存在。
   - 图片是否显示，是否有破图、空图片框、图片过少或 preview-only 来源未记录。
-- SHOULD: 在最终产物目录记录 `preview.html` 路径；如果未生成或无法打开，说明原因，并继续执行 preflight / dry-run / readback。
+- SHOULD: 在最终产物目录记录 `05-preview/preview.html` 路径；如果未生成或无法打开，说明原因，并继续执行 preflight / dry-run / readback。
 - MUST NOT: 用 HTML 预览替代 `svg_preflight.py`、`slides +create-svg --dry-run` 或 live readback。HTML 预览主要提前发现审美、布局和素材问题；服务端转换后的字体、path bbox、图片 token 和部分 SVG 效果仍必须通过 readback 验证。
 
 打开预览后必须按 [svg-aesthetic-review.md](svg-aesthetic-review.md) 做一次人工或截图式审查。重点看所有页面的标题区、装饰线、badge、文本框、图片框、safe area、重复版式和 SVG 视觉优势；如果多页出现同类问题，修生成规则后重新生成，不要只逐页微调坐标。
 
 本地 preflight 必须在 `slides +create-svg` 前执行，失败即停：
 
-- `python3 skills/lark-slides/scripts/svg_preflight.py --plan .lark-slides/plan/<deck-id>/slide_plan.json --input page-*.svg` 通过；如果脚本不可用，再退回 `xmllint --noout page-*.svg` 加人工检查。
+- `python3 skills/lark-slides/scripts/svg_preflight.py --plan .lark-slides/plan/<deck-id>/02-plan/slide_plan.json --input .lark-slides/plan/<deck-id>/04-svg/prepared/page-*.svg` 通过；如果脚本不可用，再退回 `xmllint --noout page-*.svg` 加人工检查。
 - root 是 `width="960" height="540" viewBox="0 0 960 540"`。
 - root / leaf `slide:role` 完整，所有 leaf 有几何必填属性。
 - plan 中每页 `layout_family`、`visual_recipe`、`visual_intent`、`visual_focal_point`、`required_primitives`、`svg_primitives`、`xml_like_risk`、`content_density_contract`、`risk_flags`、`source_policy` 完整，且 recipe required primitives 能在对应 SVG source 中命中。`asset_contract` 在 MVP 阶段缺失只 warning；有条件时仍应补全。
@@ -395,9 +397,10 @@ HTML 预览是生成阶段的轻量质检，不是 SVGlide 协议或 CLI API 的
 创建顺序：
 
 ```text
-generate deck plan -> generate assets -> generate SVG files
--> optional preview.html and browser preview when supported
--> local preflight with --plan -> lark-cli slides +create-svg --dry-run
+generate deck plan -> user confirms plan -> assets -> generate_svg
+-> prepare -> 05-preview/preview.html and browser preview when supported
+-> local preflight with --plan -> preview lint -> aesthetic review -> quality gate
+-> lark-cli slides +create-svg --dry-run
 -> live create -> xml_presentations get readback
 -> readback bbox / text overlap / closing slide checks
 ```
@@ -665,7 +668,7 @@ Preview 阶段优先使用这些来源来快速获得丰富视觉；正式交付
 - 自称数据、排名、客户、引用、logo 或案例时，是否有来源；没有来源时是否改为定性或假设表达。
 - 图片是否足够丰富并可见；如果 Preview/MVP 阶段暂时保留 http(s) / data URL 或 `preview_unverified` 来源，要记录 warning、确认 live/readback 可见，并在正式交付前列出替换项。
 
-验证记录建议写回 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` 的 `readback_verification` 字段，并在最终回复中简述：
+验证记录建议写回 `.lark-slides/plan/<deck-or-task-id>/08-readback/readback-check.json`，并在最终回复中简述：
 
 ```text
 验证记录：
@@ -693,7 +696,7 @@ Preview 阶段优先使用这些来源来快速获得丰富视觉；正式交付
 {
   "xml_presentation_id": "slides...",
   "failed_page": 3,
-  "failed_svg_file": ".lark-slides/plan/<deck-id>/pages/page-003.svg",
+  "failed_svg_file": ".lark-slides/plan/<deck-id>/04-svg/prepared/page-003.svg",
   "successful_slide_ids": ["abc", "def"],
   "svglide_error": {"type": "svg_validation_error", "tag_name": "foreignObject"},
   "next_action": "fix source SVG and rerun preflight before retry"
@@ -718,4 +721,4 @@ SVG deck 后续编辑走双轨，不承诺 source SVG id 能稳定映射到 read
 | 大幅换版式、重画图表、调整视觉系统 | 修改 source SVG -> 重新 preflight -> 重新创建或替换目标页 | 保持 SVG 的视觉表达优势，避免在转换后 XML 上手搓复杂 SVG 结构 |
 | 无法定位 block_id 或映射不可信 | 回 source SVG 修改 | 不生成 `edit-map.json`，除非服务端或转换结果能证明 source id 可稳定保留 |
 
-小改前必须重新 `slide.get` 拿最新 block id 和 revision；大改后必须更新同一个 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，保持 plan、SVG 文件、创建结果和验证记录一致。
+小改前必须重新 `slide.get` 拿最新 block id 和 revision；大改后必须更新同一个 `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json`，保持 plan、SVG 文件、创建结果和验证记录一致。

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-renderer-registry.schema.json",
+  "title": "SVGlide renderer registry",
+  "type": "object",
+  "required": ["schema_version", "renderers"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-renderer-registry/v1"},
+    "renderers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "family"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["active", "candidate", "blocked"]},
+          "family": {"type": "string", "minLength": 1},
+          "runtime_module": {"type": "string", "minLength": 1},
+          "allowed_style_presets": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

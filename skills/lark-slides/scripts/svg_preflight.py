@@ -59,7 +59,21 @@ BUSINESS_CLAIM_FRAGMENT_RE = re.compile(
 )
 
 SVG_PRIVATE_REQUIRED_RULE_FILES = {
+    "skills/lark-slides/references/svglide-svg-private.rules.json",
     "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+    "skills/lark-slides/references/svglide-workflow.spec.md",
+    "skills/lark-slides/references/svglide-artifacts.spec.md",
+    "skills/lark-slides/references/svglide-plan.contract.md",
+    "skills/lark-slides/references/svglide-lock.contract.md",
+    "skills/lark-slides/references/svglide-assets.contract.md",
+    "skills/lark-slides/references/svglide-generate-svg.contract.md",
+    "skills/lark-slides/references/svglide-preview.spec.md",
+    "skills/lark-slides/references/svglide-checks.checklist.md",
+    "skills/lark-slides/references/svglide-readback.contract.md",
+    "skills/lark-slides/references/svglide-create-svg.contract.md",
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/svg-protocol.md",
     "skills/lark-slides/references/style-presets.md",
     "skills/lark-slides/references/svg-visual-recipes.md",
     "skills/lark-slides/references/svg-aesthetic-review.md",
@@ -1800,7 +1814,7 @@ def validate_gate_trace(plan: dict[str, Any]) -> list[dict[str, Any]]:
                 "plan_missing_gate_plan_path",
                 "SVGlide gate trace must record plan_path",
                 None,
-                "Record .lark-slides/plan/<deck-id>/slide_plan.json so later preflight, preview, and readback can be tied to the same plan.",
+                "Record .lark-slides/plan/<deck-id>/02-plan/slide_plan.json so later preflight, preview, and readback can be tied to the same plan.",
             )
         )
     quality_gates = nested_dict(plan.get("quality_gates") or trace.get("quality_gates"))
@@ -2502,11 +2516,71 @@ def load_plan_json(path: str) -> tuple[dict[str, Any] | None, dict[str, Any] | N
     return plan, None
 
 
+def plan_route(plan: dict[str, Any]) -> str:
+    return textify(plan.get("route") or plan.get("output_mode")).strip()
+
+
+def normalize_page_paths(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    paths: list[str] = []
+    for item in value:
+        raw = item.get("path") or item.get("file") if isinstance(item, dict) else item
+        path = textify(raw).strip()
+        if path:
+            paths.append(path)
+    return paths
+
+
+def validate_plan_lock(plan: dict[str, Any], plan_path: str) -> list[dict[str, Any]]:
+    lock_path = Path(plan_path).with_name("svglide.lock.json")
+    if not lock_path.exists():
+        return []
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        return [plan_issue("error", "plan_lock_json_invalid", f"svglide.lock.json is not valid JSON: {error}")]
+    except OSError as error:
+        return [plan_issue("error", "plan_lock_unreadable", f"could not read svglide.lock.json: {error}")]
+    if not isinstance(lock, dict):
+        return [plan_issue("error", "plan_lock_root_invalid", "svglide.lock.json root must be an object")]
+
+    issues: list[dict[str, Any]] = []
+    if lock.get("version") != "svglide-lock/v1":
+        issues.append(plan_issue("error", "plan_lock_version_invalid", "svglide.lock.json must use version svglide-lock/v1"))
+    if lock.get("route") != "svglide-svg":
+        issues.append(plan_issue("error", "plan_lock_route_invalid", "svglide.lock.json route must be svglide-svg"))
+    if plan_route(plan) and plan_route(plan) != textify(lock.get("route")).strip():
+        issues.append(plan_issue("error", "plan_lock_conflict", "plan route conflicts with svglide.lock.json route"))
+
+    plan_canvas = nested_dict(plan.get("canvas"))
+    lock_canvas = nested_dict(lock.get("canvas"))
+    for field in ["width", "height", "viewBox"]:
+        if field in plan_canvas and field in lock_canvas and textify(plan_canvas.get(field)) != textify(lock_canvas.get(field)):
+            issues.append(plan_issue("error", "plan_lock_conflict", f"plan canvas.{field} conflicts with svglide.lock.json"))
+
+    plan_paths = normalize_page_paths(plan.get("svg_files"))
+    lock_paths = normalize_page_paths(lock.get("pages"))
+    if plan_paths and lock_paths and plan_paths != lock_paths:
+        issues.append(plan_issue("error", "plan_lock_conflict", "plan svg_files order conflicts with svglide.lock.json pages"))
+    return issues
+
+
+def append_plan_issues(result: dict[str, Any], issues: list[dict[str, Any]]) -> None:
+    if not issues:
+        return
+    result.setdefault("issues", []).extend(issues)
+    result["summary"]["error_count"] = sum(1 for item in result["issues"] if item["level"] == "error")
+    result["summary"]["warning_count"] = sum(1 for item in result["issues"] if item["level"] == "warning")
+
+
 def lint_plan_file(path: str) -> dict[str, Any]:
     plan, load_error = load_plan_json(path)
     if load_error:
         return load_error
-    return lint_plan(plan or {}, path)
+    result = lint_plan(plan or {}, path)
+    append_plan_issues(result, validate_plan_lock(plan or {}, path))
+    return result
 
 
 def planned_svg_path(slide: dict[str, Any], plan: dict[str, Any]) -> str:
@@ -2700,11 +2774,10 @@ def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]
         plan, load_error = load_plan_json(plan_path)
         plan_result = load_error or lint_plan(plan or {}, plan_path)
         if plan is not None:
+            append_plan_issues(plan_result, validate_plan_lock(plan, plan_path))
             alignment_issues = lint_plan_svg_alignment(plan, files)
             if alignment_issues:
-                plan_result.setdefault("issues", []).extend(alignment_issues)
-                plan_result["summary"]["error_count"] = sum(1 for item in plan_result["issues"] if item["level"] == "error")
-                plan_result["summary"]["warning_count"] = sum(1 for item in plan_result["issues"] if item["level"] == "warning")
+                append_plan_issues(plan_result, alignment_issues)
     summary = {
         "file_count": len(files),
         "error_count": sum(file["summary"]["error_count"] for file in files),

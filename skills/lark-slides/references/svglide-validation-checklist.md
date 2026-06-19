@@ -2,24 +2,37 @@
 
 Read this file only after `svglide-svg` route admission. Shared XML validation still lives in `validation-checklist.md`.
 
+Compatibility note: new runner-first check paths are defined in `svglide-checks.checklist.md`. Keep this file for gate semantics; use the staged `02-plan`, `04-svg/prepared`, `05-preview`, `06-check`, `07-create`, and `08-readback` paths for new work.
+
 ## Required Flow
 
 1. Validate the SVG plan against `svglide-plan.schema.json` and route admission.
-2. Run local source preflight with `svg_preflight.py --plan`.
-3. Build or inspect a local preview when practical, then run `svg_preview_lint.py` before live create.
-4. Record an aesthetic review following `svg-aesthetic-review.md`; this review cannot replace deterministic lint.
-5. Run `slides +create-svg --dry-run` when command behavior is under review.
-6. After live create, use `xml_presentations.get` readback and record page count, blank-page, asset, bounds, and text-fit checks.
+2. Run `svglide_source.py` to produce a fresh source receipt and evidence pack.
+3. Run local source preflight with `svg_preflight.py --plan`.
+4. Build or inspect a local preview when practical, then run `svg_preview_lint.py` before live create.
+5. Record an aesthetic review following `svg-aesthetic-review.md`; this review cannot replace deterministic lint.
+6. Run `svglide_chart_verify.py` and `svglide_runtime_review.py` before `quality_gate`.
+7. Run `svglide_semantic_review.py` to block English plans, weak page structure, thin content, missing source refs, and SVG text that does not trace to plan/source.
+8. Run `slides +create-svg --dry-run` when command behavior is under review.
+9. Run `svglide_ppe_proof.py` before live create.
+10. After live create, use `xml_presentations.get` readback and record page count, blank-page, asset, bounds, and text-fit checks.
 
 Treat the gate as a single chain:
 
 ```text
 route admission
 -> loaded_rule_set + art_direction + business_claims
+-> source receipt
 -> svg_preflight --plan
 -> svg_preview_lint.py
 -> aesthetic review record
--> dry-run / live create
+-> chart_verify
+-> semantic_review
+-> runtime_review
+-> quality_gate
+-> dry-run
+-> ppe_proof
+-> live create
 -> readback checks
 ```
 
@@ -29,8 +42,8 @@ Any P0/error-level result before live create blocks the API call.
 
 ```bash
 python3 skills/lark-slides/scripts/svg_preflight.py \
-  --plan .lark-slides/plan/<deck-id>/slide_plan.json \
-  --input .lark-slides/plan/<deck-id>/pages/page-001.svg
+  --plan .lark-slides/plan/<deck-id>/02-plan/slide_plan.json \
+  --input .lark-slides/plan/<deck-id>/04-svg/prepared/page-001.svg
 ```
 
 Pass criteria:
@@ -65,7 +78,7 @@ Run preview lint on local HTML/SVG preview before live create:
 
 ```bash
 python3 skills/lark-slides/scripts/svg_preview_lint.py \
-  .lark-slides/plan/<deck-id>/preview.html --pretty
+  .lark-slides/plan/<deck-id>/05-preview/preview.html --pretty
 ```
 
 Pass criteria:
@@ -92,6 +105,30 @@ Pass criteria:
 - Review records include preview path, score, threshold, issue ids, and action.
 - If independent review score is below the configured threshold, record `action: repair_and_rerun`; do not treat self-scoring as a gate.
 
+## Semantic Review
+
+Run semantic review before `quality_gate`:
+
+```bash
+python3 skills/lark-slides/scripts/svglide_semantic_review.py \
+  .lark-slides/plan/<deck-id> --profile preview_only --pretty
+```
+
+Pass criteria:
+
+- `summary.error_count == 0`.
+- `language == zh-CN`, `audience` is non-empty, and `deck_structure` covers the required page types.
+- Every slide has `page_type`, `section`, `role`, Chinese `title`, Chinese `key_message`, and sufficient `body_points`.
+- Content slides have source refs that resolve to `source/evidence.json`.
+- `06-check/text-inventory.json` contains no unmatched visible SVG text.
+
+Semantic review owns content-language and plan/source provenance. Do not treat a clean preview or aesthetic score as a substitute for this gate.
+
+## Chart And Runtime Review
+
+- `06-check/chart-verify.json` must be fresh. Pages declaring `chart_contract.verify=required` or exact chart precision must have chart data and chart-like SVG marks.
+- `06-check/runtime-review.json` must be fresh. Each page must declare `renderer_id` and `layout_family`; 4+ page decks cannot use a single renderer or layout family throughout.
+
 ## Readback Checks
 
 Live create is not complete until readback confirms:
@@ -102,4 +139,4 @@ Live create is not complete until readback confirms:
 - Converted XML keeps content inside canvas and safe area.
 - Text boxes, labels, and footer/source notes remain readable.
 - Closing slide is present when required.
-- Readback records must be tied to the same `plan_path` and preflight/preview lint output. HTML preview is not a substitute for readback because server conversion can change text boxes, image tokens, and bounds.
+- Readback records must be tied to the same plan, quality gate, dry-run, PPE proof, and live-create digests. HTML preview is not a substitute for readback because server conversion can change text boxes, image tokens, and bounds.

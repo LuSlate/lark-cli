@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-evidence.schema.json",
+  "title": "SVGlide evidence pack",
+  "type": "object",
+  "required": ["schema_version", "source_status", "items"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-evidence/v1"},
+    "source_status": {"enum": ["ready", "thin", "blocked"]},
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 20},
+          "source": {"type": "string", "minLength": 1},
+          "url": {"type": "string", "minLength": 1},
+          "date": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

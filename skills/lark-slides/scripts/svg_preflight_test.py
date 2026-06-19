@@ -5,9 +5,12 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svg_preflight
 
@@ -730,6 +733,31 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertIn("plan_missing_loaded_rule_set", codes)
         self.assertIn("plan_missing_art_direction", codes)
 
+    def test_lint_plan_requires_new_private_rule_contracts(self) -> None:
+        fields = style_plan_fields()
+        fields["loaded_rule_set"] = sorted(
+            svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES
+            - {"skills/lark-slides/references/svglide-assets.contract.md"}
+        )
+        plan = {
+            "output_mode": "svglide-svg",
+            "page_count": 1,
+            **fields,
+            "slides": [
+                {
+                    "page": 1,
+                    "renderer_id": "route_story",
+                    "density": "medium",
+                    "title": "Route",
+                    **recipe_fields("path_flow", ["path", "annotation"]),
+                }
+            ],
+        }
+        result = svg_preflight.lint_plan(plan)
+        missing = [issue for issue in result["issues"] if issue["code"] == "plan_missing_loaded_rule_set"]
+        self.assertEqual(len(missing), 1)
+        self.assertIn("svglide-assets.contract.md", missing[0]["hint"])
+
     def test_lint_plan_requires_business_claim_sources(self) -> None:
         plan = {
             "output_mode": "svglide-svg",
@@ -1025,6 +1053,7 @@ class SvgPreflightTest(unittest.TestCase):
             svg_path = tmp / "page-001.svg"
             plan_path = tmp / "slide_plan.json"
             svg_path.write_text(VALID_SVG, encoding="utf-8")
+            loaded_rules_json = json.dumps(sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES), indent=20)
             plan_path.write_text(
                 """
                 {
@@ -1038,15 +1067,7 @@ class SvgPreflightTest(unittest.TestCase):
                     "background_strategy": "muted grid panels",
                     "motif": "dense grid panels"
                   },
-                  "loaded_rule_set": [
-                    "skills/lark-slides/references/svglide-route-admission.md",
-                    "skills/lark-slides/references/style-presets.md",
-                    "skills/lark-slides/references/svg-visual-recipes.md",
-                    "skills/lark-slides/references/svg-aesthetic-review.md",
-                    "skills/lark-slides/references/svglide-planning-layer.md",
-                    "skills/lark-slides/references/svglide-validation-checklist.md",
-                    "skills/lark-slides/references/svglide-visual-planning.md"
-                  ],
+                  "loaded_rule_set": __LOADED_RULE_SET__,
                   "plan_path": ".lark-slides/plan/test/slide_plan.json",
                   "quality_gates": {
                     "no_text_overflow": true,
@@ -1086,11 +1107,37 @@ class SvgPreflightTest(unittest.TestCase):
                     "source_policy": "Use prompt-provided content only."
                   }]
                 }
-                """,
+                """.replace("__LOADED_RULE_SET__", loaded_rules_json),
                 encoding="utf-8",
             )
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
         self.assertEqual(result["summary"]["error_count"], 0)
+
+    def test_lint_plan_file_reports_lock_page_path_conflict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_dir = Path(tmpdir) / "02-plan"
+            plan_dir.mkdir()
+            plan_path = plan_dir / "slide_plan.json"
+            lock_path = plan_dir / "svglide.lock.json"
+            plan = {
+                "route": "svglide-svg",
+                "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+                "svg_files": [{"page": 1, "path": "04-svg/prepared/page-001.svg"}],
+                **style_plan_fields(),
+                "slides": [],
+            }
+            lock = {
+                "version": "svglide-lock/v1",
+                "route": "svglide-svg",
+                "pages": [{"page": 1, "path": "04-svg/prepared/page-002.svg"}],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            lock_path.write_text(json.dumps(lock), encoding="utf-8")
+
+            result = svg_preflight.lint_plan_file(str(plan_path))
+
+            codes = [issue["code"] for issue in result["issues"]]
+            self.assertIn("plan_lock_conflict", codes)
 
     def test_lint_files_reports_declared_recipe_without_source_primitives(self) -> None:
         svg = """

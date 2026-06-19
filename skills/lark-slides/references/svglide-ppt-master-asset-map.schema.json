@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-ppt-master-asset-map.schema.json",
+  "title": "SVGlide ppt-master asset map",
+  "type": "object",
+  "required": ["schema_version", "items"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-ppt-master-asset-map/v1"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "kind", "svglide_target", "activation_status", "copy_policy", "license_status", "unsupported_features"],
+        "additionalProperties": true,
+        "properties": {
+          "source": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "svglide_target": {"type": "string", "minLength": 1},
+          "activation_status": {"enum": ["active", "candidate", "reference_only", "blocked"]},
+          "copy_policy": {"enum": ["svglide_native", "reference_only", "blocked_raw_runtime"]},
+          "license_status": {"enum": ["cleared", "unknown", "restricted"]},
+          "unsupported_features": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

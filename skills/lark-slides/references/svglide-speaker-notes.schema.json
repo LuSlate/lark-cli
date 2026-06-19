@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-speaker-notes.schema.json",
+  "title": "SVGlide speaker notes receipt",
+  "type": "object",
+  "required": ["schema_version", "status", "summary", "issues"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-speaker-notes/v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "summary": {
+      "type": "object",
+      "required": ["error_count", "expected_page_count", "notes_page_count"],
+      "additionalProperties": true,
+      "properties": {
+        "error_count": {"type": "integer", "minimum": 0},
+        "expected_page_count": {"type": ["integer", "null"]},
+        "notes_page_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "issues": {"type": "array"}
+  }
+}

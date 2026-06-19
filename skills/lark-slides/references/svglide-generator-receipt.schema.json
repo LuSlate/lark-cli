@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-generator-receipt.schema.json",
+  "title": "SVGlide generator receipt",
+  "type": "object",
+  "required": [
+    "stage",
+    "status",
+    "generator_mode",
+    "generated_files",
+    "page_receipts",
+    "plan_sha256",
+    "evidence_sha256",
+    "asset_manifest_sha256",
+    "source_receipt_sha256"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "stage": {"const": "generate_svg"},
+    "status": {"enum": ["passed", "failed"]},
+    "generator_mode": {"enum": ["script", "external"]},
+    "generated_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "additionalProperties": true,
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "page_receipts": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "plan_sha256": {"type": "string", "minLength": 1},
+    "evidence_sha256": {"type": "string", "minLength": 1},
+    "asset_manifest_sha256": {"type": "string", "minLength": 1},
+    "source_receipt_sha256": {"type": "string", "minLength": 1},
+    "lock_sha256": {"type": ["string", "null"]},
+    "generator_script_sha256": {"type": ["string", "null"]}
+  }
+}

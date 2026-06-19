@@ -15,7 +15,7 @@ metadata:
 | 用户需求 | 优先动作 | 关键文档 / 命令 |
 |----------|----------|-----------------|
 | 新建 PPT | 先规划 `slide_plan.json`，再按复杂度选择一步或两步创建 | `planning-layer.md`、`visual-planning.md`、`asset-planning.md`、`slides +create` |
-| AI 生成 SVG 创建 PPT | 先做 SVG route admission；命中后再按 SVG 私有清单加载专属文档并调用 `slides +create-svg` | `svglide-route-admission.md`、`svg-private-manifest.json`、`slides +create-svg` |
+| AI 生成 SVG 创建 PPT | 先做 SVG route admission；命中后按 SVG 私有规则加载专属文档，优先用 runner 走到 quality gate，再调用 `slides +create-svg` | `svglide-route-admission.md`、`svglide-svg-private.rules.json`、`svg-private-manifest.json`、`svglide_project_runner.py`、`slides +create-svg` |
 | 大幅改写页面 | 先回读现有 XML，写入新 plan，再替换或重建相关页面 | `xml_presentations.get`、`+replace-slide`、`lark-slides-edit-workflows.md` |
 | 编辑单个标题、文本块、图片或局部元素 | 优先块级替换/插入，不改页序 | `slides +replace-slide`、`lark-slides-replace-slide.md` |
 | 读取或分析已有 PPT | 解析 slides/wiki token，回读全文或单页 XML，保存 `xml_presentation_id`、`slide_id`、`revision_id` | `xml_presentations.get`、`xml_presentation.slide.get` |
@@ -28,13 +28,13 @@ metadata:
 
 **CRITICAL — 开始前 MUST 先用 Read 工具读取 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)，认证、权限和全局参数均以 lark-shared 为准。**
 
-**CRITICAL — route admission：走 XML 创建/编辑路径时，只读取 XML schema、XML create/edit/validation 文档。只有当用户显式要求 SVG / SVGlide / `slides +create-svg`、输入 root 为 `<svg slide:role="slide">`，或 plan 声明 SVG route 时，才读取 [svglide-route-admission.md](references/svglide-route-admission.md)。SVG route 激活后，私有文档列表以 [svg-private-manifest.json](references/svg-private-manifest.json) 为准；XML route 不得读取。**
+**CRITICAL — route admission：走 XML 创建/编辑路径时，只读取 XML schema、XML create/edit/validation 文档。只有当用户显式要求 SVG / SVGlide / `slides +create-svg`、输入 root 为 `<svg slide:role="slide">`，或 plan 声明 SVG route 时，才读取 [svglide-route-admission.md](references/svglide-route-admission.md)。SVG route 激活后，私有文档列表以 [svglide-svg-private.rules.json](references/svglide-svg-private.rules.json) 为准，[svg-private-manifest.json](references/svg-private-manifest.json) 仅作兼容索引；XML route 不得读取。**
 
 **CRITICAL — SVG route 激活后，生成前 MUST 在 `slide_plan.json` 记录 `loaded_rule_set`、`art_direction`、`quality_gates` 和必要的 `business_claims`。`loaded_rule_set` 必须覆盖 manifest 中的 SVG 设计与验证文档；`art_direction` 必须说明封面、章节/节奏页、结尾页、deck motif 和至少 3 个 SVG-native moments；可见业务数字或推导性商业声明必须记录来源或假设。**
 
 **CRITICAL — 走 XML 创建/编辑路径时，生成任何 XML 之前，MUST 先用 Read 工具读取 [xml-schema-quick-ref.md](references/xml-schema-quick-ref.md)，禁止凭记忆猜测 XML 结构。走 SVG 创建路径时，先完成 route admission，再读取 SVG 私有协议和创建文档。**
 
-**CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，再生成 XML 或已准入的 SVG route 产物。先创建对应目录，XML 规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)；SVG 扩展规划只在 route admission 后加载。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
+**CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 plan，再生成 XML 或已准入的 SVG route 产物。XML 路径使用 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`；SVG route 准入后使用 `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json`。先创建对应目录，XML 规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)；SVG 扩展规划只在 route admission 后加载。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，生成 XML 前 MUST 读取 [visual-planning.md](references/visual-planning.md)，确保 `layout_type`、`visual_focus`、`text_density` 实际改变页面几何、主视觉和文本量。**
 
@@ -42,7 +42,7 @@ metadata:
 
 **CRITICAL — 创建或大幅改写后，MUST 按 [validation-checklist.md](references/validation-checklist.md) 做显式验证：回读全文 XML、核对页数和关键元素、检查空白/破损页、明显溢出、布局风险；XML 语法和文本重叠静态检查优先使用 [`scripts/xml_text_overlap_lint.py`](scripts/xml_text_overlap_lint.py)。SVG route 的额外验证只在 route admission 后加载。**
 
-**CRITICAL — SVG route 创建前 MUST 先通过 [`scripts/svg_preflight.py`](scripts/svg_preflight.py) 的 plan/source gate，再对本地 HTML/SVG preview 运行 [`scripts/svg_preview_lint.py`](scripts/svg_preview_lint.py)。preview 中不得展示 safe-area/debug guide；文本溢出、大数字窄框或明显重叠的 error 会阻断 `slides +create-svg`。live create 后仍需 readback gate，HTML preview 不能替代服务端转换后的验证。**
+**CRITICAL — SVG route 创建前 MUST 先通过 [`scripts/svg_preflight.py`](scripts/svg_preflight.py) 的 plan/source gate，再对本地 HTML/SVG preview 运行 [`scripts/svg_preview_lint.py`](scripts/svg_preview_lint.py)，并运行 [`scripts/svglide_semantic_review.py`](scripts/svglide_semantic_review.py) 校验中文、页型、章节、内容厚度和 SVG 可见文本来源。preview 中不得展示 safe-area/debug guide；文本溢出、大数字窄框、明显重叠、英文 plan、缺页型或 generator 硬编码文本都会阻断 `slides +create-svg`。live create 后仍需 readback gate，HTML preview 不能替代服务端转换后的验证。**
 
 **CRITICAL — 创建前自检或失败排障时，MUST 按 [troubleshooting.md](references/troubleshooting.md) 检查 XML 转义、结构、shell 截断、图片 token、3350001 和布局风险。**
 
@@ -87,7 +87,7 @@ lark-cli auth login --domain slides
 
 按需再读：
 
-- 创建：[`lark-slides-create.md`](references/lark-slides-create.md)；SVG 创建先读 [`svglide-route-admission.md`](references/svglide-route-admission.md)，准入后按 [`svg-private-manifest.json`](references/svg-private-manifest.json) 加载私有文档
+- 创建：[`lark-slides-create.md`](references/lark-slides-create.md)；SVG 创建先读 [`svglide-route-admission.md`](references/svglide-route-admission.md)，准入后按 [`svglide-svg-private.rules.json`](references/svglide-svg-private.rules.json) 加载私有文档，旧 [`svg-private-manifest.json`](references/svg-private-manifest.json) 仅用于兼容检查
 - 编辑：[`lark-slides-edit-workflows.md`](references/lark-slides-edit-workflows.md)、[`lark-slides-replace-slide.md`](references/lark-slides-replace-slide.md)
 - 图片：[`lark-slides-media-upload.md`](references/lark-slides-media-upload.md)
 - 流程图 / 时序图 / 架构图 / 装饰图案：[`lark-slides-whiteboard.md`](references/lark-slides-whiteboard.md)
@@ -170,13 +170,13 @@ Step 1: 需求澄清 & 读取知识
 
 Step 2: 生成大纲 → 用户确认 → 写入 slide_plan.json
   - 生成结构化大纲供用户确认；如使用模板，标明基于哪个模板改写
-  - 新建 / 大幅改写必须先创建目录并写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`
+  - 新建 / 大幅改写必须先创建目录并写入 plan；XML 路径写 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`，SVG route 写 `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json`
   - plan 字段、路径命名、模板边界和 `asset_need` 结构按 planning-layer.md / asset-planning.md 执行
 
 Step 3: 按 slide_plan.json 生成 XML 或 SVGlide SVG → 创建
   - 逐页消费 plan：key_message 定主结论，layout_type 定几何，visual_focus 定主视觉，text_density 定文本量
   - 缺少真实素材时必须用 `fallback_if_missing` 生成 XML-native 兜底视觉；不要留空
-  - XML 路径按 lark-slides-create.md、media-upload.md、troubleshooting.md 执行；SVG route 准入后按私有清单执行，产物是 `.svg` 文件而不是 Slides XML，仍复用同一个 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`
+  - XML 路径按 lark-slides-create.md、media-upload.md、troubleshooting.md 执行；SVG route 准入后按私有清单执行，产物是 `.svg` 文件而不是 Slides XML，使用同一个 run root 下的 `02-plan/slide_plan.json`
 
 Step 4: 审查 & 交付
   - 创建完成后，必须用 xml_presentations.get 读取全文 XML，并按 validation-checklist.md 做显式验证记录，包括 XML 文本重叠检查
@@ -287,7 +287,7 @@ lark-cli slides <resource> <method> [flags] # 调用 API
 
 ## 核心规则
 
-1. **先规划再写 XML**：新建演示文稿或大幅改写页面时，必须先写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`；模板、风格和大纲只能作为规划输入，不能绕过规划层
+1. **先规划再写 XML**：新建演示文稿或大幅改写页面时，XML 路径必须先写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`；SVG route 准入后写入 `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json`；模板、风格和大纲只能作为规划输入，不能绕过规划层
 2. **创建流程**：简单短 XML（1-3 页、结构简单、特殊字符少）可用 `slides +create --slides '[...]'` 一步创建；复杂内容、含图片/中文大段文本/嵌套引号/较多特殊字符，或超过 10 页时，默认先 `slides +create` 创建空白 PPT，再用 `xml_presentation.slide.create` 逐页添加；AI SVG 路径使用 `slides +create-svg`，不要把 SVG 塞进 `--slides`
 3. **`<slide>` 直接子元素只有 `<style>`、`<data>`、`<note>`**：文本和图形必须放在 `<data>` 内
 4. **文本通过 `<content>` 表达**：必须用 `<content><p>...</p></content>`，不能把文字直接写在 shape 内
@@ -314,4 +314,4 @@ lark-cli slides <resource> <method> [flags] # 调用 API
 
 ## SVG Route
 
-`slides +create-svg` 只作为命令入口出现在顶层。出现 SVG / SVGlide / `slides +create-svg` 需求时，先读取 [`svglide-route-admission.md`](references/svglide-route-admission.md)，命中后再按 [`svg-private-manifest.json`](references/svg-private-manifest.json) 加载 SVG 私有协议、规划、验证和排障文档。XML route 不得读取 SVG 私有清单中的策略正文。
+`slides +create-svg` 只作为命令入口出现在顶层。出现 SVG / SVGlide / `slides +create-svg` 需求时，先读取 [`svglide-route-admission.md`](references/svglide-route-admission.md)，命中后再按 [`svglide-svg-private.rules.json`](references/svglide-svg-private.rules.json) 加载 SVG 私有协议、规划、验证和排障文档，旧 [`svg-private-manifest.json`](references/svg-private-manifest.json) 仅作为兼容索引保留。新建或大幅改写 SVG deck 时，优先使用 [`svglide_project_runner.py`](scripts/svglide_project_runner.py) 管理控制面：`init` 建目录，`source` 归一化 `source/evidence.json` 并写入 source receipt，`plan` 由 agent 或外部产物阶段完成并写入对应文件，`strategy_review` 先锁定语言、受众、页型、章节和内容厚度，`confirm_plan` 必须拿到用户确认的 `02-plan/plan-confirmation.json`，runner 再负责 `assets -> generate_svg -> prepare -> preview -> preflight -> preview_lint -> aesthetic_review -> chart_verify -> semantic_review -> runtime_review -> quality_gate`；本地内容验收使用 `run .lark-slides/plan/<deck-id> --profile preview_only` 默认停在 `quality_gate`。`assets` 负责资产契约和 token/local-file 审计，`generate_svg` 负责登记或执行源 SVG 生成并写入 deck/page receipts，`prepare` 只消费已登记的源 SVG，`chart_verify` 只在页面声明 required/exact chart contract 时强制，`semantic_review` 负责 `semantic-review.json` 和 `text-inventory.json`，`runtime_review` 负责 renderer/layout 多样性。live create 前必须有新鲜的 `quality_gate.status=passed`、`dry-run.json` 和 `ppe-proof.json`，live create 后必须进入 readback stage。XML route 不得读取 SVG 私有清单中的策略正文。

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-page-rerun.schema.json",
+  "title": "SVGlide page-level rerun receipt",
+  "type": "object",
+  "required": ["schema_version", "status", "pages", "summary"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-page-rerun/v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "pages": {"type": "array"},
+    "summary": {
+      "type": "object",
+      "required": ["page_count", "dirty_page_count"],
+      "additionalProperties": true,
+      "properties": {
+        "page_count": {"type": "integer", "minimum": 0},
+        "dirty_page_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-semantic-advisory.schema.json",
+  "title": "SVGlide semantic advisory",
+  "type": "object",
+  "required": ["schema_version", "status", "summary", "warnings"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-semantic-advisory/v1"},
+    "status": {"const": "passed"},
+    "summary": {
+      "type": "object",
+      "required": ["warning_count"],
+      "additionalProperties": true,
+      "properties": {
+        "warning_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "warnings": {"type": "array"}
+  }
+}

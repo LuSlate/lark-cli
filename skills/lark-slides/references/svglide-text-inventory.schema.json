@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-text-inventory.schema.json",
+  "title": "SVGlide visible text inventory",
+  "type": "object",
+  "required": ["schema_version", "slides", "summary"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-text-inventory/v1"},
+    "slides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page", "svg", "texts", "unmatched_texts"],
+        "additionalProperties": true,
+        "properties": {
+          "page": {"type": "integer", "minimum": 1},
+          "svg": {"type": "string", "minLength": 1},
+          "texts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["text", "source", "status"],
+              "additionalProperties": true,
+              "properties": {
+                "text": {"type": "string", "minLength": 1},
+                "source": {"enum": ["slide_plan.json", "source/evidence.json", "generator"]},
+                "source_path": {"type": ["string", "null"]},
+                "status": {"enum": ["matched", "allowed_generated", "unmatched"]}
+              }
+            }
+          },
+          "unmatched_texts": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["slide_count", "text_count", "unmatched_text_count"],
+      "additionalProperties": true,
+      "properties": {
+        "slide_count": {"type": "integer", "minimum": 0},
+        "text_count": {"type": "integer", "minimum": 0},
+        "unmatched_text_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

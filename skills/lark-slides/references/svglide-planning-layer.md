@@ -2,6 +2,8 @@
 
 Read this file only after `svglide-svg` route admission. It extends the shared `planning-layer.md`; it does not replace the common narrative, page role, layout, asset, and verification fields.
 
+Compatibility note: new runner-first artifact paths are defined in `svglide-artifacts.spec.md` and `svglide-plan.contract.md`. Keep this file for planning-field semantics; use the staged `02-plan`, `04-svg`, `05-preview`, `06-check`, `07-create`, and `08-readback` layout for new work.
+
 ## Page Count
 
 When the user asks for an SVG/SVGlide deck but does not specify page count, or uses ambiguous wording such as "a slide", "a PPT", "make a slide", or "generate a slide", default to `10` pages. Generate `1` page only when the user explicitly asks for one page, a single page, onepage, one slide, or only a cover. Explicit page counts always win.
@@ -19,7 +21,7 @@ SVG route plans must include:
 - `style_selection_reason`: why the preset fits the audience, topic, density, and tone.
 - `style_system`: executable palette, typography, background strategy, and motif derived from the preset.
 - `loaded_rule_set`: exact SVG private rule files loaded after route admission. It must include the manifest-required design and validation references, not only protocol files.
-- `plan_path`: the `.lark-slides/plan/<deck-or-task-id>/slide_plan.json` path that later preflight, preview lint, live create, and readback records belong to.
+- `plan_path`: the `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json` path that later preflight, preview lint, live create, and readback records belong to.
 - `quality_gates`: deterministic gates requested before source generation, including `no_text_overflow: true`, `no_debug_guides: true`, and `no_xml_like_pages: true`.
 - `art_direction`: the deck-level visual strategy that must drive source geometry, not just prose. Required fields:
   - `cover_treatment`
@@ -76,7 +78,7 @@ Each SVG slide must include:
     "skills/lark-slides/references/svglide-validation-checklist.md",
     "skills/lark-slides/references/svglide-visual-planning.md"
   ],
-  "plan_path": ".lark-slides/plan/demo/slide_plan.json",
+  "plan_path": ".lark-slides/plan/demo/02-plan/slide_plan.json",
   "quality_gates": {
     "no_text_overflow": true,
     "no_debug_guides": true,
@@ -92,7 +94,7 @@ Each SVG slide must include:
   "business_claims": [
     {"claim": "All numeric claims are prompt-provided or marked pending.", "source_type": "prompt_provided"}
   ],
-  "svg_files": [{"page": 1, "path": ".lark-slides/plan/demo/pages/page-001.svg"}],
+  "svg_files": [{"page": 1, "path": ".lark-slides/plan/demo/04-svg/prepared/page-001.svg"}],
   "slides": [
     {
       "page": 1,

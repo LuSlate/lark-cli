@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-runtime-review.schema.json",
+  "title": "SVGlide runtime review receipt",
+  "type": "object",
+  "required": ["schema_version", "status", "action", "inputs", "registry", "pages", "summary", "issues"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-runtime-review/v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "action": {"enum": ["create_live", "repair_and_rerun"]},
+    "inputs": {"type": "object"},
+    "registry": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "additionalProperties": true,
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "minLength": 1}
+      }
+    },
+    "pages": {"type": "array"},
+    "summary": {
+      "type": "object",
+      "required": ["error_count", "slide_count", "renderer_count", "layout_family_count"],
+      "additionalProperties": true,
+      "properties": {
+        "error_count": {"type": "integer", "minimum": 0},
+        "slide_count": {"type": "integer", "minimum": 0},
+        "renderer_count": {"type": "integer", "minimum": 0},
+        "layout_family_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "issues": {"type": "array"}
+  }
+}
