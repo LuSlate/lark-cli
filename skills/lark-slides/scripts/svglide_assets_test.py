@@ -59,6 +59,21 @@ class SVGlideAssetsTest(unittest.TestCase):
         self.assertEqual(result["manifest"]["summary"]["error_count"], 1)
         self.assertEqual(result["manifest"]["issues"][0]["code"], "invalid_asset_href")
 
+    def test_fixture_policy_writes_fallback_manifest_and_image_jobs(self) -> None:
+        project = self.make_project()
+        write_json(
+            project / "02-plan/svglide.lock.json",
+            {"asset_contracts": [{"id": "hero", "query": "rocket launch", "usage_page": 1, "placement_role": "cover"}]},
+        )
+
+        result = svglide_assets.run_assets(project, network_policy="fixture", image_backend="openai")
+
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["manifest"]["summary"]["image_job_count"], 1)
+        self.assertEqual(result["manifest"]["acquired_assets"][0]["status"], "planned")
+        self.assertEqual(result["manifest"]["acquired_assets"][0]["asset_kind"], "ai_image")
+        self.assertTrue((project / "03-assets/image-jobs.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

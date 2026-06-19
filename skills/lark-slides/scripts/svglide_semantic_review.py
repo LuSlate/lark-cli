@@ -20,6 +20,7 @@ import svglide_schema
 
 PLAN_PATH = Path("02-plan/slide_plan.json")
 EVIDENCE_PATH = Path("source/evidence.json")
+SOURCE_RECEIPT_PATH = Path("source/source-receipt.json")
 PREPARED_SVG_DIR = Path("04-svg/prepared")
 CHECK_DIR = Path("06-check")
 SEMANTIC_REVIEW = CHECK_DIR / "semantic-review.json"
@@ -35,6 +36,7 @@ TAG_RE = re.compile(r"<[^>]+>")
 CJK_RE = re.compile(r"[\u3400-\u9fff]")
 LATIN_WORD_RE = re.compile(r"[A-Za-z]{3,}")
 GENERATED_SAFE_RE = re.compile(r"^[\d\s.,:%+\-/()#]+$")
+NUMERIC_CLAIM_RE = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)*(?:\s?[%万亿千百]|[KMBTkmbt])?")
 MIN_EVIDENCE_TEXT_CHARS = 20
 MIN_CHART_EVIDENCE_CHARS = 80
 
@@ -70,6 +72,12 @@ def read_json_object(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise SemanticReviewError(f"invalid JSON in {path}: expected object")
     return payload
+
+
+def read_json_object_optional(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return read_json_object(path)
 
 
 def issue(code: str, message: str, *, page: int | None = None, path: str | None = None) -> dict[str, Any]:
@@ -258,6 +266,10 @@ def list_of_strings(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str) and item.strip()]
 
 
+def has_numeric_claim(values: list[str]) -> bool:
+    return any(NUMERIC_CLAIM_RE.search(value) for value in values)
+
+
 def slide_has_chart_signal(slide: dict[str, Any]) -> bool:
     for key in ["layout_family", "visual_recipe", "renderer_id", "role"]:
         value = slide.get(key)
@@ -349,6 +361,9 @@ def check_plan_structure(plan: dict[str, Any], evidence: dict[str, Any] | None) 
         for ref in source_refs:
             if known_source_refs and ref not in known_source_refs:
                 page_issues.append(issue("source_ref_not_found", f"source_ref is not present in evidence.json: {ref}", page=page))
+        numeric_values = [value for value in [title, key_message, *body_points] if isinstance(value, str)]
+        if has_numeric_claim(numeric_values) and not source_refs:
+            page_issues.append(issue("numeric_claim_uncited", "numeric claims require at least one source_ref", page=page))
 
         issues.extend(page_issues)
         slide_results.append(
@@ -363,6 +378,32 @@ def check_plan_structure(plan: dict[str, Any], evidence: dict[str, Any] | None) 
             }
         )
     return issues, slide_results
+
+
+def research_quality_issues(project: Path, evidence: dict[str, Any] | None, *, profile: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    receipt = read_json_object_optional(project / SOURCE_RECEIPT_PATH)
+    research = receipt.get("research") if isinstance(receipt.get("research"), dict) else {}
+    status = None
+    if isinstance(research, dict):
+        raw_status = research.get("status")
+        status = raw_status if isinstance(raw_status, str) else None
+    if status is None and isinstance(evidence, dict):
+        raw_status = evidence.get("research_status")
+        status = raw_status if isinstance(raw_status, str) else None
+    sources = research.get("sources") if isinstance(research, dict) and isinstance(research.get("sources"), list) else []
+    if status in {"blocked_by_network", "skipped_by_user"}:
+        issues.append(issue("research_missing_for_current_topic", f"source research status is {status}"))
+    if profile in {"production", "production_live"} and status == "partial":
+        issues.append(issue("research_partial_for_production", "production profiles require ready/researched source status"))
+    if status == "researched" and not sources:
+        issues.append(issue("source_credibility_missing", "researched source receipt must include sources"))
+    summary = {
+        "status": status or "legacy",
+        "source_count": len(sources),
+        "retrieved_at": receipt.get("ended_at") if isinstance(receipt, dict) else None,
+    }
+    return issues, summary
 
 
 def build_text_inventory(project: Path, plan: dict[str, Any], evidence: dict[str, Any] | None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -426,6 +467,8 @@ def run_semantic_review(project: Path, *, profile: str = "preview_only") -> dict
     evidence, evidence_issues = load_evidence(project)
     issues, slide_results = check_plan_structure(plan, evidence)
     issues.extend(evidence_issues)
+    research_issues, research_summary = research_quality_issues(project, evidence, profile=profile)
+    issues.extend(research_issues)
 
     svgs = prepared_svg_files(project)
     if not svgs:
@@ -468,7 +511,11 @@ def run_semantic_review(project: Path, *, profile: str = "preview_only") -> dict
             "deck_structure": "passed" if not any(item["code"].startswith("deck_structure") for item in issues) else "failed",
             "content_density": "passed" if not any("body_points" in item["code"] or "takeaways" in item["code"] or item["code"] == "content_source_refs_missing" for item in issues) else "failed",
             "plan_svg_text_alignment": "passed" if not text_issues else "failed",
+            "research_freshness": "passed" if not any(item["code"].startswith("research_") for item in issues) else "failed",
+            "source_credibility": "passed" if not any(item["code"] == "source_credibility_missing" for item in issues) else "failed",
+            "numeric_claims": "passed" if not any(item["code"] == "numeric_claim_uncited" for item in issues) else "failed",
         },
+        "research": research_summary,
         "slides": slide_results,
         "summary": {
             "error_count": len(issues),

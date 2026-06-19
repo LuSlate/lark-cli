@@ -15,6 +15,7 @@ from typing import Any
 PREVIEW_HTML = Path("05-preview/preview.html")
 PREVIEW_MANIFEST = Path("05-preview/preview-manifest.json")
 PREVIEW_LINT = Path("06-check/preview-lint.json")
+ASSET_MANIFEST = Path("03-assets/asset-manifest.json")
 AESTHETIC_REVIEW = Path("06-check/aesthetic-review.json")
 PASS_ACTION = "create_live"
 FAIL_ACTION = "repair_and_rerun"
@@ -40,6 +41,12 @@ def read_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def read_json_optional(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return read_json(path)
+
+
 def expected_page_count(project: Path) -> int | None:
     plan_path = project / "02-plan" / "slide_plan.json"
     if not plan_path.exists():
@@ -55,6 +62,41 @@ def expected_page_count(project: Path) -> int | None:
 
 def issue(code: str, message: str) -> dict[str, str]:
     return {"code": code, "message": message}
+
+
+def asset_review(project: Path) -> tuple[list[dict[str, str]], list[dict[str, str]], dict[str, Any]]:
+    issues: list[dict[str, str]] = []
+    warnings: list[dict[str, str]] = []
+    manifest = read_json_optional(project / ASSET_MANIFEST)
+    acquired = manifest.get("acquired_assets") if isinstance(manifest.get("acquired_assets"), list) else []
+    real_assets = 0
+    fallback_assets = 0
+    for item in acquired:
+        if not isinstance(item, dict):
+            continue
+        role = item.get("placement_role")
+        status = item.get("status")
+        kind = item.get("asset_kind")
+        safe_zones = item.get("safe_text_zones")
+        if status == "acquired":
+            real_assets += 1
+        if status == "fallback_used":
+            fallback_assets += 1
+        if role in {"cover", "background", "closing"} and status == "acquired" and not isinstance(safe_zones, list):
+            issues.append(issue("asset_text_zone_unsafe", f"asset {item.get('asset_id')} needs safe_text_zones for {role} placement"))
+        if role == "body_visual" and status == "acquired" and kind == "web_image" and item.get("caption_required") is True and not item.get("source_url"):
+            issues.append(issue("asset_source_missing", f"body visual asset {item.get('asset_id')} must keep source_url"))
+        if role in {"cover", "closing"} and status == "fallback_used":
+            warnings.append(issue("asset_fallback_used", f"{role} asset {item.get('asset_id')} fell back to SVG-native rendering"))
+        if isinstance(item.get("source_url"), str) and "watermark" in str(item.get("source_url")).lower():
+            issues.append(issue("asset_label_baked_into_image", f"asset {item.get('asset_id')} source suggests watermark/text risk"))
+    summary = {
+        "manifest_status": manifest.get("status") if manifest else "missing",
+        "asset_count": len(acquired),
+        "real_asset_count": real_assets,
+        "fallback_asset_count": fallback_assets,
+    }
+    return issues, warnings, summary
 
 
 def run_aesthetic_review(project: Path) -> dict[str, Any]:
@@ -80,6 +122,8 @@ def run_aesthetic_review(project: Path) -> dict[str, Any]:
     for page in manifest.get("pages", []) if isinstance(manifest.get("pages"), list) else []:
         if isinstance(page, dict) and page.get("source_bytes") == 0:
             issues.append(issue("blank_preview_source", f"preview page {page.get('page')} has an empty SVG source"))
+    asset_issues, asset_warnings, asset_summary = asset_review(project)
+    issues.extend(asset_issues)
 
     result = {
         "version": "svglide-aesthetic-review/v1",
@@ -89,11 +133,13 @@ def run_aesthetic_review(project: Path) -> dict[str, Any]:
         "preview_path": PREVIEW_HTML.as_posix(),
         "manifest_path": PREVIEW_MANIFEST.as_posix(),
         "page_count": actual,
+        "asset_review": asset_summary,
         "summary": {
             "error_count": len(issues),
-            "warning_count": 0,
+            "warning_count": len(asset_warnings),
         },
         "issues": issues,
+        "warnings": asset_warnings,
         "action": FAIL_ACTION if issues else PASS_ACTION,
     }
     output = project / AESTHETIC_REVIEW

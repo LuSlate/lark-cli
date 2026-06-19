@@ -54,6 +54,19 @@ class SVGlideSourceTest(unittest.TestCase):
             self.assertIn("source_status_not_ready", codes)
             self.assertTrue((project / "source/evidence.json").exists())
 
+    def test_fixture_policy_generates_ready_evidence_without_network(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+
+            result = svglide_source.run_source(project, network_policy="fixture")
+
+            self.assertEqual(result["status"], "passed")
+            self.assertEqual(result["research"]["status"], "fixture")
+            self.assertTrue((project / "source/research_queries.json").exists())
+            self.assertTrue((project / "source/research.md").exists())
+            evidence = json.loads((project / "source/evidence.json").read_text(encoding="utf-8"))
+            self.assertEqual(evidence["source_status"], "ready")
+
 
 if __name__ == "__main__":
     unittest.main()

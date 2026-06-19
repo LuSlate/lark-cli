@@ -11,6 +11,17 @@
     "status": {"enum": ["passed", "failed"]},
     "inputs": {"type": "object"},
     "outputs": {"type": "object"},
+    "research": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "status": {"type": "string", "minLength": 1},
+        "network_policy": {"enum": ["auto", "online", "offline", "fixture"]},
+        "queries": {"type": "array", "items": {"type": "string"}},
+        "sources": {"type": "array"},
+        "claims": {"type": "array"}
+      }
+    },
     "summary": {
       "type": "object",
       "required": ["error_count", "evidence_item_count"],

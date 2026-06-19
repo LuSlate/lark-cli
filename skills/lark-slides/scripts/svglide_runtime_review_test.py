@@ -98,6 +98,26 @@ class SVGlideRuntimeReviewTest(unittest.TestCase):
             codes = {item["code"] for item in result["issues"]}
             self.assertIn("renderer_family_mismatch", codes)
 
+    def test_runtime_review_blocks_cover_asset_with_non_cover_renderer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "02-plan/slide_plan.json", {"slides": [{"page": 1, "renderer_id": "chart", "layout_family": "chart"}]})
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "status": "passed",
+                    "acquired_assets": [
+                        {"asset_id": "hero", "page": 1, "placement_role": "cover", "status": "acquired"}
+                    ],
+                },
+            )
+
+            result = svglide_runtime_review.run_runtime_review(project)
+
+            self.assertEqual(result["status"], "failed")
+            codes = {item["code"] for item in result["issues"]}
+            self.assertIn("asset_renderer_mismatch", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

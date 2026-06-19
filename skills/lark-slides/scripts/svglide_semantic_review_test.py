@@ -208,6 +208,24 @@ class SVGlideSemanticReviewTest(unittest.TestCase):
             codes = {item["code"] for item in result["issues"]}
             self.assertIn("chart_rich_content_too_thin", codes)
 
+    def test_semantic_review_blocks_numeric_claim_without_source_ref(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = self.make_valid_project(Path(tmpdir))
+            plan = json.loads((project / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+            plan["slides"][0]["key_message"] = "市场规模增长 30%"
+            plan["slides"][0]["source_refs"] = []
+            write_json(project / "02-plan/slide_plan.json", plan)
+            (project / "04-svg/prepared/page-001.svg").write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg"><text>英伟达供应链拐点</text><text>市场规模增长 30%</text></svg>',
+                encoding="utf-8",
+            )
+
+            result = svglide_semantic_review.run_semantic_review(project)
+
+            self.assertEqual(result["status"], "failed")
+            codes = {item["code"] for item in result["issues"]}
+            self.assertIn("numeric_claim_uncited", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

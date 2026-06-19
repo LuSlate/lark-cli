@@ -116,6 +116,16 @@ PROFILE_TARGETS = {
     "production_live": "readback",
 }
 QUALITY_GATE_PROFILES = {"preview_only", "production_live", "production", "debug"}
+RUNNER_OPTIONS = {
+    "network_policy": "auto",
+    "offline": False,
+    "no_online_research": False,
+    "no_image_search": False,
+    "no_ai_image": False,
+    "refresh_online": False,
+    "asset_provider": "auto",
+    "image_backend": "auto",
+}
 
 
 class RunnerError(Exception):
@@ -133,6 +143,39 @@ def normalize_stage(stage: str) -> str:
     if candidate not in STAGES:
         raise RunnerError(f"unknown stage '{stage}'", exit_code=2)
     return candidate
+
+
+def effective_network_policy() -> str:
+    if RUNNER_OPTIONS.get("offline"):
+        return "offline"
+    return str(RUNNER_OPTIONS.get("network_policy") or "auto")
+
+
+def source_option_args() -> list[str]:
+    args = ["--network-policy", effective_network_policy()]
+    if RUNNER_OPTIONS.get("no_online_research"):
+        args.append("--no-online-research")
+    if RUNNER_OPTIONS.get("refresh_online"):
+        args.append("--refresh-online")
+    return args
+
+
+def asset_option_args() -> list[str]:
+    args = [
+        "--network-policy",
+        effective_network_policy(),
+        "--asset-provider",
+        str(RUNNER_OPTIONS.get("asset_provider") or "auto"),
+        "--image-backend",
+        str(RUNNER_OPTIONS.get("image_backend") or "auto"),
+    ]
+    if RUNNER_OPTIONS.get("no_image_search"):
+        args.append("--no-image-search")
+    if RUNNER_OPTIONS.get("no_ai_image"):
+        args.append("--no-ai-image")
+    if RUNNER_OPTIONS.get("refresh_online"):
+        args.append("--refresh-online")
+    return args
 
 
 def stages_until(stage: str) -> list[str]:
@@ -1007,10 +1050,16 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             project_root,
             state,
             stage,
-            ["python3", (SCRIPT_DIR / "svglide_source.py").as_posix(), project_root.as_posix(), "--pretty"],
+            ["python3", (SCRIPT_DIR / "svglide_source.py").as_posix(), project_root.as_posix(), *source_option_args(), "--pretty"],
             output_json=project_root / "source" / "source-receipt.json",
             inputs=["source/source-notes.md", "source/evidence.json"],
-            outputs=["source/evidence.json", "source/source-receipt.json", "receipts/source.json"],
+            outputs=[
+                "source/evidence.json",
+                "source/research.md",
+                "source/research_queries.json",
+                "source/source-receipt.json",
+                "receipts/source.json",
+            ],
         )
     if stage == "plan":
         return run_plan_stage(project_root, state)
@@ -1037,9 +1086,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             project_root,
             state,
             stage,
-            ["python3", (SCRIPT_DIR / "svglide_assets.py").as_posix(), project_root.as_posix()],
+            ["python3", (SCRIPT_DIR / "svglide_assets.py").as_posix(), project_root.as_posix(), *asset_option_args()],
             inputs=["02-plan/slide_plan.json", "02-plan/svglide.lock.json"],
-            outputs=["03-assets/assets.json", "03-assets/asset-manifest.json", "receipts/assets.json"],
+            outputs=["03-assets/assets.json", "03-assets/asset-manifest.json", "03-assets/image-jobs.json", "receipts/assets.json"],
         )
     if stage == "generate_svg":
         return run_generate_svg_stage(project_root, state)
@@ -1250,19 +1299,39 @@ def build_parser() -> argparse.ArgumentParser:
     stage.add_argument("project_root", type=Path)
     stage.add_argument("stage")
     stage.add_argument("--profile", default="production", choices=sorted(QUALITY_GATE_PROFILES))
+    add_network_args(stage)
 
     run = subcommands.add_parser("run", help="run until a stage")
     run.add_argument("project_root", type=Path)
     run.add_argument("--until")
     run.add_argument("--profile", choices=sorted(PROFILE_TARGETS))
+    add_network_args(run)
 
     return parser
+
+
+def add_network_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--offline", action="store_true")
+    parser.add_argument("--no-online-research", action="store_true")
+    parser.add_argument("--no-image-search", action="store_true")
+    parser.add_argument("--no-ai-image", action="store_true")
+    parser.add_argument("--refresh-online", action="store_true")
+    parser.add_argument("--network-policy", default="auto", choices=["auto", "online", "offline", "fixture"])
+    parser.add_argument("--asset-provider", default="auto")
+    parser.add_argument("--image-backend", default="auto", choices=["auto", "openai", "gemini", "qwen", "flux", "stage_command", "none"])
+
+
+def apply_cli_runner_options(args: argparse.Namespace) -> None:
+    for key in RUNNER_OPTIONS:
+        if hasattr(args, key):
+            RUNNER_OPTIONS[key] = getattr(args, key)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        apply_cli_runner_options(args)
         if args.command == "init":
             result = init_project(args.deck_id, args.title, plan_root=args.plan_root, force=args.force)
         elif args.command == "stage":

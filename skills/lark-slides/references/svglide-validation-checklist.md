@@ -7,7 +7,7 @@ Compatibility note: new runner-first check paths are defined in `svglide-checks.
 ## Required Flow
 
 1. Validate the SVG plan against `svglide-plan.schema.json` and route admission.
-2. Run `svglide_source.py` to produce a fresh source receipt and evidence pack.
+2. Run `svglide_source.py` to produce a fresh source receipt and evidence pack. User runs default to online-first through the runner; CI/golden should use `--network-policy fixture` or `--offline`.
 3. Run local source preflight with `svg_preflight.py --plan`.
 4. Build or inspect a local preview when practical, then run `svg_preview_lint.py` before live create.
 5. Record an aesthetic review following `svg-aesthetic-review.md`; this review cannot replace deterministic lint.
@@ -23,6 +23,7 @@ Treat the gate as a single chain:
 route admission
 -> loaded_rule_set + art_direction + business_claims
 -> source receipt
+-> asset manifest / image jobs
 -> svg_preflight --plan
 -> svg_preview_lint.py
 -> aesthetic review record
@@ -37,6 +38,18 @@ route admission
 ```
 
 Any P0/error-level result before live create blocks the API call.
+
+## Online-First Flags
+
+Runner flags:
+
+- `--offline`: disables online research and image acquisition.
+- `--no-online-research`: keeps source local-only.
+- `--no-image-search`: disables web image search/download.
+- `--no-ai-image`: disables AI image job planning.
+- `--refresh-online`: refreshes source/assets instead of reusing existing artifacts.
+- `--network-policy auto|online|offline|fixture`: choose online-first, forced online, local-only, or deterministic fixture behavior.
+- `--asset-provider` and `--image-backend`: record acquisition/provider intent in asset receipts.
 
 ## Local Preflight
 
@@ -120,6 +133,7 @@ Pass criteria:
 - `language == zh-CN`, `audience` is non-empty, and `deck_structure` covers the required page types.
 - Every slide has `page_type`, `section`, `role`, Chinese `title`, Chinese `key_message`, and sufficient `body_points`.
 - Content slides have source refs that resolve to `source/evidence.json`.
+- Numeric claims have source refs; blocked online research is not acceptable for production/live profiles.
 - `06-check/text-inventory.json` contains no unmatched visible SVG text.
 
 Semantic review owns content-language and plan/source provenance. Do not treat a clean preview or aesthetic score as a substitute for this gate.
@@ -127,7 +141,8 @@ Semantic review owns content-language and plan/source provenance. Do not treat a
 ## Chart And Runtime Review
 
 - `06-check/chart-verify.json` must be fresh. Pages declaring `chart_contract.verify=required` or exact chart precision must have chart data and chart-like SVG marks.
-- `06-check/runtime-review.json` must be fresh. Each page must declare `renderer_id` and `layout_family`; 4+ page decks cannot use a single renderer or layout family throughout.
+- `06-check/runtime-review.json` must be fresh. Each page must declare `renderer_id` and `layout_family`; 4+ page decks cannot use a single renderer or layout family throughout; image-led cover/closing assets must match cover/closing renderer families.
+- `06-check/aesthetic-review.json` must verify asset placement metadata from `03-assets/asset-manifest.json`; cover/background/closing images require safe editable text zones.
 
 ## Readback Checks
 

@@ -451,6 +451,28 @@ class SVGlideQualityGateTest(unittest.TestCase):
             }
             self.assertIn("runtime_review_plan_stale", failed_codes)
 
+    def test_quality_gate_blocks_strict_profile_when_research_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            receipt = json.loads((project / "source/source-receipt.json").read_text(encoding="utf-8"))
+            receipt["research"] = {"status": "blocked_by_network"}
+            write_json(project / "source/source-receipt.json", receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("research_missing_for_current_topic", failed_codes)
+            self.assertEqual(result["summary"]["research_status"], "blocked_by_network")
+
 
 if __name__ == "__main__":
     unittest.main()

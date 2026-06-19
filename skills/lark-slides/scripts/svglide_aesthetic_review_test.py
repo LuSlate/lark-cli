@@ -60,6 +60,24 @@ class SVGlideAestheticReviewTest(unittest.TestCase):
         codes = {issue["code"] for issue in result["issues"]}
         self.assertIn("preview_page_count_mismatch", codes)
 
+    def test_aesthetic_review_blocks_cover_asset_without_safe_text_zone(self) -> None:
+        project = self.make_project()
+        write_json(
+            project / "03-assets/asset-manifest.json",
+            {
+                "status": "passed",
+                "acquired_assets": [
+                    {"asset_id": "hero", "placement_role": "cover", "status": "acquired", "asset_kind": "web_image"}
+                ],
+            },
+        )
+
+        result = svglide_aesthetic_review.run_aesthetic_review(project)
+
+        self.assertEqual(result["status"], "failed")
+        codes = {issue["code"] for issue in result["issues"]}
+        self.assertIn("asset_text_zone_unsafe", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

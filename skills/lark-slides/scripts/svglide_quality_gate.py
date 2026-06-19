@@ -116,6 +116,47 @@ def action_from_payload(payload: Any) -> str | None:
     return raw if isinstance(raw, str) else None
 
 
+def read_json_optional(project: Path, rel: Path) -> dict[str, Any]:
+    path = project / rel
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
+    source_receipt = read_json_optional(project, SOURCE_RECEIPT_PATH)
+    asset_manifest = read_json_optional(project, ASSET_MANIFEST_PATH)
+    research = source_receipt.get("research") if isinstance(source_receipt.get("research"), dict) else {}
+    asset_summary = asset_manifest.get("summary") if isinstance(asset_manifest.get("summary"), dict) else {}
+    research_status = research.get("status") if isinstance(research, dict) and isinstance(research.get("status"), str) else "legacy"
+    asset_status = asset_manifest.get("status") if isinstance(asset_manifest.get("status"), str) else "legacy"
+    issues: list[dict[str, str]] = []
+    if profile in STRICT_PROFILES and research_status in {"blocked_by_network", "skipped_by_user"}:
+        issues.append(issue("research_missing_for_current_topic", f"research status is {research_status}"))
+    if asset_status == "failed":
+        issues.append(issue("asset_manifest_failed", "asset manifest status is failed"))
+    status = "failed" if issues else "skipped" if not source_receipt and not asset_manifest else "passed"
+    return {
+        "name": "online-readiness",
+        "path": "source/source-receipt.json + 03-assets/asset-manifest.json",
+        "required": False,
+        "status": status,
+        "error_count": len(issues),
+        "action": PASS_ACTION if not issues else "repair_and_rerun",
+        "waivers": [],
+        "issues": issues,
+        "research_status": research_status,
+        "asset_status": asset_status,
+        "asset_real_coverage": asset_summary.get("acquired_count"),
+        "asset_fallback_count": asset_summary.get("fallback_count"),
+        "image_job_count": asset_summary.get("image_job_count"),
+    }
+
+
 def plan_requires_chart_verify(project: Path) -> bool | None:
     path = project / PLAN_PATH
     if not path.exists():
@@ -331,6 +372,7 @@ def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: 
 def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dict[str, Any]:
     project = project.resolve()
     checks = [load_generator_receipt(project)]
+    checks.append(load_online_readiness(project, profile=profile))
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in REQUIRED_CHECKS)
     chart_required = plan_requires_chart_verify(project)
     if chart_required is None:
@@ -375,6 +417,11 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
             "failed_check_count": len(failed_checks),
             "waiver_check_count": len(waiver_checks),
             "source_error_count": source_error_count,
+            "research_status": next((check.get("research_status") for check in checks if check.get("name") == "online-readiness"), None),
+            "asset_status": next((check.get("asset_status") for check in checks if check.get("name") == "online-readiness"), None),
+            "asset_real_coverage": next((check.get("asset_real_coverage") for check in checks if check.get("name") == "online-readiness"), None),
+            "asset_fallback_count": next((check.get("asset_fallback_count") for check in checks if check.get("name") == "online-readiness"), None),
+            "image_job_count": next((check.get("image_job_count") for check in checks if check.get("name") == "online-readiness"), None),
         },
         "checks": checks,
         "output_path": relpath(output_path, project),

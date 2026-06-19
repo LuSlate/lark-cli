@@ -18,6 +18,7 @@ import svglide_schema
 PLAN_PATH = Path("02-plan/slide_plan.json")
 PROJECT_REGISTRY_PATH = Path("02-plan/renderer-registry.json")
 DEFAULT_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "references" / "svglide-renderer-registry.json"
+ASSET_MANIFEST_PATH = Path("03-assets/asset-manifest.json")
 OUTPUT_PATH = Path("06-check/runtime-review.json")
 PASS_ACTION = "create_live"
 FAIL_ACTION = "repair_and_rerun"
@@ -49,11 +50,32 @@ def read_json_object(path: Path) -> dict[str, Any]:
     return payload
 
 
+def read_json_object_optional(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return read_json_object(path)
+
+
 def issue(code: str, message: str, *, page: int | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {"code": code, "message": message}
     if page is not None:
         payload["page"] = page
     return payload
+
+
+def assets_by_page(project: Path) -> dict[int, list[dict[str, Any]]]:
+    manifest = read_json_object_optional(project / ASSET_MANIFEST_PATH)
+    raw_items = manifest.get("acquired_assets")
+    if not isinstance(raw_items, list):
+        return {}
+    by_page: dict[int, list[dict[str, Any]]] = {}
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        raw_page = item.get("page") or item.get("usage_page")
+        if isinstance(raw_page, int):
+            by_page.setdefault(raw_page, []).append(item)
+    return by_page
 
 
 def registry_path_for(project: Path) -> Path:
@@ -97,6 +119,7 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
         raise RuntimeReviewError(f"missing required plan file: {PLAN_PATH.as_posix()}")
     plan = read_json_object(plan_file)
     registry_path, _registry, registry, issues = load_registry(project)
+    page_assets = assets_by_page(project)
     slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
     renderers: list[str] = []
     families: list[str] = []
@@ -108,6 +131,7 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
         page = raw_slide.get("page") if isinstance(raw_slide.get("page"), int) else index
         renderer = raw_slide.get("renderer_id")
         family = raw_slide.get("layout_family")
+        current_assets = page_assets.get(page, [])
         renderer_record = registry.get(renderer) if isinstance(renderer, str) else None
         page_status = "passed"
         if not isinstance(renderer, str) or not renderer.strip():
@@ -134,6 +158,15 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
             if isinstance(renderer_record, dict) and isinstance(renderer_record.get("family"), str) and family != renderer_record.get("family"):
                 issues.append(issue("renderer_family_mismatch", f"layout_family {family} does not match registry family {renderer_record.get('family')}", page=page))
                 page_status = "failed"
+        for asset in current_assets:
+            role = asset.get("placement_role")
+            status = asset.get("status")
+            if role == "cover" and status in {"acquired", "planned"} and isinstance(renderer, str) and "cover" not in renderer:
+                issues.append(issue("asset_renderer_mismatch", "cover asset should use a cover renderer", page=page))
+                page_status = "failed"
+            if role == "closing" and status in {"acquired", "planned"} and isinstance(family, str) and family != "closing":
+                issues.append(issue("asset_renderer_mismatch", "closing asset should use a closing layout family", page=page))
+                page_status = "failed"
         pages.append(
             {
                 "page": page,
@@ -141,6 +174,8 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
                 "registry_status": renderer_record.get("status") if isinstance(renderer_record, dict) else "unknown",
                 "layout_family": family,
                 "registry_family": renderer_record.get("family") if isinstance(renderer_record, dict) else None,
+                "asset_count": len(current_assets),
+                "asset_roles": [item.get("placement_role") for item in current_assets if isinstance(item, dict)],
                 "status": page_status,
             }
         )
@@ -176,6 +211,7 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
             "slide_count": len(slides),
             "renderer_count": renderer_count,
             "layout_family_count": family_count,
+            "asset_page_count": len(page_assets),
         },
         "issues": issues,
     }
