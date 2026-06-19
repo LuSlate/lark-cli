@@ -91,6 +91,21 @@ class SVGlidePrepareTest(unittest.TestCase):
         self.assertEqual(receipt["asset_refs"][0]["refs"][0]["status"], "local")
         self.assertEqual(receipt["asset_refs"][0]["refs"][0]["path"], "assets/hero.png")
 
+    def test_prepare_accepts_raw_asset_placeholder(self) -> None:
+        project = self.make_project()
+        (project / "03-assets" / "raw").mkdir(parents=True, exist_ok=True)
+        (project / "03-assets" / "raw" / "hero.png").write_bytes(b"fake")
+        svg = SIMPLE_SVG.replace(
+            "</svg>",
+            '<image href="@./03-assets/raw/hero.png" x="0" y="0" width="960" height="540" /></svg>',
+        )
+        (project / "04-svg" / "page-001.svg").write_text(svg, encoding="utf-8")
+
+        receipt = svglide_prepare.prepare_project(project)
+
+        self.assertEqual(receipt["asset_refs"][0]["refs"][0]["status"], "local")
+        self.assertEqual(receipt["asset_refs"][0]["refs"][0]["path"], "03-assets/raw/hero.png")
+
 
 if __name__ == "__main__":
     unittest.main()

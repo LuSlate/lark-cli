@@ -125,17 +125,20 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
     def write_plan_confirmation(self, project_root: Path) -> None:
         plan = project_root / "02-plan/slide_plan.json"
+        payload = {
+            "version": "svglide-plan-confirmation/v1",
+            "status": "confirmed",
+            "confirmed_by": "user",
+            "confirmed_at": "2026-06-18T00:00:00+08:00",
+            "plan_path": "02-plan/slide_plan.json",
+            "plan_sha256": runner.file_sha256(plan),
+        }
+        lock = project_root / "02-plan/svglide.lock.json"
+        if lock.exists():
+            payload["lock_path"] = "02-plan/svglide.lock.json"
+            payload["lock_sha256"] = runner.file_sha256(lock)
         (project_root / "02-plan/plan-confirmation.json").write_text(
-            json.dumps(
-                {
-                    "version": "svglide-plan-confirmation/v1",
-                    "status": "confirmed",
-                    "confirmed_by": "user",
-                    "confirmed_at": "2026-06-18T00:00:00+08:00",
-                    "plan_path": "02-plan/slide_plan.json",
-                    "plan_sha256": runner.file_sha256(plan),
-                }
-            ),
+            json.dumps(payload),
             encoding="utf-8",
         )
 
@@ -471,6 +474,56 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertEqual(receipt["generated_files"][0]["path"], "04-svg/page-001.svg")
             self.assertEqual(receipt["page_receipts"][0], "04-svg/page-001.receipt.json")
             self.assertTrue((project_root / "04-svg/page-001.receipt.json").exists())
+
+    def test_generate_svg_injects_file_backed_cover_asset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_plan(project_root)
+            (project_root / "03-assets/raw").mkdir(parents=True, exist_ok=True)
+            (project_root / "03-assets/raw/hero.png").write_bytes(b"png")
+            (project_root / "02-plan/svglide.lock.json").write_text(
+                json.dumps(
+                    {
+                        "asset_contracts": [
+                            {
+                                "id": "hero",
+                                "href": "@./03-assets/raw/hero.png",
+                                "usage_page": 1,
+                                "placement_role": "cover",
+                                "safe_text_zones": [{"x": 0.05, "y": 0.12, "w": 0.42, "h": 0.72}],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.write_plan_confirmation(project_root)
+            self.run_source(project_root)
+            runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "assets")
+            for page in range(1, 4):
+                (project_root / f"04-svg/page-{page:03d}.svg").write_text(
+                    '<svg width="960" height="540" viewBox="0 0 960 540"><text>测试标题</text></svg>',
+                    encoding="utf-8",
+                )
+
+            result = runner.run_stage(project_root, "generate-svg")
+
+            self.assertEqual(result["status"], "passed")
+            svg = (project_root / "04-svg/page-001.svg").read_text(encoding="utf-8")
+            self.assertIn('href="@./03-assets/raw/hero.png"', svg)
+            receipt = json.loads((project_root / "receipts/generate_svg.json").read_text(encoding="utf-8"))
+            self.assertEqual(receipt["asset_injection_summary"]["used_count"], 1)
+            self.assertEqual(receipt["generated_files"][0]["sha256"], runner.file_sha256(project_root / "04-svg/page-001.svg"))
+            page_receipt = json.loads((project_root / "04-svg/page-001.receipt.json").read_text(encoding="utf-8"))
+            self.assertEqual(page_receipt["asset_refs"][0]["asset_id"], "hero")
+            self.assertEqual(page_receipt["asset_injection"][0]["status"], "injected")
+            runner.run_stage(project_root, "prepare")
+            runner.run_stage(project_root, "preview")
+            preview_html = (project_root / "05-preview/preview.html").read_text(encoding="utf-8")
+            self.assertIn('href="data:image/png;base64,', preview_html)
 
     def test_generate_svg_runs_local_generator_script(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

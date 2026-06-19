@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import svglide_asset_injector
 import svglide_schema
 
 
@@ -725,6 +726,7 @@ def write_page_generation_receipts(
     generated_files: list[dict[str, str]],
     generator_mode: str,
     command: list[str],
+    asset_injection_summary: dict[str, Any] | None = None,
 ) -> list[str]:
     receipt_paths: list[str] = []
     plan_hash = optional_project_file_hash(project_root, "02-plan/slide_plan.json")
@@ -732,9 +734,28 @@ def write_page_generation_receipts(
     lock_hash = optional_project_file_hash(project_root, "02-plan/svglide.lock.json")
     asset_manifest_hash = optional_project_file_hash(project_root, "03-assets/asset-manifest.json")
     generator_script_hash = file_sha256(Path(command[1])) if len(command) > 1 and Path(command[1]).exists() else None
+    injection_events = asset_injection_summary.get("by_page") if isinstance(asset_injection_summary, dict) else []
+    if not isinstance(injection_events, list):
+        injection_events = []
     for index, item in enumerate(generated_files, 1):
         svg_path = project_root / item["path"]
         page_receipt = svg_path.with_suffix(".receipt.json")
+        page_injections = [
+            event
+            for event in injection_events
+            if isinstance(event, dict) and event.get("page") == index
+        ]
+        asset_refs = [
+            {
+                "asset_id": event.get("asset_id"),
+                "href": event.get("href"),
+                "file": event.get("file"),
+                "placement_role": event.get("placement_role"),
+                "status": event.get("status"),
+            }
+            for event in page_injections
+            if isinstance(event, dict) and event.get("status") in {"injected", "already_present"}
+        ]
         payload = {
             "version": "svglide-page-generation/v1",
             "stage": "generate_svg",
@@ -751,6 +772,8 @@ def write_page_generation_receipts(
             "asset_manifest_sha256": asset_manifest_hash,
             "generator_mode": generator_mode,
             "generator_script_sha256": generator_script_hash,
+            "asset_refs": asset_refs,
+            "asset_injection": page_injections,
             "visible_text_policy": "visible SVG text must be traceable to slide_plan.json or source/evidence.json",
             "generated_at": now_iso(),
         }
@@ -811,7 +834,7 @@ def run_generate_svg_stage(
             raise RunnerError(f"stage 'generate_svg' failed with exit code {completed.returncode}")
 
     try:
-        generated_files = source_file_hashes(project_root)
+        source_file_hashes(project_root)
     except RunnerError as err:
         complete_stage(
             project_root,
@@ -829,8 +852,10 @@ def run_generate_svg_stage(
         )
         raise RunnerError("generate_svg produced no source SVG files under 04-svg") from err
 
+    asset_injection_summary = svglide_asset_injector.inject_project_assets(project_root)
+    generated_files = source_file_hashes(project_root)
     generator_mode = "script" if command else "external"
-    page_receipts = write_page_generation_receipts(project_root, generated_files, generator_mode, command)
+    page_receipts = write_page_generation_receipts(project_root, generated_files, generator_mode, command, asset_injection_summary)
     receipt = complete_stage(
         project_root,
         state,
@@ -844,6 +869,7 @@ def run_generate_svg_stage(
     receipt["generator_mode"] = generator_mode
     receipt["generated_files"] = generated_files
     receipt["page_receipts"] = page_receipts
+    receipt["asset_injection_summary"] = asset_injection_summary
     receipt["plan_sha256"] = optional_project_file_hash(project_root, "02-plan/slide_plan.json")
     receipt["evidence_sha256"] = optional_project_file_hash(project_root, "source/evidence.json")
     receipt["lock_sha256"] = optional_project_file_hash(project_root, "02-plan/svglide.lock.json")

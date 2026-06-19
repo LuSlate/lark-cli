@@ -60,6 +60,25 @@ class SVGlidePreviewTest(unittest.TestCase):
             with self.assertRaises(svglide_preview.SVGlidePreviewError):
                 svglide_preview.build_preview(Path(tmpdir))
 
+    def test_build_preview_rewrites_local_asset_placeholders_for_browser(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write(project / "03-assets/raw/hero.svg", '<svg width="1" height="1"></svg>')
+            write(
+                project / "04-svg/prepared/001.svg",
+                '<svg width="960" height="540" viewBox="0 0 960 540"><image href="@./03-assets/raw/hero.svg" x="0" y="0" width="960" height="540" /></svg>',
+            )
+
+            manifest = svglide_preview.build_preview(project)
+
+            html = (project / "05-preview/preview.html").read_text(encoding="utf-8")
+            prepared = (project / "04-svg/prepared/001.svg").read_text(encoding="utf-8")
+            self.assertIn('href="data:image/svg+xml;base64,', html)
+            self.assertNotIn('href="@./03-assets/raw/hero.svg"', html)
+            self.assertIn('href="@./03-assets/raw/hero.svg"', prepared)
+            self.assertEqual(manifest["asset_href_rewrites"][0]["rewrites"][0]["from"], "@./03-assets/raw/hero.svg")
+            self.assertTrue(manifest["asset_href_rewrites"][0]["rewrites"][0]["to"].startswith("data:image/svg+xml;base64,"))
+
 
 if __name__ == "__main__":
     unittest.main()

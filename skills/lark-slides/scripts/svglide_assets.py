@@ -255,7 +255,7 @@ def acquire_contract_asset(
         "retrieved_at": None,
         "safe_text_zones": contract.get("safe_text_zones") if isinstance(contract.get("safe_text_zones"), list) else [],
         "crop_hint": contract.get("crop_hint") if isinstance(contract.get("crop_hint"), str) else None,
-        "source_url": None,
+        "source_url": contract.get("source_url") if isinstance(contract.get("source_url"), str) else None,
         "file": None,
         "sha256": None,
         "fallback_reason": None,

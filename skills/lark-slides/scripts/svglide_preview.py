@@ -5,8 +5,11 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import html
 import json
+import mimetypes
+import os
 import re
 import sys
 from pathlib import Path
@@ -19,6 +22,7 @@ PREVIEW_HTML_NAME = "preview.html"
 PREVIEW_MANIFEST_NAME = "preview-manifest.json"
 XML_DECL_RE = re.compile(r"^\s*<\?xml\b[^>]*\?>", re.IGNORECASE)
 DOCTYPE_RE = re.compile(r"^\s*<!DOCTYPE\b[^>]*>", re.IGNORECASE)
+LOCAL_ASSET_HREF_RE = re.compile(r"""(\b(?:xlink:href|href)\s*=\s*["'])(@\.\/[^"']+|@\/[^"']+)(["'])""", re.IGNORECASE)
 
 
 class SVGlidePreviewError(ValueError):
@@ -36,6 +40,43 @@ def normalize_inline_svg(text: str) -> str:
     out = XML_DECL_RE.sub("", text.strip())
     out = DOCTYPE_RE.sub("", out.strip())
     return out.strip()
+
+
+def local_asset_path(project: Path, href: str) -> Path | None:
+    if href.startswith("@./"):
+        rel = href[3:]
+    elif href.startswith("@/"):
+        rel = href[2:]
+    else:
+        return None
+    candidate = (project / rel).resolve()
+    root = project.resolve()
+    if candidate != root and root not in candidate.parents:
+        return None
+    return candidate
+
+
+def browser_asset_href(project: Path, href: str) -> str | None:
+    local = local_asset_path(project, href)
+    if local is None or not local.exists() or not local.is_file():
+        return None
+    mime_type = mimetypes.guess_type(local.name)[0] or "application/octet-stream"
+    encoded = base64.b64encode(local.read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def rewrite_preview_asset_hrefs(project: Path, svg_text: str) -> tuple[str, list[dict[str, str]]]:
+    rewrites: list[dict[str, str]] = []
+
+    def replace(match: re.Match[str]) -> str:
+        original = match.group(2)
+        rewritten = browser_asset_href(project, original)
+        if rewritten is None:
+            return match.group(0)
+        rewrites.append({"from": original, "to": rewritten})
+        return f"{match.group(1)}{rewritten}{match.group(3)}"
+
+    return LOCAL_ASSET_HREF_RE.sub(replace, svg_text), rewrites
 
 
 def collect_svg_paths(project: Path) -> list[Path]:
@@ -185,8 +226,12 @@ def build_preview(project: Path) -> dict[str, Any]:
         raise SVGlidePreviewError(f"no SVG files found under {project / SVG_INPUT_DIR}")
 
     pages: list[dict[str, Any]] = []
+    asset_href_rewrites: list[dict[str, Any]] = []
     for index, path in enumerate(svg_paths, 1):
         svg_text = normalize_inline_svg(path.read_text(encoding="utf-8"))
+        svg_text, rewrites = rewrite_preview_asset_hrefs(project, svg_text)
+        if rewrites:
+            asset_href_rewrites.append({"page": index, "source_path": relpath(path, project), "rewrites": rewrites})
         pages.append(
             {
                 "page": index,
@@ -208,6 +253,7 @@ def build_preview(project: Path) -> dict[str, Any]:
         "html_path": relpath(html_path, project),
         "manifest_path": relpath(manifest_path, project),
         "page_count": len(pages),
+        "asset_href_rewrites": asset_href_rewrites,
         "pages": [
             {
                 "page": page["page"],
