@@ -297,7 +297,7 @@ lark-cli sheets +workbook-create --title "经营看板" --sheets '{
 
 ### `+workbook-import`
 
-把已有的本地 `.xlsx` / `.xls` / `.csv` 文件导入为一个**新的**飞书电子表格（异步任务 + 内置轮询），与 `+workbook-export`（导出）对称。底层复用 drive 的导入实现，固定导入为电子表格类型。
+把已有的本地 `.xlsx` / `.xls` / `.csv` 文件导入为一个**新的**飞书电子表格（异步任务 + 内置轮询），与 `+workbook-export`（导出）对称，固定导入为电子表格类型。
 
 ```bash
 # 导入到云空间根目录；表格名默认取本地文件名（去掉扩展名）
@@ -308,7 +308,7 @@ lark-cli sheets +workbook-import --file ./report.csv --folder-token <FOLDER_TOKE
 ```
 
 - **不接受任何 spreadsheet / sheet 定位 flag**（它是新建，不操作已有表）：只有 `--file`（必填）/ `--folder-token` / `--name`。
-- 仅导入为电子表格（sheet）。若要把本地表格导入成多维表格（bitable），改用 `lark-cli drive +import --type bitable`。
+- 本地表格文件 → 飞书电子表格一律用本命令，**不要**用 `drive +import` 导电子表格——它是 sheets 之外的通用导入、还需额外指定 `--type`，绕路且更易错。只有要把本地表格导入成**多维表格**（bitable）时，才改用 `lark-cli drive +import --type bitable`。
 - 返回 `token` / `url`（导入完成的新表格）/ `ticket` / `ready` / `job_status`；未在内置轮询窗口内完成时返回 `timed_out=true` 与续查命令 `next_command`。
 
 ### `+sheet-create`
