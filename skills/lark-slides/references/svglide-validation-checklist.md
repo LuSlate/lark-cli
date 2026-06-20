@@ -142,6 +142,7 @@ Semantic review owns content-language and plan/source provenance. Do not treat a
 
 - `06-check/chart-verify.json` must be fresh. Pages declaring `chart_contract.verify=required` or exact chart precision must have chart data and chart-like SVG marks.
 - `06-check/runtime-review.json` must be fresh. Each page must declare `renderer_id` and `layout_family`; 4+ page decks cannot use a single renderer or layout family throughout; image-led cover/closing assets must match cover/closing renderer families.
+- `06-check/visual-distinctness.json` must be fresh. Topic-only decks must have a theme-specific `visual_identity`; different themes cannot reuse the same style preset, palette, cover treatment, and renderer/layout sequence.
 - `06-check/aesthetic-review.json` must verify asset placement metadata from `03-assets/asset-manifest.json`; cover/background/closing images require safe editable text zones.
 
 ## Readback Checks

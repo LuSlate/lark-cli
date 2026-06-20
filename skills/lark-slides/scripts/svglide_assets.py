@@ -76,6 +76,29 @@ def optional_sha256(path: Path | None) -> str | None:
     return file_sha256(path) if path and path.exists() and path.is_file() else None
 
 
+def dominant_colors(path: Path, *, limit: int = 5) -> list[str]:
+    try:
+        from PIL import Image  # type: ignore
+    except ImportError:
+        return []
+    try:
+        with Image.open(path) as image:
+            image.thumbnail((96, 96))
+            converted = image.convert("RGB")
+            colors = converted.getcolors(maxcolors=96 * 96) or []
+    except OSError:
+        return []
+    ranked = sorted(colors, key=lambda item: item[0], reverse=True)
+    result: list[str] = []
+    for _count, color in ranked:
+        hex_color = "#{:02X}{:02X}{:02X}".format(*color)
+        if hex_color not in result:
+            result.append(hex_color)
+        if len(result) >= limit:
+            break
+    return result
+
+
 def read_json_object(path: Path, *, required: bool = True) -> dict[str, Any]:
     if not path.exists():
         if required:
@@ -264,6 +287,9 @@ def acquire_contract_asset(
         local = local_asset_path(project, href)
         if local is not None and local.exists() and local.is_file():
             base.update({"asset_kind": "user_file", "file": relpath(local, project), "sha256": file_sha256(local), "status": "local_file"})
+            colors = dominant_colors(local)
+            if colors:
+                base["dominant_colors"] = colors
             return base, None
         if href.startswith(("http://", "https://")) and online_enabled(policy) and not no_image_search:
             try:
@@ -280,6 +306,9 @@ def acquire_contract_asset(
                         "safe_text_zones": base["safe_text_zones"] or [{"x": 0.05, "y": 0.12, "w": 0.42, "h": 0.72}],
                     }
                 )
+                colors = dominant_colors(downloaded)
+                if colors:
+                    base["dominant_colors"] = colors
                 return base, None
             except (OSError, urllib.error.URLError, TimeoutError) as error:
                 base["fallback_reason"] = f"download_failed: {error}"
@@ -304,6 +333,9 @@ def acquire_contract_asset(
                         "safe_text_zones": base["safe_text_zones"] or [{"x": 0.05, "y": 0.12, "w": 0.42, "h": 0.72}],
                     }
                 )
+                colors = dominant_colors(downloaded)
+                if colors:
+                    base["dominant_colors"] = colors
                 return base, None
         except (OSError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
             base["fallback_reason"] = f"image_search_failed: {error}"
@@ -419,6 +451,11 @@ def run_assets(
         if job:
             image_jobs.append(job)
     write_image_jobs(project, image_jobs, backend=backend)
+    palette_candidates: list[str] = []
+    for item in acquired:
+        for color in item.get("dominant_colors") if isinstance(item.get("dominant_colors"), list) else []:
+            if isinstance(color, str) and color not in palette_candidates:
+                palette_candidates.append(color)
     evaluated_by_id = {str(item.get("id")): item for item in evaluated}
     for item in acquired:
         evaluated_item = evaluated_by_id.get(str(item.get("asset_id")))
@@ -447,6 +484,7 @@ def run_assets(
         "image_jobs_sha256": optional_sha256(project / IMAGE_JOBS),
         "contracts": evaluated,
         "acquired_assets": acquired,
+        "visual_identity_palette_candidates": palette_candidates[:8],
         "summary": {
             "contract_count": len(evaluated),
             "error_count": len(issues),

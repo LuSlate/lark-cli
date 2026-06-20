@@ -29,6 +29,7 @@ REQUIRED_CHECKS = [
     ("aesthetic-review", CHECK_DIR / "aesthetic-review.json"),
     ("runtime-review", CHECK_DIR / "runtime-review.json"),
     ("semantic-review", CHECK_DIR / "semantic-review.json"),
+    ("visual-distinctness", CHECK_DIR / "visual-distinctness.json"),
 ]
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
 OPTIONAL_CHECKS = []
@@ -213,7 +214,7 @@ def plan_bound_check_freshness_issues(project: Path, payload: dict[str, Any], na
     return issues
 
 
-def load_generator_receipt(project: Path) -> dict[str, Any]:
+def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
     rel = GENERATOR_RECEIPT_PATH
     path = project / rel
     check: dict[str, Any] = {
@@ -239,6 +240,11 @@ def load_generator_receipt(project: Path) -> dict[str, Any]:
     check["issues"].extend(issue(item["code"], f"{item['path']}: {item['message']}") for item in schema_issues)
     if payload.get("status") != "passed":
         check["issues"].append(issue("generator_receipt_not_passed", "generator receipt status must be passed"))
+    page_identity_summary = payload.get("page_identity_summary")
+    if not isinstance(page_identity_summary, list) or not page_identity_summary:
+        check["issues"].append(issue("generator_page_identity_summary_missing", "generator receipt must include page_identity_summary"))
+    if profile in STRICT_PROFILES and payload.get("fallback_skeleton_used") is True:
+        check["issues"].append(issue("fallback_skeleton_used", "production profiles cannot use the generic fallback SVG skeleton"))
     if payload.get("generated_files") != source_file_hashes(project):
         check["issues"].append(issue("generator_source_stale", "generator receipt generated_files do not match current source SVG files"))
     expected = {
@@ -371,7 +377,7 @@ def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: 
 
 def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dict[str, Any]:
     project = project.resolve()
-    checks = [load_generator_receipt(project)]
+    checks = [load_generator_receipt(project, profile=profile)]
     checks.append(load_online_readiness(project, profile=profile))
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in REQUIRED_CHECKS)
     chart_required = plan_requires_chart_verify(project)

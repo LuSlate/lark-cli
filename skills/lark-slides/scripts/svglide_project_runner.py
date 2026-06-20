@@ -46,6 +46,7 @@ STAGES = [
     "chart_verify",
     "semantic_review",
     "runtime_review",
+    "visual_distinctness_review",
     "quality_gate",
     "dry_run",
     "ppe_proof",
@@ -62,6 +63,8 @@ STAGE_ALIASES = {
     "chart-verify": "chart_verify",
     "semantic-review": "semantic_review",
     "runtime-review": "runtime_review",
+    "visual-distinctness": "visual_distinctness_review",
+    "visual-distinctness-review": "visual_distinctness_review",
     "generate": "generate_svg",
     "generate-svg": "generate_svg",
     "preview-lint": "preview_lint",
@@ -104,6 +107,7 @@ IMPLEMENTED_STAGES = {
     "chart_verify",
     "semantic_review",
     "runtime_review",
+    "visual_distinctness_review",
     "quality_gate",
     "dry_run",
     "ppe_proof",
@@ -536,6 +540,94 @@ def plan_path(project_root: Path) -> Path:
     return project_root / "02-plan" / "slide_plan.json"
 
 
+def infer_visual_archetype(text: str) -> str:
+    lowered = text.lower()
+    if any(token in lowered for token in ["spacex", "space x", "上市", "ipo", "资本", "估值", "火箭", "星链"]):
+        return "space_capital_market"
+    if any(token in lowered for token in ["桂林", "山水", "旅游", "旅行", "目的地", "景区"]):
+        return "travel_destination"
+    if any(token in lowered for token in ["论文", "paper", "研究", "attention", "transformer"]):
+        return "academic_paper"
+    if any(token in lowered for token in ["字节", "bytedance", "公司", "企业", "产品", "组织"]):
+        return "company_ecosystem"
+    return "general_explainer"
+
+
+def visual_identity_defaults(archetype: str) -> dict[str, Any]:
+    presets = {
+        "company_ecosystem": {
+            "palette": "light corporate product ecosystem",
+            "layout_motif": "产品生态墙",
+            "shape_language": "低圆角 App tile 与组织网络节点",
+            "image_treatment": "官网或办公场景图片作为封面/结束页信号，正文保持 SVG 组件",
+            "component_bias": "ecosystem_wall, org_network, editorial_profile",
+            "theme_visual_anchors": ["产品生态墙", "App tile", "组织网络"],
+        },
+        "space_capital_market": {
+            "palette": "dark orbital capital-market signal",
+            "layout_motif": "发射窗口与资本市场信号线",
+            "shape_language": "轨道线、窗口卡、风险矩阵",
+            "image_treatment": "发射或航天图片配暗色 scrim，文字保持 SVG 覆盖",
+            "component_bias": "market_signal, timeline_rail, dashboard_scorecard",
+            "theme_visual_anchors": ["发射窗口", "轨道线", "资本信号"],
+        },
+        "travel_destination": {
+            "palette": "bright scenic atlas",
+            "layout_motif": "目的地地图与路线",
+            "shape_language": "地图块、路线线条、景点卡片",
+            "image_treatment": "真实风景图主导封面和结束页，正文用地图/路线组件",
+            "component_bias": "destination_atlas, timeline_rail, ecosystem_wall",
+            "theme_visual_anchors": ["山水地貌", "旅行路线", "景点地图"],
+        },
+        "academic_paper": {
+            "palette": "clean research whiteboard",
+            "layout_motif": "论文机制拆解",
+            "shape_language": "模块图、公式框、实验表格",
+            "image_treatment": "原论文图作为 inline figure，标注保持 SVG 文本",
+            "component_bias": "research_deep_dive, chart, timeline_rail",
+            "theme_visual_anchors": ["机制图", "公式框", "实验表格"],
+        },
+        "general_explainer": {
+            "palette": "neutral editorial explainer",
+            "layout_motif": "结构化说明路径",
+            "shape_language": "信息块、连接线、总结条",
+            "image_treatment": "图片只做主题证据信号",
+            "component_bias": "editorial_profile, chart, timeline_rail",
+            "theme_visual_anchors": ["主题对象", "结构路径", "结论卡片"],
+        },
+    }
+    design_dna = presets.get(archetype, presets["general_explainer"])
+    return {
+        "theme_archetype": archetype,
+        "design_dna": design_dna,
+        "forbidden_reuse": {
+            "recent_decks": 5,
+            "avoid_same_palette": True,
+            "avoid_same_cover_structure": True,
+            "avoid_default_skeleton": True,
+        },
+        "distinctness_target": {
+            "palette_overlap_max": 0.67,
+            "renderer_sequence_similarity_max": 0.75,
+            "layout_sequence_similarity_max": 0.75,
+        },
+    }
+
+
+def ensure_visual_identity(plan: dict[str, Any]) -> bool:
+    if isinstance(plan.get("visual_identity"), dict):
+        return False
+    text_parts = [str(plan.get(key) or "") for key in ["title", "topic", "scenario", "audience"]]
+    slides = plan.get("slides")
+    if isinstance(slides, list):
+        for slide in slides:
+            if isinstance(slide, dict):
+                text_parts.extend(str(slide.get(key) or "") for key in ["title", "key_message", "section", "role"])
+    archetype = infer_visual_archetype(" ".join(text_parts))
+    plan["visual_identity"] = visual_identity_defaults(archetype)
+    return True
+
+
 def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
     started_at = now_iso()
     plan = plan_path(project_root)
@@ -554,6 +646,9 @@ def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
         raise RunnerError(f"missing required plan file: {plan}")
     try:
         payload = read_json(plan)
+        visual_identity_added = ensure_visual_identity(payload)
+        if visual_identity_added:
+            write_json(plan, payload)
         schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-plan.schema.json"))
         schema_issues = svglide_schema.validate_json_schema(payload, schema)
     except (OSError, json.JSONDecodeError) as error:
@@ -571,6 +666,7 @@ def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
         error={"code": "plan_schema_failed", "issues": schema_issues} if schema_issues else None,
     )
     receipt["plan_sha256"] = file_sha256(plan)
+    receipt["visual_identity_added"] = bool(locals().get("visual_identity_added", False))
     receipt["summary"] = {"error_count": len(schema_issues)}
     receipt["issues"] = schema_issues
     write_json(receipt_path(project_root, "plan"), receipt)
@@ -734,6 +830,10 @@ def write_page_generation_receipts(
     lock_hash = optional_project_file_hash(project_root, "02-plan/svglide.lock.json")
     asset_manifest_hash = optional_project_file_hash(project_root, "03-assets/asset-manifest.json")
     generator_script_hash = file_sha256(Path(command[1])) if len(command) > 1 and Path(command[1]).exists() else None
+    plan = read_json(project_root / "02-plan" / "slide_plan.json")
+    slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
+    visual_identity = plan.get("visual_identity") if isinstance(plan.get("visual_identity"), dict) else {}
+    theme_archetype = visual_identity.get("theme_archetype") if isinstance(visual_identity.get("theme_archetype"), str) else None
     injection_events = asset_injection_summary.get("by_page") if isinstance(asset_injection_summary, dict) else []
     if not isinstance(injection_events, list):
         injection_events = []
@@ -756,6 +856,14 @@ def write_page_generation_receipts(
             for event in page_injections
             if isinstance(event, dict) and event.get("status") in {"injected", "already_present"}
         ]
+        slide = slides[index - 1] if index <= len(slides) and isinstance(slides[index - 1], dict) else {}
+        identity_fit_reason = slide.get("identity_fit_reason")
+        if not isinstance(identity_fit_reason, str) or not identity_fit_reason.strip():
+            identity_fit_reason = f"renderer and visual recipe are expected to fit theme_archetype={theme_archetype or 'unspecified'}"
+        reuse_risk_score = slide.get("reuse_risk_score")
+        if not isinstance(reuse_risk_score, (int, float)):
+            reuse_risk_score = 0
+        fallback_skeleton_used = bool(slide.get("fallback_skeleton_used") or visual_identity.get("fallback_skeleton_used"))
         payload = {
             "version": "svglide-page-generation/v1",
             "stage": "generate_svg",
@@ -774,6 +882,10 @@ def write_page_generation_receipts(
             "generator_script_sha256": generator_script_hash,
             "asset_refs": asset_refs,
             "asset_injection": page_injections,
+            "theme_archetype": theme_archetype,
+            "identity_fit_reason": identity_fit_reason,
+            "reuse_risk_score": reuse_risk_score,
+            "fallback_skeleton_used": fallback_skeleton_used,
             "visible_text_policy": "visible SVG text must be traceable to slide_plan.json or source/evidence.json",
             "generated_at": now_iso(),
         }
@@ -870,6 +982,18 @@ def run_generate_svg_stage(
     receipt["generated_files"] = generated_files
     receipt["page_receipts"] = page_receipts
     receipt["asset_injection_summary"] = asset_injection_summary
+    page_receipt_payloads = [read_json(project_root / path) for path in page_receipts]
+    receipt["fallback_skeleton_used"] = any(bool(payload.get("fallback_skeleton_used")) for payload in page_receipt_payloads)
+    receipt["page_identity_summary"] = [
+        {
+            "page": payload.get("page"),
+            "theme_archetype": payload.get("theme_archetype"),
+            "identity_fit_reason": payload.get("identity_fit_reason"),
+            "reuse_risk_score": payload.get("reuse_risk_score"),
+            "fallback_skeleton_used": payload.get("fallback_skeleton_used"),
+        }
+        for payload in page_receipt_payloads
+    ]
     receipt["plan_sha256"] = optional_project_file_hash(project_root, "02-plan/slide_plan.json")
     receipt["evidence_sha256"] = optional_project_file_hash(project_root, "source/evidence.json")
     receipt["lock_sha256"] = optional_project_file_hash(project_root, "02-plan/svglide.lock.json")
@@ -922,15 +1046,17 @@ def require_existing_stage_current(project_root: Path, stage: str) -> None:
         require_generated_svg_current(project_root)
     elif stage == "prepare":
         require_generated_svg_current(project_root)
+    elif stage == "quality_gate":
+        require_quality_gate_current(project_root)
     elif stage == "dry_run":
-        require_quality_gate_passed(project_root)
+        require_quality_gate_current(project_root)
     elif stage == "live_create":
-        require_quality_gate_passed(project_root)
+        require_quality_gate_current(project_root)
         require_ppe_proof_current(project_root)
     elif stage == "ppe_proof":
         require_ppe_proof_current(project_root)
     elif stage == "readback":
-        require_quality_gate_passed(project_root)
+        require_quality_gate_current(project_root)
 
 
 def require_quality_gate_passed(project_root: Path) -> dict[str, Any]:
@@ -940,6 +1066,20 @@ def require_quality_gate_passed(project_root: Path) -> dict[str, Any]:
     gate_hashes = gate.get("prepared_files")
     if isinstance(gate_hashes, list) and gate_hashes and gate_hashes != prepared_file_hashes(project_root):
         raise RunnerError("prepared SVG files changed after quality gate; rerun checks before create")
+    return gate
+
+
+def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
+    gate = require_quality_gate_passed(project_root)
+    inputs = gate.get("inputs")
+    if not isinstance(inputs, dict) or inputs.get("visual_distinctness") != "06-check/visual-distinctness.json":
+        raise RunnerError("quality gate is missing visual_distinctness input; rerun quality_gate")
+    checks = gate.get("checks")
+    check_names = {item.get("name") for item in checks if isinstance(item, dict)} if isinstance(checks, list) else set()
+    if "visual-distinctness" not in check_names:
+        raise RunnerError("quality gate is missing visual-distinctness check; rerun quality_gate")
+    if not (project_root / "06-check/visual-distinctness.json").exists():
+        raise RunnerError("visual distinctness receipt is missing; rerun visual_distinctness_review and quality_gate")
     return gate
 
 
@@ -1213,6 +1353,17 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["02-plan/slide_plan.json"],
             outputs=["06-check/runtime-review.json"],
         )
+    if stage == "visual_distinctness_review":
+        require_stage_passed(state, "runtime_review")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_visual_distinctness_review.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "06-check" / "visual-distinctness.json",
+            inputs=["02-plan/slide_plan.json"],
+            outputs=["06-check/visual-distinctness.json"],
+        )
     if stage == "quality_gate":
         require_stage_passed(state, "preflight")
         require_stage_passed(state, "preview_lint")
@@ -1220,6 +1371,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         require_stage_passed(state, "chart_verify")
         require_stage_passed(state, "semantic_review")
         require_stage_passed(state, "runtime_review")
+        require_stage_passed(state, "visual_distinctness_review")
         return run_script_stage(
             project_root,
             state,
@@ -1232,6 +1384,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
                 "06-check/chart-verify.json",
                 "06-check/semantic-review.json",
                 "06-check/runtime-review.json",
+                "06-check/visual-distinctness.json",
                 "receipts/generate_svg.json",
             ],
             outputs=["06-check/quality-gate.json"],

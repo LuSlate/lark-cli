@@ -60,13 +60,32 @@ def positive_plan(case_type: str) -> dict[str, Any]:
         "real_estate_planning": ("空间规划", "片区更新"),
         "data_dense_report": ("经营报告", "指标复盘"),
     }
+    identities = {
+        "data_news": ("market_signal", "market_signal", "market", "市场信号图", "新闻证据流", "风险提示牌"),
+        "real_estate_planning": ("travel_destination", "destination_atlas", "atlas", "片区地图", "空间路径", "地块分层"),
+        "data_dense_report": ("company_ecosystem", "ecosystem_wall", "ecosystem", "指标生态墙", "组织网络", "复盘看板"),
+    }
     title_prefix, section = labels[case_type]
+    archetype, evidence_renderer, evidence_family, anchor_a, anchor_b, anchor_c = identities[case_type]
     return {
         "route": "svglide-svg",
         "language": "zh-CN",
         "audience": "业务决策团队",
         "deck_structure": ["cover", "content", "content", "closing"],
         "style_preset": "safe-native-v1",
+        "visual_identity": {
+            "theme_archetype": archetype,
+            "design_dna": {
+                "palette": "fixture stable palette",
+                "layout_motif": anchor_a,
+                "shape_language": "结构化信息块",
+                "image_treatment": "素材只作为证据或背景信号",
+                "component_bias": "图表、路径、总结条",
+                "theme_visual_anchors": [anchor_a, anchor_b, anchor_c],
+            },
+            "forbidden_reuse": {"recent_decks": 5, "avoid_default_skeleton": True},
+            "distinctness_target": {"palette_overlap_max": 0.67, "renderer_sequence_similarity_max": 0.75},
+        },
         "slides": [
             {
                 "page": 1,
@@ -90,8 +109,8 @@ def positive_plan(case_type: str) -> dict[str, Any]:
                 "key_message": "核心变化已经具备连续验证信号",
                 "body_points": ["证据一显示结构变化正在形成", "证据二说明变化不是单点扰动", "证据三给出后续观测口径"],
                 "source_refs": ["source:item-001", "source:item-002"],
-                "renderer_id": "chart",
-                "layout_family": "chart",
+                "renderer_id": evidence_renderer,
+                "layout_family": evidence_family,
                 "visual_recipe": "micro_chart",
                 "chart_contract": {"verify": "required", "data": [12, 18, 25], "labels": ["一", "二", "三"]},
             },
@@ -104,8 +123,8 @@ def positive_plan(case_type: str) -> dict[str, Any]:
                 "key_message": "行动排序应围绕高确定性证据展开",
                 "body_points": ["优先处理确定性最高的场景", "保留对不确定变量的监控", "把复盘口径前置到执行计划"],
                 "source_refs": ["source:item-002", "source:item-003"],
-                "renderer_id": "timeline",
-                "layout_family": "timeline",
+                "renderer_id": "org_network" if case_type == "data_dense_report" else "timeline",
+                "layout_family": "network" if case_type == "data_dense_report" else "timeline",
                 "visual_recipe": "path_flow",
             },
             {

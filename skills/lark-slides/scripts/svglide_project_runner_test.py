@@ -47,6 +47,19 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                         "deck_motif": "测试母题",
                         "svg_native_moments": ["结构化开场", "信息图正文", "总结强调"],
                     },
+                    "visual_identity": {
+                        "theme_archetype": "company_ecosystem",
+                        "design_dna": {
+                            "palette": "light neutral test palette",
+                            "layout_motif": "测试生态墙",
+                            "shape_language": "低圆角信息块",
+                            "image_treatment": "图片只做背景信号",
+                            "component_bias": "生态墙、结构卡片、总结条",
+                            "theme_visual_anchors": ["测试产品墙", "测试组织网络", "测试结论条"],
+                        },
+                        "forbidden_reuse": {"recent_decks": 5, "avoid_default_skeleton": True},
+                        "distinctness_target": {"palette_overlap_max": 0.67, "renderer_sequence_similarity_max": 0.75},
+                    },
                     "slides": [
                         {
                             "page": 1,
@@ -57,7 +70,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                             "key_message": "测试主结论",
                             "body_points": ["测试要点一", "测试要点二"],
                             "source_refs": ["source:item-001"],
-                            "renderer_id": "test-renderer",
+                            "renderer_id": "cover_full_bleed",
                             "layout_family": "cover",
                             "visual_recipe": "test-recipe",
                             "visual_intent": "验证 runner",
@@ -80,8 +93,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                             "key_message": "正文主结论",
                             "body_points": ["测试证据一", "测试证据二"],
                             "source_refs": ["source:item-001"],
-                            "renderer_id": "test-renderer",
-                            "layout_family": "content",
+                            "renderer_id": "ecosystem_wall",
+                            "layout_family": "ecosystem",
                             "visual_recipe": "test-recipe",
                             "visual_intent": "验证 runner",
                             "visual_focal_point": "正文",
@@ -103,7 +116,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                             "key_message": "结论主线",
                             "body_points": ["后续动作一", "后续动作二"],
                             "source_refs": ["source:item-001"],
-                            "renderer_id": "test-renderer",
+                            "renderer_id": "closing_cta",
                             "layout_family": "closing",
                             "visual_recipe": "test-recipe",
                             "visual_intent": "验证 runner",
@@ -172,7 +185,17 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.write_plan_confirmation(project_root)
         runner.run_confirm_plan_stage(project_root, runner.load_state(project_root))
         (project_root / "04-svg/prepared/page-001.svg").write_text("<svg></svg>", encoding="utf-8")
-        (project_root / "06-check/quality-gate.json").write_text(json.dumps({"status": "passed"}), encoding="utf-8")
+        (project_root / "06-check/visual-distinctness.json").write_text(json.dumps({"status": "passed"}), encoding="utf-8")
+        (project_root / "06-check/quality-gate.json").write_text(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "inputs": {"visual_distinctness": "06-check/visual-distinctness.json"},
+                    "checks": [{"name": "visual-distinctness", "status": "passed"}],
+                }
+            ),
+            encoding="utf-8",
+        )
         return project_root
 
     def completed(self, command: list[str], payload: dict[str, object] | None = None, returncode: int = 0) -> subprocess.CompletedProcess[str]:
@@ -201,6 +224,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(runner.normalize_stage("chart-verify"), "chart_verify")
         self.assertEqual(runner.normalize_stage("semantic-review"), "semantic_review")
         self.assertEqual(runner.normalize_stage("runtime-review"), "runtime_review")
+        self.assertEqual(runner.normalize_stage("visual-distinctness"), "visual_distinctness_review")
+        self.assertEqual(runner.normalize_stage("visual-distinctness-review"), "visual_distinctness_review")
         self.assertEqual(runner.normalize_stage("generate"), "generate_svg")
         self.assertEqual(runner.normalize_stage("generate-svg"), "generate_svg")
         self.assertEqual(runner.normalize_stage("quality-gate"), "quality_gate")
@@ -220,6 +245,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("chart_verify", dry_run)
         self.assertIn("semantic_review", dry_run)
         self.assertIn("runtime_review", dry_run)
+        self.assertIn("visual_distinctness_review", dry_run)
         self.assertIn("quality_gate", dry_run)
         self.assertIn("dry_run", dry_run)
         self.assertNotIn("ppe_proof", dry_run)
@@ -264,8 +290,11 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("chart_verify", called_stages)
             self.assertIn("semantic_review", called_stages)
             self.assertIn("runtime_review", called_stages)
+            self.assertIn("visual_distinctness_review", called_stages)
             self.assertLess(called_stages.index("chart_verify"), called_stages.index("semantic_review"))
             self.assertLess(called_stages.index("semantic_review"), called_stages.index("quality_gate"))
+            self.assertLess(called_stages.index("runtime_review"), called_stages.index("visual_distinctness_review"))
+            self.assertLess(called_stages.index("visual_distinctness_review"), called_stages.index("quality_gate"))
             self.assertNotIn("dry_run", called_stages)
             self.assertNotIn("ppe_proof", called_stages)
             self.assertNotIn("live_create", called_stages)
@@ -370,6 +399,26 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
             state = json.loads((project_root / "01-project/state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["stages"]["plan"]["status"], "passed")
+
+    def test_plan_stage_adds_visual_identity_before_confirmation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("bytedance", "字节跳动", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_plan(project_root)
+            plan_path = project_root / "02-plan/slide_plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan.pop("visual_identity")
+            plan["title"] = "字节跳动"
+            plan_path.write_text(json.dumps(plan, ensure_ascii=False), encoding="utf-8")
+
+            result = runner.run_stage(project_root, "plan")
+
+            updated = json.loads(plan_path.read_text(encoding="utf-8"))
+            receipt = json.loads((project_root / "receipts/plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(result["status"], "passed")
+            self.assertTrue(receipt["visual_identity_added"])
+            self.assertEqual(updated["visual_identity"]["theme_archetype"], "company_ecosystem")
 
     def test_strategy_review_stage_validates_plan_semantics(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -632,6 +681,25 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
             with self.assertRaisesRegex(runner.RunnerError, "changed after quality gate"):
                 runner.run_create_stage(project_root, runner.load_state(project_root), "dry_run", dry_run=True, command_runner=lambda *a, **k: self.completed(a[0]))
+
+    def test_existing_quality_gate_without_visual_distinctness_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            old_gate = {
+                "status": "passed",
+                "inputs": {},
+                "checks": [],
+                "prepared_files": runner.prepared_file_hashes(project_root),
+            }
+            (project_root / "06-check/quality-gate.json").write_text(json.dumps(old_gate), encoding="utf-8")
+            state = runner.load_state(project_root)
+            receipt = project_root / "receipts/quality_gate.json"
+            receipt.write_text(json.dumps({"stage": "quality_gate", "status": "passed"}), encoding="utf-8")
+            runner.record_stage(state, "quality_gate", "passed", receipt)
+            runner.write_state(project_root, state)
+
+            with self.assertRaisesRegex(runner.RunnerError, "visual_distinctness"):
+                runner.run_stage(project_root, "quality_gate")
 
     def test_dry_run_command_includes_assets_when_present(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -58,6 +58,48 @@
       "allowed_style_presets": ["*"]
     },
     {
+      "id": "ecosystem_wall",
+      "status": "active",
+      "family": "ecosystem",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "org_network",
+      "status": "active",
+      "family": "network",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "editorial_profile",
+      "status": "active",
+      "family": "profile",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "destination_atlas",
+      "status": "active",
+      "family": "atlas",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "research_deep_dive",
+      "status": "active",
+      "family": "research",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "market_signal",
+      "status": "active",
+      "family": "market",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
       "id": "test-renderer",
       "status": "active",
       "family": "test",

@@ -17,6 +17,24 @@ import svglide_schema
 PLAN_PATH = Path("02-plan/slide_plan.json")
 OUTPUT_PATH = Path("02-plan/strategy-review.json")
 ALLOWED_PAGE_TYPES = {"cover", "section", "content", "closing"}
+STYLE_PRESETS_PATH = Path(__file__).resolve().parent.parent / "references" / "style-presets.json"
+DEFAULT_RENDERERS = {
+    "cover",
+    "cover_full_bleed",
+    "chart",
+    "dashboard_scorecard",
+    "timeline",
+    "timeline_rail",
+    "closing",
+    "closing_cta",
+    "test-renderer",
+}
+THEME_ARCHETYPE_KEYWORDS = {
+    "company_ecosystem": ["字节", "bytedance", "公司", "企业", "产品矩阵", "生态"],
+    "space_capital_market": ["spacex", "space x", "上市", "ipo", "资本", "估值", "火箭", "星链"],
+    "travel_destination": ["桂林", "山水", "旅游", "旅行", "目的地", "景区", "城市"],
+    "academic_paper": ["论文", "paper", "研究", "attention", "transformer", "机制"],
+}
 
 
 class StrategyReviewError(Exception):
@@ -58,6 +76,152 @@ def list_of_strings(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str) and item.strip()]
 
 
+def collect_strings(value: Any) -> list[str]:
+    strings: list[str] = []
+    if isinstance(value, str):
+        if value.strip():
+            strings.append(value)
+    elif isinstance(value, list):
+        for item in value:
+            strings.extend(collect_strings(item))
+    elif isinstance(value, dict):
+        for item in value.values():
+            strings.extend(collect_strings(item))
+    return strings
+
+
+def infer_theme_archetype(plan: dict[str, Any]) -> str | None:
+    haystack = " ".join(collect_strings({key: plan.get(key) for key in ["title", "topic", "scenario", "audience", "business_claims"]}))
+    slides = plan.get("slides")
+    if isinstance(slides, list):
+        haystack += " " + " ".join(collect_strings(slides))
+    lowered = haystack.lower()
+    matches = [
+        archetype
+        for archetype, keywords in THEME_ARCHETYPE_KEYWORDS.items()
+        if any(keyword.lower() in lowered for keyword in keywords)
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
+def style_presets_by_id() -> dict[str, dict[str, Any]]:
+    try:
+        payload = json.loads(STYLE_PRESETS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    presets = payload.get("presets") if isinstance(payload, dict) else None
+    if not isinstance(presets, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for item in presets:
+        if not isinstance(item, dict):
+            continue
+        style_id = item.get("style_id") or item.get("id") or item.get("preset_id")
+        if isinstance(style_id, str) and style_id:
+            result[style_id] = item
+    return result
+
+
+def normalize_color(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    raw = value.strip().lower()
+    if len(raw) == 4 and raw.startswith("#"):
+        return "#" + "".join(ch * 2 for ch in raw[1:])
+    if len(raw) == 7 and raw.startswith("#"):
+        return raw
+    return None
+
+
+def color_luminance(color: str) -> float:
+    r = int(color[1:3], 16) / 255
+    g = int(color[3:5], 16) / 255
+    b = int(color[5:7], 16) / 255
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def style_background_is_dark(style_preset: str | None) -> bool | None:
+    if not style_preset:
+        return None
+    preset = style_presets_by_id().get(style_preset)
+    if not preset:
+        return None
+    palette = preset.get("palette") if isinstance(preset.get("palette"), dict) else {}
+    bg = normalize_color(palette.get("background"))
+    return color_luminance(bg) < 0.42 if bg else None
+
+
+def design_palette_intent(design_dna: dict[str, Any]) -> str:
+    raw = design_dna.get("palette_intent") or design_dna.get("palette") or design_dna.get("color_intent")
+    return " ".join(collect_strings(raw)).lower()
+
+
+def visual_anchors(visual_identity: dict[str, Any], design_dna: dict[str, Any]) -> list[str]:
+    for key in ["theme_visual_anchors", "visual_anchors", "subject_visual_anchors"]:
+        anchors = list_of_strings(visual_identity.get(key))
+        if anchors:
+            return anchors
+    for key in ["theme_visual_anchors", "visual_anchors", "subject_visual_anchors"]:
+        anchors = list_of_strings(design_dna.get(key))
+        if anchors:
+            return anchors
+    return []
+
+
+def validate_visual_identity(plan: dict[str, Any], slides: list[Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    visual_identity = plan.get("visual_identity")
+    if not isinstance(visual_identity, dict):
+        return [issue("visual_identity_missing", "slide_plan.visual_identity is required")]
+    theme_archetype = visual_identity.get("theme_archetype")
+    if not isinstance(theme_archetype, str) or not theme_archetype.strip():
+        issues.append(issue("visual_identity_theme_missing", "visual_identity.theme_archetype is required"))
+    inferred = infer_theme_archetype(plan)
+    if inferred and theme_archetype and theme_archetype != inferred:
+        issues.append(
+            issue(
+                "visual_identity_theme_mismatch",
+                f"visual_identity.theme_archetype {theme_archetype!r} does not match inferred theme {inferred!r}",
+            )
+        )
+
+    design_dna = visual_identity.get("design_dna")
+    if not isinstance(design_dna, dict):
+        issues.append(issue("visual_identity_design_dna_missing", "visual_identity.design_dna is required"))
+        design_dna = {}
+    for field in ["palette", "layout_motif", "shape_language", "image_treatment", "component_bias"]:
+        if not collect_strings(design_dna.get(field)):
+            issues.append(issue(f"visual_identity_design_dna_missing_{field}", f"visual_identity.design_dna.{field} is required"))
+    if len(visual_anchors(visual_identity, design_dna)) < 3:
+        issues.append(issue("visual_identity_anchors_too_few", "visual_identity must include at least 3 theme-specific visual anchors"))
+    if not isinstance(visual_identity.get("forbidden_reuse"), (dict, list)):
+        issues.append(issue("visual_identity_forbidden_reuse_missing", "visual_identity.forbidden_reuse is required"))
+    if not isinstance(visual_identity.get("distinctness_target"), dict):
+        issues.append(issue("visual_identity_distinctness_target_missing", "visual_identity.distinctness_target is required"))
+
+    palette_intent = design_palette_intent(design_dna)
+    background_dark = style_background_is_dark(plan.get("style_preset") if isinstance(plan.get("style_preset"), str) else None)
+    if background_dark is not None:
+        wants_light = any(token in palette_intent for token in ["light", "white", "bright", "浅", "白", "明亮"])
+        wants_dark = any(token in palette_intent for token in ["dark", "black", "deep", "深", "黑"])
+        if wants_light and background_dark:
+            issues.append(issue("visual_identity_style_palette_conflict", "style_preset is dark but visual_identity requests a light palette"))
+        if wants_dark and not background_dark:
+            issues.append(issue("visual_identity_style_palette_conflict", "style_preset is light but visual_identity requests a dark palette"))
+
+    renderer_ids = [slide.get("renderer_id") for slide in slides if isinstance(slide, dict) and isinstance(slide.get("renderer_id"), str)]
+    content_renderers = [
+        slide.get("renderer_id")
+        for slide in slides
+        if isinstance(slide, dict) and slide.get("page_type") == "content" and isinstance(slide.get("renderer_id"), str)
+    ]
+    if renderer_ids and all(renderer_id in DEFAULT_RENDERERS for renderer_id in renderer_ids):
+        issues.append(issue("visual_identity_renderer_default_only", "renderer_id sequence uses only generic default renderers"))
+    if len(set(content_renderers)) <= 1 and len(content_renderers) >= 3:
+        issues.append(issue("visual_identity_content_renderer_monoculture", "content pages need more than one renderer family for theme-specific structure"))
+    return issues
+
+
 def run_strategy_review(project: Path) -> dict[str, Any]:
     project = project.resolve()
     plan_path = project / PLAN_PATH
@@ -83,6 +247,7 @@ def run_strategy_review(project: Path) -> dict[str, Any]:
     if not isinstance(slides, list) or not slides:
         issues.append(issue("slides_missing", "slide_plan.slides must be a non-empty array"))
         slides = []
+    issues.extend(validate_visual_identity(plan, slides))
     for index, raw_slide in enumerate(slides, 1):
         if not isinstance(raw_slide, dict):
             issues.append(issue("slide_not_object", "slide item must be an object", page=index))

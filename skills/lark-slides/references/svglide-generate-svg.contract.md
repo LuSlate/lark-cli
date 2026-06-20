@@ -48,9 +48,15 @@
   "lock_sha256": "<sha256>",
   "asset_manifest_path": "03-assets/asset-manifest.json",
   "asset_manifest_sha256": "<sha256>",
-  "generator_mode": "script | external"
+  "generator_mode": "script | external",
+  "theme_archetype": "company_ecosystem",
+  "identity_fit_reason": "renderer and visual recipe fit the declared visual_identity",
+  "reuse_risk_score": 0,
+  "fallback_skeleton_used": false
 }
 ```
+
+The deck-level `receipts/generate_svg.json` must summarize these page identity records in `page_identity_summary` and expose `fallback_skeleton_used`. Strict profiles reject `fallback_skeleton_used=true`; preview-only profiles may treat it as a repair warning.
 
 ## Discipline
 
@@ -58,3 +64,4 @@
 - 如果源 SVG 已由外部 agent 生成，可登记为 `generator_mode=external`，但必须记录 hash。
 - 生成后修改 `04-svg/page-###.svg` 必须重跑 `generate_svg`，否则 `prepare` 阻断。
 - CLI 不迁移 ppt-master “禁止脚本生成”的规则；CLI 允许脚本生成，但必须用 lock/assets/hash/receipt 把漂移控制住。
+- Generator scripts must consume `slide_plan.visual_identity`; if they fall back to a generic skeleton, they must mark that fact in the page and deck receipts.

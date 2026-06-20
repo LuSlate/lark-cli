@@ -20,6 +20,11 @@ SVG route plans must include:
 - `style_preset`: a preset id from `style-presets.json`.
 - `style_selection_reason`: why the preset fits the audience, topic, density, and tone.
 - `style_system`: executable palette, typography, background strategy, and motif derived from the preset.
+- `visual_identity`: the theme-specific visual system that prevents unrelated decks from sharing the same skeleton. Required fields:
+  - `theme_archetype`: such as `company_ecosystem`, `space_capital_market`, `travel_destination`, or `academic_paper`.
+  - `design_dna`: `palette`, `layout_motif`, `shape_language`, `image_treatment`, `component_bias`, plus at least 3 theme-specific visual anchors.
+  - `forbidden_reuse`: recent-deck reuse rules for palette, cover structure, and default skeleton.
+  - `distinctness_target`: palette, renderer sequence, and layout sequence similarity thresholds.
 - `loaded_rule_set`: exact SVG private rule files loaded after route admission. It must include the manifest-required design and validation references, not only protocol files.
 - `plan_path`: the `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json` path that later preflight, preview lint, live create, and readback records belong to.
 - `quality_gates`: deterministic gates requested before source generation, including `no_text_overflow: true`, `no_debug_guides: true`, and `no_xml_like_pages: true`.
@@ -68,6 +73,19 @@ Each SVG slide must include:
     "typography": "strong title, readable native text labels",
     "background_strategy": "muted grid panels with one stable background family",
     "motif": "dense grid panels with restrained accent labels"
+  },
+  "visual_identity": {
+    "theme_archetype": "company_ecosystem",
+    "design_dna": {
+      "palette": "light corporate product ecosystem",
+      "layout_motif": "product ecosystem wall",
+      "shape_language": "low-radius app tiles and organization network nodes",
+      "image_treatment": "company imagery for cover/closing; editable SVG components for body pages",
+      "component_bias": "ecosystem_wall, org_network, editorial_profile",
+      "theme_visual_anchors": ["app tile wall", "product matrix", "organization network"]
+    },
+    "forbidden_reuse": {"recent_decks": 5, "avoid_same_palette": true, "avoid_same_cover_structure": true, "avoid_default_skeleton": true},
+    "distinctness_target": {"palette_overlap_max": 0.67, "renderer_sequence_similarity_max": 0.75, "layout_sequence_similarity_max": 0.75}
   },
   "loaded_rule_set": [
     "skills/lark-slides/references/svglide-route-admission.md",
@@ -127,6 +145,8 @@ Each SVG slide must include:
 - 10 or more SVG pages should use at least 5 distinct `renderer_id` values and 5 `layout_family` values.
 - Do not use the same renderer or layout family for 3 consecutive pages.
 - High-density pages must quantify the density contract, such as `matrix >= 6 cells`, `timeline >= 4 nodes`, `dashboard >= 4 metrics`, `flow >= 4 stages`, or `risk_grid >= 4 items`.
+- Topic-only decks must still declare a theme-specific `visual_identity`; using only default renderer sequences such as cover/chart/timeline/closing is a strategy failure.
+- Different local projects should not reuse the same `style_preset`, palette, cover treatment, and renderer/layout sequence unless the theme archetype is intentionally the same.
 
 ## XML Boundary
 

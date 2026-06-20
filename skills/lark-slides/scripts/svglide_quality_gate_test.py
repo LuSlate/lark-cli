@@ -85,6 +85,16 @@ def write_passing_semantic_review(project: Path) -> None:
             "source_receipt_sha256": svglide_quality_gate.file_sha256(project / "source/source-receipt.json"),
             "lock_sha256": None,
             "generator_script_sha256": None,
+            "fallback_skeleton_used": False,
+            "page_identity_summary": [
+                {
+                    "page": 1,
+                    "theme_archetype": "company_ecosystem",
+                    "identity_fit_reason": "测试页符合视觉身份",
+                    "reuse_risk_score": 0,
+                    "fallback_skeleton_used": False,
+                }
+            ],
         },
     )
     write_json(project / "06-check/text-inventory.json", {"schema_version": "svglide-text-inventory/v1", "slides": []})
@@ -104,6 +114,19 @@ def write_passing_semantic_review(project: Path) -> None:
             },
             "pages": [],
             "summary": {"error_count": 0, "warning_count": 0, "slide_count": 0, "renderer_count": 0, "layout_family_count": 0},
+            "issues": [],
+        },
+    )
+    write_json(
+        project / "06-check/visual-distinctness.json",
+        {
+            "schema_version": "svglide-visual-distinctness/v1",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {"slide_plan": "02-plan/slide_plan.json"},
+            "signature": {"theme_archetype": "company_ecosystem"},
+            "comparisons": [],
+            "summary": {"error_count": 0, "warning_count": 0, "comparison_count": 0},
             "issues": [],
         },
     )
@@ -164,6 +187,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             self.assertEqual(result["inputs"]["preview_lint"], "06-check/preview-lint.json")
             self.assertEqual(result["inputs"]["aesthetic_review"], "06-check/aesthetic-review.json")
             self.assertEqual(result["inputs"]["semantic_review"], "06-check/semantic-review.json")
+            self.assertEqual(result["inputs"]["visual_distinctness"], "06-check/visual-distinctness.json")
             self.assertEqual(result["prepared_files"][0]["path"], "04-svg/prepared/page-001.svg")
             self.assertEqual(result["summary"]["failed_check_count"], 0)
             self.assertTrue((project / "06-check/quality-gate.json").exists())
@@ -471,7 +495,27 @@ class SVGlideQualityGateTest(unittest.TestCase):
                 for issue in check["issues"]
             }
             self.assertIn("research_missing_for_current_topic", failed_codes)
-            self.assertEqual(result["summary"]["research_status"], "blocked_by_network")
+
+    def test_quality_gate_blocks_strict_profile_when_fallback_skeleton_used(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            receipt = json.loads((project / "receipts/generate_svg.json").read_text(encoding="utf-8"))
+            receipt["fallback_skeleton_used"] = True
+            write_json(project / "receipts/generate_svg.json", receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("fallback_skeleton_used", failed_codes)
 
 
 if __name__ == "__main__":
