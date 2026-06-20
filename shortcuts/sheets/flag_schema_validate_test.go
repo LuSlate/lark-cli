@@ -587,3 +587,27 @@ func TestValidateInputAgainstSchema_SkipOperations(t *testing.T) {
 		t.Errorf("operations should be skipped; got %v", err)
 	}
 }
+
+// TestValidateValueAgainstSchema_PrintSchemaHint pins the highest-value
+// recovery affordance for composite-JSON flags: when the shape is wrong, the
+// error must point the agent straight at --print-schema (with the right
+// command + flag) instead of leaving it to guess across retries. +cells-set
+// --cells expects a 2-D array; a bare string trips the top-level type check.
+func TestValidateValueAgainstSchema_PrintSchemaHint(t *testing.T) {
+	t.Parallel()
+	fv := mapFlagView{command: "+cells-set"}
+	err := validateValueAgainstSchema(fv, "cells", "not-an-array")
+	if err == nil {
+		t.Fatal("expected schema validation error for wrong --cells shape")
+	}
+	msg := err.Error()
+	// Underlying shape error is preserved (substring callers still match).
+	if !strings.Contains(msg, `expected type "array"`) {
+		t.Errorf("want underlying shape error preserved; got %q", msg)
+	}
+	// And the actionable --print-schema hint is appended with the exact
+	// command + flag, so a copy-paste fetches the schema for this pair.
+	if !strings.Contains(msg, "lark-cli sheets +cells-set --print-schema --flag-name cells") {
+		t.Errorf("want --print-schema hint with command+flag; got %q", msg)
+	}
+}

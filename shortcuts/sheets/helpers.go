@@ -241,6 +241,16 @@ func parseJSONFlag(runtime flagView, name string) (interface{}, error) {
 	}
 	var out interface{}
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		// Composite payloads that embed formulas / quotes / commas are the
+		// classic source of this error: inlined into the shell, the JSON gets
+		// mangled (e.g. `\$` → "invalid character in string escape"). For any
+		// flag that accepts stdin, steer the caller there — passing the payload
+		// via `--<flag> - < file` sidesteps shell escaping entirely.
+		if flagAcceptsStdin(runtime.Command(), name) {
+			return nil, sheetsValidationForFlag(name,
+				"--%s: invalid JSON: %v; if the payload contains formulas / quotes / commas, pass it via stdin (`--%s - < file`) so the shell doesn't mangle the JSON",
+				name, err, name).WithCause(err)
+		}
 		return nil, sheetsValidationForFlag(name, "--%s: invalid JSON: %v", name, err).WithCause(err)
 	}
 	// Schema-driven flag validation at the user-input boundary. Skips

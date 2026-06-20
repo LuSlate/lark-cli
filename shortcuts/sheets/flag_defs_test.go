@@ -140,3 +140,24 @@ func TestFlagsFor_EveryRegisteredCommandHasDefs(t *testing.T) {
 		}
 	}
 }
+
+// TestFlagAcceptsStdin verifies the stdin-capability probe that decides whether
+// an "invalid JSON" error should also steer the caller toward stdin: a composite
+// flag (cells) accepts stdin, a plain locator (spreadsheet-token) does not, and
+// an unknown command/flag returns false without panicking (it runs on an error
+// path, unlike flagsFor).
+func TestFlagAcceptsStdin(t *testing.T) {
+	t.Parallel()
+	if !flagAcceptsStdin("+cells-set", "cells") {
+		t.Error("+cells-set --cells should accept stdin")
+	}
+	if flagAcceptsStdin("+cells-set", "spreadsheet-token") {
+		t.Error("--spreadsheet-token should not accept stdin")
+	}
+	if flagAcceptsStdin("+nope", "cells") {
+		t.Error("unknown command should be false (and must not panic)")
+	}
+	if flagAcceptsStdin("+cells-set", "nope") {
+		t.Error("unknown flag should be false")
+	}
+}
