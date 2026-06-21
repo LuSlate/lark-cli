@@ -7,6 +7,7 @@
   "properties": {
     "route": {"const": "svglide-svg"},
     "output_mode": {"const": "svglide-svg"},
+    "generation_mode": {"enum": ["direct_svg", "artboard_satori"]},
     "page_count": {"type": "integer", "minimum": 1},
     "target_slide_count": {"type": "integer", "minimum": 1},
     "fallback_policy": {"enum": ["strict-native", "auto"]},
@@ -144,6 +145,10 @@
           "content_density_contract": {"type": "string", "minLength": 1},
           "risk_flags": {"type": "array", "items": {"type": "string"}},
           "source_policy": {"type": "string", "minLength": 1},
+          "canvas_spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "asset_contract": {}
         },
         "additionalProperties": true
@@ -163,5 +168,112 @@
   "anyOf": [
     {"required": ["route"]},
     {"required": ["output_mode"]}
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "generation_mode": {"const": "artboard_satori"}
+        },
+        "required": ["generation_mode"]
+      },
+      "then": {
+        "properties": {
+          "slides": {
+            "items": {
+              "required": ["canvas_spec"],
+              "properties": {
+                "canvas_spec": {
+                  "type": "object",
+                  "required": ["version", "canvas", "safe_area", "template_id", "theme_id", "theme", "content", "semantic_elements", "quality_constraints"],
+                  "properties": {
+                    "version": {"const": "svglide-canvas-spec/v1"},
+                    "canvas": {
+                      "type": "object",
+                      "required": ["width", "height", "viewBox"],
+                      "properties": {
+                        "width": {"const": 960},
+                        "height": {"const": 540},
+                        "viewBox": {"const": "0 0 960 540"}
+                      },
+                      "additionalProperties": true
+                    },
+                    "template_id": {"type": "string", "minLength": 1},
+                    "theme_id": {"type": "string", "minLength": 1},
+                    "safe_area": {
+                      "type": "object",
+                      "required": ["x", "y", "width", "height"],
+                      "properties": {
+                        "x": {"type": "number"},
+                        "y": {"type": "number"},
+                        "width": {"type": "number"},
+                        "height": {"type": "number"}
+                      },
+                      "additionalProperties": true
+                    },
+                    "theme": {"type": "object"},
+                    "content": {
+                      "type": "object",
+                      "required": ["title"],
+                      "properties": {
+                        "title": {"type": "string", "minLength": 1}
+                      },
+                      "additionalProperties": true
+                    },
+                    "semantic_elements": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "required": ["element_id", "kind", "role", "source_ref", "bbox"],
+                        "properties": {
+                          "element_id": {"type": "string", "minLength": 1},
+                          "kind": {"type": "string", "minLength": 1},
+                          "role": {"type": "string", "minLength": 1},
+                          "source_ref": {"type": "string", "minLength": 1},
+                          "bbox": {
+                            "type": "object",
+                            "required": ["x", "y", "width", "height"],
+                            "properties": {
+                              "x": {"type": "number"},
+                              "y": {"type": "number"},
+                              "width": {"type": "number"},
+                              "height": {"type": "number"}
+                            },
+                            "additionalProperties": true
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "quality_constraints": {
+                      "type": "object",
+                      "required": ["min_font_size", "safe_area"],
+                      "properties": {
+                        "min_font_size": {"type": "number"},
+                        "max_title_lines": {"type": "integer", "minimum": 1},
+                        "safe_area": {
+                          "type": "object",
+                          "required": ["x", "y", "width", "height"],
+                          "properties": {
+                            "x": {"type": "number"},
+                            "y": {"type": "number"},
+                            "width": {"type": "number"},
+                            "height": {"type": "number"}
+                          },
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   ]
 }

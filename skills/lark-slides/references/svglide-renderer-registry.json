@@ -16,6 +16,111 @@
       "allowed_style_presets": ["*"]
     },
     {
+      "id": "artboard_cover_hero",
+      "status": "active",
+      "family": "cover",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_comparison",
+      "status": "active",
+      "family": "comparison",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_section_title",
+      "status": "active",
+      "family": "closing",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.cover-hero",
+      "status": "active",
+      "family": "cover",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.comparison-cards",
+      "status": "active",
+      "family": "comparison",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.image-feature",
+      "status": "active",
+      "family": "image_text",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.data-story",
+      "status": "active",
+      "family": "data_story",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.summary-final",
+      "status": "active",
+      "family": "closing",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.agenda-list",
+      "status": "active",
+      "family": "agenda",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.timeline-steps",
+      "status": "active",
+      "family": "timeline",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.architecture-blueprint",
+      "status": "active",
+      "family": "architecture",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.process-flow",
+      "status": "active",
+      "family": "process",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.metric-dashboard",
+      "status": "active",
+      "family": "dashboard",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.risk-alert",
+      "status": "active",
+      "family": "risk",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
+      "id": "artboard_satori.roadmap-lanes",
+      "status": "active",
+      "family": "roadmap",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": ["*"]
+    },
+    {
       "id": "chart",
       "status": "active",
       "family": "chart",

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-repair-plan.schema.json",
+  "title": "SVGlide Repair Planner Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "target_plan_path", "change_reason", "patches"],
+  "properties": {
+    "schema_version": {"const": "svglide-repair-plan/v1"},
+    "target_plan_path": {"type": "string", "minLength": 1},
+    "change_reason": {"type": "string", "minLength": 1},
+    "patches": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op", "path", "reason"],
+        "properties": {
+          "op": {"enum": ["add", "replace", "remove", "test"]},
+          "path": {"type": "string", "minLength": 1},
+          "value": {},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

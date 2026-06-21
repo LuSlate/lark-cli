@@ -1,0 +1,72 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "chips": [
+      "地貌",
+      "监测",
+      "风险"
+    ],
+    "eyebrow": "ICELAND VOLCANO",
+    "subtitle": "地貌证据、活动迹象与连续观测。",
+    "title": "冰岛火山研究"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 18,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 142,
+        "width": 628,
+        "x": 84,
+        "y": 142
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "cover-hero",
+  "theme": {
+    "colors": {
+      "accent": "#F97316",
+      "background": "#071827",
+      "muted": "#93B4C8",
+      "panel": "#0E2A3F",
+      "primary": "#5EEAD4",
+      "text": "#EAF6FF"
+    },
+    "spacing": {
+      "card": 28,
+      "gap": 20,
+      "page": 64
+    },
+    "theme_id": "blueprint-technical",
+    "typography": {
+      "body": 20,
+      "label": 18,
+      "subtitle": 23,
+      "title": 54
+    }
+  },
+  "theme_id": "blueprint-technical",
+  "version": "svglide-canvas-spec/v1"
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-deck-plan.schema.json",
+  "title": "SVGlide Deck Planner Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "topic", "audience", "objective", "target_slide_count", "narrative_arc", "theme_direction", "constraints", "slides"],
+  "properties": {
+    "schema_version": {"const": "svglide-deck-plan/v1"},
+    "topic": {"type": "string", "minLength": 1},
+    "audience": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "target_slide_count": {"type": "integer", "minimum": 1},
+    "narrative_arc": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 1}},
+    "theme_direction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preferred_theme_ids", "visual_identity", "tone"],
+      "properties": {
+        "preferred_theme_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "visual_identity": {"type": "string", "minLength": 1},
+        "tone": {"type": "string", "minLength": 1}
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation_mode", "source_policy", "forbidden_outputs"],
+      "properties": {
+        "generation_mode": {"const": "artboard_satori"},
+        "source_policy": {"type": "string", "minLength": 1},
+        "forbidden_outputs": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["page", "title", "role", "key_message", "content_goal", "visual_goal", "allowed_template_ids"],
+        "properties": {
+          "page": {"type": "integer", "minimum": 1},
+          "title": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "key_message": {"type": "string", "minLength": 1},
+          "content_goal": {"type": "string", "minLength": 1},
+          "visual_goal": {"type": "string", "minLength": 1},
+          "allowed_template_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

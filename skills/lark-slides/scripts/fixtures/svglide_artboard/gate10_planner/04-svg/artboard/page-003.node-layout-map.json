@@ -1,0 +1,148 @@
+{
+  "drift": {
+    "max_px": 0,
+    "status": "not_measured_in_p0"
+  },
+  "nodes": [
+    {
+      "height": 540,
+      "id": "background",
+      "kind": "rect",
+      "width": 960,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 30,
+      "id": "metric-bar-1",
+      "kind": "rect",
+      "width": 18,
+      "x": 712,
+      "y": 322
+    },
+    {
+      "height": 48,
+      "id": "metric-bar-2",
+      "kind": "rect",
+      "width": 18,
+      "x": 742,
+      "y": 304
+    },
+    {
+      "height": 66,
+      "id": "metric-bar-3",
+      "kind": "rect",
+      "width": 18,
+      "x": 772,
+      "y": 286
+    },
+    {
+      "height": 32,
+      "id": "eyebrow",
+      "kind": "text",
+      "text": "NEXT",
+      "width": 420,
+      "x": 72,
+      "y": 64
+    },
+    {
+      "height": 110,
+      "id": "title",
+      "kind": "text",
+      "text": "下一步观测",
+      "width": 700,
+      "x": 72,
+      "y": 110
+    },
+    {
+      "height": 66,
+      "id": "subtitle",
+      "kind": "text",
+      "text": "把研究结果转成可执行的观测闭环。",
+      "width": 640,
+      "x": 72,
+      "y": 244
+    },
+    {
+      "height": 126,
+      "id": "takeaway-card-1",
+      "kind": "rect",
+      "width": 250,
+      "x": 72,
+      "y": 344
+    },
+    {
+      "height": 30,
+      "id": "takeaway-index-1",
+      "kind": "text",
+      "text": "01",
+      "width": 64,
+      "x": 94,
+      "y": 366
+    },
+    {
+      "height": 54,
+      "id": "takeaway-1",
+      "kind": "text",
+      "text": "连续监测",
+      "width": 202,
+      "x": 94,
+      "y": 404
+    },
+    {
+      "height": 126,
+      "id": "takeaway-card-2",
+      "kind": "rect",
+      "width": 250,
+      "x": 340,
+      "y": 344
+    },
+    {
+      "height": 30,
+      "id": "takeaway-index-2",
+      "kind": "text",
+      "text": "02",
+      "width": 64,
+      "x": 362,
+      "y": 366
+    },
+    {
+      "height": 54,
+      "id": "takeaway-2",
+      "kind": "text",
+      "text": "现场复核",
+      "width": 202,
+      "x": 362,
+      "y": 404
+    },
+    {
+      "height": 126,
+      "id": "takeaway-card-3",
+      "kind": "rect",
+      "width": 250,
+      "x": 608,
+      "y": 344
+    },
+    {
+      "height": 30,
+      "id": "takeaway-index-3",
+      "kind": "text",
+      "text": "03",
+      "width": 64,
+      "x": 630,
+      "y": 366
+    },
+    {
+      "height": 54,
+      "id": "takeaway-3",
+      "kind": "text",
+      "text": "风险沟通",
+      "width": 202,
+      "x": 630,
+      "y": 404
+    }
+  ],
+  "page": 3,
+  "source": "template-layout-map",
+  "version": "svglide-node-layout-map/v1"
+}

@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": "source:item-001",
+      "text": "SVGlide Artboard P0a validates a controlled CanvasSpec input before producing protocol SVG."
+    },
+    {
+      "id": "source:item-002",
+      "text": "The renderer keeps CanvasSpec as the semantic source of truth and records artboard receipts."
+    },
+    {
+      "id": "source:item-003",
+      "text": "The existing prepare, preflight, quality gate, and dry-run stages remain the downstream delivery path."
+    }
+  ],
+  "schema_version": "svglide-evidence/v1",
+  "source_status": "ready"
+}

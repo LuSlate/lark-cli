@@ -1,0 +1,10 @@
+{
+  "command": ["init", "--deck-id", "artboard-p0b-three-page"],
+  "ended_at": "2026-06-20T00:00:00+08:00",
+  "error": null,
+  "inputs": [],
+  "outputs": ["01-project/project_manifest.json", "01-project/state.json"],
+  "stage": "init",
+  "started_at": "2026-06-20T00:00:00+08:00",
+  "status": "passed"
+}

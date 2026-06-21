@@ -136,6 +136,56 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def write_artboard_plan(self, project_root: Path) -> None:
+        self.write_plan(project_root)
+        plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+        plan["generation_mode"] = "artboard_satori"
+        first_slide = plan["slides"][0]
+        first_slide["renderer_id"] = "artboard_satori.cover-hero"
+        first_slide["layout_family"] = "cover"
+        first_slide["visual_recipe"] = "artboard-cover-hero"
+        first_slide["required_primitives"] = ["text", "rect", "circle"]
+        first_slide["svg_primitives"] = ["foreignObject", "rect", "circle"]
+        first_slide["canvas_spec"] = {
+            "version": "svglide-canvas-spec/v1",
+            "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+            "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+            "template_id": "cover-hero",
+            "theme_id": "dark-clarity",
+            "theme": {
+                "colors": {
+                    "background": "#0F172A",
+                    "panel": "#111827",
+                    "primary": "#38BDF8",
+                    "accent": "#A78BFA",
+                    "text": "#F8FAFC",
+                    "muted": "#CBD5E1",
+                }
+            },
+            "content": {
+                "eyebrow": "ARTBOARD P0A",
+                "title": "受控画板生成",
+                "subtitle": "CanvasSpec 驱动模板，输出可进入 SVGlide 后续链路的协议 SVG。",
+                "chips": ["CanvasSpec", "Satori Preview", "SVGlide SVG"],
+            },
+            "semantic_elements": [
+                {
+                    "element_id": "title",
+                    "kind": "text",
+                    "role": "title",
+                    "source_ref": "canvas_spec.content.title",
+                    "bbox": {"x": 84, "y": 142, "width": 628, "height": 142},
+                }
+            ],
+            "quality_constraints": {
+                "max_title_lines": 2,
+                "min_font_size": 18,
+                "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+            },
+        }
+        plan["slides"] = [first_slide]
+        (project_root / "02-plan/slide_plan.json").write_text(json.dumps(plan), encoding="utf-8")
+
     def write_plan_confirmation(self, project_root: Path) -> None:
         plan = project_root / "02-plan/slide_plan.json"
         payload = {
@@ -184,14 +234,132 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.run_source(project_root)
         self.write_plan_confirmation(project_root)
         runner.run_confirm_plan_stage(project_root, runner.load_state(project_root))
+        (project_root / "03-assets/asset-manifest.json").write_text(
+            json.dumps(
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "source_receipt_sha256": runner.file_sha256(project_root / "source/source-receipt.json"),
+                    "summary": {"error_count": 0},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (project_root / "04-svg/page-001.svg").write_text("<svg></svg>", encoding="utf-8")
         (project_root / "04-svg/prepared/page-001.svg").write_text("<svg></svg>", encoding="utf-8")
-        (project_root / "06-check/visual-distinctness.json").write_text(json.dumps({"status": "passed"}), encoding="utf-8")
+        source_files = runner.source_file_hashes(project_root)
+        (project_root / "04-svg/page-001.receipt.json").write_text(
+            json.dumps(
+                {
+                    "version": "svglide-page-generation/v1",
+                    "stage": "generate_svg",
+                    "page": 1,
+                    "source_svg": source_files[0]["path"],
+                    "source_sha256": source_files[0]["sha256"],
+                    "plan_sha256": runner.file_sha256(project_root / "02-plan/slide_plan.json"),
+                    "evidence_sha256": runner.file_sha256(project_root / "source/evidence.json"),
+                }
+            ),
+            encoding="utf-8",
+        )
+        (project_root / "receipts/generate_svg.json").write_text(
+            json.dumps(
+                {
+                    "stage": "generate_svg",
+                    "status": "passed",
+                    "generator_mode": "external",
+                    "generation_mode": "direct_svg",
+                    "generated_files": source_files,
+                    "page_receipts": ["04-svg/page-001.receipt.json"],
+                    "plan_sha256": runner.file_sha256(project_root / "02-plan/slide_plan.json"),
+                    "evidence_sha256": runner.file_sha256(project_root / "source/evidence.json"),
+                    "asset_manifest_sha256": runner.file_sha256(project_root / "03-assets/asset-manifest.json"),
+                    "source_receipt_sha256": runner.file_sha256(project_root / "source/source-receipt.json"),
+                    "lock_sha256": None,
+                    "generator_script_sha256": None,
+                    "fallback_skeleton_used": False,
+                    "page_identity_summary": [
+                        {
+                            "page": 1,
+                            "theme_archetype": "company_ecosystem",
+                            "identity_fit_reason": "测试页符合视觉身份",
+                            "reuse_risk_score": 0,
+                            "fallback_skeleton_used": False,
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        theme_validate = {
+            "schema_version": "svglide-theme-validate/v1",
+            "stage": "theme_validate",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": runner.file_sha256(project_root / "02-plan/slide_plan.json"),
+            },
+            "pages": [{"page": 1, "theme_id": "dark-clarity", "status": "passed", "issues": []}],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1, "theme_count": 1},
+            "issues": [],
+        }
+        (project_root / "06-check/theme-validate.json").write_text(json.dumps(theme_validate), encoding="utf-8")
+        theme_adherence = {
+            "schema_version": "svglide-theme-adherence/v1",
+            "stage": "theme_adherence",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": runner.file_sha256(project_root / "02-plan/slide_plan.json"),
+                "theme_validate": "06-check/theme-validate.json",
+                "theme_validate_sha256": runner.file_sha256(project_root / "06-check/theme-validate.json"),
+            },
+            "prepared_files": runner.prepared_file_hashes(project_root),
+            "pages": [{"page": 1, "status": "passed", "issues": []}],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
+            "issues": [],
+        }
+        (project_root / "06-check/theme-adherence.json").write_text(json.dumps(theme_adherence), encoding="utf-8")
+        (project_root / "06-check/visual-distinctness.json").write_text(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "action": "create_live",
+                    "inputs": {
+                        "slide_plan": "02-plan/slide_plan.json",
+                        "plan_sha256": runner.file_sha256(project_root / "02-plan/slide_plan.json"),
+                    },
+                    "summary": {"error_count": 0},
+                    "issues": [],
+                }
+            ),
+            encoding="utf-8",
+        )
         (project_root / "06-check/quality-gate.json").write_text(
             json.dumps(
                 {
                     "status": "passed",
-                    "inputs": {"visual_distinctness": "06-check/visual-distinctness.json"},
-                    "checks": [{"name": "visual-distinctness", "status": "passed"}],
+                    "inputs": {
+                        "generation_mode": "direct_svg",
+                        "generator_receipt": "receipts/generate_svg.json",
+                        "visual_distinctness": "06-check/visual-distinctness.json",
+                        "theme_validate": "06-check/theme-validate.json",
+                        "theme_adherence": "06-check/theme-adherence.json",
+                    },
+                    "input_hashes": {
+                        "generator_receipt": runner.file_sha256(project_root / "receipts/generate_svg.json"),
+                        "visual_distinctness": runner.file_sha256(project_root / "06-check/visual-distinctness.json"),
+                        "theme_validate": runner.file_sha256(project_root / "06-check/theme-validate.json"),
+                        "theme_adherence": runner.file_sha256(project_root / "06-check/theme-adherence.json"),
+                    },
+                    "prepared_files": runner.prepared_file_hashes(project_root),
+                    "checks": [
+                        {"name": "visual-distinctness", "status": "passed"},
+                        {"name": "theme-validate", "status": "passed"},
+                        {"name": "theme-adherence", "status": "passed"},
+                    ],
                 }
             ),
             encoding="utf-8",
@@ -202,13 +370,24 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         return subprocess.CompletedProcess(command, returncode, stdout=json.dumps(payload or {"ok": True}), stderr="")
 
     def write_ppe_input(self, project_root: Path) -> None:
+        rule_file = "skills/lark-slides/references/ppe-pure-svg.whistle.js"
+        rule_path = runner.repo_root() / rule_file
         (project_root / "07-create/ppe-proof.input.json").write_text(
             json.dumps(
                 {
                     "status": "passed",
                     "environment": {"name": "Pre_release", "x-tt-env": "ppe_pure_svg"},
                     "auth": {"identity": "user"},
-                    "proxy": {"mode": "whistle", "rewrite_host": "ppe"},
+                    "proxy": {
+                        "mode": "whistle",
+                        "capture": True,
+                        "http_proxy": "http://127.0.0.1:8899",
+                        "https_proxy": "http://127.0.0.1:8899",
+                        "rewrite_host": "open.feishu-pre.cn",
+                        "rule_file": rule_file,
+                        "rule_sha256": runner.file_sha256(rule_path),
+                        "inject_headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg"},
+                    },
                     "headers": {"x-tt-env": "ppe_pure_svg"},
                     "route": {"name": "slides +create-svg", "lane": "pure-svg"},
                 }
@@ -220,18 +399,24 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(runner.normalize_stage("confirm-plan"), "confirm_plan")
         self.assertEqual(runner.normalize_stage("source-review"), "source")
         self.assertEqual(runner.normalize_stage("strategy-review"), "strategy_review")
+        self.assertEqual(runner.normalize_stage("theme-validate"), "theme_validate")
+        self.assertEqual(runner.normalize_stage("package-check"), "package_check")
+        self.assertEqual(runner.normalize_stage("artboard-package-check"), "package_check")
         self.assertEqual(runner.normalize_stage("aesthetic-review"), "aesthetic_review")
         self.assertEqual(runner.normalize_stage("chart-verify"), "chart_verify")
         self.assertEqual(runner.normalize_stage("semantic-review"), "semantic_review")
         self.assertEqual(runner.normalize_stage("runtime-review"), "runtime_review")
         self.assertEqual(runner.normalize_stage("visual-distinctness"), "visual_distinctness_review")
         self.assertEqual(runner.normalize_stage("visual-distinctness-review"), "visual_distinctness_review")
+        self.assertEqual(runner.normalize_stage("theme-adherence"), "theme_adherence")
         self.assertEqual(runner.normalize_stage("generate"), "generate_svg")
         self.assertEqual(runner.normalize_stage("generate-svg"), "generate_svg")
         self.assertEqual(runner.normalize_stage("quality-gate"), "quality_gate")
         self.assertEqual(runner.normalize_stage("preview-lint"), "preview_lint")
         self.assertEqual(runner.normalize_stage("dry-run"), "dry_run")
         self.assertEqual(runner.normalize_stage("ppe-proof"), "ppe_proof")
+        self.assertEqual(runner.normalize_stage("pre-submit-review"), "pre_submit_review")
+        self.assertEqual(runner.normalize_stage("pre-submit"), "pre_submit_review")
         self.assertEqual(runner.normalize_stage("live-create"), "live_create")
 
     def test_stages_until_uses_normalized_stage_graph(self) -> None:
@@ -239,6 +424,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("source", dry_run)
         self.assertIn("confirm_plan", dry_run)
         self.assertIn("strategy_review", dry_run)
+        self.assertIn("theme_validate", dry_run)
+        self.assertIn("package_check", dry_run)
         self.assertIn("assets", dry_run)
         self.assertIn("generate_svg", dry_run)
         self.assertIn("aesthetic_review", dry_run)
@@ -246,6 +433,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("semantic_review", dry_run)
         self.assertIn("runtime_review", dry_run)
         self.assertIn("visual_distinctness_review", dry_run)
+        self.assertIn("theme_adherence", dry_run)
         self.assertIn("quality_gate", dry_run)
         self.assertIn("dry_run", dry_run)
         self.assertNotIn("ppe_proof", dry_run)
@@ -255,6 +443,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
         readback = runner.stages_until("readback")
         self.assertIn("ppe_proof", readback)
+        self.assertIn("pre_submit_review", readback)
         self.assertIn("live_create", readback)
         self.assertIn("readback", readback)
 
@@ -291,12 +480,21 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("semantic_review", called_stages)
             self.assertIn("runtime_review", called_stages)
             self.assertIn("visual_distinctness_review", called_stages)
+            self.assertIn("theme_validate", called_stages)
+            self.assertIn("package_check", called_stages)
+            self.assertIn("theme_adherence", called_stages)
+            self.assertLess(called_stages.index("strategy_review"), called_stages.index("theme_validate"))
+            self.assertLess(called_stages.index("theme_validate"), called_stages.index("confirm_plan"))
+            self.assertLess(called_stages.index("confirm_plan"), called_stages.index("package_check"))
             self.assertLess(called_stages.index("chart_verify"), called_stages.index("semantic_review"))
             self.assertLess(called_stages.index("semantic_review"), called_stages.index("quality_gate"))
             self.assertLess(called_stages.index("runtime_review"), called_stages.index("visual_distinctness_review"))
+            self.assertLess(called_stages.index("visual_distinctness_review"), called_stages.index("theme_adherence"))
+            self.assertLess(called_stages.index("theme_adherence"), called_stages.index("quality_gate"))
             self.assertLess(called_stages.index("visual_distinctness_review"), called_stages.index("quality_gate"))
             self.assertNotIn("dry_run", called_stages)
             self.assertNotIn("ppe_proof", called_stages)
+            self.assertNotIn("pre_submit_review", called_stages)
             self.assertNotIn("live_create", called_stages)
             self.assertNotIn("readback", called_stages)
             self.assertTrue(all(profile == "preview_only" for _, profile in calls))
@@ -324,8 +522,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
             called_stages = [stage for stage, _ in calls]
             self.assertIn("ppe_proof", called_stages)
+            self.assertIn("pre_submit_review", called_stages)
             self.assertLess(called_stages.index("dry_run"), called_stages.index("ppe_proof"))
-            self.assertLess(called_stages.index("ppe_proof"), called_stages.index("live_create"))
+            self.assertLess(called_stages.index("ppe_proof"), called_stages.index("pre_submit_review"))
+            self.assertLess(called_stages.index("pre_submit_review"), called_stages.index("live_create"))
             self.assertTrue(all(profile == "production_live" for _, profile in calls))
 
     def test_init_creates_project_directories_manifest_and_state(self) -> None:
@@ -399,6 +599,27 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
             state = json.loads((project_root / "01-project/state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["stages"]["plan"]["status"], "passed")
+
+    def test_plan_stage_rejects_artboard_mode_without_canvas_spec(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_plan(project_root)
+            plan_path = project_root / "02-plan/slide_plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["generation_mode"] = "artboard_satori"
+            for slide in plan["slides"]:
+                slide.pop("canvas_spec", None)
+            plan_path.write_text(json.dumps(plan, ensure_ascii=False), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "plan schema validation failed"):
+                runner.run_stage(project_root, "plan")
+
+            receipt = json.loads((project_root / "receipts/plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(receipt["status"], "failed")
+            paths = {item["path"] for item in receipt["error"]["issues"]}
+            self.assertIn("$.slides[0].canvas_spec", paths)
 
     def test_plan_stage_adds_visual_identity_before_confirmation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -502,6 +723,26 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             with self.assertRaisesRegex(runner.RunnerError, "assets"):
                 runner.run_stage(project_root, "generate-svg")
 
+    def test_package_check_writes_noop_receipt_for_direct_svg(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_plan(project_root)
+            self.write_plan_confirmation(project_root)
+            runner.run_stage(project_root, "confirm-plan")
+
+            result = runner.run_stage(project_root, "package-check")
+
+            self.assertEqual(result["status"], "passed")
+            check = json.loads((project_root / "06-check/artboard-package-check.json").read_text(encoding="utf-8"))
+            self.assertEqual(check["stage"], "package_check")
+            self.assertEqual(check["status"], "passed")
+            self.assertEqual(check["generation_mode"], "direct_svg")
+            self.assertEqual(check["summary"]["error_count"], 0)
+            state = runner.load_state(project_root)
+            self.assertEqual(state["stages"]["package_check"]["status"], "passed")
+
     def test_generate_svg_adopts_existing_source_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"
@@ -511,6 +752,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.write_plan_confirmation(project_root)
             self.run_source(project_root)
             runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
             runner.run_stage(project_root, "assets")
             for page in range(1, 4):
                 (project_root / f"04-svg/page-{page:03d}.svg").write_text("<svg></svg>", encoding="utf-8")
@@ -551,6 +793,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.write_plan_confirmation(project_root)
             self.run_source(project_root)
             runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
             runner.run_stage(project_root, "assets")
             for page in range(1, 4):
                 (project_root / f"04-svg/page-{page:03d}.svg").write_text(
@@ -583,6 +826,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.write_plan_confirmation(project_root)
             self.run_source(project_root)
             runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
             runner.run_stage(project_root, "assets")
             generator = project_root / "logs/generate_svgs.py"
             generator.write_text(
@@ -605,6 +849,69 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertEqual(receipt["generator_mode"], "script")
             self.assertIn("logs/generate_svgs.py", receipt["command"][1])
 
+    def test_generate_svg_runs_artboard_satori_dispatcher(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_artboard_plan(project_root)
+            self.write_plan_confirmation(project_root)
+            self.run_source(project_root)
+            runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
+            runner.run_stage(project_root, "assets")
+
+            result = runner.run_stage(project_root, "generate-svg")
+
+            self.assertEqual(result["status"], "passed")
+            source = project_root / "04-svg/page-001.svg"
+            self.assertTrue(source.exists())
+            self.assertIn('slide:role="slide"', source.read_text(encoding="utf-8"))
+            receipt = json.loads((project_root / "receipts/generate_svg.json").read_text(encoding="utf-8"))
+            self.assertEqual(receipt["generation_mode"], "artboard_satori")
+            self.assertEqual(receipt["generator_mode"], "script")
+            self.assertEqual(receipt["artboard_receipts"], ["04-svg/artboard/page-001.receipt.json"])
+            self.assertEqual(
+                receipt["artboard_additional_receipts"],
+                [
+                    "receipts/canvas-spec-validate.json",
+                    "receipts/artboard-render.json",
+                    "receipts/satori-bridge.json",
+                ],
+            )
+            self.assertEqual(receipt["canvas_spec_validate"], "06-check/canvas-spec-validate.json")
+            self.assertEqual(receipt["artboard_render_receipt"], "receipts/artboard-render.json")
+            self.assertEqual(receipt["satori_bridge_receipt"], "receipts/satori-bridge.json")
+            self.assertEqual(receipt["contact_sheet"]["path"], "05-preview/contact-sheet.png")
+            self.assertEqual(receipt["template_fit_check"], "06-check/template-fit.json")
+            self.assertEqual(receipt["page_receipts"], ["04-svg/page-001.receipt.json"])
+            self.assertTrue((project_root / "06-check/template-fit.json").exists())
+            self.assertTrue((project_root / "receipts/template-fit-check.json").exists())
+            self.assertTrue((project_root / "04-svg/artboard/page-001.png").exists())
+            self.assertTrue((project_root / "05-preview/contact-sheet.png").exists())
+            page_receipt = json.loads((project_root / "04-svg/page-001.receipt.json").read_text(encoding="utf-8"))
+            self.assertEqual(page_receipt["generation_mode"], "artboard_satori")
+            self.assertEqual(page_receipt["artboard_receipt"], "04-svg/artboard/page-001.receipt.json")
+
+    def test_generate_svg_rejects_artboard_plan_without_canvas_spec(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_artboard_plan(project_root)
+            plan_path = project_root / "02-plan/slide_plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["slides"][0].pop("canvas_spec")
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            self.write_plan_confirmation(project_root)
+            self.run_source(project_root)
+            runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
+            runner.run_stage(project_root, "assets")
+
+            with self.assertRaisesRegex(runner.RunnerError, "requires canvas_spec"):
+                runner.run_stage(project_root, "generate-svg")
+
     def test_prepare_requires_confirm_plan_stage(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"
@@ -626,6 +933,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.write_plan_confirmation(project_root)
             self.run_source(project_root)
             runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
             runner.run_stage(project_root, "assets")
             (project_root / "04-svg/page-001.svg").write_text("<svg></svg>", encoding="utf-8")
 
@@ -654,6 +962,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.write_plan_confirmation(project_root)
             self.run_source(project_root)
             runner.run_stage(project_root, "confirm-plan")
+            runner.run_stage(project_root, "package-check")
             runner.run_stage(project_root, "assets")
             source = project_root / "04-svg/page-001.svg"
             for page in range(1, 4):
@@ -675,8 +984,6 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def test_dry_run_refuses_changed_prepared_hashes_after_quality_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = self.make_project(tmpdir)
-            hashes = runner.prepared_file_hashes(project_root)
-            (project_root / "06-check/quality-gate.json").write_text(json.dumps({"status": "passed", "prepared_files": hashes}), encoding="utf-8")
             (project_root / "04-svg/prepared/page-001.svg").write_text("<svg><rect /></svg>", encoding="utf-8")
 
             with self.assertRaisesRegex(runner.RunnerError, "changed after quality gate"):
@@ -748,6 +1055,37 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("+create-svg", command)
             self.assertIn("--dry-run", command)
 
+    def test_live_create_command_includes_ppe_request_header(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            captured: list[list[str]] = []
+
+            def fake(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+                captured.append(command)
+                return self.completed(command, {"xml_presentation_id": "xml_1", "slide_ids": ["s1"]})
+
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            self.write_ppe_input(project_root)
+            runner.run_stage(project_root, "ppe-proof")
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "live_create",
+                dry_run=False,
+                command_runner=fake,
+            )
+
+            self.assertEqual(captured[0][captured[0].index("--request-header") + 1], "x-tt-env=ppe_pure_svg")
+            self.assertNotIn("--dry-run", captured[0])
+            command_text = (project_root / "07-create/create-command.txt").read_text(encoding="utf-8")
+            self.assertIn("--request-header x-tt-env=ppe_pure_svg", command_text)
+
     def test_cli_arg_path_uses_repo_relative_paths(self) -> None:
         repo_file = runner.repo_root() / "skills/lark-slides/scripts/svglide_project_runner.py"
 
@@ -767,6 +1105,19 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.write_ppe_input(project_root)
             runner.run_stage(project_root, "ppe-proof")
             (project_root / "04-svg/prepared/page-001.svg").write_text("<svg><rect /></svg>", encoding="utf-8")
+            theme_adherence_path = project_root / "06-check/theme-adherence.json"
+            theme_adherence = json.loads(theme_adherence_path.read_text(encoding="utf-8"))
+            theme_adherence["prepared_files"] = runner.prepared_file_hashes(project_root)
+            theme_adherence_path.write_text(json.dumps(theme_adherence), encoding="utf-8")
+            gate_path = project_root / "06-check/quality-gate.json"
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            gate["prepared_files"] = runner.prepared_file_hashes(project_root)
+            gate["input_hashes"]["theme_adherence"] = runner.file_sha256(theme_adherence_path)
+            gate_path.write_text(json.dumps(gate), encoding="utf-8")
+            proof_path = project_root / "07-create/ppe-proof.json"
+            proof = json.loads(proof_path.read_text(encoding="utf-8"))
+            proof["inputs"]["quality_gate_sha256"] = runner.file_sha256(gate_path)
+            proof_path.write_text(json.dumps(proof), encoding="utf-8")
 
             with self.assertRaisesRegex(runner.RunnerError, "changed after dry-run"):
                 runner.run_create_stage(
@@ -801,6 +1152,54 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                     dry_run=False,
                     command_runner=lambda command, **_: self.completed(command, {"xml_presentation_id": "xml_1", "slide_ids": ["s1"]}),
                 )
+
+    def test_production_live_create_requires_pre_submit_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            self.write_ppe_input(project_root)
+            runner.run_stage(project_root, "ppe-proof")
+
+            with self.assertRaisesRegex(runner.RunnerError, "pre_submit_review"):
+                runner.run_create_stage(
+                    project_root,
+                    runner.load_state(project_root),
+                    "live_create",
+                    dry_run=False,
+                    profile="production_live",
+                    command_runner=lambda command, **_: self.completed(command, {"xml_presentation_id": "xml_1", "slide_ids": ["s1"]}),
+                )
+
+    def test_existing_live_create_record_requires_pre_submit_for_production_live_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            self.write_ppe_input(project_root)
+            runner.run_stage(project_root, "ppe-proof")
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "live_create",
+                dry_run=False,
+                command_runner=lambda command, **_: self.completed(command, {"xml_presentation_id": "xml_1", "slide_ids": ["s1"]}),
+            )
+
+            with self.assertRaisesRegex(runner.RunnerError, "pre_submit_review"):
+                runner.run_stage(project_root, "live-create", profile="production_live")
 
 
 if __name__ == "__main__":

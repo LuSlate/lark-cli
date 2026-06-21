@@ -1,0 +1,33 @@
+{
+  "schema_version": "svglide-component-registry/v1",
+  "runtime_contract": {
+    "format": "Satori-compatible JSX/render tree",
+    "allowed_styles": ["static flex layout", "absolute positioning", "solid backgrounds", "font tokens", "bounded text boxes"],
+    "forbidden_styles": ["CSS animation", "filter effects", "external stylesheets", "arbitrary HTML passthrough"]
+  },
+  "components": [
+    {"id": "Title", "status": "active", "role": "primary text hierarchy", "source": "components/primitives.mjs"},
+    {"id": "Subtitle", "status": "active", "role": "secondary text hierarchy", "source": "components/primitives.mjs"},
+    {"id": "TextBlock", "status": "active", "role": "bounded text surface", "source": "components/primitives.mjs"},
+    {"id": "Badge", "status": "active", "role": "eyebrow or metadata label", "source": "components/primitives.mjs"},
+    {"id": "Chip", "status": "active", "role": "short categorical tag", "source": "components/primitives.mjs"},
+    {"id": "StatCard", "status": "active", "role": "numbered takeaway card", "source": "components/primitives.mjs"},
+    {"id": "ImageFrame", "status": "active", "role": "bounded visual placeholder", "source": "components/primitives.mjs"},
+    {"id": "MetricTile", "status": "active", "role": "dashboard metric block", "source": "templates/p0-templates.mjs"},
+    {"id": "TimelineNode", "status": "active", "role": "milestone marker", "source": "templates/p0-templates.mjs"},
+    {"id": "ProcessStep", "status": "active", "role": "pipeline step card", "source": "templates/p0-templates.mjs"},
+    {"id": "QuoteBlock", "status": "active", "role": "large quotation layout", "source": "templates/p0-templates.mjs"},
+    {"id": "RiskBanner", "status": "active", "role": "severity and risk grouping", "source": "templates/p0-templates.mjs"},
+    {"id": "RoadmapLane", "status": "active", "role": "horizontal roadmap row", "source": "templates/p0-templates.mjs"},
+    {"id": "ArchitectureNode", "status": "active", "role": "system node block", "source": "templates/p0-templates.mjs"},
+    {"id": "Callout", "status": "active", "role": "emphasis panel", "source": "templates/p0-templates.mjs"},
+    {"id": "SectionHeader", "status": "active", "role": "compact page heading cluster", "source": "templates/p0-templates.mjs"},
+    {"id": "FigurePlaceholder", "status": "active", "role": "image or diagram placeholder", "source": "templates/p0-templates.mjs"},
+    {"id": "LegendDot", "status": "active", "role": "comparison and chart marker", "source": "templates/p0-templates.mjs"},
+    {"id": "IndexNumber", "status": "active", "role": "ordered list number", "source": "templates/p0-templates.mjs"},
+    {"id": "DividerRule", "status": "active", "role": "section or timeline divider", "source": "templates/p0-templates.mjs"},
+    {"id": "PosterSection", "status": "active", "role": "research poster content block", "source": "templates/p0-templates.mjs"},
+    {"id": "BarMark", "status": "active", "role": "simple data story bar", "source": "templates/p0-templates.mjs"},
+    {"id": "AccentShape", "status": "active", "role": "bounded decorative visual signal", "source": "templates/p0-templates.mjs"}
+  ]
+}

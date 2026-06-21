@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="#F7F3E8"/>
+<text data-node-id="title" data-box-x="64" data-box-y="52" data-box-width="760" data-box-height="64" x="64" y="96" fill="#1F2937" font-size="40" font-weight="800" font-family="Inter">观测证据对比</text>
+<rect data-node-id="left-card" x="64" y="140" width="390" height="250" fill="#FFFDF6" opacity="0.82"/>
+<rect data-node-id="right-card" x="506" y="140" width="390" height="250" fill="#FFFDF6" opacity="0.82"/>
+<text data-node-id="left-title" data-box-x="92" data-box-y="168" data-box-width="320" data-box-height="34" x="92" y="194" fill="#1E3A8A" font-size="24" font-weight="800" font-family="Inter">地表信号</text>
+<text data-node-id="right-title" data-box-x="534" data-box-y="168" data-box-width="320" data-box-height="34" x="534" y="194" fill="#B45309" font-size="24" font-weight="800" font-family="Inter">地下信号</text>
+<circle data-node-id="left-dot-1" cx="98" cy="241" r="5" fill="#1E3A8A"/>
+<text data-node-id="left-point-1" data-box-x="116" data-box-y="222" data-box-width="296" data-box-height="36" x="116" y="248" fill="#6B7280" font-size="20" font-weight="500" font-family="Inter">熔岩地貌</text>
+<circle data-node-id="left-dot-2" cx="98" cy="289" r="5" fill="#1E3A8A"/>
+<text data-node-id="left-point-2" data-box-x="116" data-box-y="270" data-box-width="296" data-box-height="36" x="116" y="296" fill="#6B7280" font-size="20" font-weight="500" font-family="Inter">热异常</text>
+<circle data-node-id="left-dot-3" cx="98" cy="337" r="5" fill="#1E3A8A"/>
+<text data-node-id="left-point-3" data-box-x="116" data-box-y="318" data-box-width="296" data-box-height="36" x="116" y="344" fill="#6B7280" font-size="20" font-weight="500" font-family="Inter">气体羽流</text>
+<circle data-node-id="right-dot-1" cx="540" cy="241" r="5" fill="#B45309"/>
+<text data-node-id="right-point-1" data-box-x="558" data-box-y="222" data-box-width="296" data-box-height="36" x="558" y="248" fill="#6B7280" font-size="20" font-weight="500" font-family="Inter">地震活动</text>
+<circle data-node-id="right-dot-2" cx="540" cy="289" r="5" fill="#B45309"/>
+<text data-node-id="right-point-2" data-box-x="558" data-box-y="270" data-box-width="296" data-box-height="36" x="558" y="296" fill="#6B7280" font-size="20" font-weight="500" font-family="Inter">形变趋势</text>
+<circle data-node-id="right-dot-3" cx="540" cy="337" r="5" fill="#B45309"/>
+<text data-node-id="right-point-3" data-box-x="558" data-box-y="318" data-box-width="296" data-box-height="36" x="558" y="344" fill="#6B7280" font-size="20" font-weight="500" font-family="Inter">岩浆补给</text>
+<rect data-node-id="conclusion-bg" x="64" y="414" width="832" height="66" fill="#1E3A8A" opacity="0.16"/>
+<text data-node-id="conclusion" data-box-x="86" data-box-y="426" data-box-width="788" data-box-height="42" x="86" y="454" fill="#1F2937" font-size="22" font-weight="700" font-family="Inter">多源观测共同降低单一证据偏差。</text>
+</svg>

@@ -6,6 +6,8 @@ bin/
 
 # Node
 node_modules/
+!skills/lark-slides/scripts/artboard_renderer/dist/
+!skills/lark-slides/scripts/artboard_renderer/dist/render.mjs
 
 
 # OS

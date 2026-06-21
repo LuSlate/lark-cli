@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "environment": {
+    "name": "Pre_release",
+    "x-tt-env": "ppe_pure_svg"
+  },
+  "auth": {
+    "identity": "user"
+  },
+  "proxy": {
+    "mode": "whistle",
+    "capture": true,
+    "http_proxy": "http://127.0.0.1:8899",
+    "https_proxy": "http://127.0.0.1:8899",
+    "rewrite_host": "open.feishu-pre.cn",
+    "rule_file": "skills/lark-slides/references/ppe-pure-svg.whistle.js",
+    "rule_sha256": "641d01be2b2ea6b7a57a21302ee45cf10cc60d247132f50681966b88481a8487",
+    "inject_headers": {
+      "Env": "Pre_release",
+      "x-tt-env": "ppe_pure_svg"
+    }
+  },
+  "headers": {
+    "x-tt-env": "ppe_pure_svg"
+  },
+  "route": {
+    "name": "slides +create-svg"
+  }
+}

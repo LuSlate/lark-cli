@@ -204,7 +204,7 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
         self.assertEqual(result["used_count"], 0)
         self.assertEqual(result["by_page"][0]["reason"], "safe_text_zones_missing")
 
-    def test_body_visual_asset_uses_svg_text_contract_for_caption(self) -> None:
+    def test_body_visual_asset_does_not_add_untraceable_caption_text(self) -> None:
         project = self.make_project()
         self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#fff"/><!-- svglide:asset-slot -->')
         asset_file = self.write_asset(project)
@@ -232,10 +232,45 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
         svg = (project / "04-svg/page-001.svg").read_text(encoding="utf-8")
 
         self.assertEqual(result["used_count"], 1)
-        self.assertIn('slide:shape-type="text"', svg)
-        self.assertIn("Visual evidence", svg)
-        self.assertIn("Source: https://example.com/source", svg)
+        self.assertIn("<image", svg)
+        self.assertNotIn("Visual evidence", svg)
+        self.assertNotIn("https://example.com/source", svg)
         self.assertNotIn("<text", svg)
+
+    def test_body_visual_without_slot_uses_ambient_fallback(self) -> None:
+        project = self.make_project()
+        self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#fff"/><text>Title</text>')
+        asset_file = self.write_asset(project)
+        write_json(
+            project / "03-assets/asset-manifest.json",
+            {
+                "version": "svglide-assets/v1",
+                "status": "passed",
+                "acquired_assets": [
+                    {
+                        "asset_id": "market-signal",
+                        "page": 1,
+                        "placement_role": "inline_figure",
+                        "asset_kind": "user_file",
+                        "status": "local_file",
+                        "file": asset_file,
+                        "source_url": "https://example.com/source",
+                        "license": "preview_unverified",
+                    }
+                ],
+            },
+        )
+
+        result = svglide_asset_injector.inject_project_assets(project)
+        svg = (project / "04-svg/page-001.svg").read_text(encoding="utf-8")
+
+        self.assertEqual(result["used_count"], 1)
+        self.assertEqual(result["by_page"][0]["status"], "injected")
+        self.assertEqual(result["by_page"][0]["renderer_id"], "ambient_asset_background")
+        self.assertEqual(result["by_page"][0]["slot_strategy"], "ambient_fallback")
+        self.assertIn('data-svglide-slot-strategy="ambient_fallback"', svg)
+        self.assertIn('href="@./03-assets/raw/hero.png"', svg)
+        self.assertIn("<text>Title</text>", svg)
 
 
 if __name__ == "__main__":

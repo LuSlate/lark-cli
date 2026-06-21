@@ -1,0 +1,178 @@
+{
+  "art_direction": {
+    "closing_treatment": "single-slide P0a fixture",
+    "cover_treatment": "dark technical cover with controlled typography",
+    "deck_motif": "controlled artboard pipeline",
+    "section_divider_treatment": "not used in P0a",
+    "svg_native_moments": [
+      "protocol SVG cover",
+      "semantic text boxes",
+      "controlled decorative orbit"
+    ]
+  },
+  "audience": "SVGlide engineers",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "generation_mode": "artboard_satori",
+  "language": "zh-CN",
+  "loaded_rule_set": [
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svg-protocol.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svglide-artifacts.spec.md",
+    "skills/lark-slides/references/svglide-assets.contract.md",
+    "skills/lark-slides/references/svglide-checks.checklist.md",
+    "skills/lark-slides/references/svglide-create-svg.contract.md",
+    "skills/lark-slides/references/svglide-generate-svg.contract.md",
+    "skills/lark-slides/references/svglide-lock.contract.md",
+    "skills/lark-slides/references/svglide-plan.contract.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+    "skills/lark-slides/references/svglide-preview.spec.md",
+    "skills/lark-slides/references/svglide-readback.contract.md",
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-svg-private.rules.json",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+    "skills/lark-slides/references/svglide-workflow.spec.md"
+  ],
+  "plan_path": "02-plan/slide_plan.json",
+  "quality_gates": {
+    "no_debug_guides": true,
+    "no_text_overflow": true,
+    "no_xml_like_pages": true
+  },
+  "route": "svglide-svg",
+  "slides": [
+    {
+      "body_points": [
+        "CanvasSpec 负责语义和内容结构",
+        "Satori-compatible preview 只作为上游预览证据",
+        "SVGlide protocol SVG 继续进入现有质量门禁"
+      ],
+      "canvas_spec": {
+        "canvas": {
+          "height": 540,
+          "viewBox": "0 0 960 540",
+          "width": 960
+        },
+        "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+        "content": {
+          "chips": [
+            "CanvasSpec",
+            "Satori Preview",
+            "SVGlide SVG"
+          ],
+          "eyebrow": "ARTBOARD P0A",
+          "subtitle": "CanvasSpec 驱动模板，输出可进入 SVGlide 后续链路的协议 SVG。",
+          "title": "受控画板生成"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {"x": 84, "y": 142, "width": 628, "height": 142}
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 2,
+          "min_font_size": 18,
+          "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}
+        },
+        "template_id": "cover-hero",
+        "theme": {
+          "colors": {
+            "accent": "#A78BFA",
+            "background": "#0F172A",
+            "muted": "#CBD5E1",
+            "panel": "#111827",
+            "primary": "#38BDF8",
+            "text": "#F8FAFC"
+          }
+        },
+        "theme_id": "dark-clarity",
+        "version": "svglide-canvas-spec/v1"
+      },
+      "content_density_contract": "medium",
+      "asset_contract": "none_required",
+      "key_message": "P0a 证明受控画板链路可以进入现有 SVGlide delivery stages。",
+      "layout_family": "cover",
+      "page": 1,
+      "page_type": "cover",
+      "renderer_id": "artboard_cover_hero",
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "risk_flags": [],
+      "role": "thesis",
+      "section": "开场",
+      "source_policy": "source-backed",
+      "source_refs": [
+        "source:item-001",
+        "source:item-002",
+        "source:item-003"
+      ],
+      "svg_effects": [
+        "typography"
+      ],
+      "svg_primitives": [
+        "typography",
+        "geometric_shape",
+        "foreignObject",
+        "rect",
+        "circle"
+      ],
+      "title": "受控画板生成",
+      "visual_focal_point": "title",
+      "visual_intent": "validate controlled artboard rendering",
+      "visual_recipe": "hero_typography",
+      "visual_signature": "dark cover panel with orbit accent",
+      "xml_like_risk": "low"
+    }
+  ],
+  "style_preset": "cobalt_bloom",
+  "style_selection_reason": "single fixture for controlled artboard rendering",
+  "style_system": {
+    "background_strategy": "solid",
+    "motif": "orbit panel",
+    "palette": [
+      "#0F172A",
+      "#38BDF8",
+      "#A78BFA"
+    ],
+    "typography": "Inter-compatible system"
+  },
+  "title": "Artboard P0a Cover",
+  "visual_identity": {
+    "design_dna": {
+      "component_bias": "controlled cover panel, semantic text blocks, orbit accent",
+      "image_treatment": "no image required for P0a fixture",
+      "layout_motif": "controlled artboard pipeline",
+      "palette": "technical clarity",
+      "shape_language": "solid rectangles, orbit circles, clear text containers",
+      "theme_visual_anchors": [
+        "CanvasSpec",
+        "Satori-compatible preview",
+        "SVGlide protocol SVG"
+      ]
+    },
+    "distinctness_target": {
+      "palette_overlap_max": 0.67,
+      "renderer_sequence_similarity_max": 0.75
+    },
+    "forbidden_reuse": {
+      "avoid_default_skeleton": true,
+      "avoid_same_cover_structure": true,
+      "recent_decks": 5
+    },
+    "theme_archetype": "general_explainer"
+  }
+}

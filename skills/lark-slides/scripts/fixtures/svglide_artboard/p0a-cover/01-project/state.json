@@ -1,0 +1,13 @@
+{
+  "created_at": "2026-06-20T00:00:00+08:00",
+  "current_stage": "init",
+  "runner_version": "svglide-project-runner/v0",
+  "stages": {
+    "init": {
+      "receipt": "receipts/init.json",
+      "status": "passed"
+    }
+  },
+  "updated_at": "2026-06-20T00:00:00+08:00",
+  "version": "svglide-state/v1"
+}

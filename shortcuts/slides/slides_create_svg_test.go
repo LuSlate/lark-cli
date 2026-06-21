@@ -145,6 +145,80 @@ func TestSlidesCreateSVGExecuteCreatesSlidesInFileOrder(t *testing.T) {
 	assertSlideCreateBodyContains(t, slideStub2, `<foreignObject slide:role="shape" slide:shape-type="text" x="80" y="80" width="320" height="80">`)
 }
 
+func TestSlidesCreateSVGRequestHeaderPassesToCreateAndSlideCalls(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage1), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	createStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"xml_presentation_id": "pres_header",
+				"revision_id":         1,
+			},
+		},
+	}
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_header/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_header", "revision_id": 2}},
+	}
+	reg.Register(createStub)
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_header", "https://x.feishu.cn/slides/pres_header")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--title", "SVG Header Deck",
+		"--request-header", "x-tt-env=ppe_pure_svg",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if got := createStub.CapturedHeaders.Get("x-tt-env"); got != "ppe_pure_svg" {
+		t.Fatalf("create x-tt-env = %q, want ppe_pure_svg", got)
+	}
+	if got := slideStub.CapturedHeaders.Get("x-tt-env"); got != "ppe_pure_svg" {
+		t.Fatalf("slide x-tt-env = %q, want ppe_pure_svg", got)
+	}
+	data := decodeSlidesCreateEnvelope(t, stdout)
+	headers, _ := data["request_headers"].(map[string]interface{})
+	if headers["x-tt-env"] != "ppe_pure_svg" {
+		t.Fatalf("request_headers = %#v, want x-tt-env", data["request_headers"])
+	}
+}
+
+func TestSlidesCreateSVGRejectsUnsupportedRequestHeader(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage1), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--request-header", "authorization=secret",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected unsupported request header error")
+	}
+	if !strings.Contains(err.Error(), "only x-tt-env is allowed") {
+		t.Fatalf("err = %v, want supported-header message", err)
+	}
+}
+
 func TestSlidesCreateSVGChartMarkerPassesThroughSlideContent(t *testing.T) {
 	dir := t.TempDir()
 	withSlidesTestWorkingDir(t, dir)

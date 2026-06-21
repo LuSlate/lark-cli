@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-canvas-spec.schema.json",
+  "title": "SVGlide CanvasSpec",
+  "type": "object",
+  "required": ["version", "canvas", "safe_area", "template_id", "theme_id", "theme", "content", "semantic_elements", "quality_constraints"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-canvas-spec/v1"},
+    "canvas": {
+      "type": "object",
+      "required": ["width", "height", "viewBox"],
+      "additionalProperties": true,
+      "properties": {
+        "width": {"const": 960},
+        "height": {"const": 540},
+        "viewBox": {"const": "0 0 960 540"}
+      }
+    },
+    "template_id": {"type": "string", "minLength": 1},
+    "theme_id": {"type": "string", "minLength": 1},
+    "safe_area": {
+      "type": "object",
+      "required": ["x", "y", "width", "height"],
+      "additionalProperties": true,
+      "properties": {
+        "x": {"type": "number"},
+        "y": {"type": "number"},
+        "width": {"type": "number"},
+        "height": {"type": "number"}
+      }
+    },
+    "theme": {"type": "object", "additionalProperties": true},
+    "content": {"type": "object", "additionalProperties": true},
+    "semantic_elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["element_id", "kind", "role", "source_ref", "bbox"],
+        "additionalProperties": true,
+        "properties": {
+          "element_id": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "source_ref": {"type": "string", "minLength": 1},
+          "bbox": {
+            "type": "object",
+            "required": ["x", "y", "width", "height"],
+            "additionalProperties": true,
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"},
+              "width": {"type": "number"},
+              "height": {"type": "number"}
+            }
+          }
+        }
+      }
+    },
+    "quality_constraints": {
+      "type": "object",
+      "required": ["min_font_size", "safe_area"],
+      "additionalProperties": true,
+      "properties": {
+        "min_font_size": {"type": "number"},
+        "max_title_lines": {"type": "integer", "minimum": 1},
+        "safe_area": {
+          "type": "object",
+          "required": ["x", "y", "width", "height"],
+          "additionalProperties": true,
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"},
+            "width": {"type": "number"},
+            "height": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}

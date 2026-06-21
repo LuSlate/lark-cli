@@ -7,10 +7,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import quote
 
 
 CREATE_DIR = Path("07-create")
@@ -18,6 +22,7 @@ READBACK_DIR = Path("08-readback")
 LIVE_CREATE_NAME = "live-create.json"
 RAW_READBACK_NAME = "xml-presentations-get.json"
 READBACK_CHECK_NAME = "readback-check.json"
+LARK_CLI_COMMAND_ENV = "SVGLIDE_LARK_CLI_CMD"
 
 
 class ReadbackError(Exception):
@@ -89,6 +94,49 @@ def extract_slide_ids(live_create: Any) -> list[str]:
     return []
 
 
+def lark_cli_command_prefix() -> list[str]:
+    raw = os.environ.get(LARK_CLI_COMMAND_ENV, "").strip()
+    if not raw:
+        return ["lark-cli"]
+    parsed = shlex.split(raw)
+    return parsed if parsed else ["lark-cli"]
+
+
+def extract_request_headers(live_create: Any) -> dict[str, str]:
+    raw = find_first_key(live_create, {"request_headers"})
+    if not isinstance(raw, dict):
+        return {}
+    headers: dict[str, str] = {}
+    for key, value in raw.items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise ReadbackError("live-create request_headers must be a string key/value object")
+        normalized_key = key.strip().lower()
+        normalized_value = value.strip()
+        if normalized_key != "x-tt-env" or normalized_value != "ppe_pure_svg":
+            raise ReadbackError("readback currently supports only x-tt-env=ppe_pure_svg request header")
+        headers[normalized_key] = normalized_value
+    return headers
+
+
+def build_readback_command(live_create: Any, xml_presentation_id: str) -> tuple[list[str], dict[str, str]]:
+    request_headers = extract_request_headers(live_create)
+    prefix = lark_cli_command_prefix()
+    if request_headers:
+        command = prefix + [
+            "api",
+            "GET",
+            f"/open-apis/slides_ai/v1/xml_presentations/{quote(xml_presentation_id, safe='')}",
+            "--as",
+            "user",
+        ]
+        for key in sorted(request_headers):
+            command.extend(["--request-header", f"{key}={request_headers[key]}"])
+        return command, request_headers
+
+    params = json.dumps({"xml_presentation_id": xml_presentation_id}, separators=(",", ":"))
+    return prefix + ["slides", "xml_presentations", "get", "--as", "user", "--params", params], {}
+
+
 def build_input_binding(project: Path, live_create: Any) -> dict[str, Any]:
     revision = find_first_key(live_create, {"revision_id", "revision"})
     slide_ids = extract_slide_ids(live_create)
@@ -98,7 +146,7 @@ def build_input_binding(project: Path, live_create: Any) -> dict[str, Any]:
         "dry_run_sha256": optional_sha256(project / CREATE_DIR / "dry-run.json"),
         "ppe_proof_sha256": optional_sha256(project / CREATE_DIR / "ppe-proof.json"),
         "live_create_sha256": optional_sha256(project / CREATE_DIR / LIVE_CREATE_NAME),
-        "revision_id": revision if isinstance(revision, str) else None,
+        "revision_id": revision if isinstance(revision, (str, int)) else None,
         "expected_slide_count": expected_page_count(project),
         "created_slide_count": len(slide_ids),
     }
@@ -138,12 +186,43 @@ def find_slide_list(value: Any) -> list[Any] | None:
     return None
 
 
+def extract_presentation_content(readback: Any) -> str | None:
+    value = find_first_key(readback, {"content"})
+    if isinstance(value, str) and "<presentation" in value and "<slide" in value:
+        return value
+    return None
+
+
+def slide_ids_from_content(content: str) -> list[str]:
+    return re.findall(r"<slide\b[^>]*\bid=\"([^\"]+)\"", content)
+
+
+def slide_ids_from_readback(readback: Any) -> list[str]:
+    content = extract_presentation_content(readback)
+    if content:
+        return slide_ids_from_content(content)
+    slides = find_slide_list(readback)
+    ids: list[str] = []
+    if slides is not None:
+        for slide in slides:
+            if isinstance(slide, dict):
+                raw = slide.get("id") or slide.get("slide_id")
+                if isinstance(raw, str) and raw.strip():
+                    ids.append(raw)
+    return ids
+
+
 def actual_page_count(readback: Any) -> int | None:
     raw = find_first_key(readback, {"page_count", "slide_count"})
     if isinstance(raw, int) and raw >= 0:
         return raw
     slides = find_slide_list(readback)
-    return len(slides) if slides is not None else None
+    if slides is not None:
+        return len(slides)
+    content = extract_presentation_content(readback)
+    if content:
+        return len(slide_ids_from_content(content))
+    return None
 
 
 def expected_asset_tokens(project: Path) -> list[str]:
@@ -200,20 +279,61 @@ def expected_business_claim_fragments(project: Path) -> list[str]:
     return [fragment.strip() for fragment in fragments if fragment.strip()]
 
 
+def expected_core_visible_text_fragments(project: Path) -> list[str]:
+    plan_path = project / "02-plan" / "slide_plan.json"
+    if not plan_path.exists():
+        return []
+    plan = read_json(plan_path)
+    if not isinstance(plan, dict):
+        return []
+    fragments: list[str] = []
+    slides = plan.get("slides")
+    if not isinstance(slides, list):
+        return []
+    for slide in slides:
+        if not isinstance(slide, dict):
+            continue
+        spec = slide.get("canvas_spec")
+        content = spec.get("content") if isinstance(spec, dict) else None
+        if isinstance(content, dict):
+            fragments.extend(item.strip() for item in iter_strings(content) if item.strip())
+        else:
+            value = slide.get("title")
+            if isinstance(value, str) and value.strip():
+                fragments.append(value.strip())
+    seen: set[str] = set()
+    unique: list[str] = []
+    for fragment in fragments:
+        if fragment not in seen:
+            seen.add(fragment)
+            unique.append(fragment)
+    return unique
+
+
 def expected_chart_marker_count(project: Path) -> int:
     count = 0
-    svg_dirs = [project / "04-svg" / "prepared", project / "04-svg"]
-    seen: set[Path] = set()
-    for svg_dir in svg_dirs:
-        if not svg_dir.exists():
-            continue
-        for path in sorted(svg_dir.glob("*.svg")):
-            if path in seen:
-                continue
-            seen.add(path)
-            text = path.read_text(encoding="utf-8", errors="ignore")
-            if 'slide:role="chart"' in text or "data-svglide-chart" in text:
-                count += 1
+    for path in source_svgs_for_readback(project):
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        if 'slide:role="chart"' in text or "data-svglide-chart" in text:
+            count += 1
+    return count
+
+
+def source_svgs_for_readback(project: Path) -> list[Path]:
+    prepared = project / "04-svg" / "prepared"
+    if prepared.exists():
+        files = sorted(path for path in prepared.glob("*.svg") if path.is_file())
+        if files:
+            return files
+    source = project / "04-svg"
+    return sorted(path for path in source.glob("*.svg") if path.is_file()) if source.exists() else []
+
+
+def expected_image_asset_count(project: Path) -> int:
+    count = 0
+    for path in source_svgs_for_readback(project):
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        count += len(re.findall(r"<image\b", text, flags=re.IGNORECASE))
     return count
 
 
@@ -244,6 +364,7 @@ def build_checks(project: Path, live_create: Any, readback: Any, xml_presentatio
     expected_count = expected_page_count(project)
     actual_count = actual_page_count(readback)
     slide_ids = extract_slide_ids(live_create)
+    readback_slide_ids = slide_ids_from_readback(readback)
     tokens = expected_asset_tokens(project)
     readback_text = json.dumps(readback, ensure_ascii=False)
 
@@ -261,6 +382,13 @@ def build_checks(project: Path, live_create: Any, readback: Any, xml_presentatio
         checks["slide_ids"] = check_status("failed", expected=expected_count, actual=len(slide_ids))
     else:
         checks["slide_ids"] = check_status("passed", actual=len(slide_ids))
+
+    if not slide_ids or not readback_slide_ids:
+        checks["slide_order"] = check_status("skipped", reason="live or readback slide ids are unavailable")
+    elif slide_ids == readback_slide_ids:
+        checks["slide_order"] = check_status("passed", expected=slide_ids, actual=readback_slide_ids)
+    else:
+        checks["slide_order"] = check_status("failed", expected=slide_ids, actual=readback_slide_ids)
 
     checks["blank_page"] = check_status("failed" if has_blank_marker(readback) else "passed")
 
@@ -289,6 +417,13 @@ def build_checks(project: Path, live_create: Any, readback: Any, xml_presentatio
         chart_present = has_any_marker(readback_text, ["svglide-chart", "slide:role=\"chart\"", "chart-ref", "chart"])
         checks["chart_markers"] = check_status("passed" if chart_present else "failed", expected=expected_chart_markers)
 
+    expected_images = expected_image_asset_count(project)
+    if expected_images == 0:
+        checks["image_assets"] = check_status("skipped", reason="no source image assets")
+    else:
+        image_present = has_any_marker(readback_text, ["<image", "<img", "data-svglide-assets", "image-ref", "imageRef"])
+        checks["image_assets"] = check_status("passed" if image_present else "failed", expected=expected_images)
+
     claims = expected_business_claim_fragments(project)
     if not claims:
         checks["business_claims"] = check_status("skipped", reason="no business claims")
@@ -296,6 +431,18 @@ def build_checks(project: Path, live_create: Any, readback: Any, xml_presentatio
         visible_text = "\n".join(iter_strings(readback))
         missing_claims = [claim for claim in claims if claim not in visible_text]
         checks["business_claims"] = check_status("failed" if missing_claims else "passed", missing=missing_claims)
+
+    core_fragments = expected_core_visible_text_fragments(project)
+    if not core_fragments:
+        checks["core_visible_text"] = check_status("skipped", reason="no expected core text fragments")
+    else:
+        visible_text = "\n".join(iter_strings(readback))
+        missing_fragments = [fragment for fragment in core_fragments if fragment not in visible_text]
+        checks["core_visible_text"] = check_status(
+            "failed" if missing_fragments else "passed",
+            expected=len(core_fragments),
+            missing=missing_fragments,
+        )
 
     failed = [name for name, item in checks.items() if item["status"] == "failed"]
     return {
@@ -327,11 +474,24 @@ def run_readback(project: Path, *, command_runner: CommandRunner = subprocess.ru
         write_json(output_dir / READBACK_CHECK_NAME, result)
         return result
 
-    params = json.dumps({"xml_presentation_id": xml_presentation_id}, separators=(",", ":"))
-    command = ["lark-cli", "slides", "xml_presentations", "get", "--as", "user", "--params", params]
+    try:
+        command, request_headers = build_readback_command(live_create, xml_presentation_id)
+    except ReadbackError as error:
+        result = {
+            "version": "svglide-readback/v1",
+            "status": "failed",
+            "xml_presentation_id": xml_presentation_id,
+            "input_binding": build_input_binding(project, live_create),
+            "checks": {"readback_command": check_status("failed", reason=str(error))},
+            "failed_checks": ["readback_command"],
+        }
+        write_json(output_dir / READBACK_CHECK_NAME, result)
+        return result
+
     completed = command_runner(command, check=False, capture_output=True, text=True)
     raw_record = {
         "command": command,
+        "request_headers": request_headers,
         "returncode": completed.returncode,
         "stdout": completed.stdout,
         "stderr": completed.stderr,

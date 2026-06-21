@@ -6,6 +6,7 @@ package slides
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/larksuite/cli/internal/output"
@@ -35,15 +36,24 @@ var SlidesCreateSVG = common.Shortcut{
 			Desc:     "SVG file path; repeat for multiple pages",
 		},
 		{Name: "assets", Desc: "optional assets.json path mapping SVG @path placeholders to uploaded file tokens"},
+		{Name: "request-header", Type: "string_array", Desc: "internal request header for SVGlide live lanes; repeat key=value, currently only x-tt-env=ppe_pure_svg is allowed"},
 	},
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		if err := validateSVGFileInputs(runtime, runtime.StrArray("file")); err != nil {
 			return err
 		}
-		return validateSVGAssetsPath(runtime, runtime.Str("assets"))
+		if err := validateSVGAssetsPath(runtime, runtime.Str("assets")); err != nil {
+			return err
+		}
+		_, err := parseSVGRequestHeaders(runtime.StrArray("request-header"))
+		return err
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		title := effectiveTitle(runtime.Str("title"))
+		requestHeaders, err := parseSVGRequestHeaders(runtime.StrArray("request-header"))
+		if err != nil {
+			return common.NewDryRunAPI().Set("error", err.Error())
+		}
 		svgs, err := readSVGFiles(runtime, runtime.StrArray("file"))
 		if err != nil {
 			return common.NewDryRunAPI().Set("error", err.Error())
@@ -86,10 +96,17 @@ var SlidesCreateSVG = common.Shortcut{
 		if runtime.IsBot() {
 			dry.Desc("After creation succeeds in bot mode, the CLI will also try to grant the current CLI user full_access (可管理权限) on the new presentation.")
 		}
+		if len(requestHeaders) > 0 {
+			dry.Set("request_headers", svgRequestHeadersForOutput(requestHeaders))
+		}
 		return dry.Set("title", title)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		title := effectiveTitle(runtime.Str("title"))
+		requestHeaders, err := parseSVGRequestHeaders(runtime.StrArray("request-header"))
+		if err != nil {
+			return err
+		}
 		svgs, err := readSVGFiles(runtime, runtime.StrArray("file"))
 		if err != nil {
 			return err
@@ -99,7 +116,7 @@ var SlidesCreateSVG = common.Shortcut{
 			return err
 		}
 
-		presentationID, revisionID, err := createEmptyPresentation(runtime, title)
+		presentationID, revisionID, err := createEmptyPresentationWithHeaders(runtime, title, requestHeaders)
 		if err != nil {
 			return err
 		}
@@ -109,6 +126,9 @@ var SlidesCreateSVG = common.Shortcut{
 		}
 		if revisionID > 0 {
 			result["revision_id"] = revisionID
+		}
+		if len(requestHeaders) > 0 {
+			result["request_headers"] = svgRequestHeadersForOutput(requestHeaders)
 		}
 
 		pages, uploaded, err := rewriteSVGImagePlaceholders(runtime, presentationID, svgs, assets)
@@ -133,11 +153,12 @@ var SlidesCreateSVG = common.Shortcut{
 					"page %d/%d failed before API call: %v (presentation %s was created; %d slide(s) added; slide_ids=%s)",
 					i+1, len(pages), err, presentationID, len(slideIDs), strings.Join(slideIDs, ","))
 			}
-			slideData, err := runtime.CallAPI(
+			slideData, err := runtime.CallAPIWithHeaders(
 				"POST",
 				slideURL,
 				map[string]interface{}{"revision_id": -1},
 				buildCreateSVGBody(content),
+				requestHeaders,
 			)
 			if err != nil {
 				return output.Errorf(output.ExitAPI, "api_error",
@@ -158,4 +179,36 @@ var SlidesCreateSVG = common.Shortcut{
 		runtime.Out(result, nil)
 		return nil
 	},
+}
+
+func parseSVGRequestHeaders(values []string) (http.Header, error) {
+	headers := http.Header{}
+	for _, raw := range values {
+		item := strings.TrimSpace(raw)
+		if item == "" {
+			return nil, output.ErrValidation("--request-header cannot be empty")
+		}
+		key, value, ok := strings.Cut(item, "=")
+		if !ok {
+			return nil, output.ErrValidation("--request-header %q must use key=value", item)
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		if !strings.EqualFold(key, "x-tt-env") {
+			return nil, output.ErrValidation("--request-header %q is not supported; only x-tt-env is allowed", key)
+		}
+		if value != "ppe_pure_svg" {
+			return nil, output.ErrValidation("--request-header x-tt-env must be ppe_pure_svg")
+		}
+		headers.Set("x-tt-env", value)
+	}
+	return headers, nil
+}
+
+func svgRequestHeadersForOutput(headers http.Header) map[string]string {
+	out := map[string]string{}
+	if value := headers.Get("x-tt-env"); value != "" {
+		out["x-tt-env"] = value
+	}
+	return out
 }

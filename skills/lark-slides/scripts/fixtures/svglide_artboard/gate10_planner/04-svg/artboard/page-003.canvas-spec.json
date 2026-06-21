@@ -1,0 +1,72 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "NEXT",
+    "subtitle": "把研究结果转成可执行的观测闭环。",
+    "takeaways": [
+      "连续监测",
+      "现场复核",
+      "风险沟通"
+    ],
+    "title": "下一步观测"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 18,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 110,
+        "width": 700,
+        "x": 72,
+        "y": 110
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "summary-final",
+  "theme": {
+    "colors": {
+      "accent": "#22D3EE",
+      "background": "#27130F",
+      "muted": "#F4C9A8",
+      "panel": "#3A211B",
+      "primary": "#F97316",
+      "text": "#FFF7ED"
+    },
+    "spacing": {
+      "card": 28,
+      "gap": 20,
+      "page": 64
+    },
+    "theme_id": "warm-editorial",
+    "typography": {
+      "body": 20,
+      "label": 18,
+      "subtitle": 23,
+      "title": 54
+    }
+  },
+  "theme_id": "warm-editorial",
+  "version": "svglide-canvas-spec/v1"
+}

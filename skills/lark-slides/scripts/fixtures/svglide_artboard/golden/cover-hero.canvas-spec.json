@@ -1,0 +1,16 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+  "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+  "template_id": "cover-hero",
+  "theme_id": "dark-clarity",
+  "theme": {"colors": {"background": "#0F172A", "panel": "#111827", "primary": "#38BDF8", "accent": "#A78BFA", "text": "#F8FAFC", "muted": "#CBD5E1"}},
+  "content": {
+    "eyebrow": "ARTBOARD P0",
+    "title": "受控画板生成",
+    "subtitle": "CanvasSpec 驱动模板，输出可进入 SVGlide 链路的协议 SVG。",
+    "chips": ["CanvasSpec", "Satori", "SVGlide"]
+  },
+  "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 84, "y": 142, "width": 628, "height": 142}}],
+  "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+}

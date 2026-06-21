@@ -180,6 +180,8 @@ def has_body_slot(svg_text: str, asset: dict[str, Any], page: int) -> bool:
         f"id='asset-slot-{asset_id}'",
         f'id="asset-slot-page-{page:03d}"',
         f"id='asset-slot-page-{page:03d}'",
+        'data-node-id="image-label"',
+        "data-node-id='image-label'",
         "<!-- svglide:asset-slot",
     ]
     return any(token in svg_text for token in tokens)
@@ -222,24 +224,20 @@ def text_layer(id_: str, *, x: float, y: float, width: float, height: float, tex
 def figure_layer(asset: dict[str, Any], *, href: str, width: float, height: float) -> str:
     asset_id = html.escape(str(asset.get("asset_id")), quote=True)
     safe = safe_id(asset.get("asset_id"))
-    source = asset.get("source_url")
-    caption = ""
-    if isinstance(source, str) and source:
-        caption = "\n    " + text_layer(
-            f"svglide-asset-source-{safe}",
-            x=width - 344,
-            y=332,
-            width=280,
-            height=18,
-            text=f"Source: {source[:88]}",
-            color="#596579",
-            size=10,
-        )
     return f"""
   <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(str(asset.get("placement_role") or ""), quote=True)}">
     <rect slide:role="shape" x="{width - 368:g}" y="78" width="320" height="276" rx="8" fill="#FFFFFF" opacity="0.92" />
     <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="{width - 352:g}" y="94" width="288" height="216" preserveAspectRatio="xMidYMid slice" />
-    {text_layer(f"svglide-asset-caption-{safe}", x=width - 344, y=318, width=160, height=18, text="Visual evidence", color="#1F2937", size=12)}{caption}
+  </g>"""
+
+
+def ambient_layer(asset: dict[str, Any], *, href: str, width: float, height: float) -> str:
+    asset_id = html.escape(str(asset.get("asset_id")), quote=True)
+    safe = safe_id(asset.get("asset_id"))
+    return f"""
+  <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(str(asset.get("placement_role") or ""), quote=True)}" data-svglide-slot-strategy="ambient_fallback">
+    <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="0" y="0" width="{width:g}" height="{height:g}" preserveAspectRatio="xMidYMid slice" opacity="0.22" />
+    <rect slide:role="shape" id="svglide-asset-ambient-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="#06111F" opacity="0.52" />
   </g>"""
 
 
@@ -288,10 +286,6 @@ def injection_for_asset(project: Path, svg_text: str, asset: dict[str, Any], *, 
         result["reason"] = "safe_text_zones_missing"
         result["file"] = relpath(asset_path, project)
         return svg_text, result
-    if role in {"body_visual", "inline_figure"} and not has_body_slot(svg_text, asset, page):
-        result["reason"] = "body_asset_slot_missing"
-        result["file"] = relpath(asset_path, project)
-        return svg_text, result
     if role == "inline_figure" and not asset.get("source_url"):
         result["reason"] = "inline_figure_source_missing"
         result["file"] = relpath(asset_path, project)
@@ -309,12 +303,19 @@ def injection_for_asset(project: Path, svg_text: str, asset: dict[str, Any], *, 
         )
         return svg_text, result
     width, height = geometry(svg_text)
+    slot_strategy = "declared_slot"
     if role in {"cover", "closing"}:
         layer = cover_or_closing_layer(asset, href=href, width=width, height=height)
         renderer_id = "editorial_image_cover" if role == "cover" else "image_closing_takeaway"
+        slot_strategy = "full_bleed"
     else:
-        layer = figure_layer(asset, href=href, width=width, height=height)
-        renderer_id = "figure_panel_asset"
+        if has_body_slot(svg_text, asset, page):
+            layer = figure_layer(asset, href=href, width=width, height=height)
+            renderer_id = "figure_panel_asset"
+        else:
+            layer = ambient_layer(asset, href=href, width=width, height=height)
+            renderer_id = "ambient_asset_background"
+            slot_strategy = "ambient_fallback"
     injected = inject_layer(svg_text, layer)
     result.update(
         {
@@ -325,6 +326,7 @@ def injection_for_asset(project: Path, svg_text: str, asset: dict[str, Any], *, 
             "source_url": asset.get("source_url"),
             "license": asset.get("license"),
             "renderer_id": renderer_id,
+            "slot_strategy": slot_strategy,
             "asset_fit_reason": f"{role} page has local file-backed {kind} asset",
         }
     )

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-semantic-map.schema.json",
+  "title": "SVGlide semantic map",
+  "type": "object",
+  "required": ["version", "page", "template_id", "semantic_source", "elements"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-semantic-map/v1"},
+    "page": {"type": "integer", "minimum": 1},
+    "template_id": {"type": "string", "minLength": 1},
+    "theme_id": {"type": ["string", "null"]},
+    "semantic_source": {"type": "string", "minLength": 1},
+    "content_keys": {"type": "array", "items": {"type": "string"}},
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["element_id", "kind", "role", "bbox"],
+        "additionalProperties": true,
+        "properties": {
+          "element_id": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "source_ref": {"type": ["string", "null"]},
+          "text": {"type": ["string", "null"]},
+          "bbox": {
+            "type": "object",
+            "required": ["x", "y", "width", "height"],
+            "additionalProperties": true,
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"},
+              "width": {"type": "number"},
+              "height": {"type": "number"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "artifact_root": "skills/lark-slides/scripts/fixtures/svglide_artboard/p0a-cover",
+  "cli_git_commit": "fixture",
+  "created_at": "2026-06-20T00:00:00+08:00",
+  "created_by": "lark-cli",
+  "deck_id": "artboard-p0a-cover",
+  "route": "svglide-svg",
+  "runner_version": "svglide-project-runner/v0",
+  "stage_graph": "svglide-workflow/v1",
+  "title": "Artboard P0a Cover",
+  "version": "svglide-project/v1"
+}

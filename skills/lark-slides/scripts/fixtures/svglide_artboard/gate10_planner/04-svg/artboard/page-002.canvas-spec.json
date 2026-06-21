@@ -1,0 +1,78 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "conclusion": "多源观测共同降低单一证据偏差。",
+    "left_points": [
+      "熔岩地貌",
+      "热异常",
+      "气体羽流"
+    ],
+    "left_title": "地表信号",
+    "right_points": [
+      "地震活动",
+      "形变趋势",
+      "岩浆补给"
+    ],
+    "right_title": "地下信号",
+    "title": "观测证据对比"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 18,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 64,
+        "width": 760,
+        "x": 64,
+        "y": 52
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "comparison-cards",
+  "theme": {
+    "colors": {
+      "accent": "#B45309",
+      "background": "#F7F3E8",
+      "muted": "#6B7280",
+      "panel": "#FFFDF6",
+      "primary": "#1E3A8A",
+      "text": "#1F2937"
+    },
+    "spacing": {
+      "card": 28,
+      "gap": 20,
+      "page": 64
+    },
+    "theme_id": "paper-research",
+    "typography": {
+      "body": 20,
+      "label": 18,
+      "subtitle": 22,
+      "title": 52
+    }
+  },
+  "theme_id": "paper-research",
+  "version": "svglide-canvas-spec/v1"
+}

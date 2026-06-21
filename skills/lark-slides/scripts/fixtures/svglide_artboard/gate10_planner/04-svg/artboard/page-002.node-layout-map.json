@@ -1,0 +1,125 @@
+{
+  "drift": {
+    "max_px": 0,
+    "status": "not_measured_in_p0"
+  },
+  "nodes": [
+    {
+      "height": 540,
+      "id": "background",
+      "kind": "rect",
+      "width": 960,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 64,
+      "id": "title",
+      "kind": "text",
+      "text": "观测证据对比",
+      "width": 760,
+      "x": 64,
+      "y": 52
+    },
+    {
+      "height": 250,
+      "id": "left-card",
+      "kind": "rect",
+      "width": 390,
+      "x": 64,
+      "y": 140
+    },
+    {
+      "height": 250,
+      "id": "right-card",
+      "kind": "rect",
+      "width": 390,
+      "x": 506,
+      "y": 140
+    },
+    {
+      "height": 34,
+      "id": "left-title",
+      "kind": "text",
+      "text": "地表信号",
+      "width": 320,
+      "x": 92,
+      "y": 168
+    },
+    {
+      "height": 36,
+      "id": "left-point-1",
+      "kind": "text",
+      "text": "熔岩地貌",
+      "width": 296,
+      "x": 116,
+      "y": 222
+    },
+    {
+      "height": 36,
+      "id": "left-point-2",
+      "kind": "text",
+      "text": "热异常",
+      "width": 296,
+      "x": 116,
+      "y": 270
+    },
+    {
+      "height": 36,
+      "id": "left-point-3",
+      "kind": "text",
+      "text": "气体羽流",
+      "width": 296,
+      "x": 116,
+      "y": 318
+    },
+    {
+      "height": 34,
+      "id": "right-title",
+      "kind": "text",
+      "text": "地下信号",
+      "width": 320,
+      "x": 534,
+      "y": 168
+    },
+    {
+      "height": 36,
+      "id": "right-point-1",
+      "kind": "text",
+      "text": "地震活动",
+      "width": 296,
+      "x": 558,
+      "y": 222
+    },
+    {
+      "height": 36,
+      "id": "right-point-2",
+      "kind": "text",
+      "text": "形变趋势",
+      "width": 296,
+      "x": 558,
+      "y": 270
+    },
+    {
+      "height": 36,
+      "id": "right-point-3",
+      "kind": "text",
+      "text": "岩浆补给",
+      "width": 296,
+      "x": 558,
+      "y": 318
+    },
+    {
+      "height": 42,
+      "id": "conclusion",
+      "kind": "text",
+      "text": "多源观测共同降低单一证据偏差。",
+      "width": 788,
+      "x": 86,
+      "y": 426
+    }
+  ],
+  "page": 2,
+  "source": "template-layout-map",
+  "version": "svglide-node-layout-map/v1"
+}

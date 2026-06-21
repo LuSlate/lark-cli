@@ -27,7 +27,7 @@ def write_passing_semantic_review(project: Path) -> None:
     (project / "04-svg").mkdir(parents=True, exist_ok=True)
     (project / "04-svg/prepared").mkdir(parents=True, exist_ok=True)
     if not (project / "02-plan/slide_plan.json").exists():
-        write_json(project / "02-plan/slide_plan.json", {"language": "zh-CN", "slides": []})
+        write_json(project / "02-plan/slide_plan.json", {"language": "zh-CN", "theme_id": "dark-clarity", "slides": [{"page": 1, "title": "测试"}]})
     if not (project / "source/evidence.json").exists():
         write_json(project / "source/evidence.json", {"schema_version": "svglide-evidence/v1", "source_status": "ready", "items": [{"id": "item-001", "text": "这是一条足够长的中文证据内容，用于质量门禁测试。"}]})
     if not (project / "source/source-receipt.json").exists():
@@ -77,6 +77,7 @@ def write_passing_semantic_review(project: Path) -> None:
             "stage": "generate_svg",
             "status": "passed",
             "generator_mode": "external",
+            "generation_mode": "direct_svg",
             "generated_files": source_files,
             "page_receipts": ["04-svg/page-001.receipt.json"],
             "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
@@ -123,10 +124,48 @@ def write_passing_semantic_review(project: Path) -> None:
             "schema_version": "svglide-visual-distinctness/v1",
             "status": "passed",
             "action": "create_live",
-            "inputs": {"slide_plan": "02-plan/slide_plan.json"},
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+            },
             "signature": {"theme_archetype": "company_ecosystem"},
             "comparisons": [],
             "summary": {"error_count": 0, "warning_count": 0, "comparison_count": 0},
+            "issues": [],
+        },
+    )
+    write_json(
+        project / "06-check/theme-validate.json",
+        {
+            "schema_version": "svglide-theme-validate/v1",
+            "stage": "theme_validate",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+            },
+            "pages": [{"page": 1, "theme_id": "dark-clarity", "status": "passed", "issues": []}],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1, "theme_count": 1},
+            "issues": [],
+        },
+    )
+    write_json(
+        project / "06-check/theme-adherence.json",
+        {
+            "schema_version": "svglide-theme-adherence/v1",
+            "stage": "theme_adherence",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+                "theme_validate": "06-check/theme-validate.json",
+                "theme_validate_sha256": svglide_quality_gate.file_sha256(project / "06-check/theme-validate.json"),
+            },
+            "prepared_files": svglide_quality_gate.prepared_file_hashes(project),
+            "pages": [{"page": 1, "status": "passed", "issues": []}],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
             "issues": [],
         },
     )
@@ -168,6 +207,243 @@ def write_passing_semantic_review(project: Path) -> None:
     )
 
 
+def attach_passing_artboard_receipt(project: Path) -> None:
+    artboard_dir = project / "04-svg/artboard"
+    artboard_dir.mkdir(parents=True, exist_ok=True)
+    (project / "04-svg/artboard/raw").mkdir(parents=True, exist_ok=True)
+    (project / "05-preview").mkdir(parents=True, exist_ok=True)
+    satori_svg = project / "04-svg/artboard/raw/page-001.satori.svg"
+    satori_svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540"/></svg>', encoding="utf-8")
+    canvas_template_svg = project / "04-svg/artboard/page-001.canvas-template.svg"
+    canvas_template_svg.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540"/><text x="80" y="120">Title</text></svg>',
+        encoding="utf-8",
+    )
+    (project / "04-svg/artboard/page-001.png").write_bytes(b"png")
+    write_json(
+        project / "04-svg/artboard/page-001.render-metadata.json",
+        {"node_version": "v20.0.0", "satori_version": "0.26.0", "resvg_version": "2.6.2", "font_path": "/tmp/font.ttf"},
+    )
+    write_json(
+        project / "04-svg/artboard/page-001.semantic-map.json",
+        {
+            "version": "svglide-semantic-map/v1",
+            "page": 1,
+            "template_id": "cover-hero",
+            "theme_id": "dark-clarity",
+            "semantic_source": "CanvasSpec",
+            "content_keys": ["title"],
+            "elements": [
+                {
+                    "element_id": "title",
+                    "kind": "text",
+                    "role": "title",
+                    "source_ref": "canvas_spec.content.title",
+                    "text": "Title",
+                    "bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                }
+            ],
+        },
+    )
+    write_json(
+        project / "04-svg/artboard/page-001.node-layout-map.json",
+        {
+            "version": "svglide-node-layout-map/v1",
+            "page": 1,
+            "source": "template-layout-map",
+            "drift": {"status": "not_measured_in_p0", "max_px": 0},
+            "nodes": [{"id": "title", "kind": "text", "x": 80, "y": 80, "width": 720, "height": 72}],
+        },
+    )
+    (project / "05-preview/contact-sheet.png").write_bytes(b"contact")
+    source_hash = svglide_quality_gate.file_sha256(project / "04-svg/page-001.svg")
+    template_registry_sha256 = "template-registry-hash"
+    theme_registry_sha256 = "theme-registry-hash"
+    font_hashes = [{"path": "/tmp/font.ttf", "sha256": "font-hash"}]
+    write_json(
+        project / "04-svg/artboard/page-001.receipt.json",
+        {
+            "version": "svglide-artboard-receipt/v1",
+            "stage": "generate_svg",
+            "status": "passed",
+            "page": 1,
+            "canvas_spec_path": "02-plan/slide_plan.json#/slides/0/canvas_spec",
+            "canvas_spec_sha256": "test-canvas-spec",
+            "template_id": "cover-hero",
+            "theme_id": "dark-clarity",
+            "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+            "template_registry_sha256": template_registry_sha256,
+            "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+            "theme_registry_sha256": theme_registry_sha256,
+            "theme_files": ["skills/lark-slides/scripts/artboard_renderer/themes/dark-clarity.json"],
+            "node_version": "v20.0.0",
+            "satori_version": "0.26.0",
+            "resvg_version": "2.6.2",
+            "font_hashes": font_hashes,
+            "renderer": {"name": "satori-resvg-p0", "engine": "satori-node", "actual_satori_package": True},
+            "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+            "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
+            "png": "04-svg/artboard/page-001.png",
+            "png_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.png"),
+            "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+            "render_metadata_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"),
+            "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+            "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
+            "compiler_input": "04-svg/artboard/page-001.canvas-template.svg",
+            "compiler_input_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
+            "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+            "semantic_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json"),
+            "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+            "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
+            "svglide_svg": "04-svg/page-001.svg",
+            "svglide_svg_sha256": source_hash,
+            "compiler": {"semantic_source": "CanvasSpec", "compiler_input": "CanvasSpecTemplateSVG", "satori_svg_usage": "preview_only"},
+        },
+    )
+    receipt = json.loads((project / "receipts/generate_svg.json").read_text(encoding="utf-8"))
+    receipt["generation_mode"] = "artboard_satori"
+    receipt["artboard_receipts"] = ["04-svg/artboard/page-001.receipt.json"]
+    receipt["artboard_additional_receipts"] = [
+        "receipts/canvas-spec-validate.json",
+        "receipts/artboard-render.json",
+        "receipts/satori-bridge.json",
+    ]
+    receipt["canvas_spec_validate"] = "06-check/canvas-spec-validate.json"
+    receipt["artboard_render_receipt"] = "receipts/artboard-render.json"
+    receipt["satori_bridge_receipt"] = "receipts/satori-bridge.json"
+    receipt["template_fit_check"] = "06-check/template-fit.json"
+    receipt["contact_sheet"] = {
+        "path": "05-preview/contact-sheet.png",
+        "sha256": svglide_quality_gate.file_sha256(project / "05-preview/contact-sheet.png"),
+    }
+    write_json(project / "receipts/generate_svg.json", receipt)
+    write_json(
+        project / "06-check/artboard-package-check.json",
+        {
+            "version": "svglide-artboard-package-check/v1",
+            "stage": "package_check",
+            "status": "passed",
+            "action": "create_live",
+            "summary": {"error_count": 0, "warning_count": 0, "runtime_check_count": 0},
+            "runtime_checks": [],
+            "issues": [],
+        },
+    )
+    write_json(
+        project / "06-check/canvas-spec-validate.json",
+        {
+            "schema_version": "svglide-canvas-spec-validate/v1",
+            "stage": "canvas-spec-validate",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+                "template_registry_sha256": template_registry_sha256,
+                "theme_registry_sha256": theme_registry_sha256,
+            },
+            "pages": [],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
+            "issues": [],
+        },
+    )
+    write_json(project / "receipts/canvas-spec-validate.json", json.loads((project / "06-check/canvas-spec-validate.json").read_text(encoding="utf-8")))
+    write_json(
+        project / "receipts/artboard-render.json",
+        {
+            "version": "svglide-artboard-render/v1",
+            "stage": "artboard-render",
+            "status": "passed",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+                "template_registry_sha256": template_registry_sha256,
+                "theme_registry_sha256": theme_registry_sha256,
+                "canvas_spec_validate": "receipts/canvas-spec-validate.json",
+                "canvas_spec_validate_sha256": svglide_quality_gate.file_sha256(project / "receipts/canvas-spec-validate.json"),
+            },
+            "pages": [
+                {
+                    "page": 1,
+                    "template_id": "cover-hero",
+                    "theme_id": "dark-clarity",
+                    "satori_version": "0.26.0",
+                    "resvg_version": "2.6.2",
+                    "font_hashes": font_hashes,
+                    "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+                    "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
+                    "png": "04-svg/artboard/page-001.png",
+                    "png_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.png"),
+                    "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+                    "render_metadata_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"),
+                    "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+                    "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
+                    "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+                    "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
+                }
+            ],
+            "contact_sheet": receipt["contact_sheet"],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
+        },
+    )
+    write_json(
+        project / "receipts/satori-bridge.json",
+        {
+            "version": "svglide-satori-bridge/v1",
+            "stage": "satori-bridge",
+            "status": "passed",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+                "artboard_render": "receipts/artboard-render.json",
+                "artboard_render_sha256": svglide_quality_gate.file_sha256(project / "receipts/artboard-render.json"),
+            },
+            "pages": [
+                {
+                    "page": 1,
+                    "semantic_source": "CanvasSpec",
+                    "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+                    "semantic_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json"),
+                    "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+                    "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
+                    "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+                    "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
+                    "compiler_input": "04-svg/artboard/page-001.canvas-template.svg",
+                    "compiler_input_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
+                    "compiler_input_type": "CanvasSpecTemplateSVG",
+                    "satori_svg_usage": "preview_only",
+                    "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+                    "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
+                    "svglide_svg": "04-svg/page-001.svg",
+                    "svglide_svg_sha256": source_hash,
+                }
+            ],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
+        },
+    )
+    write_json(
+        project / "06-check/template-fit.json",
+        {
+            "schema_version": "svglide-template-fit/v1",
+            "status": "passed",
+            "action": "create_live",
+            "inputs": {
+                "slide_plan": "02-plan/slide_plan.json",
+                "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
+                "generator_receipt": "receipts/generate_svg.json",
+                "generator_receipt_sha256": svglide_quality_gate.file_sha256(project / "receipts/generate_svg.json"),
+                "artboard_receipts": ["04-svg/artboard/page-001.receipt.json"],
+                "template_registry_sha256": template_registry_sha256,
+                "theme_registry_sha256": theme_registry_sha256,
+            },
+            "pages": [],
+            "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
+            "issues": [],
+        },
+    )
+    write_json(project / "receipts/template-fit-check.json", json.loads((project / "06-check/template-fit.json").read_text(encoding="utf-8")))
+
+
 class SVGlideQualityGateTest(unittest.TestCase):
     def test_quality_gate_passes_when_required_checks_have_zero_errors(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -191,6 +467,109 @@ class SVGlideQualityGateTest(unittest.TestCase):
             self.assertEqual(result["prepared_files"][0]["path"], "04-svg/prepared/page-001.svg")
             self.assertEqual(result["summary"]["failed_check_count"], 0)
             self.assertTrue((project / "06-check/quality-gate.json").exists())
+
+    def test_quality_gate_requires_theme_checks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            (project / "06-check/theme-adherence.json").unlink()
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            missing = [check for check in result["checks"] if check["name"] == "theme-adherence"][0]
+            self.assertEqual(missing["status"], "missing")
+            self.assertIn("theme_adherence", result["inputs"])
+
+    def test_quality_gate_fails_when_theme_adherence_theme_validate_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            theme_validate = json.loads((project / "06-check/theme-validate.json").read_text(encoding="utf-8"))
+            theme_validate["checked_at"] = "2026-06-21T00:00:00+08:00"
+            write_json(project / "06-check/theme-validate.json", theme_validate)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("theme_adherence_theme_validate_stale", failed_codes)
+
+    def test_quality_gate_direct_svg_ignores_artboard_package_check(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            write_json(
+                project / "06-check/artboard-package-check.json",
+                {
+                    "version": "svglide-artboard-package-check/v1",
+                    "stage": "package_check",
+                    "status": "failed",
+                    "action": "repair_and_rerun",
+                    "summary": {"error_count": 1, "warning_count": 0, "runtime_check_count": 0},
+                    "issues": [{"code": "should_be_ignored", "message": "direct_svg does not require artboard package"}],
+                },
+            )
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "passed")
+            self.assertNotIn("artboard_package_check", result["inputs"])
+            self.assertNotIn("artboard-package-check", {check["name"] for check in result["checks"]})
+
+    def test_quality_gate_artboard_satori_requires_package_check(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            (project / "06-check/artboard-package-check.json").unlink()
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            missing = [check for check in result["checks"] if check["name"] == "artboard-package-check"][0]
+            self.assertEqual(missing["status"], "missing")
+            self.assertEqual(result["inputs"]["generation_mode"], "artboard_satori")
+            self.assertIn("artboard_package_check", result["inputs"])
+
+    def test_online_readiness_counts_local_file_assets_as_real_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "status": "passed",
+                    "summary": {
+                        "acquired_count": 1,
+                        "local_file_count": 3,
+                        "mapped_token_count": 2,
+                        "fallback_count": 0,
+                    },
+                },
+            )
+
+            result = svglide_quality_gate.load_online_readiness(project, profile="production")
+
+            self.assertEqual(result["asset_real_coverage"], 6)
+            self.assertEqual(result["asset_acquired_count"], 1)
+            self.assertEqual(result["asset_local_file_count"], 3)
+            self.assertEqual(result["asset_mapped_token_count"], 2)
 
     def test_quality_gate_fails_when_required_check_is_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -433,6 +812,116 @@ class SVGlideQualityGateTest(unittest.TestCase):
             }
             self.assertIn("generator_source_stale", failed_codes)
 
+    def test_quality_gate_requires_artboard_receipts_for_artboard_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            receipt = json.loads((project / "receipts/generate_svg.json").read_text(encoding="utf-8"))
+            receipt["generation_mode"] = "artboard_satori"
+            write_json(project / "receipts/generate_svg.json", receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("generator_artboard_receipts_missing", failed_codes)
+
+    def test_quality_gate_fails_when_artboard_receipt_artifact_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            (project / "04-svg/artboard/raw/page-001.satori.svg").write_text("<svg changed='true'/>", encoding="utf-8")
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("generator_artboard_artifact_stale", failed_codes)
+
+    def test_quality_gate_rejects_raw_satori_as_artboard_compiler_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            receipt_path = project / "04-svg/artboard/page-001.receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["compiler"]["compiler_input"] = "RawSatoriSVG"
+            receipt["compiler"]["satori_svg_usage"] = "compiler_input"
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("generator_artboard_compiler_input_invalid", failed_codes)
+            self.assertIn("generator_artboard_compiler_satori_usage_invalid", failed_codes)
+
+    def test_quality_gate_fails_when_artboard_compiler_input_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            (project / "04-svg/artboard/page-001.canvas-template.svg").write_text("<svg changed='true'/>", encoding="utf-8")
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("generator_artboard_artifact_stale", failed_codes)
+            self.assertIn("satori_bridge_compiler_input_stale", failed_codes)
+
+    def test_quality_gate_validates_artboard_receipt_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            receipt_path = project / "04-svg/artboard/page-001.receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt.pop("version")
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("generator_artboard_receipt_schema_invalid", failed_codes)
+
     def test_quality_gate_requires_chart_verify_when_plan_requires_it(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
@@ -495,6 +984,68 @@ class SVGlideQualityGateTest(unittest.TestCase):
                 for issue in check["issues"]
             }
             self.assertIn("research_missing_for_current_topic", failed_codes)
+
+    def test_quality_gate_blocks_strict_profile_when_image_jobs_have_no_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "summary": {
+                        "contract_count": 1,
+                        "error_count": 0,
+                        "mapped_token_count": 0,
+                        "local_file_count": 0,
+                        "acquired_count": 0,
+                        "fallback_count": 0,
+                        "image_job_count": 1,
+                    },
+                },
+            )
+            write_passing_semantic_review(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("visual_asset_contracts_unfulfilled", failed_codes)
+
+    def test_quality_gate_allows_unfulfilled_image_jobs_in_preview_only_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "summary": {
+                        "contract_count": 1,
+                        "error_count": 0,
+                        "mapped_token_count": 0,
+                        "local_file_count": 0,
+                        "acquired_count": 0,
+                        "fallback_count": 0,
+                        "image_job_count": 1,
+                    },
+                },
+            )
+            write_passing_semantic_review(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="preview_only")
+
+            self.assertEqual(result["status"], "passed")
 
     def test_quality_gate_blocks_strict_profile_when_fallback_skeleton_used(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

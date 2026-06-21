@@ -26,6 +26,8 @@ PROJECT_VERSION = "svglide-project/v1"
 STATE_VERSION = "svglide-state/v1"
 STAGE_GRAPH = "svglide-workflow/v1"
 ROUTE = "svglide-svg"
+DEFAULT_GENERATION_MODE = "direct_svg"
+GENERATION_MODES = {DEFAULT_GENERATION_MODE, "artboard_satori"}
 DEFAULT_PLAN_ROOT = Path(".lark-slides/plan")
 SCRIPT_DIR = Path(__file__).resolve().parent
 LARK_CLI_COMMAND_ENV = "SVGLIDE_LARK_CLI_CMD"
@@ -35,7 +37,9 @@ STAGES = [
     "source",
     "plan",
     "strategy_review",
+    "theme_validate",
     "confirm_plan",
+    "package_check",
     "assets",
     "generate_svg",
     "prepare",
@@ -47,9 +51,11 @@ STAGES = [
     "semantic_review",
     "runtime_review",
     "visual_distinctness_review",
+    "theme_adherence",
     "quality_gate",
     "dry_run",
     "ppe_proof",
+    "pre_submit_review",
     "live_create",
     "readback",
     "export",
@@ -59,18 +65,24 @@ STAGE_ALIASES = {
     "confirm-plan": "confirm_plan",
     "source-review": "source",
     "strategy-review": "strategy_review",
+    "theme-validate": "theme_validate",
+    "package-check": "package_check",
+    "artboard-package-check": "package_check",
     "aesthetic-review": "aesthetic_review",
     "chart-verify": "chart_verify",
     "semantic-review": "semantic_review",
     "runtime-review": "runtime_review",
     "visual-distinctness": "visual_distinctness_review",
     "visual-distinctness-review": "visual_distinctness_review",
+    "theme-adherence": "theme_adherence",
     "generate": "generate_svg",
     "generate-svg": "generate_svg",
     "preview-lint": "preview_lint",
     "quality-gate": "quality_gate",
     "dry-run": "dry_run",
     "ppe-proof": "ppe_proof",
+    "pre-submit-review": "pre_submit_review",
+    "pre-submit": "pre_submit_review",
     "live-create": "live_create",
 }
 
@@ -96,7 +108,9 @@ IMPLEMENTED_STAGES = {
     "source",
     "plan",
     "strategy_review",
+    "theme_validate",
     "confirm_plan",
+    "package_check",
     "assets",
     "generate_svg",
     "prepare",
@@ -108,9 +122,11 @@ IMPLEMENTED_STAGES = {
     "semantic_review",
     "runtime_review",
     "visual_distinctness_review",
+    "theme_adherence",
     "quality_gate",
     "dry_run",
     "ppe_proof",
+    "pre_submit_review",
     "live_create",
     "readback",
 }
@@ -199,6 +215,12 @@ def resolve_run_target(until: str | None, profile: str | None) -> str:
     if profile in PROFILE_TARGETS:
         return normalize_stage(PROFILE_TARGETS[profile])
     raise RunnerError("--until is required unless --profile is preview_only or production_live", exit_code=2)
+
+
+def stage_required_for_profile(stage: str, profile: str) -> bool:
+    if stage == "pre_submit_review":
+        return profile == "production_live"
+    return True
 
 
 def validate_deck_id(deck_id: str) -> str:
@@ -783,6 +805,94 @@ def svg_generator_command(project_root: Path) -> list[str]:
     return []
 
 
+def plan_generation_mode(project_root: Path) -> str:
+    plan = read_json(plan_path(project_root))
+    raw = plan.get("generation_mode") or DEFAULT_GENERATION_MODE
+    if raw not in GENERATION_MODES:
+        raise RunnerError(f"unsupported generation_mode '{raw}'")
+    return str(raw)
+
+
+def validate_artboard_plan(project_root: Path) -> None:
+    plan = read_json(plan_path(project_root))
+    slides = plan.get("slides")
+    if not isinstance(slides, list) or not slides:
+        raise RunnerError("generation_mode=artboard_satori requires slide_plan.slides")
+    for index, slide in enumerate(slides, 1):
+        if not isinstance(slide, dict):
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} must be an object")
+        spec = slide.get("canvas_spec")
+        if not isinstance(spec, dict):
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} requires canvas_spec")
+        canvas = spec.get("canvas")
+        content = spec.get("content")
+        if spec.get("version") != "svglide-canvas-spec/v1":
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} canvas_spec.version is invalid")
+        if not isinstance(canvas, dict) or canvas.get("width") != 960 or canvas.get("height") != 540 or canvas.get("viewBox") != "0 0 960 540":
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} canvas_spec.canvas must be 960x540")
+        if not isinstance(spec.get("template_id"), str) or not spec.get("template_id"):
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} canvas_spec.template_id is required")
+        if not isinstance(spec.get("theme"), dict):
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} canvas_spec.theme is required")
+        if not isinstance(content, dict) or not isinstance(content.get("title"), str) or not content.get("title").strip():
+            raise RunnerError(f"generation_mode=artboard_satori slide {index} canvas_spec.content.title is required")
+
+
+def artboard_generator_command(project_root: Path) -> list[str]:
+    return [
+        "python3",
+        (SCRIPT_DIR / "svglide_artboard_renderer.py").as_posix(),
+        project_root.as_posix(),
+        "--pretty",
+    ]
+
+
+def artboard_receipt_paths(project_root: Path) -> list[str]:
+    root = project_root / "04-svg" / "artboard"
+    if not root.exists():
+        return []
+    return [path.relative_to(project_root).as_posix() for path in sorted(root.glob("page-*.receipt.json")) if path.is_file()]
+
+
+def refresh_artboard_receipts_after_asset_injection(project_root: Path, generated_files: list[dict[str, str]]) -> None:
+    final_hashes = {
+        item.get("path"): item.get("sha256")
+        for item in generated_files
+        if isinstance(item.get("path"), str) and isinstance(item.get("sha256"), str)
+    }
+    if not final_hashes:
+        return
+
+    for receipt_rel in artboard_receipt_paths(project_root):
+        receipt_file = project_root / receipt_rel
+        payload = read_json(receipt_file)
+        svglide_svg = payload.get("svglide_svg")
+        final_hash = final_hashes.get(svglide_svg)
+        if isinstance(final_hash, str) and payload.get("svglide_svg_sha256") != final_hash:
+            payload["svglide_svg_sha256"] = final_hash
+            payload["post_asset_injection_refreshed_at"] = now_iso()
+            write_json(receipt_file, payload)
+
+    satori_bridge_file = project_root / "receipts" / "satori-bridge.json"
+    if not satori_bridge_file.exists():
+        return
+    satori_bridge = read_json(satori_bridge_file)
+    pages = satori_bridge.get("pages")
+    changed = False
+    if isinstance(pages, list):
+        for page in pages:
+            if not isinstance(page, dict):
+                continue
+            svglide_svg = page.get("svglide_svg")
+            final_hash = final_hashes.get(svglide_svg)
+            if isinstance(final_hash, str) and page.get("svglide_svg_sha256") != final_hash:
+                page["svglide_svg_sha256"] = final_hash
+                changed = True
+    if changed:
+        satori_bridge["post_asset_injection_refreshed_at"] = now_iso()
+        write_json(satori_bridge_file, satori_bridge)
+
+
 def require_source_current(project_root: Path) -> None:
     receipt = read_json(project_root / "source" / "source-receipt.json")
     if receipt.get("status") != "passed":
@@ -822,6 +932,8 @@ def write_page_generation_receipts(
     generated_files: list[dict[str, str]],
     generator_mode: str,
     command: list[str],
+    generation_mode: str = DEFAULT_GENERATION_MODE,
+    artboard_receipts: list[str] | None = None,
     asset_injection_summary: dict[str, Any] | None = None,
 ) -> list[str]:
     receipt_paths: list[str] = []
@@ -879,6 +991,8 @@ def write_page_generation_receipts(
             "asset_manifest_path": "03-assets/asset-manifest.json" if asset_manifest_hash else None,
             "asset_manifest_sha256": asset_manifest_hash,
             "generator_mode": generator_mode,
+            "generation_mode": generation_mode,
+            "artboard_receipt": artboard_receipts[index - 1] if artboard_receipts and index <= len(artboard_receipts) else None,
             "generator_script_sha256": generator_script_hash,
             "asset_refs": asset_refs,
             "asset_injection": page_injections,
@@ -897,10 +1011,19 @@ def write_page_generation_receipts(
 def validate_generator_receipt(project_root: Path, receipt: dict[str, Any]) -> list[dict[str, str]]:
     schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-generator-receipt.schema.json"))
     issues = svglide_schema.validate_json_schema(receipt, schema)
+    generation_mode = receipt.get("generation_mode") or DEFAULT_GENERATION_MODE
+    if generation_mode not in GENERATION_MODES:
+        issues.append({"code": "generator_generation_mode_invalid", "path": "$.generation_mode", "message": "generation_mode must be direct_svg or artboard_satori"})
     generated = receipt.get("generated_files")
     page_receipts = receipt.get("page_receipts")
     if isinstance(generated, list) and isinstance(page_receipts, list) and len(generated) != len(page_receipts):
         issues.append({"code": "generator_page_receipt_count_mismatch", "path": "$.page_receipts", "message": "page_receipts count must match generated_files"})
+    artboard_receipts = receipt.get("artboard_receipts")
+    if generation_mode == "artboard_satori":
+        if not isinstance(artboard_receipts, list) or not artboard_receipts:
+            issues.append({"code": "generator_artboard_receipts_missing", "path": "$.artboard_receipts", "message": "artboard_satori generation must include artboard_receipts"})
+        elif isinstance(generated, list) and len(artboard_receipts) != len(generated):
+            issues.append({"code": "generator_artboard_receipt_count_mismatch", "path": "$.artboard_receipts", "message": "artboard_receipts count must match generated_files"})
     plan = read_json(plan_path(project_root))
     slides = plan.get("slides")
     if isinstance(slides, list) and isinstance(generated, list) and len(slides) != len(generated):
@@ -909,6 +1032,10 @@ def validate_generator_receipt(project_root: Path, receipt: dict[str, Any]) -> l
         for item in page_receipts:
             if not isinstance(item, str) or not (project_root / item).exists():
                 issues.append({"code": "generator_page_receipt_missing", "path": "$.page_receipts", "message": f"missing page receipt: {item}"})
+    if isinstance(artboard_receipts, list):
+        for item in artboard_receipts:
+            if not isinstance(item, str) or not (project_root / item).exists():
+                issues.append({"code": "generator_artboard_receipt_missing", "path": "$.artboard_receipts", "message": f"missing artboard receipt: {item}"})
     return issues
 
 
@@ -924,7 +1051,28 @@ def run_generate_svg_stage(
     require_source_current(project_root)
     require_assets_current(project_root)
     started_at = now_iso()
+    generation_mode = plan_generation_mode(project_root)
     command = svg_generator_command(project_root)
+    artboard_result: dict[str, Any] = {}
+    if generation_mode == "artboard_satori":
+        validate_artboard_plan(project_root)
+        if command:
+            complete_stage(
+                project_root,
+                state,
+                "generate_svg",
+                "failed",
+                started_at=started_at,
+                inputs=["02-plan/slide_plan.json", "03-assets/assets.json"],
+                outputs=[],
+                command=command,
+                error={
+                    "code": "generator_mode_conflict",
+                    "message": "generation_mode=artboard_satori cannot be combined with project-local generate_svg.py",
+                },
+            )
+            raise RunnerError("generation_mode=artboard_satori cannot be combined with project-local generate_svg.py")
+        command = artboard_generator_command(project_root)
     if command:
         completed = command_runner(command, cwd=repo_root(), check=False, capture_output=True, text=True)
         if completed.returncode != 0:
@@ -944,6 +1092,9 @@ def run_generate_svg_stage(
                 },
             )
             raise RunnerError(f"stage 'generate_svg' failed with exit code {completed.returncode}")
+        if generation_mode == "artboard_satori":
+            parsed = parse_json_or_none(completed.stdout)
+            artboard_result = parsed if isinstance(parsed, dict) else {}
 
     try:
         source_file_hashes(project_root)
@@ -966,8 +1117,29 @@ def run_generate_svg_stage(
 
     asset_injection_summary = svglide_asset_injector.inject_project_assets(project_root)
     generated_files = source_file_hashes(project_root)
+    if generation_mode == "artboard_satori":
+        refresh_artboard_receipts_after_asset_injection(project_root, generated_files)
     generator_mode = "script" if command else "external"
-    page_receipts = write_page_generation_receipts(project_root, generated_files, generator_mode, command, asset_injection_summary)
+    artboard_receipts = artboard_result.get("artboard_receipts") if isinstance(artboard_result.get("artboard_receipts"), list) else artboard_receipt_paths(project_root)
+    artboard_additional_receipts = artboard_result.get("additional_receipts") if isinstance(artboard_result.get("additional_receipts"), list) else []
+    artboard_output_paths: list[str] = []
+    if generation_mode == "artboard_satori":
+        for key in ["canvas_spec_validate", "artboard_render_receipt", "satori_bridge_receipt"]:
+            value = artboard_result.get(key)
+            if isinstance(value, str):
+                artboard_output_paths.append(value)
+        contact_sheet = artboard_result.get("contact_sheet")
+        if isinstance(contact_sheet, dict) and isinstance(contact_sheet.get("path"), str):
+            artboard_output_paths.append(contact_sheet["path"])
+    page_receipts = write_page_generation_receipts(
+        project_root,
+        generated_files,
+        generator_mode,
+        command,
+        generation_mode,
+        artboard_receipts if generation_mode == "artboard_satori" else None,
+        asset_injection_summary,
+    )
     receipt = complete_stage(
         project_root,
         state,
@@ -975,12 +1147,23 @@ def run_generate_svg_stage(
         "passed",
         started_at=started_at,
         inputs=["02-plan/slide_plan.json", "03-assets/assets.json"],
-        outputs=[item["path"] for item in generated_files] + page_receipts,
+        outputs=[item["path"] for item in generated_files]
+        + page_receipts
+        + (artboard_receipts if generation_mode == "artboard_satori" else [])
+        + (artboard_additional_receipts if generation_mode == "artboard_satori" else [])
+        + artboard_output_paths,
         command=command,
     )
     receipt["generator_mode"] = generator_mode
+    receipt["generation_mode"] = generation_mode
     receipt["generated_files"] = generated_files
     receipt["page_receipts"] = page_receipts
+    if generation_mode == "artboard_satori":
+        receipt["artboard_receipts"] = artboard_receipts
+        receipt["artboard_additional_receipts"] = artboard_additional_receipts
+        for key in ["canvas_spec_validate", "artboard_render_receipt", "satori_bridge_receipt", "contact_sheet"]:
+            if key in artboard_result:
+                receipt[key] = artboard_result[key]
     receipt["asset_injection_summary"] = asset_injection_summary
     page_receipt_payloads = [read_json(project_root / path) for path in page_receipts]
     receipt["fallback_skeleton_used"] = any(bool(payload.get("fallback_skeleton_used")) for payload in page_receipt_payloads)
@@ -1001,6 +1184,10 @@ def run_generate_svg_stage(
     receipt["source_receipt_sha256"] = optional_project_file_hash(project_root, "source/source-receipt.json")
     receipt["generator_script_sha256"] = file_sha256(Path(command[1])) if len(command) > 1 and Path(command[1]).exists() else None
     receipt["visible_text_policy"] = "visible SVG text must be traceable to slide_plan.json or source/evidence.json"
+    if generation_mode == "artboard_satori":
+        receipt["template_fit_check"] = "06-check/template-fit.json"
+        if "06-check/template-fit.json" not in receipt["outputs"]:
+            receipt["outputs"].append("06-check/template-fit.json")
     schema_issues = validate_generator_receipt(project_root, receipt)
     if schema_issues:
         receipt["status"] = "failed"
@@ -1010,6 +1197,25 @@ def run_generate_svg_stage(
         write_state(project_root, state)
         raise RunnerError("generate_svg receipt validation failed")
     write_json(receipt_path(project_root, "generate_svg"), receipt)
+    if generation_mode == "artboard_satori":
+        fit_command = [
+            "python3",
+            (SCRIPT_DIR / "svglide_template_fit_check.py").as_posix(),
+            project_root.as_posix(),
+            "--pretty",
+        ]
+        fit_completed = subprocess.run(fit_command, cwd=repo_root(), check=False, capture_output=True, text=True)
+        if fit_completed.returncode != 0:
+            receipt["status"] = "failed"
+            receipt["error"] = {
+                "code": "template_fit_failed",
+                "returncode": fit_completed.returncode,
+                "stderr": fit_completed.stderr,
+            }
+            write_json(receipt_path(project_root, "generate_svg"), receipt)
+            record_stage(state, "generate_svg", "failed", receipt_path(project_root, "generate_svg"))
+            write_state(project_root, state)
+            raise RunnerError("artboard template fit check failed")
     return receipt
 
 
@@ -1027,6 +1233,13 @@ def require_generated_svg_current(project_root: Path) -> None:
     for key, current in expected.items():
         if receipt.get(key) != current:
             raise RunnerError(f"generate_svg receipt {key} does not match current project files; rerun generate_svg")
+    if receipt.get("generation_mode") == "artboard_satori":
+        artboard_receipts = receipt.get("artboard_receipts")
+        if not isinstance(artboard_receipts, list) or not artboard_receipts:
+            raise RunnerError("generate_svg receipt is missing artboard_receipts; rerun generate_svg")
+        for item in artboard_receipts:
+            if not isinstance(item, str) or not (project_root / item).exists():
+                raise RunnerError(f"artboard receipt is missing: {item}; rerun generate_svg")
     command = receipt.get("command")
     if isinstance(command, list) and len(command) > 1 and isinstance(command[1], str):
         script = Path(command[1])
@@ -1034,7 +1247,7 @@ def require_generated_svg_current(project_root: Path) -> None:
             raise RunnerError("generator script changed after generate_svg; rerun generate_svg")
 
 
-def require_existing_stage_current(project_root: Path, stage: str) -> None:
+def require_existing_stage_current(project_root: Path, stage: str, *, profile: str = "production") -> None:
     if stage == "source":
         require_source_current(project_root)
     elif stage == "assets":
@@ -1053,8 +1266,12 @@ def require_existing_stage_current(project_root: Path, stage: str) -> None:
     elif stage == "live_create":
         require_quality_gate_current(project_root)
         require_ppe_proof_current(project_root)
+        if profile == "production_live":
+            require_pre_submit_review_current(project_root)
     elif stage == "ppe_proof":
         require_ppe_proof_current(project_root)
+    elif stage == "pre_submit_review":
+        require_pre_submit_review_current(project_root)
     elif stage == "readback":
         require_quality_gate_current(project_root)
 
@@ -1074,13 +1291,73 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
     inputs = gate.get("inputs")
     if not isinstance(inputs, dict) or inputs.get("visual_distinctness") != "06-check/visual-distinctness.json":
         raise RunnerError("quality gate is missing visual_distinctness input; rerun quality_gate")
+    if inputs.get("theme_validate") != "06-check/theme-validate.json":
+        raise RunnerError("quality gate is missing theme_validate input; rerun theme_validate and quality_gate")
+    if inputs.get("theme_adherence") != "06-check/theme-adherence.json":
+        raise RunnerError("quality gate is missing theme_adherence input; rerun theme_adherence and quality_gate")
     checks = gate.get("checks")
     check_names = {item.get("name") for item in checks if isinstance(item, dict)} if isinstance(checks, list) else set()
     if "visual-distinctness" not in check_names:
         raise RunnerError("quality gate is missing visual-distinctness check; rerun quality_gate")
+    if "theme-validate" not in check_names:
+        raise RunnerError("quality gate is missing theme-validate check; rerun quality_gate")
+    if "theme-adherence" not in check_names:
+        raise RunnerError("quality gate is missing theme-adherence check; rerun quality_gate")
     if not (project_root / "06-check/visual-distinctness.json").exists():
         raise RunnerError("visual distinctness receipt is missing; rerun visual_distinctness_review and quality_gate")
+    for input_name, rel in [
+        ("theme_validate", "06-check/theme-validate.json"),
+        ("theme_adherence", "06-check/theme-adherence.json"),
+        ("visual_distinctness", "06-check/visual-distinctness.json"),
+    ]:
+        if not (project_root / rel).exists():
+            raise RunnerError(f"{input_name} receipt is missing; rerun {input_name} and quality_gate")
+    input_hashes = gate.get("input_hashes")
+    if not isinstance(input_hashes, dict):
+        raise RunnerError("quality gate is missing input_hashes; rerun quality_gate")
+    for input_name, rel in [
+        ("theme_validate", "06-check/theme-validate.json"),
+        ("theme_adherence", "06-check/theme-adherence.json"),
+        ("visual_distinctness", "06-check/visual-distinctness.json"),
+        ("generator_receipt", "receipts/generate_svg.json"),
+    ]:
+        if input_hashes.get(input_name) != optional_project_file_hash(project_root, rel):
+            raise RunnerError(f"quality gate {input_name} hash is stale; rerun quality_gate")
+    if inputs.get("generation_mode") == "artboard_satori":
+        if inputs.get("artboard_package_check") != "06-check/artboard-package-check.json":
+            raise RunnerError("quality gate is missing artboard_package_check input; rerun package_check and quality_gate")
+        if "artboard-package-check" not in check_names:
+            raise RunnerError("quality gate is missing artboard-package-check check; rerun quality_gate")
+        if input_hashes.get("artboard_package_check") != optional_project_file_hash(project_root, "06-check/artboard-package-check.json"):
+            raise RunnerError("quality gate artboard_package_check hash is stale; rerun quality_gate")
     return gate
+
+
+def require_pre_submit_review_current(project_root: Path) -> dict[str, Any]:
+    review_path = project_root / "06-check" / "pre-submit-review.json"
+    if not review_path.exists():
+        raise RunnerError("pre_submit_review must be passed before production live create")
+    review = read_json(review_path)
+    if review.get("status") != "passed":
+        raise RunnerError("pre_submit_review must be passed before production live create")
+    inputs = review.get("inputs")
+    if not isinstance(inputs, dict):
+        raise RunnerError("pre_submit_review inputs are missing; rerun pre_submit_review")
+    expected = {
+        "plan_sha256": optional_project_file_hash(project_root, "02-plan/slide_plan.json"),
+        "quality_gate_sha256": optional_project_file_hash(project_root, "06-check/quality-gate.json"),
+        "theme_adherence_sha256": optional_project_file_hash(project_root, "06-check/theme-adherence.json"),
+        "visual_distinctness_sha256": optional_project_file_hash(project_root, "06-check/visual-distinctness.json"),
+    }
+    for key, current in expected.items():
+        if inputs.get(key) != current:
+            raise RunnerError(f"pre_submit_review {key} does not match current project files; rerun pre_submit_review")
+    if review.get("prepared_files") != prepared_file_hashes(project_root):
+        raise RunnerError("prepared SVG files changed after pre_submit_review; rerun pre_submit_review")
+    human = review.get("human_approval")
+    if not isinstance(human, dict) or human.get("approved") is not True:
+        raise RunnerError("pre_submit_review is missing human approval")
+    return review
 
 
 def require_ppe_proof_current(project_root: Path) -> dict[str, Any]:
@@ -1101,6 +1378,66 @@ def require_ppe_proof_current(project_root: Path) -> dict[str, Any]:
     return proof
 
 
+def write_direct_svg_package_check(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+    started_at = now_iso()
+    payload = {
+        "version": "svglide-artboard-package-check/v1",
+        "stage": "package_check",
+        "status": "passed",
+        "action": "create_live",
+        "checked_at": now_iso(),
+        "generation_mode": DEFAULT_GENERATION_MODE,
+        "summary": {"error_count": 0, "warning_count": 0, "runtime_check_count": 0},
+        "runtime_checks": [],
+        "issues": [],
+        "skip_reason": "generation_mode is direct_svg; artboard package runtime is not required",
+    }
+    check = project_root / "06-check" / "artboard-package-check.json"
+    receipt = project_root / "receipts" / "artboard-package-check.json"
+    write_json(check, payload)
+    write_json(receipt, payload)
+    return complete_stage(
+        project_root,
+        state,
+        "package_check",
+        "passed",
+        started_at=started_at,
+        inputs=["02-plan/slide_plan.json"],
+        outputs=[
+            "06-check/artboard-package-check.json",
+            "receipts/artboard-package-check.json",
+        ],
+        command=[],
+    )
+
+
+def run_package_check_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+    require_stage_passed(state, "confirm_plan")
+    validate_plan_confirmation(project_root)
+    mode = plan_generation_mode(project_root)
+    if mode == DEFAULT_GENERATION_MODE:
+        return write_direct_svg_package_check(project_root, state)
+    return run_script_stage(
+        project_root,
+        state,
+        "package_check",
+        [
+            "python3",
+            (SCRIPT_DIR / "svglide_artboard_package_check.py").as_posix(),
+            "--repo-root",
+            repo_root().as_posix(),
+            "--output-dir",
+            project_root.as_posix(),
+            "--pretty",
+        ],
+        inputs=["02-plan/slide_plan.json"],
+        outputs=[
+            "06-check/artboard-package-check.json",
+            "receipts/artboard-package-check.json",
+        ],
+    )
+
+
 def lark_cli_command_prefix() -> list[str]:
     raw = os.environ.get(LARK_CLI_COMMAND_ENV, "").strip()
     if not raw:
@@ -1118,11 +1455,36 @@ def cli_arg_path(path: Path) -> str:
         return path.as_posix()
 
 
+def ppe_live_request_headers(project_root: Path) -> list[str]:
+    proof = require_ppe_proof_current(project_root)
+    proof_payload = proof.get("proof")
+    if not isinstance(proof_payload, dict):
+        raise RunnerError("PPE proof payload is missing; rerun ppe_proof")
+    headers = proof_payload.get("headers")
+    if not isinstance(headers, dict):
+        raise RunnerError("PPE proof headers are missing; rerun ppe_proof")
+    items: list[str] = []
+    for key, value in headers.items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise RunnerError("PPE proof headers must be string key/value pairs")
+        normalized_key = key.strip().lower()
+        normalized_value = value.strip()
+        if normalized_key != "x-tt-env" or normalized_value != "ppe_pure_svg":
+            raise RunnerError("PPE proof currently supports only x-tt-env=ppe_pure_svg")
+        items.append(f"{normalized_key}={normalized_value}")
+    if not items:
+        raise RunnerError("PPE proof headers are empty; rerun ppe_proof")
+    return sorted(items)
+
+
 def create_command(project_root: Path, *, dry_run: bool) -> list[str]:
     command = lark_cli_command_prefix() + ["slides", "+create-svg", "--as", "user", "--title", project_title(project_root)]
     assets = project_root / "03-assets" / "assets.json"
     if assets.exists():
         command.extend(["--assets", cli_arg_path(assets)])
+    if not dry_run:
+        for header in ppe_live_request_headers(project_root):
+            command.extend(["--request-header", header])
     for path in prepared_svg_files(project_root):
         command.extend(["--file", cli_arg_path(path)])
     if dry_run:
@@ -1140,17 +1502,21 @@ def run_create_stage(
     stage: str,
     *,
     dry_run: bool,
+    profile: str = "production",
     command_runner=subprocess.run,
 ) -> dict[str, Any]:
     require_stage_passed(state, "confirm_plan")
     validate_plan_confirmation(project_root)
-    require_quality_gate_passed(project_root)
+    require_quality_gate_current(project_root)
     started_at = now_iso()
     hashes = prepared_file_hashes(project_root)
 
     if not dry_run:
         require_stage_passed(state, "ppe_proof")
         require_ppe_proof_current(project_root)
+        if profile == "production_live":
+            require_stage_passed(state, "pre_submit_review")
+            require_pre_submit_review_current(project_root)
         dry_run_record = read_json(project_root / "07-create" / "dry-run.json")
         if dry_run_record.get("prepared_files") != hashes:
             complete_stage(
@@ -1242,10 +1608,24 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["02-plan/slide_plan.json"],
             outputs=["02-plan/strategy-review.json"],
         )
+    if stage == "theme_validate":
+        require_stage_passed(state, "strategy_review")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_theme_validate.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "06-check" / "theme-validate.json",
+            inputs=["02-plan/slide_plan.json"],
+            outputs=["06-check/theme-validate.json", "receipts/theme-validate.json"],
+        )
     if stage == "confirm_plan":
         return run_confirm_plan_stage(project_root, state)
+    if stage == "package_check":
+        return run_package_check_stage(project_root, state)
     if stage == "assets":
         require_stage_passed(state, "confirm_plan")
+        require_stage_passed(state, "package_check")
         validate_plan_confirmation(project_root)
         require_source_current(project_root)
         return run_script_stage(
@@ -1364,6 +1744,18 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["02-plan/slide_plan.json"],
             outputs=["06-check/visual-distinctness.json"],
         )
+    if stage == "theme_adherence":
+        require_stage_passed(state, "visual_distinctness_review")
+        require_stage_passed(state, "theme_validate")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_theme_adherence.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "06-check" / "theme-adherence.json",
+            inputs=["02-plan/slide_plan.json", "06-check/theme-validate.json", "04-svg/prepared"],
+            outputs=["06-check/theme-adherence.json", "receipts/theme-adherence.json"],
+        )
     if stage == "quality_gate":
         require_stage_passed(state, "preflight")
         require_stage_passed(state, "preview_lint")
@@ -1372,6 +1764,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         require_stage_passed(state, "semantic_review")
         require_stage_passed(state, "runtime_review")
         require_stage_passed(state, "visual_distinctness_review")
+        require_stage_passed(state, "theme_adherence")
         return run_script_stage(
             project_root,
             state,
@@ -1385,12 +1778,14 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
                 "06-check/semantic-review.json",
                 "06-check/runtime-review.json",
                 "06-check/visual-distinctness.json",
+                "06-check/theme-validate.json",
+                "06-check/theme-adherence.json",
                 "receipts/generate_svg.json",
             ],
             outputs=["06-check/quality-gate.json"],
         )
     if stage == "dry_run":
-        return run_create_stage(project_root, state, stage, dry_run=True)
+        return run_create_stage(project_root, state, stage, dry_run=True, profile=profile)
     if stage == "ppe_proof":
         require_stage_passed(state, "dry_run")
         return run_script_stage(
@@ -1402,8 +1797,32 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["06-check/quality-gate.json", "07-create/dry-run.json", "07-create/ppe-proof.input.json"],
             outputs=["07-create/ppe-proof.json"],
         )
+    if stage == "pre_submit_review":
+        require_stage_passed(state, "ppe_proof")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            [
+                "python3",
+                (SCRIPT_DIR / "svglide_pre_submit_review.py").as_posix(),
+                project_root.as_posix(),
+                "--human-review",
+                (project_root / "06-check" / "pre-submit-review.input.json").as_posix(),
+                "--pretty",
+            ],
+            output_json=project_root / "06-check" / "pre-submit-review.json",
+            inputs=[
+                "06-check/pre-submit-review.input.json",
+                "06-check/quality-gate.json",
+                "06-check/theme-adherence.json",
+                "06-check/visual-distinctness.json",
+                "04-svg/prepared",
+            ],
+            outputs=["06-check/pre-submit-review.json", "receipts/pre-submit-review.json"],
+        )
     if stage == "live_create":
-        return run_create_stage(project_root, state, stage, dry_run=False)
+        return run_create_stage(project_root, state, stage, dry_run=False, profile=profile)
     if stage == "readback":
         return run_script_stage(
             project_root,
@@ -1424,7 +1843,7 @@ def run_stage(project_root: Path, stage: str, *, command: list[str] | None = Non
     record = state.get("stages", {}).get(normalized)
     if record:
         fail_if_existing_stage_failed(normalized, record)
-        require_existing_stage_current(project_root, normalized)
+        require_existing_stage_current(project_root, normalized, profile=profile)
         return {"stage": normalized, "status": "passed", "state": state}
 
     if normalized not in IMPLEMENTED_STAGES:
@@ -1445,10 +1864,12 @@ def run_until(project_root: Path, until: str, *, profile: str = "production") ->
     target = normalize_stage(until)
     state = load_state(project_root)
     for stage in stages_until(target):
+        if not stage_required_for_profile(stage, profile):
+            continue
         record = state.get("stages", {}).get(stage)
         if record:
             fail_if_existing_stage_failed(stage, record)
-            require_existing_stage_current(project_root, stage)
+            require_existing_stage_current(project_root, stage, profile=profile)
             continue
 
         if stage not in IMPLEMENTED_STAGES:
@@ -1486,6 +1907,18 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--profile", choices=sorted(PROFILE_TARGETS))
     add_network_args(run)
 
+    prompt_plan = subcommands.add_parser("prompt-plan", help="generate source and plan artifacts from a raw prompt")
+    prompt_plan.add_argument("project_root", type=Path)
+    prompt_plan.add_argument("--prompt", required=True)
+    prompt_plan.add_argument("--target-slide-count", type=int, default=8)
+    prompt_plan.add_argument("--language", default="zh-CN")
+    prompt_plan.add_argument("--audience", default="投资/战略分析读者")
+    prompt_plan.add_argument("--provider", default="codex", choices=["codex", "claude", "command"])
+    prompt_plan.add_argument("--planner-command")
+    prompt_plan.add_argument("--no-search", action="store_true")
+    prompt_plan.add_argument("--timeout", type=int, default=300)
+    prompt_plan.add_argument("--force", action="store_true")
+
     return parser
 
 
@@ -1513,6 +1946,21 @@ def main(argv: list[str] | None = None) -> int:
         apply_cli_runner_options(args)
         if args.command == "init":
             result = init_project(args.deck_id, args.title, plan_root=args.plan_root, force=args.force)
+        elif args.command == "prompt-plan":
+            import svglide_prompt_planner
+
+            result = svglide_prompt_planner.run_prompt_plan(
+                args.project_root,
+                prompt=args.prompt,
+                target_slide_count=args.target_slide_count,
+                language=args.language,
+                audience=args.audience,
+                provider=args.provider,
+                planner_command=args.planner_command,
+                search=not args.no_search,
+                timeout=args.timeout,
+                force=args.force,
+            )
         elif args.command == "stage":
             result = run_stage(args.project_root, args.stage, profile=args.profile)
         elif args.command == "run":

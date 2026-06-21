@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect x="0" y="0" width="960" height="540" fill="#071827" slide:role="shape" />
+  <circle cx="820" cy="132" r="96" fill="#F97316" opacity="0.28" slide:role="shape" />
+  <circle cx="812" cy="150" r="72" fill="#5EEAD4" opacity="0.22" slide:role="shape" />
+  <rect x="56" y="64" width="704" height="356" fill="#0E2A3F" opacity="0.82" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="84" y="98" width="420" height="32" data-node-id="eyebrow"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:700;font-family:Inter;color:#5EEAD4;line-height:1.16;white-space:normal">ICELAND VOLCANO</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="84" y="142" width="628" height="142" data-node-id="title"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:58px;font-weight:800;font-family:Inter;color:#EAF6FF;line-height:1.16;white-space:normal">冰岛火山研究</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="88" y="302" width="610" height="74" data-node-id="subtitle"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:24px;font-weight:500;font-family:Inter;color:#93B4C8;line-height:1.16;white-space:normal">地貌证据、活动迹象与连续观测。</div></foreignObject>
+  <rect x="84" y="444" width="92" height="40" fill="#5EEAD4" opacity="0.16" slide:role="shape" />
+  <rect x="190" y="444" width="92" height="40" fill="#5EEAD4" opacity="0.16" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="190" y="444" width="92" height="40" data-node-id="chip-2"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:17px;font-weight:600;font-family:Inter;color:#EAF6FF;line-height:1.16;white-space:normal">监测</div></foreignObject>
+  <rect x="296" y="444" width="92" height="40" fill="#5EEAD4" opacity="0.16" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="296" y="444" width="92" height="40" data-node-id="chip-3"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:17px;font-weight:600;font-family:Inter;color:#EAF6FF;line-height:1.16;white-space:normal">风险</div></foreignObject>
+</svg>

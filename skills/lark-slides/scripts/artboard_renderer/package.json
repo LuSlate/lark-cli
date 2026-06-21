@@ -1,0 +1,21 @@
+{
+  "name": "@larksuite/svglide-artboard-renderer",
+  "version": "0.0.0-p0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs",
+    "build": "esbuild render.mjs --bundle --platform=node --format=esm --target=node18 --external:@resvg/resvg-js --outfile=dist/render.mjs",
+    "check": "node render.mjs --check-runtime"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "satori": "0.26.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}

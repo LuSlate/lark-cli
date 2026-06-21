@@ -1,0 +1,111 @@
+{
+  "contact_sheet": {
+    "path": "05-preview/contact-sheet.png",
+    "sha256": "2c4c66c09ded55972bac90f9586eeb71c89fd67c20d0af781cbcc7cf9aec0a2b",
+    "source_pngs": [
+      "04-svg/artboard/page-001.png",
+      "04-svg/artboard/page-002.png",
+      "04-svg/artboard/page-003.png"
+    ]
+  },
+  "created_at": "2026-06-21T13:59:15+08:00",
+  "inputs": {
+    "canvas_spec_validate": "receipts/canvas-spec-validate.json",
+    "canvas_spec_validate_sha256": "c6e93921b849a96a9dbbe1449d8e9de52096bc563313ff9a744be506a0254363",
+    "plan_sha256": "9c5f68a5f3536a91e07486e29ccd6961e95738de450e526727577960be672f1e",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/blueprint-technical.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "7ae629f17d38922702489ad3a23da26d465c3e6f5c284b409d4ab10a53ef6ed0"
+  },
+  "pages": [
+    {
+      "canvas_spec_sha256": "c217ffcfb547080e01de408d01933ed81f2ed1f9dc06de845e8a0dad7a19af02",
+      "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+      "canvas_template_svg_sha256": "a21538ac26cd5ce67d306ec05f45e7c6ee98b4ae5a954c6bb92414994df2abc2",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "895b6d98ab57c2e5633b92513c4b06047e26411c4bf75bf8f248be5358752c86",
+      "node_version": "v20.18.1",
+      "page": 1,
+      "png": "04-svg/artboard/page-001.png",
+      "png_sha256": "83d25aa4149a7ea9131f459dd3446bdf5aacfebea5d3d83e57638a5ad97f7e11",
+      "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+      "render_metadata_sha256": "050b8900bfe64f3e7e08007a4f695096976000215233e0a5bfe9743ee4f7acf4",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+      "satori_svg_sha256": "700e2b829a7a00354739512182916d4566877165748e9e1fa8b3aeeafcb21540",
+      "satori_version": "0.26.0",
+      "template_id": "cover-hero",
+      "theme_id": "blueprint-technical"
+    },
+    {
+      "canvas_spec_sha256": "71c31d9e39a828f37a38c95912be4ec79343a4101072afede90384d5454d2270",
+      "canvas_template_svg": "04-svg/artboard/page-002.canvas-template.svg",
+      "canvas_template_svg_sha256": "acb7c3b4563b96ff052ca745c2ee43de958c2025cee815cc49b92611b3fbd82b",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "1ad67ee48e5a22981c1432d858587ff346ac6069b4376a52990f16bce3e16c5e",
+      "node_version": "v20.18.1",
+      "page": 2,
+      "png": "04-svg/artboard/page-002.png",
+      "png_sha256": "ba705a55dc18aaef73144e01197fd75dba6fe37d27eb36897df95683f13161a7",
+      "render_metadata": "04-svg/artboard/page-002.render-metadata.json",
+      "render_metadata_sha256": "cc88b7d0489199a4aee08a29316b247fdd6cccb1df4fdec5f4e7be6dcbbb5a34",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-002.satori.svg",
+      "satori_svg_sha256": "5979d2dd93d09936d216d871929aacb5d06eecab43d34a2e0d8070991d1ed88a",
+      "satori_version": "0.26.0",
+      "template_id": "comparison-cards",
+      "theme_id": "paper-research"
+    },
+    {
+      "canvas_spec_sha256": "1409994cbf70a22f5fffff357295569ef0adc9caae55ebf6bb52920b2c385615",
+      "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+      "canvas_template_svg_sha256": "81c00e0a1494c858ea821a001833825b93bf44fe328905a4fe7f822b69b6ac2e",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "5b0c426195a980724c7e77f0d09cc5a8f32bafb2f85ce7d5ac3a6b641cc72886",
+      "node_version": "v20.18.1",
+      "page": 3,
+      "png": "04-svg/artboard/page-003.png",
+      "png_sha256": "a1d172b3953148d4a428d7359f48f9f3b97d74a89ef07257583861271653bc6a",
+      "render_metadata": "04-svg/artboard/page-003.render-metadata.json",
+      "render_metadata_sha256": "2c3d41831d1d62dd42c2a404501a71d0c361c9b827c583bb8acfaf586fe14f0b",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+      "satori_svg_sha256": "07396b9b453965f332cee318eb9b8e55dbd01fd844aa69f66e5e532aec1f7ab6",
+      "satori_version": "0.26.0",
+      "template_id": "summary-final",
+      "theme_id": "warm-editorial"
+    }
+  ],
+  "stage": "artboard-render",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "max_workers": 3,
+    "page_count": 3,
+    "warning_count": 0
+  },
+  "version": "svglide-artboard-render/v1"
+}

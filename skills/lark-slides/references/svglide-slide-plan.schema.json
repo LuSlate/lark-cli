@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-slide-plan.schema.json",
+  "title": "SVGlide Slide Planner Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "deck_plan_ref", "generation_mode", "slides"],
+  "properties": {
+    "schema_version": {"const": "svglide-slide-plan/v1"},
+    "deck_plan_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "minLength": 1}
+      }
+    },
+    "generation_mode": {"const": "artboard_satori"},
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["page", "title", "key_message", "template_id", "theme_id", "content_requirements", "visual_role", "source_policy"],
+        "properties": {
+          "page": {"type": "integer", "minimum": 1},
+          "title": {"type": "string", "minLength": 1},
+          "key_message": {"type": "string", "minLength": 1},
+          "template_id": {"type": "string", "minLength": 1},
+          "theme_id": {"type": "string", "minLength": 1},
+          "content_requirements": {"type": "object", "additionalProperties": true},
+          "visual_role": {"type": "string", "minLength": 1},
+          "source_policy": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -251,6 +251,14 @@ func (ctx *RuntimeContext) CallAPI(method, url string, params map[string]interfa
 	return HandleApiResult(result, err, "API call failed")
 }
 
+// CallAPIWithHeaders is CallAPI plus request-scoped HTTP headers. Keep this for
+// shortcuts that need a narrow, audited transport lane rather than global CLI
+// header injection.
+func (ctx *RuntimeContext) CallAPIWithHeaders(method, url string, params map[string]interface{}, data interface{}, headers http.Header) (map[string]interface{}, error) {
+	result, err := ctx.callRawWithHeaders(method, url, params, data, headers)
+	return HandleApiResult(result, err, "API call failed")
+}
+
 // CallAPITyped is the typed-only replacement for CallAPI: it performs the same
 // SDK request (buildRequest → APIClient.DoAPI → DoSDKRequest, identical
 // transport and query model to CallAPI) and returns the "data" object, but
@@ -422,11 +430,19 @@ func (ctx *RuntimeContext) buildRequest(method, url string, params map[string]in
 }
 
 func (ctx *RuntimeContext) callRaw(method, url string, params map[string]interface{}, data interface{}) (interface{}, error) {
+	return ctx.callRawWithHeaders(method, url, params, data, nil)
+}
+
+func (ctx *RuntimeContext) callRawWithHeaders(method, url string, params map[string]interface{}, data interface{}, headers http.Header) (interface{}, error) {
 	ac, err := ctx.getAPIClient()
 	if err != nil {
 		return nil, err
 	}
-	return ac.CallAPI(ctx.ctx, ctx.buildRequest(method, url, params, data))
+	req := ctx.buildRequest(method, url, params, data)
+	if len(headers) > 0 {
+		req.ExtraOpts = append(req.ExtraOpts, larkcore.WithHeaders(headers))
+	}
+	return ac.CallAPI(ctx.ctx, req)
 }
 
 // DoAPI executes a raw Lark SDK request with automatic auth handling.
@@ -1000,6 +1016,10 @@ func runShortcut(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bo
 		}
 	}
 
+	if wantDryRun, _ := cmd.Flags().GetBool("dry-run"); wantDryRun && s.DryRun != nil {
+		return runShortcutDryRunLocal(cmd, f, s, botOnly)
+	}
+
 	as, err := resolveShortcutIdentity(cmd, f, s)
 	if err != nil {
 		return err
@@ -1048,6 +1068,49 @@ func runShortcut(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bo
 		return err
 	}
 	return rctx.outputErr
+}
+
+func runShortcutDryRunLocal(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bool) error {
+	asFlag, _ := cmd.Flags().GetString("as")
+	as := core.Identity(strings.TrimSpace(asFlag))
+	if as == "" || as == "auto" {
+		as = core.AsUser
+	}
+	if botOnly {
+		as = core.AsBot
+	}
+	if !shortcutSupportsIdentity(as, s.AuthTypes) {
+		return f.CheckIdentity(as, s.AuthTypes)
+	}
+	config := &core.CliConfig{}
+	rctx := newLocalDryRunRuntimeContext(cmd, f, s, config, as, botOnly)
+	if err := validateEnumFlags(rctx, s.Flags); err != nil {
+		return err
+	}
+	if err := resolveInputFlags(rctx, s.Flags); err != nil {
+		return err
+	}
+	if err := output.ValidateJqFlags(rctx.JqExpr, "", rctx.Format); err != nil {
+		return err
+	}
+	if s.Validate != nil {
+		if err := s.Validate(rctx.ctx, rctx); err != nil {
+			return err
+		}
+	}
+	return handleShortcutDryRun(f, rctx, s)
+}
+
+func shortcutSupportsIdentity(as core.Identity, authTypes []string) bool {
+	if len(authTypes) == 0 {
+		return true
+	}
+	for _, raw := range authTypes {
+		if core.Identity(raw) == as {
+			return true
+		}
+	}
+	return false
 }
 
 func resolveShortcutIdentity(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut) (core.Identity, error) {
@@ -1102,6 +1165,21 @@ func newRuntimeContext(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, conf
 	rctx.Format = rctx.Str("format")
 	rctx.JqExpr, _ = cmd.Flags().GetString("jq")
 	return rctx, nil
+}
+
+func newLocalDryRunRuntimeContext(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, config *core.CliConfig, as core.Identity, botOnly bool) *RuntimeContext {
+	ctx := cmd.Context()
+	ctx = cmdutil.ContextWithShortcut(ctx, s.Service+":"+s.Command, uuid.New().String())
+	rctx := &RuntimeContext{ctx: ctx, Config: config, Cmd: cmd, botOnly: botOnly, resolvedAs: as, Factory: f}
+	rctx.apiClientFunc = sync.OnceValues(func() (*client.APIClient, error) {
+		return nil, fmt.Errorf("API client is not available during local dry-run")
+	})
+	rctx.botInfoFunc = sync.OnceValues(func() (*BotInfo, error) {
+		return nil, fmt.Errorf("bot info is not available during local dry-run")
+	})
+	rctx.Format = rctx.Str("format")
+	rctx.JqExpr, _ = cmd.Flags().GetString("jq")
+	return rctx
 }
 
 // stripUTF8BOM removes a leading UTF-8 byte-order mark from content read from a

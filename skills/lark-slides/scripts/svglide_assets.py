@@ -147,7 +147,7 @@ def collect_asset_contracts(plan: dict[str, Any], lock: dict[str, Any]) -> list[
                     item = dict(raw)
                     item.setdefault("source", source_name)
                     item.setdefault("key", key)
-                    item.setdefault("id", item.get("name") or item.get("href") or item.get("path") or f"{key}-{index + 1}")
+                    item.setdefault("id", item.get("name") or item.get("href") or item.get("path") or item.get("local_path") or f"{key}-{index + 1}")
                     item.setdefault("required", True)
                     contracts.append(item)
     return contracts
@@ -266,7 +266,7 @@ def acquire_contract_asset(
     asset_id = safe_asset_id(contract.get("id"), index)
     role = placement_role(contract)
     query = image_query(contract)
-    href = contract.get("href") or contract.get("path")
+    href = contract.get("href") or contract.get("path") or contract.get("local_path")
     base = {
         "asset_id": asset_id,
         "page": contract.get("usage_page") or contract.get("page"),
@@ -374,7 +374,7 @@ def local_asset_path(project: Path, ref: str) -> Path | None:
 
 
 def evaluate_contract(project: Path, contract: dict[str, Any], assets: dict[str, str]) -> dict[str, Any]:
-    href = contract.get("href") or contract.get("placeholder") or contract.get("path")
+    href = contract.get("href") or contract.get("placeholder") or contract.get("path") or contract.get("local_path")
     token = contract.get("token") or contract.get("file_token")
     required = bool(contract.get("required", True))
     status = "declared"

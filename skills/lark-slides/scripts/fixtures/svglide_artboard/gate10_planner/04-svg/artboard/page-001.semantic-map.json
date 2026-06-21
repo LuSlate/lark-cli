@@ -1,0 +1,132 @@
+{
+  "content_keys": [
+    "chips",
+    "eyebrow",
+    "subtitle",
+    "title"
+  ],
+  "elements": [
+    {
+      "bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "element_id": "background",
+      "kind": "rect",
+      "role": "background",
+      "source_ref": null,
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 192.0,
+        "width": 192.0,
+        "x": 724.0,
+        "y": 36.0
+      },
+      "element_id": "accent-orbit",
+      "kind": "circle",
+      "role": "decorative",
+      "source_ref": null,
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 356.0,
+        "width": 704.0,
+        "x": 56.0,
+        "y": 64.0
+      },
+      "element_id": "panel",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 32.0,
+        "width": 420.0,
+        "x": 84.0,
+        "y": 98.0
+      },
+      "element_id": "eyebrow",
+      "kind": "text",
+      "role": "eyebrow",
+      "source_ref": "canvas_spec.content.eyebrow",
+      "text": "ICELAND VOLCANO"
+    },
+    {
+      "bbox": {
+        "height": 142.0,
+        "width": 628.0,
+        "x": 84.0,
+        "y": 142.0
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "text": "冰岛火山研究"
+    },
+    {
+      "bbox": {
+        "height": 74.0,
+        "width": 610.0,
+        "x": 88.0,
+        "y": 302.0
+      },
+      "element_id": "subtitle",
+      "kind": "text",
+      "role": "subtitle",
+      "source_ref": "canvas_spec.content.subtitle",
+      "text": "地貌证据、活动迹象与连续观测。"
+    },
+    {
+      "bbox": {
+        "height": 40.0,
+        "width": 92.0,
+        "x": 84.0,
+        "y": 444.0
+      },
+      "element_id": "chip-1",
+      "kind": "text",
+      "role": "badge",
+      "source_ref": "canvas_spec.content.chips[]",
+      "text": "地貌"
+    },
+    {
+      "bbox": {
+        "height": 40.0,
+        "width": 92.0,
+        "x": 190.0,
+        "y": 444.0
+      },
+      "element_id": "chip-2",
+      "kind": "text",
+      "role": "badge",
+      "source_ref": "canvas_spec.content.chips[]",
+      "text": "监测"
+    },
+    {
+      "bbox": {
+        "height": 40.0,
+        "width": 92.0,
+        "x": 296.0,
+        "y": 444.0
+      },
+      "element_id": "chip-3",
+      "kind": "text",
+      "role": "badge",
+      "source_ref": "canvas_spec.content.chips[]",
+      "text": "风险"
+    }
+  ],
+  "page": 1,
+  "semantic_source": "CanvasSpec",
+  "template_id": "cover-hero",
+  "theme_id": "blueprint-technical",
+  "version": "svglide-semantic-map/v1"
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-node-layout-map.schema.json",
+  "title": "SVGlide node layout map",
+  "type": "object",
+  "required": ["version", "page", "source", "drift", "nodes"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-node-layout-map/v1"},
+    "page": {"type": "integer", "minimum": 1},
+    "source": {"type": "string", "minLength": 1},
+    "drift": {
+      "type": "object",
+      "required": ["status", "max_px"],
+      "additionalProperties": true,
+      "properties": {
+        "status": {"type": "string", "minLength": 1},
+        "max_px": {"type": "number"}
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "x", "y", "width", "height"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "x": {"type": "number"},
+          "y": {"type": "number"},
+          "width": {"type": "number"},
+          "height": {"type": "number"}
+        }
+      }
+    }
+  }
+}

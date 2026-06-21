@@ -1,0 +1,10 @@
+{
+  "items": [
+    {"id": "source:item-001", "text": "P0b fixture uses three pages to validate page order and receipt consistency."},
+    {"id": "source:item-002", "text": "CanvasSpec keeps semantic input structured before template rendering."},
+    {"id": "source:item-003", "text": "Template fit, preflight, semantic review, runtime review, and quality gate must all pass before dry-run."},
+    {"id": "source:item-004", "text": "Satori-compatible preview artifacts are recorded separately from final SVGlide protocol SVG."}
+  ],
+  "schema_version": "svglide-evidence/v1",
+  "source_status": "ready"
+}

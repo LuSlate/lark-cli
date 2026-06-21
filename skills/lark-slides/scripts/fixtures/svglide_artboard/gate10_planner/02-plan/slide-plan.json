@@ -1,0 +1,37 @@
+{
+  "schema_version": "svglide-slide-plan/v1",
+  "deck_plan_ref": {"path": "02-plan/deck-plan.json"},
+  "generation_mode": "artboard_satori",
+  "slides": [
+    {
+      "page": 1,
+      "title": "冰岛火山研究",
+      "key_message": "研究从地貌、活动迹象和观测路线展开。",
+      "template_id": "cover-hero",
+      "theme_id": "blueprint-technical",
+      "content_requirements": {"eyebrow": "ICELAND VOLCANO", "subtitle": "地貌证据、活动迹象与连续观测。", "chips": ["地貌", "监测", "风险"]},
+      "visual_role": "research cover",
+      "source_policy": "topic-provided; no invented metrics"
+    },
+    {
+      "page": 2,
+      "title": "观测证据对比",
+      "key_message": "不同观测来源共同约束火山活动判断。",
+      "template_id": "comparison-cards",
+      "theme_id": "paper-research",
+      "content_requirements": {"left_title": "地表信号", "right_title": "地下信号", "left_points": ["熔岩地貌", "热异常", "气体羽流"], "right_points": ["地震活动", "形变趋势", "岩浆补给"]},
+      "visual_role": "evidence comparison",
+      "source_policy": "topic-derived categories; no numeric claims"
+    },
+    {
+      "page": 3,
+      "title": "下一步观测",
+      "key_message": "后续重点是连续监测和风险沟通。",
+      "template_id": "summary-final",
+      "theme_id": "warm-editorial",
+      "content_requirements": {"eyebrow": "NEXT", "subtitle": "把研究结果转成可执行的观测闭环。", "takeaways": ["连续监测", "现场复核", "风险沟通"]},
+      "visual_role": "closing summary",
+      "source_policy": "topic-derived actions"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "action": "create_live",
+  "inputs": {
+    "plan_sha256": "9c5f68a5f3536a91e07486e29ccd6961e95738de450e526727577960be672f1e",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/blueprint-technical.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "7ae629f17d38922702489ad3a23da26d465c3e6f5c284b409d4ab10a53ef6ed0"
+  },
+  "issues": [],
+  "output_path": "06-check/canvas-spec-validate.json",
+  "pages": [
+    {
+      "canvas_spec_sha256": "d94438cc689e2893a96ec0240051750920a855b0560eb4a594e8e9c4d4f9162b",
+      "error_count": 0,
+      "page": 1,
+      "template_id": "cover-hero",
+      "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+      "theme_id": "blueprint-technical",
+      "theme_registry_sha256": "7ae629f17d38922702489ad3a23da26d465c3e6f5c284b409d4ab10a53ef6ed0"
+    },
+    {
+      "canvas_spec_sha256": "4997cabbcda2823c3603a4f87993bb83b8cd8c91b0954653d611beb4e6b5a584",
+      "error_count": 0,
+      "page": 2,
+      "template_id": "comparison-cards",
+      "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+      "theme_id": "paper-research",
+      "theme_registry_sha256": "85be63912ba33fd278b2bff4471ac7a1e6761d67292dc1a1a374b4fd7bd5edfd"
+    },
+    {
+      "canvas_spec_sha256": "2e8f25a423a181bfe2b4462ec4fe3561a245688992dbf5c37fd26967f56ee9da",
+      "error_count": 0,
+      "page": 3,
+      "template_id": "summary-final",
+      "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+      "theme_id": "warm-editorial",
+      "theme_registry_sha256": "283def187d5c69623fd43618332b3f4f212b0dad313f2e90f13f614569d797fb"
+    }
+  ],
+  "schema_version": "svglide-canvas-spec-validate/v1",
+  "stage": "canvas-spec-validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 3,
+    "warning_count": 0
+  }
+}

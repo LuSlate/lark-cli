@@ -1,0 +1,13 @@
+{
+  "schema_version": "svglide-repair-plan/v1",
+  "target_plan_path": "02-plan/slide_plan.json",
+  "change_reason": "示例修复标题预算风险，只修改单个 CanvasSpec 字段。",
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/slides/1/canvas_spec/content/conclusion",
+      "value": "多源观测共同降低单一证据偏差。",
+      "reason": "收短结论文案以满足 comparison-cards text_budget。"
+    }
+  ]
+}

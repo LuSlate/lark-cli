@@ -23,6 +23,12 @@ EVIDENCE_PATH = Path("source/evidence.json")
 SOURCE_RECEIPT_PATH = Path("source/source-receipt.json")
 ASSET_MANIFEST_PATH = Path("03-assets/asset-manifest.json")
 GENERATOR_RECEIPT_PATH = Path("receipts/generate_svg.json")
+TEMPLATE_FIT_PATH = Path("06-check/template-fit.json")
+CANVAS_SPEC_VALIDATE_RECEIPT = Path("receipts/canvas-spec-validate.json")
+TEMPLATE_FIT_RECEIPT = Path("receipts/template-fit-check.json")
+ARTBOARD_RENDER_RECEIPT = Path("receipts/artboard-render.json")
+SATORI_BRIDGE_RECEIPT = Path("receipts/satori-bridge.json")
+CONTACT_SHEET = Path("05-preview/contact-sheet.png")
 REQUIRED_CHECKS = [
     ("preflight", CHECK_DIR / "preflight.json"),
     ("preview-lint", CHECK_DIR / "preview-lint.json"),
@@ -31,6 +37,11 @@ REQUIRED_CHECKS = [
     ("semantic-review", CHECK_DIR / "semantic-review.json"),
     ("visual-distinctness", CHECK_DIR / "visual-distinctness.json"),
 ]
+THEME_REQUIRED_CHECKS = [
+    ("theme-validate", CHECK_DIR / "theme-validate.json"),
+    ("theme-adherence", CHECK_DIR / "theme-adherence.json"),
+]
+ARTBOARD_PACKAGE_CHECK = ("artboard-package-check", CHECK_DIR / "artboard-package-check.json")
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
 OPTIONAL_CHECKS = []
 PASS_ACTION = "create_live"
@@ -91,6 +102,10 @@ def optional_file_sha256(project: Path, rel: Path) -> str | None:
     return file_sha256(path) if path.exists() else None
 
 
+def input_check_hashes(project: Path, checks: list[tuple[str, Path]]) -> dict[str, str | None]:
+    return {name.replace("-", "_"): optional_file_sha256(project, rel) for name, rel in checks}
+
+
 def error_count_from_payload(payload: Any) -> int | None:
     if not isinstance(payload, dict):
         return None
@@ -128,6 +143,56 @@ def read_json_optional(project: Path, rel: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
+def generator_generation_mode(project: Path) -> str | None:
+    payload = read_json_optional(project, GENERATOR_RECEIPT_PATH)
+    raw = payload.get("generation_mode") if isinstance(payload, dict) else None
+    return raw if raw in {"direct_svg", "artboard_satori"} else None
+
+
+def require_receipt(project: Path, rel: Path, issues: list[dict[str, str]], *, code_prefix: str) -> dict[str, Any]:
+    path = project / rel
+    if not path.exists():
+        issues.append(issue(f"{code_prefix}_missing", f"required receipt is missing: {rel.as_posix()}"))
+        return {}
+    payload = read_json_optional(project, rel)
+    if not payload:
+        issues.append(issue(f"{code_prefix}_invalid_json", f"required receipt is not valid JSON: {rel.as_posix()}"))
+        return {}
+    if payload.get("status") != "passed":
+        issues.append(issue(f"{code_prefix}_not_passed", f"receipt status must be passed: {rel.as_posix()}"))
+    return payload
+
+
+def check_recorded_artifact(project: Path, payload: dict[str, Any], path_key: str, hash_key: str, issues: list[dict[str, str]], *, code_prefix: str) -> None:
+    rel = payload.get(path_key)
+    recorded = payload.get(hash_key)
+    if not isinstance(rel, str) or not rel:
+        issues.append(issue(f"{code_prefix}_{path_key}_missing", f"receipt must include {path_key}"))
+        return
+    path = project / rel
+    if not path.exists():
+        issues.append(issue(f"{code_prefix}_{path_key}_artifact_missing", f"artifact is missing: {rel}"))
+        return
+    if recorded != file_sha256(path):
+        issues.append(issue(f"{code_prefix}_{path_key}_stale", f"artifact hash is stale: {rel}"))
+
+
+def check_contact_sheet(project: Path, contact_sheet: Any, issues: list[dict[str, str]]) -> None:
+    if not isinstance(contact_sheet, dict):
+        issues.append(issue("artboard_contact_sheet_missing", "generate_svg receipt must include contact_sheet"))
+        return
+    rel = contact_sheet.get("path")
+    recorded = contact_sheet.get("sha256")
+    if rel != CONTACT_SHEET.as_posix():
+        issues.append(issue("artboard_contact_sheet_path_invalid", f"contact_sheet.path must be {CONTACT_SHEET.as_posix()}"))
+        return
+    if not (project / CONTACT_SHEET).exists():
+        issues.append(issue("artboard_contact_sheet_file_missing", f"contact sheet is missing: {CONTACT_SHEET.as_posix()}"))
+        return
+    if recorded != file_sha256(project / CONTACT_SHEET):
+        issues.append(issue("artboard_contact_sheet_stale", "contact sheet hash does not match current file"))
+
+
 def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
     source_receipt = read_json_optional(project, SOURCE_RECEIPT_PATH)
     asset_manifest = read_json_optional(project, ASSET_MANIFEST_PATH)
@@ -135,11 +200,25 @@ def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
     asset_summary = asset_manifest.get("summary") if isinstance(asset_manifest.get("summary"), dict) else {}
     research_status = research.get("status") if isinstance(research, dict) and isinstance(research.get("status"), str) else "legacy"
     asset_status = asset_manifest.get("status") if isinstance(asset_manifest.get("status"), str) else "legacy"
+    acquired_count = int(asset_summary.get("acquired_count") or 0)
+    local_file_count = int(asset_summary.get("local_file_count") or 0)
+    mapped_token_count = int(asset_summary.get("mapped_token_count") or 0)
+    fulfilled_count = acquired_count + local_file_count + mapped_token_count
     issues: list[dict[str, str]] = []
     if profile in STRICT_PROFILES and research_status in {"blocked_by_network", "skipped_by_user"}:
         issues.append(issue("research_missing_for_current_topic", f"research status is {research_status}"))
     if asset_status == "failed":
         issues.append(issue("asset_manifest_failed", "asset manifest status is failed"))
+    if profile in STRICT_PROFILES:
+        contract_count = int(asset_summary.get("contract_count") or 0)
+        image_job_count = int(asset_summary.get("image_job_count") or 0)
+        if contract_count > 0 and image_job_count > 0 and fulfilled_count == 0:
+            issues.append(
+                issue(
+                    "visual_asset_contracts_unfulfilled",
+                    "asset contracts produced image jobs but no acquired, local, or token-backed asset",
+                )
+            )
     status = "failed" if issues else "skipped" if not source_receipt and not asset_manifest else "passed"
     return {
         "name": "online-readiness",
@@ -152,7 +231,10 @@ def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
         "issues": issues,
         "research_status": research_status,
         "asset_status": asset_status,
-        "asset_real_coverage": asset_summary.get("acquired_count"),
+        "asset_real_coverage": fulfilled_count,
+        "asset_acquired_count": acquired_count,
+        "asset_local_file_count": local_file_count,
+        "asset_mapped_token_count": mapped_token_count,
         "asset_fallback_count": asset_summary.get("fallback_count"),
         "image_job_count": asset_summary.get("image_job_count"),
     }
@@ -272,6 +354,194 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
             page_receipt = project / item
             if not page_receipt.exists():
                 check["issues"].append(issue("generator_page_receipt_missing", f"page receipt is missing: {item}"))
+    generation_mode = payload.get("generation_mode") or "direct_svg"
+    if generation_mode not in {"direct_svg", "artboard_satori"}:
+        check["issues"].append(issue("generator_generation_mode_invalid", "generation_mode must be direct_svg or artboard_satori"))
+    if generation_mode == "artboard_satori":
+        if payload.get("canvas_spec_validate") != "06-check/canvas-spec-validate.json":
+            check["issues"].append(issue("generator_canvas_spec_validate_missing", "artboard_satori generator receipt must include canvas_spec_validate"))
+        if payload.get("artboard_render_receipt") != ARTBOARD_RENDER_RECEIPT.as_posix():
+            check["issues"].append(issue("generator_artboard_render_receipt_missing", "artboard_satori generator receipt must include artboard_render_receipt"))
+        if payload.get("satori_bridge_receipt") != SATORI_BRIDGE_RECEIPT.as_posix():
+            check["issues"].append(issue("generator_satori_bridge_receipt_missing", "artboard_satori generator receipt must include satori_bridge_receipt"))
+        additional_receipts = payload.get("artboard_additional_receipts")
+        expected_additional_receipts = [
+            CANVAS_SPEC_VALIDATE_RECEIPT.as_posix(),
+            ARTBOARD_RENDER_RECEIPT.as_posix(),
+            SATORI_BRIDGE_RECEIPT.as_posix(),
+        ]
+        if additional_receipts != expected_additional_receipts:
+            check["issues"].append(issue("generator_artboard_additional_receipts_invalid", "artboard_satori generator receipt must include ordered aggregate receipts"))
+        check_contact_sheet(project, payload.get("contact_sheet"), check["issues"])
+        canvas_validate = require_receipt(project, CANVAS_SPEC_VALIDATE_RECEIPT, check["issues"], code_prefix="canvas_spec_validate")
+        if canvas_validate:
+            inputs = canvas_validate.get("inputs") if isinstance(canvas_validate.get("inputs"), dict) else {}
+            if inputs.get("plan_sha256") != optional_file_sha256(project, PLAN_PATH):
+                check["issues"].append(issue("canvas_spec_validate_plan_stale", "canvas-spec-validate plan_sha256 does not match current slide_plan.json"))
+            if not inputs.get("template_registry_sha256") or not inputs.get("theme_registry_sha256"):
+                check["issues"].append(issue("canvas_spec_validate_registry_hash_missing", "canvas-spec-validate must include template/theme registry hashes"))
+        artboard_render = require_receipt(project, ARTBOARD_RENDER_RECEIPT, check["issues"], code_prefix="artboard_render")
+        if artboard_render:
+            inputs = artboard_render.get("inputs") if isinstance(artboard_render.get("inputs"), dict) else {}
+            if inputs.get("plan_sha256") != optional_file_sha256(project, PLAN_PATH):
+                check["issues"].append(issue("artboard_render_plan_stale", "artboard-render plan_sha256 does not match current slide_plan.json"))
+            if inputs.get("canvas_spec_validate_sha256") != optional_file_sha256(project, CANVAS_SPEC_VALIDATE_RECEIPT):
+                check["issues"].append(issue("artboard_render_canvas_validate_stale", "artboard-render canvas_spec_validate_sha256 is stale"))
+            if not inputs.get("template_registry_sha256") or not inputs.get("theme_registry_sha256"):
+                check["issues"].append(issue("artboard_render_registry_hash_missing", "artboard-render must include template/theme registry hashes"))
+            check_contact_sheet(project, artboard_render.get("contact_sheet"), check["issues"])
+            pages = artboard_render.get("pages") if isinstance(artboard_render.get("pages"), list) else []
+            if not pages:
+                check["issues"].append(issue("artboard_render_pages_missing", "artboard-render receipt must include pages"))
+            for page in pages:
+                if not isinstance(page, dict):
+                    check["issues"].append(issue("artboard_render_page_invalid", "artboard-render pages must be objects"))
+                    continue
+                if not page.get("template_id") or not page.get("theme_id"):
+                    check["issues"].append(issue("artboard_render_template_theme_missing", "artboard-render pages must include template_id and theme_id"))
+                if not page.get("satori_version") or not page.get("resvg_version"):
+                    check["issues"].append(issue("artboard_render_runtime_version_missing", "artboard-render pages must include satori_version and resvg_version"))
+                if not isinstance(page.get("font_hashes"), list) or not page.get("font_hashes"):
+                    check["issues"].append(issue("artboard_render_font_hash_missing", "artboard-render pages must include font_hashes"))
+                for path_key, hash_key in [
+                    ("satori_svg", "satori_svg_sha256"),
+                    ("png", "png_sha256"),
+                    ("render_metadata", "render_metadata_sha256"),
+                    ("canvas_template_svg", "canvas_template_svg_sha256"),
+                    ("node_layout_map", "node_layout_map_sha256"),
+                ]:
+                    check_recorded_artifact(project, page, path_key, hash_key, check["issues"], code_prefix="artboard_render")
+        satori_bridge = require_receipt(project, SATORI_BRIDGE_RECEIPT, check["issues"], code_prefix="satori_bridge")
+        if satori_bridge:
+            inputs = satori_bridge.get("inputs") if isinstance(satori_bridge.get("inputs"), dict) else {}
+            if inputs.get("plan_sha256") != optional_file_sha256(project, PLAN_PATH):
+                check["issues"].append(issue("satori_bridge_plan_stale", "satori-bridge plan_sha256 does not match current slide_plan.json"))
+            if inputs.get("artboard_render_sha256") != optional_file_sha256(project, ARTBOARD_RENDER_RECEIPT):
+                check["issues"].append(issue("satori_bridge_artboard_render_stale", "satori-bridge artboard_render_sha256 is stale"))
+            pages = satori_bridge.get("pages") if isinstance(satori_bridge.get("pages"), list) else []
+            if not pages:
+                check["issues"].append(issue("satori_bridge_pages_missing", "satori-bridge receipt must include pages"))
+            for page in pages:
+                if not isinstance(page, dict):
+                    check["issues"].append(issue("satori_bridge_page_invalid", "satori-bridge pages must be objects"))
+                    continue
+                if page.get("semantic_source") != "CanvasSpec":
+                    check["issues"].append(issue("satori_bridge_semantic_source_invalid", "satori-bridge semantic_source must be CanvasSpec"))
+                if page.get("compiler_input_type") != "CanvasSpecTemplateSVG":
+                    check["issues"].append(issue("satori_bridge_compiler_input_type_invalid", "satori-bridge compiler_input_type must be CanvasSpecTemplateSVG"))
+                if page.get("satori_svg_usage") != "preview_only":
+                    check["issues"].append(issue("satori_bridge_satori_usage_invalid", "satori-bridge satori_svg_usage must be preview_only"))
+                for path_key, hash_key in [
+                    ("semantic_map", "semantic_map_sha256"),
+                    ("node_layout_map", "node_layout_map_sha256"),
+                    ("canvas_template_svg", "canvas_template_svg_sha256"),
+                    ("compiler_input", "compiler_input_sha256"),
+                    ("satori_svg", "satori_svg_sha256"),
+                    ("svglide_svg", "svglide_svg_sha256"),
+                ]:
+                    check_recorded_artifact(project, page, path_key, hash_key, check["issues"], code_prefix="satori_bridge")
+        template_fit_receipt = require_receipt(project, TEMPLATE_FIT_RECEIPT, check["issues"], code_prefix="template_fit_receipt")
+        if template_fit_receipt:
+            inputs = template_fit_receipt.get("inputs") if isinstance(template_fit_receipt.get("inputs"), dict) else {}
+            if inputs.get("plan_sha256") != optional_file_sha256(project, PLAN_PATH):
+                check["issues"].append(issue("template_fit_receipt_plan_stale", "template-fit receipt plan_sha256 does not match current slide_plan.json"))
+            if inputs.get("generator_receipt_sha256") != optional_file_sha256(project, GENERATOR_RECEIPT_PATH):
+                check["issues"].append(issue("template_fit_receipt_generator_stale", "template-fit receipt generator_receipt_sha256 is stale"))
+            if not inputs.get("template_registry_sha256") or not inputs.get("theme_registry_sha256"):
+                check["issues"].append(issue("template_fit_receipt_registry_hash_missing", "template-fit receipt must include template/theme registry hashes"))
+        template_fit = read_json_optional(project, TEMPLATE_FIT_PATH)
+        if not template_fit:
+            check["issues"].append(issue("template_fit_missing", "artboard_satori generation requires 06-check/template-fit.json"))
+        else:
+            if template_fit.get("status") != "passed":
+                check["issues"].append(issue("template_fit_not_passed", "template fit status must be passed"))
+            inputs = template_fit.get("inputs") if isinstance(template_fit.get("inputs"), dict) else {}
+            if inputs.get("plan_sha256") != optional_file_sha256(project, PLAN_PATH):
+                check["issues"].append(issue("template_fit_plan_stale", "template fit plan_sha256 does not match current slide_plan.json"))
+            if inputs.get("generator_receipt_sha256") != optional_file_sha256(project, GENERATOR_RECEIPT_PATH):
+                check["issues"].append(issue("template_fit_generator_stale", "template fit generator_receipt_sha256 does not match current generate_svg receipt"))
+        artboard_receipts = payload.get("artboard_receipts")
+        if not isinstance(artboard_receipts, list) or not artboard_receipts:
+            check["issues"].append(issue("generator_artboard_receipts_missing", "artboard_satori generation must include artboard_receipts"))
+        elif isinstance(generated, list) and len(artboard_receipts) != len(generated):
+            check["issues"].append(issue("generator_artboard_receipt_count_mismatch", "artboard_receipts count must match generated_files"))
+        if isinstance(artboard_receipts, list):
+            artboard_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-artboard-receipt.schema.json"))
+            semantic_map_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-semantic-map.schema.json"))
+            node_layout_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-node-layout-map.schema.json"))
+            by_svg = {item.get("path"): item.get("sha256") for item in generated if isinstance(item, dict)} if isinstance(generated, list) else {}
+            for item in artboard_receipts:
+                if not isinstance(item, str):
+                    check["issues"].append(issue("generator_artboard_receipt_invalid", "artboard_receipts must be string paths"))
+                    continue
+                artboard_receipt_path = project / item
+                if not artboard_receipt_path.exists():
+                    check["issues"].append(issue("generator_artboard_receipt_missing", f"artboard receipt is missing: {item}"))
+                    continue
+                try:
+                    artboard_receipt = json.loads(artboard_receipt_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as error:
+                    check["issues"].append(issue("generator_artboard_receipt_invalid_json", f"could not read artboard receipt JSON: {error}"))
+                    continue
+                schema_issues = svglide_schema.validate_json_schema(artboard_receipt, artboard_schema)
+                if schema_issues:
+                    check["issues"].extend(issue("generator_artboard_receipt_schema_invalid", f"{item} {schema_issue['path']}: {schema_issue['message']}") for schema_issue in schema_issues)
+                    continue
+                if not isinstance(artboard_receipt, dict) or artboard_receipt.get("status") != "passed":
+                    check["issues"].append(issue("generator_artboard_receipt_not_passed", f"artboard receipt status must be passed: {item}"))
+                    continue
+                svglide_svg = artboard_receipt.get("svglide_svg")
+                svglide_svg_sha256 = artboard_receipt.get("svglide_svg_sha256")
+                if not isinstance(svglide_svg, str) or by_svg.get(svglide_svg) != svglide_svg_sha256:
+                    check["issues"].append(issue("generator_artboard_output_stale", f"artboard receipt output does not match generated_files: {item}"))
+                for path_key, hash_key in [
+                    ("satori_svg", "satori_svg_sha256"),
+                    ("png", "png_sha256"),
+                    ("render_metadata", "render_metadata_sha256"),
+                    ("canvas_template_svg", "canvas_template_svg_sha256"),
+                    ("compiler_input", "compiler_input_sha256"),
+                    ("semantic_map", "semantic_map_sha256"),
+                    ("node_layout_map", "node_layout_map_sha256"),
+                    ("svglide_svg", "svglide_svg_sha256"),
+                ]:
+                    rel = artboard_receipt.get(path_key)
+                    recorded = artboard_receipt.get(hash_key)
+                    if not isinstance(rel, str) or not (project / rel).exists():
+                        check["issues"].append(issue("generator_artboard_artifact_missing", f"artboard artifact is missing: {path_key} in {item}"))
+                        continue
+                    if recorded != file_sha256(project / rel):
+                        check["issues"].append(issue("generator_artboard_artifact_stale", f"artboard artifact hash is stale: {path_key} in {item}"))
+                if not artboard_receipt.get("template_id") or not artboard_receipt.get("theme_id"):
+                    check["issues"].append(issue("generator_artboard_template_theme_missing", f"artboard receipt must include template_id and theme_id: {item}"))
+                if not artboard_receipt.get("template_registry_sha256") or not artboard_receipt.get("theme_registry_sha256"):
+                    check["issues"].append(issue("generator_artboard_registry_hash_missing", f"artboard receipt must include template/theme registry hashes: {item}"))
+                if not artboard_receipt.get("satori_version") or not artboard_receipt.get("resvg_version"):
+                    check["issues"].append(issue("generator_artboard_runtime_version_missing", f"artboard receipt must include satori_version and resvg_version: {item}"))
+                if not isinstance(artboard_receipt.get("font_hashes"), list) or not artboard_receipt.get("font_hashes"):
+                    check["issues"].append(issue("generator_artboard_font_hash_missing", f"artboard receipt must include font_hashes: {item}"))
+                compiler = artboard_receipt.get("compiler") if isinstance(artboard_receipt.get("compiler"), dict) else {}
+                if compiler.get("semantic_source") != "CanvasSpec":
+                    check["issues"].append(issue("generator_artboard_compiler_semantic_source_invalid", f"artboard compiler semantic_source must be CanvasSpec: {item}"))
+                if compiler.get("compiler_input") != "CanvasSpecTemplateSVG":
+                    check["issues"].append(issue("generator_artboard_compiler_input_invalid", f"artboard compiler_input must be CanvasSpecTemplateSVG: {item}"))
+                if compiler.get("satori_svg_usage") != "preview_only":
+                    check["issues"].append(issue("generator_artboard_compiler_satori_usage_invalid", f"artboard compiler satori_svg_usage must be preview_only: {item}"))
+                if artboard_receipt.get("compiler_input") != artboard_receipt.get("canvas_template_svg"):
+                    check["issues"].append(issue("generator_artboard_compiler_input_path_invalid", f"artboard compiler_input must point to canvas_template_svg: {item}"))
+                for path_key, artifact_schema, code in [
+                    ("semantic_map", semantic_map_schema, "generator_artboard_semantic_map_schema_invalid"),
+                    ("node_layout_map", node_layout_schema, "generator_artboard_node_layout_schema_invalid"),
+                ]:
+                    rel = artboard_receipt.get(path_key)
+                    if not isinstance(rel, str) or not (project / rel).exists():
+                        continue
+                    try:
+                        artifact = json.loads((project / rel).read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError) as error:
+                        check["issues"].append(issue(code, f"could not read {path_key} JSON in {item}: {error}"))
+                        continue
+                    schema_issues = svglide_schema.validate_json_schema(artifact, artifact_schema)
+                    check["issues"].extend(issue(code, f"{rel} {schema_issue['path']}: {schema_issue['message']}") for schema_issue in schema_issues)
     check["error_count"] = len(check["issues"])
     check["status"] = "failed" if check["issues"] else "passed"
     return check
@@ -357,7 +627,28 @@ def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: 
             check["issues"].extend(freshness)
             return check
 
-    if name in {"chart-verify", "runtime-review", "semantic-review"} and action not in {PASS_ACTION, "passed"}:
+    if name == "theme-validate" and isinstance(payload, dict):
+        freshness = plan_bound_check_freshness_issues(project, payload, "theme_validate", prepared=False)
+        if freshness:
+            check["issues"].extend(freshness)
+            return check
+
+    if name == "theme-adherence" and isinstance(payload, dict):
+        freshness = plan_bound_check_freshness_issues(project, payload, "theme_adherence", prepared=True)
+        if freshness:
+            check["issues"].extend(freshness)
+            return check
+        inputs = payload.get("inputs") if isinstance(payload.get("inputs"), dict) else {}
+        if inputs.get("theme_validate_sha256") != optional_file_sha256(project, CHECK_DIR / "theme-validate.json"):
+            check["issues"].append(issue("theme_adherence_theme_validate_stale", "theme adherence theme_validate_sha256 does not match current theme-validate receipt"))
+            return check
+
+    if name == "artboard-package-check" and isinstance(payload, dict):
+        if payload.get("stage") not in {"package_check", "artboard_package_check"}:
+            check["issues"].append(issue("artboard_package_check_stage_invalid", "artboard package check stage must be package_check"))
+            return check
+
+    if name in {"chart-verify", "runtime-review", "semantic-review", "theme-validate", "theme-adherence", "artboard-package-check"} and action not in {PASS_ACTION, "passed"}:
         check["issues"].append(issue(f"{name.replace('-', '_')}_action_not_create_live", f"{name} action is {action!r}; expected {PASS_ACTION!r}"))
         return check
 
@@ -380,6 +671,12 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     checks = [load_generator_receipt(project, profile=profile)]
     checks.append(load_online_readiness(project, profile=profile))
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in REQUIRED_CHECKS)
+    checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in THEME_REQUIRED_CHECKS)
+    generation_mode = generator_generation_mode(project)
+    conditional_checks: list[tuple[str, Path]] = []
+    if generation_mode == "artboard_satori":
+        conditional_checks.append(ARTBOARD_PACKAGE_CHECK)
+        checks.append(load_check(project, *ARTBOARD_PACKAGE_CHECK, required=True, profile=profile))
     chart_required = plan_requires_chart_verify(project)
     if chart_required is None:
         checks.append(
@@ -402,6 +699,8 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     source_error_count = sum(check["error_count"] or 0 for check in checks)
     status = "failed" if failed_checks else "passed_with_waiver" if waiver_checks else "passed"
     output_path = project / CHECK_DIR / QUALITY_GATE_NAME
+    input_checks = REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + conditional_checks + ([CHART_VERIFY_CHECK] if chart_required else []) + OPTIONAL_CHECKS
+    required_input_names = {item[0] for item in REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + conditional_checks}
     result = {
         "version": "svglide-quality-gate/v1",
         "project": str(project),
@@ -409,9 +708,10 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
         "status": status,
         "inputs": {
             name.replace("-", "_"): rel.as_posix()
-            for name, rel in REQUIRED_CHECKS + ([CHART_VERIFY_CHECK] if chart_required else []) + OPTIONAL_CHECKS
-            if (project / rel).exists() or name in {item[0] for item in REQUIRED_CHECKS}
+            for name, rel in input_checks
+            if (project / rel).exists() or name in required_input_names
         },
+        "input_hashes": input_check_hashes(project, input_checks + [("generator-receipt", GENERATOR_RECEIPT_PATH)]),
         "prepared_files": prepared_file_hashes(project),
         "waivers": [
             {"check": check["name"], "waivers": check["waivers"]}
@@ -426,6 +726,9 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
             "research_status": next((check.get("research_status") for check in checks if check.get("name") == "online-readiness"), None),
             "asset_status": next((check.get("asset_status") for check in checks if check.get("name") == "online-readiness"), None),
             "asset_real_coverage": next((check.get("asset_real_coverage") for check in checks if check.get("name") == "online-readiness"), None),
+            "asset_acquired_count": next((check.get("asset_acquired_count") for check in checks if check.get("name") == "online-readiness"), None),
+            "asset_local_file_count": next((check.get("asset_local_file_count") for check in checks if check.get("name") == "online-readiness"), None),
+            "asset_mapped_token_count": next((check.get("asset_mapped_token_count") for check in checks if check.get("name") == "online-readiness"), None),
             "asset_fallback_count": next((check.get("asset_fallback_count") for check in checks if check.get("name") == "online-readiness"), None),
             "image_job_count": next((check.get("image_job_count") for check in checks if check.get("name") == "online-readiness"), None),
         },
@@ -433,6 +736,7 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
         "output_path": relpath(output_path, project),
     }
     result["inputs"]["generator_receipt"] = GENERATOR_RECEIPT_PATH.as_posix()
+    result["inputs"]["generation_mode"] = generation_mode or "unknown"
     schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-quality-gate.schema.json"))
     schema_issues = svglide_schema.validate_json_schema(result, schema)
     if schema_issues:

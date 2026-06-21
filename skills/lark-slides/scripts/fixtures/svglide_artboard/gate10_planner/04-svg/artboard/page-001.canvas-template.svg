@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="#071827"/>
+<circle data-node-id="accent-orbit" cx="820" cy="132" r="96" fill="#F97316" opacity="0.28"/>
+<circle data-node-id="accent-dot" cx="812" cy="150" r="72" fill="#5EEAD4" opacity="0.22"/>
+<rect data-node-id="panel" x="56" y="64" width="704" height="356" fill="#0E2A3F" opacity="0.82"/>
+<text data-node-id="eyebrow" data-box-x="84" data-box-y="98" data-box-width="420" data-box-height="32" x="84" y="116" fill="#5EEAD4" font-size="18" font-weight="700" font-family="Inter">ICELAND VOLCANO</text>
+<text data-node-id="title" data-box-x="84" data-box-y="142" data-box-width="628" data-box-height="142" x="84" y="200" fill="#EAF6FF" font-size="58" font-weight="800" font-family="Inter">冰岛火山研究</text>
+<text data-node-id="subtitle" data-box-x="88" data-box-y="302" data-box-width="610" data-box-height="74" x="88" y="326" fill="#93B4C8" font-size="24" font-weight="500" font-family="Inter">地貌证据、活动迹象与连续观测。</text>
+<rect data-node-id="chip-1-bg" x="84" y="444" width="92" height="40" fill="#5EEAD4" opacity="0.16"/>
+<text data-node-id="chip-1" data-box-x="99" data-box-y="450" data-box-width="62" data-box-height="30" x="99" y="471" fill="#EAF6FF" font-size="17" font-weight="600" font-family="Inter">地貌</text>
+<rect data-node-id="chip-2-bg" x="190" y="444" width="92" height="40" fill="#5EEAD4" opacity="0.16"/>
+<text data-node-id="chip-2" data-box-x="205" data-box-y="450" data-box-width="62" data-box-height="30" x="205" y="471" fill="#EAF6FF" font-size="17" font-weight="600" font-family="Inter">监测</text>
+<rect data-node-id="chip-3-bg" x="296" y="444" width="92" height="40" fill="#5EEAD4" opacity="0.16"/>
+<text data-node-id="chip-3" data-box-x="311" data-box-y="450" data-box-width="62" data-box-height="30" x="311" y="471" fill="#EAF6FF" font-size="17" font-weight="600" font-family="Inter">风险</text>
+</svg>

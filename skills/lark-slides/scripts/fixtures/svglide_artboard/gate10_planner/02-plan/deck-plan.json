@@ -1,0 +1,47 @@
+{
+  "schema_version": "svglide-deck-plan/v1",
+  "topic": "冰岛火山研究",
+  "audience": "地学研究汇报听众",
+  "objective": "用三页说明研究背景、证据对比和下一步观测重点。",
+  "target_slide_count": 3,
+  "narrative_arc": ["建立研究对象", "比较观测证据", "收束行动重点"],
+  "theme_direction": {
+    "preferred_theme_ids": ["blueprint-technical", "paper-research", "warm-editorial"],
+    "visual_identity": "冷色科研蓝图结合火山暖色强调。",
+    "tone": "克制、研究型、可审查"
+  },
+  "constraints": {
+    "generation_mode": "artboard_satori",
+    "source_policy": "只使用用户给定主题，不编造具体数值。",
+    "forbidden_outputs": ["free_html", "free_css", "free_svg", "markdown_fence", "base64_image_data"]
+  },
+  "slides": [
+    {
+      "page": 1,
+      "title": "冰岛火山研究",
+      "role": "cover",
+      "key_message": "研究从地貌、活动迹象和观测路线展开。",
+      "content_goal": "建立研究对象和语境。",
+      "visual_goal": "使用封面模板给出冷色科研气质。",
+      "allowed_template_ids": ["cover-hero", "section-title"]
+    },
+    {
+      "page": 2,
+      "title": "观测证据对比",
+      "role": "evidence",
+      "key_message": "不同观测来源共同约束火山活动判断。",
+      "content_goal": "把地表和地下信号分开比较。",
+      "visual_goal": "使用左右对比保持信息可扫读。",
+      "allowed_template_ids": ["comparison-cards"]
+    },
+    {
+      "page": 3,
+      "title": "下一步观测",
+      "role": "closing",
+      "key_message": "后续重点是连续监测和风险沟通。",
+      "content_goal": "收束为三个行动方向。",
+      "visual_goal": "使用总结页形成清晰结尾。",
+      "allowed_template_ids": ["summary-final"]
+    }
+  ]
+}

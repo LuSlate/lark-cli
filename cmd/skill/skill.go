@@ -50,7 +50,8 @@ func NewCmdSkill(f *cmdutil.Factory) *cobra.Command {
 		Short: "Read embedded skill content (list / read)",
 		Long: "Read agent-readable skill content (SKILL.md and reference files) embedded in " +
 			"the CLI binary at build time, so it stays in sync with the CLI version. " +
-			"Machine resources such as assets/ and scripts/ are not embedded.",
+			"Selected lark-slides prompts, scripts, and artboard renderer package files are also embedded; " +
+			"runtime dependency folders such as node_modules/ and generated artifacts are not embedded.",
 	}
 	// Risk is set on each leaf (GetRisk does not walk parents); the group has none.
 	cmdutil.DisableAuthCheck(cmd)

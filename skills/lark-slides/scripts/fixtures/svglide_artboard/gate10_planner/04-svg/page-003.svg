@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect x="0" y="0" width="960" height="540" fill="#27130F" slide:role="shape" />
+  <circle cx="786" cy="136" r="82" fill="#22D3EE" opacity="0.22" slide:role="shape" />
+  <rect x="712" y="322" width="18" height="30" fill="#F97316" opacity="0.72" slide:role="shape" />
+  <rect x="742" y="304" width="18" height="48" fill="#F97316" opacity="0.86" slide:role="shape" />
+  <rect x="772" y="286" width="18" height="66" fill="#22D3EE" opacity="0.92" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="72" y="64" width="420" height="32" data-node-id="eyebrow"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;font-family:Inter;color:#F97316;line-height:1.16;white-space:normal">NEXT</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="72" y="110" width="700" height="110" data-node-id="title"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:50px;font-weight:850;font-family:Inter;color:#FFF7ED;line-height:1.16;white-space:normal">下一步观测</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="72" y="244" width="640" height="66" data-node-id="subtitle"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:23px;font-weight:500;font-family:Inter;color:#F4C9A8;line-height:1.16;white-space:normal">把研究结果转成可执行的观测闭环。</div></foreignObject>
+  <rect x="72" y="344" width="250" height="126" fill="#3A211B" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="94" y="366" width="64" height="30" data-node-id="takeaway-index-1"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;font-family:Inter;color:#F97316;line-height:1.16;white-space:normal">01</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="94" y="404" width="202" height="54" data-node-id="takeaway-1"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:21px;font-weight:700;font-family:Inter;color:#FFF7ED;line-height:1.16;white-space:normal">连续监测</div></foreignObject>
+  <rect x="340" y="344" width="250" height="126" fill="#3A211B" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="362" y="366" width="64" height="30" data-node-id="takeaway-index-2"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;font-family:Inter;color:#F97316;line-height:1.16;white-space:normal">02</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="362" y="404" width="202" height="54" data-node-id="takeaway-2"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:21px;font-weight:700;font-family:Inter;color:#FFF7ED;line-height:1.16;white-space:normal">现场复核</div></foreignObject>
+  <rect x="608" y="344" width="250" height="126" fill="#3A211B" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="630" y="366" width="64" height="30" data-node-id="takeaway-index-3"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;font-family:Inter;color:#F97316;line-height:1.16;white-space:normal">03</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="630" y="404" width="202" height="54" data-node-id="takeaway-3"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:21px;font-weight:700;font-family:Inter;color:#FFF7ED;line-height:1.16;white-space:normal">风险沟通</div></foreignObject>
+</svg>

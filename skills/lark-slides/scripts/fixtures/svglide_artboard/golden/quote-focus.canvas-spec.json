@@ -1,0 +1,11 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+  "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+  "template_id": "quote-focus",
+  "theme_id": "paper-research",
+  "theme": {"colors": {"background": "#F7F3E8", "panel": "#FFFDF6", "primary": "#1E3A8A", "accent": "#B45309", "text": "#1F2937", "muted": "#6B7280"}},
+  "content": {"title": "核心判断", "quote": "稳定的输入结构，比自由发挥更接近可控的美学。", "attribution": "SVGlide Artboard Review"},
+  "semantic_elements": [{"element_id": "quote", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.quote", "bbox": {"x": 132, "y": 156, "width": 720, "height": 150}}],
+  "quality_constraints": {"max_title_lines": 3, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+}

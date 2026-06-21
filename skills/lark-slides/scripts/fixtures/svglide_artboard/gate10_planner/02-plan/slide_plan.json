@@ -1,0 +1,131 @@
+{
+  "schema_version": "svglide-canvas-plan/v1",
+  "route": "svglide-svg",
+  "generation_mode": "artboard_satori",
+  "page_count": 3,
+  "target_slide_count": 3,
+  "plan_path": "02-plan/slide_plan.json",
+  "style_preset": "cobalt_bloom",
+  "style_selection_reason": "冷色研究基调适合冰岛火山主题，暖色 accent 对应火山活动。",
+  "style_system": {
+    "palette": {"background": "#071827", "text": "#EAF6FF", "accent": "#F97316"},
+    "typography": "Satori-compatible static text hierarchy",
+    "background_strategy": "研究页使用深色蓝图背景，结尾页允许暖色强调。",
+    "motif": "科研蓝图线索和火山暖色标记"
+  },
+  "loaded_rule_set": [
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-canvas-spec.schema.json",
+    "skills/lark-slides/references/svglide-template-registry.json"
+  ],
+  "quality_gates": {"no_text_overflow": true, "no_debug_guides": true, "no_xml_like_pages": true},
+  "art_direction": {
+    "cover_treatment": "深色研究封面，用简洁标题和 chips 建立主题。",
+    "section_divider_treatment": "不设独立章节页，使用第二页证据对比作为节奏转换。",
+    "closing_treatment": "暖色总结页收束为三个行动方向。",
+    "deck_motif": "冰岛火山研究蓝图",
+    "svg_native_moments": ["封面 chips", "左右证据卡片", "总结 stat cards"]
+  },
+  "business_claims": [
+    {"claim": "不展示具体数值，避免编造研究数据。", "source_type": "derived", "derivation": "derived from the no-invented-metrics source policy"}
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "title": "冰岛火山研究",
+      "key_message": "研究从地貌、活动迹象和观测路线展开。",
+      "renderer_id": "artboard_satori.cover-hero",
+      "layout_family": "cover",
+      "visual_recipe": "hero_typography",
+      "visual_intent": "建立研究主题和冷色科研气质。",
+      "visual_focal_point": "大标题和研究标签。",
+      "visual_signature": "blueprint cover panel",
+      "svg_effects": ["typography"],
+      "required_primitives": ["typography", "geometric_shape"],
+      "svg_primitives": ["typography", "rect", "circle"],
+      "xml_like_risk": "普通标题页会丢失科研蓝图气质。",
+      "content_density_contract": "cover title plus 3 chips",
+      "risk_flags": [],
+      "source_policy": "topic-provided; no invented metrics",
+      "asset_contract": "none_required",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+        "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+        "template_id": "cover-hero",
+        "theme_id": "blueprint-technical",
+        "theme": {"colors": {"background": "#071827", "panel": "#0E2A3F", "primary": "#5EEAD4", "accent": "#F97316", "text": "#EAF6FF", "muted": "#93B4C8"}},
+        "content": {"eyebrow": "ICELAND VOLCANO", "title": "冰岛火山研究", "subtitle": "地貌证据、活动迹象与连续观测。", "chips": ["地貌", "监测", "风险"]},
+        "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 84, "y": 142, "width": 628, "height": 142}}],
+        "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+      }
+    },
+    {
+      "page": 2,
+      "title": "观测证据对比",
+      "key_message": "不同观测来源共同约束火山活动判断。",
+      "renderer_id": "artboard_satori.comparison-cards",
+      "layout_family": "comparison",
+      "visual_recipe": "two_column_comparison",
+      "visual_intent": "区分地表和地下观测证据。",
+      "visual_focal_point": "左右证据卡片。",
+      "visual_signature": "research evidence cards",
+      "svg_effects": ["typography"],
+      "required_primitives": ["typography", "geometric_shape"],
+      "svg_primitives": ["typography", "rect", "circle"],
+      "xml_like_risk": "普通项目符号会弱化证据对照。",
+      "content_density_contract": "two cards with 3 points each",
+      "risk_flags": [],
+      "source_policy": "topic-derived categories; no numeric claims",
+      "asset_contract": "none_required",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+        "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+        "template_id": "comparison-cards",
+        "theme_id": "paper-research",
+        "theme": {"colors": {"background": "#F7F3E8", "panel": "#FFFDF6", "primary": "#1E3A8A", "accent": "#B45309", "text": "#1F2937", "muted": "#6B7280"}},
+        "content": {
+          "title": "观测证据对比",
+          "left_title": "地表信号",
+          "right_title": "地下信号",
+          "left_points": ["熔岩地貌", "热异常", "气体羽流"],
+          "right_points": ["地震活动", "形变趋势", "岩浆补给"],
+          "conclusion": "多源观测共同降低单一证据偏差。"
+        },
+        "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 64, "y": 52, "width": 760, "height": 64}}],
+        "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+      }
+    },
+    {
+      "page": 3,
+      "title": "下一步观测",
+      "key_message": "后续重点是连续监测和风险沟通。",
+      "renderer_id": "artboard_satori.summary-final",
+      "layout_family": "closing",
+      "visual_recipe": "summary_cards",
+      "visual_intent": "把研究结果收束成行动闭环。",
+      "visual_focal_point": "三个行动卡片。",
+      "visual_signature": "warm volcanic closing",
+      "svg_effects": ["typography"],
+      "required_primitives": ["typography", "geometric_shape"],
+      "svg_primitives": ["typography", "rect", "circle"],
+      "xml_like_risk": "普通总结页会缺少行动优先级。",
+      "content_density_contract": "3 takeaway cards",
+      "risk_flags": [],
+      "source_policy": "topic-derived actions",
+      "asset_contract": "none_required",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+        "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+        "template_id": "summary-final",
+        "theme_id": "warm-editorial",
+        "theme": {"colors": {"background": "#27130F", "panel": "#3A211B", "primary": "#F97316", "accent": "#22D3EE", "text": "#FFF7ED", "muted": "#F4C9A8"}},
+        "content": {"eyebrow": "NEXT", "title": "下一步观测", "subtitle": "把研究结果转成可执行的观测闭环。", "takeaways": ["连续监测", "现场复核", "风险沟通"]},
+        "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 72, "y": 110, "width": 700, "height": 110}}],
+        "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+      }
+    }
+  ]
+}

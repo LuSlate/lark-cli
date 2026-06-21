@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -42,6 +43,7 @@ type APIOptions struct {
 	JqExpr    string
 	DryRun    bool
 	File      string
+	Headers   []string
 }
 
 var urlPrefixRe = regexp.MustCompile(`https?://[^/]+(/open-apis/.+)`)
@@ -94,6 +96,7 @@ func NewCmdApiWithContext(ctx context.Context, f *cmdutil.Factory, runF func(*AP
 	cmd.Flags().StringVarP(&opts.JqExpr, "jq", "q", "", "jq expression to filter JSON output")
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "print request without executing")
 	cmd.Flags().StringVar(&opts.File, "file", "", "file to upload as multipart/form-data ([field=]path, supports - for stdin)")
+	cmd.Flags().StringArrayVar(&opts.Headers, "request-header", nil, "internal request header for controlled lanes; repeat key=value, currently only x-tt-env=ppe_pure_svg is allowed")
 
 	cmd.ValidArgsFunction = func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
@@ -140,6 +143,13 @@ func buildAPIRequest(opts *APIOptions) (client.RawApiRequest, *cmdutil.FileUploa
 		Params: params,
 		As:     opts.As,
 	}
+	headers, err := parseAPIRequestHeaders(opts.Headers)
+	if err != nil {
+		return client.RawApiRequest{}, nil, err
+	}
+	if len(headers) > 0 {
+		request.ExtraOpts = append(request.ExtraOpts, larkcore.WithHeaders(headers))
+	}
 
 	if opts.File != "" {
 		// File upload path: build formdata.
@@ -185,6 +195,30 @@ func buildAPIRequest(opts *APIOptions) (client.RawApiRequest, *cmdutil.FileUploa
 	}
 
 	return request, nil, nil
+}
+
+func parseAPIRequestHeaders(values []string) (http.Header, error) {
+	headers := http.Header{}
+	for _, raw := range values {
+		item := strings.TrimSpace(raw)
+		if item == "" {
+			return nil, output.ErrValidation("--request-header cannot be empty")
+		}
+		key, value, ok := strings.Cut(item, "=")
+		if !ok {
+			return nil, output.ErrValidation("--request-header %q must use key=value", item)
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		if !strings.EqualFold(key, "x-tt-env") {
+			return nil, output.ErrValidation("--request-header %q is not supported; only x-tt-env is allowed", key)
+		}
+		if value != "ppe_pure_svg" {
+			return nil, output.ErrValidation("--request-header x-tt-env must be ppe_pure_svg")
+		}
+		headers.Set("x-tt-env", value)
+	}
+	return headers, nil
 }
 
 func apiRun(opts *APIOptions) error {

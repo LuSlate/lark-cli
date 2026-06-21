@@ -1,0 +1,77 @@
+{
+  "created_at": "2026-06-21T13:59:15+08:00",
+  "inputs": {
+    "artboard_render": "receipts/artboard-render.json",
+    "artboard_render_sha256": "82fb1e199442e5560d15e8b19d3ec85de4f0fbc69273015cf71b95027f5b2f1e",
+    "plan_sha256": "9c5f68a5f3536a91e07486e29ccd6961e95738de450e526727577960be672f1e",
+    "slide_plan": "02-plan/slide_plan.json"
+  },
+  "pages": [
+    {
+      "canvas_spec_sha256": "c217ffcfb547080e01de408d01933ed81f2ed1f9dc06de845e8a0dad7a19af02",
+      "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+      "canvas_template_svg_sha256": "a21538ac26cd5ce67d306ec05f45e7c6ee98b4ae5a954c6bb92414994df2abc2",
+      "compiler_input": "04-svg/artboard/page-001.canvas-template.svg",
+      "compiler_input_sha256": "a21538ac26cd5ce67d306ec05f45e7c6ee98b4ae5a954c6bb92414994df2abc2",
+      "compiler_input_type": "CanvasSpecTemplateSVG",
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "895b6d98ab57c2e5633b92513c4b06047e26411c4bf75bf8f248be5358752c86",
+      "page": 1,
+      "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+      "satori_svg_sha256": "700e2b829a7a00354739512182916d4566877165748e9e1fa8b3aeeafcb21540",
+      "satori_svg_usage": "preview_only",
+      "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+      "semantic_map_sha256": "0ce8309c016ff337d9dd72c322e928f2541a66b2acaa097c321979265ca06df7",
+      "semantic_source": "CanvasSpec",
+      "svglide_svg": "04-svg/page-001.svg",
+      "svglide_svg_sha256": "0bec84addb5a7b9319b71a573e0bd9de7890dcbe6985b61e3456e54950850fb3"
+    },
+    {
+      "canvas_spec_sha256": "71c31d9e39a828f37a38c95912be4ec79343a4101072afede90384d5454d2270",
+      "canvas_template_svg": "04-svg/artboard/page-002.canvas-template.svg",
+      "canvas_template_svg_sha256": "acb7c3b4563b96ff052ca745c2ee43de958c2025cee815cc49b92611b3fbd82b",
+      "compiler_input": "04-svg/artboard/page-002.canvas-template.svg",
+      "compiler_input_sha256": "acb7c3b4563b96ff052ca745c2ee43de958c2025cee815cc49b92611b3fbd82b",
+      "compiler_input_type": "CanvasSpecTemplateSVG",
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "1ad67ee48e5a22981c1432d858587ff346ac6069b4376a52990f16bce3e16c5e",
+      "page": 2,
+      "satori_svg": "04-svg/artboard/raw/page-002.satori.svg",
+      "satori_svg_sha256": "5979d2dd93d09936d216d871929aacb5d06eecab43d34a2e0d8070991d1ed88a",
+      "satori_svg_usage": "preview_only",
+      "semantic_map": "04-svg/artboard/page-002.semantic-map.json",
+      "semantic_map_sha256": "61fb537e82510e1fcada54f9f043b4746c1aeb10553391e4778cd6b76aeca520",
+      "semantic_source": "CanvasSpec",
+      "svglide_svg": "04-svg/page-002.svg",
+      "svglide_svg_sha256": "3c539aa631b9240c89e3d36411a2f74f0007eba48f02aaa9bda1fff98b87481d"
+    },
+    {
+      "canvas_spec_sha256": "1409994cbf70a22f5fffff357295569ef0adc9caae55ebf6bb52920b2c385615",
+      "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+      "canvas_template_svg_sha256": "81c00e0a1494c858ea821a001833825b93bf44fe328905a4fe7f822b69b6ac2e",
+      "compiler_input": "04-svg/artboard/page-003.canvas-template.svg",
+      "compiler_input_sha256": "81c00e0a1494c858ea821a001833825b93bf44fe328905a4fe7f822b69b6ac2e",
+      "compiler_input_type": "CanvasSpecTemplateSVG",
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "5b0c426195a980724c7e77f0d09cc5a8f32bafb2f85ce7d5ac3a6b641cc72886",
+      "page": 3,
+      "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+      "satori_svg_sha256": "07396b9b453965f332cee318eb9b8e55dbd01fd844aa69f66e5e532aec1f7ab6",
+      "satori_svg_usage": "preview_only",
+      "semantic_map": "04-svg/artboard/page-003.semantic-map.json",
+      "semantic_map_sha256": "8bacd61d84cae3f0f1ca36bcf10bc65d61b847b74a02eb224c90f3039b1195ec",
+      "semantic_source": "CanvasSpec",
+      "svglide_svg": "04-svg/page-003.svg",
+      "svglide_svg_sha256": "9318eccee9a629b10c181b3416fe30f9de32883e36b93169121c30037dc50fd6"
+    }
+  ],
+  "stage": "satori-bridge",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "max_workers": 3,
+    "page_count": 3,
+    "warning_count": 0
+  },
+  "version": "svglide-satori-bridge/v1"
+}

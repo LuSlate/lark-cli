@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect x="0" y="0" width="960" height="540" fill="#F7F3E8" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="64" y="52" width="760" height="64" data-node-id="title"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:40px;font-weight:800;font-family:Inter;color:#1F2937;line-height:1.16;white-space:normal">观测证据对比</div></foreignObject>
+  <rect x="64" y="140" width="390" height="250" fill="#FFFDF6" opacity="0.82" slide:role="shape" />
+  <rect x="506" y="140" width="390" height="250" fill="#FFFDF6" opacity="0.82" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="92" y="168" width="320" height="34" data-node-id="left-title"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:24px;font-weight:800;font-family:Inter;color:#1E3A8A;line-height:1.16;white-space:normal">地表信号</div></foreignObject>
+  <foreignObject slide:role="shape" slide:shape-type="text" x="534" y="168" width="320" height="34" data-node-id="right-title"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:24px;font-weight:800;font-family:Inter;color:#B45309;line-height:1.16;white-space:normal">地下信号</div></foreignObject>
+  <circle cx="98" cy="241" r="5" fill="#1E3A8A" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="116" y="222" width="296" height="36" data-node-id="left-point-1"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:20px;font-weight:500;font-family:Inter;color:#6B7280;line-height:1.16;white-space:normal">熔岩地貌</div></foreignObject>
+  <circle cx="98" cy="289" r="5" fill="#1E3A8A" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="116" y="270" width="296" height="36" data-node-id="left-point-2"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:20px;font-weight:500;font-family:Inter;color:#6B7280;line-height:1.16;white-space:normal">热异常</div></foreignObject>
+  <circle cx="98" cy="337" r="5" fill="#1E3A8A" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="116" y="318" width="296" height="36" data-node-id="left-point-3"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:20px;font-weight:500;font-family:Inter;color:#6B7280;line-height:1.16;white-space:normal">气体羽流</div></foreignObject>
+  <circle cx="540" cy="241" r="5" fill="#B45309" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="558" y="222" width="296" height="36" data-node-id="right-point-1"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:20px;font-weight:500;font-family:Inter;color:#6B7280;line-height:1.16;white-space:normal">地震活动</div></foreignObject>
+  <circle cx="540" cy="289" r="5" fill="#B45309" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="558" y="270" width="296" height="36" data-node-id="right-point-2"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:20px;font-weight:500;font-family:Inter;color:#6B7280;line-height:1.16;white-space:normal">形变趋势</div></foreignObject>
+  <circle cx="540" cy="337" r="5" fill="#B45309" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="558" y="318" width="296" height="36" data-node-id="right-point-3"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:20px;font-weight:500;font-family:Inter;color:#6B7280;line-height:1.16;white-space:normal">岩浆补给</div></foreignObject>
+  <rect x="64" y="414" width="832" height="66" fill="#1E3A8A" opacity="0.16" slide:role="shape" />
+  <foreignObject slide:role="shape" slide:shape-type="text" x="86" y="426" width="788" height="42" data-node-id="conclusion"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:22px;font-weight:700;font-family:Inter;color:#1F2937;line-height:1.16;white-space:normal">多源观测共同降低单一证据偏差。</div></foreignObject>
+</svg>

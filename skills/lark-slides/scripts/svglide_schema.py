@@ -42,6 +42,17 @@ def validate_json_schema(payload: Any, schema: dict[str, Any], *, path: str = "$
     if isinstance(any_of, list) and any_of:
         if not any(isinstance(option, dict) and not validate_json_schema(payload, option, path=path) for option in any_of):
             issues.append({"code": "schema_any_of_mismatch", "path": path, "message": "value does not match any allowed schema"})
+    all_of = schema.get("allOf")
+    if isinstance(all_of, list):
+        for option in all_of:
+            if isinstance(option, dict):
+                issues.extend(validate_json_schema(payload, option, path=path))
+    if_schema = schema.get("if")
+    if isinstance(if_schema, dict):
+        matched = not validate_json_schema(payload, if_schema, path=path)
+        branch = schema.get("then") if matched else schema.get("else")
+        if isinstance(branch, dict):
+            issues.extend(validate_json_schema(payload, branch, path=path))
 
     if isinstance(payload, dict):
         for required in schema.get("required", []):

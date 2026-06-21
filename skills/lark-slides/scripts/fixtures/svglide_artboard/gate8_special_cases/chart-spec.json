@@ -1,0 +1,13 @@
+{
+  "version": "svglide-chart-spec/v1",
+  "chartType": "bar",
+  "data": {
+    "categories": ["Q1", "Q2", "Q3"],
+    "series": [
+      {
+        "name": "Research index",
+        "values": [12, 18, 25]
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "artifact_root": "skills/lark-slides/scripts/fixtures/svglide_artboard/p0c-live",
+  "cli_git_commit": "fixture",
+  "created_at": "2026-06-20T00:00:00+08:00",
+  "created_by": "lark-cli",
+  "deck_id": "artboard-p0c-live",
+  "route": "svglide-svg",
+  "runner_version": "svglide-project-runner/v0",
+  "stage_graph": "svglide-workflow/v1",
+  "title": "Artboard P0c Live",
+  "version": "svglide-project/v1"
+}

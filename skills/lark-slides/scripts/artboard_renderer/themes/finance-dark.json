@@ -1,0 +1,22 @@
+{
+  "theme_id": "finance-dark",
+  "colors": {
+    "background": "#07110E",
+    "panel": "#10201A",
+    "primary": "#22C55E",
+    "accent": "#F59E0B",
+    "text": "#ECFDF5",
+    "muted": "#A7C4B7"
+  },
+  "typography": {
+    "title": 54,
+    "subtitle": 23,
+    "body": 20,
+    "label": 18
+  },
+  "spacing": {
+    "page": 64,
+    "card": 28,
+    "gap": 20
+  }
+}

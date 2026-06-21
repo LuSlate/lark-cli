@@ -1,0 +1,225 @@
+{
+  "schema_version": "svglide-source-intake/v1",
+  "policy": {
+    "runtime_import": "forbidden",
+    "usage": "external repositories are inspiration and measurement sources only; runtime output must be CanvasSpec plus in-repo Satori-compatible templates",
+    "conversion_path": "source example -> visual archetype -> CanvasSpec schema fields -> Template Registry -> Theme Token",
+    "acceptance_gate": "a source family is counted only when it has required intake fields and at least one conversion record pointing to owned registry output and golden CanvasSpec fixtures"
+  },
+  "sources": [
+    {
+      "id": "open-design-html-ppt",
+      "source_path": "/Users/bytedance/bd-projects/open-design/design-templates",
+      "source_type": "html_css_examples",
+      "source_hash_or_version": "git:2aadac07c",
+      "license_or_provenance": "origin https://github.com/nexu-io/open-design.git; local LICENSE is Apache-2.0; used as inspiration only",
+      "extract_fields": ["palette", "typography", "mood", "density", "occasion", "layout skeleton", "component combinations"],
+      "conversion_target": ["Theme Token", "Canvas Template", "Satori component candidate", "Layout Archetype"],
+      "acceptance_rule": "no source HTML/CSS enters runtime; every adopted pattern must map to a registry id and at least one golden CanvasSpec fixture",
+      "forbidden_usage": ["direct HTML runtime import", "arbitrary CSS passthrough", "client-side animation", "external stylesheet dependency"],
+      "verified_examples": [
+        "/Users/bytedance/bd-projects/open-design/design-templates/html-ppt-weekly-report",
+        "/Users/bytedance/bd-projects/open-design/design-templates/html-ppt-product-launch"
+      ],
+      "conversion_records": [
+        {
+          "source_examples": ["html-ppt-weekly-report"],
+          "abstraction_record": "dense report pages with compact headers, numbered rows, and metric grouping",
+          "canvas_spec_fields": ["content.items", "content.metrics", "semantic_elements.title", "quality_constraints.safe_area"],
+          "registry_output": {
+            "templates": ["agenda-list", "metric-dashboard"],
+            "themes": ["finance-dark", "swiss-red"],
+            "components": ["IndexNumber", "MetricTile", "SectionHeader"],
+            "layouts": ["agenda-list", "metric-dashboard"],
+            "golden_fixtures": ["agenda-list.canvas-spec.json", "metric-dashboard.canvas-spec.json"]
+          },
+          "acceptance_rule": "fixture validates required content, max_items, text_budget, safe_area, and renders through Satori/resvg"
+        },
+        {
+          "source_examples": ["html-ppt-product-launch"],
+          "abstraction_record": "launch narrative pages with hero, image-text split, and short supporting points",
+          "canvas_spec_fields": ["content.title", "content.subtitle", "content.points", "content.caption"],
+          "registry_output": {
+            "templates": ["cover-hero", "image-feature", "summary-final"],
+            "themes": ["glass-neon", "dark-clarity"],
+            "components": ["Chip", "ImageFrame", "FigurePlaceholder", "Callout"],
+            "layouts": ["hero-cover", "image-text-split"],
+            "golden_fixtures": ["cover-hero.canvas-spec.json", "image-feature.canvas-spec.json", "summary-final.canvas-spec.json"]
+          },
+          "acceptance_rule": "image is represented as a bounded placeholder in CanvasSpec; no source DOM or CSS is copied"
+        }
+      ]
+    },
+    {
+      "id": "open-design-retro-quarterly-review",
+      "source_path": "/Users/bytedance/bd-projects/open-design/skills/html-ppt-retro-quarterly-review",
+      "source_type": "html_css_case_study",
+      "source_hash_or_version": "git:2aadac07c",
+      "license_or_provenance": "origin https://github.com/nexu-io/open-design.git; local LICENSE is Apache-2.0; used as inspiration only",
+      "extract_fields": ["report structure", "metric hierarchy", "risk sectioning", "timeline rhythm", "executive density"],
+      "conversion_target": ["Canvas Template", "Component Variant", "Layout Archetype"],
+      "acceptance_rule": "patterns must become bounded CanvasSpec arrays with max_items/text_budget checks and golden fixtures",
+      "forbidden_usage": ["runtime dependency", "unbounded responsive layout", "copied JS interaction", "copied CSS animation"],
+      "verified_examples": [
+        "/Users/bytedance/bd-projects/open-design/skills/html-ppt-retro-quarterly-review"
+      ],
+      "conversion_records": [
+        {
+          "source_examples": ["html-ppt-retro-quarterly-review"],
+          "abstraction_record": "quarterly review flow with metric overview, timeline, risk callout, and closing summary",
+          "canvas_spec_fields": ["content.metrics", "content.events", "content.risks", "content.takeaways"],
+          "registry_output": {
+            "templates": ["metric-dashboard", "timeline-steps", "risk-alert", "summary-final"],
+            "themes": ["finance-dark", "warm-editorial"],
+            "components": ["MetricTile", "TimelineNode", "RiskBanner", "StatCard"],
+            "layouts": ["metric-dashboard", "timeline-horizontal", "architecture-blueprint"],
+            "golden_fixtures": ["metric-dashboard.canvas-spec.json", "timeline-steps.canvas-spec.json", "risk-alert.canvas-spec.json", "summary-final.canvas-spec.json"]
+          },
+          "acceptance_rule": "all sections use arrays with explicit max_items and render in the 15-page golden regression"
+        }
+      ]
+    },
+    {
+      "id": "open-design-zhangzara",
+      "source_path": "/Users/bytedance/bd-projects/open-design/design-templates/html-ppt-zhangzara-*",
+      "source_type": "design_templates",
+      "source_hash_or_version": "git:2aadac07c",
+      "license_or_provenance": "origin https://github.com/nexu-io/open-design.git; local LICENSE is Apache-2.0; used as inspiration only",
+      "extract_fields": ["grid system", "editorial color balance", "paper texture metaphor", "display/body contrast", "card spacing"],
+      "conversion_target": ["Theme Token", "Layout Archetype", "Canvas Template"],
+      "acceptance_rule": "dedupe strong-style packs into reusable Satori-compatible tokens and fixtures; do not count duplicate style variants",
+      "forbidden_usage": ["copying generated markup", "uncontrolled visual effects", "blindly copying all style packs", "texture/image runtime dependency"],
+      "verified_examples": [
+        "/Users/bytedance/bd-projects/open-design/design-templates/html-ppt-zhangzara-editorial-tri-tone",
+        "/Users/bytedance/bd-projects/open-design/design-templates/html-ppt-zhangzara-cartesian",
+        "/Users/bytedance/bd-projects/open-design/design-templates/html-ppt-zhangzara-pin-and-paper"
+      ],
+      "conversion_records": [
+        {
+          "source_examples": ["html-ppt-zhangzara-editorial-tri-tone"],
+          "abstraction_record": "editorial tri-tone palette and strong asymmetrical section page",
+          "canvas_spec_fields": ["content.eyebrow", "content.title", "content.subtitle"],
+          "registry_output": {
+            "templates": ["section-title", "image-feature"],
+            "themes": ["editorial-tritone", "paper-research"],
+            "components": ["SectionHeader", "DividerRule", "FigurePlaceholder"],
+            "layouts": ["section-divider", "image-text-split"],
+            "golden_fixtures": ["section-title.canvas-spec.json", "image-feature.canvas-spec.json"]
+          },
+          "acceptance_rule": "theme colors are explicit hex tokens and fixture text remains within text_budget"
+        },
+        {
+          "source_examples": ["html-ppt-zhangzara-cartesian", "html-ppt-zhangzara-pin-and-paper"],
+          "abstraction_record": "grid and paper-note discipline converted to bounded rows, lanes, and blueprint nodes",
+          "canvas_spec_fields": ["content.lanes", "content.nodes", "semantic_elements.title"],
+          "registry_output": {
+            "templates": ["roadmap-lanes", "architecture-blueprint"],
+            "themes": ["swiss-red", "blueprint-technical"],
+            "components": ["RoadmapLane", "ArchitectureNode", "DividerRule"],
+            "layouts": ["architecture-blueprint"],
+            "golden_fixtures": ["roadmap-lanes.canvas-spec.json", "architecture-blueprint.canvas-spec.json"]
+          },
+          "acceptance_rule": "roadmap and blueprint output remains editable SVG shapes/text, not rasterized source art"
+        }
+      ]
+    },
+    {
+      "id": "ppt-master-examples",
+      "source_path": "/Users/bytedance/bd-projects/workspaces/SVGlide/ppt-master/examples",
+      "source_type": "pptx_svg_examples",
+      "source_hash_or_version": "git:45d9a79",
+      "license_or_provenance": "origin https://github.com/hugohe3/ppt-master.git; local LICENSE is MIT; inspiration-only with no copied SVG/runtime dependency",
+      "extract_fields": ["deck rhythm", "page archetypes", "visual style rules", "palette rules", "element density", "bbox/font-size facts"],
+      "conversion_target": ["Canvas Template", "Theme Token", "Golden Fixture", "Quality Rule"],
+      "acceptance_rule": "ppt-master SVG may inform measurements but must not be emitted as final SVGlide output or imported at runtime",
+      "forbidden_usage": ["direct SVG runtime import", "PPT generation workflow import", "copying svg_final as live SVG", "adding ppt-master as CLI dependency"],
+      "verified_examples": [
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/ppt-master/examples/ppt169_attention_is_all_you_need/design_spec.md",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/ppt-master/examples/ppt169_swiss_grid_systems/design_spec.md",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/ppt-master/examples/ppt169_glassmorphism_demo",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/ppt-master/examples/ppt169_kubernetes_blueprint_2026/design_spec.md",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/ppt-master/examples/ppt169_brutalist_ai_newspaper_2026/design_spec.md"
+      ],
+      "conversion_records": [
+        {
+          "source_examples": ["ppt169_attention_is_all_you_need", "ppt169_kubernetes_blueprint_2026"],
+          "abstraction_record": "technical narrative pages with architecture nodes, process stages, and research framing",
+          "canvas_spec_fields": ["content.steps", "content.nodes", "content.sections", "semantic_elements.title"],
+          "registry_output": {
+            "templates": ["process-flow", "architecture-blueprint", "research-poster"],
+            "themes": ["blueprint-technical", "cobalt-grid"],
+            "components": ["ProcessStep", "ArchitectureNode", "PosterSection"],
+            "layouts": ["process-flow", "architecture-blueprint", "research-poster-3col"],
+            "golden_fixtures": ["process-flow.canvas-spec.json", "architecture-blueprint.canvas-spec.json", "research-poster.canvas-spec.json"]
+          },
+          "acceptance_rule": "all outputs are owned templates and CanvasSpec fixtures; raw ppt-master SVG is preview reference only"
+        },
+        {
+          "source_examples": ["ppt169_swiss_grid_systems", "ppt169_glassmorphism_demo", "ppt169_brutalist_ai_newspaper_2026"],
+          "abstraction_record": "Swiss grid, glass neon contrast, and editorial newspaper density distilled into reusable theme tokens and comparison/data layouts",
+          "canvas_spec_fields": ["content.left_points", "content.right_points", "content.metrics", "content.callout"],
+          "registry_output": {
+            "templates": ["comparison-cards", "data-story", "quote-focus"],
+            "themes": ["swiss-red", "glass-neon", "editorial-tritone"],
+            "components": ["LegendDot", "BarMark", "QuoteBlock", "Callout"],
+            "layouts": ["two-column-comparison", "metric-dashboard"],
+            "golden_fixtures": ["comparison-cards.canvas-spec.json", "data-story.canvas-spec.json", "quote-focus.canvas-spec.json"]
+          },
+          "acceptance_rule": "fixture content is short enough for text_budget and renderer uses Satori-compatible static style only"
+        }
+      ]
+    },
+    {
+      "id": "postergen",
+      "source_path": "/Users/bytedance/bd-projects/workspaces/SVGlide/PosterGen",
+      "source_type": "poster_generation_rules",
+      "source_hash_or_version": "git:8a54325",
+      "license_or_provenance": "origin https://github.com/Y-Research-SBU/PosterGen.git; local LICENSE is MIT; used as inspiration only",
+      "extract_fields": ["three-column poster", "title area ratio", "section balance", "logo-aware palette", "font-size constraints", "text-height measurement"],
+      "conversion_target": ["Research Poster Template", "Quality Rule", "Layout Archetype", "Theme Token"],
+      "acceptance_rule": "poster heuristics must be encoded as bounded sections, max_items, text_budget, and golden fixture render checks",
+      "forbidden_usage": ["LangGraph workflow runtime", "Python poster agents as production dependency", "GPT image generation workflow import", "web UI runtime import"],
+      "verified_examples": [
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/PosterGen/config/poster_config.yaml",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/PosterGen/config/prompts/layout_balancer.txt",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/PosterGen/config/prompts/extract_color_from_figure.txt",
+        "/Users/bytedance/bd-projects/workspaces/SVGlide/PosterGen/config/prompts/spatial_content_planner.txt"
+      ],
+      "conversion_records": [
+        {
+          "source_examples": ["config/poster_config.yaml", "layout_balancer.txt", "spatial_content_planner.txt"],
+          "abstraction_record": "research poster with three bounded columns, title/authors area, balanced sections, and explicit section max count",
+          "canvas_spec_fields": ["content.title", "content.authors", "content.sections", "content.key_visual"],
+          "registry_output": {
+            "templates": ["research-poster"],
+            "themes": ["paper-research"],
+            "components": ["PosterSection", "FigurePlaceholder", "SectionHeader"],
+            "layouts": ["research-poster-3col"],
+            "golden_fixtures": ["research-poster.canvas-spec.json"]
+          },
+          "acceptance_rule": "sections max at 6, title/authors are explicit fields, and the fixture renders through the golden regression"
+        },
+        {
+          "source_examples": ["extract_color_from_figure.txt"],
+          "abstraction_record": "color extraction idea converted to fixed theme-token selection rather than arbitrary color generation",
+          "canvas_spec_fields": ["theme_id", "theme.colors"],
+          "registry_output": {
+            "templates": ["image-feature", "data-story"],
+            "themes": ["paper-research", "glass-neon"],
+            "components": ["FigurePlaceholder", "BarMark"],
+            "layouts": ["image-text-split", "metric-dashboard"],
+            "golden_fixtures": ["image-feature.canvas-spec.json", "data-story.canvas-spec.json"]
+          },
+          "acceptance_rule": "LLM/planner must choose a registered theme_id; arbitrary CSS colors are not accepted as runtime style"
+        }
+      ]
+    }
+  ],
+  "p1_abstractions": {
+    "template_count": 15,
+    "theme_count": 10,
+    "layout_archetype_count": 10,
+    "component_variant_count": 23,
+    "golden_fixture_count": 15
+  }
+}

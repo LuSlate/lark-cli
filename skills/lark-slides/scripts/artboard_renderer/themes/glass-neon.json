@@ -1,0 +1,22 @@
+{
+  "theme_id": "glass-neon",
+  "colors": {
+    "background": "#090B1A",
+    "panel": "#14172E",
+    "primary": "#22D3EE",
+    "accent": "#C084FC",
+    "text": "#F8FAFC",
+    "muted": "#BAC3D9"
+  },
+  "typography": {
+    "title": 56,
+    "subtitle": 24,
+    "body": 20,
+    "label": 18
+  },
+  "spacing": {
+    "page": 64,
+    "card": 28,
+    "gap": 20
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": "svglide-planner-prompt-contracts/v1",
+  "contracts": [
+    {
+      "id": "deck-planner",
+      "stage": "deck_planner",
+      "prompt_path": "skills/lark-slides/prompts/svglide/deck-planner.prompt.md",
+      "input_bundle": ["user_topic", "audience", "target_slide_count", "source_policy", "available_template_registry", "available_theme_registry"],
+      "output_schema": "skills/lark-slides/references/svglide-deck-plan.schema.json",
+      "output_path": "02-plan/deck-plan.json",
+      "validation_command": "python3 skills/lark-slides/scripts/svglide_planner_contracts.py <project>",
+      "forbidden_outputs": ["free_html", "free_css", "free_svg", "jsx_or_tsx", "markdown_fence", "base64_image_data"]
+    },
+    {
+      "id": "slide-planner",
+      "stage": "slide_planner",
+      "prompt_path": "skills/lark-slides/prompts/svglide/slide-planner.prompt.md",
+      "input_bundle": ["deck-plan.json", "svglide-template-registry.json", "themes/registry.json", "svglide-layout-archetypes.json", "svglide-component-registry.json"],
+      "output_schema": "skills/lark-slides/references/svglide-slide-plan.schema.json",
+      "output_path": "02-plan/slide-plan.json",
+      "validation_command": "python3 skills/lark-slides/scripts/svglide_planner_contracts.py <project>",
+      "forbidden_outputs": ["free_html", "free_css", "free_svg", "jsx_or_tsx", "markdown_fence", "unregistered_template_id"]
+    },
+    {
+      "id": "canvas-planner",
+      "stage": "canvas_planner",
+      "prompt_path": "skills/lark-slides/prompts/svglide/canvas-planner.prompt.md",
+      "input_bundle": ["slide-plan.json", "svglide-template-registry.json", "themes/registry.json", "svglide-canvas-spec.schema.json", "golden CanvasSpec examples"],
+      "output_schema": "skills/lark-slides/references/svglide-canvas-plan.schema.json",
+      "output_path": "02-plan/slide_plan.json",
+      "validation_command": "python3 skills/lark-slides/scripts/svglide_planner_contracts.py <project>",
+      "forbidden_outputs": ["free_html", "free_css", "free_svg", "jsx_or_tsx", "markdown_fence", "raw_satori_svg"]
+    },
+    {
+      "id": "repair-planner",
+      "stage": "repair_planner",
+      "prompt_path": "skills/lark-slides/prompts/svglide/repair-planner.prompt.md",
+      "input_bundle": ["validation receipt", "target planner JSON", "schema issue list", "template fit issue list"],
+      "output_schema": "skills/lark-slides/references/svglide-repair-plan.schema.json",
+      "output_path": "02-plan/repair-plan.json",
+      "validation_command": "python3 skills/lark-slides/scripts/svglide_planner_contracts.py <project>",
+      "forbidden_outputs": ["full_deck_rewrite", "free_html", "free_css", "free_svg", "markdown_fence", "unscoped_patch"]
+    }
+  ]
+}

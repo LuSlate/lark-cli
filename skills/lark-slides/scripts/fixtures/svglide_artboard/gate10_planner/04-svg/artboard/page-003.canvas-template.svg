@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="#27130F"/>
+<circle data-node-id="accent" cx="786" cy="136" r="82" fill="#22D3EE" opacity="0.22"/>
+<rect data-node-id="metric-bar-1" x="712" y="322" width="18" height="30" fill="#F97316" opacity="0.72"/>
+<rect data-node-id="metric-bar-2" x="742" y="304" width="18" height="48" fill="#F97316" opacity="0.86"/>
+<rect data-node-id="metric-bar-3" x="772" y="286" width="18" height="66" fill="#22D3EE" opacity="0.92"/>
+<text data-node-id="eyebrow" data-box-x="72" data-box-y="64" data-box-width="420" data-box-height="32" x="72" y="84" fill="#F97316" font-size="18" font-weight="800" font-family="Inter">NEXT</text>
+<text data-node-id="title" data-box-x="72" data-box-y="110" data-box-width="700" data-box-height="110" x="72" y="164" fill="#FFF7ED" font-size="50" font-weight="850" font-family="Inter">下一步观测</text>
+<text data-node-id="subtitle" data-box-x="72" data-box-y="244" data-box-width="640" data-box-height="66" x="72" y="274" fill="#F4C9A8" font-size="23" font-weight="500" font-family="Inter">把研究结果转成可执行的观测闭环。</text>
+<rect data-node-id="takeaway-card-1" x="72" y="344" width="250" height="126" fill="#3A211B"/>
+<text data-node-id="takeaway-index-1" data-box-x="94" data-box-y="366" data-box-width="64" data-box-height="30" x="94" y="386" fill="#F97316" font-size="18" font-weight="800" font-family="Inter">01</text>
+<text data-node-id="takeaway-1" data-box-x="94" data-box-y="404" data-box-width="202" data-box-height="54" x="94" y="428" fill="#FFF7ED" font-size="21" font-weight="700" font-family="Inter">连续监测</text>
+<rect data-node-id="takeaway-card-2" x="340" y="344" width="250" height="126" fill="#3A211B"/>
+<text data-node-id="takeaway-index-2" data-box-x="362" data-box-y="366" data-box-width="64" data-box-height="30" x="362" y="386" fill="#F97316" font-size="18" font-weight="800" font-family="Inter">02</text>
+<text data-node-id="takeaway-2" data-box-x="362" data-box-y="404" data-box-width="202" data-box-height="54" x="362" y="428" fill="#FFF7ED" font-size="21" font-weight="700" font-family="Inter">现场复核</text>
+<rect data-node-id="takeaway-card-3" x="608" y="344" width="250" height="126" fill="#3A211B"/>
+<text data-node-id="takeaway-index-3" data-box-x="630" data-box-y="366" data-box-width="64" data-box-height="30" x="630" y="386" fill="#F97316" font-size="18" font-weight="800" font-family="Inter">03</text>
+<text data-node-id="takeaway-3" data-box-x="630" data-box-y="404" data-box-width="202" data-box-height="54" x="630" y="428" fill="#FFF7ED" font-size="21" font-weight="700" font-family="Inter">风险沟通</text>
+</svg>

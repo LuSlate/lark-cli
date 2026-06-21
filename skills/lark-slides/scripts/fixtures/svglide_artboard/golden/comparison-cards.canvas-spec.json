@@ -1,0 +1,18 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+  "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+  "template_id": "comparison-cards",
+  "theme_id": "forest-signal",
+  "theme": {"colors": {"background": "#0B1F1A", "panel": "#123329", "primary": "#34D399", "accent": "#FBBF24", "text": "#F7FCEB", "muted": "#B7D3C6"}},
+  "content": {
+    "title": "新旧链路差异",
+    "left_title": "旧链路",
+    "right_title": "新链路",
+    "left_points": ["直接生成 SVG", "审美分散在 prompt", "门禁只看最终文件"],
+    "right_points": ["先生成 CanvasSpec", "模板统一审美", "receipt 绑定画板"],
+    "conclusion": "美学标准从自由生成迁移到受控设计系统。"
+  },
+  "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 64, "y": 52, "width": 760, "height": 64}}],
+  "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+}

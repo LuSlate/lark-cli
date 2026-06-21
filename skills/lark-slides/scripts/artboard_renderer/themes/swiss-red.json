@@ -1,0 +1,22 @@
+{
+  "theme_id": "swiss-red",
+  "colors": {
+    "background": "#F8F8F4",
+    "panel": "#FFFFFF",
+    "primary": "#E11D48",
+    "accent": "#111111",
+    "text": "#111111",
+    "muted": "#666666"
+  },
+  "typography": {
+    "title": 52,
+    "subtitle": 22,
+    "body": 20,
+    "label": 18
+  },
+  "spacing": {
+    "page": 64,
+    "card": 28,
+    "gap": 20
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-theme-spec.schema.json",
+  "title": "SVGlide ThemeSpec",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "theme_id",
+    "mode",
+    "colors",
+    "semantic_colors",
+    "tokens",
+    "contrast",
+    "allowed_color_roles"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "svglide-theme/v1"},
+    "theme_id": {"type": "string", "minLength": 1},
+    "mode": {"enum": ["light", "dark"]},
+    "colors": {
+      "type": "object",
+      "required": [
+        "background",
+        "surface",
+        "text",
+        "muted",
+        "primary",
+        "accent",
+        "success",
+        "warning",
+        "danger"
+      ],
+      "additionalProperties": {"$ref": "#/$defs/hexColor"},
+      "properties": {
+        "background": {"$ref": "#/$defs/hexColor"},
+        "surface": {"$ref": "#/$defs/hexColor"},
+        "text": {"$ref": "#/$defs/hexColor"},
+        "muted": {"$ref": "#/$defs/hexColor"},
+        "primary": {"$ref": "#/$defs/hexColor"},
+        "accent": {"$ref": "#/$defs/hexColor"},
+        "success": {"$ref": "#/$defs/hexColor"},
+        "warning": {"$ref": "#/$defs/hexColor"},
+        "danger": {"$ref": "#/$defs/hexColor"}
+      }
+    },
+    "semantic_colors": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "anyOf": [
+          {"$ref": "#/$defs/hexColor"},
+          {"type": "string", "minLength": 1}
+        ]
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "required": [
+        "color.background",
+        "color.surface",
+        "color.text",
+        "color.muted",
+        "color.primary",
+        "color.accent",
+        "color.success",
+        "color.warning",
+        "color.danger"
+      ],
+      "additionalProperties": {
+        "anyOf": [
+          {"$ref": "#/$defs/hexColor"},
+          {"type": "string", "minLength": 1}
+        ]
+      },
+      "properties": {
+        "color.background": {"$ref": "#/$defs/hexColor"},
+        "color.surface": {"$ref": "#/$defs/hexColor"},
+        "color.text": {"$ref": "#/$defs/hexColor"},
+        "color.muted": {"$ref": "#/$defs/hexColor"},
+        "color.primary": {"$ref": "#/$defs/hexColor"},
+        "color.accent": {"$ref": "#/$defs/hexColor"},
+        "color.success": {"$ref": "#/$defs/hexColor"},
+        "color.warning": {"$ref": "#/$defs/hexColor"},
+        "color.danger": {"$ref": "#/$defs/hexColor"}
+      }
+    },
+    "contrast": {
+      "type": "object",
+      "required": ["min_text_contrast"],
+      "additionalProperties": true,
+      "properties": {
+        "min_text_contrast": {"type": "number"}
+      }
+    },
+    "allowed_color_roles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "data_series": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/hexColor"}
+    }
+  },
+  "$defs": {
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+    }
+  }
+}

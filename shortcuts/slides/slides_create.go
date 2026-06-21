@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -219,7 +220,11 @@ func buildPresentationXML(title string) string {
 }
 
 func createEmptyPresentation(runtime *common.RuntimeContext, title string) (string, int, error) {
-	data, err := runtime.CallAPI(
+	return createEmptyPresentationWithHeaders(runtime, title, nil)
+}
+
+func createEmptyPresentationWithHeaders(runtime *common.RuntimeContext, title string, headers http.Header) (string, int, error) {
+	data, err := runtime.CallAPIWithHeaders(
 		"POST",
 		"/open-apis/slides_ai/v1/xml_presentations",
 		nil,
@@ -228,6 +233,7 @@ func createEmptyPresentation(runtime *common.RuntimeContext, title string) (stri
 				"content": buildPresentationXML(title),
 			},
 		},
+		headers,
 	)
 	if err != nil {
 		return "", 0, err

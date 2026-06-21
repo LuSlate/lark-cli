@@ -1,0 +1,15 @@
+{
+  "schema_version": "svglide-layout-archetypes/v1",
+  "archetypes": [
+    {"id": "hero-cover", "status": "active", "templates": ["cover-hero"], "purpose": "deck opening page with one dominant message and controlled chips"},
+    {"id": "section-divider", "status": "active", "templates": ["section-title"], "purpose": "chapter transition and narrative pacing"},
+    {"id": "agenda-list", "status": "active", "templates": ["agenda-list"], "purpose": "ordered content map for multi-page decks"},
+    {"id": "two-column-comparison", "status": "active", "templates": ["comparison-cards"], "purpose": "before-after or option comparison"},
+    {"id": "timeline-horizontal", "status": "active", "templates": ["timeline-steps"], "purpose": "time or milestone sequence"},
+    {"id": "process-flow", "status": "active", "templates": ["process-flow"], "purpose": "pipeline and dependency explanation"},
+    {"id": "metric-dashboard", "status": "active", "templates": ["metric-dashboard", "data-story"], "purpose": "small set of quantitative highlights"},
+    {"id": "image-text-split", "status": "active", "templates": ["image-feature"], "purpose": "one visual anchor with supporting interpretation"},
+    {"id": "research-poster-3col", "status": "active", "templates": ["research-poster"], "purpose": "dense research summary with balanced sections"},
+    {"id": "architecture-blueprint", "status": "active", "templates": ["architecture-blueprint", "roadmap-lanes", "risk-alert", "quote-focus", "summary-final"], "purpose": "systems, plans, risks, quotes, and closing pages"}
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "svglide-theme-registry/v1",
+  "themes": [
+    {
+      "id": "dark-clarity",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/dark-clarity.json"
+    },
+    {
+      "id": "forest-signal",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/forest-signal.json"
+    },
+    {
+      "id": "warm-editorial",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/warm-editorial.json"
+    },
+    {
+      "id": "blueprint-technical",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/blueprint-technical.json"
+    },
+    {
+      "id": "editorial-tritone",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/editorial-tritone.json"
+    },
+    {
+      "id": "cobalt-grid",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json"
+    },
+    {
+      "id": "finance-dark",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/finance-dark.json"
+    },
+    {
+      "id": "swiss-red",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/swiss-red.json"
+    },
+    {
+      "id": "glass-neon",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/glass-neon.json"
+    },
+    {
+      "id": "paper-research",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/paper-research.json"
+    }
+  ]
+}

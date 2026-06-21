@@ -1,0 +1,89 @@
+{
+  "drift": {
+    "max_px": 0,
+    "status": "not_measured_in_p0"
+  },
+  "nodes": [
+    {
+      "height": 540,
+      "id": "background",
+      "kind": "rect",
+      "width": 960,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 192,
+      "id": "accent-orbit",
+      "kind": "circle",
+      "width": 192,
+      "x": 724,
+      "y": 36
+    },
+    {
+      "height": 356,
+      "id": "panel",
+      "kind": "rect",
+      "width": 704,
+      "x": 56,
+      "y": 64
+    },
+    {
+      "height": 32,
+      "id": "eyebrow",
+      "kind": "text",
+      "text": "ICELAND VOLCANO",
+      "width": 420,
+      "x": 84,
+      "y": 98
+    },
+    {
+      "height": 142,
+      "id": "title",
+      "kind": "text",
+      "text": "冰岛火山研究",
+      "width": 628,
+      "x": 84,
+      "y": 142
+    },
+    {
+      "height": 74,
+      "id": "subtitle",
+      "kind": "text",
+      "text": "地貌证据、活动迹象与连续观测。",
+      "width": 610,
+      "x": 88,
+      "y": 302
+    },
+    {
+      "height": 40,
+      "id": "chip-1",
+      "kind": "text",
+      "text": "地貌",
+      "width": 92,
+      "x": 84,
+      "y": 444
+    },
+    {
+      "height": 40,
+      "id": "chip-2",
+      "kind": "text",
+      "text": "监测",
+      "width": 92,
+      "x": 190,
+      "y": 444
+    },
+    {
+      "height": 40,
+      "id": "chip-3",
+      "kind": "text",
+      "text": "风险",
+      "width": 92,
+      "x": 296,
+      "y": 444
+    }
+  ],
+  "page": 1,
+  "source": "template-layout-map",
+  "version": "svglide-node-layout-map/v1"
+}

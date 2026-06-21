@@ -1,0 +1,186 @@
+{
+  "content_keys": [
+    "conclusion",
+    "left_points",
+    "left_title",
+    "right_points",
+    "right_title",
+    "title"
+  ],
+  "elements": [
+    {
+      "bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "element_id": "background",
+      "kind": "rect",
+      "role": "background",
+      "source_ref": null,
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 64.0,
+        "width": 760.0,
+        "x": 64.0,
+        "y": 52.0
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "text": "观测证据对比"
+    },
+    {
+      "bbox": {
+        "height": 250.0,
+        "width": 390.0,
+        "x": 64.0,
+        "y": 140.0
+      },
+      "element_id": "left-card",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 250.0,
+        "width": 390.0,
+        "x": 506.0,
+        "y": 140.0
+      },
+      "element_id": "right-card",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 34.0,
+        "width": 320.0,
+        "x": 92.0,
+        "y": 168.0
+      },
+      "element_id": "left-title",
+      "kind": "text",
+      "role": "left-title",
+      "source_ref": "canvas_spec.content.left_title",
+      "text": "地表信号"
+    },
+    {
+      "bbox": {
+        "height": 36.0,
+        "width": 296.0,
+        "x": 116.0,
+        "y": 222.0
+      },
+      "element_id": "left-point-1",
+      "kind": "text",
+      "role": "body",
+      "source_ref": "canvas_spec.content.left_points[]",
+      "text": "熔岩地貌"
+    },
+    {
+      "bbox": {
+        "height": 36.0,
+        "width": 296.0,
+        "x": 116.0,
+        "y": 270.0
+      },
+      "element_id": "left-point-2",
+      "kind": "text",
+      "role": "body",
+      "source_ref": "canvas_spec.content.left_points[]",
+      "text": "热异常"
+    },
+    {
+      "bbox": {
+        "height": 36.0,
+        "width": 296.0,
+        "x": 116.0,
+        "y": 318.0
+      },
+      "element_id": "left-point-3",
+      "kind": "text",
+      "role": "body",
+      "source_ref": "canvas_spec.content.left_points[]",
+      "text": "气体羽流"
+    },
+    {
+      "bbox": {
+        "height": 34.0,
+        "width": 320.0,
+        "x": 534.0,
+        "y": 168.0
+      },
+      "element_id": "right-title",
+      "kind": "text",
+      "role": "right-title",
+      "source_ref": "canvas_spec.content.right_title",
+      "text": "地下信号"
+    },
+    {
+      "bbox": {
+        "height": 36.0,
+        "width": 296.0,
+        "x": 558.0,
+        "y": 222.0
+      },
+      "element_id": "right-point-1",
+      "kind": "text",
+      "role": "body",
+      "source_ref": "canvas_spec.content.right_points[]",
+      "text": "地震活动"
+    },
+    {
+      "bbox": {
+        "height": 36.0,
+        "width": 296.0,
+        "x": 558.0,
+        "y": 270.0
+      },
+      "element_id": "right-point-2",
+      "kind": "text",
+      "role": "body",
+      "source_ref": "canvas_spec.content.right_points[]",
+      "text": "形变趋势"
+    },
+    {
+      "bbox": {
+        "height": 36.0,
+        "width": 296.0,
+        "x": 558.0,
+        "y": 318.0
+      },
+      "element_id": "right-point-3",
+      "kind": "text",
+      "role": "body",
+      "source_ref": "canvas_spec.content.right_points[]",
+      "text": "岩浆补给"
+    },
+    {
+      "bbox": {
+        "height": 42.0,
+        "width": 788.0,
+        "x": 86.0,
+        "y": 426.0
+      },
+      "element_id": "conclusion",
+      "kind": "text",
+      "role": "conclusion",
+      "source_ref": "canvas_spec.content.conclusion",
+      "text": "多源观测共同降低单一证据偏差。"
+    }
+  ],
+  "page": 2,
+  "semantic_source": "CanvasSpec",
+  "template_id": "comparison-cards",
+  "theme_id": "paper-research",
+  "version": "svglide-semantic-map/v1"
+}

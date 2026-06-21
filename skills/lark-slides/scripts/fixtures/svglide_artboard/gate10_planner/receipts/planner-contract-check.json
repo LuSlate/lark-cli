@@ -1,0 +1,80 @@
+{
+  "action": "continue_to_generate_svg",
+  "inputs": {
+    "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/gate10_planner",
+    "prompt_contracts": "skills/lark-slides/references/svglide-planner-prompt-contracts.json",
+    "prompt_contracts_sha256": "a04fbc7ccef868a0f37aebc735a710933f3a23ad58a2208ae1bbe93cc2a65d63"
+  },
+  "issues": [],
+  "output_path": "06-check/planner-contract-check.json",
+  "planner_outputs": [
+    {
+      "error_count": 0,
+      "output_path": "02-plan/deck-plan.json",
+      "output_sha256": "64895dd3daa421e2467b4bd51711f4a486ffbe25ec65dcbe22115c9bcfbe7387",
+      "prompt_id": "deck-planner",
+      "schema": "skills/lark-slides/references/svglide-deck-plan.schema.json"
+    },
+    {
+      "error_count": 0,
+      "output_path": "02-plan/slide-plan.json",
+      "output_sha256": "cc73612a48528e17b832efbdc124f5be2d8948d620b80803a652f6738054e475",
+      "prompt_id": "slide-planner",
+      "schema": "skills/lark-slides/references/svglide-slide-plan.schema.json"
+    },
+    {
+      "error_count": 0,
+      "output_path": "02-plan/slide_plan.json",
+      "output_sha256": "9c5f68a5f3536a91e07486e29ccd6961e95738de450e526727577960be672f1e",
+      "prompt_id": "canvas-planner",
+      "schema": "skills/lark-slides/references/svglide-canvas-plan.schema.json"
+    },
+    {
+      "error_count": 0,
+      "output_path": "02-plan/repair-plan.json",
+      "output_sha256": "938bed59c49da6eaeb1dd36c35143102022713e33fdc15ab9253fbbcbe26f736",
+      "prompt_id": "repair-planner",
+      "schema": "skills/lark-slides/references/svglide-repair-plan.schema.json"
+    }
+  ],
+  "prompt_contracts": [
+    {
+      "id": "deck-planner",
+      "output_path": "02-plan/deck-plan.json",
+      "output_schema": "skills/lark-slides/references/svglide-deck-plan.schema.json",
+      "prompt_path": "skills/lark-slides/prompts/svglide/deck-planner.prompt.md",
+      "prompt_sha256": "3959317b1f62019cdc8f5a37d787f794119a9309384de6f3f6d1256afe7545ed"
+    },
+    {
+      "id": "slide-planner",
+      "output_path": "02-plan/slide-plan.json",
+      "output_schema": "skills/lark-slides/references/svglide-slide-plan.schema.json",
+      "prompt_path": "skills/lark-slides/prompts/svglide/slide-planner.prompt.md",
+      "prompt_sha256": "27f52eabb8433c0808811c6ab4056b2d19b9f60144eec49c8c9add553330aabd"
+    },
+    {
+      "id": "canvas-planner",
+      "output_path": "02-plan/slide_plan.json",
+      "output_schema": "skills/lark-slides/references/svglide-canvas-plan.schema.json",
+      "prompt_path": "skills/lark-slides/prompts/svglide/canvas-planner.prompt.md",
+      "prompt_sha256": "192897b85ad5af6bec5a0e646496b6e35214c54cda467f748d077aee2dde6de6"
+    },
+    {
+      "id": "repair-planner",
+      "output_path": "02-plan/repair-plan.json",
+      "output_schema": "skills/lark-slides/references/svglide-repair-plan.schema.json",
+      "prompt_path": "skills/lark-slides/prompts/svglide/repair-planner.prompt.md",
+      "prompt_sha256": "7cb893ed2fb133161b91232706fa80d507eadc87eb62a7806f0b0f6df8f42f50"
+    }
+  ],
+  "receipt_path": "receipts/planner-contract-check.json",
+  "schema_version": "svglide-planner-contract-check/v1",
+  "stage": "planner-contract-check",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "planner_output_count": 4,
+    "prompt_contract_count": 4,
+    "warning_count": 0
+  }
+}

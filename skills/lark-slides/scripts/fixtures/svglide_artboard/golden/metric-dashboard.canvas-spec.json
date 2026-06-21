@@ -1,0 +1,11 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+  "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+  "template_id": "metric-dashboard",
+  "theme_id": "finance-dark",
+  "theme": {"colors": {"background": "#07110E", "panel": "#10201A", "primary": "#22C55E", "accent": "#F59E0B", "text": "#ECFDF5", "muted": "#A7C4B7"}},
+  "content": {"eyebrow": "METRICS", "title": "研究指标概览", "subtitle": "关键指标保持在同一视觉系统内。", "metrics": ["样本 128", "站点 14", "误差 6%", "时长 30d", "风险 L2", "置信 92%"]},
+  "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 56, "y": 96, "width": 710, "height": 88}}],
+  "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+}

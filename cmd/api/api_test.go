@@ -88,6 +88,46 @@ func TestApiCmd_BotMode(t *testing.T) {
 	}
 }
 
+func TestApiCmd_RequestHeaderPassesToCall(t *testing.T) {
+	f, stdout, _, reg := cmdutil.TestFactory(t, &core.CliConfig{
+		AppID: "test-app", AppSecret: "test-secret", Brand: core.BrandFeishu,
+	})
+
+	stub := &httpmock.Stub{
+		URL:  "/open-apis/test",
+		Body: map[string]interface{}{"code": 0, "msg": "ok", "data": map[string]interface{}{"result": "success"}},
+	}
+	reg.Register(stub)
+
+	cmd := NewCmdApi(f, nil)
+	cmd.SetArgs([]string{"GET", "/open-apis/test", "--as", "user", "--request-header", "x-tt-env=ppe_pure_svg"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := stub.CapturedHeaders.Get("x-tt-env"); got != "ppe_pure_svg" {
+		t.Fatalf("x-tt-env header = %q, want ppe_pure_svg", got)
+	}
+	if !strings.Contains(stdout.String(), "success") {
+		t.Error("expected 'success' in output")
+	}
+}
+
+func TestApiCmd_RequestHeaderRejectsUnsupportedKey(t *testing.T) {
+	f, _, _, _ := cmdutil.TestFactory(t, &core.CliConfig{
+		AppID: "test-app", AppSecret: "test-secret", Brand: core.BrandFeishu,
+	})
+
+	cmd := NewCmdApi(f, nil)
+	cmd.SetArgs([]string{"GET", "/open-apis/test", "--as", "user", "--request-header", "authorization=secret"})
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected unsupported request header error")
+	}
+	if !strings.Contains(err.Error(), "only x-tt-env is allowed") {
+		t.Fatalf("err = %v, want supported-header message", err)
+	}
+}
+
 func TestApiCmd_MissingArgs(t *testing.T) {
 	f, _, _, _ := cmdutil.TestFactory(t, &core.CliConfig{
 		AppID: "test-app", AppSecret: "test-secret", Brand: core.BrandFeishu,

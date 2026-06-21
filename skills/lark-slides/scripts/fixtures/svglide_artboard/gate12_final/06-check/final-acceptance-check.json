@@ -1,0 +1,233 @@
+{
+  "checked_at": "2026-06-21T14:52:12+08:00",
+  "evidence_files": [
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate0-gate1-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate2-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate3-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate4-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate5-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate6-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate7-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate8-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate9-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate10-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate11-evidence.md"
+    },
+    {
+      "exists": true,
+      "path": "skills/lark-slides/references/svglide-artboard-gate12a-evidence.md"
+    }
+  ],
+  "gate_statuses": {
+    "0": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "1": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "10": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "11": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "12a": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "2": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "3": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "4": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "5": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "6": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "7": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "8": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    },
+    "9": {
+      "owner": "executor",
+      "reviewer_verdict": "PASS",
+      "status": "DONE"
+    }
+  },
+  "instruction_adherence": {
+    "check_path": ".tmp/svglide-p0c-gate7-live6/06-check/instruction-adherence.json",
+    "hash_checks": [
+      {
+        "exists": true,
+        "label": "instruction",
+        "matched": true,
+        "path": "00-input/instruction.json",
+        "sha256": "c292a356e2d80dade4f4237f45d94da28f55a6e2889267a54e04ccdd16b42200"
+      },
+      {
+        "exists": true,
+        "label": "deck_plan",
+        "matched": true,
+        "path": "02-plan/deck-plan.json",
+        "sha256": "48fae1be097548f7b9d1284516c8c4586db69ad1bfc6f34f0c499dc3afedcd40"
+      },
+      {
+        "exists": true,
+        "label": "slide_plan",
+        "matched": true,
+        "path": "02-plan/slide-plan.json",
+        "sha256": "601608e462386bf4d2bfa030bc9db6ef1ca7dc31a51f0f6c52f711cb2ea01701"
+      },
+      {
+        "exists": true,
+        "label": "final_plan",
+        "matched": true,
+        "path": "02-plan/slide_plan.json",
+        "sha256": "3aa06d0877a587f8b62d0c8934fcc03ec8e34823c00c725f4e16c3d44ceb3bb7"
+      },
+      {
+        "exists": true,
+        "label": "output_page_1",
+        "matched": true,
+        "path": "04-svg/page-001.svg",
+        "sha256": "6d35ebfe7ec500472a9fd5ab69af230d1a73aea40b2f5f6bc6f02f5a58a0900f"
+      },
+      {
+        "exists": true,
+        "label": "output_page_2",
+        "matched": true,
+        "path": "04-svg/page-002.svg",
+        "sha256": "9c623b3138cab6f0dcf68fb3cdfc68e9747f11ef5a8ba9f048a7a2360524e799"
+      },
+      {
+        "exists": true,
+        "label": "output_page_3",
+        "matched": true,
+        "path": "04-svg/page-003.svg",
+        "sha256": "13d7fc19310ac89a699f1fdf85597628b1a8428aa55468262c9a920644bf4e24"
+      },
+      {
+        "exists": true,
+        "label": "readback_check",
+        "matched": true,
+        "path": "08-readback/readback-check.json",
+        "sha256": "d0975690314cdde750cc2463a35c75364720e5abfe0a65de630b2f0c9f2b67f4"
+      },
+      {
+        "exists": true,
+        "label": "readback_raw",
+        "matched": true,
+        "path": "08-readback/xml-presentations-get.json",
+        "sha256": "4613b160af688aef660b1c07fdd7f9b19c676ef8d9fb0fb0cfdf7607b1eeb596"
+      }
+    ],
+    "project": ".tmp/svglide-p0c-gate7-live6",
+    "readback_binding_checks": [
+      {
+        "binding_key": "plan_sha256",
+        "matched": true,
+        "path": "02-plan/slide_plan.json"
+      },
+      {
+        "binding_key": "quality_gate_sha256",
+        "matched": true,
+        "path": "06-check/quality-gate.json"
+      },
+      {
+        "binding_key": "dry_run_sha256",
+        "matched": true,
+        "path": "07-create/dry-run.json"
+      },
+      {
+        "binding_key": "ppe_proof_sha256",
+        "matched": true,
+        "path": "07-create/ppe-proof.json"
+      },
+      {
+        "binding_key": "live_create_sha256",
+        "matched": true,
+        "path": "07-create/live-create.json"
+      }
+    ],
+    "receipt_path": ".tmp/svglide-p0c-gate7-live6/receipts/instruction-adherence.json",
+    "receipt_status": "passed",
+    "status": "passed"
+  },
+  "issues": [],
+  "package_receipt": {
+    "path": "skills/lark-slides/scripts/fixtures/svglide_artboard/gate11_package/receipts/artboard-package-check.json",
+    "status": "passed"
+  },
+  "plan_path": "/Users/bytedance/Downloads/PLAN.md",
+  "scope": {
+    "accepted_milestone": "P0/P1 artboard_satori implementation through Gate 12a reviewer PASS",
+    "deferrals_path": "skills/lark-slides/references/svglide-artboard-gate12-scope.md",
+    "not_claimed": "complete high-quality PPT generation system with actual model-driven topic-to-deck loop"
+  },
+  "stage": "final_acceptance",
+  "status": "passed",
+  "version": "svglide-artboard-final-acceptance/v1"
+}

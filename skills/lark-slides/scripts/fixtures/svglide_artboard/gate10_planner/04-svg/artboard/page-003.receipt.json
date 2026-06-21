@@ -1,0 +1,108 @@
+{
+  "canvas_spec_path": "02-plan/slide_plan.json#/slides/2/canvas_spec",
+  "canvas_spec_sha256": "1409994cbf70a22f5fffff357295569ef0adc9caae55ebf6bb52920b2c385615",
+  "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+  "canvas_template_svg_sha256": "81c00e0a1494c858ea821a001833825b93bf44fe328905a4fe7f822b69b6ac2e",
+  "compiler": {
+    "compiler_input": "CanvasSpecTemplateSVG",
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "native_mapped": [
+      "rect",
+      "circle",
+      "rect",
+      "rect",
+      "rect",
+      "text->foreignObject",
+      "text->foreignObject",
+      "text->foreignObject",
+      "rect",
+      "text->foreignObject",
+      "text->foreignObject",
+      "rect",
+      "text->foreignObject",
+      "text->foreignObject",
+      "rect",
+      "text->foreignObject",
+      "text->foreignObject"
+    ],
+    "satori_svg_usage": "preview_only",
+    "semantic_source": "CanvasSpec"
+  },
+  "compiler_input": "04-svg/artboard/page-003.canvas-template.svg",
+  "compiler_input_sha256": "81c00e0a1494c858ea821a001833825b93bf44fe328905a4fe7f822b69b6ac2e",
+  "created_at": "2026-06-21T13:59:15+08:00",
+  "font_hashes": [
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+      "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+    }
+  ],
+  "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+  "node_layout_map_sha256": "5b0c426195a980724c7e77f0d09cc5a8f32bafb2f85ce7d5ac3a6b641cc72886",
+  "node_version": "v20.18.1",
+  "page": 3,
+  "png": "04-svg/artboard/page-003.png",
+  "png_sha256": "a1d172b3953148d4a428d7359f48f9f3b97d74a89ef07257583861271653bc6a",
+  "render_metadata": "04-svg/artboard/page-003.render-metadata.json",
+  "render_metadata_sha256": "2c3d41831d1d62dd42c2a404501a71d0c361c9b827c583bb8acfaf586fe14f0b",
+  "renderer": {
+    "actual_satori_package": true,
+    "adapter": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "engine": "satori-node",
+    "name": "satori-resvg-p0"
+  },
+  "resvg_version": "2.6.2",
+  "satori_preview": {
+    "element_counts": {
+      "g": 4,
+      "mask": 19,
+      "path": 1,
+      "rect": 26,
+      "svg": 1,
+      "text": 37
+    },
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "issues": [],
+    "status": "passed",
+    "strict": false
+  },
+  "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+  "satori_svg_sha256": "07396b9b453965f332cee318eb9b8e55dbd01fd844aa69f66e5e532aec1f7ab6",
+  "satori_version": "0.26.0",
+  "semantic_map": "04-svg/artboard/page-003.semantic-map.json",
+  "semantic_map_sha256": "8bacd61d84cae3f0f1ca36bcf10bc65d61b847b74a02eb224c90f3039b1195ec",
+  "stage": "generate_svg",
+  "status": "passed",
+  "svglide_svg": "04-svg/page-003.svg",
+  "svglide_svg_sha256": "9318eccee9a629b10c181b3416fe30f9de32883e36b93169121c30037dc50fd6",
+  "template_id": "summary-final",
+  "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+  "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+  "theme_files": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/warm-editorial.json"
+  ],
+  "theme_id": "warm-editorial",
+  "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+  "theme_registry_sha256": "283def187d5c69623fd43618332b3f4f212b0dad313f2e90f13f614569d797fb",
+  "version": "svglide-artboard-receipt/v1"
+}

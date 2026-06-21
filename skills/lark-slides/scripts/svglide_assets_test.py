@@ -49,6 +49,21 @@ class SVGlideAssetsTest(unittest.TestCase):
         self.assertEqual(result["status"], "passed")
         self.assertEqual(result["manifest"]["contracts"][0]["status"], "local_file")
 
+    def test_assets_stage_accepts_existing_local_path_asset(self) -> None:
+        project = self.make_project()
+        write_json(
+            project / "02-plan/svglide.lock.json",
+            {"asset_contracts": [{"id": "hero", "local_path": "@./03-assets/hero.png"}]},
+        )
+        (project / "03-assets").mkdir(parents=True, exist_ok=True)
+        (project / "03-assets/hero.png").write_bytes(b"png")
+
+        result = svglide_assets.run_assets(project)
+
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["manifest"]["contracts"][0]["status"], "local_file")
+        self.assertEqual(result["manifest"]["acquired_assets"][0]["status"], "local_file")
+
     def test_assets_stage_blocks_required_http_asset(self) -> None:
         project = self.make_project()
         write_json(project / "02-plan/svglide.lock.json", {"asset_contracts": [{"id": "hero", "href": "https://example.com/hero.png"}]})

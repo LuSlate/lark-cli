@@ -1,0 +1,104 @@
+{
+  "canvas_spec_path": "02-plan/slide_plan.json#/slides/0/canvas_spec",
+  "canvas_spec_sha256": "c217ffcfb547080e01de408d01933ed81f2ed1f9dc06de845e8a0dad7a19af02",
+  "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+  "canvas_template_svg_sha256": "a21538ac26cd5ce67d306ec05f45e7c6ee98b4ae5a954c6bb92414994df2abc2",
+  "compiler": {
+    "compiler_input": "CanvasSpecTemplateSVG",
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "native_mapped": [
+      "rect",
+      "circle",
+      "circle",
+      "rect",
+      "text->foreignObject",
+      "text->foreignObject",
+      "text->foreignObject",
+      "rect",
+      "text->foreignObject",
+      "rect",
+      "text->foreignObject",
+      "rect",
+      "text->foreignObject"
+    ],
+    "satori_svg_usage": "preview_only",
+    "semantic_source": "CanvasSpec"
+  },
+  "compiler_input": "04-svg/artboard/page-001.canvas-template.svg",
+  "compiler_input_sha256": "a21538ac26cd5ce67d306ec05f45e7c6ee98b4ae5a954c6bb92414994df2abc2",
+  "created_at": "2026-06-21T13:59:15+08:00",
+  "font_hashes": [
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+      "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+    }
+  ],
+  "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+  "node_layout_map_sha256": "895b6d98ab57c2e5633b92513c4b06047e26411c4bf75bf8f248be5358752c86",
+  "node_version": "v20.18.1",
+  "page": 1,
+  "png": "04-svg/artboard/page-001.png",
+  "png_sha256": "83d25aa4149a7ea9131f459dd3446bdf5aacfebea5d3d83e57638a5ad97f7e11",
+  "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+  "render_metadata_sha256": "050b8900bfe64f3e7e08007a4f695096976000215233e0a5bfe9743ee4f7acf4",
+  "renderer": {
+    "actual_satori_package": true,
+    "adapter": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "engine": "satori-node",
+    "name": "satori-resvg-p0"
+  },
+  "resvg_version": "2.6.2",
+  "satori_preview": {
+    "element_counts": {
+      "g": 8,
+      "mask": 10,
+      "path": 1,
+      "rect": 15,
+      "svg": 1,
+      "text": 30
+    },
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "issues": [],
+    "status": "passed",
+    "strict": false
+  },
+  "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+  "satori_svg_sha256": "700e2b829a7a00354739512182916d4566877165748e9e1fa8b3aeeafcb21540",
+  "satori_version": "0.26.0",
+  "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+  "semantic_map_sha256": "0ce8309c016ff337d9dd72c322e928f2541a66b2acaa097c321979265ca06df7",
+  "stage": "generate_svg",
+  "status": "passed",
+  "svglide_svg": "04-svg/page-001.svg",
+  "svglide_svg_sha256": "0bec84addb5a7b9319b71a573e0bd9de7890dcbe6985b61e3456e54950850fb3",
+  "template_id": "cover-hero",
+  "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+  "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+  "theme_files": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/blueprint-technical.json"
+  ],
+  "theme_id": "blueprint-technical",
+  "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+  "theme_registry_sha256": "7ae629f17d38922702489ad3a23da26d465c3e6f5c284b409d4ab10a53ef6ed0",
+  "version": "svglide-artboard-receipt/v1"
+}

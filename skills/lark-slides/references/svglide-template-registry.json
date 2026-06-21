@@ -1,0 +1,170 @@
+{
+  "schema_version": "svglide-template-registry/v1",
+  "templates": [
+    {
+      "id": "cover-hero",
+      "status": "active",
+      "renderer_id": "artboard_satori.cover-hero",
+      "layout_family": "cover",
+      "required_content": ["title"],
+      "optional_content": ["eyebrow", "subtitle", "chips"],
+      "max_items": {"chips": 4},
+      "text_budget": {"eyebrow": 28, "title": 32, "subtitle": 80, "chips": 16},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "comparison-cards",
+      "status": "active",
+      "renderer_id": "artboard_satori.comparison-cards",
+      "layout_family": "comparison",
+      "required_content": ["title", "left_title", "right_title", "left_points", "right_points"],
+      "optional_content": ["conclusion"],
+      "max_items": {"left_points": 3, "right_points": 3},
+      "text_budget": {"title": 36, "left_title": 16, "right_title": 16, "left_points": 22, "right_points": 22, "conclusion": 52},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "summary-final",
+      "status": "active",
+      "renderer_id": "artboard_satori.summary-final",
+      "layout_family": "closing",
+      "required_content": ["title"],
+      "optional_content": ["eyebrow", "subtitle", "takeaways"],
+      "max_items": {"takeaways": 3},
+      "text_budget": {"eyebrow": 20, "title": 34, "subtitle": 76, "takeaways": 24},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "section-title",
+      "status": "active",
+      "renderer_id": "artboard_satori.section-title",
+      "layout_family": "section",
+      "required_content": ["title"],
+      "optional_content": ["eyebrow", "subtitle"],
+      "max_items": {},
+      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 72},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "agenda-list",
+      "status": "active",
+      "renderer_id": "artboard_satori.agenda-list",
+      "layout_family": "agenda",
+      "required_content": ["title", "items"],
+      "optional_content": ["eyebrow", "subtitle"],
+      "max_items": {"items": 6},
+      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 72, "items": 28},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "timeline-steps",
+      "status": "active",
+      "renderer_id": "artboard_satori.timeline-steps",
+      "layout_family": "timeline",
+      "required_content": ["title", "events"],
+      "optional_content": ["eyebrow", "subtitle"],
+      "max_items": {"events": 5},
+      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 72, "events": 22},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "process-flow",
+      "status": "active",
+      "renderer_id": "artboard_satori.process-flow",
+      "layout_family": "process",
+      "required_content": ["title", "steps"],
+      "optional_content": ["eyebrow", "subtitle", "conclusion"],
+      "max_items": {"steps": 5},
+      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 72, "steps": 24, "conclusion": 56},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "metric-dashboard",
+      "status": "active",
+      "renderer_id": "artboard_satori.metric-dashboard",
+      "layout_family": "dashboard",
+      "required_content": ["title", "metrics"],
+      "optional_content": ["eyebrow", "subtitle"],
+      "max_items": {"metrics": 6},
+      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 68, "metrics": 20},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "quote-focus",
+      "status": "active",
+      "renderer_id": "artboard_satori.quote-focus",
+      "layout_family": "quote",
+      "required_content": ["title", "quote"],
+      "optional_content": ["attribution"],
+      "max_items": {},
+      "text_budget": {"title": 36, "quote": 88, "attribution": 36},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "image-feature",
+      "status": "active",
+      "renderer_id": "artboard_satori.image-feature",
+      "layout_family": "image_text",
+      "required_content": ["title", "points"],
+      "optional_content": ["eyebrow", "subtitle", "image_label", "caption"],
+      "max_items": {"points": 3},
+      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 64, "points": 24, "caption": 52, "image_label": 18},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "research-poster",
+      "status": "active",
+      "renderer_id": "artboard_satori.research-poster",
+      "layout_family": "poster",
+      "required_content": ["title", "sections"],
+      "optional_content": ["eyebrow", "authors", "key_visual"],
+      "max_items": {"sections": 6},
+      "text_budget": {"eyebrow": 24, "title": 42, "authors": 48, "sections": 22, "key_visual": 28},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "data-story",
+      "status": "active",
+      "renderer_id": "artboard_satori.data-story",
+      "layout_family": "data_story",
+      "required_content": ["title", "metrics"],
+      "optional_content": ["eyebrow", "subtitle", "callout"],
+      "max_items": {"metrics": 4},
+      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 64, "metrics": 18, "callout": 48},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "risk-alert",
+      "status": "active",
+      "renderer_id": "artboard_satori.risk-alert",
+      "layout_family": "risk",
+      "required_content": ["title", "risks"],
+      "optional_content": ["eyebrow", "subtitle", "summary", "severity"],
+      "max_items": {"risks": 4},
+      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 64, "risks": 28, "summary": 52, "severity": 8},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "roadmap-lanes",
+      "status": "active",
+      "renderer_id": "artboard_satori.roadmap-lanes",
+      "layout_family": "roadmap",
+      "required_content": ["title", "lanes"],
+      "optional_content": ["eyebrow", "subtitle"],
+      "max_items": {"lanes": 4},
+      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 64, "lanes": 18},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    },
+    {
+      "id": "architecture-blueprint",
+      "status": "active",
+      "renderer_id": "artboard_satori.architecture-blueprint",
+      "layout_family": "architecture",
+      "required_content": ["title", "nodes"],
+      "optional_content": ["eyebrow", "subtitle"],
+      "max_items": {"nodes": 6},
+      "text_budget": {"eyebrow": 24, "title": 38, "subtitle": 64, "nodes": 22},
+      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+    }
+  ]
+}
