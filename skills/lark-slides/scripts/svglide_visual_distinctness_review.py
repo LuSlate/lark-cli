@@ -15,7 +15,7 @@ from typing import Any
 PLAN_PATH = Path("02-plan/slide_plan.json")
 CHECK_DIR = Path("06-check")
 OUTPUT_PATH = CHECK_DIR / "visual-distinctness.json"
-PASS_ACTION = "create_live"
+PASS_ACTION = "continue_pipeline"
 FAIL_ACTION = "repair_and_rerun"
 DEFAULT_HISTORY_LIMIT = 5
 PALETTE_OVERLAP_FAIL = 0.67

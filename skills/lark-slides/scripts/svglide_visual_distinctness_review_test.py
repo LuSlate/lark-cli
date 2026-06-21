@@ -71,6 +71,7 @@ class SVGlideVisualDistinctnessReviewTest(unittest.TestCase):
             result = review.run_visual_distinctness_review(current)
 
             self.assertEqual(result["status"], "passed")
+            self.assertEqual(result["action"], "continue_pipeline")
             self.assertEqual(result["summary"]["comparison_count"], 1)
 
     def test_fails_default_only_renderer_sequence(self) -> None:

@@ -24,6 +24,47 @@ def prepared_hashes(project: Path) -> list[dict[str, str]]:
     return pre_submit_review.prepared_file_hashes(project)
 
 
+def write_visual_acceptance(project: Path, *, status: str = "skipped", action: str = "engineering_only") -> None:
+    payload = {
+        "schema_version": "svglide-visual-acceptance/v1",
+        "stage": "visual_acceptance",
+        "status": status,
+        "action": action,
+        "generation_mode": "direct_svg",
+        "deliverable_pass": status == "passed",
+        "inputs": {
+            "slide_plan": "02-plan/slide_plan.json",
+            "slide_plan_sha256": pre_submit_review.file_sha256(project / "02-plan/slide_plan.json"),
+            "quality_gate": "06-check/quality-gate.json",
+            "quality_gate_sha256": pre_submit_review.file_sha256(project / "06-check/quality-gate.json"),
+            "preview": "05-preview/preview.html",
+            "preview_sha256": pre_submit_review.file_sha256(project / "05-preview/preview.html"),
+            "preview_manifest": "05-preview/preview-manifest.json",
+            "preview_manifest_sha256": pre_submit_review.file_sha256(project / "05-preview/preview-manifest.json"),
+            "contact_sheet": {
+                "path": "05-preview/contact-sheet.png",
+                "sha256": pre_submit_review.file_sha256(project / "05-preview/contact-sheet.png"),
+            },
+        },
+        "summary": {"error_count": 0, "warning_count": 1, "checked_page_count": 0},
+        "issues": [],
+        "warnings": [],
+    }
+    write_json(project / "06-check/visual-acceptance.json", payload)
+    write_json(project / "receipts/visual_acceptance.json", payload)
+
+
+def minimal_deck_rhythm() -> dict[str, object]:
+    return {
+        "schema_version": "svglide-deck-rhythm/v1",
+        "slide_count": 1,
+        "layout_family_sequence": ["cover"],
+        "renderer_sequence": ["artboard_satori.cover-hero"],
+        "theme_ids": ["dark-clarity"],
+        "thresholds": {},
+    }
+
+
 def make_project(root: Path) -> Path:
     project = root / "project"
     (project / "02-plan").mkdir(parents=True)
@@ -118,6 +159,7 @@ def make_project(root: Path) -> Path:
             "summary": {"failed_check_count": 0, "source_error_count": 0},
         },
     )
+    write_visual_acceptance(project)
     write_human_review(project)
     return project
 
@@ -158,6 +200,10 @@ def human_review_payload(project: Path) -> dict[str, object]:
                 "path": "06-check/quality-gate.json",
                 "sha256": pre_submit_review.file_sha256(project / "06-check/quality-gate.json"),
             },
+            "visual_acceptance": {
+                "path": "06-check/visual-acceptance.json",
+                "sha256": pre_submit_review.file_sha256(project / "06-check/visual-acceptance.json"),
+            },
         },
     }
 
@@ -173,7 +219,7 @@ def human_review_payload_with_artifact_array(project: Path) -> dict[str, object]
         for item in current_prepared
         if isinstance(item, dict) and isinstance(item.get("path"), str) and isinstance(item.get("sha256"), str)
     ]
-    for kind in ("contact_sheet", "preview", "preview_manifest", "quality_gate"):
+    for kind in ("contact_sheet", "preview", "preview_manifest", "quality_gate", "visual_acceptance"):
         item = reviewed[kind]
         assert isinstance(item, dict)
         artifacts.append({"kind": kind, "path": item["path"], "sha256": item["sha256"]})
@@ -284,6 +330,174 @@ class PreSubmitReviewTest(unittest.TestCase):
             result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
             self.assertEqual(result["status"], "failed")
             self.assertIn("reviewed_artifact_preview_stale", issue_codes(result))
+
+    def test_visual_acceptance_machine_check_is_required_and_current(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            (project / "06-check/visual-acceptance.json").unlink()
+            (project / "receipts/visual_acceptance.json").unlink()
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("visual_acceptance_missing", issue_codes(result))
+
+            project = make_project(Path(tmp) / "failed-check")
+            write_visual_acceptance(project, status="failed", action="repair_and_rerun")
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+            self.assertEqual(result["status"], "failed")
+            codes = issue_codes(result)
+            self.assertIn("visual_acceptance_not_passed", codes)
+            self.assertIn("reviewed_artifact_visual_acceptance_stale", codes)
+
+    def test_visual_acceptance_artboard_artifacts_must_be_current(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            artifact = project / "04-svg/artboard/page-001.png"
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_bytes(b"page-png")
+            check = json.loads((project / "06-check/visual-acceptance.json").read_text(encoding="utf-8"))
+            check["status"] = "passed"
+            check["action"] = "deliverable_pass"
+            check["generation_mode"] = "artboard_satori"
+            check["deliverable_pass"] = True
+            check["artboard_artifacts"] = [
+                {
+                    "kind": "page_png",
+                    "path": "04-svg/artboard/page-001.png",
+                    "sha256": pre_submit_review.file_sha256(artifact),
+                }
+            ]
+            check["visual_evidence"] = {
+                "schema_version": "svglide-visual-evidence/v1",
+                "pages": [
+                    {
+                        "page": 1,
+                        "evidence_path": "05-preview/contact-sheet.png",
+                        "contact_sheet_tile": {"x": 16, "y": 16, "width": 320, "height": 180},
+                    }
+                ],
+            }
+            check["deck_rhythm"] = minimal_deck_rhythm()
+            write_json(project / "06-check/visual-acceptance.json", check)
+            write_json(project / "receipts/visual_acceptance.json", check)
+            write_human_review(project, human_review_payload(project))
+            artifact.write_bytes(b"mutated")
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("visual_acceptance_artboard_artifact_stale", issue_codes(result))
+
+    def test_visual_acceptance_artboard_requires_visual_evidence_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            artifact = project / "04-svg/artboard/page-001.png"
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_bytes(b"page-png")
+            check = json.loads((project / "06-check/visual-acceptance.json").read_text(encoding="utf-8"))
+            check["status"] = "passed"
+            check["action"] = "deliverable_pass"
+            check["generation_mode"] = "artboard_satori"
+            check["deliverable_pass"] = True
+            check["artboard_artifacts"] = [
+                {
+                    "kind": "page_png",
+                    "path": "04-svg/artboard/page-001.png",
+                    "sha256": pre_submit_review.file_sha256(artifact),
+                }
+            ]
+            check.pop("visual_evidence", None)
+            check["deck_rhythm"] = minimal_deck_rhythm()
+            write_json(project / "06-check/visual-acceptance.json", check)
+            write_json(project / "receipts/visual_acceptance.json", check)
+            write_human_review(project, human_review_payload(project))
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("visual_acceptance_visual_evidence_missing", issue_codes(result))
+
+    def test_visual_acceptance_artboard_requires_template_guardrails_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            artifact = project / "04-svg/artboard/page-001.png"
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_bytes(b"page-png")
+            check = json.loads((project / "06-check/visual-acceptance.json").read_text(encoding="utf-8"))
+            check["status"] = "passed"
+            check["action"] = "deliverable_pass"
+            check["generation_mode"] = "artboard_satori"
+            check["deliverable_pass"] = True
+            check["artboard_artifacts"] = [
+                {
+                    "kind": "page_png",
+                    "path": "04-svg/artboard/page-001.png",
+                    "sha256": pre_submit_review.file_sha256(artifact),
+                }
+            ]
+            check["visual_evidence"] = {
+                "schema_version": "svglide-visual-evidence/v1",
+                "pages": [
+                    {
+                        "page": 1,
+                        "evidence_path": "05-preview/contact-sheet.png",
+                        "preview_anchor": "05-preview/preview.html#page-1",
+                        "contact_sheet_tile": {"x": 16, "y": 16, "width": 320, "height": 180},
+                    }
+                ],
+            }
+            check["deck_rhythm"] = minimal_deck_rhythm()
+            inputs = check["inputs"]
+            assert isinstance(inputs, dict)
+            inputs.pop("template_guardrails_sha256", None)
+            write_json(project / "06-check/visual-acceptance.json", check)
+            write_json(project / "receipts/visual_acceptance.json", check)
+            write_human_review(project, human_review_payload(project))
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("visual_acceptance_template_guardrails_missing", issue_codes(result))
+
+    def test_visual_acceptance_artboard_requires_deck_rhythm(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            artifact = project / "04-svg/artboard/page-001.png"
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_bytes(b"page-png")
+            check = json.loads((project / "06-check/visual-acceptance.json").read_text(encoding="utf-8"))
+            check["status"] = "passed"
+            check["action"] = "deliverable_pass"
+            check["generation_mode"] = "artboard_satori"
+            check["deliverable_pass"] = True
+            check["artboard_artifacts"] = [
+                {
+                    "kind": "page_png",
+                    "path": "04-svg/artboard/page-001.png",
+                    "sha256": pre_submit_review.file_sha256(artifact),
+                }
+            ]
+            check["visual_evidence"] = {
+                "schema_version": "svglide-visual-evidence/v1",
+                "pages": [
+                    {
+                        "page": 1,
+                        "evidence_path": "05-preview/contact-sheet.png",
+                        "preview_anchor": "05-preview/preview.html#page-1",
+                        "contact_sheet_tile": {"x": 16, "y": 16, "width": 320, "height": 180},
+                    }
+                ],
+            }
+            check["inputs"]["template_guardrails_sha256"] = pre_submit_review.file_sha256(pre_submit_review.TEMPLATE_GUARDRAILS_PATH)
+            check.pop("deck_rhythm", None)
+            write_json(project / "06-check/visual-acceptance.json", check)
+            write_json(project / "receipts/visual_acceptance.json", check)
+            write_human_review(project, human_review_payload(project))
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("visual_acceptance_deck_rhythm_missing", issue_codes(result))
 
     def test_quality_gate_hash_stale_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

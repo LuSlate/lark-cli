@@ -114,6 +114,32 @@ class SVGlideStrategyReviewTest(unittest.TestCase):
 
             self.assertEqual(result["status"], "passed")
 
+    def test_passes_volcanic_research_visual_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            plan = base_plan("冰岛火山研究", archetype="volcanic_research_lab")
+            plan["audience"] = "地理研究读者"
+            plan["slides"][1]["title"] = "监测信号如何展开"
+            plan["slides"][1]["body_points"] = ["地震活动", "地表形变"]
+            write_json(project / "02-plan/slide_plan.json", plan)
+
+            result = svglide_strategy_review.run_strategy_review(project)
+
+            self.assertEqual(result["status"], "passed")
+
+    def test_passes_new_zealand_landscape_visual_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            plan = base_plan("新西兰风光路线", archetype="alpine_coast_travel_board")
+            plan["audience"] = "旅行内容策划读者"
+            plan["slides"][1]["title"] = "路线层次如何展开"
+            plan["slides"][1]["body_points"] = ["高山湖泊", "海岸路线"]
+            write_json(project / "02-plan/slide_plan.json", plan)
+
+            result = svglide_strategy_review.run_strategy_review(project)
+
+            self.assertEqual(result["status"], "passed")
+
 
 if __name__ == "__main__":
     unittest.main()

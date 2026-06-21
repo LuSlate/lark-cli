@@ -32,6 +32,8 @@ DEFAULT_RENDERERS = {
 THEME_ARCHETYPE_KEYWORDS = {
     "company_ecosystem": ["字节", "bytedance", "公司", "企业", "产品矩阵", "生态"],
     "space_capital_market": ["spacex", "space x", "上市", "ipo", "资本", "估值", "火箭", "星链"],
+    "volcanic_research_lab": ["冰岛", "火山", "地震", "岩浆", "形变", "volcano", "seismic", "iceland"],
+    "alpine_coast_travel_board": ["新西兰", "高山", "湖泊", "海岸", "new zealand", "alpine", "coast"],
     "travel_destination": ["桂林", "山水", "旅游", "旅行", "目的地", "景区", "城市"],
     "academic_paper": ["论文", "paper", "研究", "attention", "transformer", "机制"],
 }
@@ -96,12 +98,10 @@ def infer_theme_archetype(plan: dict[str, Any]) -> str | None:
     if isinstance(slides, list):
         haystack += " " + " ".join(collect_strings(slides))
     lowered = haystack.lower()
-    matches = [
-        archetype
-        for archetype, keywords in THEME_ARCHETYPE_KEYWORDS.items()
-        if any(keyword.lower() in lowered for keyword in keywords)
-    ]
-    return matches[0] if len(matches) == 1 else None
+    for archetype, keywords in THEME_ARCHETYPE_KEYWORDS.items():
+        if any(keyword.lower() in lowered for keyword in keywords):
+            return archetype
+    return None
 
 
 def style_presets_by_id() -> dict[str, dict[str, Any]]:

@@ -28,6 +28,35 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
     def fixture_topic(self) -> dict[str, object]:
         return json.loads((self.fixture_dir() / "topic.json").read_text(encoding="utf-8"))
 
+    def test_prompt_builders_do_not_inject_spacex_rules_for_other_topics(self) -> None:
+        instruction = prompt_planner.instruction_payload(
+            prompt="新西兰风光",
+            language="zh-CN",
+            target_slide_count=3,
+            audience="旅行内容策划读者",
+        )
+        context = prompt_planner.load_context()
+        deck_plan = {
+            "schema_version": "svglide-deck-plan/v1",
+            "topic": "新西兰风光",
+            "audience": "旅行内容策划读者",
+            "target_slide_count": 3,
+            "slides": [],
+        }
+        slide_plan = {"schema_version": "svglide-slide-plan/v1", "slides": []}
+
+        prompts = [
+            prompt_planner.build_source_prompt(instruction),
+            prompt_planner.build_deck_prompt(instruction, context),
+            prompt_planner.build_slide_prompt(instruction, deck_plan, context, "deck-sha"),
+            prompt_planner.build_canvas_prompt(instruction, deck_plan, slide_plan, context),
+        ]
+
+        for planner_prompt in prompts:
+            self.assertNotIn("SpaceX", planner_prompt)
+            self.assertNotIn("confirmed IPO", planner_prompt)
+            self.assertNotIn("investment-analysis", planner_prompt)
+
     def fake_provider(self, tmpdir: str) -> Path:
         provider = Path(tmpdir) / "fake_provider.py"
         provider.write_text(

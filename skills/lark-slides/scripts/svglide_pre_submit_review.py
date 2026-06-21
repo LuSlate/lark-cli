@@ -14,14 +14,19 @@ from typing import Any
 
 
 CHECK_VERSION = "svglide-pre-submit-review/v1"
+SCRIPT_DIR = Path(__file__).resolve().parent
+TEMPLATE_GUARDRAILS_PATH = SCRIPT_DIR.parent / "references" / "svglide-template-guardrails.json"
 PLAN_PATH = Path("02-plan/slide_plan.json")
 QUALITY_GATE_PATH = Path("06-check/quality-gate.json")
 THEME_ADHERENCE_PATH = Path("06-check/theme-adherence.json")
 VISUAL_DISTINCTNESS_PATH = Path("06-check/visual-distinctness.json")
+VISUAL_ACCEPTANCE_PATH = Path("06-check/visual-acceptance.json")
+VISUAL_ACCEPTANCE_RECEIPT_PATH = Path("receipts/visual_acceptance.json")
 PREPARED_SVG_DIR = Path("04-svg/prepared")
 CONTACT_SHEET_PATH = Path("05-preview/contact-sheet.png")
 PREVIEW_PATH = Path("05-preview/preview.html")
 PREVIEW_MANIFEST_PATH = Path("05-preview/preview-manifest.json")
+DRY_RUN_PATH = Path("07-create/dry-run.json")
 OUTPUT_PATH = Path("06-check/pre-submit-review.json")
 RECEIPT_PATH = Path("receipts/pre-submit-review.json")
 
@@ -38,6 +43,7 @@ ARTIFACT_PATHS = {
     "preview": PREVIEW_PATH,
     "preview_manifest": PREVIEW_MANIFEST_PATH,
     "quality_gate": QUALITY_GATE_PATH,
+    "visual_acceptance": VISUAL_ACCEPTANCE_PATH,
 }
 
 PROTECTED_RERUN_BOUNDARIES = [
@@ -370,6 +376,263 @@ def validate_preview_manifest(
             )
 
 
+def validate_visual_acceptance(
+    payload: dict[str, Any],
+    issues: list[dict[str, str]],
+    *,
+    project: Path,
+    current_plan_sha: str | None,
+    current_artifact_hashes: dict[str, str | None],
+) -> None:
+    if not payload:
+        return
+    status = payload.get("status")
+    action = payload.get("action")
+    if status == "passed":
+        if payload.get("deliverable_pass") is not True:
+            issues.append(
+                issue(
+                    "visual_acceptance",
+                    "visual_acceptance_deliverable_not_passed",
+                    "passed visual acceptance must set deliverable_pass true",
+                    category="check_not_passed",
+                )
+            )
+    elif status == "skipped" and action == "engineering_only":
+        if payload.get("deliverable_pass") is not False:
+            issues.append(
+                issue(
+                    "visual_acceptance",
+                    "visual_acceptance_skip_boundary_invalid",
+                    "skipped visual acceptance must set deliverable_pass false",
+                    category="invalid_input",
+                )
+            )
+    else:
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_not_passed",
+                f"{VISUAL_ACCEPTANCE_PATH.as_posix()} status must be passed, or skipped only for engineering_only output",
+                category="check_not_passed",
+            )
+        )
+
+    summary = payload.get("summary")
+    if isinstance(summary, dict):
+        error_count = summary.get("error_count")
+        if isinstance(error_count, int) and not isinstance(error_count, bool) and error_count > 0:
+            issues.append(
+                issue(
+                    "visual_acceptance",
+                    "visual_acceptance_has_errors",
+                    f"{VISUAL_ACCEPTANCE_PATH.as_posix()} summary.error_count is {error_count}",
+                    category="check_not_passed",
+                )
+            )
+
+    inputs = payload.get("inputs") if isinstance(payload.get("inputs"), dict) else {}
+    artboard_required = payload.get("generation_mode") == "artboard_satori" and status == "passed"
+    plan_sha = payload.get("plan_sha256") or inputs.get("slide_plan_sha256") or inputs.get("plan_sha256")
+    if plan_sha is not None and plan_sha != current_plan_sha:
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_plan_stale",
+                "visual acceptance slide_plan_sha256 does not match current slide_plan.json",
+                category="stale_hash",
+            )
+        )
+
+    input_artifact_keys = {
+        "quality_gate": "quality_gate_sha256",
+        "preview": "preview_sha256",
+        "preview_manifest": "preview_manifest_sha256",
+        "dry_run": "dry_run_sha256",
+    }
+    for name, hash_key in input_artifact_keys.items():
+        recorded = inputs.get(hash_key)
+        if recorded is not None and recorded != current_artifact_hashes.get(name):
+            issues.append(
+                issue(
+                    "visual_acceptance",
+                    f"visual_acceptance_{name}_stale",
+                    f"visual acceptance {hash_key} does not match current artifact",
+                    category="stale_hash",
+                )
+            )
+
+    guardrails_sha = inputs.get("template_guardrails_sha256")
+    current_guardrails_sha = file_sha256(TEMPLATE_GUARDRAILS_PATH) if TEMPLATE_GUARDRAILS_PATH.exists() else None
+    if artboard_required and (not isinstance(guardrails_sha, str) or not guardrails_sha):
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_template_guardrails_missing",
+                "passed artboard visual acceptance must include template_guardrails_sha256",
+                category="missing_input",
+            )
+        )
+    elif guardrails_sha is not None and guardrails_sha != current_guardrails_sha:
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_template_guardrails_stale",
+                "visual acceptance template_guardrails_sha256 does not match current guardrail registry",
+                category="stale_hash",
+            )
+        )
+
+    contact = inputs.get("contact_sheet")
+    if isinstance(contact, dict):
+        if contact.get("sha256") != current_artifact_hashes.get("contact_sheet"):
+            issues.append(
+                issue(
+                    "visual_acceptance",
+                    "visual_acceptance_contact_sheet_stale",
+                    "visual acceptance contact_sheet.sha256 does not match current contact sheet",
+                    category="stale_hash",
+                )
+            )
+
+    check_path = project / VISUAL_ACCEPTANCE_PATH
+    receipt_path = project / VISUAL_ACCEPTANCE_RECEIPT_PATH
+    if not receipt_path.exists():
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_receipt_missing",
+                f"required visual acceptance receipt is missing: {VISUAL_ACCEPTANCE_RECEIPT_PATH.as_posix()}",
+                category="missing_input",
+            )
+        )
+    elif check_path.exists() and file_sha256(receipt_path) != file_sha256(check_path):
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_receipt_disagrees",
+                "visual acceptance receipt must match current visual acceptance check",
+                category="stale_hash",
+            )
+        )
+
+    artboard_artifacts = payload.get("artboard_artifacts")
+    if artboard_required and not isinstance(artboard_artifacts, list):
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_artboard_artifacts_missing",
+                "visual acceptance must record artboard artifact hashes",
+                category="missing_input",
+            )
+        )
+        return
+    visual_evidence = payload.get("visual_evidence")
+    evidence_pages = visual_evidence.get("pages") if isinstance(visual_evidence, dict) else None
+    if artboard_required and (not isinstance(evidence_pages, list) or not evidence_pages):
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_visual_evidence_missing",
+                "visual acceptance must record page-level visual_evidence.pages",
+                category="missing_input",
+            )
+        )
+    elif artboard_required and isinstance(evidence_pages, list):
+        for item in evidence_pages:
+            if not isinstance(item, dict):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_page_invalid",
+                        "visual acceptance visual_evidence.pages entries must be objects",
+                        category="invalid_input",
+                    )
+                )
+                continue
+            if not isinstance(item.get("page"), int) or not isinstance(item.get("evidence_path"), str) or not item.get("evidence_path"):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_page_target_missing",
+                        "visual acceptance visual_evidence.pages entries must include page and evidence_path",
+                        category="missing_input",
+                    )
+                )
+            if not isinstance(item.get("preview_anchor"), str) or not item.get("preview_anchor"):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_preview_anchor_missing",
+                        "visual acceptance visual_evidence.pages entries must include preview_anchor",
+                        category="missing_input",
+                    )
+                )
+            if not isinstance(item.get("contact_sheet_tile"), dict):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_tile_missing",
+                        "visual acceptance visual_evidence.pages entries must include contact_sheet_tile",
+                        category="missing_input",
+                    )
+                )
+    deck_rhythm = payload.get("deck_rhythm")
+    if artboard_required and (not isinstance(deck_rhythm, dict) or deck_rhythm.get("schema_version") != "svglide-deck-rhythm/v1"):
+        issues.append(
+            issue(
+                "visual_acceptance",
+                "visual_acceptance_deck_rhythm_missing",
+                "passed artboard visual acceptance must include deck_rhythm",
+                category="missing_input",
+            )
+        )
+    if isinstance(artboard_artifacts, list):
+        for item in artboard_artifacts:
+            if not isinstance(item, dict):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_artboard_artifact_invalid",
+                        "visual acceptance artboard_artifacts entries must be objects",
+                        category="invalid_input",
+                    )
+                )
+                continue
+            rel = item.get("path")
+            recorded = item.get("sha256")
+            if not isinstance(rel, str) or not rel or not isinstance(recorded, str) or not recorded:
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_artboard_artifact_record_invalid",
+                        "visual acceptance artboard artifact records must include path and sha256",
+                        category="invalid_input",
+                    )
+                )
+                continue
+            target = project / rel
+            if not target.exists() or not target.is_file():
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_artboard_artifact_missing",
+                        f"visual acceptance artifact is missing: {rel}",
+                        category="missing_input",
+                    )
+                )
+                continue
+            if file_sha256(target) != recorded:
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_artboard_artifact_stale",
+                        f"visual acceptance artifact hash is stale: {rel}",
+                        category="stale_hash",
+                    )
+                )
+
+
 def validate_single_reviewed_artifact(
     reviewed: dict[str, Any],
     issues: list[dict[str, str]],
@@ -507,6 +770,8 @@ def minimal_rerun_from(issues: list[dict[str, str]]) -> str:
         return "prepare_svg_then_preview_quality_gate_and_human_review"
     if any(code and "preview" in code for code in codes):
         return "preview_then_human_review"
+    if any(code and "visual_acceptance" in code for code in codes) or "visual_acceptance" in stages:
+        return "scoped_visual_repair_then_visual_acceptance_and_human_review"
     if any(code and "quality_gate" in code for code in codes) or "quality_gate" in stages:
         return "quality_gate_then_human_review"
     if "theme_adherence" in stages:
@@ -538,15 +803,18 @@ def run_pre_submit_review(project: Path, human_review: Path) -> dict[str, Any]:
     current_quality_gate_sha = optional_sha256(project / QUALITY_GATE_PATH)
     current_theme_sha = optional_sha256(project / THEME_ADHERENCE_PATH)
     current_visual_sha = optional_sha256(project / VISUAL_DISTINCTNESS_PATH)
+    current_visual_acceptance_sha = optional_sha256(project / VISUAL_ACCEPTANCE_PATH)
     current_artifact_hashes = {
         name: optional_sha256(project / rel)
         for name, rel in ARTIFACT_PATHS.items()
     }
+    current_artifact_hashes["dry_run"] = optional_sha256(project / DRY_RUN_PATH)
 
     plan = read_json_object(project / PLAN_PATH, issues, stage="plan")
     quality_gate = read_json_object(project / QUALITY_GATE_PATH, issues, stage="quality_gate")
     theme_adherence = read_json_object(project / THEME_ADHERENCE_PATH, issues, stage="theme_adherence")
     visual_distinctness = read_json_object(project / VISUAL_DISTINCTNESS_PATH, issues, stage="visual_distinctness")
+    visual_acceptance = read_json_object(project / VISUAL_ACCEPTANCE_PATH, issues, stage="visual_acceptance")
     preview_manifest = read_json_object(project / PREVIEW_MANIFEST_PATH, issues, stage="preview")
     human = read_json_object(human_review, issues, stage="human_review")
 
@@ -570,6 +838,13 @@ def run_pre_submit_review(project: Path, human_review: Path) -> dict[str, Any]:
         current_plan_sha=current_plan_sha,
         current_prepared=current_prepared,
         require_prepared_when_present=False,
+    )
+    validate_visual_acceptance(
+        visual_acceptance,
+        issues,
+        project=project,
+        current_plan_sha=current_plan_sha,
+        current_artifact_hashes=current_artifact_hashes,
     )
     validate_preview_manifest(preview_manifest, issues, project=project, current_prepared=current_prepared)
 
@@ -607,6 +882,8 @@ def run_pre_submit_review(project: Path, human_review: Path) -> dict[str, Any]:
             "theme_adherence_sha256": current_theme_sha,
             "visual_distinctness": VISUAL_DISTINCTNESS_PATH.as_posix(),
             "visual_distinctness_sha256": current_visual_sha,
+            "visual_acceptance": VISUAL_ACCEPTANCE_PATH.as_posix(),
+            "visual_acceptance_sha256": current_visual_acceptance_sha,
             "prepared_svg_dir": PREPARED_SVG_DIR.as_posix(),
             "contact_sheet": CONTACT_SHEET_PATH.as_posix(),
             "contact_sheet_sha256": current_artifact_hashes["contact_sheet"],

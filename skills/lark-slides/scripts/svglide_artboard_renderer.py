@@ -574,6 +574,8 @@ def semantic_role_for_node(node: dict[str, Any]) -> str:
     kind = str(node.get("kind") or "")
     if node_id == "background":
         return "background"
+    if node_id.startswith(("data-bar", "unlock-", "data-price-curve")):
+        return "data_chart"
     if kind == "text":
         if node_id.startswith("chip-"):
             return "badge"
@@ -1659,15 +1661,29 @@ def write_contact_sheet(project: Path, png_paths: list[Path]) -> dict[str, Any]:
     except Exception as err:  # pragma: no cover - environment dependent
         raise ArtboardError("Pillow is required to compose contact-sheet.png from resvg page PNGs") from err
     thumbs = []
+    thumb_meta: list[dict[str, Any]] = []
     for index, png in enumerate(png_paths, 1):
         image = Image.open(png).convert("RGB")
+        source_width, source_height = image.size
         image.thumbnail((320, 180), Image.LANCZOS)
         tile = Image.new("RGB", (320, 180), (10, 14, 18))
-        tile.paste(image, ((320 - image.width) // 2, (180 - image.height) // 2))
+        image_x = (320 - image.width) // 2
+        image_y = (180 - image.height) // 2
+        tile.paste(image, (image_x, image_y))
         draw = ImageDraw.Draw(tile)
         draw.rectangle((8, 8, 46, 30), fill=(15, 23, 42))
         draw.text((16, 13), f"{index:02d}", fill=(248, 250, 252))
         thumbs.append(tile)
+        thumb_meta.append(
+            {
+                "page": index,
+                "source_png": relpath(png, project),
+                "source_width": source_width,
+                "source_height": source_height,
+                "image_in_tile": {"x": image_x, "y": image_y, "width": image.width, "height": image.height},
+                "label_in_tile": {"x": 8, "y": 8, "width": 38, "height": 22},
+            }
+        )
     cols = min(3, len(thumbs))
     rows = (len(thumbs) + cols - 1) // cols
     gap = 16
@@ -1676,10 +1692,24 @@ def write_contact_sheet(project: Path, png_paths: list[Path]) -> dict[str, Any]:
         x = gap + (index % cols) * (320 + gap)
         y = gap + (index // cols) * (180 + gap)
         sheet.paste(tile, (x, y))
+        thumb_meta[index]["tile_bbox"] = {"x": x, "y": y, "width": 320, "height": 180}
+        image_in_tile = thumb_meta[index]["image_in_tile"]
+        thumb_meta[index]["image_bbox"] = {
+            "x": x + image_in_tile["x"],
+            "y": y + image_in_tile["y"],
+            "width": image_in_tile["width"],
+            "height": image_in_tile["height"],
+        }
     output = project / CONTACT_SHEET
     output.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(output)
-    return {"path": CONTACT_SHEET.as_posix(), "sha256": file_sha256(output), "source_pngs": [relpath(path, project) for path in png_paths]}
+    return {
+        "path": CONTACT_SHEET.as_posix(),
+        "sha256": file_sha256(output),
+        "source_pngs": [relpath(path, project) for path in png_paths],
+        "grid": {"tile_width": 320, "tile_height": 180, "gap": gap, "cols": cols, "rows": rows},
+        "pages": thumb_meta,
+    }
 
 
 def write_canvas_spec_validate(project: Path, pages: list[dict[str, Any]], issues: list[dict[str, Any]], registry_summary: dict[str, Any]) -> dict[str, Any]:

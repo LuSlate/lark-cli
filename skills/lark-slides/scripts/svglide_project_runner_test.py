@@ -366,6 +366,82 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         )
         return project_root
 
+    def make_artboard_visual_project(self, tmpdir: str) -> Path:
+        project_root = self.make_project(tmpdir)
+        self.write_artboard_plan(project_root)
+        self.write_plan_confirmation(project_root)
+        artboard_dir = project_root / "04-svg/artboard"
+        artboard_dir.mkdir(parents=True, exist_ok=True)
+        (project_root / "05-preview").mkdir(parents=True, exist_ok=True)
+        (artboard_dir / "page-001.png").write_bytes(b"page-png")
+        (project_root / "05-preview/contact-sheet.png").write_bytes(b"contact-sheet")
+        (project_root / "05-preview/preview.html").write_text("<html><body>preview</body></html>", encoding="utf-8")
+        (project_root / "05-preview/preview-manifest.json").write_text(
+            json.dumps({"page_count": 1, "pages": [{"page": 1, "source_path": "04-svg/prepared/page-001.svg", "source_bytes": (project_root / "04-svg/prepared/page-001.svg").stat().st_size}]}),
+            encoding="utf-8",
+        )
+        (artboard_dir / "page-001.semantic-map.json").write_text(
+            json.dumps(
+                {
+                    "version": "svglide-semantic-map/v1",
+                    "page": 1,
+                    "template_id": "cover-hero",
+                    "theme_id": "dark-clarity",
+                    "elements": [
+                        {
+                            "element_id": "title",
+                            "kind": "text",
+                            "role": "title",
+                            "text": "受控画板生成",
+                            "bbox": {"x": 84, "y": 142, "width": 628, "height": 142},
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (artboard_dir / "page-001.node-layout-map.json").write_text(
+            json.dumps(
+                {
+                    "version": "svglide-node-layout-map/v1",
+                    "page": 1,
+                    "nodes": [{"id": "title", "kind": "text", "x": 84, "y": 142, "width": 628, "height": 142}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (artboard_dir / "page-001.receipt.json").write_text(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "page": 1,
+                    "template_id": "cover-hero",
+                    "theme_id": "dark-clarity",
+                    "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+                    "semantic_map_sha256": runner.file_sha256(artboard_dir / "page-001.semantic-map.json"),
+                    "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+                    "node_layout_map_sha256": runner.file_sha256(artboard_dir / "page-001.node-layout-map.json"),
+                    "png": "04-svg/artboard/page-001.png",
+                    "png_sha256": runner.file_sha256(artboard_dir / "page-001.png"),
+                }
+            ),
+            encoding="utf-8",
+        )
+        generator_path = project_root / "receipts/generate_svg.json"
+        generator = json.loads(generator_path.read_text(encoding="utf-8"))
+        generator["generation_mode"] = "artboard_satori"
+        generator["artboard_receipts"] = ["04-svg/artboard/page-001.receipt.json"]
+        generator["contact_sheet"] = {
+            "path": "05-preview/contact-sheet.png",
+            "sha256": runner.file_sha256(project_root / "05-preview/contact-sheet.png"),
+        }
+        generator_path.write_text(json.dumps(generator), encoding="utf-8")
+        gate_path = project_root / "06-check/quality-gate.json"
+        gate = json.loads(gate_path.read_text(encoding="utf-8"))
+        gate["input_hashes"]["generator_receipt"] = runner.file_sha256(generator_path)
+        gate_path.write_text(json.dumps(gate), encoding="utf-8")
+        return project_root
+
     def completed(self, command: list[str], payload: dict[str, object] | None = None, returncode: int = 0) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, returncode, stdout=json.dumps(payload or {"ok": True}), stderr="")
 
@@ -414,6 +490,9 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(runner.normalize_stage("quality-gate"), "quality_gate")
         self.assertEqual(runner.normalize_stage("preview-lint"), "preview_lint")
         self.assertEqual(runner.normalize_stage("dry-run"), "dry_run")
+        self.assertEqual(runner.normalize_stage("visual-acceptance"), "visual_acceptance")
+        self.assertEqual(runner.normalize_stage("visual-acceptance-gate"), "visual_acceptance")
+        self.assertEqual(runner.normalize_stage("deliverable"), "visual_acceptance")
         self.assertEqual(runner.normalize_stage("ppe-proof"), "ppe_proof")
         self.assertEqual(runner.normalize_stage("pre-submit-review"), "pre_submit_review")
         self.assertEqual(runner.normalize_stage("pre-submit"), "pre_submit_review")
@@ -440,12 +519,20 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("theme_adherence", dry_run)
         self.assertIn("quality_gate", dry_run)
         self.assertIn("dry_run", dry_run)
+        self.assertNotIn("visual_acceptance", dry_run)
         self.assertNotIn("ppe_proof", dry_run)
         self.assertNotIn("live_create", dry_run)
         self.assertNotIn("readback", dry_run)
         self.assertNotIn("export", dry_run)
 
+        visual_acceptance = runner.stages_until("visual_acceptance")
+        self.assertIn("dry_run", visual_acceptance)
+        self.assertIn("visual_acceptance", visual_acceptance)
+        self.assertLess(visual_acceptance.index("dry_run"), visual_acceptance.index("visual_acceptance"))
+        self.assertNotIn("ppe_proof", visual_acceptance)
+
         readback = runner.stages_until("readback")
+        self.assertIn("visual_acceptance", readback)
         self.assertIn("ppe_proof", readback)
         self.assertIn("pre_submit_review", readback)
         self.assertIn("live_create", readback)
@@ -531,8 +618,11 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
             called_stages = [stage for stage, _ in calls]
             self.assertIn("ppe_proof", called_stages)
+            self.assertIn("visual_acceptance", called_stages)
             self.assertIn("pre_submit_review", called_stages)
             self.assertLess(called_stages.index("dry_run"), called_stages.index("ppe_proof"))
+            self.assertLess(called_stages.index("dry_run"), called_stages.index("visual_acceptance"))
+            self.assertLess(called_stages.index("visual_acceptance"), called_stages.index("ppe_proof"))
             self.assertLess(called_stages.index("ppe_proof"), called_stages.index("pre_submit_review"))
             self.assertLess(called_stages.index("pre_submit_review"), called_stages.index("live_create"))
             self.assertTrue(all(profile == "production_live" for _, profile in calls))
@@ -1219,6 +1309,114 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertNotIn("--dry-run", captured[0])
             command_text = (project_root / "07-create/create-command.txt").read_text(encoding="utf-8")
             self.assertIn("--request-header x-tt-env=ppe_pure_svg", command_text)
+
+    def test_ppe_proof_refuses_visual_acceptance_receipt_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            runner.run_stage(project_root, "visual-acceptance")
+            self.write_ppe_input(project_root)
+            (project_root / "receipts/visual_acceptance.json").write_text(
+                json.dumps({"status": "skipped", "mutated": True}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(runner.RunnerError, "receipt does not match"):
+                runner.run_stage(project_root, "ppe-proof")
+
+    def test_ppe_proof_refuses_skipped_visual_acceptance_delivery_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            runner.run_stage(project_root, "visual-acceptance")
+            self.write_ppe_input(project_root)
+            check_path = project_root / "06-check/visual-acceptance.json"
+            check = json.loads(check_path.read_text(encoding="utf-8"))
+            check["action"] = "deliverable_pass"
+            check["deliverable_pass"] = True
+            check_path.write_text(json.dumps(check), encoding="utf-8")
+            (project_root / "receipts/visual_acceptance.json").write_text(json.dumps(check), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "skipped visual_acceptance"):
+                runner.run_stage(project_root, "ppe-proof")
+
+    def test_ppe_proof_refuses_stale_visual_acceptance_artboard_artifacts(self) -> None:
+        for rel in ["04-svg/artboard/page-001.receipt.json", "04-svg/artboard/page-001.png"]:
+            with self.subTest(rel=rel), tempfile.TemporaryDirectory() as tmpdir:
+                project_root = self.make_artboard_visual_project(tmpdir)
+                runner.run_create_stage(
+                    project_root,
+                    runner.load_state(project_root),
+                    "dry_run",
+                    dry_run=True,
+                    command_runner=lambda command, **_: self.completed(command),
+                )
+                runner.run_stage(project_root, "visual-acceptance")
+                self.write_ppe_input(project_root)
+                target = project_root / rel
+                if rel.endswith(".json"):
+                    payload = json.loads(target.read_text(encoding="utf-8"))
+                    payload["mutated_after_visual_acceptance"] = True
+                    target.write_text(json.dumps(payload), encoding="utf-8")
+                else:
+                    target.write_bytes(b"mutated-after-visual-acceptance")
+
+                with self.assertRaisesRegex(runner.RunnerError, "artifact hash is stale"):
+                    runner.run_stage(project_root, "ppe-proof")
+
+    def test_ppe_proof_refuses_missing_visual_evidence_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_artboard_visual_project(tmpdir)
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            runner.run_stage(project_root, "visual-acceptance")
+            self.write_ppe_input(project_root)
+            check_path = project_root / "06-check/visual-acceptance.json"
+            check = json.loads(check_path.read_text(encoding="utf-8"))
+            check.pop("visual_evidence", None)
+            check_path.write_text(json.dumps(check), encoding="utf-8")
+            (project_root / "receipts/visual_acceptance.json").write_text(json.dumps(check), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "visual_evidence.pages"):
+                runner.run_stage(project_root, "ppe-proof")
+
+    def test_ppe_proof_refuses_missing_deck_rhythm(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_artboard_visual_project(tmpdir)
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            runner.run_stage(project_root, "visual-acceptance")
+            self.write_ppe_input(project_root)
+            check_path = project_root / "06-check/visual-acceptance.json"
+            check = json.loads(check_path.read_text(encoding="utf-8"))
+            check.pop("deck_rhythm", None)
+            check_path.write_text(json.dumps(check), encoding="utf-8")
+            (project_root / "receipts/visual_acceptance.json").write_text(json.dumps(check), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "deck_rhythm"):
+                runner.run_stage(project_root, "ppe-proof")
 
     def test_cli_arg_path_uses_repo_relative_paths(self) -> None:
         repo_file = runner.repo_root() / "skills/lark-slides/scripts/svglide_project_runner.py"

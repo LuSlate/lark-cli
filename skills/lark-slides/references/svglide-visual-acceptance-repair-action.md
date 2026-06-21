@@ -6,10 +6,10 @@ Last updated: 2026-06-21
 
 ```text
 Follow-up: Visual Acceptance Repair
-Cursor: VF1 Visual Acceptance Gate
-Status: READY
+Cursor: VF5 Real-Run Benchmark Suite
+Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_REAL_ROUTE_POLICY_BLOCKED
 Trigger: a real prompt-to-preview run can pass quality_gate and dry_run while the rendered deck is visually unacceptable.
-Previous gate: VF0 Documentation Lock And Reviewer Team DONE/PASS
+Previous gate: VF4 Theme And Deck Rhythm Lock DONE/PASS
 ```
 
 This is a new follow-up scope after Gate 12b PASS for the current P0/P1 milestone. It does not rewrite that milestone. It fixes the missing visual acceptance layer exposed by real generation runs.
@@ -167,6 +167,8 @@ Review result:
 
 ### VF1: Visual Acceptance Gate
 
+Status: DONE/PASS
+
 Actions:
 
 - Add `skills/lark-slides/scripts/svglide_visual_acceptance.py`.
@@ -179,6 +181,14 @@ Actions:
 - Write `receipts/visual_acceptance.json`.
 - Add tests for pass/fail cases.
 
+Implemented evidence:
+
+- `svglide_visual_acceptance.py` writes `06-check/visual-acceptance.json` and `receipts/visual_acceptance.json`.
+- `svglide_project_runner.py` runs `visual_acceptance` after `dry_run` and before `ppe_proof` / `pre_submit_review` / `live_create` / `readback` for artboard Satori delivery paths.
+- `svglide_pre_submit_review.py` requires current `visual_acceptance` reviewed artifact and validates freshness against current plan, quality gate, preview, preview manifest, contact sheet, and visual acceptance receipt.
+- `svglide_quality_gate.py` remains independent; visual acceptance is not a quality gate precondition.
+- Evidence file: `skills/lark-slides/references/svglide-visual-acceptance-vf1-evidence.md`.
+
 Acceptance:
 
 - A known visually bad fixture fails before delivery claim.
@@ -187,7 +197,15 @@ Acceptance:
 - `deliverable_pass`, final visual acceptance, or any high-quality/upper-bound claim cannot pass for artboard Satori runs without a fresh passed visual acceptance receipt.
 - Any opt-out profile must be labeled `engineering_only` or `non_visual` and must not allow visual delivery claims.
 
+Reviewer status:
+
+- Reviewer `Pascal`: PASS.
+- Follow-up increment for skipped engineering-only boundary: PASS.
+- Next cursor: VF2 Screenshot And Geometry Evidence.
+
 ### VF2: Screenshot And Geometry Evidence
+
+Status: DONE/PASS
 
 Actions:
 
@@ -195,12 +213,27 @@ Actions:
 - Add deterministic page crop metadata where needed.
 - Record page-level visual issue locations.
 
+Implemented evidence:
+
+- `svglide_visual_acceptance.py` writes `visual_evidence` with contact sheet path/hash, preview path/hash, preview manifest hash, page PNG, preview anchor, and deterministic contact sheet tile metadata.
+- page-level issues receive `evidence_path`, `preview_anchor`, and `contact_sheet_tile`.
+- `svglide_artboard_renderer.py` records contact sheet grid and per-page tile metadata at source.
+- runner and pre-submit reject passed artboard visual acceptance without `visual_evidence.pages`.
+- Evidence file: `skills/lark-slides/references/svglide-visual-acceptance-vf2-evidence.md`.
+
 Acceptance:
 
 - Reviewer can open one artifact and see the pages being judged.
 - Failure reports identify page number, issue type, and evidence path.
 
+Reviewer status:
+
+- Reviewer `Pascal`: PASS.
+- Next cursor: VF3 Renderer And Template Guardrails.
+
 ### VF3: Renderer And Template Guardrails
+
+Status: DONE/PASS
 
 Actions:
 
@@ -208,12 +241,27 @@ Actions:
 - Reject unregistered geometry patterns in production templates.
 - Make structural images part of CanvasSpec and template planning.
 
+Implemented evidence:
+
+- Added `skills/lark-slides/references/svglide-template-guardrails.json`.
+- `svglide_visual_acceptance.py` validates decorative primitives, admitted motifs, chart contracts, image slots, CanvasSpec image source refs, and density through the guardrail registry.
+- runner and pre-submit bind visual acceptance to current `template_guardrails_sha256`.
+- Manifest and rules include the new guardrail registry.
+- Evidence file: `skills/lark-slides/references/svglide-visual-acceptance-vf3-evidence.md`.
+
 Acceptance:
 
 - The renderer cannot silently invent arbitrary visual primitives.
 - Template fixtures show images and semantic elements integrated by layout, not pasted late.
 
+Reviewer status:
+
+- Reviewer `Pascal`: PASS.
+- Next cursor: VF4 Theme And Deck Rhythm Lock.
+
 ### VF4: Theme And Deck Rhythm Lock
+
+Status: DONE/PASS
 
 Actions:
 
@@ -221,12 +269,27 @@ Actions:
 - Add planned layout-rhythm checks across pages.
 - Prevent multiple topics from collapsing into the same generic look when distinct templates/assets are available.
 
+Implemented evidence:
+
+- `svglide_visual_acceptance.py` writes `deck_rhythm` with layout, renderer, visual recipe, theme, run-length, and threshold data.
+- visual acceptance fails collapsed layout, renderer, visual recipe, long renderer repetition, and fragmented theme token usage.
+- runner and pre-submit reject passed artboard VA without `deck_rhythm`.
+- Evidence file: `skills/lark-slides/references/svglide-visual-acceptance-vf4-evidence.md`.
+
 Acceptance:
 
 - Two different topics can share a quality standard without becoming visually identical.
 - Same topic reruns may vary in content/assets/layout choices while staying within theme and template rules.
 
+Reviewer status:
+
+- Reviewer `Pascal`: PASS.
+- Non-blocking: add explicit `allow_multi_theme` branch unit coverage later if the theme policy surface grows.
+- Next cursor: VF5 Real-Run Benchmark Suite.
+
 ### VF5: Real-Run Benchmark Suite
+
+Status: DONE/PASS_FOR_FIXTURE_BENCHMARK_REAL_ROUTE_POLICY_BLOCKED
 
 Actions:
 
@@ -243,6 +306,37 @@ Acceptance:
 - Bad outputs fail with actionable issue codes.
 - Good outputs pass `deliverable_pass`.
 - Comparison screenshots can be used for user review without relabeling failed outputs as upper-bound demos.
+
+Implemented evidence:
+
+- Added `svglide_vf5_benchmark.py` and `svglide_vf5_benchmark_test.py`.
+- Added `svglide_fixture_model_provider_test.py` to prevent prompt-specific fixtures from collapsing back to one hardcoded topic.
+- Added benchmark-local `--lark-cli-command` so dry-run can use the current branch CLI instead of a stale global `lark-cli`.
+- Expanded the follow-up fixture model provider to a prompt-aware three-page deck with deck/slide/canvas planner outputs, canvas specs, asset contracts, loaded rules, visible template keys, chart contracts, topic-specific style presets, topic-specific palettes, and topic-specific CanvasSpec theme colors.
+- Removed SpaceX-specific hardcoding from generic prompt-planner instructions.
+- Extended strategy review theme inference for `volcanic_research_lab` and `alpine_coast_travel_board`.
+- Strengthened canvas planner prompt constraints so renderer fallback text, object-form `data-story.metrics`, missing loaded rules, and missing chart contracts are rejected upstream.
+- Updated semantic role mapping so `data-story` data marks are checked as chart primitives rather than arbitrary decoration.
+- Fixture benchmark path: `.tmp/svglide-vf5-benchmark-fixture-v6`.
+- Fixture benchmark status: `passed`, 3/3 cases, 3/3 `deliverable_pass`, `live_create` not run.
+- Fixture benchmark hash: `ad4abfd3e15e7150892ded8b42fd19ffa9a5afc81555157df197172257b79092`.
+- Fixture receipt hash: `600bcf55e10cbef1405f9bdc7490f51d783154ac149694e0a0139dc78e1a027d`.
+- Distinctness proof:
+  - `spacex IPO 分析`: `raw_grid`, `space_capital_market`, action `continue_pipeline`, contact sheet `1119b9474eb5286ae47689c2ebdc3b6d9f2627fbac6dfff0586972b17746a34a`.
+  - `冰岛火山研究`: `editorial_forest`, `volcanic_research_lab`, action `continue_pipeline`, contact sheet `1b0c93451c2b7c8ed19d8e81d4a1e9258ac1cae5951e40fd9b25ca3f42cfd280`.
+  - `新西兰风光`: `cobalt_bloom`, `alpine_coast_travel_board`, action `continue_pipeline`, contact sheet `cd6d658b99fcdb780e6191fbf8565c35c86f882fb379b0eb1404979d5f14531e`.
+- Evidence file: `skills/lark-slides/references/svglide-visual-acceptance-vf5-evidence.md`.
+
+Real probe status:
+
+- A real `codex` planner + online asset probe was attempted for `spacex-ipo-analysis`.
+- Execution was blocked before start by environment escalation policy because it would transmit private repo prompt/schema/template/theme context to external model and image services.
+- No real benchmark PASS is claimed.
+
+Reviewer status:
+
+- Reviewer `Feynman`: PASS for VF5 fixture benchmark completion.
+- Remaining scope: trusted internal real planner/image route is still missing; no real external-model benchmark PASS is claimed.
 
 ## 8. Reviewer Protocol
 
@@ -299,10 +393,12 @@ Template/Theme Reviewer:
 
 ## 10. Current Blocking Principle
 
-Until VF1 is implemented and reviewer-approved:
+After VF1 reviewer PASS, the blocking principle is:
 
 ```text
 The chain may be called runnable.
 The chain may be called engineering-pass if quality_gate and dry_run pass.
-The chain must not be called high-quality visual generation, upper-bound output, or final production-quality preview.
+The chain may be called deliverable-pass only with fresh passed visual_acceptance evidence.
+The chain must not be called high-quality visual generation, upper-bound output, or final production-quality preview without fresh passed visual_acceptance evidence.
+The current implementation cursor is VF5 Real-Run Benchmark Suite reviewer validation.
 ```

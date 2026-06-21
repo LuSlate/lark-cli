@@ -23,10 +23,10 @@ Anything less than that is `IN_PROGRESS` or `BLOCKED`.
 The current execution cursor is:
 
 ```text
-Visual Acceptance Repair Follow-Up: VF1 Visual Acceptance Gate
-Status: READY
+Visual Acceptance Repair Follow-Up: VF5 Real-Run Benchmark Suite
+Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_REAL_ROUTE_POLICY_BLOCKED
 Current issue: Gate 12b/P0-P1 engineering milestone is PASS, but real prompt-to-preview runs can still pass quality_gate/dry_run while producing visually unacceptable decks.
-Next allowed executor task: implement VF1 in skills/lark-slides/references/svglide-visual-acceptance-repair-action.md.
+Next allowed executor task: implement a trusted internal real planner/image route before any real-model quality or upper-bound claim.
 Next forbidden executor task: claiming high-quality, upper-bound, final visual, or production-quality generated output without fresh visual_acceptance evidence.
 ```
 
@@ -78,7 +78,7 @@ Gate 12a: complete with reviewer PASS
 Gate 12b: complete with reviewer PASS
 P1: asset system scale-out, prompt/planning, and packaging decision complete with reviewer PASS
 P2: not started
-Visual Acceptance Repair Follow-Up: VF0 DONE/PASS, VF1 READY
+Visual Acceptance Repair Follow-Up: VF0 DONE/PASS, VF1 DONE/PASS, VF2 DONE/PASS, VF3 DONE/PASS, VF4 DONE/PASS, VF5 FIXTURE_DISTINCTNESS_PASS/REVIEWER_PASS/REAL_ROUTE_POLICY_BLOCKED
 ```
 
 Current active cursor:
@@ -120,9 +120,15 @@ New follow-up cursor:
 ```text
 Visual Acceptance Repair Follow-Up is now active.
 Source: skills/lark-slides/references/svglide-visual-acceptance-repair-action.md
-Current gate: VF1 Visual Acceptance Gate
+Current gate: VF5 Real-Run Benchmark Suite
 Blocking rule: quality_gate/dry_run alone do not prove visual quality.
 Required future artifact for visual quality claims: 06-check/visual-acceptance.json and receipts/visual_acceptance.json.
+Latest PASS evidence files:
+- skills/lark-slides/references/svglide-visual-acceptance-vf1-evidence.md
+- skills/lark-slides/references/svglide-visual-acceptance-vf2-evidence.md
+- skills/lark-slides/references/svglide-visual-acceptance-vf3-evidence.md
+- skills/lark-slides/references/svglide-visual-acceptance-vf4-evidence.md
+Current review evidence file: skills/lark-slides/references/svglide-visual-acceptance-vf5-evidence.md
 ```
 
 ## 2. Source Of Truth
@@ -814,21 +820,33 @@ Only a reviewer subagent can move `Reviewer verdict` to `PASS`.
 
 ## 7.1 Current Next Task
 
-Gate 12b now has reviewer PASS for the P0/P1 engineering milestone:
+Gate 12b has reviewer PASS for the P0/P1 engineering milestone. The active follow-up is now Visual Acceptance Repair.
 
 ```text
-Completed Gate 12a outcome:
-- Durable instruction capture exists at 00-input/instruction.json in the live/readback project.
-- Instruction / plan / output adherence receipt is passed.
-- Target slide count, actual slides[] count, page order, exact key_message, language, must_include/must_avoid, explicit constraints, and readback hash bindings are checked.
-- Scoped repair was used for final slide_plan key_message drift; full regeneration was not used.
-- Reviewer verdict: PASS.
+Completed follow-up gates:
+- VF0 Documentation Lock And Reviewer Team: DONE/PASS.
+- VF1 Visual Acceptance Gate: DONE/PASS.
+- VF2 Screenshot And Geometry Evidence: DONE/PASS.
+- VF3 Renderer And Template Guardrails: DONE/PASS.
+- VF4 Theme And Deck Rhythm Lock: DONE/PASS.
+
+Current follow-up cursor:
+- VF5 Real-Run Benchmark Suite.
+- Code implemented.
+- Fixture benchmark v6 passed 3/3 cases through quality_gate, dry_run, and visual_acceptance.
+- Fixture benchmark v6 also passed cross-topic visual distinctness: SpaceX uses `raw_grid`/`space_capital_market`, Iceland uses `editorial_forest`/`volcanic_research_lab`, and New Zealand uses `cobalt_bloom`/`alpine_coast_travel_board`; all distinctness pass actions are `continue_pipeline`, not `create_live`.
+- Fixture benchmark artifacts:
+  - `.tmp/svglide-vf5-benchmark-fixture-v6/06-check/vf5-benchmark.json`
+  - `.tmp/svglide-vf5-benchmark-fixture-v6/receipts/vf5-benchmark.json`
+  - benchmark hash `ad4abfd3e15e7150892ded8b42fd19ffa9a5afc81555157df197172257b79092`
+  - receipt hash `600bcf55e10cbef1405f9bdc7490f51d783154ac149694e0a0139dc78e1a027d`
+- Real codex planner + online asset probe was attempted but blocked before execution by environment policy because it would transmit private repo prompt/schema/template/theme context to external model/image services.
+- Reviewer verdict: Feynman PASS for fixture benchmark completion.
+- Remaining required action: add a trusted internal real planner/image route before claiming real-model quality or upper-bound output.
 
 Next required action:
-- The user has now started a new follow-up scope: Visual Acceptance Repair.
-- VF0 Documentation Lock And Reviewer Team has reviewer PASS.
-- Current follow-up cursor: VF1 Visual Acceptance Gate.
-- Follow `skills/lark-slides/references/svglide-visual-acceptance-repair-action.md`.
+- Reviewer audit for `skills/lark-slides/references/svglide-visual-acceptance-vf5-evidence.md`.
+- Do not claim real external-model benchmark PASS.
 - Do not claim high-quality visual output unless visual_acceptance evidence exists and passes.
 - Do not claim P2/future scope as complete.
 ```
@@ -868,9 +886,9 @@ Do not accept demos, screenshots, fake dry-runs, stale receipts, missing hashes,
 or direct Satori SVG as completion evidence.
 
 Current execution cursor:
-Visual Acceptance Repair Follow-Up, VF1 Visual Acceptance Gate.
+Visual Acceptance Repair Follow-Up, VF5 Real-Run Benchmark Suite.
 Gate 12b Final Full-Plan Acceptance remains DONE/PASS for the current P0/P1 engineering milestone.
-P2/future scope remains explicitly not claimed. High-quality visual output is not claimable until visual_acceptance evidence passes.
+P2/future scope remains explicitly not claimed. High-quality visual output is not claimable until visual_acceptance evidence passes. Real external-model benchmark PASS is not claimable when the real probe is policy-blocked.
 
 For every review, answer these checks:
 

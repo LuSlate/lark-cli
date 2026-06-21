@@ -30,6 +30,7 @@ DEFAULT_GENERATION_MODE = "direct_svg"
 GENERATION_MODES = {DEFAULT_GENERATION_MODE, "artboard_satori"}
 DEFAULT_PLAN_ROOT = Path(".lark-slides/plan")
 SCRIPT_DIR = Path(__file__).resolve().parent
+TEMPLATE_GUARDRAILS_PATH = SCRIPT_DIR.parent / "references" / "svglide-template-guardrails.json"
 LARK_CLI_COMMAND_ENV = "SVGLIDE_LARK_CLI_CMD"
 DEFAULT_REPAIR_LOOP_FAILING_RECEIPT = Path("06-check/preflight.json")
 
@@ -55,6 +56,7 @@ STAGES = [
     "theme_adherence",
     "quality_gate",
     "dry_run",
+    "visual_acceptance",
     "ppe_proof",
     "pre_submit_review",
     "live_create",
@@ -85,6 +87,9 @@ STAGE_ALIASES = {
     "preview-lint": "preview_lint",
     "quality-gate": "quality_gate",
     "dry-run": "dry_run",
+    "visual-acceptance": "visual_acceptance",
+    "visual-acceptance-gate": "visual_acceptance",
+    "deliverable": "visual_acceptance",
     "ppe-proof": "ppe_proof",
     "pre-submit-review": "pre_submit_review",
     "pre-submit": "pre_submit_review",
@@ -135,6 +140,7 @@ IMPLEMENTED_STAGES = {
     "theme_adherence",
     "quality_gate",
     "dry_run",
+    "visual_acceptance",
     "ppe_proof",
     "pre_submit_review",
     "live_create",
@@ -1276,17 +1282,23 @@ def require_existing_stage_current(project_root: Path, stage: str, *, profile: s
         require_quality_gate_current(project_root)
     elif stage == "dry_run":
         require_quality_gate_current(project_root)
+    elif stage == "visual_acceptance":
+        require_visual_acceptance_current(project_root)
     elif stage == "live_create":
         require_quality_gate_current(project_root)
+        require_visual_acceptance_current(project_root)
         require_ppe_proof_current(project_root)
         if profile == "production_live":
             require_pre_submit_review_current(project_root)
     elif stage == "ppe_proof":
+        require_visual_acceptance_current(project_root)
         require_ppe_proof_current(project_root)
     elif stage == "pre_submit_review":
+        require_visual_acceptance_current(project_root)
         require_pre_submit_review_current(project_root)
     elif stage == "readback":
         require_quality_gate_current(project_root)
+        require_visual_acceptance_current(project_root)
 
 
 def require_quality_gate_passed(project_root: Path) -> dict[str, Any]:
@@ -1344,6 +1356,103 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
         if input_hashes.get("artboard_package_check") != optional_project_file_hash(project_root, "06-check/artboard-package-check.json"):
             raise RunnerError("quality gate artboard_package_check hash is stale; rerun quality_gate")
     return gate
+
+
+def require_visual_acceptance_current(project_root: Path) -> dict[str, Any]:
+    check_path = project_root / "06-check" / "visual-acceptance.json"
+    if not check_path.exists():
+        if not artboard_visual_acceptance_required(project_root):
+            return {"status": "skipped", "generation_mode": DEFAULT_GENERATION_MODE, "action": "engineering_only"}
+        raise RunnerError("visual_acceptance must be run before visual delivery or live submission")
+    check = read_json(check_path)
+    status = check.get("status")
+    mode = check.get("generation_mode")
+    if mode == "artboard_satori" and status != "passed":
+        raise RunnerError("visual_acceptance must pass for artboard_satori delivery")
+    if status not in {"passed", "skipped"}:
+        raise RunnerError("visual_acceptance status must be passed or skipped")
+    if status == "skipped" and (check.get("action") != "engineering_only" or check.get("deliverable_pass") is not False):
+        raise RunnerError("skipped visual_acceptance must be engineering_only with deliverable_pass=false")
+    inputs = check.get("inputs")
+    if not isinstance(inputs, dict):
+        raise RunnerError("visual_acceptance inputs are missing; rerun visual_acceptance")
+    expected = {
+        "slide_plan_sha256": optional_project_file_hash(project_root, "02-plan/slide_plan.json"),
+        "generator_receipt_sha256": optional_project_file_hash(project_root, "receipts/generate_svg.json"),
+    }
+    if status == "passed":
+        expected.update(
+            {
+                "asset_manifest_sha256": optional_project_file_hash(project_root, "03-assets/asset-manifest.json"),
+                "quality_gate_sha256": optional_project_file_hash(project_root, "06-check/quality-gate.json"),
+                "dry_run_sha256": optional_project_file_hash(project_root, "07-create/dry-run.json"),
+                "preview_sha256": optional_project_file_hash(project_root, "05-preview/preview.html"),
+                "preview_manifest_sha256": optional_project_file_hash(project_root, "05-preview/preview-manifest.json"),
+                "template_guardrails_sha256": file_sha256(TEMPLATE_GUARDRAILS_PATH) if TEMPLATE_GUARDRAILS_PATH.exists() else None,
+            }
+        )
+        contact_sheet = inputs.get("contact_sheet")
+        if not isinstance(contact_sheet, dict) or contact_sheet.get("sha256") != optional_project_file_hash(project_root, "05-preview/contact-sheet.png"):
+            raise RunnerError("visual_acceptance contact_sheet hash is stale; rerun visual_acceptance")
+        if mode == "artboard_satori":
+            require_recorded_artifacts_current(project_root, check.get("artboard_artifacts"), stage="visual_acceptance")
+            visual_evidence = check.get("visual_evidence")
+            evidence_pages = visual_evidence.get("pages") if isinstance(visual_evidence, dict) else None
+            require_visual_evidence_pages_current(evidence_pages, stage="visual_acceptance")
+            deck_rhythm = check.get("deck_rhythm")
+            if not isinstance(deck_rhythm, dict) or deck_rhythm.get("schema_version") != "svglide-deck-rhythm/v1":
+                raise RunnerError("visual_acceptance deck_rhythm is missing; rerun visual_acceptance")
+    for key, current in expected.items():
+        if inputs.get(key) != current:
+            raise RunnerError(f"visual_acceptance {key} does not match current project files; rerun visual_acceptance")
+    receipt = project_root / "receipts" / "visual_acceptance.json"
+    if not receipt.exists():
+        raise RunnerError("visual_acceptance receipt is missing; rerun visual_acceptance")
+    if file_sha256(receipt) != file_sha256(check_path):
+        raise RunnerError("visual_acceptance receipt does not match current check; rerun visual_acceptance")
+    return check
+
+
+def artboard_visual_acceptance_required(project_root: Path) -> bool:
+    try:
+        return plan_generation_mode(project_root) == "artboard_satori"
+    except RunnerError:
+        return False
+
+
+def require_recorded_artifacts_current(project_root: Path, artifacts: Any, *, stage: str) -> None:
+    if not isinstance(artifacts, list) or not artifacts:
+        raise RunnerError(f"{stage} is missing recorded artifact hashes; rerun {stage}")
+    for item in artifacts:
+        if not isinstance(item, dict):
+            raise RunnerError(f"{stage} recorded artifacts are invalid; rerun {stage}")
+        rel = item.get("path")
+        recorded = item.get("sha256")
+        if not isinstance(rel, str) or not rel or not isinstance(recorded, str) or not recorded:
+            raise RunnerError(f"{stage} recorded artifacts must include path and sha256; rerun {stage}")
+        current = optional_project_file_hash(project_root, rel)
+        if current is None:
+            raise RunnerError(f"{stage} artifact is missing: {rel}; rerun {stage}")
+        if recorded != current:
+            raise RunnerError(f"{stage} artifact hash is stale: {rel}; rerun {stage}")
+
+
+def require_visual_evidence_pages_current(pages: Any, *, stage: str) -> None:
+    if not isinstance(pages, list) or not pages:
+        raise RunnerError(f"{stage} visual_evidence.pages is missing; rerun {stage}")
+    for item in pages:
+        if not isinstance(item, dict):
+            raise RunnerError(f"{stage} visual_evidence.pages entries are invalid; rerun {stage}")
+        page = item.get("page")
+        evidence_path = item.get("evidence_path")
+        preview_anchor = item.get("preview_anchor")
+        contact_sheet_tile = item.get("contact_sheet_tile")
+        if not isinstance(page, int) or not isinstance(evidence_path, str) or not evidence_path:
+            raise RunnerError(f"{stage} visual_evidence.pages entries must include page and evidence_path; rerun {stage}")
+        if not isinstance(preview_anchor, str) or not preview_anchor:
+            raise RunnerError(f"{stage} visual_evidence.pages entries must include preview_anchor; rerun {stage}")
+        if not isinstance(contact_sheet_tile, dict):
+            raise RunnerError(f"{stage} visual_evidence.pages entries must include contact_sheet_tile; rerun {stage}")
 
 
 def require_pre_submit_review_current(project_root: Path) -> dict[str, Any]:
@@ -1518,6 +1627,51 @@ def run_theme_productization_stage(project_root: Path, state: dict[str, Any]) ->
     )
 
 
+def run_visual_acceptance_stage(project_root: Path, state: dict[str, Any], *, profile: str) -> dict[str, Any]:
+    started_at = now_iso()
+    command = [
+        "python3",
+        (SCRIPT_DIR / "svglide_visual_acceptance.py").as_posix(),
+        project_root.as_posix(),
+        "--profile",
+        profile,
+        "--pretty",
+    ]
+    completed = subprocess.run(command, cwd=repo_root(), check=False, capture_output=True, text=True)
+    check_path = project_root / "06-check" / "visual-acceptance.json"
+    receipt = project_root / "receipts" / "visual_acceptance.json"
+    status = "failed"
+    if check_path.exists():
+        result = read_json(check_path)
+        result["command"] = command
+        result["runner_started_at"] = started_at
+        result["runner_ended_at"] = now_iso()
+        result["stdout"] = completed.stdout
+        result["stderr"] = completed.stderr
+        write_json(check_path, result)
+        write_json(receipt, result)
+        if completed.returncode == 0 and result.get("status") in {"passed", "skipped"}:
+            status = "passed"
+    else:
+        result = build_receipt(
+            "visual_acceptance",
+            "failed",
+            started_at=started_at,
+            command=command,
+            error={
+                "code": "visual_acceptance_missing_output",
+                "returncode": completed.returncode,
+                "stderr": completed.stderr,
+            },
+        )
+        write_json(receipt, result)
+    record_stage(state, "visual_acceptance", status, receipt)
+    write_state(project_root, state)
+    if status != "passed":
+        raise RunnerError(f"stage 'visual_acceptance' failed with exit code {completed.returncode}")
+    return {"stage": "visual_acceptance", "status": status, "receipt": project_relpath(receipt, project_root)}
+
+
 def lark_cli_command_prefix() -> list[str]:
     raw = os.environ.get(LARK_CLI_COMMAND_ENV, "").strip()
     if not raw:
@@ -1592,6 +1746,9 @@ def run_create_stage(
     hashes = prepared_file_hashes(project_root)
 
     if not dry_run:
+        if artboard_visual_acceptance_required(project_root):
+            require_stage_passed(state, "visual_acceptance")
+        require_visual_acceptance_current(project_root)
         require_stage_passed(state, "ppe_proof")
         require_ppe_proof_current(project_root)
         if profile == "production_live":
@@ -1866,8 +2023,14 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         )
     if stage == "dry_run":
         return run_create_stage(project_root, state, stage, dry_run=True, profile=profile)
+    if stage == "visual_acceptance":
+        require_stage_passed(state, "dry_run")
+        return run_visual_acceptance_stage(project_root, state, profile=profile)
     if stage == "ppe_proof":
         require_stage_passed(state, "dry_run")
+        if artboard_visual_acceptance_required(project_root):
+            require_stage_passed(state, "visual_acceptance")
+        require_visual_acceptance_current(project_root)
         return run_script_stage(
             project_root,
             state,
@@ -1879,6 +2042,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         )
     if stage == "pre_submit_review":
         require_stage_passed(state, "ppe_proof")
+        if artboard_visual_acceptance_required(project_root):
+            require_stage_passed(state, "visual_acceptance")
+        require_visual_acceptance_current(project_root)
         return run_script_stage(
             project_root,
             state,
@@ -1904,6 +2070,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
     if stage == "live_create":
         return run_create_stage(project_root, state, stage, dry_run=False, profile=profile)
     if stage == "readback":
+        if artboard_visual_acceptance_required(project_root):
+            require_stage_passed(state, "visual_acceptance")
+        require_visual_acceptance_current(project_root)
         return run_script_stage(
             project_root,
             state,

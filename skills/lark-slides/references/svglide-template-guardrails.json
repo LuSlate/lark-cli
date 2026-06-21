@@ -1,0 +1,129 @@
+{
+  "schema_version": "svglide-template-guardrails/v1",
+  "defaults": {
+    "allowed_kinds": ["rect", "circle", "ellipse", "line", "text", "foreignObject", "image"],
+    "decorative": {
+      "allowed_kinds": ["rect", "circle", "ellipse", "line"],
+      "admitted_motifs": ["background", "panel", "card", "accent", "rule", "grid", "dot", "signal", "orbit"],
+      "max_count": 8
+    },
+    "density": {
+      "max_nodes": 90,
+      "max_text_nodes": 34
+    },
+    "chart": {
+      "requires_contract": true
+    },
+    "image": {
+      "requires_canvas_slot": true,
+      "allowed_slot_fields": ["asset_slots", "image_slots", "assets", "image_asset", "key_visual", "hero_image"]
+    }
+  },
+  "templates": {
+    "cover-hero": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "ellipse", "line"],
+        "admitted_motifs": ["background", "panel", "accent", "orbit", "signal"],
+        "max_count": 6
+      }
+    },
+    "comparison-cards": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "divider"],
+        "max_count": 8
+      }
+    },
+    "summary-final": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "metric", "bar", "takeaway"],
+        "max_count": 10
+      }
+    },
+    "agenda-list": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "trajectory", "rail", "node", "stack", "bar"],
+        "max_count": 16
+      }
+    },
+    "timeline-steps": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "orbit", "rail", "pin", "node", "timeline"],
+        "max_count": 18
+      }
+    },
+    "process-flow": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "flow", "connector", "arrow", "node", "conclusion", "process"],
+        "max_count": 18
+      }
+    },
+    "metric-dashboard": {
+      "chart": {
+        "requires_contract": true
+      },
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "dot", "metric", "dashboard", "trend", "grid", "signal"],
+        "max_count": 10
+      }
+    },
+    "data-story": {
+      "chart": {
+        "requires_contract": true
+      },
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "dot", "data", "bar", "terminal", "unlock", "axis", "node", "callout", "price", "curve"],
+        "max_count": 10
+      }
+    },
+    "risk-alert": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "warning", "severity", "gauge", "node", "risk"],
+        "max_count": 16
+      }
+    },
+    "roadmap-lanes": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "axis", "quarter", "lane", "bar", "milestone", "roadmap"],
+        "max_count": 18
+      }
+    },
+    "architecture-blueprint": {
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "link", "loop", "node", "port", "blueprint"],
+        "max_count": 18
+      }
+    },
+    "image-feature": {
+      "image": {
+        "requires_canvas_slot": true,
+        "allowed_slot_fields": ["asset_slots", "image_slots", "assets", "image_asset", "key_visual", "hero_image"]
+      },
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line", "path"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "asset", "slot", "page", "feature", "point", "dot", "trajectory"],
+        "max_count": 7
+      }
+    },
+    "research-poster": {
+      "image": {
+        "requires_canvas_slot": true,
+        "allowed_slot_fields": ["asset_slots", "image_slots", "assets", "image_asset", "key_visual", "hero_image"]
+      },
+      "decorative": {
+        "allowed_kinds": ["rect", "circle", "line"],
+        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "grid"],
+        "max_count": 10
+      }
+    }
+  }
+}

@@ -517,6 +517,30 @@ class SVGlideQualityGateTest(unittest.TestCase):
             self.assertEqual(result["summary"]["failed_check_count"], 0)
             self.assertTrue((project / "06-check/quality-gate.json").exists())
 
+    def test_quality_gate_is_independent_from_visual_acceptance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            (project / "04-svg/prepared").mkdir(parents=True)
+            (project / "04-svg/prepared/page-001.svg").write_text("<svg></svg>", encoding="utf-8")
+            write_passing_semantic_review(project)
+            write_json(
+                project / "06-check/visual-acceptance.json",
+                {
+                    "schema_version": "svglide-visual-acceptance/v1",
+                    "status": "failed",
+                    "issues": [{"code": "layout_overlap"}],
+                },
+            )
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "passed")
+            self.assertNotIn("visual_acceptance", result["inputs"])
+            self.assertNotIn("visual-acceptance", {check["name"] for check in result["checks"]})
+
     def test_quality_gate_requires_theme_checks(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
