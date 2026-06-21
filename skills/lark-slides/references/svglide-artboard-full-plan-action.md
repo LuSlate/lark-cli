@@ -23,11 +23,11 @@ Anything less than that is `IN_PROGRESS` or `BLOCKED`.
 The current execution cursor is:
 
 ```text
-Gate 12b: Final Full-Plan Acceptance
-Status: DONE
-Current issue: Gate 12b final reviewer verdict is PASS; current P0/P1 milestone is complete
-Next allowed executor task: stop or start a new explicitly scoped follow-up
-Next forbidden executor task: claiming P2/future scope as complete
+Visual Acceptance Repair Follow-Up: VF1 Visual Acceptance Gate
+Status: READY
+Current issue: Gate 12b/P0-P1 engineering milestone is PASS, but real prompt-to-preview runs can still pass quality_gate/dry_run while producing visually unacceptable decks.
+Next allowed executor task: implement VF1 in skills/lark-slides/references/svglide-visual-acceptance-repair-action.md.
+Next forbidden executor task: claiming high-quality, upper-bound, final visual, or production-quality generated output without fresh visual_acceptance evidence.
 ```
 
 Supervisor rule:
@@ -59,6 +59,7 @@ Deck/Slide planning contract
 -> SatoriToSVGlide compiler
 -> existing SVGlide prepare / preview / preflight / reviews / quality_gate
 -> dry_run
+-> visual acceptance evidence for visual quality claims
 -> ppe_proof
 -> live_create
 -> readback
@@ -77,6 +78,7 @@ Gate 12a: complete with reviewer PASS
 Gate 12b: complete with reviewer PASS
 P1: asset system scale-out, prompt/planning, and packaging decision complete with reviewer PASS
 P2: not started
+Visual Acceptance Repair Follow-Up: VF0 DONE/PASS, VF1 READY
 ```
 
 Current active cursor:
@@ -110,7 +112,17 @@ Reviewer verdict: PASS.
 
 Next cursor: current P0/P1 milestone closed with Gate 12b reviewer PASS.
 
-The full PLAN is not complete until Gate 12b also passes review.
+The current P0/P1 engineering milestone is closed. The new visual acceptance follow-up is not complete until its own VF gates pass review.
+```
+
+New follow-up cursor:
+
+```text
+Visual Acceptance Repair Follow-Up is now active.
+Source: skills/lark-slides/references/svglide-visual-acceptance-repair-action.md
+Current gate: VF1 Visual Acceptance Gate
+Blocking rule: quality_gate/dry_run alone do not prove visual quality.
+Required future artifact for visual quality claims: 06-check/visual-acceptance.json and receipts/visual_acceptance.json.
 ```
 
 ## 2. Source Of Truth
@@ -132,6 +144,7 @@ Important local references:
 
 ```text
 skills/lark-slides/references/svglide-artboard-p0-goal-lock.md
+skills/lark-slides/references/svglide-visual-acceptance-repair-action.md
 skills/lark-slides/references/svglide-artboard-satori.contract.md
 skills/lark-slides/references/svglide-canvas-spec.schema.json
 skills/lark-slides/references/svglide-semantic-map.schema.json
@@ -187,6 +200,7 @@ Satori SVG copied directly to live SVG
 unregistered template or theme treated as valid
 external HTML/CSS library directly used as runtime renderer
 quality_gate checking only file existence without hash/freshness
+quality_gate or dry_run treated as visual quality acceptance
 fake lark-cli dry_run treated as live_create/readback evidence
 executor-written claim treated as reviewer evidence
 ```
@@ -800,7 +814,7 @@ Only a reviewer subagent can move `Reviewer verdict` to `PASS`.
 
 ## 7.1 Current Next Task
 
-Gate 12b now has reviewer PASS:
+Gate 12b now has reviewer PASS for the P0/P1 engineering milestone:
 
 ```text
 Completed Gate 12a outcome:
@@ -811,7 +825,11 @@ Completed Gate 12a outcome:
 - Reviewer verdict: PASS.
 
 Next required action:
-- Stop here unless the user starts a new follow-up scope.
+- The user has now started a new follow-up scope: Visual Acceptance Repair.
+- VF0 Documentation Lock And Reviewer Team has reviewer PASS.
+- Current follow-up cursor: VF1 Visual Acceptance Gate.
+- Follow `skills/lark-slides/references/svglide-visual-acceptance-repair-action.md`.
+- Do not claim high-quality visual output unless visual_acceptance evidence exists and passes.
 - Do not claim P2/future scope as complete.
 ```
 
@@ -850,8 +868,9 @@ Do not accept demos, screenshots, fake dry-runs, stale receipts, missing hashes,
 or direct Satori SVG as completion evidence.
 
 Current execution cursor:
-Gate 12b Final Full-Plan Acceptance is DONE/PASS for the current P0/P1 milestone.
-P2/future scope remains explicitly not claimed unless PLAN.md and this supervision guide record a new reviewer-approved follow-up completion.
+Visual Acceptance Repair Follow-Up, VF1 Visual Acceptance Gate.
+Gate 12b Final Full-Plan Acceptance remains DONE/PASS for the current P0/P1 engineering milestone.
+P2/future scope remains explicitly not claimed. High-quality visual output is not claimable until visual_acceptance evidence passes.
 
 For every review, answer these checks:
 
@@ -912,9 +931,11 @@ all gates 0-12 are DONE
 all reviewer verdicts are PASS
 PLAN.md completion table is updated
 real live_create/readback evidence exists for P0c
+visual_acceptance evidence exists and passes for any claim of high-quality generated visual output
 legacy direct_svg remains compatible
 artboard_satori path has reproducible fixtures and tests
 packaging/distribution path is explicit enough for CLI users
+current Visual Acceptance Repair follow-up VF gates are DONE/PASS, unless this follow-up is explicitly scoped out in PLAN.md with owner/date
 ```
 
 If any of these are false, the correct status is still `IN_PROGRESS` or `BLOCKED`, not complete.

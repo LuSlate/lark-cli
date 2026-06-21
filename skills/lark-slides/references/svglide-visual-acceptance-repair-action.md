@@ -1,0 +1,308 @@
+# SVGlide Visual Acceptance Repair Action Plan
+
+Last updated: 2026-06-21
+
+## 0. Current Cursor
+
+```text
+Follow-up: Visual Acceptance Repair
+Cursor: VF1 Visual Acceptance Gate
+Status: READY
+Trigger: a real prompt-to-preview run can pass quality_gate and dry_run while the rendered deck is visually unacceptable.
+Previous gate: VF0 Documentation Lock And Reviewer Team DONE/PASS
+```
+
+This is a new follow-up scope after Gate 12b PASS for the current P0/P1 milestone. It does not rewrite that milestone. It fixes the missing visual acceptance layer exposed by real generation runs.
+
+## 1. Problem Statement
+
+The current chain can produce this invalid state:
+
+```text
+quality_gate: passed
+dry_run: passed
+preview: visually unacceptable
+```
+
+Examples of unacceptable output include:
+
+- inconsistent or chaotic palette
+- text overlap
+- text overflow
+- decorative primitives that look arbitrary or sharp without semantic purpose
+- fake chart-like marks without a chart contract
+- real images not integrated into the CanvasSpec layout
+- repeated page composition that makes different topics look nearly identical
+
+`quality_gate` and `dry_run` are engineering gates. They are necessary, but they are not sufficient evidence that the deck is a high-quality generated output.
+
+## 2. Source Of Truth
+
+Primary plan:
+
+```text
+/Users/bytedance/Downloads/PLAN.md
+```
+
+Supervision guide:
+
+```text
+skills/lark-slides/references/svglide-artboard-full-plan-action.md
+```
+
+Relevant current failed/weak evidence surfaces:
+
+```text
+.tmp/current-cli-quality-runs/spacex-ipo-current-cli-20260621-2125
+/Users/bytedance/bd-projects/workspaces/SVGlide/.tmp/theme-comparison-spacex-ipo/outputs/current-cli/current-cli-preview-full.png
+```
+
+If a referenced failed-run path is missing on a later machine, the rule still stands: the next real prompt-to-preview run must be judged by rendered visual evidence, not by receipts alone.
+
+## 3. Definitions
+
+```text
+engineering_pass:
+  quality_gate passed and dry_run passed.
+
+visual_acceptance:
+  rendered preview/contact sheet passes the visual rubric and writes
+  06-check/visual-acceptance.json plus receipts/visual_acceptance.json.
+
+deliverable_pass:
+  engineering_pass and visual_acceptance both pass.
+```
+
+No generated deck may be called "high-quality", "upper bound", "final visual result", or "production-quality preview" unless it reaches `deliverable_pass`.
+
+## 4. Hard Rules
+
+- `quality_gate passed` must not be reported as visual quality pass.
+- `dry_run passed` must not be reported as visual quality pass.
+- A deck with `visual_acceptance=failed` blocks delivery claims even when `quality_gate` and `dry_run` pass.
+- Reviewer evidence must include rendered screenshots/contact sheets, not only JSON receipts.
+- Visual review must inspect the final rendered preview path that the user sees.
+- Random decorative geometry is forbidden unless it has a semantic role, is part of an admitted template, or is marked as a controlled background motif.
+- Chart-like visuals are forbidden unless backed by a chart contract or explicitly classified as non-data decoration.
+- Structural images must be represented in CanvasSpec asset slots before render; late image paste is not enough.
+- Repeated page layouts must be explained by the deck rhythm; accidental sameness across pages or topics is a failure.
+- If visual acceptance fails, the default action is scoped repair of affected templates, theme tokens, CanvasSpec, or assets. Do not default to full regeneration.
+
+## 5. Required Artifacts
+
+Every real prompt-to-preview run that is used to demonstrate quality must include:
+
+```text
+00-input/instruction.json
+02-plan/deck-plan.json
+02-plan/slide-plan.json
+02-plan/slide_plan.json
+03-assets/asset-manifest.json
+05-preview/preview.html
+05-preview/contact-sheet.png
+06-check/quality-gate.json
+06-check/visual-acceptance.json
+07-create/dry-run.json
+receipts/quality_gate.json
+receipts/visual_acceptance.json
+receipts/dry_run.json
+```
+
+The visual acceptance receipt must record:
+
+- input instruction hash
+- final slide plan hash
+- asset manifest hash
+- contact sheet hash
+- preview URL or local preview path
+- checked page count
+- failed pages and issue codes
+- repair recommendation scope
+
+## 6. Visual Acceptance Rubric
+
+The first implementation of `svglide_visual_acceptance.py` must be deterministic and conservative. It should fail obvious bad output before any model-based taste review is added.
+
+Required checks:
+
+- page count matches instruction and final plan
+- each page has a stable screenshot/contact-sheet crop
+- no text bbox exceeds canvas or safe area
+- no high-priority text overlaps another high-priority text bbox
+- text contrast is above the configured threshold
+- title/subtitle/body hierarchy is consistent with the selected template
+- palette stays within the selected theme token plus allowed accent budget
+- page density is within template limits
+- arbitrary triangle/circle/path primitives are either admitted template background motifs or are flagged
+- chart-like marks require chart contract evidence
+- image slots declared by CanvasSpec resolve to real assets and are visible
+- important images do not cover important text
+- page compositions across a deck have planned rhythm, not accidental copy/paste sameness
+
+Model-based visual judgment can be added later, but it cannot replace deterministic failures for overflow, overlap, missing assets, stale hashes, or unsupported chart-like marks.
+
+## 7. Phased Execution
+
+### VF0: Documentation Lock And Reviewer Team
+
+Status: DONE/PASS
+
+Actions:
+
+- Add this document.
+- Update `svglide-artboard-full-plan-action.md` so the active cursor points to this follow-up.
+- Create independent reviewers for visual acceptance and pipeline boundary review.
+
+Acceptance:
+
+- The docs clearly separate `engineering_pass`, `visual_acceptance`, and `deliverable_pass`.
+- The docs block future claims that `quality_gate/dry_run` alone prove visual quality.
+- Reviewer subagents return PASS or concrete blockers.
+
+Review result:
+
+- Visual Gate Reviewer `Volta`: PASS.
+- Pipeline Boundary Reviewer `Kant`: PASS after the docs were revised to keep `quality_gate` and `dry_run` as engineering gates and make `visual_acceptance` a separate delivery/claim gate.
+- Next cursor: VF1 Visual Acceptance Gate.
+
+### VF1: Visual Acceptance Gate
+
+Actions:
+
+- Add `skills/lark-slides/scripts/svglide_visual_acceptance.py`.
+- Add runner stage `visual_acceptance` as a separate delivery/claim gate after `dry_run` in deliverable profiles.
+- Keep `quality_gate` and `dry_run` as engineering gates with their current semantics.
+- Do not make `visual_acceptance` a precondition for `quality_gate` or `dry_run`.
+- Make `deliverable_pass` and any high-quality visual claim require a fresh passed `visual_acceptance` receipt.
+- Define or implement the producer for `05-preview/contact-sheet.png`; `preview.html` plus `preview-manifest.json` alone is not enough visual evidence.
+- Write `06-check/visual-acceptance.json`.
+- Write `receipts/visual_acceptance.json`.
+- Add tests for pass/fail cases.
+
+Acceptance:
+
+- A known visually bad fixture fails before delivery claim.
+- A known valid fixture passes.
+- `quality_gate` and `dry_run` can still pass as engineering gates without visual acceptance.
+- `deliverable_pass`, final visual acceptance, or any high-quality/upper-bound claim cannot pass for artboard Satori runs without a fresh passed visual acceptance receipt.
+- Any opt-out profile must be labeled `engineering_only` or `non_visual` and must not allow visual delivery claims.
+
+### VF2: Screenshot And Geometry Evidence
+
+Actions:
+
+- Bind visual acceptance to the actual `05-preview/contact-sheet.png` and per-page preview artifacts.
+- Add deterministic page crop metadata where needed.
+- Record page-level visual issue locations.
+
+Acceptance:
+
+- Reviewer can open one artifact and see the pages being judged.
+- Failure reports identify page number, issue type, and evidence path.
+
+### VF3: Renderer And Template Guardrails
+
+Actions:
+
+- Add template-level constraints for decorative primitives, chart-like marks, image slots, and density.
+- Reject unregistered geometry patterns in production templates.
+- Make structural images part of CanvasSpec and template planning.
+
+Acceptance:
+
+- The renderer cannot silently invent arbitrary visual primitives.
+- Template fixtures show images and semantic elements integrated by layout, not pasted late.
+
+### VF4: Theme And Deck Rhythm Lock
+
+Actions:
+
+- Add deck-level theme consistency checks.
+- Add planned layout-rhythm checks across pages.
+- Prevent multiple topics from collapsing into the same generic look when distinct templates/assets are available.
+
+Acceptance:
+
+- Two different topics can share a quality standard without becoming visually identical.
+- Same topic reruns may vary in content/assets/layout choices while staying within theme and template rules.
+
+### VF5: Real-Run Benchmark Suite
+
+Actions:
+
+- Add benchmark prompts:
+  - `spacex IPO analysis`
+  - `Iceland volcano research`
+  - `New Zealand landscape`
+- For each prompt, run from instruction capture through planner, assets, preview, quality gate, dry run, and then visual acceptance as the delivery/claim gate.
+- Any earlier visual check is advisory only and must not be counted as `deliverable_pass`.
+- Preserve receipts, previews, screenshots, and repair logs.
+
+Acceptance:
+
+- Bad outputs fail with actionable issue codes.
+- Good outputs pass `deliverable_pass`.
+- Comparison screenshots can be used for user review without relabeling failed outputs as upper-bound demos.
+
+## 8. Reviewer Protocol
+
+Reviewers must answer:
+
+```text
+Verdict: PASS / BLOCKED
+
+Blocking issues:
+- ...
+
+Non-blocking risks:
+- ...
+
+Evidence checked:
+- ...
+
+Next required action:
+- ...
+```
+
+Reviewer PASS for this follow-up requires:
+
+- this document exists and is referenced by the full-plan supervision guide
+- the active cursor is not still Gate 12b stop state
+- visual quality claims are blocked unless visual acceptance artifacts exist
+- the create-svg boundary remains true: final live input is SVGlide protocol SVG, not direct Satori SVG
+- the plan does not weaken existing quality_gate, dry_run, live_create, or readback requirements
+
+## 9. Team Roles
+
+Executor:
+
+- Implements the current VF gate only.
+- Updates this document when the cursor changes.
+- Runs validation commands and records evidence.
+
+Visual Gate Reviewer:
+
+- Challenges whether the visual rubric catches the failures observed in real previews.
+- Requires rendered evidence, not only receipts.
+- Blocks ambiguous claims such as "looks fine" or "quality gate passed".
+
+Pipeline Boundary Reviewer:
+
+- Ensures Satori remains a renderer/converter inside the artboard lane.
+- Ensures final live input remains SVGlide protocol SVG.
+- Ensures `+create-svg` boundary and dry-run/live-create semantics are not bypassed.
+
+Template/Theme Reviewer:
+
+- Challenges template sameness, palette chaos, bad typography, and fake chart-like decoration.
+- Requires source intake and owned Satori-compatible assets for production templates.
+
+## 10. Current Blocking Principle
+
+Until VF1 is implemented and reviewer-approved:
+
+```text
+The chain may be called runnable.
+The chain may be called engineering-pass if quality_gate and dry_run pass.
+The chain must not be called high-quality visual generation, upper-bound output, or final production-quality preview.
+```
