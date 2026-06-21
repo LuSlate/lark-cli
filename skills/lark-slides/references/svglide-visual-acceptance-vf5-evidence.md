@@ -14,6 +14,8 @@ It stops before `live_create`.
 - Added `skills/lark-slides/scripts/svglide_vf5_benchmark_test.py`.
 - Added `skills/lark-slides/scripts/svglide_fixture_model_provider_test.py`.
 - Added explicit `--lark-cli-command` support so benchmark dry-run can use the current branch CLI instead of a stale global `lark-cli`.
+- Added trusted real-route guardrails: non-fixture benchmark runs must use `--trusted-provider-id`, a trusted planner command, `--asset-provider trusted:<provider-id>`, and `--image-backend stage_command`.
+- Added `SVGLIDE_IMAGE_STAGE_COMMAND` support so a trusted internal image provider can materialize local assets during the assets stage; missing/failed commands fail asset acquisition.
 - Expanded `followup_model_loop/fixture_model_provider.py` from one poster-like page to a prompt-aware three-page deck fixture.
 - Removed SpaceX-specific hardcoding from generic prompt-planner instructions.
 - Extended strategy review theme inference for `volcanic_research_lab` and `alpine_coast_travel_board`.
@@ -31,7 +33,7 @@ Command:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 skills/lark-slides/scripts/svglide_vf5_benchmark.py \
-  --run-root .tmp/svglide-vf5-benchmark-fixture-v6 \
+  --run-root .tmp/svglide-vf5-benchmark-fixture-v8 \
   --planner-provider command \
   --planner-command "python3 skills/lark-slides/scripts/fixtures/svglide_artboard/followup_model_loop/fixture_model_provider.py --stage {stage} --raw-output {raw_output}" \
   --lark-cli-command "env GOCACHE=/private/tmp/svglide-gocache go run ." \
@@ -59,23 +61,23 @@ real_benchmark: false
 Artifacts:
 
 ```text
-.tmp/svglide-vf5-benchmark-fixture-v6/06-check/vf5-benchmark.json
-.tmp/svglide-vf5-benchmark-fixture-v6/receipts/vf5-benchmark.json
+.tmp/svglide-vf5-benchmark-fixture-v8/06-check/vf5-benchmark.json
+.tmp/svglide-vf5-benchmark-fixture-v8/receipts/vf5-benchmark.json
 ```
 
 Hashes:
 
 ```text
-vf5-benchmark.json sha256: ad4abfd3e15e7150892ded8b42fd19ffa9a5afc81555157df197172257b79092
-vf5-benchmark receipt sha256: 600bcf55e10cbef1405f9bdc7490f51d783154ac149694e0a0139dc78e1a027d
+vf5-benchmark.json sha256: 70dc9a8a60ffbbd36f4bf8a51949108d107a8f370fb219eb664ff184cae3493a
+vf5-benchmark receipt sha256: 351402b7316786b1248cca267878376989feabe0a20b528b51ecd751bcc76597
 ```
 
 Case project roots:
 
 ```text
-.tmp/svglide-vf5-benchmark-fixture-v6/projects/vf5-spacex-ipo-analysis
-.tmp/svglide-vf5-benchmark-fixture-v6/projects/vf5-iceland-volcano-research
-.tmp/svglide-vf5-benchmark-fixture-v6/projects/vf5-new-zealand-landscape
+.tmp/svglide-vf5-benchmark-fixture-v8/projects/vf5-spacex-ipo-analysis
+.tmp/svglide-vf5-benchmark-fixture-v8/projects/vf5-iceland-volcano-research
+.tmp/svglide-vf5-benchmark-fixture-v8/projects/vf5-new-zealand-landscape
 ```
 
 Per-case result:
@@ -124,7 +126,7 @@ new-zealand-landscape:
   live_create: not run
 ```
 
-The first fixture attempt after prompt-specific support still failed reviewer concerns because generic SpaceX prompt text contaminated non-SpaceX selection. The provider now reads `Instruction.raw_prompt` first, and `svglide_fixture_model_provider_test.py` covers that regression. A later benchmark attempt failed visual distinctness because all three topics reused the same palette and renderer/layout sequence. The current v6 evidence passes after assigning topic-specific `style_preset`, `style_system.palette`, `visual_identity.theme_archetype`, and CanvasSpec theme colors. `visual_distinctness.action` is now `continue_pipeline`, not `create_live`, so local visual approval is not mislabeled as live submission permission.
+The first fixture attempt after prompt-specific support still failed reviewer concerns because generic SpaceX prompt text contaminated non-SpaceX selection. The provider now reads `Instruction.raw_prompt` first, and `svglide_fixture_model_provider_test.py` covers that regression. A later benchmark attempt failed visual distinctness because all three topics reused the same palette and renderer/layout sequence. The current v8 evidence passes after assigning topic-specific `style_preset`, `style_system.palette`, `visual_identity.theme_archetype`, and CanvasSpec theme colors. `visual_distinctness.action` is now `continue_pipeline`, not `create_live`, so local visual approval is not mislabeled as live submission permission.
 
 ## Local CLI Proof
 
@@ -174,16 +176,20 @@ This real benchmark would transmit private repository prompt/schema/template/the
 
 No real benchmark PASS is claimed. The fixture benchmark is a deterministic CI-style chain proof, not a real external-model quality upper bound.
 
+After this blocked probe, non-fixture VF5 mode was tightened: external/default planners such as `codex` and `claude` are not accepted as trusted internal benchmark evidence. A real benchmark now requires an explicit trusted provider id, a trusted planner command, `--asset-provider trusted:<provider-id>`, and `SVGLIDE_IMAGE_STAGE_COMMAND` with `--image-backend stage_command`. This creates the internal route extension point, but no actual trusted internal provider instance has been configured and run yet.
+
 ## Validation Commands
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest skills/lark-slides/scripts/svglide_vf5_benchmark_test.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
+  skills/lark-slides/scripts/svglide_assets_test.py \
+  skills/lark-slides/scripts/svglide_vf5_benchmark_test.py
 ```
 
 Result:
 
 ```text
-Ran 5 tests in 0.639s
+Ran 13 tests in 0.408s
 OK
 ```
 
@@ -223,6 +229,7 @@ OK
 ```bash
 PYTHONPYCACHEPREFIX=/private/tmp/svglide-pycache python3 -m py_compile \
   skills/lark-slides/scripts/svglide_vf5_benchmark.py \
+  skills/lark-slides/scripts/svglide_assets.py \
   skills/lark-slides/scripts/svglide_visual_acceptance.py \
   skills/lark-slides/scripts/svglide_artboard_renderer.py \
   skills/lark-slides/scripts/svglide_prompt_planner.py \
@@ -244,7 +251,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/lark-slides/scr
 Result:
 
 ```text
-Ran 393 tests in 23.797s
+Ran 396 tests in 24.315s
 OK
 ```
 
@@ -255,7 +262,7 @@ env GOCACHE=/private/tmp/svglide-gocache go test .
 Result:
 
 ```text
-ok  	github.com/larksuite/cli	0.622s
+ok  	github.com/larksuite/cli	0.728s
 ```
 
 ```bash
@@ -291,6 +298,6 @@ Notes:
 - PASS applies to VF5 fixture benchmark completion only.
 - `real_benchmark=false`; no real external-model benchmark PASS is claimed.
 - Real visual asset route remains open: all three fixture cases use fallback assets with `asset_real_coverage=0`.
-- Latest v6 re-review confirmed all three `visual_distinctness.action` values are `continue_pipeline`, not `create_live`.
+- Latest v8 re-check confirmed all three `visual_distinctness.action` values are `continue_pipeline`, not `create_live`.
 - The stale `Verdict: pending` footer from an earlier draft was removed after reviewer re-check.
-- Required next action outside this fixture gate: implement a trusted internal real planner/image route before claiming real-model quality or upper-bound output.
+- Required next action outside this fixture gate: configure and run an actual trusted internal planner/image provider instance before claiming real-model quality or upper-bound output.

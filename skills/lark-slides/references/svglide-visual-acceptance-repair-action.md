@@ -312,15 +312,17 @@ Implemented evidence:
 - Added `svglide_vf5_benchmark.py` and `svglide_vf5_benchmark_test.py`.
 - Added `svglide_fixture_model_provider_test.py` to prevent prompt-specific fixtures from collapsing back to one hardcoded topic.
 - Added benchmark-local `--lark-cli-command` so dry-run can use the current branch CLI instead of a stale global `lark-cli`.
+- Added trusted real-route guardrails: non-fixture VF5 now requires a `trusted_provider_id`, a trusted planner command, `--asset-provider trusted:<provider-id>`, and `--image-backend stage_command`.
+- Added executable `SVGLIDE_IMAGE_STAGE_COMMAND` support so trusted internal image providers can materialize local assets during the assets stage; missing/failed stage command now fails asset acquisition instead of silently producing a real benchmark.
 - Expanded the follow-up fixture model provider to a prompt-aware three-page deck with deck/slide/canvas planner outputs, canvas specs, asset contracts, loaded rules, visible template keys, chart contracts, topic-specific style presets, topic-specific palettes, and topic-specific CanvasSpec theme colors.
 - Removed SpaceX-specific hardcoding from generic prompt-planner instructions.
 - Extended strategy review theme inference for `volcanic_research_lab` and `alpine_coast_travel_board`.
 - Strengthened canvas planner prompt constraints so renderer fallback text, object-form `data-story.metrics`, missing loaded rules, and missing chart contracts are rejected upstream.
 - Updated semantic role mapping so `data-story` data marks are checked as chart primitives rather than arbitrary decoration.
-- Fixture benchmark path: `.tmp/svglide-vf5-benchmark-fixture-v6`.
+- Fixture benchmark path: `.tmp/svglide-vf5-benchmark-fixture-v8`.
 - Fixture benchmark status: `passed`, 3/3 cases, 3/3 `deliverable_pass`, `live_create` not run.
-- Fixture benchmark hash: `ad4abfd3e15e7150892ded8b42fd19ffa9a5afc81555157df197172257b79092`.
-- Fixture receipt hash: `600bcf55e10cbef1405f9bdc7490f51d783154ac149694e0a0139dc78e1a027d`.
+- Fixture benchmark hash: `70dc9a8a60ffbbd36f4bf8a51949108d107a8f370fb219eb664ff184cae3493a`.
+- Fixture receipt hash: `351402b7316786b1248cca267878376989feabe0a20b528b51ecd751bcc76597`.
 - Distinctness proof:
   - `spacex IPO 分析`: `raw_grid`, `space_capital_market`, action `continue_pipeline`, contact sheet `1119b9474eb5286ae47689c2ebdc3b6d9f2627fbac6dfff0586972b17746a34a`.
   - `冰岛火山研究`: `editorial_forest`, `volcanic_research_lab`, action `continue_pipeline`, contact sheet `1b0c93451c2b7c8ed19d8e81d4a1e9258ac1cae5951e40fd9b25ca3f42cfd280`.
@@ -331,12 +333,13 @@ Real probe status:
 
 - A real `codex` planner + online asset probe was attempted for `spacex-ipo-analysis`.
 - Execution was blocked before start by environment escalation policy because it would transmit private repo prompt/schema/template/theme context to external model and image services.
+- After this blocker, the benchmark was tightened so external/default planners are not accepted as trusted internal real-route evidence.
 - No real benchmark PASS is claimed.
 
 Reviewer status:
 
 - Reviewer `Feynman`: PASS for VF5 fixture benchmark completion.
-- Remaining scope: trusted internal real planner/image route is still missing; no real external-model benchmark PASS is claimed.
+- Remaining scope: an actual trusted internal planner/image provider instance still has not been configured and run; no real external-model benchmark PASS is claimed.
 
 ## 8. Reviewer Protocol
 

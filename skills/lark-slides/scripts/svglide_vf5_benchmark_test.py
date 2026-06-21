@@ -26,8 +26,8 @@ def args_for(tmpdir: str, **overrides: object) -> argparse.Namespace:
         "run_root": Path(tmpdir) / "vf5-run",
         "project_runner": Path(__file__).resolve().parent / "svglide_project_runner.py",
         "case": None,
-        "planner_provider": "codex",
-        "planner_command": None,
+        "planner_provider": "command",
+        "planner_command": "trusted-planner",
         "lark_cli_command": None,
         "target_slide_count": 8,
         "language": "zh-CN",
@@ -35,8 +35,9 @@ def args_for(tmpdir: str, **overrides: object) -> argparse.Namespace:
         "timeout": 60,
         "no_search": False,
         "network_policy": "auto",
-        "asset_provider": "auto",
-        "image_backend": "auto",
+        "asset_provider": "trusted:test",
+        "image_backend": "stage_command",
+        "trusted_provider_id": "internal-test",
         "no_online_research": False,
         "no_image_search": False,
         "no_ai_image": False,
@@ -179,17 +180,22 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
     def test_real_mode_blocks_non_real_planner_and_disabled_assets(self) -> None:
         config = args_for(
             tempfile.gettempdir(),
-            planner_provider="command",
+            planner_provider="codex",
+            planner_command=None,
             network_policy="fixture",
+            asset_provider="auto",
             image_backend="none",
+            trusted_provider_id=None,
             no_image_search=True,
             no_ai_image=True,
         )
 
         codes = {item["code"] for item in benchmark.assert_real_mode(config)}
 
-        self.assertIn("planner_provider_not_real", codes)
+        self.assertIn("trusted_provider_id_missing", codes)
+        self.assertIn("planner_provider_external_untrusted", codes)
         self.assertIn("asset_network_not_real", codes)
+        self.assertIn("asset_provider_not_trusted_internal", codes)
         self.assertIn("image_search_disabled", codes)
         self.assertIn("ai_image_disabled", codes)
         self.assertIn("image_backend_none", codes)
@@ -198,8 +204,15 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             config = args_for(tmpdir)
             fake = FakeRunner(acquired_count=2, visual_deliverable_pass=True)
-
-            result = benchmark.run_benchmark(config, command_func=fake)
+            previous = os.environ.get("SVGLIDE_IMAGE_STAGE_COMMAND")
+            os.environ["SVGLIDE_IMAGE_STAGE_COMMAND"] = "trusted-image-command"
+            try:
+                result = benchmark.run_benchmark(config, command_func=fake)
+            finally:
+                if previous is None:
+                    os.environ.pop("SVGLIDE_IMAGE_STAGE_COMMAND", None)
+                else:
+                    os.environ["SVGLIDE_IMAGE_STAGE_COMMAND"] = previous
 
             self.assertEqual("passed", result["status"])
             self.assertEqual(3, result["summary"]["case_count"])
@@ -210,12 +223,34 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
             self.assertTrue(all(item["stage_statuses"]["live_create"] is None for item in result["cases"]))
             self.assertTrue(all(item["checks"]["visual_acceptance"]["deliverable_pass"] is True for item in result["cases"]))
 
+    def test_real_mode_mode_issues_fail_before_running_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = args_for(tmpdir, planner_provider="codex", planner_command=None, asset_provider="auto", image_backend="auto", trusted_provider_id=None)
+            fake = FakeRunner(acquired_count=2, visual_deliverable_pass=True)
+
+            result = benchmark.run_benchmark(config, command_func=fake)
+
+            self.assertEqual("failed", result["status"])
+            self.assertEqual([], result["cases"])
+            self.assertEqual([], fake.commands)
+            self.assertTrue(result["mode_issues"])
+            self.assertEqual(3, result["summary"]["failed_count"])
+            self.assertTrue((Path(result["run_root"]) / "06-check/vf5-benchmark.json").exists())
+            self.assertTrue((Path(result["run_root"]) / "receipts/vf5-benchmark.json").exists())
+
     def test_real_mode_fails_when_assets_do_not_acquire_real_visuals(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             config = args_for(tmpdir)
             fake = FakeRunner(acquired_count=0, visual_deliverable_pass=True)
-
-            result = benchmark.run_benchmark(config, command_func=fake)
+            previous = os.environ.get("SVGLIDE_IMAGE_STAGE_COMMAND")
+            os.environ["SVGLIDE_IMAGE_STAGE_COMMAND"] = "trusted-image-command"
+            try:
+                result = benchmark.run_benchmark(config, command_func=fake)
+            finally:
+                if previous is None:
+                    os.environ.pop("SVGLIDE_IMAGE_STAGE_COMMAND", None)
+                else:
+                    os.environ["SVGLIDE_IMAGE_STAGE_COMMAND"] = previous
 
             self.assertEqual("failed", result["status"])
             self.assertEqual(3, result["summary"]["failed_count"])
@@ -241,7 +276,9 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
     def test_benchmark_sets_local_lark_cli_command_only_for_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             previous = os.environ.get("SVGLIDE_LARK_CLI_CMD")
+            previous_image = os.environ.get("SVGLIDE_IMAGE_STAGE_COMMAND")
             os.environ.pop("SVGLIDE_LARK_CLI_CMD", None)
+            os.environ["SVGLIDE_IMAGE_STAGE_COMMAND"] = "trusted-image-command"
             try:
                 config = args_for(tmpdir, lark_cli_command="go run .")
                 fake = FakeRunner(acquired_count=2, visual_deliverable_pass=True)
@@ -253,6 +290,10 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
             finally:
                 if previous is not None:
                     os.environ["SVGLIDE_LARK_CLI_CMD"] = previous
+                if previous_image is None:
+                    os.environ.pop("SVGLIDE_IMAGE_STAGE_COMMAND", None)
+                else:
+                    os.environ["SVGLIDE_IMAGE_STAGE_COMMAND"] = previous_image
 
 
 if __name__ == "__main__":

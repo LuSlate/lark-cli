@@ -8,6 +8,9 @@ import argparse
 import hashlib
 import json
 import mimetypes
+import os
+import shlex
+import subprocess
 import sys
 import urllib.error
 import urllib.parse
@@ -29,6 +32,7 @@ IMAGE_JOBS = ASSETS_DIR / "image-jobs.json"
 RECEIPT_PATH = Path("receipts/assets.json")
 NETWORK_POLICIES = {"auto", "online", "offline", "fixture"}
 IMAGE_BACKENDS = {"auto", "openai", "gemini", "qwen", "flux", "stage_command", "none"}
+STAGE_COMMAND_ENV = "SVGLIDE_IMAGE_STAGE_COMMAND"
 
 
 class AssetsError(Exception):
@@ -252,6 +256,120 @@ def build_image_job(contract: dict[str, Any], *, asset_id: str, backend: str) ->
     }
 
 
+def stage_command_output_path(project: Path, asset_id: str) -> Path:
+    return project / RAW_ASSETS_DIR / f"{asset_id}.png"
+
+
+def run_stage_command_image(
+    project: Path,
+    contract: dict[str, Any],
+    *,
+    asset_id: str,
+    provider: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    job = build_image_job(contract, asset_id=asset_id, backend="stage_command")
+    output_path = stage_command_output_path(project, asset_id)
+    command_text = os.environ.get(STAGE_COMMAND_ENV)
+    job["output_path"] = output_path.as_posix()
+    job["provider"] = provider
+    if not command_text:
+        job.update({"status": "failed", "error": f"{STAGE_COMMAND_ENV} is required for image_backend=stage_command"})
+        return {
+            "asset_id": asset_id,
+            "page": contract.get("usage_page") or contract.get("page"),
+            "placement_role": placement_role(contract),
+            "asset_kind": "generated_image",
+            "query": image_query(contract),
+            "provider": provider,
+            "license": None,
+            "retrieved_at": None,
+            "safe_text_zones": contract.get("safe_text_zones") if isinstance(contract.get("safe_text_zones"), list) else [],
+            "crop_hint": contract.get("crop_hint") if isinstance(contract.get("crop_hint"), str) else None,
+            "source_url": None,
+            "file": None,
+            "sha256": None,
+            "status": "failed",
+            "fallback_reason": f"{STAGE_COMMAND_ENV} missing",
+            "required": bool(contract.get("required", True)),
+        }, job
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    command = shlex.split(command_text)
+    input_payload = dict(job)
+    input_payload["contract"] = contract
+    input_payload["project_root"] = project.as_posix()
+    completed = subprocess.run(
+        command,
+        cwd=project,
+        input=json.dumps(input_payload, ensure_ascii=False),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    job.update(
+        {
+            "command": command,
+            "returncode": completed.returncode,
+            "stdout_tail": completed.stdout[-1000:],
+            "stderr_tail": completed.stderr[-2000:],
+        }
+    )
+    response: dict[str, Any] = {}
+    if completed.stdout.strip():
+        try:
+            parsed = json.loads(completed.stdout)
+            if isinstance(parsed, dict):
+                response = parsed
+        except json.JSONDecodeError:
+            response = {}
+    if completed.returncode != 0:
+        job.update({"status": "failed", "error": "stage command failed"})
+    elif not output_path.exists() or not output_path.is_file():
+        job.update({"status": "failed", "error": f"stage command did not create {output_path}"})
+    else:
+        job["status"] = "acquired"
+    if job["status"] != "acquired":
+        return {
+            "asset_id": asset_id,
+            "page": contract.get("usage_page") or contract.get("page"),
+            "placement_role": placement_role(contract),
+            "asset_kind": "generated_image",
+            "query": image_query(contract),
+            "provider": provider,
+            "license": None,
+            "retrieved_at": None,
+            "safe_text_zones": contract.get("safe_text_zones") if isinstance(contract.get("safe_text_zones"), list) else [],
+            "crop_hint": contract.get("crop_hint") if isinstance(contract.get("crop_hint"), str) else None,
+            "source_url": None,
+            "file": None,
+            "sha256": None,
+            "status": "failed",
+            "fallback_reason": str(job.get("error") or "stage_command_failed"),
+            "required": bool(contract.get("required", True)),
+        }, job
+    item = {
+        "asset_id": asset_id,
+        "page": contract.get("usage_page") or contract.get("page"),
+        "placement_role": placement_role(contract),
+        "asset_kind": "generated_image",
+        "query": image_query(contract),
+        "provider": provider,
+        "license": response.get("license") if isinstance(response.get("license"), str) else "internal_generated",
+        "retrieved_at": now_iso(),
+        "safe_text_zones": contract.get("safe_text_zones") if isinstance(contract.get("safe_text_zones"), list) else [],
+        "crop_hint": contract.get("crop_hint") if isinstance(contract.get("crop_hint"), str) else None,
+        "source_url": response.get("source_url") if isinstance(response.get("source_url"), str) else "stage_command",
+        "file": relpath(output_path, project),
+        "sha256": file_sha256(output_path),
+        "status": "acquired",
+        "fallback_reason": None,
+        "required": bool(contract.get("required", True)),
+    }
+    colors = dominant_colors(output_path)
+    if colors:
+        item["dominant_colors"] = colors
+    return item, job
+
+
 def acquire_contract_asset(
     project: Path,
     contract: dict[str, Any],
@@ -312,6 +430,8 @@ def acquire_contract_asset(
                 return base, None
             except (OSError, urllib.error.URLError, TimeoutError) as error:
                 base["fallback_reason"] = f"download_failed: {error}"
+    if image_backend == "stage_command" and not no_ai_image:
+        return run_stage_command_image(project, contract, asset_id=asset_id, provider=provider)
     if policy == "fixture":
         base.update({"asset_kind": "svg_fallback", "status": "fallback_used", "fallback_reason": "network_policy=fixture"})
     elif not online_enabled(policy) or no_image_search:
@@ -465,6 +585,15 @@ def run_assets(
                 evaluated_item["status"] = "acquired"
                 evaluated_item["issues"] = []
     issues = [issue for item in evaluated for issue in item["issues"]]
+    for item in acquired:
+        if item.get("status") == "failed" and item.get("required", True):
+            issues.append(
+                {
+                    "code": "asset_acquisition_failed",
+                    "message": str(item.get("fallback_reason") or "asset acquisition failed"),
+                    "asset_id": str(item.get("asset_id") or ""),
+                }
+            )
     status = "failed" if issues else "passed"
     manifest = {
         "version": "svglide-assets/v1",

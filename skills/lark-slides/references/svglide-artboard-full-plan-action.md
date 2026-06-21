@@ -26,7 +26,7 @@ The current execution cursor is:
 Visual Acceptance Repair Follow-Up: VF5 Real-Run Benchmark Suite
 Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_REAL_ROUTE_POLICY_BLOCKED
 Current issue: Gate 12b/P0-P1 engineering milestone is PASS, but real prompt-to-preview runs can still pass quality_gate/dry_run while producing visually unacceptable decks.
-Next allowed executor task: implement a trusted internal real planner/image route before any real-model quality or upper-bound claim.
+Next allowed executor task: configure and run an actual trusted internal planner/image provider instance before any real-model quality or upper-bound claim.
 Next forbidden executor task: claiming high-quality, upper-bound, final visual, or production-quality generated output without fresh visual_acceptance evidence.
 ```
 
@@ -833,16 +833,17 @@ Completed follow-up gates:
 Current follow-up cursor:
 - VF5 Real-Run Benchmark Suite.
 - Code implemented.
-- Fixture benchmark v6 passed 3/3 cases through quality_gate, dry_run, and visual_acceptance.
-- Fixture benchmark v6 also passed cross-topic visual distinctness: SpaceX uses `raw_grid`/`space_capital_market`, Iceland uses `editorial_forest`/`volcanic_research_lab`, and New Zealand uses `cobalt_bloom`/`alpine_coast_travel_board`; all distinctness pass actions are `continue_pipeline`, not `create_live`.
+- Fixture benchmark v8 passed 3/3 cases through quality_gate, dry_run, and visual_acceptance.
+- Fixture benchmark v8 also passed cross-topic visual distinctness: SpaceX uses `raw_grid`/`space_capital_market`, Iceland uses `editorial_forest`/`volcanic_research_lab`, and New Zealand uses `cobalt_bloom`/`alpine_coast_travel_board`; all distinctness pass actions are `continue_pipeline`, not `create_live`.
 - Fixture benchmark artifacts:
-  - `.tmp/svglide-vf5-benchmark-fixture-v6/06-check/vf5-benchmark.json`
-  - `.tmp/svglide-vf5-benchmark-fixture-v6/receipts/vf5-benchmark.json`
-  - benchmark hash `ad4abfd3e15e7150892ded8b42fd19ffa9a5afc81555157df197172257b79092`
-  - receipt hash `600bcf55e10cbef1405f9bdc7490f51d783154ac149694e0a0139dc78e1a027d`
+  - `.tmp/svglide-vf5-benchmark-fixture-v8/06-check/vf5-benchmark.json`
+  - `.tmp/svglide-vf5-benchmark-fixture-v8/receipts/vf5-benchmark.json`
+  - benchmark hash `70dc9a8a60ffbbd36f4bf8a51949108d107a8f370fb219eb664ff184cae3493a`
+  - receipt hash `351402b7316786b1248cca267878376989feabe0a20b528b51ecd751bcc76597`
 - Real codex planner + online asset probe was attempted but blocked before execution by environment policy because it would transmit private repo prompt/schema/template/theme context to external model/image services.
+- Non-fixture VF5 mode now requires an explicit trusted provider id, trusted planner command, trusted asset provider id, and `SVGLIDE_IMAGE_STAGE_COMMAND` with `--image-backend stage_command`; external/default planners are not accepted as trusted real-route evidence.
 - Reviewer verdict: Feynman PASS for fixture benchmark completion.
-- Remaining required action: add a trusted internal real planner/image route before claiming real-model quality or upper-bound output.
+- Remaining required action: configure and run an actual trusted internal planner/image provider instance before claiming real-model quality or upper-bound output.
 
 Next required action:
 - Reviewer audit for `skills/lark-slides/references/svglide-visual-acceptance-vf5-evidence.md`.

@@ -38,7 +38,8 @@ DEFAULT_CASES = [
         "audience": "旅行内容策划读者",
     },
 ]
-REAL_PLANNER_PROVIDERS = {"codex", "claude"}
+REAL_PLANNER_PROVIDERS = {"command"}
+EXTERNAL_PLANNER_PROVIDERS = {"codex", "claude"}
 IMAGE_BACKENDS = {"auto", "openai", "gemini", "qwen", "flux", "stage_command", "none"}
 NETWORK_POLICIES = {"auto", "online", "offline", "fixture"}
 
@@ -134,16 +135,27 @@ def assert_real_mode(args: argparse.Namespace) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     if args.fixture_mode:
         return issues
+    trusted_provider_id = getattr(args, "trusted_provider_id", None)
+    if not isinstance(trusted_provider_id, str) or not trusted_provider_id.strip():
+        issues.append({"code": "trusted_provider_id_missing", "message": "real VF5 runs must name the trusted internal planner/image provider"})
     if args.planner_provider not in REAL_PLANNER_PROVIDERS:
-        issues.append({"code": "planner_provider_not_real", "message": "real VF5 runs must use codex or claude planner provider"})
+        code = "planner_provider_external_untrusted" if args.planner_provider in EXTERNAL_PLANNER_PROVIDERS else "planner_provider_not_real"
+        issues.append({"code": code, "message": "real VF5 runs must use a trusted internal planner command, not an external/default planner"})
+    if args.planner_provider == "command" and not args.planner_command:
+        issues.append({"code": "planner_command_missing", "message": "trusted real VF5 runs must provide --planner-command"})
     if args.network_policy in {"offline", "fixture"}:
         issues.append({"code": "asset_network_not_real", "message": "real VF5 runs must use auto or online network policy"})
+    if not isinstance(args.asset_provider, str) or not args.asset_provider.startswith("trusted:"):
+        issues.append({"code": "asset_provider_not_trusted_internal", "message": "real VF5 runs must set --asset-provider trusted:<provider-id>"})
     if args.no_image_search:
         issues.append({"code": "image_search_disabled", "message": "real VF5 runs must not disable image search"})
     if args.no_ai_image:
         issues.append({"code": "ai_image_disabled", "message": "real VF5 runs must not disable AI image planning"})
-    if args.image_backend == "none":
-        issues.append({"code": "image_backend_none", "message": "real VF5 runs must not use image-backend none"})
+    if args.image_backend != "stage_command":
+        code = "image_backend_none" if args.image_backend == "none" else "image_backend_not_trusted_internal"
+        issues.append({"code": code, "message": "real VF5 runs must use --image-backend stage_command with a trusted internal command"})
+    elif not os.environ.get("SVGLIDE_IMAGE_STAGE_COMMAND"):
+        issues.append({"code": "image_stage_command_missing", "message": "real VF5 runs with stage_command require SVGLIDE_IMAGE_STAGE_COMMAND"})
     return issues
 
 
@@ -442,6 +454,49 @@ def run_benchmark(
     project_runner = command_project_runner(args)
     mode_issues = assert_real_mode(args)
     cases = selected_cases(args.case)
+    if mode_issues:
+        payload = {
+            "schema_version": "svglide-vf5-benchmark/v1",
+            "status": "failed",
+            "run_root": run_root.as_posix(),
+            "created_at": now_iso(),
+            "fixture_mode": bool(args.fixture_mode),
+            "real_benchmark": not bool(args.fixture_mode),
+            "planner_provider": args.planner_provider,
+            "planner_search_enabled": not args.no_search,
+            "network_policy": args.network_policy,
+            "asset_provider": args.asset_provider,
+            "image_backend": args.image_backend,
+            "trusted_provider_id": getattr(args, "trusted_provider_id", None),
+            "lark_cli_command": args.lark_cli_command or os.environ.get("SVGLIDE_LARK_CLI_CMD") or "lark-cli",
+            "no_image_search": bool(args.no_image_search),
+            "no_ai_image": bool(args.no_ai_image),
+            "target_stage": "visual_acceptance",
+            "stopped_before_live_create": True,
+            "mode_issues": mode_issues,
+            "cases": [],
+            "summary": {
+                "case_count": len(cases),
+                "passed_count": 0,
+                "failed_count": len(cases),
+                "deliverable_pass_count": 0,
+            },
+        }
+        write_json(run_root / "06-check/vf5-benchmark.json", payload)
+        receipt = {
+            "schema_version": "svglide-vf5-benchmark-receipt/v1",
+            "stage": "vf5_benchmark",
+            "status": "failed",
+            "created_at": payload["created_at"],
+            "run_root": run_root.as_posix(),
+            "check_path": "06-check/vf5-benchmark.json",
+            "check_sha256": file_sha256(run_root / "06-check/vf5-benchmark.json"),
+            "case_project_roots": [],
+            "summary": payload["summary"],
+            "mode_issues": mode_issues,
+        }
+        write_json(run_root / "receipts/vf5-benchmark.json", receipt)
+        return payload
     command_func = command_func or (lambda command, cwd: run_command(command, cwd=cwd))
     previous_lark_cli_command = os.environ.get("SVGLIDE_LARK_CLI_CMD")
     if args.lark_cli_command:
@@ -477,6 +532,7 @@ def run_benchmark(
         "network_policy": args.network_policy,
         "asset_provider": args.asset_provider,
         "image_backend": args.image_backend,
+        "trusted_provider_id": getattr(args, "trusted_provider_id", None),
         "lark_cli_command": args.lark_cli_command or os.environ.get("SVGLIDE_LARK_CLI_CMD") or "lark-cli",
         "no_image_search": bool(args.no_image_search),
         "no_ai_image": bool(args.no_ai_image),
@@ -523,6 +579,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-search", action="store_true")
     parser.add_argument("--network-policy", default="auto", choices=sorted(NETWORK_POLICIES))
     parser.add_argument("--asset-provider", default="auto")
+    parser.add_argument("--trusted-provider-id", help="trusted internal provider id required for non-fixture VF5 benchmark runs")
     parser.add_argument("--image-backend", default="auto", choices=sorted(IMAGE_BACKENDS))
     parser.add_argument("--no-online-research", action="store_true")
     parser.add_argument("--no-image-search", action="store_true")
