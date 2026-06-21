@@ -1,0 +1,61 @@
+{
+  "action": "repair_and_rerun",
+  "checked_at": "2026-06-21T21:34:08+08:00",
+  "contrast_failures": [],
+  "contrast_unresolved": [],
+  "inputs": {
+    "plan_sha256": "37ec82d0f615e7daf9ab498684597ebc93748372a1f8c56daec548ba01a3e425",
+    "slide_plan": "02-plan/slide_plan.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_validate_sha256": "bec8dd0adf58083b70607bfa7d1ddaabd67b53826bf1c15e43c92348bb999d12"
+  },
+  "issues": [
+    {
+      "code": "theme_unknown_color",
+      "message": "color #123456 is not allowed by theme dark-clarity",
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg"
+    }
+  ],
+  "output_path": "06-check/theme-adherence.json",
+  "pages": [
+    {
+      "issues": [
+        {
+          "code": "theme_unknown_color",
+          "message": "color #123456 is not allowed by theme dark-clarity",
+          "page": 1,
+          "path": "04-svg/prepared/page-001.svg"
+        }
+      ],
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "9a86436dad4a18fcb65e7a41a37ed7c6aa6f59bd79ef15f041feaa16675e62b7",
+      "status": "failed",
+      "theme_id": "dark-clarity"
+    }
+  ],
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "9a86436dad4a18fcb65e7a41a37ed7c6aa6f59bd79ef15f041feaa16675e62b7"
+    }
+  ],
+  "schema_version": "svglide-theme-adherence/v1",
+  "stage": "theme_adherence",
+  "status": "failed",
+  "summary": {
+    "contrast_unresolved_count": 0,
+    "error_count": 1,
+    "prepared_svg_count": 1,
+    "unknown_color_count": 1,
+    "warning_count": 0
+  },
+  "unknown_colors": [
+    {
+      "color": "#123456",
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg"
+    }
+  ]
+}

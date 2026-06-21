@@ -1,0 +1,30 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-21T00:00:00+08:00",
+  "inputs": {
+    "plan_sha256": "stale",
+    "slide_plan": "02-plan/slide_plan.json"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-validate.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "status": "passed",
+      "template_id": "cover-hero",
+      "theme_id": "dark-clarity",
+      "theme_sha256": "stale"
+    }
+  ],
+  "schema_version": "svglide-theme-validate/v1",
+  "stage": "theme_validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 1,
+    "theme_count": 1,
+    "warning_count": 0
+  },
+  "theme_files": []
+}

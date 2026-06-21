@@ -1,0 +1,39 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-21T21:34:00+08:00",
+  "inputs": {
+    "plan_sha256": "37ec82d0f615e7daf9ab498684597ebc93748372a1f8c56daec548ba01a3e425",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "78c6639ee435ff8b8818f64f7b536967a7486281eacab5abce8e20626e20f6b3",
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "62ea0e69b9f5380a11622a6a47f6947943601f4cc3f1bdba1c7f4e45d77db959"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-validate.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "status": "passed",
+      "template_id": "cover-hero",
+      "theme_id": "dark-clarity",
+      "theme_sha256": "707e671d244fb10d975a10da1c78692b215e8544bc44eb1bb4c0a55dfaec01c1"
+    }
+  ],
+  "schema_version": "svglide-theme-validate/v1",
+  "stage": "theme_validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 1,
+    "theme_count": 1,
+    "warning_count": 0
+  },
+  "theme_files": [
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/dark-clarity.json",
+      "sha256": "f47cfdcc5c29d4b694820c097a8cccedc964d072211b579c0a91e3702189ab1b"
+    }
+  ]
+}

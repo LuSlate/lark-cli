@@ -151,6 +151,33 @@ def sorted_hash_records(records: list[dict[str, str]]) -> list[dict[str, str]]:
     return sorted(records, key=lambda item: item["path"])
 
 
+def normalize_reviewed_artifacts(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, list):
+        return None
+    normalized: dict[str, Any] = {}
+    prepared: list[dict[str, str]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            return None
+        kind = item.get("kind")
+        path = item.get("path")
+        sha = item.get("sha256")
+        if not isinstance(kind, str) or not isinstance(path, str) or not isinstance(sha, str):
+            return None
+        record = {"path": path, "sha256": sha}
+        if kind == "prepared_svg":
+            prepared.append(record)
+        elif kind in ARTIFACT_PATHS:
+            normalized[kind] = record
+        else:
+            normalized[kind] = record
+    if prepared:
+        normalized["prepared_svg"] = prepared
+    return normalized
+
+
 def validate_hash_value(
     issues: list[dict[str, str]],
     *,
@@ -386,7 +413,7 @@ def validate_reviewed_artifacts(
     project: Path,
     current_prepared: list[dict[str, str]],
 ) -> list[dict[str, Any]]:
-    reviewed = human.get("reviewed_artifacts") if isinstance(human.get("reviewed_artifacts"), dict) else {}
+    reviewed = normalize_reviewed_artifacts(human.get("reviewed_artifacts"))
     evidence: list[dict[str, Any]] = []
     if not reviewed:
         issues.append(issue("human_review", "reviewed_artifacts_missing", "human review must include reviewed_artifacts", category="missing_input"))
@@ -446,7 +473,7 @@ def validate_human_bindings(
     elif recorded_prepared != sorted_hash_records(current_prepared):
         issues.append(issue("human_review", "human_prepared_files_stale", "human review prepared_files do not match current prepared SVG files", category="stale_hash"))
 
-    reviewed_artifacts = human.get("reviewed_artifacts") if isinstance(human.get("reviewed_artifacts"), dict) else {}
+    reviewed_artifacts = normalize_reviewed_artifacts(human.get("reviewed_artifacts")) or {}
     quality_gate_review = reviewed_artifacts.get("quality_gate") if isinstance(reviewed_artifacts, dict) else None
     if isinstance(quality_gate_review, dict) and quality_gate_review.get("sha256") != human.get("quality_gate_sha256"):
         issues.append(issue("human_review", "human_quality_gate_hash_disagrees", "quality_gate_sha256 must match reviewed_artifacts.quality_gate.sha256", category="stale_hash"))

@@ -1,0 +1,55 @@
+{
+  "generation_mode": "artboard_satori",
+  "language": "zh-CN",
+  "theme_id": "dark-clarity",
+  "slides": [
+    {
+      "page": 1,
+      "page_type": "cover",
+      "title": "主题系统封面",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "template_id": "cover-hero",
+        "theme_id": "dark-clarity",
+        "theme": {
+          "colors": {
+            "background": "#0F172A",
+            "text": "#F8FAFC"
+          }
+        }
+      }
+    },
+    {
+      "page": 2,
+      "page_type": "content",
+      "title": "主题系统正文",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "template_id": "comparison-cards",
+        "theme_id": "dark-clarity",
+        "theme": {
+          "colors": {
+            "background": "#0F172A",
+            "text": "#F8FAFC"
+          }
+        }
+      }
+    },
+    {
+      "page": 3,
+      "page_type": "closing",
+      "title": "主题系统结尾",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "template_id": "summary-final",
+        "theme_id": "dark-clarity",
+        "theme": {
+          "colors": {
+            "background": "#0F172A",
+            "text": "#F8FAFC"
+          }
+        }
+      }
+    }
+  ]
+}

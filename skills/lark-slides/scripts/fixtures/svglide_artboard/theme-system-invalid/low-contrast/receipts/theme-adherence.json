@@ -1,0 +1,63 @@
+{
+  "action": "repair_and_rerun",
+  "checked_at": "2026-06-21T21:34:08+08:00",
+  "contrast_failures": [
+    {
+      "min": 4.5,
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "ratio": 1.0064,
+      "text_index": 0
+    }
+  ],
+  "contrast_unresolved": [],
+  "inputs": {
+    "plan_sha256": "9d54b389938c4a1d52a2ff9ef4cffacf7fc90d4282aee5154ba85d1b78198fc3",
+    "slide_plan": "02-plan/slide_plan.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_validate_sha256": "0d72cbf9f836201ee3e7f8589a2b2fbdd00907e5e89a69640d5060bc98d7c65b"
+  },
+  "issues": [
+    {
+      "code": "contrast_too_low",
+      "message": "text contrast 1.01 is below 4.5",
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg"
+    }
+  ],
+  "output_path": "06-check/theme-adherence.json",
+  "pages": [
+    {
+      "issues": [
+        {
+          "code": "contrast_too_low",
+          "message": "text contrast 1.01 is below 4.5",
+          "page": 1,
+          "path": "04-svg/prepared/page-001.svg"
+        }
+      ],
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "b18e154042df52110f187d53683dbb3faff57944db65a5c218e313b57615d7f6",
+      "status": "failed",
+      "theme_id": "dark-clarity"
+    }
+  ],
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "b18e154042df52110f187d53683dbb3faff57944db65a5c218e313b57615d7f6"
+    }
+  ],
+  "schema_version": "svglide-theme-adherence/v1",
+  "stage": "theme_adherence",
+  "status": "failed",
+  "summary": {
+    "contrast_unresolved_count": 0,
+    "error_count": 1,
+    "prepared_svg_count": 1,
+    "unknown_color_count": 0,
+    "warning_count": 0
+  },
+  "unknown_colors": []
+}

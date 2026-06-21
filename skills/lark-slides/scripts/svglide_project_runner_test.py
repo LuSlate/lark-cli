@@ -528,6 +528,53 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertLess(called_stages.index("pre_submit_review"), called_stages.index("live_create"))
             self.assertTrue(all(profile == "production_live" for _, profile in calls))
 
+    def test_pre_submit_review_uses_documented_human_review_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            state = runner.load_state(project_root)
+            state.setdefault("stages", {})["ppe_proof"] = {"status": "passed"}
+            captured: dict[str, object] = {}
+            original_run_script_stage = runner.run_script_stage
+
+            def fake_run_script_stage(
+                project_root: Path,
+                state: dict[str, object],
+                stage: str,
+                command: list[str],
+                *,
+                output_json: Path | None = None,
+                inputs: list[str] | None = None,
+                outputs: list[str] | None = None,
+                command_runner=runner.subprocess.run,
+            ) -> dict[str, object]:
+                captured["command"] = command
+                captured["inputs"] = inputs
+                return runner.complete_stage(
+                    project_root,
+                    state,
+                    stage,
+                    "passed",
+                    started_at=runner.now_iso(),
+                    inputs=inputs,
+                    outputs=outputs,
+                    command=command,
+                )
+
+            try:
+                runner.run_script_stage = fake_run_script_stage
+                runner.run_implemented_stage(project_root, "pre_submit_review", state, profile="production_live")
+            finally:
+                runner.run_script_stage = original_run_script_stage
+
+            command = captured["command"]
+            inputs = captured["inputs"]
+            self.assertIsInstance(command, list)
+            self.assertIsInstance(inputs, list)
+            self.assertIn((project_root / "06-check/pre-submit-human-review.json").as_posix(), command)
+            self.assertIn("06-check/pre-submit-human-review.json", inputs)
+
     def test_init_creates_project_directories_manifest_and_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"

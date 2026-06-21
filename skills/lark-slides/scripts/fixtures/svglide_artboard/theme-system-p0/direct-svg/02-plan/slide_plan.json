@@ -1,0 +1,12 @@
+{
+  "generation_mode": "direct_svg",
+  "language": "zh-CN",
+  "theme_id": "dark-clarity",
+  "slides": [
+    {
+      "page": 1,
+      "page_type": "content",
+      "title": "Direct SVG 主题检查"
+    }
+  ]
+}

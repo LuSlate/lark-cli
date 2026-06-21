@@ -1,0 +1,16 @@
+{
+  "generation_mode": "artboard_satori",
+  "language": "zh-CN",
+  "theme_id": "dark-clarity",
+  "slides": [
+    {
+      "page": 1,
+      "title": "未知颜色负例",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "template_id": "cover-hero",
+        "theme_id": "dark-clarity"
+      }
+    }
+  ]
+}

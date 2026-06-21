@@ -162,6 +162,25 @@ def human_review_payload(project: Path) -> dict[str, object]:
     }
 
 
+def human_review_payload_with_artifact_array(project: Path) -> dict[str, object]:
+    payload = human_review_payload(project)
+    reviewed = payload["reviewed_artifacts"]
+    assert isinstance(reviewed, dict)
+    current_prepared = reviewed["prepared_svg"]
+    assert isinstance(current_prepared, list)
+    artifacts: list[dict[str, str]] = [
+        {"kind": "prepared_svg", "path": item["path"], "sha256": item["sha256"]}
+        for item in current_prepared
+        if isinstance(item, dict) and isinstance(item.get("path"), str) and isinstance(item.get("sha256"), str)
+    ]
+    for kind in ("contact_sheet", "preview", "preview_manifest", "quality_gate"):
+        item = reviewed[kind]
+        assert isinstance(item, dict)
+        artifacts.append({"kind": kind, "path": item["path"], "sha256": item["sha256"]})
+    payload["reviewed_artifacts"] = artifacts
+    return payload
+
+
 def write_human_review(project: Path, payload: dict[str, object] | None = None) -> Path:
     path = project / "06-check/pre-submit-human-review.json"
     write_json(path, payload or human_review_payload(project))
@@ -186,6 +205,16 @@ class PreSubmitReviewTest(unittest.TestCase):
             receipt = json.loads((project / "receipts/pre-submit-review.json").read_text(encoding="utf-8"))
             self.assertEqual(check["status"], "passed")
             self.assertEqual(check, receipt)
+
+    def test_document_array_reviewed_artifacts_contract_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            write_human_review(project, human_review_payload_with_artifact_array(project))
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+
+            self.assertEqual(result["status"], "passed", result["issues"])
+            self.assertEqual(result["issues"], [])
 
     def test_missing_human_file_writes_failed_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

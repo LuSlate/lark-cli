@@ -1,0 +1,47 @@
+{
+  "action": "repair_and_rerun",
+  "checked_at": "2026-06-21T21:34:11+08:00",
+  "contrast_failures": [],
+  "contrast_unresolved": [],
+  "inputs": {
+    "plan_sha256": "776295d1edea25ac19696a5b5114ada5cce7a99b2a02ecc0a8a3ac65d697f121",
+    "slide_plan": "02-plan/slide_plan.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_validate_sha256": "bc51b146bf85d911dda444f8b43b955347fdeee6c69b9bb467d5fceff4b1ebe3"
+  },
+  "issues": [
+    {
+      "code": "theme_validate_plan_stale",
+      "message": "theme_validate plan_sha256 does not match current slide_plan.json",
+      "path": "06-check/theme-validate.json"
+    }
+  ],
+  "output_path": "06-check/theme-adherence.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "6287b6edeed2bf3219eaa1035a5a922406f47d7d905b2e34ab6f1899901aab92",
+      "status": "passed",
+      "theme_id": "dark-clarity"
+    }
+  ],
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "6287b6edeed2bf3219eaa1035a5a922406f47d7d905b2e34ab6f1899901aab92"
+    }
+  ],
+  "schema_version": "svglide-theme-adherence/v1",
+  "stage": "theme_adherence",
+  "status": "failed",
+  "summary": {
+    "contrast_unresolved_count": 0,
+    "error_count": 1,
+    "prepared_svg_count": 1,
+    "unknown_color_count": 0,
+    "warning_count": 0
+  },
+  "unknown_colors": []
+}
