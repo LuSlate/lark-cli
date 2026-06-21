@@ -17,6 +17,8 @@ from typing import Any
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape, quoteattr
 
+import svglide_node_layout_drift
+
 
 CANVAS_SPEC_VERSION = "svglide-canvas-spec/v1"
 ARTBOARD_RECEIPT_VERSION = "svglide-artboard-receipt/v1"
@@ -417,7 +419,20 @@ def svg_text(
     font_weight: int = 700,
 ) -> None:
     box_height = max(height, 30)
-    nodes.append({"id": node_id, "kind": "text", "x": x, "y": y, "width": width, "height": box_height, "text": value})
+    nodes.append(
+        {
+            "id": node_id,
+            "kind": "text",
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": box_height,
+            "text": value,
+            "fill": fill,
+            "font_size": font_size,
+            "font_weight": font_weight,
+        }
+    )
     baseline = y + min(box_height - 4, font_size * 1.18)
     parts.append(
         f'<text data-node-id="{node_id}" data-box-x="{x:g}" data-box-y="{y:g}" '
@@ -440,7 +455,7 @@ def svg_rect(
     stroke: str | None = None,
     stroke_width: float | None = None,
 ) -> None:
-    nodes.append({"id": node_id, "kind": "rect", "x": x, "y": y, "width": width, "height": height})
+    nodes.append({"id": node_id, "kind": "rect", "x": x, "y": y, "width": width, "height": height, "fill": fill, "opacity": opacity, "stroke": stroke, "stroke_width": stroke_width})
     parts.append(
         f'<rect data-node-id="{node_id}" x="{x:g}" y="{y:g}" width="{width:g}" height="{height:g}" '
         f'fill="{fill}"'
@@ -464,7 +479,7 @@ def svg_circle(
     stroke: str | None = None,
     stroke_width: float | None = None,
 ) -> None:
-    nodes.append({"id": node_id, "kind": "circle", "x": cx - r, "y": cy - r, "width": r * 2, "height": r * 2})
+    nodes.append({"id": node_id, "kind": "circle", "x": cx - r, "y": cy - r, "width": r * 2, "height": r * 2, "fill": fill, "opacity": opacity, "stroke": stroke, "stroke_width": stroke_width})
     parts.append(
         f'<circle data-node-id="{node_id}" cx="{cx:g}" cy="{cy:g}" r="{r:g}" fill="{fill}"'
         + (f' opacity="{opacity:g}"' if opacity is not None else "")
@@ -487,7 +502,23 @@ def svg_line(
     stroke_width: float = 2,
     opacity: float | None = None,
 ) -> None:
-    nodes.append({"id": node_id, "kind": "line", "x": min(x1, x2), "y": min(y1, y2), "width": max(abs(x2 - x1), 1), "height": max(abs(y2 - y1), 1)})
+    nodes.append(
+        {
+            "id": node_id,
+            "kind": "line",
+            "x": min(x1, x2),
+            "y": min(y1, y2),
+            "width": max(abs(x2 - x1), 1),
+            "height": max(abs(y2 - y1), 1),
+            "x1": x1,
+            "y1": y1,
+            "x2": x2,
+            "y2": y2,
+            "stroke": stroke,
+            "stroke_width": stroke_width,
+            "opacity": opacity,
+        }
+    )
     parts.append(
         f'<line data-node-id="{node_id}" x1="{x1:g}" y1="{y1:g}" x2="{x2:g}" y2="{y2:g}" stroke="{stroke}" stroke-width="{stroke_width:g}"'
         + (f' opacity="{opacity:g}"' if opacity is not None else "")
@@ -510,7 +541,7 @@ def svg_path(
     stroke_width: float | None = None,
     opacity: float | None = None,
 ) -> None:
-    nodes.append({"id": node_id, "kind": "path", "x": x, "y": y, "width": width, "height": height})
+    nodes.append({"id": node_id, "kind": "path", "x": x, "y": y, "width": width, "height": height, "d": d, "fill": fill, "stroke": stroke, "stroke_width": stroke_width, "opacity": opacity})
     parts.append(
         f'<path data-node-id="{node_id}" d="{d}" x="{x:g}" y="{y:g}" width="{width:g}" height="{height:g}" fill="{fill}"'
         + (f' stroke="{stroke}"' if stroke else "")
@@ -521,7 +552,7 @@ def svg_path(
 
 
 def begin_template_svg(theme: dict[str, str], nodes: list[dict[str, Any]]) -> list[str]:
-    nodes.append({"id": "background", "kind": "rect", "x": 0, "y": 0, "width": 960, "height": 540})
+    nodes.append({"id": "background", "kind": "rect", "x": 0, "y": 0, "width": 960, "height": 540, "fill": theme["background"]})
     return [
         f'<svg xmlns="{SVG_NS}" width="960" height="540" viewBox="0 0 960 540">',
         f'<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="{theme["background"]}"/>',
@@ -596,9 +627,19 @@ def semantic_elements_from_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, 
                     "width": number(node.get("width"), 0),
                     "height": number(node.get("height"), 0),
                 },
+                "style": semantic_style_for_node(node),
             }
         )
     return elements
+
+
+def semantic_style_for_node(node: dict[str, Any]) -> dict[str, Any]:
+    style: dict[str, Any] = {}
+    for key in ["fill", "stroke", "stroke_width", "opacity", "font_size", "font_weight", "d", "x1", "y1", "x2", "y2"]:
+        value = node.get(key)
+        if value is not None:
+            style[key] = value
+    return style
 
 
 def template_cover_hero(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
@@ -741,6 +782,7 @@ def template_comparison(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
         {"id": "title", "kind": "text", "x": 64, "y": 52, "width": 760, "height": 64, "text": title},
         {"id": "left-card", "kind": "rect", "x": 64, "y": 140, "width": 390, "height": 250},
         {"id": "right-card", "kind": "rect", "x": 506, "y": 140, "width": 390, "height": 250},
+        {"id": "comparison-divider", "kind": "path", "x": 480, "y": 144, "width": 1, "height": 246, "d": "M480 144 L480 390", "fill": "none", "stroke": theme["primary"], "stroke_width": 2, "opacity": 0.45},
         {"id": "left-title", "kind": "text", "x": 92, "y": 168, "width": 320, "height": 34, "text": left_title},
         {"id": "left-point-1", "kind": "text", "x": 116, "y": 222, "width": 296, "height": 36, "text": left_points[0] if len(left_points) > 0 else ""},
         {"id": "left-point-2", "kind": "text", "x": 116, "y": 270, "width": 296, "height": 36, "text": left_points[1] if len(left_points) > 1 else ""},
@@ -757,6 +799,7 @@ def template_comparison(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
         f'<text data-node-id="title" data-box-x="64" data-box-y="52" data-box-width="760" data-box-height="64" x="64" y="96" fill="{theme["text"]}" font-size="40" font-weight="800" font-family="Inter">{escape(title)}</text>',
         f'<rect data-node-id="left-card" x="64" y="140" width="390" height="250" fill="{theme["panel"]}" opacity="0.82"/>',
         f'<rect data-node-id="right-card" x="506" y="140" width="390" height="250" fill="{theme["panel"]}" opacity="0.82"/>',
+        f'<path data-node-id="comparison-divider" d="M480 144 L480 390" x="480" y="144" width="1" height="246" fill="none" stroke="{theme["primary"]}" stroke-width="2" opacity="0.45"/>',
         f'<text data-node-id="left-title" data-box-x="92" data-box-y="168" data-box-width="320" data-box-height="34" x="92" y="194" fill="{theme["primary"]}" font-size="24" font-weight="800" font-family="Inter">{escape(left_title)}</text>',
         f'<text data-node-id="right-title" data-box-x="534" data-box-y="168" data-box-width="320" data-box-height="34" x="534" y="194" fill="{theme["accent"]}" font-size="24" font-weight="800" font-family="Inter">{escape(right_title)}</text>',
     ]
@@ -982,7 +1025,7 @@ def template_data_story(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
     for index, metric in enumerate(metrics):
         x = 86 + index * 204
         accent = theme["primary"] if index % 2 == 0 else theme["accent"]
-        svg_text(parts, nodes, f"data-metric-{index + 1}", metric, x=x, y=272, width=164, height=46, fill=accent, font_size=28, font_weight=900)
+        svg_text(parts, nodes, f"data-metric-{index + 1}", metric, x=x, y=268, width=164, height=58, fill=accent, font_size=22, font_weight=900)
         svg_rect(parts, nodes, f"data-bar-track-{index + 1}", x=x, y=334, width=148, height=10, fill=theme["muted"], opacity=0.22)
         svg_rect(parts, nodes, f"data-bar-{index + 1}", x=x, y=334, width=60 + index * 26, height=10, fill=accent, opacity=0.86)
         svg_text(parts, nodes, f"data-label-{index + 1}", ["募资规模", "IPO估值", "首日涨幅", "初始流通"][index], x=x, y=354, width=156, height=28, fill=theme["muted"], font_size=15, font_weight=700)
@@ -1111,9 +1154,17 @@ def renderer_receipt_path(renderer: Path) -> str:
         return renderer.as_posix()
 
 
-def render_node_satori_svg(spec_path: Path, output_path: Path, png_path: Path, metadata_path: Path) -> Path:
+def render_node_satori_svg(spec_path: Path, output_path: Path, png_path: Path, metadata_path: Path, observations_path: Path) -> Path:
     renderer = resolve_node_renderer()
-    command = ["node", renderer.as_posix(), spec_path.as_posix(), output_path.as_posix(), png_path.as_posix(), metadata_path.as_posix()]
+    command = [
+        "node",
+        renderer.as_posix(),
+        spec_path.as_posix(),
+        output_path.as_posix(),
+        png_path.as_posix(),
+        metadata_path.as_posix(),
+        observations_path.as_posix(),
+    ]
     result = subprocess.run(command, cwd=renderer.parent, text=True, capture_output=True, check=False)
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
@@ -1171,8 +1222,22 @@ def text_style_from_element(element: ElementTree.Element) -> dict[str, str]:
 def text_to_foreign_object(element: ElementTree.Element) -> str:
     text = "".join(element.itertext()).strip()
     text_style = text_style_from_element(element)
+    attrs = {
+        "slide:role": "shape",
+        "slide:shape-type": "text",
+        "x": text_style["x"],
+        "y": text_style["y"],
+        "width": text_style["width"],
+        "height": text_style["height"],
+    }
+    node_id = attr(element, "data-node-id")
+    if node_id:
+        attrs["data-node-id"] = node_id
+        source_ref = semantic_source_ref_for_node({"id": node_id})
+        if source_ref:
+            attrs["data-source-ref"] = source_ref
     return (
-        f'<foreignObject slide:role="shape" slide:shape-type="text" x="{text_style["x"]}" y="{text_style["y"]}" width="{text_style["width"]}" height="{text_style["height"]}">'
+        f"<foreignObject {svg_attrs(attrs)}>"
         f'<div xmlns="{XHTML_NS}" style="{escape(text_style["style"])}">{escape(text)}</div>'
         "</foreignObject>"
     )
@@ -1335,6 +1400,137 @@ def compile_canvas_template_svg_to_svglide(canvas_template_svg: str) -> tuple[st
     )
 
 
+def compile_semantic_map_to_svglide(semantic_map: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    elements = semantic_map.get("elements")
+    if not isinstance(elements, list) or not elements:
+        raise ArtboardError("semantic-map/v1 has no elements to compile")
+    theme = semantic_map.get("theme") if isinstance(semantic_map.get("theme"), dict) else {}
+    native_mapped: list[str] = []
+    children: list[str] = []
+    for element in elements:
+        if not isinstance(element, dict):
+            continue
+        child = compile_semantic_element(element, theme)
+        if child:
+            children.append(child)
+            native_mapped.append(str(element.get("kind") or "unknown"))
+    if not children:
+        raise ArtboardError("semantic-map compiler produced no SVGlide nodes")
+    svg = (
+        f'<svg xmlns="{SVG_NS}" xmlns:slide="{SLIDE_NS}" slide:role="slide" '
+        f'slide:contract-version="{CONTRACT_VERSION}" width="960" height="540" viewBox="0 0 960 540">\n'
+        + "\n".join(f"  {child}" for child in children)
+        + "\n</svg>\n"
+    )
+    return svg, {
+        "semantic_source": str(semantic_map.get("semantic_source") or "semantic-map/v1"),
+        "compiler_input": "SemanticMapIR",
+        "satori_svg_usage": "preview_only",
+        "native_mapped": native_mapped,
+        "fail_fast": sorted(FAIL_FAST_ELEMENTS),
+    }
+
+
+def semantic_shape_fill(element_id: str, kind: str, style: dict[str, Any], theme: dict[str, Any]) -> str:
+    if style.get("fill"):
+        return str(style["fill"])
+    if element_id == "background":
+        return str(theme.get("background") or "#0F172A")
+    if any(token in element_id for token in ["panel", "card", "bg", "terminal"]):
+        return str(theme.get("panel") or "#111827")
+    if any(token in element_id for token in ["accent", "bar", "node", "dot", "rule", "signal", "port"]):
+        return str(theme.get("primary") or "#60A5FA")
+    if kind == "path":
+        return "none"
+    return str(theme.get("panel") or "#111827")
+
+
+def compile_semantic_element(element: dict[str, Any], theme: dict[str, Any]) -> str | None:
+    element_id = str(element.get("element_id") or "")
+    kind = str(element.get("kind") or "")
+    bbox = element.get("bbox") if isinstance(element.get("bbox"), dict) else {}
+    style = element.get("style") if isinstance(element.get("style"), dict) else {}
+    x = number(bbox.get("x"), 0)
+    y = number(bbox.get("y"), 0)
+    width = max(number(bbox.get("width"), 0), 1)
+    height = max(number(bbox.get("height"), 0), 1)
+    common = {"data-node-id": element_id}
+    source_ref = element.get("source_ref")
+    if isinstance(source_ref, str) and source_ref:
+        common["data-source-ref"] = source_ref
+    if kind == "text":
+        font_size = number(style.get("font_size"), 18)
+        font_weight = int(number(style.get("font_weight"), 700))
+        fill = str(style.get("fill") or "#111827")
+        text = str(element.get("text") or "")
+        attrs = {
+            **common,
+            "slide:role": "shape",
+            "slide:shape-type": "text",
+            "x": f"{x:g}",
+            "y": f"{y:g}",
+            "width": f"{width:g}",
+            "height": f"{height:g}",
+        }
+        css = f"color:{fill};font-size:{font_size:g}px;font-weight:{font_weight};font-family:Inter,Arial,sans-serif;line-height:1.18;"
+        return f'<foreignObject {svg_attrs(attrs)}><div xmlns="{XHTML_NS}" style="{escape(css)}">{escape(text)}</div></foreignObject>'
+    if kind == "rect":
+        attrs = {
+            **common,
+            "slide:role": "shape",
+            "x": f"{x:g}",
+            "y": f"{y:g}",
+            "width": f"{width:g}",
+            "height": f"{height:g}",
+            "fill": semantic_shape_fill(element_id, kind, style, theme),
+        }
+        add_optional_svg_style(attrs, style)
+        return f"<rect {svg_attrs(attrs)}/>"
+    if kind == "circle":
+        attrs = {
+            **common,
+            "slide:role": "shape",
+            "cx": f"{x + width / 2:g}",
+            "cy": f"{y + height / 2:g}",
+            "r": f"{max(min(width, height) / 2, 1):g}",
+            "fill": semantic_shape_fill(element_id, kind, style, theme),
+        }
+        add_optional_svg_style(attrs, style)
+        return f"<circle {svg_attrs(attrs)}/>"
+    if kind == "line":
+        attrs = {
+            **common,
+            "slide:role": "shape",
+            "x1": f"{number(style.get('x1'), x):g}",
+            "y1": f"{number(style.get('y1'), y):g}",
+            "x2": f"{number(style.get('x2'), x + width):g}",
+            "y2": f"{number(style.get('y2'), y + height):g}",
+            "stroke": str(style.get("stroke") or style.get("fill") or theme.get("primary") or "#111827"),
+            "stroke-width": f"{number(style.get('stroke_width'), 2):g}",
+        }
+        add_optional_svg_style(attrs, style)
+        return f"<line {svg_attrs(attrs)}/>"
+    if kind == "path":
+        d = style.get("d")
+        if not isinstance(d, str) or not d.strip():
+            return None
+        attrs = {**common, "slide:role": "shape", "d": d, "fill": semantic_shape_fill(element_id, kind, style, theme)}
+        if not style.get("stroke"):
+            attrs["stroke"] = str(theme.get("accent") or theme.get("primary") or "#111827")
+        add_optional_svg_style(attrs, style)
+        return f"<path {svg_attrs(attrs)}/>"
+    return None
+
+
+def add_optional_svg_style(attrs: dict[str, str], style: dict[str, Any]) -> None:
+    if style.get("opacity") is not None:
+        attrs["opacity"] = f"{number(style.get('opacity'), 1):g}"
+    if style.get("stroke"):
+        attrs["stroke"] = str(style["stroke"])
+    if style.get("stroke_width") is not None:
+        attrs["stroke-width"] = f"{number(style.get('stroke_width'), 1):g}"
+
+
 def normalize_xhtml_foreign_object(svg: str) -> str:
     svg = svg.replace(f' xmlns:html="{XHTML_NS}"', "")
     svg = svg.replace("<html:div ", f'<div xmlns="{XHTML_NS}" ')
@@ -1370,6 +1566,9 @@ def align_text_boxes_to_node_layout(svglide_svg: str, nodes: list[dict[str, Any]
             if isinstance(value, (int, float)):
                 element.set(key, f"{value:g}")
         element.set("data-node-id", str(node.get("id") or ""))
+        source_ref = semantic_source_ref_for_node(node)
+        if source_ref:
+            element.set("data-source-ref", source_ref)
         text = str(node.get("text") or "") or join_text_fragments(["".join(item.itertext()).strip() for item in elements])
         div = next(iter(element), None)
         if div is not None:
@@ -1560,6 +1759,7 @@ def render_project(project: Path) -> dict[str, Any]:
         satori_path = raw_dir / f"{page_name}.satori.svg"
         png_path = artboard_dir / f"{page_name}.png"
         metadata_path = artboard_dir / f"{page_name}.render-metadata.json"
+        node_observations_path = artboard_dir / f"{page_name}.node-observations.json"
         canvas_spec_artifact_path = artboard_dir / f"{page_name}.canvas-spec.json"
         canvas_template_path = artboard_dir / f"{page_name}.canvas-template.svg"
         semantic_map_path = artboard_dir / f"{page_name}.semantic-map.json"
@@ -1572,7 +1772,7 @@ def render_project(project: Path) -> dict[str, Any]:
         node_adapter_path: Path | None = None
         renderer_metadata: dict[str, Any] = {}
         if actual_satori_package:
-            node_adapter_path = render_node_satori_svg(canvas_spec_artifact_path, satori_path, png_path, metadata_path)
+            node_adapter_path = render_node_satori_svg(canvas_spec_artifact_path, satori_path, png_path, metadata_path, node_observations_path)
             satori_svg = satori_path.read_text(encoding="utf-8")
             renderer_metadata = read_json(metadata_path)
             satori_preview = validate_satori_preview_svg(satori_svg, strict=False)
@@ -1580,8 +1780,19 @@ def render_project(project: Path) -> dict[str, Any]:
             satori_svg = canvas_template_svg
             satori_preview = validate_satori_preview_svg(satori_svg, strict=True)
             metadata_path.write_text(json.dumps({"node_version": None, "satori_version": None, "resvg_version": None, "font_path": None}, indent=2) + "\n", encoding="utf-8")
-        svglide_svg, compiler = compile_canvas_template_svg_to_svglide(canvas_template_svg)
-        svglide_svg = align_text_boxes_to_node_layout(svglide_svg, nodes)
+            write_json(node_observations_path, {"version": "svglide-node-observations/v1", "observation_source": "rendered_satori_svg_parse", "nodes": []})
+        semantic_map = {
+            "version": SEMANTIC_MAP_VERSION,
+            "page": index,
+            "template_id": spec.get("template_id"),
+            "theme_id": spec.get("theme_id"),
+            "theme": normalize_theme(spec),
+            "semantic_source": "CanvasSpec",
+            "content_keys": sorted((spec.get("content") or {}).keys()) if isinstance(spec.get("content"), dict) else [],
+            "elements": semantic_elements_from_nodes(nodes),
+        }
+        write_json(semantic_map_path, semantic_map)
+        svglide_svg, compiler = compile_semantic_map_to_svglide(semantic_map)
         satori_path.write_text(satori_svg, encoding="utf-8")
         svglide_path.write_text(svglide_svg, encoding="utf-8")
         if not png_path.exists():
@@ -1590,24 +1801,20 @@ def render_project(project: Path) -> dict[str, Any]:
         font_hashes = []
         if isinstance(font_path, str) and Path(font_path).exists():
             font_hashes.append({"path": font_path, "sha256": file_sha256(Path(font_path))})
-        semantic_map = {
-            "version": SEMANTIC_MAP_VERSION,
-            "page": index,
-            "template_id": spec.get("template_id"),
-            "theme_id": spec.get("theme_id"),
-            "semantic_source": "CanvasSpec",
-            "content_keys": sorted((spec.get("content") or {}).keys()) if isinstance(spec.get("content"), dict) else [],
-            "elements": semantic_elements_from_nodes(nodes),
-        }
-        node_layout_map = {
-            "version": NODE_LAYOUT_MAP_VERSION,
-            "page": index,
-            "source": "template-layout-map",
-            "drift": {"status": "not_measured_in_p0", "max_px": 0},
-            "nodes": nodes,
-        }
-        write_json(semantic_map_path, semantic_map)
+        renderer_observations = []
+        if node_observations_path.exists():
+            observations_payload = read_json(node_observations_path)
+            raw_observations = observations_payload.get("nodes")
+            renderer_observations = raw_observations if isinstance(raw_observations, list) else []
+        node_layout_map = svglide_node_layout_drift.build_node_layout_map(
+            page=index,
+            expected_nodes=nodes,
+            renderer_observations=renderer_observations,
+            satori_svg_path=satori_path,
+        )
         write_json(node_layout_path, node_layout_map)
+        input_semantic_hash = file_sha256(semantic_map_path)
+        compiler["input_semantic_hash"] = input_semantic_hash
         receipt_path = artboard_dir / f"{page_name}.receipt.json"
         receipt = {
             "version": ARTBOARD_RECEIPT_VERSION,
@@ -1641,8 +1848,9 @@ def render_project(project: Path) -> dict[str, Any]:
             "render_metadata_sha256": file_sha256(metadata_path),
             "canvas_template_svg": relpath(canvas_template_path, project),
             "canvas_template_svg_sha256": file_sha256(canvas_template_path),
-            "compiler_input": relpath(canvas_template_path, project),
-            "compiler_input_sha256": file_sha256(canvas_template_path),
+            "compiler_input": relpath(semantic_map_path, project),
+            "compiler_input_sha256": file_sha256(semantic_map_path),
+            "input_semantic_hash": input_semantic_hash,
             "semantic_map": relpath(semantic_map_path, project),
             "semantic_map_sha256": file_sha256(semantic_map_path),
             "node_layout_map": relpath(node_layout_path, project),
@@ -1672,6 +1880,8 @@ def render_project(project: Path) -> dict[str, Any]:
                 "render_metadata_sha256": file_sha256(metadata_path),
                 "canvas_template_svg": relpath(canvas_template_path, project),
                 "canvas_template_svg_sha256": file_sha256(canvas_template_path),
+                "node_observations": relpath(node_observations_path, project),
+                "node_observations_sha256": file_sha256(node_observations_path),
                 "node_layout_map": relpath(node_layout_path, project),
                 "node_layout_map_sha256": file_sha256(node_layout_path),
                 "node_version": renderer_metadata.get("node_version"),
@@ -1685,12 +1895,13 @@ def render_project(project: Path) -> dict[str, Any]:
                 "canvas_spec_sha256": json_sha256(spec),
                 "semantic_map": relpath(semantic_map_path, project),
                 "semantic_map_sha256": file_sha256(semantic_map_path),
+                "input_semantic_hash": input_semantic_hash,
                 "node_layout_map": relpath(node_layout_path, project),
                 "node_layout_map_sha256": file_sha256(node_layout_path),
                 "canvas_template_svg": relpath(canvas_template_path, project),
                 "canvas_template_svg_sha256": file_sha256(canvas_template_path),
-                "compiler_input": relpath(canvas_template_path, project),
-                "compiler_input_sha256": file_sha256(canvas_template_path),
+                "compiler_input": relpath(semantic_map_path, project),
+                "compiler_input_sha256": file_sha256(semantic_map_path),
                 "compiler_input_type": compiler.get("compiler_input"),
                 "satori_svg_usage": compiler.get("satori_svg_usage"),
                 "satori_svg": relpath(satori_path, project),

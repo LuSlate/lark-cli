@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">
+  <foreignObject slide:role="shape" slide:shape-type="text" data-node-id="title" data-source-ref="canvas_spec.content.title" x="80" y="80" width="720" height="72">
+    <div xmlns="http://www.w3.org/1999/xhtml">Semantic IR Title</div>
+  </foreignObject>
+</svg>

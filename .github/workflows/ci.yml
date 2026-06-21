@@ -48,6 +48,37 @@ jobs:
             exit 1
           fi
 
+  svglide-artboard-macos-x64-runtime:
+    needs: fast-gate
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.x'
+      - name: Install artboard renderer dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+          pnpm --dir skills/lark-slides/scripts/artboard_renderer install --frozen-lockfile
+      - name: Validate macOS x64 runtime
+        run: |
+          mkdir -p .artifacts/svglide-artboard-package-check
+          python3 skills/lark-slides/scripts/svglide_artboard_package_check.py \
+            --require-system Darwin \
+            --require-arch x64 \
+            --output-dir .artifacts/svglide-artboard-package-check \
+            --pretty
+      - name: Upload SVGlide artboard runtime evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: svglide-artboard-macos-x64-runtime-${{ github.run_number }}
+          path: .artifacts/svglide-artboard-package-check
+          retention-days: 30
+
   # ── Layer 2: Quality Gate ──────────────────────────────────────────
   unit-test:
     needs: fast-gate

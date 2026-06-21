@@ -1,0 +1,18 @@
+{
+  "version": "svglide-semantic-map/v1",
+  "page": 1,
+  "template_id": "cover-hero",
+  "theme_id": "dark-clarity",
+  "semantic_source": "CanvasSpec",
+  "content_keys": ["title"],
+  "elements": [
+    {
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "text": "Semantic IR Title",
+      "bbox": {"x": 80, "y": 80, "width": 720, "height": 72}
+    }
+  ]
+}

@@ -62,6 +62,15 @@ class PackageCheckError(Exception):
     pass
 
 
+def normalize_arch(machine: str) -> str:
+    value = machine.strip().lower()
+    if value in {"x86_64", "amd64", "x64"}:
+        return "x64"
+    if value in {"arm64", "aarch64"}:
+        return "arm64"
+    return value or "unknown"
+
+
 def now_iso() -> str:
     return datetime.now().astimezone().replace(microsecond=0).isoformat()
 
@@ -189,6 +198,8 @@ def inspect_artboard_package(
     renderer_dir: Path = ARTBOARD_RENDERER_DIR,
     *,
     run_runtime: bool = True,
+    require_system: str | None = None,
+    require_arch: str | None = None,
 ) -> dict[str, Any]:
     repo_root = repo_root.resolve()
     renderer_dir = renderer_dir.resolve()
@@ -200,6 +211,15 @@ def inspect_artboard_package(
     gitignore_path = repo_root / ".gitignore"
 
     issues: list[dict[str, str]] = []
+    blockers: list[dict[str, str]] = []
+    host_system = platform.system()
+    host_machine = platform.machine()
+    host_arch = normalize_arch(host_machine)
+    required_arch = normalize_arch(require_arch) if require_arch else None
+    if require_system and host_system.lower() != require_system.lower():
+        blockers.append({"code": "runtime_host_system_mismatch", "message": f"runtime check requires {require_system}, got {host_system or 'unknown'}"})
+    if required_arch and host_arch != required_arch:
+        blockers.append({"code": "runtime_host_arch_mismatch", "message": f"runtime check requires arch {required_arch}, got {host_arch}"})
     package_payload = read_json(package_path)
     lockfile_text = lockfile_path.read_text(encoding="utf-8") if lockfile_path.exists() else ""
     if not lockfile_path.exists():
@@ -242,7 +262,7 @@ def inspect_artboard_package(
                 if not check.get("passed"):
                     issues.append({"code": "runtime_check_failed", "message": f"{repo_rel(entry, repo_root)} --check-runtime failed"})
 
-    status = "passed" if not issues else "failed"
+    status = "passed" if not issues and not blockers else ("blocked" if blockers and not issues else "failed")
     return {
         "version": CHECK_VERSION,
         "stage": CHECK_STAGE,
@@ -251,13 +271,21 @@ def inspect_artboard_package(
         "checked_at": now_iso(),
         "summary": {
             "error_count": len(issues),
+            "blocked_count": len(blockers),
             "warning_count": 0,
             "runtime_check_count": len(runtime_checks),
         },
         "host": {
-            "system": platform.system(),
-            "machine": platform.machine(),
+            "system": host_system,
+            "machine": host_machine,
+            "normalized_arch": host_arch,
             "python": platform.python_version(),
+        },
+        "host_requirements": {
+            "required_system": require_system,
+            "required_arch": required_arch,
+            "status": "passed" if not blockers else "blocked",
+            "blockers": blockers,
         },
         "renderer": {
             "dir": repo_rel(renderer_dir, repo_root),
@@ -301,6 +329,7 @@ def inspect_artboard_package(
             "no_network": "do not auto-fetch; use CI/preinstalled pnpm store or a packaged platform dependency layer",
         },
         "runtime_checks": runtime_checks,
+        "blockers": blockers,
         "issues": issues,
     }
 
@@ -316,6 +345,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--renderer-dir", type=Path, default=ARTBOARD_RENDERER_DIR)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--skip-runtime", action="store_true", help="skip node --check-runtime probes; structural checks still run")
+    parser.add_argument("--require-system", help="require a runtime host system, for example Darwin")
+    parser.add_argument("--require-arch", choices=["x64", "arm64"], help="require a normalized runtime host architecture")
     parser.add_argument("--pretty", action="store_true")
     return parser.parse_args(argv)
 
@@ -323,7 +354,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
-        payload = inspect_artboard_package(args.repo_root, args.renderer_dir, run_runtime=not args.skip_runtime)
+        payload = inspect_artboard_package(
+            args.repo_root,
+            args.renderer_dir,
+            run_runtime=not args.skip_runtime,
+            require_system=args.require_system,
+            require_arch=args.require_arch,
+        )
         if args.output_dir:
             write_check_outputs(args.output_dir, payload)
         print(json.dumps(payload, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))
@@ -335,7 +372,7 @@ def main(argv: list[str]) -> int:
             "status": "failed",
             "action": "repair_and_rerun",
             "checked_at": now_iso(),
-            "summary": {"error_count": 1, "warning_count": 0, "runtime_check_count": 0},
+            "summary": {"error_count": 1, "blocked_count": 0, "warning_count": 0, "runtime_check_count": 0},
             "issues": [{"code": "package_check_error", "message": str(err)}],
         }
         if args.output_dir:

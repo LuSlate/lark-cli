@@ -1,0 +1,23 @@
+{
+  "version": "svglide-node-layout-map/v1",
+  "page": 1,
+  "source": "measured-layout-observation",
+  "observation_source": "satori_on_node_detected",
+  "threshold_px": 8,
+  "drift": {"status": "failed", "max_px": 48, "threshold_px": 8, "missing_count": 0},
+  "nodes": [
+    {
+      "id": "title",
+      "kind": "text",
+      "x": 128,
+      "y": 80,
+      "width": 720,
+      "height": 72,
+      "text": "Semantic IR Title",
+      "expected_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+      "measured_bbox": {"x": 128, "y": 80, "width": 720, "height": 72},
+      "drift_px": 48,
+      "observation_source": "satori_on_node_detected"
+    }
+  ]
+}

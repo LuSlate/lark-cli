@@ -127,9 +127,19 @@ def run_aesthetic_review(project: Path) -> dict[str, Any]:
 
     result = {
         "version": "svglide-aesthetic-review/v1",
-        "review_mode": "automated_preview_record",
+        "review_mode": "deterministic_aesthetic_auto_approval",
         "reviewed_at": now_iso(),
         "status": "failed" if issues else "passed",
+        "approval": {
+            "status": "rejected" if issues else "approved",
+            "policy": "preview-lint-page-count-asset-safety/v1",
+            "model": None,
+            "human_review_required": bool(issues),
+        },
+        "boundaries": {
+            "aesthetic_model": "not_connected",
+            "scope": "deterministic preview artifact checks; not a learned visual taste model",
+        },
         "preview_path": PREVIEW_HTML.as_posix(),
         "manifest_path": PREVIEW_MANIFEST.as_posix(),
         "page_count": actual,

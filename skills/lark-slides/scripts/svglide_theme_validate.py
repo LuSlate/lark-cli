@@ -76,6 +76,22 @@ def theme_record_paths(registry: dict[str, Any]) -> dict[str, str]:
     return result
 
 
+def theme_records_by_id(registry: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    themes = registry.get("themes") if isinstance(registry.get("themes"), list) else []
+    return {item["id"]: item for item in themes if isinstance(item, dict) and isinstance(item.get("id"), str)}
+
+
+def project_theme_allows_template(registry: dict[str, Any], theme_id: str, template_id: str) -> bool:
+    record = theme_records_by_id(registry).get(theme_id)
+    if not isinstance(record, dict):
+        return False
+    bindings = record.get("template_bindings")
+    if not isinstance(bindings, dict):
+        return False
+    supported = bindings.get("supported_template_ids")
+    return isinstance(supported, list) and template_id in supported
+
+
 def slide_canvas_spec(slide: dict[str, Any]) -> dict[str, Any]:
     spec = slide.get("canvas_spec")
     return spec if isinstance(spec, dict) else {}
@@ -175,7 +191,7 @@ def validate_project(project_root: Path) -> dict[str, Any]:
                 page_issues.append(issue("template_unknown", f"template_id {template_id!r} is not present in template registry", page=index))
             elif theme_id:
                 allowed = template.get("supported_theme_ids")
-                if isinstance(allowed, list) and theme_id not in allowed:
+                if isinstance(allowed, list) and theme_id not in allowed and not project_theme_allows_template(registry, theme_id, template_id):
                     page_issues.append(issue("template_theme_not_allowed", f"template_id {template_id!r} does not allow theme_id {theme_id!r}", page=index))
         pages.append(
             {

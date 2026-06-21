@@ -1,0 +1,19 @@
+{
+  "schema_version": "svglide-repair-plan/v1",
+  "target_plan_path": "02-plan/slide_plan.json",
+  "change_reason": "收短封面标题，修复 preflight 的 text_overflow。",
+  "patches": [
+    {
+      "op": "test",
+      "path": "/slides/0/page",
+      "value": 1,
+      "reason": "确认只修改第一页。"
+    },
+    {
+      "op": "replace",
+      "path": "/slides/0/canvas_spec/content/title",
+      "value": "SpaceX IPO 框架",
+      "reason": "将标题缩短到 CanvasSpec 文本预算内。"
+    }
+  ]
+}

@@ -10,6 +10,8 @@ request
 -> load SVG private rule set
 -> init run directory
 -> source
+-> optional model-plan
+-> optional theme_productization
 -> plan
 -> strategy_review
 -> user confirms plan
@@ -29,6 +31,7 @@ request
 -> ppe_proof
 -> live create
 -> readback
+-> optional export
 -> delivery record
 ```
 
@@ -40,6 +43,8 @@ request
 | load rules | `svglide-svg-private.rules.json` | recorded `loaded_rule_set` | missing required private files blocks preflight |
 | init | deck id, title | `.lark-slides/plan/<deck-id>/01-project/` | repeat init of the same deck id is rejected unless explicitly forced |
 | source | `source/evidence.json` or `source/source-notes.md`; online research unless disabled | `source/evidence.json`, `source/research_queries.json`, `source/research.md`, `source/source-receipt.json`, `receipts/source.json` | `source_status=thin/blocked`, blocked online research, too few evidence items, or stale source receipt blocks strategy/generation |
+| model-plan | user prompt and provider command/model config | `source/evidence.json`, `02-plan/deck-plan.json`, `02-plan/slide-plan.json`, `02-plan/canvas-plan.json`, planner raw output hashes | provider output must be JSON, pass planner contracts, and record `provider_type`; external model credentials are not assumed |
+| theme_productization | theme productization request and optional slide plan | project `ThemeSpec`, `02-plan/theme-registry.json`, optional migrated plan and patch receipt | ThemeSpec schema, project template binding, and migration patch must be valid |
 | plan | user goal, page count, sources | `02-plan/slide_plan.json`, optional `02-plan/svglide.lock.json`, `receipts/plan.json` | plan must declare route/output mode, style, loaded rules, visual identity, art direction, quality gates, and SVG page metadata |
 | strategy_review | `02-plan/slide_plan.json` | `02-plan/strategy-review.json` | language, audience, deck structure, page types, sections, roles, key messages, visual identity, theme anchors, and content minimums must pass before confirmation |
 | confirm plan | `02-plan/slide_plan.json`, optional lock | `02-plan/plan-confirmation.json`, `receipts/confirm_plan.json` | user confirmation is required before assets, SVG generation, prepare, dry-run, or live-create |
@@ -49,7 +54,7 @@ request
 | build preview | prepared SVG pages and plan metadata | `05-preview/preview.html`, `05-preview/preview-manifest.json` | preview is a visual review aid, not the API contract |
 | preflight | plan, prepared SVG | `06-check/preflight.json` | SVG protocol, plan contract, loaded rules, geometry, text, assets, and business claims must pass |
 | preview_lint | local preview HTML | `06-check/preview-lint.json` | preview action must be `create_live` |
-| aesthetic_review | preview lint, preview manifest, asset manifest | `06-check/aesthetic-review.json` | review status must be `passed`, image-led pages must have safe text zones, and action must be `create_live` |
+| aesthetic_review | preview lint, preview manifest, asset manifest | `06-check/aesthetic-review.json` | deterministic auto approval must be `approved`, image-led pages must have safe text zones, and action must be `create_live`; this is not a learned aesthetics model |
 | chart_verify | plan chart contracts and prepared SVG | `06-check/chart-verify.json` | required or exact chart pages must have data and chart-like marks; no required chart records `required_chart_count=0` and passes |
 | semantic_review | plan, evidence, source receipt, prepared SVG pages | `06-check/semantic-review.json`, `06-check/text-inventory.json` | language, audience, deck structure, page types, content density, source refs, numeric claim citations, research status, and visible SVG text provenance must pass |
 | runtime_review | plan renderer/layout declarations, asset manifest | `06-check/runtime-review.json` | missing renderer/layout declarations, renderer/layout monoculture, or asset/renderer mismatch blocks quality gate |
@@ -59,6 +64,8 @@ request
 | ppe_proof | current quality gate, dry-run, and PPE input | `07-create/ppe-proof.json` | live create is blocked unless PPE/auth/proxy/header proof is passed and fresh |
 | live create | same checked prepared SVG files and PPE proof | `07-create/live-create.json` | partial failures must preserve the returned ids for recovery |
 | readback | presentation id | `08-readback/readback-check.json` | page count, blank pages, bounds, text fit, assets, input binding, and closing slide must be checked |
+| repair_loop | failing receipt and scoped repair plan | updated `02-plan/slide_plan.json`, `receipts/repair-loop.json` | only scoped scalar JSON Patch is allowed; broad structural rewrites are rejected |
+| export | passed readback, live-create, quality-gate, and prepared SVGs | `09-export/export-manifest.json`, optional zip, `receipts/export.json` | packages verified SVGlide artifacts; PPTX/animation/narration must be explicitly marked separately |
 
 ## Route Boundary
 

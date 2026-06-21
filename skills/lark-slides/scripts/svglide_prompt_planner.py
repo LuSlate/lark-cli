@@ -601,6 +601,7 @@ def run_prompt_plan(
         "stage": "prompt-plan",
         "status": "passed",
         "provider": provider,
+        "provider_type": provider,
         "search_enabled": search,
         "started_at": started_at,
         "ended_at": now_iso(),
@@ -625,6 +626,14 @@ def run_prompt_plan(
         },
         "planner_stage_receipts": [receipt["stage"] for receipt in receipts],
         "planner_stage_receipt_paths": [planner_file(receipt["stage"], "receipt.json").as_posix() for receipt in receipts],
+        "planner_raw_outputs": [
+            {
+                "stage": receipt["stage"],
+                "path": receipt["raw_output_path"],
+                "sha256": receipt["raw_output_sha256"],
+            }
+            for receipt in receipts
+        ],
         "plan_confirmation": confirmation,
         "summary": {
             "slide_count": len(canvas_plan.get("slides", [])) if isinstance(canvas_plan.get("slides"), list) else None,

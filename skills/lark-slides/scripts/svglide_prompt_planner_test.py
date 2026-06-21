@@ -18,6 +18,16 @@ import svglide_prompt_planner as prompt_planner
 
 
 class SVGlidePromptPlannerTest(unittest.TestCase):
+    def fixture_dir(self) -> Path:
+        return Path(__file__).resolve().parent / "fixtures/svglide_artboard/followup_model_loop"
+
+    def fixture_provider_command(self) -> str:
+        provider = self.fixture_dir() / "fixture_model_provider.py"
+        return f"{sys.executable} {provider} --stage {{stage}} --raw-output {{raw_output}}"
+
+    def fixture_topic(self) -> dict[str, object]:
+        return json.loads((self.fixture_dir() / "topic.json").read_text(encoding="utf-8"))
+
     def fake_provider(self, tmpdir: str) -> Path:
         provider = Path(tmpdir) / "fake_provider.py"
         provider.write_text(
@@ -191,17 +201,22 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
             plan_root = Path(tmpdir) / ".lark-slides/plan"
             result = runner.init_project("spacex-auto", "SpaceX Auto", plan_root=plan_root)
             project = Path(result["project_root"])
-            provider = self.fake_provider(tmpdir)
+            topic = self.fixture_topic()
 
             receipt = prompt_planner.run_prompt_plan(
                 project,
-                prompt="spacex IPO 分析",
-                target_slide_count=1,
+                prompt=str(topic["prompt"]),
+                target_slide_count=int(topic["target_slide_count"]),
+                language=str(topic["language"]),
+                audience=str(topic["audience"]),
                 provider="command",
-                planner_command=f"{sys.executable} {provider} --stage {{stage}} --raw-output {{raw_output}}",
+                planner_command=self.fixture_provider_command(),
             )
 
             self.assertEqual("passed", receipt["status"])
+            self.assertEqual("command", receipt["provider_type"])
+            self.assertEqual(4, len(receipt["planner_raw_outputs"]))
+            self.assertTrue(all(item["sha256"] for item in receipt["planner_raw_outputs"]))
             self.assertTrue((project / "00-input/instruction.json").exists())
             self.assertEqual("spacex IPO 分析", json.loads((project / "00-input/instruction.json").read_text(encoding="utf-8"))["raw_prompt"])
             self.assertTrue((project / "02-plan/deck-plan.json").exists())
@@ -215,14 +230,14 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
             self.assertEqual("passed", json.loads((project / "06-check/planner-contract-check.json").read_text(encoding="utf-8"))["status"])
             canvas = json.loads((project / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
             self.assertGreaterEqual(len(canvas["asset_contracts"]), 3)
+            self.assertEqual("command", canvas["model_loop_fixture"]["provider"])
 
     def test_prompt_plan_refuses_to_overwrite_without_force(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"
             result = runner.init_project("spacex-auto", "SpaceX Auto", plan_root=plan_root)
             project = Path(result["project_root"])
-            provider = self.fake_provider(tmpdir)
-            command = f"{sys.executable} {provider} --stage {{stage}} --raw-output {{raw_output}}"
+            command = self.fixture_provider_command()
             prompt_planner.run_prompt_plan(project, prompt="spacex IPO 分析", target_slide_count=1, provider="command", planner_command=command)
 
             with self.assertRaisesRegex(prompt_planner.PromptPlannerError, "already exist"):

@@ -79,8 +79,28 @@ async function checkRuntime() {
   console.log(JSON.stringify({ ok: true, renderer: 'satori-resvg', satori_version: SATORI_VERSION, resvg_version: RESVG_VERSION, font_path: font.path }))
 }
 
+function serializeObservation(node) {
+  const props = node?.props || {}
+  const safeProps = {}
+  for (const [key, value] of Object.entries(props)) {
+    if (key.startsWith('data-') && ['string', 'number', 'boolean'].includes(typeof value)) {
+      safeProps[key] = value
+    }
+  }
+  return {
+    left: node?.left,
+    top: node?.top,
+    width: node?.width,
+    height: node?.height,
+    type: node?.type,
+    key: node?.key,
+    textContent: node?.textContent,
+    props: safeProps
+  }
+}
+
 async function main() {
-  const [, , inputPath, outputPath, pngPath, metadataPath] = process.argv
+  const [, , inputPath, outputPath, pngPath, metadataPath, observationsPath] = process.argv
   if (inputPath === '--check-runtime') {
     await checkRuntime()
     return
@@ -93,11 +113,15 @@ async function main() {
   const Resvg = await loadResvg()
   const spec = JSON.parse(await fs.readFile(inputPath, 'utf8'))
   const font = await loadFont()
+  const observations = []
   const svg = await satori(renderTree(spec), {
     width: 960,
     height: 540,
     embedFont: false,
-    fonts: [font]
+    fonts: [font],
+    onNodeDetected: (node) => {
+      observations.push(serializeObservation(node))
+    }
   })
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
   await fs.writeFile(outputPath, svg)
@@ -121,6 +145,21 @@ async function main() {
           resvg_version: RESVG_VERSION,
           font_path: font.path,
           png_bytes: pngBytes ? pngBytes.length : null
+        },
+        null,
+        2
+      ) + '\n'
+    )
+  }
+  if (observationsPath) {
+    await fs.mkdir(path.dirname(observationsPath), { recursive: true })
+    await fs.writeFile(
+      observationsPath,
+      JSON.stringify(
+        {
+          version: 'svglide-node-observations/v1',
+          observation_source: 'satori_on_node_detected',
+          nodes: observations
         },
         null,
         2

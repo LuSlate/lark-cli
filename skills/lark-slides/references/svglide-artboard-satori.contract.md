@@ -143,9 +143,9 @@ Each per-page artboard receipt must bind:
 - CanvasSpec hash
 - raw Satori preview SVG hash
 - CanvasSpec template SVG hash
-- compiler input path and hash
+- compiler input path and hash; current main path uses `semantic-map/v1`
 - renderer mode (`local-static` or `satori-node`)
-- compiler mode (`CanvasSpecTemplateSVG` / `preview_only`)
+- compiler mode (`SemanticMapIR` / `preview_only`)
 - semantic map hash
 - node layout map hash
 - final SVGlide SVG hash

@@ -36,6 +36,9 @@ class SVGlideAestheticReviewTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "passed")
         self.assertEqual(result["action"], "create_live")
+        self.assertEqual(result["review_mode"], "deterministic_aesthetic_auto_approval")
+        self.assertEqual(result["approval"]["status"], "approved")
+        self.assertIsNone(result["approval"]["model"])
         self.assertEqual(result["summary"]["error_count"], 0)
         self.assertTrue((project / "06-check/aesthetic-review.json").exists())
 
@@ -47,6 +50,8 @@ class SVGlideAestheticReviewTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "failed")
         self.assertEqual(result["action"], "repair_and_rerun")
+        self.assertEqual(result["approval"]["status"], "rejected")
+        self.assertTrue(result["approval"]["human_review_required"])
         self.assertEqual(result["issues"][0]["code"], "preview_lint_not_clean")
 
     def test_aesthetic_review_blocks_page_count_mismatch(self) -> None:

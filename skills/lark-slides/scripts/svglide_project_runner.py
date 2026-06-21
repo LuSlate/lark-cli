@@ -31,6 +31,7 @@ GENERATION_MODES = {DEFAULT_GENERATION_MODE, "artboard_satori"}
 DEFAULT_PLAN_ROOT = Path(".lark-slides/plan")
 SCRIPT_DIR = Path(__file__).resolve().parent
 LARK_CLI_COMMAND_ENV = "SVGLIDE_LARK_CLI_CMD"
+DEFAULT_REPAIR_LOOP_FAILING_RECEIPT = Path("06-check/preflight.json")
 
 STAGES = [
     "init",
@@ -60,6 +61,10 @@ STAGES = [
     "readback",
     "export",
 ]
+OPTIONAL_STAGES = {
+    "repair_loop",
+    "theme_productization",
+}
 
 STAGE_ALIASES = {
     "confirm-plan": "confirm_plan",
@@ -84,6 +89,11 @@ STAGE_ALIASES = {
     "pre-submit-review": "pre_submit_review",
     "pre-submit": "pre_submit_review",
     "live-create": "live_create",
+    "repair-loop": "repair_loop",
+    "theme-productization": "theme_productization",
+    "theme-productize": "theme_productization",
+    "export-package": "export",
+    "package-export": "export",
 }
 
 PROJECT_DIRS = [
@@ -129,6 +139,9 @@ IMPLEMENTED_STAGES = {
     "pre_submit_review",
     "live_create",
     "readback",
+    "repair_loop",
+    "theme_productization",
+    "export",
 }
 FAILURE_STATUSES = {"blocked", "failed", "skipped"}
 DECK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -161,7 +174,7 @@ def now_iso() -> str:
 
 def normalize_stage(stage: str) -> str:
     candidate = STAGE_ALIASES.get(stage, stage.replace("-", "_"))
-    if candidate not in STAGES:
+    if candidate not in STAGES and candidate not in OPTIONAL_STAGES:
         raise RunnerError(f"unknown stage '{stage}'", exit_code=2)
     return candidate
 
@@ -1438,6 +1451,73 @@ def run_package_check_stage(project_root: Path, state: dict[str, Any]) -> dict[s
     )
 
 
+def repair_loop_input_path(project_root: Path) -> Path:
+    return project_root / "02-plan" / "repair-loop.input.json"
+
+
+def repair_loop_failing_receipt(project_root: Path) -> Path:
+    request_path = repair_loop_input_path(project_root)
+    if request_path.exists():
+        payload = read_json(request_path)
+        raw = payload.get("failing_receipt")
+        if not isinstance(raw, str) or not raw:
+            raise RunnerError("repair-loop.input.json must include failing_receipt")
+        return project_root / raw
+    fallback = project_root / DEFAULT_REPAIR_LOOP_FAILING_RECEIPT
+    if fallback.exists():
+        return fallback
+    raise RunnerError(
+        "repair_loop requires a failing receipt; write 02-plan/repair-loop.input.json "
+        "with failing_receipt or run the repair-loop command with --failing-receipt"
+    )
+
+
+def run_repair_loop_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+    failing_receipt = repair_loop_failing_receipt(project_root)
+    command = [
+        "python3",
+        (SCRIPT_DIR / "svglide_model_repair_loop.py").as_posix(),
+        project_root.as_posix(),
+        "--failing-receipt",
+        failing_receipt.as_posix(),
+        "--pretty",
+    ]
+    inputs = [
+        "02-plan/slide_plan.json",
+        "02-plan/repair-plan.json",
+        project_relpath(failing_receipt, project_root),
+    ]
+    if repair_loop_input_path(project_root).exists():
+        inputs.append("02-plan/repair-loop.input.json")
+    return run_script_stage(
+        project_root,
+        state,
+        "repair_loop",
+        command,
+        output_json=project_root / "receipts" / "repair-loop.json",
+        inputs=inputs,
+        outputs=["02-plan/slide_plan.json", "receipts/repair-loop.json", "receipts/repair_loop.json"],
+    )
+
+
+def run_theme_productization_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+    return run_script_stage(
+        project_root,
+        state,
+        "theme_productization",
+        ["python3", (SCRIPT_DIR / "svglide_theme_productization.py").as_posix(), project_root.as_posix(), "--pretty"],
+        output_json=project_root / "06-check" / "theme-productization.json",
+        inputs=["02-plan/theme-productization.input.json", "02-plan/slide_plan.json"],
+        outputs=[
+            "02-plan/theme-registry.json",
+            "02-plan/themes",
+            "02-plan/theme-migration.patch.json",
+            "06-check/theme-productization.json",
+            "receipts/theme-productization.json",
+        ],
+    )
+
+
 def lark_cli_command_prefix() -> list[str]:
     raw = os.environ.get(LARK_CLI_COMMAND_ENV, "").strip()
     if not raw:
@@ -1832,6 +1912,30 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["07-create/live-create.json", "02-plan/slide_plan.json"],
             outputs=["08-readback/xml-presentations-get.json", "08-readback/readback-check.json"],
         )
+    if stage == "repair_loop":
+        return run_repair_loop_stage(project_root, state)
+    if stage == "theme_productization":
+        return run_theme_productization_stage(project_root, state)
+    if stage == "export":
+        require_stage_passed(state, "readback")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_export_package.py").as_posix(), project_root.as_posix(), "--archive", "--pretty"],
+            output_json=project_root / "09-export" / "export-manifest.json",
+            inputs=[
+                "02-plan/slide_plan.json",
+                "06-check/quality-gate.json",
+                "07-create/live-create.json",
+                "08-readback/readback-check.json",
+            ],
+            outputs=[
+                "09-export/export-manifest.json",
+                "09-export/svglide-artifacts.zip",
+                "receipts/export.json",
+            ],
+        )
     raise RunnerError(f"stage '{stage}' is not implemented in the P0 runner skeleton")
 
 
@@ -1907,17 +2011,28 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--profile", choices=sorted(PROFILE_TARGETS))
     add_network_args(run)
 
-    prompt_plan = subcommands.add_parser("prompt-plan", help="generate source and plan artifacts from a raw prompt")
-    prompt_plan.add_argument("project_root", type=Path)
-    prompt_plan.add_argument("--prompt", required=True)
-    prompt_plan.add_argument("--target-slide-count", type=int, default=8)
-    prompt_plan.add_argument("--language", default="zh-CN")
-    prompt_plan.add_argument("--audience", default="投资/战略分析读者")
-    prompt_plan.add_argument("--provider", default="codex", choices=["codex", "claude", "command"])
-    prompt_plan.add_argument("--planner-command")
-    prompt_plan.add_argument("--no-search", action="store_true")
-    prompt_plan.add_argument("--timeout", type=int, default=300)
-    prompt_plan.add_argument("--force", action="store_true")
+    for command_name in ["prompt-plan", "model-plan"]:
+        prompt_plan = subcommands.add_parser(command_name, help="generate source and plan artifacts from a raw prompt")
+        prompt_plan.add_argument("project_root", type=Path)
+        prompt_plan.add_argument("--prompt", required=True)
+        prompt_plan.add_argument("--target-slide-count", type=int, default=8)
+        prompt_plan.add_argument("--language", default="zh-CN")
+        prompt_plan.add_argument("--audience", default="投资/战略分析读者")
+        prompt_plan.add_argument("--provider", default="codex", choices=["codex", "claude", "command"])
+        prompt_plan.add_argument("--planner-command")
+        prompt_plan.add_argument("--no-search", action="store_true")
+        prompt_plan.add_argument("--timeout", type=int, default=300)
+        prompt_plan.add_argument("--force", action="store_true")
+
+    repair_loop = subcommands.add_parser("repair-loop", help="apply a scoped repair-plan JSON Patch to slide_plan.json")
+    repair_loop.add_argument("project_root", type=Path)
+    repair_loop.add_argument("--failing-receipt", type=Path, required=True)
+    repair_loop.add_argument("--repair-plan", type=Path, default=Path("02-plan/repair-plan.json"))
+    repair_loop.add_argument("--plan", type=Path, default=Path("02-plan/slide_plan.json"))
+
+    theme_productize = subcommands.add_parser("theme-productize", help="extract a project theme and migrate a slide plan to it")
+    theme_productize.add_argument("project_root", type=Path)
+    theme_productize.add_argument("--input", type=Path, default=Path("02-plan/theme-productization.input.json"))
 
     return parser
 
@@ -1946,7 +2061,7 @@ def main(argv: list[str] | None = None) -> int:
         apply_cli_runner_options(args)
         if args.command == "init":
             result = init_project(args.deck_id, args.title, plan_root=args.plan_root, force=args.force)
-        elif args.command == "prompt-plan":
+        elif args.command in {"prompt-plan", "model-plan"}:
             import svglide_prompt_planner
 
             result = svglide_prompt_planner.run_prompt_plan(
@@ -1961,6 +2076,25 @@ def main(argv: list[str] | None = None) -> int:
                 timeout=args.timeout,
                 force=args.force,
             )
+        elif args.command == "repair-loop":
+            import svglide_model_repair_loop
+
+            try:
+                result = svglide_model_repair_loop.run_repair_loop(
+                    args.project_root,
+                    failing_receipt=args.failing_receipt,
+                    repair_plan=args.repair_plan,
+                    plan=args.plan,
+                )
+            except svglide_model_repair_loop.RepairLoopError as err:
+                raise RunnerError(str(err)) from err
+        elif args.command == "theme-productize":
+            import svglide_theme_productization
+
+            try:
+                result = svglide_theme_productization.run_theme_productization(args.project_root, input_path=args.input)
+            except (svglide_theme_productization.ThemeProductizationError, OSError, json.JSONDecodeError) as err:
+                raise RunnerError(str(err)) from err
         elif args.command == "stage":
             result = run_stage(args.project_root, args.stage, profile=args.profile)
         elif args.command == "run":

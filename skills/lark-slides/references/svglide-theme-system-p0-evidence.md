@@ -24,6 +24,13 @@ P1/P2 are not targets for this evidence slice. In particular, this file does
 not claim model-driven theme extraction, productized theme authoring UI,
 cross-deck theme migration, export packaging, or automated aesthetic approval.
 
+Follow-up implementation after this P0 slice is tracked in
+`skills/lark-slides/references/svglide-artboard-followup-completion-evidence.md`.
+The local CLI layer now includes deterministic theme productization,
+cross-plan theme migration, export artifact packaging, and deterministic
+aesthetic auto approval. It still does not claim a productized editor UI,
+external model-quality approval, PPTX export, animation, or narrated output.
+
 ## Branch And Baseline
 
 Observed during this evidence update:
@@ -298,11 +305,15 @@ output receipts:
 
 - `pre_submit_review` is a human receipt validator. It is not an automatic
   aesthetics model.
+- `aesthetic_review` now emits deterministic auto approval from preview,
+  page-count, and asset-safety checks. It is still not a learned aesthetics
+  model.
 - `theme_adherence` only checks static SVG colors and direct text/background
   contrast in final prepared SVG files.
 - Satori SVG remains an artboard preview/intermediate artifact; final theme
   adherence is checked on `04-svg/prepared/*.svg`.
 - `direct_svg` still runs theme checks, but it must not require
   `artboard-package-check`.
-- `export` is outside Theme System P0. The P0 plan explicitly does not claim
-  PPTX or narrated deck output.
+- `export` was outside Theme System P0. Follow-up now packages verified
+  SVGlide artifacts, but still does not claim PPTX, animation, or narrated
+  deck output.

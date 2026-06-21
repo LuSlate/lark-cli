@@ -77,7 +77,7 @@ class SVGlideTemplateFitCheckTest(unittest.TestCase):
             write_project(
                 project,
                 [
-                    {"id": "title", "kind": "text", "x": 40, "y": 40, "width": 320, "height": 24},
+                    {"id": "title", "kind": "text", "x": 40, "y": 40, "width": 320, "height": 18},
                     {"id": "footer", "kind": "shape", "x": 920, "y": 500, "width": 80, "height": 60},
                 ],
             )

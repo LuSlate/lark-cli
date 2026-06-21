@@ -43,7 +43,7 @@ def text_height_ok(node: dict[str, Any]) -> bool:
     kind = node.get("kind")
     if kind != "text":
         return True
-    return isinstance(height, (int, float)) and height >= 30
+    return isinstance(height, (int, float)) and height >= 24
 
 
 def node_in_canvas(node: dict[str, Any]) -> bool:

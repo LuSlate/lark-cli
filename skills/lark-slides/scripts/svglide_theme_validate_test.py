@@ -47,7 +47,14 @@ def write_project_theme(project: Path, *, theme_id: str = "project-theme", prima
         project / "02-plan/theme-registry.json",
         {
             "schema_version": "svglide-theme-registry/v1",
-            "themes": [{"id": theme_id, "status": "active", "path": "themes/project-theme.json"}],
+            "themes": [
+                {
+                    "id": theme_id,
+                    "status": "active",
+                    "path": "themes/project-theme.json",
+                    "template_bindings": {"supported_template_ids": ["cover-hero"]},
+                }
+            ],
         },
     )
     write_json(
@@ -98,6 +105,17 @@ class SVGlideThemeValidateTest(unittest.TestCase):
         self.assertEqual(result["inputs"]["theme_registry"], "02-plan/theme-registry.json")
         self.assertEqual(result["theme_files"][0]["path"], "themes/project-theme.json")
         self.assertEqual(result["pages"][0]["theme_id"], "project-theme")
+
+    def test_validate_project_allows_project_theme_template_binding(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_project_theme(project)
+            write_plan(project, theme_id="project-theme", template_id="cover-hero")
+
+            result = svglide_theme_validate.validate_project(project)
+
+        self.assertEqual(result["status"], "passed", result["issues"])
+        self.assertEqual(result["pages"][0]["template_id"], "cover-hero")
 
     def test_validate_project_fails_unknown_theme(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

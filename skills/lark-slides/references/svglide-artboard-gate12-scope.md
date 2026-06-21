@@ -2,6 +2,9 @@
 
 Status: final acceptance scope for current implementation milestone
 
+Follow-up completion evidence:
+`skills/lark-slides/references/svglide-artboard-followup-completion-evidence.md`
+
 ## Accepted Milestone
 
 Gate 12 acceptance covers the implemented SVGlide Artboard/Satori milestone through Gate 12a:
@@ -41,6 +44,18 @@ Not claimed in this milestone:
 These are not silently dropped. They are explicit follow-up scope.
 
 ## Follow-Up Items
+
+Current follow-up status as of 2026-06-21:
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Real Topic Model Loop | local executable contract completed | `model-plan` supports command/model provider flow and records raw output hashes; real external LLM execution still requires credentials/network |
+| Automated Visual Repair Loop | local executable loop completed | `repair_loop` applies scoped scalar JSON Patch from repair plans and rejects broad patches |
+| Semantic Map Compiler IR | completed | compiler/artboard receipts include `input_semantic_hash`; visible text/source refs are compared against semantic map |
+| True Node Layout Observation | completed locally | Satori node observations produce measured `node-layout-map/v1`; drift blocks quality gate |
+| Real macOS x64 Runtime Validation | CI wired, local proof blocked by host arch | package check supports `--require-system Darwin --require-arch x64`; GitHub Actions `macos-13` job uploads evidence |
+| Export Packaging | completed for SVGlide artifact package | runner `export` writes manifest, zip, and receipt; PPTX/animation/narration remain outside local CLI workspace |
+| Theme P1/P2 CLI layer | local executable contracts completed | ThemeSpec extraction, project registry binding, plan migration, and deterministic approval are implemented; UI/server/model-quality approval remain external |
 
 ### 1. Real Topic Model Loop
 

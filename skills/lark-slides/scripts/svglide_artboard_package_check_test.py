@@ -8,6 +8,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -76,6 +77,23 @@ var skillsEmbedFS embed.FS
         encoded = json.dumps(payload)
         decoded = json.loads(encoded)
         self.assertEqual(decoded["runtime_checks"][0]["payload"]["renderer"], "satori-resvg")
+
+    def test_required_x64_host_blocks_on_arm64_host(self) -> None:
+        with mock.patch.object(package_check.platform, "system", return_value="Darwin"), mock.patch.object(package_check.platform, "machine", return_value="arm64"):
+            payload = package_check.inspect_artboard_package(run_runtime=False, require_system="Darwin", require_arch="x64")
+
+        self.assertEqual(payload["status"], "blocked", payload["issues"])
+        self.assertEqual(payload["host"]["normalized_arch"], "arm64")
+        self.assertEqual(payload["host_requirements"]["required_arch"], "x64")
+        self.assertEqual(payload["blockers"][0]["code"], "runtime_host_arch_mismatch")
+
+    def test_required_x64_host_passes_requirement_on_x86_64_host(self) -> None:
+        with mock.patch.object(package_check.platform, "system", return_value="Darwin"), mock.patch.object(package_check.platform, "machine", return_value="x86_64"):
+            payload = package_check.inspect_artboard_package(run_runtime=False, require_system="Darwin", require_arch="x64")
+
+        self.assertEqual(payload["status"], "passed", payload["issues"])
+        self.assertEqual(payload["host"]["normalized_arch"], "x64")
+        self.assertEqual(payload["host_requirements"]["status"], "passed")
 
 
 if __name__ == "__main__":

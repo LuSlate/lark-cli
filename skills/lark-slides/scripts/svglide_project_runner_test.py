@@ -418,6 +418,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(runner.normalize_stage("pre-submit-review"), "pre_submit_review")
         self.assertEqual(runner.normalize_stage("pre-submit"), "pre_submit_review")
         self.assertEqual(runner.normalize_stage("live-create"), "live_create")
+        self.assertEqual(runner.normalize_stage("theme-productization"), "theme_productization")
+        self.assertEqual(runner.normalize_stage("theme-productize"), "theme_productization")
+        self.assertEqual(runner.normalize_stage("export-package"), "export")
+        self.assertEqual(runner.normalize_stage("package-export"), "export")
 
     def test_stages_until_uses_normalized_stage_graph(self) -> None:
         dry_run = runner.stages_until("dry_run")
@@ -446,6 +450,11 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("pre_submit_review", readback)
         self.assertIn("live_create", readback)
         self.assertIn("readback", readback)
+        self.assertNotIn("export", readback)
+
+        export = runner.stages_until("export")
+        self.assertIn("readback", export)
+        self.assertIn("export", export)
 
     def test_resolve_run_target_accepts_preview_only_profile(self) -> None:
         self.assertEqual(runner.resolve_run_target(None, "preview_only"), "quality_gate")
@@ -574,6 +583,84 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIsInstance(inputs, list)
             self.assertIn((project_root / "06-check/pre-submit-human-review.json").as_posix(), command)
             self.assertIn("06-check/pre-submit-human-review.json", inputs)
+
+    def test_export_stage_invokes_package_script_after_readback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            state = runner.load_state(project_root)
+            state.setdefault("stages", {})["readback"] = {"status": "passed", "receipt": "receipts/readback.json"}
+            runner.write_state(project_root, state)
+            captured: dict[str, object] = {}
+            original_run_script_stage = runner.run_script_stage
+
+            def fake_run_script_stage(
+                project_root: Path,
+                state: dict[str, object],
+                stage: str,
+                command: list[str],
+                **_: object,
+            ) -> dict[str, object]:
+                captured["stage"] = stage
+                captured["command"] = command
+                return runner.complete_stage(
+                    project_root,
+                    state,
+                    stage,
+                    "passed",
+                    started_at=runner.now_iso(),
+                    command=command,
+                )
+
+            try:
+                runner.run_script_stage = fake_run_script_stage
+                runner.run_stage(project_root, "export-package")
+            finally:
+                runner.run_script_stage = original_run_script_stage
+
+            self.assertEqual(captured["stage"], "export")
+            command = captured["command"]
+            self.assertIsInstance(command, list)
+            self.assertIn("svglide_export_package.py", " ".join(command))
+            self.assertIn("--archive", command)
+
+    def test_theme_productization_stage_invokes_script(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            captured: dict[str, object] = {}
+            original_run_script_stage = runner.run_script_stage
+
+            def fake_run_script_stage(
+                project_root: Path,
+                state: dict[str, object],
+                stage: str,
+                command: list[str],
+                **_: object,
+            ) -> dict[str, object]:
+                captured["stage"] = stage
+                captured["command"] = command
+                return runner.complete_stage(
+                    project_root,
+                    state,
+                    stage,
+                    "passed",
+                    started_at=runner.now_iso(),
+                    command=command,
+                )
+
+            try:
+                runner.run_script_stage = fake_run_script_stage
+                runner.run_stage(project_root, "theme-productize")
+            finally:
+                runner.run_script_stage = original_run_script_stage
+
+            self.assertEqual(captured["stage"], "theme_productization")
+            command = captured["command"]
+            self.assertIsInstance(command, list)
+            self.assertIn("svglide_theme_productization.py", " ".join(command))
 
     def test_init_creates_project_directories_manifest_and_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

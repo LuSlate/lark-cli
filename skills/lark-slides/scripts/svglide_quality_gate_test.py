@@ -219,6 +219,14 @@ def attach_passing_artboard_receipt(project: Path) -> None:
         '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540"/><text x="80" y="120">Title</text></svg>',
         encoding="utf-8",
     )
+    (project / "04-svg/page-001.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">'
+        '<foreignObject slide:role="shape" slide:shape-type="text" data-node-id="title" data-source-ref="canvas_spec.content.title" x="80" y="80" width="720" height="72">'
+        '<div xmlns="http://www.w3.org/1999/xhtml">Title</div>'
+        '</foreignObject>'
+        '</svg>',
+        encoding="utf-8",
+    )
     (project / "04-svg/artboard/page-001.png").write_bytes(b"png")
     write_json(
         project / "04-svg/artboard/page-001.render-metadata.json",
@@ -250,9 +258,25 @@ def attach_passing_artboard_receipt(project: Path) -> None:
         {
             "version": "svglide-node-layout-map/v1",
             "page": 1,
-            "source": "template-layout-map",
-            "drift": {"status": "not_measured_in_p0", "max_px": 0},
-            "nodes": [{"id": "title", "kind": "text", "x": 80, "y": 80, "width": 720, "height": 72}],
+            "source": "measured-layout-observation",
+            "observation_source": "satori_on_node_detected",
+            "threshold_px": 8,
+            "drift": {"status": "passed", "max_px": 0, "threshold_px": 8, "missing_count": 0},
+            "nodes": [
+                {
+                    "id": "title",
+                    "kind": "text",
+                    "x": 80,
+                    "y": 80,
+                    "width": 720,
+                    "height": 72,
+                    "text": "Title",
+                    "expected_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                    "measured_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                    "drift_px": 0,
+                    "observation_source": "satori_on_node_detected",
+                }
+            ],
         },
     )
     (project / "05-preview/contact-sheet.png").write_bytes(b"contact")
@@ -260,6 +284,7 @@ def attach_passing_artboard_receipt(project: Path) -> None:
     template_registry_sha256 = "template-registry-hash"
     theme_registry_sha256 = "theme-registry-hash"
     font_hashes = [{"path": "/tmp/font.ttf", "sha256": "font-hash"}]
+    semantic_map_sha256 = svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json")
     write_json(
         project / "04-svg/artboard/page-001.receipt.json",
         {
@@ -289,15 +314,16 @@ def attach_passing_artboard_receipt(project: Path) -> None:
             "render_metadata_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"),
             "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
             "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-            "compiler_input": "04-svg/artboard/page-001.canvas-template.svg",
-            "compiler_input_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
+            "compiler_input": "04-svg/artboard/page-001.semantic-map.json",
+            "compiler_input_sha256": semantic_map_sha256,
+            "input_semantic_hash": semantic_map_sha256,
             "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
-            "semantic_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json"),
+            "semantic_map_sha256": semantic_map_sha256,
             "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
             "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
             "svglide_svg": "04-svg/page-001.svg",
             "svglide_svg_sha256": source_hash,
-            "compiler": {"semantic_source": "CanvasSpec", "compiler_input": "CanvasSpecTemplateSVG", "satori_svg_usage": "preview_only"},
+            "compiler": {"semantic_source": "CanvasSpec", "compiler_input": "SemanticMapIR", "satori_svg_usage": "preview_only", "input_semantic_hash": semantic_map_sha256},
         },
     )
     receipt = json.loads((project / "receipts/generate_svg.json").read_text(encoding="utf-8"))
@@ -403,14 +429,15 @@ def attach_passing_artboard_receipt(project: Path) -> None:
                     "page": 1,
                     "semantic_source": "CanvasSpec",
                     "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
-                    "semantic_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json"),
+                    "semantic_map_sha256": semantic_map_sha256,
+                    "input_semantic_hash": semantic_map_sha256,
                     "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
                     "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
                     "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
                     "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-                    "compiler_input": "04-svg/artboard/page-001.canvas-template.svg",
-                    "compiler_input_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-                    "compiler_input_type": "CanvasSpecTemplateSVG",
+                    "compiler_input": "04-svg/artboard/page-001.semantic-map.json",
+                    "compiler_input_sha256": semantic_map_sha256,
+                    "compiler_input_type": "SemanticMapIR",
                     "satori_svg_usage": "preview_only",
                     "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
                     "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
@@ -442,6 +469,28 @@ def attach_passing_artboard_receipt(project: Path) -> None:
         },
     )
     write_json(project / "receipts/template-fit-check.json", json.loads((project / "06-check/template-fit.json").read_text(encoding="utf-8")))
+
+
+def refresh_artboard_node_layout_hashes(project: Path) -> None:
+    node_layout_sha = svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json")
+    for receipt_rel in [
+        "04-svg/artboard/page-001.receipt.json",
+        "receipts/artboard-render.json",
+        "receipts/satori-bridge.json",
+    ]:
+        receipt_path = project / receipt_rel
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        if "node_layout_map_sha256" in receipt:
+            receipt["node_layout_map_sha256"] = node_layout_sha
+        for page in receipt.get("pages", []) if isinstance(receipt.get("pages"), list) else []:
+            if isinstance(page, dict) and page.get("node_layout_map") == "04-svg/artboard/page-001.node-layout-map.json":
+                page["node_layout_map_sha256"] = node_layout_sha
+        write_json(receipt_path, receipt)
+    satori_bridge = project / "receipts/satori-bridge.json"
+    render_receipt = project / "receipts/artboard-render.json"
+    payload = json.loads(satori_bridge.read_text(encoding="utf-8"))
+    payload["inputs"]["artboard_render_sha256"] = svglide_quality_gate.file_sha256(render_receipt)
+    write_json(satori_bridge, payload)
 
 
 class SVGlideQualityGateTest(unittest.TestCase):
@@ -886,7 +935,9 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            (project / "04-svg/artboard/page-001.canvas-template.svg").write_text("<svg changed='true'/>", encoding="utf-8")
+            semantic_map = json.loads((project / "04-svg/artboard/page-001.semantic-map.json").read_text(encoding="utf-8"))
+            semantic_map["elements"][0]["text"] = "Changed semantic input"
+            write_json(project / "04-svg/artboard/page-001.semantic-map.json", semantic_map)
 
             result = svglide_quality_gate.run_quality_gate(project)
 
@@ -898,6 +949,33 @@ class SVGlideQualityGateTest(unittest.TestCase):
             }
             self.assertIn("generator_artboard_artifact_stale", failed_codes)
             self.assertIn("satori_bridge_compiler_input_stale", failed_codes)
+
+    def test_quality_gate_fails_when_node_layout_drift_exceeds_threshold(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            node_layout_path = project / "04-svg/artboard/page-001.node-layout-map.json"
+            node_layout = json.loads(node_layout_path.read_text(encoding="utf-8"))
+            node_layout["drift"] = {"status": "failed", "max_px": 48, "threshold_px": 8, "missing_count": 0}
+            node_layout["nodes"][0]["x"] = 128
+            node_layout["nodes"][0]["measured_bbox"]["x"] = 128
+            node_layout["nodes"][0]["drift_px"] = 48
+            write_json(node_layout_path, node_layout)
+            refresh_artboard_node_layout_hashes(project)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("generator_artboard_node_layout_drift_exceeds_threshold", failed_codes)
 
     def test_quality_gate_validates_artboard_receipt_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

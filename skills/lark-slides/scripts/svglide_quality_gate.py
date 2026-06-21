@@ -11,7 +11,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import svglide_node_layout_drift
 import svglide_schema
+import svglide_semantic_map_ir
 
 
 CHECK_DIR = Path("06-check")
@@ -427,8 +429,10 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                     continue
                 if page.get("semantic_source") != "CanvasSpec":
                     check["issues"].append(issue("satori_bridge_semantic_source_invalid", "satori-bridge semantic_source must be CanvasSpec"))
-                if page.get("compiler_input_type") != "CanvasSpecTemplateSVG":
-                    check["issues"].append(issue("satori_bridge_compiler_input_type_invalid", "satori-bridge compiler_input_type must be CanvasSpecTemplateSVG"))
+                if page.get("input_semantic_hash") != page.get("semantic_map_sha256"):
+                    check["issues"].append(issue("satori_bridge_input_semantic_hash_mismatch", "satori-bridge input_semantic_hash must match semantic_map_sha256"))
+                if page.get("compiler_input_type") != "SemanticMapIR":
+                    check["issues"].append(issue("satori_bridge_compiler_input_type_invalid", "satori-bridge compiler_input_type must be SemanticMapIR"))
                 if page.get("satori_svg_usage") != "preview_only":
                     check["issues"].append(issue("satori_bridge_satori_usage_invalid", "satori-bridge satori_svg_usage must be preview_only"))
                 for path_key, hash_key in [
@@ -522,12 +526,22 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                 compiler = artboard_receipt.get("compiler") if isinstance(artboard_receipt.get("compiler"), dict) else {}
                 if compiler.get("semantic_source") != "CanvasSpec":
                     check["issues"].append(issue("generator_artboard_compiler_semantic_source_invalid", f"artboard compiler semantic_source must be CanvasSpec: {item}"))
-                if compiler.get("compiler_input") != "CanvasSpecTemplateSVG":
-                    check["issues"].append(issue("generator_artboard_compiler_input_invalid", f"artboard compiler_input must be CanvasSpecTemplateSVG: {item}"))
+                if compiler.get("compiler_input") != "SemanticMapIR":
+                    check["issues"].append(issue("generator_artboard_compiler_input_invalid", f"artboard compiler_input must be SemanticMapIR: {item}"))
                 if compiler.get("satori_svg_usage") != "preview_only":
                     check["issues"].append(issue("generator_artboard_compiler_satori_usage_invalid", f"artboard compiler satori_svg_usage must be preview_only: {item}"))
-                if artboard_receipt.get("compiler_input") != artboard_receipt.get("canvas_template_svg"):
-                    check["issues"].append(issue("generator_artboard_compiler_input_path_invalid", f"artboard compiler_input must point to canvas_template_svg: {item}"))
+                if artboard_receipt.get("compiler_input") != artboard_receipt.get("semantic_map"):
+                    check["issues"].append(issue("generator_artboard_compiler_input_path_invalid", f"artboard compiler_input must point to semantic_map: {item}"))
+                input_semantic_hash = artboard_receipt.get("input_semantic_hash")
+                semantic_map_sha256 = artboard_receipt.get("semantic_map_sha256")
+                if not isinstance(input_semantic_hash, str) or not input_semantic_hash:
+                    check["issues"].append(issue("generator_artboard_input_semantic_hash_missing", f"artboard receipt must include input_semantic_hash: {item}"))
+                elif input_semantic_hash != semantic_map_sha256:
+                    check["issues"].append(issue("generator_artboard_input_semantic_hash_mismatch", f"artboard input_semantic_hash must match semantic_map_sha256: {item}"))
+                if artboard_receipt.get("compiler_input_sha256") != semantic_map_sha256:
+                    check["issues"].append(issue("generator_artboard_compiler_input_hash_mismatch", f"artboard compiler_input_sha256 must match semantic_map_sha256: {item}"))
+                if compiler.get("input_semantic_hash") != semantic_map_sha256:
+                    check["issues"].append(issue("generator_artboard_compiler_input_semantic_hash_mismatch", f"artboard compiler input_semantic_hash must match semantic_map_sha256: {item}"))
                 for path_key, artifact_schema, code in [
                     ("semantic_map", semantic_map_schema, "generator_artboard_semantic_map_schema_invalid"),
                     ("node_layout_map", node_layout_schema, "generator_artboard_node_layout_schema_invalid"),
@@ -542,6 +556,14 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                         continue
                     schema_issues = svglide_schema.validate_json_schema(artifact, artifact_schema)
                     check["issues"].extend(issue(code, f"{rel} {schema_issue['path']}: {schema_issue['message']}") for schema_issue in schema_issues)
+                    if path_key == "semantic_map":
+                        svglide_rel = artboard_receipt.get("svglide_svg")
+                        if isinstance(svglide_rel, str) and (project / svglide_rel).exists():
+                            semantic_issues = svglide_semantic_map_ir.validate_semantic_map_against_svg(artifact, project / svglide_rel)
+                            check["issues"].extend(issue(f"generator_artboard_{semantic_issue['code']}", f"{rel}: {semantic_issue['message']}") for semantic_issue in semantic_issues)
+                    if path_key == "node_layout_map":
+                        drift_issues = svglide_node_layout_drift.validate_node_layout_map(artifact)
+                        check["issues"].extend(issue(f"generator_artboard_{drift_issue['code']}", f"{rel}: {drift_issue['message']}") for drift_issue in drift_issues)
     check["error_count"] = len(check["issues"])
     check["status"] = "failed" if check["issues"] else "passed"
     return check

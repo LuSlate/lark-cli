@@ -1,0 +1,15 @@
+{
+  "schema_version": "svglide-repair-plan/v1",
+  "target_plan_path": "02-plan/slide_plan.json",
+  "change_reason": "错误示例：尝试重写整个 content 对象。",
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/slides/0/canvas_spec/content",
+      "value": {
+        "title": "whole object rewrite"
+      },
+      "reason": "broad object rewrite must be rejected."
+    }
+  ]
+}

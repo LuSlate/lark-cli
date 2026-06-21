@@ -430,9 +430,9 @@ Required actions:
 - Convert using CanvasSpec/semantic map, not by trusting raw Satori SVG as semantic truth.
 - Keep raw Satori SVG as preview/layout evidence only.
 - Record the actual compiler input artifact and hash, for example:
-  - `04-svg/artboard/page-###.canvas-template.svg`
-  - `canvas_template_svg_sha256`
-  - `compiler_input=CanvasSpecTemplateSVG`
+  - `04-svg/artboard/page-###.semantic-map.json`
+  - `semantic_map_sha256`
+  - `compiler_input=SemanticMapIR`
   - `satori_svg_usage=preview_only`
 - Output current SVGlide protocol:
   - `xmlns:slide="https://slides.bytedance.com/ns"`
@@ -775,7 +775,7 @@ Update this board after each meaningful implementation chunk.
 | 1 Contract layer completion | DONE | executor | PASS | Plan schema now rejects `artboard_satori` slides without `canvas_spec`; semantic map now emits `elements[]`; PLAN/contract receipt wording aligned to per-page `artboard_receipts` + aggregate `artboard_additional_receipts`; reviewer PASS recorded in `svglide-artboard-gate0-gate1-evidence.md` |
 | 2 Template/theme/component/input quality | DONE | executor | PASS | 3 templates + 3 registered themes + component module + `templates/p0-templates.mjs` exist; registry text budgets, golden CanvasSpec fixtures, and safe-area/semantic bbox admission checks added; P0b `/private/tmp/svglide-p0b-gate2-safe-YVT67C` passed template-fit/quality-gate/dry-run; evidence recorded in `svglide-artboard-gate2-evidence.md` |
 | 3 Satori renderer and resvg preview | DONE | executor | PASS | `node render.mjs --check-runtime` and `node dist/render.mjs --check-runtime` passed with Satori 0.26.0 / resvg 2.6.2; P0b raw SVG/PNG/contact sheet and receipts verified; evidence recorded in `svglide-artboard-gate3-evidence.md` |
-| 4 SatoriToSVGlide compiler | DONE | executor | PASS | Main artboard path now writes `04-svg/artboard/page-###.canvas-template.svg` and compiles final SVGlide SVG from `CanvasSpecTemplateSVG`; raw Satori SVG is `preview_only`; quality gate rejects RawSatori compiler metadata; P0b `/private/tmp/svglide-p0b-gate4-641DXp` passed quality_gate/dry_run; evidence recorded in `svglide-artboard-gate4-evidence.md` |
+| 4 SatoriToSVGlide compiler | DONE | executor | PASS | Main artboard path writes template SVG as preview/layout evidence and now compiles final SVGlide SVG from `semantic-map/v1` as `SemanticMapIR`; raw Satori SVG is `preview_only`; quality gate rejects RawSatori compiler metadata; original P0b evidence remains recorded in `svglide-artboard-gate4-evidence.md` |
 | 5 Runner and quality gate integration | DONE | executor | PASS | Page jobs now run with bounded `max_workers=min(4,page_count)` and stable sorted receipts; full test suite passed 254 tests; direct_svg `/private/tmp/svglide-direct-gate5-iYPBBA` passed quality_gate; artboard P0b `/private/tmp/svglide-p0b-gate5-qg7PC6` passed dry_run; evidence recorded in `svglide-artboard-gate5-evidence.md` |
 | 6 P0a/P0b local E2E | DONE | executor | PASS | P0a `/private/tmp/svglide-p0a-gate6-zNSbw5` ran to dry_run; P0b `/private/tmp/svglide-p0b-gate5-qg7PC6` ran to dry_run; P0b hits `cover-hero/dark-clarity`, `comparison-cards/forest-signal`, `summary-final/warm-editorial`; evidence recorded in `svglide-artboard-gate6-evidence.md` |
 | 7 P0c live closure | DONE | executor | PASS | Reviewer PASS: strengthened PPE proof validates Whistle capture/proxy/rule hash/injected headers; fresh P0c `.tmp/svglide-p0c-gate7-live6` ran `dry_run -> ppe_proof -> live_create -> readback`; live deck `MPcnsjAH5l5r2edcpWYcNhFVnVd` created 3 slides `["pbb","pbu","pbe"]`; readback passed page count, slide order, nonblank, text-fit/bounds marker scan, and 22 CanvasSpec visible text fragments; evidence recorded in `svglide-artboard-gate7-evidence.md` |
