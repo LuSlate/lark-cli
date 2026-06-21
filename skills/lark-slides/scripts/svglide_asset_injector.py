@@ -24,6 +24,10 @@ VIEWBOX_RE = re.compile(r"""viewBox\s*=\s*["']\s*([0-9.-]+)\s+([0-9.-]+)\s+([0-9
 NUMBER_ATTR_RE = re.compile(r"""{name}\s*=\s*["']([0-9.]+)(?:px)?["']""")
 PAGE_RE = re.compile(r"page-(\d+)\.svg$")
 FULL_SLIDE_RECT_RE = re.compile(r"<rect\b[^>]*>", re.IGNORECASE | re.DOTALL)
+BODY_SLOT_RECT_RE = re.compile(
+    r"""<rect\b(?=[^>]*(?:data-node-id\s*=\s*["']asset-slot-page["']|id\s*=\s*["']asset-slot-[^"']+["']))[^>]*>""",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class AssetInjectionError(Exception):
@@ -193,7 +197,39 @@ def already_injected(svg_text: str, asset_id: str) -> bool:
     return f'data-svglide-asset-id="{escaped}"' in svg_text or f'id="svglide-asset-{safe}"' in svg_text
 
 
-def cover_or_closing_layer(asset: dict[str, Any], *, href: str, width: float, height: float) -> str:
+def rect_attributes(rect: str) -> dict[str, str]:
+    return {
+        name: value
+        for name, value in re.findall(r"""([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*["']([^"']+)["']""", rect)
+    }
+
+
+def numeric_attr(attrs: dict[str, str], name: str, default: float = 0.0) -> float:
+    try:
+        return float(attrs.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def is_full_slide_rect(attrs: dict[str, str], *, width: float, height: float) -> bool:
+    return (
+        abs(numeric_attr(attrs, "x") - 0) < 0.01
+        and abs(numeric_attr(attrs, "y") - 0) < 0.01
+        and abs(numeric_attr(attrs, "width") - width) < 0.01
+        and abs(numeric_attr(attrs, "height") - height) < 0.01
+    )
+
+
+def full_slide_fill(svg_text: str, *, width: float, height: float) -> str:
+    for rect_match in FULL_SLIDE_RECT_RE.finditer(svg_text):
+        attrs = rect_attributes(rect_match.group(0))
+        fill = attrs.get("fill")
+        if is_full_slide_rect(attrs, width=width, height=height) and isinstance(fill, str) and fill:
+            return fill
+    return "#000000"
+
+
+def cover_or_closing_layer(asset: dict[str, Any], *, href: str, width: float, height: float, scrim_fill: str) -> str:
     role = str(asset.get("placement_role") or "")
     asset_id = html.escape(str(asset.get("asset_id")), quote=True)
     safe = safe_id(asset.get("asset_id"))
@@ -201,7 +237,7 @@ def cover_or_closing_layer(asset: dict[str, Any], *, href: str, width: float, he
     return f"""
   <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(role, quote=True)}">
     <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="0" y="0" width="{width:g}" height="{height:g}" preserveAspectRatio="xMidYMid slice" />
-    <rect slide:role="shape" id="svglide-asset-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="#06111F" opacity="{scrim_opacity}" />
+    <rect slide:role="shape" id="svglide-asset-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="{html.escape(scrim_fill, quote=True)}" opacity="{scrim_opacity}" />
   </g>"""
 
 
@@ -221,41 +257,42 @@ def text_layer(id_: str, *, x: float, y: float, width: float, height: float, tex
     )
 
 
-def figure_layer(asset: dict[str, Any], *, href: str, width: float, height: float) -> str:
+def figure_layer(asset: dict[str, Any], *, href: str, width: float, height: float, panel_fill: str) -> str:
     asset_id = html.escape(str(asset.get("asset_id")), quote=True)
     safe = safe_id(asset.get("asset_id"))
     return f"""
   <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(str(asset.get("placement_role") or ""), quote=True)}">
-    <rect slide:role="shape" x="{width - 368:g}" y="78" width="320" height="276" rx="8" fill="#FFFFFF" opacity="0.92" />
+    <rect slide:role="shape" x="{width - 368:g}" y="78" width="320" height="276" rx="8" fill="{html.escape(panel_fill, quote=True)}" opacity="0.92" />
     <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="{width - 352:g}" y="94" width="288" height="216" preserveAspectRatio="xMidYMid slice" />
   </g>"""
 
 
-def ambient_layer(asset: dict[str, Any], *, href: str, width: float, height: float) -> str:
+def ambient_layer(asset: dict[str, Any], *, href: str, width: float, height: float, scrim_fill: str) -> str:
     asset_id = html.escape(str(asset.get("asset_id")), quote=True)
     safe = safe_id(asset.get("asset_id"))
     return f"""
   <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(str(asset.get("placement_role") or ""), quote=True)}" data-svglide-slot-strategy="ambient_fallback">
     <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="0" y="0" width="{width:g}" height="{height:g}" preserveAspectRatio="xMidYMid slice" opacity="0.22" />
-    <rect slide:role="shape" id="svglide-asset-ambient-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="#06111F" opacity="0.52" />
+    <rect slide:role="shape" id="svglide-asset-ambient-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="{html.escape(scrim_fill, quote=True)}" opacity="0.52" />
   </g>"""
 
 
-def inject_layer(svg_text: str, layer: str) -> str:
+def inject_layer(svg_text: str, layer: str, *, after_body_slot: bool = False) -> str:
     match = SVG_OPEN_RE.search(svg_text)
     if not match:
         raise AssetInjectionError("source SVG has no <svg> root")
+    if after_body_slot:
+        slot_match = BODY_SLOT_RECT_RE.search(svg_text, match.end())
+        if slot_match:
+            return svg_text[: slot_match.end()] + layer + svg_text[slot_match.end() :]
     insert_at = match.end()
     tail = svg_text[insert_at:]
     rect_match = FULL_SLIDE_RECT_RE.match(tail.lstrip())
     if rect_match:
         leading_ws = len(tail) - len(tail.lstrip())
         rect = rect_match.group(0)
-        attrs = {
-            name: value
-            for name, value in re.findall(r"""([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*["']([^"']+)["']""", rect)
-        }
-        if attrs.get("x", "0") == "0" and attrs.get("y", "0") == "0" and attrs.get("width") in {"960", "960.0"} and attrs.get("height") in {"540", "540.0"}:
+        attrs = rect_attributes(rect)
+        if is_full_slide_rect(attrs, width=960.0, height=540.0):
             insert_at += leading_ws + rect_match.end()
     return svg_text[:insert_at] + layer + svg_text[insert_at:]
 
@@ -303,20 +340,21 @@ def injection_for_asset(project: Path, svg_text: str, asset: dict[str, Any], *, 
         )
         return svg_text, result
     width, height = geometry(svg_text)
+    theme_fill = full_slide_fill(svg_text, width=width, height=height)
     slot_strategy = "declared_slot"
     if role in {"cover", "closing"}:
-        layer = cover_or_closing_layer(asset, href=href, width=width, height=height)
+        layer = cover_or_closing_layer(asset, href=href, width=width, height=height, scrim_fill=theme_fill)
         renderer_id = "editorial_image_cover" if role == "cover" else "image_closing_takeaway"
         slot_strategy = "full_bleed"
     else:
         if has_body_slot(svg_text, asset, page):
-            layer = figure_layer(asset, href=href, width=width, height=height)
+            layer = figure_layer(asset, href=href, width=width, height=height, panel_fill=theme_fill)
             renderer_id = "figure_panel_asset"
         else:
-            layer = ambient_layer(asset, href=href, width=width, height=height)
+            layer = ambient_layer(asset, href=href, width=width, height=height, scrim_fill=theme_fill)
             renderer_id = "ambient_asset_background"
             slot_strategy = "ambient_fallback"
-    injected = inject_layer(svg_text, layer)
+    injected = inject_layer(svg_text, layer, after_body_slot=role in {"body_visual", "inline_figure"} and slot_strategy == "declared_slot")
     result.update(
         {
             "status": "injected",

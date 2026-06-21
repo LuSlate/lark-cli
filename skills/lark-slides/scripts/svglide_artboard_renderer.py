@@ -1017,6 +1017,8 @@ def template_image_feature(spec: dict[str, Any]) -> tuple[str, list[dict[str, An
 def template_data_story(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
     theme = normalize_theme(spec)
     metrics = content_first_list(spec, ["metrics", "items"], ["$75B", "$1.77T", "+19%", "4.3%"])[:4]
+    labels = content_first_list(spec, ["metric_labels", "labels"], ["运营口径", "用户口径", "单客口径", "现金口径"])[:4]
+    milestones = content_first_list(spec, ["milestones", "unlock_labels"], ["口径", "来源", "区间", "敏感项"])[:4]
     callout = content_text(spec, "callout", "")
     nodes: list[dict[str, Any]] = []
     parts = begin_template_svg(theme, nodes)
@@ -1028,9 +1030,10 @@ def template_data_story(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
         svg_text(parts, nodes, f"data-metric-{index + 1}", metric, x=x, y=268, width=164, height=58, fill=accent, font_size=22, font_weight=900)
         svg_rect(parts, nodes, f"data-bar-track-{index + 1}", x=x, y=334, width=148, height=10, fill=theme["muted"], opacity=0.22)
         svg_rect(parts, nodes, f"data-bar-{index + 1}", x=x, y=334, width=60 + index * 26, height=10, fill=accent, opacity=0.86)
-        svg_text(parts, nodes, f"data-label-{index + 1}", ["募资规模", "IPO估值", "首日涨幅", "初始流通"][index], x=x, y=354, width=156, height=28, fill=theme["muted"], font_size=15, font_weight=700)
+        label = labels[index] if index < len(labels) else ""
+        svg_text(parts, nodes, f"data-label-{index + 1}", label, x=x, y=354, width=156, height=28, fill=theme["muted"], font_size=15, font_weight=700)
     svg_line(parts, nodes, "unlock-axis", x1=96, y1=424, x2=826, y2=424, stroke=theme["muted"], stroke_width=2, opacity=0.5)
-    for index, label in enumerate(["T+0", "70D", "120D", "180D"]):
+    for index, label in enumerate(milestones):
         x = 96 + index * 242
         svg_circle(parts, nodes, f"unlock-node-{index + 1}", cx=x, cy=424, r=8, fill=theme["primary"] if index < 2 else theme["accent"], opacity=0.92)
         svg_text(parts, nodes, f"unlock-label-{index + 1}", label, x=x - 24, y=440, width=60, height=24, fill=theme["text"], font_size=14, font_weight=760)
@@ -1461,12 +1464,14 @@ def compile_semantic_element(element: dict[str, Any], theme: dict[str, Any]) -> 
     if kind == "text":
         font_size = number(style.get("font_size"), 18)
         font_weight = int(number(style.get("font_weight"), 700))
-        fill = str(style.get("fill") or "#111827")
+        fill = str(style.get("fill") or theme.get("text") or "#111827")
         text = str(element.get("text") or "")
         attrs = {
             **common,
             "slide:role": "shape",
             "slide:shape-type": "text",
+            "fill": fill,
+            "color": fill,
             "x": f"{x:g}",
             "y": f"{y:g}",
             "width": f"{width:g}",

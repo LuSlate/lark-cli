@@ -55,7 +55,7 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
 
     def test_injects_cover_asset_with_scrim_and_editable_overlay_preserved(self) -> None:
         project = self.make_project()
-        self.write_svg(project, 1)
+        self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#07110E"/><text>Title</text>')
         self.write_svg(project, 2)
         asset_file = self.write_asset(project)
         write_json(
@@ -86,6 +86,7 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
         self.assertIn('data-svglide-asset-id="hero"', svg)
         self.assertIn('href="@./03-assets/raw/hero.png"', svg)
         self.assertIn("svglide-asset-scrim-hero", svg)
+        self.assertIn('fill="#07110E"', svg)
         self.assertIn("<text>Title</text>", svg)
 
     def test_injection_is_idempotent(self) -> None:
@@ -206,7 +207,7 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
 
     def test_body_visual_asset_does_not_add_untraceable_caption_text(self) -> None:
         project = self.make_project()
-        self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#fff"/><!-- svglide:asset-slot -->')
+        self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#081C4A"/><!-- svglide:asset-slot -->')
         asset_file = self.write_asset(project)
         write_json(
             project / "03-assets/asset-manifest.json",
@@ -233,13 +234,53 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
 
         self.assertEqual(result["used_count"], 1)
         self.assertIn("<image", svg)
+        self.assertIn('fill="#081C4A"', svg)
         self.assertNotIn("Visual evidence", svg)
         self.assertNotIn("https://example.com/source", svg)
         self.assertNotIn("<text", svg)
 
+    def test_body_visual_with_slot_rect_is_layered_above_placeholder(self) -> None:
+        project = self.make_project()
+        self.write_svg(
+            project,
+            1,
+            (
+                '<rect x="0" y="0" width="960" height="540" fill="#081C4A"/>'
+                '<foreignObject id="title">Title</foreignObject>'
+                '<rect data-node-id="asset-slot-page" x="584" y="70" width="336" height="334" fill="#102C6B"/>'
+                '<foreignObject data-node-id="image-label">Image</foreignObject>'
+            ),
+        )
+        asset_file = self.write_asset(project)
+        write_json(
+            project / "03-assets/asset-manifest.json",
+            {
+                "version": "svglide-assets/v1",
+                "status": "passed",
+                "acquired_assets": [
+                    {
+                        "asset_id": "figure",
+                        "page": 1,
+                        "placement_role": "body_visual",
+                        "asset_kind": "user_file",
+                        "status": "local_file",
+                        "file": asset_file,
+                        "source_url": "https://example.com/source",
+                        "license": "preview_unverified",
+                    }
+                ],
+            },
+        )
+
+        svglide_asset_injector.inject_project_assets(project)
+        svg = (project / "04-svg/page-001.svg").read_text(encoding="utf-8")
+
+        self.assertLess(svg.index('data-node-id="asset-slot-page"'), svg.index('data-svglide-asset-id="figure"'))
+        self.assertLess(svg.index('data-svglide-asset-id="figure"'), svg.index('data-node-id="image-label"'))
+
     def test_body_visual_without_slot_uses_ambient_fallback(self) -> None:
         project = self.make_project()
-        self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#fff"/><text>Title</text>')
+        self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#10201A"/><text>Title</text>')
         asset_file = self.write_asset(project)
         write_json(
             project / "03-assets/asset-manifest.json",
@@ -270,6 +311,7 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
         self.assertEqual(result["by_page"][0]["slot_strategy"], "ambient_fallback")
         self.assertIn('data-svglide-slot-strategy="ambient_fallback"', svg)
         self.assertIn('href="@./03-assets/raw/hero.png"', svg)
+        self.assertIn('fill="#10201A"', svg)
         self.assertIn("<text>Title</text>", svg)
 
 

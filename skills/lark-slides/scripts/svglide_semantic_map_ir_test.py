@@ -44,6 +44,18 @@ class SVGlideSemanticMapIRTest(unittest.TestCase):
 
         self.assertEqual(issues, [])
 
+    def test_node_layout_map_accepts_canonical_fallback_observation(self) -> None:
+        layout_map = json.loads((FIXTURE_DIR / "page-001.node-layout-map.json").read_text(encoding="utf-8"))
+        layout_map["drift"]["missing_count"] = 1
+        layout_map["drift"]["canonical_fallback_count"] = 1
+        layout_map["nodes"][0]["observation_source"] = "missing"
+        layout_map["nodes"][0]["measured_bbox"] = layout_map["nodes"][0]["expected_bbox"]
+        layout_map["nodes"][0]["drift_px"] = None
+
+        issues = svglide_node_layout_drift.validate_node_layout_map(layout_map)
+
+        self.assertEqual(issues, [])
+
     def test_node_layout_map_rejects_material_drift(self) -> None:
         layout_map = json.loads((FIXTURE_DIR / "page-001.node-layout-drift.json").read_text(encoding="utf-8"))
 
