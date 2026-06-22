@@ -80,11 +80,11 @@ var AppsFileDownload = common.Shortcut{
 				out = "download"
 			}
 		}
-		req, err := http.NewRequestWithContext(rctx.Ctx(), http.MethodGet, signedURL, nil)
+		req, err := http.NewRequestWithContext(rctx.Ctx(), http.MethodGet, signedURL, nil) //nolint:forbidigo // GET from a presigned object-storage URL bypasses the Lark gateway; raw HTTP required (not a Lark API call).
 		if err != nil {
 			return output.ErrNetwork("build download request: %v", err)
 		}
-		resp, err := newFileTransferClient().Do(req)
+		resp, err := newFileTransferClient().Do(req) //nolint:forbidigo // see above: direct presigned-URL download, RuntimeContext.DoAPI does not apply.
 		if err != nil {
 			return output.ErrNetwork("download failed: %v", err)
 		}

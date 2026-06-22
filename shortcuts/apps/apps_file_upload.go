@@ -125,6 +125,8 @@ var AppsFileUpload = common.Shortcut{
 // Content-Disposition 透传原始文件名：TOS 把它存成对象 metadata，callback 阶段后端
 // HeadObject 读回解析出 filename 写入 DB 的 display name。不传则后端兜底用 storage key
 // （平台 16 位 ID）当文件名 —— 即「上传后文件名变成 ID」的根因。
+//
+//nolint:forbidigo // direct PUT to a presigned object-storage URL bypasses the Lark gateway — raw HTTP is required (no Lark auth/gateway); RuntimeContext.DoAPI cannot target a presigned URL.
 func putFileBytes(ctx context.Context, url string, content []byte, contentType, fileName string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(content))
 	if err != nil {

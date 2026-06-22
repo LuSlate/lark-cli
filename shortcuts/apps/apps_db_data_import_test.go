@@ -140,4 +140,3 @@ func TestAppsDBDataImport_TableDefaultsToFileBasename(t *testing.T) {
 		t.Fatalf("expected table=customers (from file basename) in params, got %v", env.API[0].Params)
 	}
 }
-

@@ -75,6 +75,8 @@ func normalizeTimestamp(raw string) (string, error) {
 }
 
 // newFileTransferClient 直传 / 直下对象存储 presigned URL 用（绕开 Lark 网关，无需 auth、无超时以容纳大文件）。
+//
+//nolint:forbidigo // presigned object-storage transfer bypasses the Lark gateway — raw http.Client is required (no Lark auth, no gateway routing); not a Lark API call, so RuntimeContext.DoAPI does not apply.
 func newFileTransferClient() *http.Client {
 	return &http.Client{Transport: http.DefaultTransport}
 }

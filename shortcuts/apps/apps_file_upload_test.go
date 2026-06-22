@@ -139,10 +139,10 @@ func TestAppsFileUpload_EndToEnd(t *testing.T) {
 func TestSanitizeUploadFileName_Cases(t *testing.T) {
 	cases := []struct{ in, want string }{
 		{"logo.png", "logo.png"},
-		{"a b.png", "a%20b.png"},          // 空格 → %20（encodeURIComponent）
-		{`a:b/c*d?.png`, "abcd.png"},      // 去掉 TOS 非法字符
-		{"///", "download_file"},           // 全非法 → 兜底
-		{"中.txt", "%E4%B8%AD.txt"},        // 非 ASCII → UTF-8 百分号编码
+		{"a b.png", "a%20b.png"},     // 空格 → %20（encodeURIComponent）
+		{`a:b/c*d?.png`, "abcd.png"}, // 去掉 TOS 非法字符
+		{"///", "download_file"},     // 全非法 → 兜底
+		{"中.txt", "%E4%B8%AD.txt"},   // 非 ASCII → UTF-8 百分号编码
 	}
 	for _, c := range cases {
 		if got := sanitizeUploadFileName(c.in); got != c.want {

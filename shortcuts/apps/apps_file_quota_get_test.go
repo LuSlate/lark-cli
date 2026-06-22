@@ -18,9 +18,9 @@ func TestAppsFileQuotaGet_QuotaConnectedShowsAllFields(t *testing.T) {
 		Method: "GET", URL: fileQuotaURL,
 		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
 			"storage_used_bytes":  157286400,
-			"storage_quota_bytes":  1073741824,
-			"usage_percent":        14.6,
-			"files":                42,
+			"storage_quota_bytes": 1073741824,
+			"usage_percent":       14.6,
+			"files":               42,
 		}},
 	})
 	if err := runAppsShortcut(t, AppsFileQuotaGet,
@@ -41,7 +41,7 @@ func TestAppsFileQuotaGet_UnconnectedOmitsQuotaFields(t *testing.T) {
 	reg.Register(&httpmock.Stub{
 		Method: "GET", URL: fileQuotaURL,
 		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
-			"storage_used_bytes": 157286400,
+			"storage_used_bytes":  157286400,
 			"storage_quota_bytes": 0,
 			"usage_percent":       0,
 			"files":               42,
