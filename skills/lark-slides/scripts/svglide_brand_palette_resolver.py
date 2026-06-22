@@ -9,11 +9,12 @@ import re
 from pathlib import Path
 from typing import Any
 
+import beautiful_template_runtime
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
 BRAND_REGISTRY_PATH = SCRIPT_DIR.parent / "references" / "svglide-brand-palette-registry.json"
-PALETTE_REGISTRY_PATH = SCRIPT_DIR.parent / "references" / "svglide-palette-registry.json"
 HEX_RE = re.compile(r"#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})(?![0-9A-Fa-f])")
 
 
@@ -98,7 +99,9 @@ def load_brand_registry(path: Path | None = None) -> dict[str, Any]:
 
 
 def load_palette_registry(path: Path | None = None) -> dict[str, Any]:
-    return read_json(path or PALETTE_REGISTRY_PATH)
+    if path is not None:
+        return read_json(path)
+    return beautiful_template_runtime.palette_registry()
 
 
 def resolve_brand_registry_palette(entities: list[dict[str, Any]], registry: dict[str, Any]) -> list[dict[str, Any]]:
@@ -170,7 +173,7 @@ def stable_palette_fallback(signals: dict[str, Any], registry: dict[str, Any]) -
             "background": colors.get("background"),
             "text": colors.get("text"),
         },
-        "evidence": [{"type": "stable_fallback", "source": "svglide-palette-registry.json", "fallback_seed": seed}],
+        "evidence": [{"type": "stable_fallback", "source": "beautiful-html-template-families runtime palette view", "fallback_seed": seed}],
     }
 
 

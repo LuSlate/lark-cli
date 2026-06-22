@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/asset-slot-contract.schema.json",
+  "title": "SVGlide image asset slot contract",
+  "type": "object",
+  "required": ["asset_strategy", "image_slots"],
+  "additionalProperties": true,
+  "properties": {
+    "asset_strategy": {
+      "type": "object",
+      "required": ["strategy_id"],
+      "additionalProperties": true,
+      "properties": {
+        "strategy_id": {"type": "string", "minLength": 1},
+        "expected_asset_count": {"type": "integer", "minimum": 0},
+        "source_type_allowlist": {
+          "type": "array",
+          "items": {"enum": ["web_search_preview", "user_provided", "uploaded_file"]}
+        },
+        "generated_bitmap_allowed_as_real_image": {"type": "boolean"},
+        "preview_required": {"type": "boolean"},
+        "live_submit_requires_file_token": {"type": "boolean"},
+        "user_override": {"type": "boolean"}
+      }
+    },
+    "image_slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slot_id", "semantic_subject", "asset_type", "required"],
+        "additionalProperties": true,
+        "properties": {
+          "slot_id": {"type": "string", "minLength": 1},
+          "semantic_subject": {"type": "string", "minLength": 1},
+          "asset_type": {"enum": ["photo", "logo", "screenshot", "chart", "illustration"]},
+          "required": {"type": "boolean"},
+          "shared_asset_allowed": {"type": "boolean"},
+          "fallback_if_missing": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -46,10 +46,10 @@ STAGES = [
     "palette_review",
     "selection_review",
     "plan_bundle_review",
-    "confirm_plan",
     "package_check",
     "assets",
     "generate_svg",
+    "contract_compile",
     "prepare",
     "preview",
     "preflight",
@@ -71,6 +71,7 @@ STAGES = [
     "export",
 ]
 OPTIONAL_STAGES = {
+    "confirm_plan",
     "repair_loop",
     "theme_productization",
 }
@@ -146,6 +147,7 @@ IMPLEMENTED_STAGES = {
     "package_check",
     "assets",
     "generate_svg",
+    "contract_compile",
     "prepare",
     "preview",
     "preflight",
@@ -849,6 +851,46 @@ def source_file_hashes(project_root: Path) -> list[dict[str, str]]:
     return svg_file_hashes(source_svg_files(project_root), project_root)
 
 
+def raw_visual_manifest_path(project_root: Path) -> Path:
+    return project_root / "04-artboard" / "raw" / "manifest.json"
+
+
+def contract_manifest_path(project_root: Path) -> Path:
+    return project_root / "04-svg" / "contract" / "manifest.json"
+
+
+def raw_visual_file_hashes(project_root: Path) -> list[dict[str, str]]:
+    manifest_path = raw_visual_manifest_path(project_root)
+    if not manifest_path.exists():
+        raise RunnerError(f"missing raw visual manifest: {manifest_path}")
+    manifest = read_json(manifest_path)
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages:
+        raise RunnerError(f"raw visual manifest has no pages: {manifest_path}")
+    files: list[Path] = []
+    for page in pages:
+        if not isinstance(page, dict) or not isinstance(page.get("source"), str):
+            raise RunnerError("raw visual manifest page is missing source")
+        files.append(project_root / page["source"])
+    return svg_file_hashes(files, project_root)
+
+
+def contract_output_hashes(project_root: Path) -> list[dict[str, str]]:
+    manifest_path = contract_manifest_path(project_root)
+    if not manifest_path.exists():
+        raise RunnerError(f"missing contract compile manifest: {manifest_path}")
+    manifest = read_json(manifest_path)
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages:
+        raise RunnerError(f"contract compile manifest has no pages: {manifest_path}")
+    files: list[Path] = []
+    for page in pages:
+        if not isinstance(page, dict) or not isinstance(page.get("output"), str):
+            raise RunnerError("contract compile manifest page is missing output")
+        files.append(project_root / page["output"])
+    return svg_file_hashes(files, project_root)
+
+
 def optional_project_file_hash(project_root: Path, rel: str) -> str | None:
     path = project_root / rel
     return file_sha256(path) if path.exists() else None
@@ -1525,8 +1567,8 @@ def validate_plan_confirmation(project_root: Path) -> dict[str, Any]:
     if not confirmation_file.exists():
         write_json(plan_confirmation_request_path(project_root), request)
         raise RunnerError(
-            "plan confirmation required before SVG generation; review 02-plan/plan-confirmation.request.json "
-            "and write 02-plan/plan-confirmation.json"
+            "optional plan confirmation is missing; review 02-plan/plan-confirmation.request.json "
+            "and write 02-plan/plan-confirmation.json before rerunning confirm_plan"
         )
     confirmation = read_json(confirmation_file)
     if confirmation.get("version") != "svglide-plan-confirmation/v1":
@@ -1630,49 +1672,10 @@ def artboard_generator_command(project_root: Path) -> list[str]:
 
 
 def artboard_receipt_paths(project_root: Path) -> list[str]:
-    root = project_root / "04-svg" / "artboard"
+    root = project_root / "04-artboard" / "raw"
     if not root.exists():
         return []
     return [path.relative_to(project_root).as_posix() for path in sorted(root.glob("page-*.receipt.json")) if path.is_file()]
-
-
-def refresh_artboard_receipts_after_asset_injection(project_root: Path, generated_files: list[dict[str, str]]) -> None:
-    final_hashes = {
-        item.get("path"): item.get("sha256")
-        for item in generated_files
-        if isinstance(item.get("path"), str) and isinstance(item.get("sha256"), str)
-    }
-    if not final_hashes:
-        return
-
-    for receipt_rel in artboard_receipt_paths(project_root):
-        receipt_file = project_root / receipt_rel
-        payload = read_json(receipt_file)
-        svglide_svg = payload.get("svglide_svg")
-        final_hash = final_hashes.get(svglide_svg)
-        if isinstance(final_hash, str) and payload.get("svglide_svg_sha256") != final_hash:
-            payload["svglide_svg_sha256"] = final_hash
-            payload["post_asset_injection_refreshed_at"] = now_iso()
-            write_json(receipt_file, payload)
-
-    satori_bridge_file = project_root / "receipts" / "satori-bridge.json"
-    if not satori_bridge_file.exists():
-        return
-    satori_bridge = read_json(satori_bridge_file)
-    pages = satori_bridge.get("pages")
-    changed = False
-    if isinstance(pages, list):
-        for page in pages:
-            if not isinstance(page, dict):
-                continue
-            svglide_svg = page.get("svglide_svg")
-            final_hash = final_hashes.get(svglide_svg)
-            if isinstance(final_hash, str) and page.get("svglide_svg_sha256") != final_hash:
-                page["svglide_svg_sha256"] = final_hash
-                changed = True
-    if changed:
-        satori_bridge["post_asset_injection_refreshed_at"] = now_iso()
-        write_json(satori_bridge_file, satori_bridge)
 
 
 def require_source_current(project_root: Path) -> None:
@@ -1827,9 +1830,7 @@ def run_generate_svg_stage(
     *,
     command_runner=subprocess.run,
 ) -> dict[str, Any]:
-    require_stage_passed(state, "confirm_plan")
     require_stage_passed(state, "assets")
-    validate_plan_confirmation(project_root)
     require_source_current(project_root)
     require_assets_current(project_root)
     started_at = now_iso()
@@ -1879,8 +1880,10 @@ def run_generate_svg_stage(
             artboard_result = parsed if isinstance(parsed, dict) else {}
 
     try:
-        source_file_hashes(project_root)
+        generated_files = raw_visual_file_hashes(project_root) if generation_mode == "artboard_satori" else source_file_hashes(project_root)
     except RunnerError as err:
+        missing_code = "raw_visual_missing" if generation_mode == "artboard_satori" else "generated_svg_missing"
+        missing_message = "generate_svg produced no raw visual artifacts under 04-artboard/raw" if generation_mode == "artboard_satori" else "generate_svg produced no source SVG files under 04-svg"
         complete_stage(
             project_root,
             state,
@@ -1891,16 +1894,15 @@ def run_generate_svg_stage(
             outputs=[],
             command=command,
             error={
-                "code": "generated_svg_missing",
-                "message": "generate_svg produced no source SVG files under 04-svg",
+                "code": missing_code,
+                "message": missing_message,
             },
         )
-        raise RunnerError("generate_svg produced no source SVG files under 04-svg") from err
+        raise RunnerError(missing_message) from err
 
-    asset_injection_summary = svglide_asset_injector.inject_project_assets(project_root)
-    generated_files = source_file_hashes(project_root)
-    if generation_mode == "artboard_satori":
-        refresh_artboard_receipts_after_asset_injection(project_root, generated_files)
+    asset_injection_summary = {"used_count": 0, "by_page": [], "stage": "contract_compile_pending"} if generation_mode == "artboard_satori" else svglide_asset_injector.inject_project_assets(project_root)
+    if generation_mode != "artboard_satori":
+        generated_files = source_file_hashes(project_root)
     generator_mode = "script" if command else "external"
     artboard_receipts = artboard_result.get("artboard_receipts") if isinstance(artboard_result.get("artboard_receipts"), list) else artboard_receipt_paths(project_root)
     artboard_additional_receipts = artboard_result.get("additional_receipts") if isinstance(artboard_result.get("additional_receipts"), list) else []
@@ -1943,6 +1945,9 @@ def run_generate_svg_stage(
     if generation_mode == "artboard_satori":
         receipt["artboard_receipts"] = artboard_receipts
         receipt["artboard_additional_receipts"] = artboard_additional_receipts
+        for key in ["raw_visual_manifest", "raw_visual_files", "semantic_maps"]:
+            if key in artboard_result:
+                receipt[key] = artboard_result[key]
         for key in ["canvas_spec_validate", "artboard_render_receipt", "satori_bridge_receipt", "contact_sheet"]:
             if key in artboard_result:
                 receipt[key] = artboard_result[key]
@@ -2004,8 +2009,11 @@ def run_generate_svg_stage(
 def require_generated_svg_current(project_root: Path) -> None:
     receipt = read_json(receipt_path(project_root, "generate_svg"))
     generated = receipt.get("generated_files")
-    if isinstance(generated, list) and generated and generated != source_file_hashes(project_root):
-        raise RunnerError("source SVG files changed after generate_svg; rerun generate_svg before prepare")
+    generation_mode = receipt.get("generation_mode") or DEFAULT_GENERATION_MODE
+    if isinstance(generated, list) and generated:
+        current_generated = raw_visual_file_hashes(project_root) if generation_mode == "artboard_satori" else source_file_hashes(project_root)
+        if generated != current_generated:
+            raise RunnerError("generated visual files changed after generate_svg; rerun generate_svg before prepare")
     expected = {
         "plan_sha256": optional_project_file_hash(project_root, "02-plan/slide_plan.json"),
         "evidence_sha256": optional_project_file_hash(project_root, "source/evidence.json"),
@@ -2015,18 +2023,45 @@ def require_generated_svg_current(project_root: Path) -> None:
     for key, current in expected.items():
         if receipt.get(key) != current:
             raise RunnerError(f"generate_svg receipt {key} does not match current project files; rerun generate_svg")
-    if receipt.get("generation_mode") == "artboard_satori":
+    if generation_mode == "artboard_satori":
         artboard_receipts = receipt.get("artboard_receipts")
         if not isinstance(artboard_receipts, list) or not artboard_receipts:
             raise RunnerError("generate_svg receipt is missing artboard_receipts; rerun generate_svg")
         for item in artboard_receipts:
             if not isinstance(item, str) or not (project_root / item).exists():
                 raise RunnerError(f"artboard receipt is missing: {item}; rerun generate_svg")
+        raw_manifest = receipt.get("raw_visual_manifest")
+        if not isinstance(raw_manifest, str) or not (project_root / raw_manifest).exists():
+            raise RunnerError("generate_svg receipt is missing raw_visual_manifest; rerun generate_svg")
     command = receipt.get("command")
     if isinstance(command, list) and len(command) > 1 and isinstance(command[1], str):
         script = Path(command[1])
         if script.exists() and receipt.get("generator_script_sha256") != file_sha256(script):
             raise RunnerError("generator script changed after generate_svg; rerun generate_svg")
+
+
+def require_contract_compile_current(project_root: Path) -> None:
+    require_generated_svg_current(project_root)
+    receipt = read_json(receipt_path(project_root, "contract_compile"))
+    manifest_path = contract_manifest_path(project_root)
+    if not manifest_path.exists():
+        raise RunnerError("contract compile manifest is missing; rerun contract_compile")
+    manifest = read_json(manifest_path)
+    if manifest.get("status") == "failed":
+        raise RunnerError("contract compile manifest failed; rerun contract_compile after repair")
+    if receipt.get("raw_visual_manifest_sha256") != optional_project_file_hash(project_root, "04-artboard/raw/manifest.json"):
+        raise RunnerError("contract compile raw manifest hash is stale; rerun contract_compile")
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages:
+        raise RunnerError("contract compile manifest has no pages; rerun contract_compile")
+    current_outputs = contract_output_hashes(project_root)
+    expected_outputs = [
+        {"path": page.get("output"), "sha256": page.get("output_sha256")}
+        for page in pages
+        if isinstance(page, dict)
+    ]
+    if expected_outputs != current_outputs:
+        raise RunnerError("contract compiled SVG files changed after contract_compile; rerun contract_compile")
 
 
 def require_existing_stage_current(project_root: Path, stage: str, *, profile: str = "production") -> None:
@@ -2044,8 +2079,10 @@ def require_existing_stage_current(project_root: Path, stage: str, *, profile: s
         require_source_current(project_root)
         require_assets_current(project_root)
         require_generated_svg_current(project_root)
+    elif stage == "contract_compile":
+        require_contract_compile_current(project_root)
     elif stage == "prepare":
-        require_generated_svg_current(project_root)
+        require_contract_compile_current(project_root)
     elif stage == "quality_gate":
         require_quality_gate_current(project_root)
     elif stage == "generation_benchmark":
@@ -2367,8 +2404,6 @@ def write_direct_svg_package_check(project_root: Path, state: dict[str, Any]) ->
 
 
 def run_package_check_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
-    require_stage_passed(state, "confirm_plan")
-    validate_plan_confirmation(project_root)
     mode = plan_generation_mode(project_root)
     if mode == DEFAULT_GENERATION_MODE:
         return write_direct_svg_package_check(project_root, state)
@@ -2603,8 +2638,6 @@ def run_create_stage(
     profile: str = "production",
     command_runner=subprocess.run,
 ) -> dict[str, Any]:
-    require_stage_passed(state, "confirm_plan")
-    validate_plan_confirmation(project_root)
     require_quality_gate_current(project_root)
     started_at = now_iso()
     hashes = prepared_file_hashes(project_root)
@@ -2771,9 +2804,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
     if stage == "package_check":
         return run_package_check_stage(project_root, state)
     if stage == "assets":
-        require_stage_passed(state, "confirm_plan")
         require_stage_passed(state, "package_check")
-        validate_plan_confirmation(project_root)
         require_source_current(project_root)
         return run_script_stage(
             project_root,
@@ -2785,19 +2816,33 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         )
     if stage == "generate_svg":
         return run_generate_svg_stage(project_root, state)
+    if stage == "contract_compile":
+        require_stage_passed(state, "generate_svg")
+        require_generated_svg_current(project_root)
+        generation_mode = plan_generation_mode(project_root)
+        command = ["python3", (SCRIPT_DIR / "svglide_contract_compile.py").as_posix(), "--project", project_root.as_posix()]
+        if generation_mode != "artboard_satori" or not raw_visual_manifest_path(project_root).exists():
+            command.append("--allow-existing-svg")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            command,
+            inputs=["04-artboard/raw/manifest.json", "04-svg", "03-assets/assets.json"],
+            outputs=["04-svg", "04-svg/contract/manifest.json", "receipts/contract_compile.json"],
+        )
     if stage == "prepare":
-        require_stage_passed(state, "confirm_plan")
         require_stage_passed(state, "assets")
         require_stage_passed(state, "generate_svg")
-        validate_plan_confirmation(project_root)
+        require_stage_passed(state, "contract_compile")
         require_assets_current(project_root)
-        require_generated_svg_current(project_root)
+        require_contract_compile_current(project_root)
         return run_script_stage(
             project_root,
             state,
             stage,
             ["python3", (SCRIPT_DIR / "svglide_prepare.py").as_posix(), project_root.as_posix()],
-            inputs=["04-svg", "03-assets/assets.json"],
+            inputs=["04-svg", "04-svg/contract/manifest.json", "03-assets/assets.json"],
             outputs=["04-svg/prepared", "receipts/prepare.json"],
         )
     if stage == "preview":
@@ -2815,6 +2860,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         command = ["python3", (SCRIPT_DIR / "svg_preflight.py").as_posix(), "--plan", plan.as_posix()]
         for path in prepared_svg_files(project_root):
             command.extend(["--input", path.as_posix()])
+        contract_manifest = contract_manifest_path(project_root)
+        if contract_manifest.exists():
+            command.extend(["--contract-manifest", contract_manifest.as_posix()])
         return run_script_stage(
             project_root,
             state,

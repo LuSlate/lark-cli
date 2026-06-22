@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import svglide_brand_palette_resolver as brand_resolver
+import beautiful_template_runtime
 import svglide_palette_selector
 import svglide_semantic_asset_matcher as semantic_matcher
 
@@ -18,8 +19,6 @@ import svglide_semantic_asset_matcher as semantic_matcher
 SCHEMA_VERSION = "svglide-theme-template-selection/v1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-TEMPLATE_REGISTRY_PATH = SCRIPT_DIR.parent / "references" / "svglide-template-registry.json"
-THEME_REGISTRY_PATH = SCRIPT_DIR / "artboard_renderer" / "themes" / "registry.json"
 PALETTE_SELECTION_PATH = Path("02-plan/palette-selection.json")
 PLAN_PATH = Path("02-plan/slide_plan.json")
 SELECTION_PATH = Path("02-plan/theme-template-selection.json")
@@ -74,11 +73,11 @@ def load_plan_if_present(project_root: Path) -> dict[str, Any]:
 
 
 def load_template_registry(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
-    return read_json(repo_root / "skills/lark-slides/references/svglide-template-registry.json")
+    return beautiful_template_runtime.template_registry()
 
 
 def load_theme_registry(repo_root: Path = REPO_ROOT) -> dict[str, Any]:
-    return read_json(repo_root / "skills/lark-slides/scripts/artboard_renderer/themes/registry.json")
+    return beautiful_template_runtime.theme_registry()
 
 
 def list_value(value: Any) -> list[str]:
@@ -103,6 +102,26 @@ def template_asset(template: dict[str, Any]) -> dict[str, Any]:
         "best_for": ", ".join(list_value(metadata.get("best_for"))),
         "avoid_for": ", ".join(list_value(metadata.get("avoid_for"))),
     }
+
+
+def boost_template(
+    scored: dict[str, Any],
+    template_id: str,
+    target_ids: set[str],
+    *,
+    weight: int,
+    signal: str,
+    penalty_ids: set[str] | None = None,
+    penalty: int = 0,
+) -> int:
+    delta = 0
+    if template_id in target_ids:
+        delta += weight
+        scored["matched_signals"].append(signal)
+    if penalty_ids and template_id in penalty_ids:
+        delta -= penalty
+        scored["rejection_reasons"].append(f"template_mismatch:{signal}")
+    return delta
 
 
 def theme_asset(theme: dict[str, Any]) -> dict[str, Any]:
@@ -143,6 +162,24 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     if template_id == "executive-dashboard" and "postmortem" in occasions:
         score -= 10
         scored["rejection_reasons"].append("template_mismatch:postmortem_not_dashboard")
+    score += boost_template(
+        scored,
+        template_id,
+        {"timeline-steps", "risk-alert", "process-flow"},
+        weight=34,
+        signal="scenario:postmortem",
+        penalty_ids={"executive-dashboard", "metric-dashboard", "trend-grid-report"},
+        penalty=30,
+    ) if "postmortem" in occasions else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"comparison-cards", "brutalist-matrix", "intelligence-brief"},
+        weight=34,
+        signal="scenario:comparison",
+        penalty_ids={"executive-dashboard", "metric-dashboard"},
+        penalty=24,
+    ) if "competitive analysis" in occasions or {"comparison matrix", "feature matrix", "versus"}.intersection(content_shapes) else 0
     if template_id in {"architectural-spec", "architecture-blueprint"} and (
         {"technical architecture", "system design"}.intersection(occasions) or {"architecture", "dependency map", "nodes"}.intersection(content_shapes)
     ):
@@ -151,6 +188,56 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     if template_id == "risk-alert" and {"technical architecture", "system design"}.intersection(occasions):
         score -= 8
         scored["rejection_reasons"].append("template_mismatch:architecture_not_risk")
+    score += boost_template(
+        scored,
+        template_id,
+        {"architectural-spec", "architecture-blueprint"},
+        weight=34,
+        signal="scenario:architecture",
+        penalty_ids={"executive-dashboard", "metric-dashboard"},
+        penalty=28,
+    ) if {"technical architecture", "system design"}.intersection(occasions) or {"architecture", "dependency map", "nodes"}.intersection(content_shapes) else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"poster-stat-punch", "product-ribbon", "cover-hero"},
+        weight=34,
+        signal="scenario:product_launch",
+        penalty_ids={"brutalist-matrix", "dense-panel-grid"},
+        penalty=24,
+    ) if "product launch" in occasions or "brand deck" in occasions else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"research-poster", "printed-program"},
+        weight=32,
+        signal="scenario:research_poster",
+    ) if "research" in prompt_norm or "学术" in prompt_norm or "会议研究" in prompt_norm else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"agenda-list", "printed-program", "annotated-field-board"},
+        weight=30,
+        signal="scenario:workshop",
+    ) if "workshop" in prompt_norm or "onboarding" in prompt_norm or "议程" in prompt_norm else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"roadmap-lanes", "timeline-steps", "process-flow"},
+        weight=34,
+        signal="scenario:roadmap",
+        penalty_ids={"architecture-blueprint", "architectural-spec", "executive-dashboard"},
+        penalty=18,
+    ) if "roadmap" in prompt_norm or "路线图" in prompt_norm or "swimlane" in prompt_norm or "里程碑" in prompt_norm else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"risk-alert", "intelligence-brief"},
+        weight=34,
+        signal="scenario:risk_security",
+        penalty_ids={"executive-dashboard", "metric-dashboard"},
+        penalty=24,
+    ) if "security review" in occasions or "风险" in prompt_norm or "合规" in prompt_norm or "审计" in prompt_norm else 0
     if template_id in {"trend-grid-report", "dense-panel-grid", "intelligence-brief"} and (
         "market analysis" in occasions or {"market map", "trend", "bar ranking"}.intersection(content_shapes)
     ):
@@ -164,6 +251,24 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     ):
         score += 14
         scored["matched_signals"].append("template_capability:image_feature")
+    score += boost_template(
+        scored,
+        template_id,
+        {"image-feature", "editorial-quote-chart", "quote-focus"},
+        weight=30,
+        signal="scenario:image_story",
+        penalty_ids={"annotated-field-board"},
+        penalty=12,
+    ) if any(token in prompt_norm for token in ("客户案例", "quote", "大图", "图片", "品牌图文", "image")) else 0
+    score += boost_template(
+        scored,
+        template_id,
+        {"dense-panel-grid", "printed-program", "ledger-briefing"},
+        weight=34,
+        signal="scenario:dense_table",
+        penalty_ids={"intelligence-brief", "executive-dashboard"},
+        penalty=18,
+    ) if any(token in prompt_norm for token in ("高密度", "排期表", "多个项目", "负责人", "long table")) else 0
     if template_id == "quote-focus" and any(token in prompt_norm for token in ("大图", "图片", "配图", "image report")):
         score -= 8
         scored["rejection_reasons"].append("template_mismatch:image_report_not_quote_only")
@@ -224,14 +329,22 @@ def score_theme(
     brand_resolution = palette_selection.get("brand_resolution") if isinstance(palette_selection.get("brand_resolution"), dict) else {}
     brands = [str(item) for item in brand_resolution.get("brands", []) if isinstance(item, str)]
     affinity = set(list_value(metadata.get("brand_affinity")))
+    theme_id = str(theme.get("id") or "")
     if brands and affinity.intersection(brands):
         score += 8
         scored["matched_signals"].append("brand_affinity")
+    if brands and {"zhipu", "minimax"}.intersection(brands):
+        if theme_id in {"blueprint-technical", "cobalt-grid", "glass-neon", "magazine-cobalt"}:
+            score += 14
+            scored["matched_signals"].append("brand_context:ai_tech")
+        if theme_id in {"acid-studio", "tomato-poster", "sakura-catalog"}:
+            score -= 8
+            scored["rejection_reasons"].append("brand_context_mismatch:ai_tech")
     if brands and metadata.get("token_override_policy") == "forbidden":
         score -= 10
         scored["rejection_reasons"].append("token_override_policy_forbidden")
     scored["score"] = score
-    scored["theme_id"] = theme.get("id")
+    scored["theme_id"] = theme_id
     scored["selection_reason"] = list(scored.get("matched_signals", []))[:6]
     return scored
 

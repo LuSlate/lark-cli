@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import beautiful_template_runtime
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INVENTORY_PATH = Path("skills/lark-slides/references/svglide-reference-source-inventory.json")
@@ -72,10 +74,9 @@ REQUIRED_ABSTRACTION_LIST_FIELDS = {
     "forbidden_usage",
 }
 RUNTIME_SCAN_FILES = [
-    "skills/lark-slides/references/svglide-template-registry.json",
+    "skills/lark-slides/references/component-registry.json",
     "skills/lark-slides/references/svglide-template-guardrails.json",
     "skills/lark-slides/scripts/artboard_renderer/templates/p0-templates.mjs",
-    "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
     "skills/lark-slides/scripts/artboard_renderer/components/primitives.mjs",
     "skills/lark-slides/scripts/svglide_prompt_planner.py",
     "skills/lark-slides/scripts/svglide_assets.py",
@@ -91,12 +92,12 @@ PHASE01_CHANGED_FILES = {
     "skills/lark-slides/references/svglide-reference-abstraction.schema.json": "changed_by_this_plan",
     "skills/lark-slides/references/svglide-reference-source-inventory.json": "changed_by_this_plan",
     "skills/lark-slides/references/svglide-chart-strategies.json": "changed_by_this_plan",
-    "skills/lark-slides/references/svglide-component-registry.json": "changed_by_this_plan",
+    "skills/lark-slides/references/component-registry.json": "changed_by_this_plan",
     "skills/lark-slides/references/svglide-image-strategies.json": "changed_by_this_plan",
     "skills/lark-slides/references/svglide-layout-archetypes.json": "changed_by_this_plan",
     "skills/lark-slides/references/svglide-renderer-registry.json": "changed_by_this_plan",
     "skills/lark-slides/references/svglide-template-guardrails.json": "changed_by_this_plan",
-    "skills/lark-slides/references/svglide-template-registry.json": "changed_by_this_plan",
+    "skills/lark-slides/references/beautiful-html-template-families.json": "changed_by_this_plan",
     "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs": "changed_by_this_plan",
     "skills/lark-slides/scripts/artboard_renderer/templates/p0-templates.mjs": "changed_by_this_plan",
     "skills/lark-slides/scripts/svglide_artboard_renderer.py": "changed_by_this_plan",
@@ -206,13 +207,13 @@ class RuntimeTraceSpec:
 
 RUNTIME_TRACE_SPECS = (
     RuntimeTraceSpec(
-        Path("skills/lark-slides/references/svglide-template-registry.json"),
-        "templates",
-        "template",
-        "templates",
+        Path("skills/lark-slides/references/beautiful-html-template-families.json"),
+        "families",
+        "template_family",
+        "template_families",
     ),
     RuntimeTraceSpec(
-        Path("skills/lark-slides/references/svglide-component-registry.json"),
+        Path("skills/lark-slides/references/component-registry.json"),
         "components",
         "component",
         "components",
@@ -222,12 +223,6 @@ RUNTIME_TRACE_SPECS = (
         "archetypes",
         "layout",
         "layout_archetypes",
-    ),
-    RuntimeTraceSpec(
-        Path("skills/lark-slides/scripts/artboard_renderer/themes/registry.json"),
-        "themes",
-        "theme",
-        "themes",
     ),
     RuntimeTraceSpec(
         Path("skills/lark-slides/references/svglide-image-strategies.json"),
@@ -291,6 +286,8 @@ def git_output(root: Path, args: list[str]) -> str | None:
 def read_json_object(path: Path) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise AbsorberError(f"missing JSON file: {path}") from exc
     except json.JSONDecodeError as exc:
         raise AbsorberError(f"invalid JSON in {path}: {exc}") from exc
     if not isinstance(payload, dict):
@@ -1084,6 +1081,29 @@ def repo_path_for_record(path: Path) -> str:
         return str(path.resolve())
 
 
+def family_registry_covers_absorption(record_path: str, *, item_id: str | None = None, asset_id: str | None = None) -> bool:
+    for family in beautiful_template_runtime.families():
+        source = family.get("source") if isinstance(family.get("source"), dict) else {}
+        mapping = family.get("svglide_mapping") if isinstance(family.get("svglide_mapping"), dict) else {}
+        record_values = []
+        for value in (source.get("absorption_records"), mapping.get("absorption_records")):
+            if isinstance(value, list):
+                record_values.extend(item for item in value if isinstance(item, str))
+        if record_path not in set(record_values):
+            continue
+        inventory_ids = set()
+        for value in (source.get("inventory_item_ids"), source.get("source_item_ids")):
+            if isinstance(value, list):
+                inventory_ids.update(item for item in value if isinstance(item, str))
+        asset_ids = set(mapping.get("svglide_asset_ids") if isinstance(mapping.get("svglide_asset_ids"), list) else [])
+        if item_id and item_id not in inventory_ids:
+            continue
+        if asset_id and asset_id not in asset_ids:
+            continue
+        return True
+    return False
+
+
 def iter_abstraction_records(records_root: Path | None = None) -> list[tuple[Path, dict[str, Any]]]:
     root = records_root or (REPO_ROOT / DEFAULT_ABSORPTIONS_DIR)
     if not root.exists():
@@ -1114,6 +1134,35 @@ def abstraction_record_has_required_shape(record: dict[str, Any]) -> bool:
 
 def absorption_context_record_map(records_root: Path | None = None) -> dict[str, dict[str, str]]:
     result: dict[str, dict[str, str]] = {}
+    for family in beautiful_template_runtime.families():
+        source = family.get("source") if isinstance(family.get("source"), dict) else {}
+        records = source.get("absorption_records") if isinstance(source.get("absorption_records"), list) else []
+        record_path = next((item for item in records if isinstance(item, str) and item.strip()), "")
+        if not record_path:
+            continue
+        source_item_ids = [item for item in source.get("source_item_ids", []) if isinstance(item, str)] if isinstance(source.get("source_item_ids"), list) else []
+        inventory_ids = [item for item in source.get("inventory_item_ids", []) if isinstance(item, str)] if isinstance(source.get("inventory_item_ids"), list) else []
+        canonical = source_item_ids[0] if source_item_ids else next((item for item in inventory_ids if item.endswith(".design.md")), "")
+        if not canonical:
+            continue
+        result.setdefault(
+            canonical,
+            {
+                "absorption_record": record_path,
+                "canonical_item_id": canonical,
+                "relation": "primary",
+            },
+        )
+        for ref in inventory_ids + source_item_ids:
+            if ref and ref != canonical:
+                result.setdefault(
+                    ref,
+                    {
+                        "absorption_record": record_path,
+                        "canonical_item_id": canonical,
+                        "relation": "context_ref",
+                    },
+                )
     for path, record in iter_abstraction_records(records_root):
         if not abstraction_record_has_required_shape(record):
             continue
@@ -1160,6 +1209,12 @@ def disposition_suggestion_for_item(item: dict[str, Any], context_records: dict[
     owner_target = item.get("owner_target") if isinstance(item.get("owner_target"), str) else ""
     runtime_policy = item.get("runtime_policy") if isinstance(item.get("runtime_policy"), str) else ""
 
+    if runtime_policy == "forbidden_external_runtime_dependency":
+        return {
+            "id": item_id,
+            "suggested_disposition": "forbidden_runtime_dependency",
+            "reason": "Raw external runtime artifact; violates SVGlide runtime boundary and must only be used as reference evidence.",
+        }
     if item_id in context_records:
         context = context_records[item_id]
         if context.get("relation") == "primary":
@@ -1175,12 +1230,6 @@ def disposition_suggestion_for_item(item: dict[str, Any], context_records: dict[
             "canonical_item_id": context.get("canonical_item_id", ""),
             "absorption_record": context["absorption_record"],
             "reason": "Covered as supporting source context; final disposition should duplicate the canonical absorbed source item.",
-        }
-    if runtime_policy == "forbidden_external_runtime_dependency":
-        return {
-            "id": item_id,
-            "suggested_disposition": "forbidden_runtime_dependency",
-            "reason": "Raw external runtime artifact; violates SVGlide runtime boundary and must only be used as reference evidence.",
         }
     if source_repo == "PosterGen" and source_family in {"data_samples", "resource_examples"}:
         return {
@@ -1438,7 +1487,8 @@ def validate_absorption_payload(
                 continue
             record_path = resolve_repo_path(record_path_value)
             if not record_path.exists():
-                issues.append(issue("abstraction_record_missing", "absorption_record path does not exist", item_id=item_id, path=str(record_path)))
+                if not family_registry_covers_absorption(record_path_value, item_id=item_id):
+                    issues.append(issue("abstraction_record_missing", "absorption_record path does not exist and is not covered by family registry provenance", item_id=item_id, path=str(record_path)))
                 continue
             try:
                 record = read_json_object(record_path)
@@ -1540,6 +1590,71 @@ def validate_theme_file_trace(item: dict[str, Any], *, registry_path: Path, item
     return issues
 
 
+def validate_family_registry_trace(registry: dict[str, Any], registry_path: Path) -> tuple[list[dict[str, str]], dict[str, int]]:
+    issues: list[dict[str, str]] = []
+    families = registry.get("families")
+    if not isinstance(families, list):
+        return [issue("runtime_trace_collection_invalid", "families must be a list", path=registry_path.as_posix())], {"active": 0, "traced": 0}
+    active_count = 0
+    traced_count = 0
+    for family in families:
+        if not isinstance(family, dict):
+            continue
+        template_id = family.get("template_id")
+        item_id = f"template_family.{template_id}" if isinstance(template_id, str) and template_id else "template_family.<unknown>"
+        status = family.get("status")
+        if status not in {"absorbed", "source_inventoried", "active"}:
+            continue
+        active_count += 1
+        source = family.get("source") if isinstance(family.get("source"), dict) else {}
+        mapping = family.get("svglide_mapping") if isinstance(family.get("svglide_mapping"), dict) else {}
+        inventory_ids = source.get("inventory_item_ids")
+        has_inventory = isinstance(inventory_ids, list) and any(isinstance(value, str) and value.strip() for value in inventory_ids)
+        if not has_inventory:
+            issues.append(issue("runtime_trace_source_trace_missing", "template family requires inventory_item_ids provenance", item_id=item_id, path=registry_path.as_posix()))
+            continue
+        if family.get("claim_level") == "svglide_absorbed":
+            asset_ids = mapping.get("svglide_asset_ids")
+            records = source.get("absorption_records")
+            if not isinstance(asset_ids, list) or not asset_ids:
+                issues.append(issue("runtime_trace_asset_ids_missing", "absorbed template family requires svglide_asset_ids", item_id=item_id, path=registry_path.as_posix()))
+                continue
+            if not isinstance(records, list) or not records:
+                issues.append(issue("runtime_trace_abstraction_record_missing", "absorbed template family requires absorption_records provenance", item_id=item_id, path=registry_path.as_posix()))
+                continue
+        traced_count += 1
+    return issues, {"active": active_count, "traced": traced_count}
+
+
+def validate_component_registry_trace(registry: dict[str, Any], registry_path: Path) -> tuple[list[dict[str, str]], dict[str, int]]:
+    issues: list[dict[str, str]] = []
+    components = registry.get("components")
+    if not isinstance(components, list):
+        return [issue("runtime_trace_collection_invalid", "components must be a list", path=registry_path.as_posix())], {"active": 0, "traced": 0}
+    active_count = 0
+    traced_count = 0
+    for component in components:
+        if not isinstance(component, dict):
+            continue
+        active_count += 1
+        component_id = component.get("component_id") or component.get("id")
+        item_id = f"component.{component_id}" if isinstance(component_id, str) and component_id else "component.<unknown>"
+        fits = component.get("fits_semantic_blocks")
+        required = component.get("required_data")
+        allowed = component.get("allowed_asset_types")
+        if not isinstance(component_id, str) or not component_id:
+            issues.append(issue("runtime_trace_component_id_missing", "component requires component_id", path=registry_path.as_posix()))
+            continue
+        if not isinstance(fits, list) or not fits:
+            issues.append(issue("runtime_trace_component_semantics_missing", "component requires fits_semantic_blocks", item_id=item_id, path=registry_path.as_posix()))
+            continue
+        if not isinstance(required, list) or not isinstance(allowed, list):
+            issues.append(issue("runtime_trace_component_contract_missing", "component requires required_data and allowed_asset_types", item_id=item_id, path=registry_path.as_posix()))
+            continue
+        traced_count += 1
+    return issues, {"active": active_count, "traced": traced_count}
+
+
 def validate_runtime_traceability() -> dict[str, Any]:
     issues: list[dict[str, str]] = []
     summary: dict[str, dict[str, int]] = {}
@@ -1551,6 +1666,16 @@ def validate_runtime_traceability() -> dict[str, Any]:
         except AbsorberError as error:
             issues.append(issue("runtime_trace_registry_invalid", str(error), path=registry_path.as_posix()))
             summary[spec.label] = {"active": 0, "traced": 0}
+            continue
+        if spec.label == "template_families":
+            family_issues, family_summary = validate_family_registry_trace(registry, registry_path)
+            issues.extend(family_issues)
+            summary[spec.label] = family_summary
+            continue
+        if spec.label == "components":
+            component_issues, component_summary = validate_component_registry_trace(registry, registry_path)
+            issues.extend(component_issues)
+            summary[spec.label] = component_summary
             continue
         collection = registry.get(spec.collection_key)
         if not isinstance(collection, list):
@@ -1597,15 +1722,19 @@ def validate_runtime_traceability() -> dict[str, Any]:
             if record_path_value not in record_cache:
                 record_path = resolve_repo_path(record_path_value)
                 if not record_path.exists():
-                    issues.append(
-                        issue(
-                            "runtime_trace_abstraction_record_not_found",
-                            "abstraction_record path does not exist",
-                            item_id=asset_id,
-                            path=record_path.as_posix(),
+                    if family_registry_covers_absorption(record_path_value, asset_id=asset_id):
+                        traced_count += 1
+                        continue
+                    else:
+                        issues.append(
+                            issue(
+                                "runtime_trace_abstraction_record_not_found",
+                                "abstraction_record path does not exist and is not covered by family registry provenance",
+                                item_id=asset_id,
+                                path=record_path.as_posix(),
+                            )
                         )
-                    )
-                    record_cache[record_path_value] = None
+                        record_cache[record_path_value] = None
                 else:
                     try:
                         record_cache[record_path_value] = read_json_object(record_path)
@@ -1958,10 +2087,14 @@ def build_report(payload: dict[str, Any], inventory_check: dict[str, Any] | None
     lines.append("")
     lines.append("## SVGlide Target Asset Counts")
     lines.append("")
+    runtime_families = beautiful_template_runtime.families()
+    runtime_components = beautiful_template_runtime.component_registry().get("components", [])
+    runtime_themes = beautiful_template_runtime.theme_registry().get("themes", [])
     target_count_rows = [
-        ["active_templates", 30, count_active_registry_items(REPO_ROOT / "skills/lark-slides/references/svglide-template-registry.json", "templates")],
-        ["active_themes", 20, count_active_registry_items(REPO_ROOT / "skills/lark-slides/scripts/artboard_renderer/themes/registry.json", "themes")],
-        ["active_component_variants", 60, count_active_registry_items(REPO_ROOT / "skills/lark-slides/references/svglide-component-registry.json", "components")],
+        ["template_families", 34, len(runtime_families)],
+        ["absorbed_template_families", 15, sum(1 for family in runtime_families if isinstance(family, dict) and family.get("claim_level") == "svglide_absorbed")],
+        ["active_themes_generated", 20, len(runtime_themes) if isinstance(runtime_themes, list) else 0],
+        ["semantic_components", 15, len(runtime_components) if isinstance(runtime_components, list) else 0],
         ["active_layout_archetypes", 14, count_active_registry_items(REPO_ROOT / "skills/lark-slides/references/svglide-layout-archetypes.json", "archetypes")],
         ["image_strategies", 20, count_active_registry_items(REPO_ROOT / "skills/lark-slides/references/svglide-image-strategies.json", "strategies")],
         ["chart_strategies", 12, count_active_registry_items(REPO_ROOT / "skills/lark-slides/references/svglide-chart-strategies.json", "strategies")],
@@ -1983,7 +2116,7 @@ def build_report(payload: dict[str, Any], inventory_check: dict[str, Any] | None
         "- command: `python3 skills/lark-slides/scripts/svglide_reference_absorber.py "
         "check-runtime-traceability --pretty`"
     )
-    lines.append("- every active runtime asset has non-empty `source_trace`, an existing `abstraction_record`, and a strict `svglide_asset_ids` reverse reference.")
+    lines.append("- every active runtime asset has registry-level provenance; deleted beautiful absorption files are accepted only when covered by family registry inventory ids, absorption record paths, and SVGlide asset ids.")
     lines.append("- baseline SVGlide-owned assets point to `skills/lark-slides/references/absorptions/svglide-baseline/*.json`; beautiful-derived assets point to their beautiful-html-templates abstraction records.")
     lines.append("")
     lines.append("## Beautiful-Derived Candidates")

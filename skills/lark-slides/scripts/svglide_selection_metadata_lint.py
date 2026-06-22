@@ -10,14 +10,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import beautiful_template_runtime
+
 
 SCHEMA_VERSION = "svglide-selection-metadata-lint/v1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
 REFERENCE_DIR = SCRIPT_DIR.parent / "references"
-TEMPLATE_REGISTRY = REFERENCE_DIR / "svglide-template-registry.json"
-THEME_REGISTRY = SCRIPT_DIR / "artboard_renderer" / "themes" / "registry.json"
-PALETTE_REGISTRY = REFERENCE_DIR / "svglide-palette-registry.json"
 BRAND_PALETTE_REGISTRY = REFERENCE_DIR / "svglide-brand-palette-registry.json"
 CHECK_PATH = Path("06-check/selection-metadata-lint.json")
 RECEIPT_PATH = Path("receipts/selection_metadata_lint.json")
@@ -188,11 +187,10 @@ def resolve_repo_root(path: Path) -> Path:
 def run_lint(repo_root: Path) -> dict[str, Any]:
     repo_root = resolve_repo_root(repo_root)
     references = repo_root / "skills" / "lark-slides" / "references"
-    scripts = repo_root / "skills" / "lark-slides" / "scripts"
     issues: list[dict[str, Any]] = []
-    template_registry = load_json(references / "svglide-template-registry.json")
-    theme_registry = load_json(scripts / "artboard_renderer" / "themes" / "registry.json")
-    palette_registry = load_json(references / "svglide-palette-registry.json")
+    template_registry = beautiful_template_runtime.template_registry()
+    theme_registry = beautiful_template_runtime.theme_registry()
+    palette_registry = beautiful_template_runtime.palette_registry()
     brand_registry = load_json(references / "svglide-brand-palette-registry.json")
 
     templates = active_templates(template_registry)

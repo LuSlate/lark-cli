@@ -47,9 +47,11 @@ Private planning and validation:
 
 Private style and quality references:
 
-- `style-presets.json`
-- `style-presets.md`
-- `svg-visual-recipes.md`
+- `beautiful-html-template-families.json`
+- `component-registry.json`
+- `asset-strategy-registry.json`
+- `asset-slot-contract.schema.json`
+- `beautiful-html-template-cleanup-map.json`
 - `svg-aesthetic-review.md`
 
 Private machine profiles and local gates:

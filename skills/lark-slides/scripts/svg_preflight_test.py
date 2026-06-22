@@ -44,19 +44,14 @@ def with_contract(svg: str) -> str:
     )
 
 
-def style_plan_fields(preset_id: str = "raw_grid") -> dict[str, object]:
+def style_plan_fields(template_id: str = "raw-grid") -> dict[str, object]:
     return {
-        "style_preset": preset_id,
-        "style_selection_reason": "raw_grid fits technical training pages that need dense but readable visual structure",
-        "style_system": {
-            "palette": {
-                "background": "#F5F5F5",
-                "text": "#0A0A0A",
-                "accent": "#F2D4CF",
-            },
-            "typography": "strong title, readable native text labels",
-            "background_strategy": "muted grid panels with one stable background family",
-            "motif": "dense grid panels with restrained accent labels",
+        "template_family_selection": {
+            "enabled": True,
+            "source": "beautiful-html-template-families",
+            "selected_template_id": template_id,
+            "candidate_template_ids": [template_id, "blue-professional", "signal"],
+            "selection_reason": f"{template_id} fits technical training pages that need dense but readable visual structure",
         },
         "loaded_rule_set": sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES),
         "plan_path": ".lark-slides/plan/test/slide_plan.json",
@@ -98,6 +93,21 @@ def effects_for_primitives(primitives: list[str]) -> list[str]:
     return sorted(effects)
 
 
+def template_slide_fields(variant: str = "path_flow") -> dict[str, object]:
+    return {
+        "template_variant": variant,
+        "semantic_blocks": [
+            {"block_id": "title", "type": "title", "content": "Unit test title"},
+            {"block_id": "message", "type": "finding", "content": f"Use {variant}"},
+        ],
+        "component_selection": [
+            {"component_id": "title_block", "binds": ["title"]},
+            {"component_id": "finding_callout", "binds": ["message"]},
+        ],
+        "asset_strategy": {"strategy_id": "structured_fallback", "expected_asset_count": 0},
+    }
+
+
 def recipe_fields(recipe: str, primitives: list[str]) -> dict[str, object]:
     return {
         "layout_family": recipe,
@@ -113,6 +123,7 @@ def recipe_fields(recipe: str, primitives: list[str]) -> dict[str, object]:
         "asset_contract": "none_required",
         "risk_flags": [],
         "source_policy": "Use prompt-provided content only; mark missing numbers as pending.",
+        **template_slide_fields(recipe),
     }
 
 
@@ -170,6 +181,130 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result.get("issues", [])]
         self.assertIn("root_contract_version_mismatch", codes)
         self.assertEqual(result["summary"]["error_count"], 1)
+
+    def test_parse_args_accepts_contract_manifest(self) -> None:
+        options = svg_preflight.parse_args(["--input", "page.svg", "--contract-manifest", "manifest.json"])
+
+        self.assertEqual(options["inputs"], ["page.svg"])
+        self.assertEqual(options["contract_manifest"], "manifest.json")
+
+    def test_contract_manifest_does_not_replace_missing_slide_role_check(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            svg_path = project / "04-svg/page-001.svg"
+            manifest_path = project / "04-svg/contract/manifest.json"
+            svg_path.parent.mkdir(parents=True)
+            manifest_path.parent.mkdir(parents=True)
+            svg_path.write_text('<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>', encoding="utf-8")
+            digest = svg_preflight.file_sha256(svg_path)
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "version": "svglide-contract-compile-manifest/v1",
+                        "stage": "contract_compile",
+                        "status": "passed",
+                        "pages": [
+                            {
+                                "page": 1,
+                                "source": "04-artboard/raw/page-001.visual.svg",
+                                "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+                                "output": "04-svg/page-001.svg",
+                                "report": "04-svg/contract/page-001.report.json",
+                                "status": "passed",
+                                "input_sha256": "raw",
+                                "semantic_map_sha256": "semantic",
+                                "output_sha256": digest,
+                            }
+                        ],
+                        "summary": {"pages": 1, "blocking_issues": 0, "degraded_elements": 0, "rasterized_regions": 0, "dropped_decorations": 0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = svg_preflight.lint_files([svg_path.as_posix()], contract_manifest_path=manifest_path.as_posix())
+
+            codes = [issue["code"] for issue in result["files"][0]["issues"]]
+            self.assertIn("missing_root_role", codes)
+            self.assertEqual(result["contract_compile"]["summary"]["error_count"], 0)
+
+    def test_contract_manifest_hash_mismatch_blocks_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            svg_path = project / "04-svg/page-001.svg"
+            manifest_path = project / "04-svg/contract/manifest.json"
+            svg_path.parent.mkdir(parents=True)
+            manifest_path.parent.mkdir(parents=True)
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "version": "svglide-contract-compile-manifest/v1",
+                        "stage": "contract_compile",
+                        "status": "passed",
+                        "pages": [
+                            {
+                                "page": 1,
+                                "source": "04-artboard/raw/page-001.visual.svg",
+                                "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+                                "output": "04-svg/page-001.svg",
+                                "report": "04-svg/contract/page-001.report.json",
+                                "status": "passed",
+                                "input_sha256": "raw",
+                                "semantic_map_sha256": "semantic",
+                                "output_sha256": "stale",
+                            }
+                        ],
+                        "summary": {"pages": 1, "blocking_issues": 0, "degraded_elements": 0, "rasterized_regions": 0, "dropped_decorations": 0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = svg_preflight.lint_files([svg_path.as_posix()], contract_manifest_path=manifest_path.as_posix())
+
+            self.assertEqual(result["contract_compile"]["summary"]["error_count"], 1)
+            self.assertEqual(result["contract_compile"]["issues"][0]["code"], "contract_output_hash_mismatch")
+
+    def test_contract_manifest_prepared_hash_mismatch_blocks_preflight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            compiled_path = project / "04-svg/page-001.svg"
+            prepared_path = project / "04-svg/prepared/page-001.svg"
+            manifest_path = project / "04-svg/contract/manifest.json"
+            prepared_path.parent.mkdir(parents=True)
+            manifest_path.parent.mkdir(parents=True)
+            compiled_path.write_text(VALID_SVG, encoding="utf-8")
+            prepared_path.write_text(VALID_SVG.replace("#f8fafc", "#f1f5f9"), encoding="utf-8")
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "version": "svglide-contract-compile-manifest/v1",
+                        "stage": "contract_compile",
+                        "status": "passed",
+                        "pages": [
+                            {
+                                "page": 1,
+                                "source": "04-artboard/raw/page-001.visual.svg",
+                                "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+                                "output": "04-svg/page-001.svg",
+                                "report": "04-svg/contract/page-001.report.json",
+                                "status": "passed",
+                                "input_sha256": "raw",
+                                "semantic_map_sha256": "semantic",
+                                "output_sha256": svg_preflight.file_sha256(compiled_path),
+                            }
+                        ],
+                        "summary": {"pages": 1, "blocking_issues": 0, "degraded_elements": 0, "rasterized_regions": 0, "dropped_decorations": 0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = svg_preflight.lint_files([prepared_path.as_posix()], contract_manifest_path=manifest_path.as_posix())
+
+            codes = [issue["code"] for issue in result["contract_compile"]["issues"]]
+            self.assertIn("contract_prepared_hash_mismatch", codes)
 
     def test_lint_svg_warns_external_image_and_reports_font_shorthand(self) -> None:
         svg = """
@@ -313,7 +448,7 @@ class SvgPreflightTest(unittest.TestCase):
              xmlns:slide="https://slides.bytedance.com/ns"
              slide:role="slide"
              width="960" height="540" viewBox="0 0 960 540">
-          <path id="decorative-divider" slide:role="shape" d="M80 80 L220 160" fill="none" stroke="#EE1A3B" stroke-width="2" stroke-dasharray="8 8" />
+          <path id="decorative-divider" slide:role="shape" data-svglide-motif-owner="unit-test" data-svglide-motif-id="decorative-divider" d="M80 80 L220 160" fill="none" stroke="#EE1A3B" stroke-width="2" stroke-dasharray="8 8" />
         </svg>
         """
         result = svg_preflight.lint_svg(with_contract(svg))
@@ -328,7 +463,7 @@ class SvgPreflightTest(unittest.TestCase):
              xmlns:slide="https://slides.bytedance.com/ns"
              slide:role="slide"
              width="960" height="540" viewBox="0 0 960 540">
-          <path id="conversion-flow-route" slide:role="shape" d="M80 80 L220 160" fill="none" stroke="#EE1A3B" stroke-width="2" stroke-dasharray="8 8" />
+          <path id="conversion-flow-route" slide:role="shape" data-svglide-semantic-role="conversion-flow-route" d="M80 80 L220 160" fill="none" stroke="#EE1A3B" stroke-width="2" stroke-dasharray="8 8" />
         </svg>
         """
         result = svg_preflight.lint_svg(with_contract(svg))
@@ -640,32 +775,21 @@ class SvgPreflightTest(unittest.TestCase):
         result = svg_preflight.lint_plan(plan)
         self.assertEqual(result["summary"]["error_count"], 0)
         self.assertGreaterEqual(result["distinct_renderer_count"], 5)
-        self.assertGreaterEqual(result["distinct_visual_recipe_family_count"], 5)
+        self.assertGreaterEqual(result["distinct_layout_family_count"], 5)
 
-    def test_style_preset_catalog_has_35_complete_entries(self) -> None:
+    def test_template_family_leak_catalog_has_34_complete_entries(self) -> None:
         catalog = svg_preflight.STYLE_PRESET_CATALOG
-        self.assertEqual(len(catalog), 35)
-        group_counts: dict[str, int] = {}
+        self.assertEqual(len(catalog), 34)
         tokens = set()
         for style_id, preset in catalog.items():
             self.assertEqual(style_id, preset["style_id"])
-            self.assertIn(preset["group"], {"Restrained", "Balanced", "Bold"})
-            group_counts[preset["group"]] = group_counts.get(preset["group"], 0) + 1
             self.assertTrue(preset.get("display_name"))
             self.assertTrue(preset.get("source_token"))
+            self.assertTrue(preset["source_token"].endswith("/template.json"))
             tokens.add(preset["source_token"])
-            self.assertIn("palette", preset)
-            self.assertRegex(preset["palette"]["background"], r"^#[0-9A-Fa-f]{6}$")
-            self.assertRegex(preset["palette"]["text"], r"^#[0-9A-Fa-f]{6}$")
-            self.assertRegex(preset["palette"]["accent"], r"^#[0-9A-Fa-f]{6}$")
-            self.assertIn("shape_language", preset)
-            self.assertIn("density", preset)
-            self.assertIn("slide_translation", preset)
-            self.assertIn("quality_oracle", preset)
-        self.assertEqual(group_counts, {"Restrained": 9, "Balanced": 15, "Bold": 11})
-        self.assertEqual(len(tokens), 35)
+        self.assertEqual(len(tokens), 34)
 
-    def test_lint_plan_reports_unknown_style_preset(self) -> None:
+    def test_lint_plan_reports_unknown_template_family(self) -> None:
         plan = {
             "output_mode": "svglide-svg",
             "page_count": 1,
@@ -682,7 +806,7 @@ class SvgPreflightTest(unittest.TestCase):
         }
         result = svg_preflight.lint_plan(plan)
         codes = [issue["code"] for issue in result["issues"]]
-        self.assertIn("plan_style_preset_unknown", codes)
+        self.assertIn("plan_template_family_unknown", codes)
 
     def test_lint_plan_requires_rule_loading_and_art_direction(self) -> None:
         fields = style_plan_fields()
@@ -831,8 +955,9 @@ class SvgPreflightTest(unittest.TestCase):
             ],
         }
         result = svg_preflight.lint_plan(plan)
-        codes = [issue["code"] for issue in result["issues"]]
-        self.assertIn("plan_svg_effect_requires_safe_fallback", codes)
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("plan_svg_effect_requires_safe_fallback", codes)
+        self.assertEqual(result["summary"]["error_count"], 0)
 
     def test_lint_files_reports_declared_svg_effect_missing_from_source(self) -> None:
         svg = """
@@ -980,10 +1105,12 @@ class SvgPreflightTest(unittest.TestCase):
         }
         result = svg_preflight.lint_plan(plan)
         codes = [issue["code"] for issue in result["issues"]]
-        self.assertIn("plan_missing_visual_recipe", codes)
+        self.assertIn("plan_missing_template_variant", codes)
+        self.assertIn("plan_missing_semantic_blocks", codes)
+        self.assertIn("plan_missing_component_selection", codes)
+        self.assertIn("plan_missing_asset_strategy", codes)
         self.assertIn("plan_renderer_repetition", codes)
         self.assertIn("plan_renderer_diversity_low", codes)
-        self.assertIn("plan_visual_recipe_diversity_low", codes)
         self.assertIn("plan_high_density_without_structure", codes)
         self.assertIn("plan_missing_source_guard", codes)
         self.assertIn("plan_missing_closing_slide", codes)
@@ -1009,8 +1136,10 @@ class SvgPreflightTest(unittest.TestCase):
         }
         result = svg_preflight.lint_plan(plan)
         codes = [issue["code"] for issue in result["issues"]]
-        self.assertIn("plan_missing_layout_family", codes)
-        self.assertIn("plan_missing_required_primitives", codes)
+        self.assertIn("plan_missing_template_variant", codes)
+        self.assertIn("plan_missing_semantic_blocks", codes)
+        self.assertIn("plan_missing_component_selection", codes)
+        self.assertIn("plan_missing_asset_strategy", codes)
         self.assertIn("plan_missing_asset_contract", codes)
         self.assertIn("plan_missing_risk_flags", codes)
         self.assertIn("plan_missing_source_policy", codes)
@@ -1059,13 +1188,12 @@ class SvgPreflightTest(unittest.TestCase):
                 {
                   "output_mode": "svglide-svg",
                   "page_count": 1,
-                  "style_preset": "raw_grid",
-                  "style_selection_reason": "raw_grid fits technical training pages that need dense but readable visual structure",
-                  "style_system": {
-                    "palette": {"background": "#F5F5F5", "text": "#0A0A0A", "accent": "#F2D4CF"},
-                    "typography": "strong title, readable native text labels",
-                    "background_strategy": "muted grid panels",
-                    "motif": "dense grid panels"
+                  "template_family_selection": {
+                    "enabled": true,
+                    "source": "beautiful-html-template-families",
+                    "selected_template_id": "raw-grid",
+                    "candidate_template_ids": ["raw-grid", "blue-professional", "signal"],
+                    "selection_reason": "raw-grid fits technical training pages that need dense but readable visual structure"
                   },
                   "loaded_rule_set": __LOADED_RULE_SET__,
                   "plan_path": ".lark-slides/plan/test/slide_plan.json",
@@ -1104,7 +1232,17 @@ class SvgPreflightTest(unittest.TestCase):
                       "generated_by": "unit test"
                     },
                     "risk_flags": [],
-                    "source_policy": "Use prompt-provided content only."
+                    "source_policy": "Use prompt-provided content only.",
+                    "template_variant": "path_flow",
+                    "semantic_blocks": [
+                      {"block_id": "title", "type": "title", "content": "Unit test title"},
+                      {"block_id": "message", "type": "finding", "content": "Use path_flow"}
+                    ],
+                    "component_selection": [
+                      {"component_id": "title_block", "binds": ["title"]},
+                      {"component_id": "finding_callout", "binds": ["message"]}
+                    ],
+                    "asset_strategy": {"strategy_id": "structured_fallback", "expected_asset_count": 0}
                   }]
                 }
                 """.replace("__LOADED_RULE_SET__", loaded_rules_json),
@@ -1156,18 +1294,32 @@ class SvgPreflightTest(unittest.TestCase):
             svg_path = tmp / "page-001.svg"
             plan_path = tmp / "slide_plan.json"
             svg_path.write_text(with_contract(svg), encoding="utf-8")
+            loaded_rules_json = json.dumps(sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES), indent=20)
             plan_path.write_text(
                 """
                 {
                   "output_mode": "svglide-svg",
                   "page_count": 1,
-                  "style_preset": "raw_grid",
-                  "style_selection_reason": "raw_grid fits technical training pages that need dense but readable visual structure",
-                  "style_system": {
-                    "palette": {"background": "#F5F5F5", "text": "#0A0A0A", "accent": "#F2D4CF"},
-                    "typography": "strong title, readable native text labels",
-                    "background_strategy": "muted grid panels",
-                    "motif": "dense grid panels"
+                  "template_family_selection": {
+                    "enabled": true,
+                    "source": "beautiful-html-template-families",
+                    "selected_template_id": "raw-grid",
+                    "candidate_template_ids": ["raw-grid", "blue-professional", "signal"],
+                    "selection_reason": "raw-grid fits technical training pages that need dense but readable visual structure"
+                  },
+                  "loaded_rule_set": __LOADED_RULE_SET__,
+                  "plan_path": ".lark-slides/plan/test/slide_plan.json",
+                  "quality_gates": {
+                    "no_text_overflow": true,
+                    "no_debug_guides": true,
+                    "no_xml_like_pages": true
+                  },
+                  "art_direction": {
+                    "cover_treatment": "hero route cover",
+                    "section_divider_treatment": "not applicable for this one-page test",
+                    "closing_treatment": "not applicable for this one-page test",
+                    "deck_motif": "dense grid panels",
+                    "svg_native_moments": ["route path", "hero image", "annotation geometry"]
                   },
                   "svg_files": [{"page": 1, "path": "page-001.svg"}],
                   "slides": [{
@@ -1186,10 +1338,20 @@ class SvgPreflightTest(unittest.TestCase):
                     "content_density_contract": "flow >= 4 stages",
                     "asset_contract": "none_required",
                     "risk_flags": [],
-                    "source_policy": "Use prompt-provided content only."
+                    "source_policy": "Use prompt-provided content only.",
+                    "template_variant": "path_flow",
+                    "semantic_blocks": [
+                      {"block_id": "title", "type": "title", "content": "Unit test title"},
+                      {"block_id": "message", "type": "finding", "content": "Use path_flow"}
+                    ],
+                    "component_selection": [
+                      {"component_id": "title_block", "binds": ["title"]},
+                      {"component_id": "finding_callout", "binds": ["message"]}
+                    ],
+                    "asset_strategy": {"strategy_id": "structured_fallback", "expected_asset_count": 0}
                   }]
                 }
-                """,
+                """.replace("__LOADED_RULE_SET__", loaded_rules_json),
                 encoding="utf-8",
             )
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
@@ -1225,6 +1387,7 @@ class SvgPreflightTest(unittest.TestCase):
                         "asset_contract": "none_required",
                         "risk_flags": [],
                         "source_policy": "Use prompt-provided content only.",
+                        **template_slide_fields("path_flow"),
                     }
                 ],
             }
@@ -1273,6 +1436,7 @@ class SvgPreflightTest(unittest.TestCase):
                         },
                         "risk_flags": ["image_preview_only"],
                         "source_policy": "Preview image source is marked and will be replaced before production.",
+                        **template_slide_fields("path_flow"),
                     }
                 ],
             }
@@ -1322,6 +1486,7 @@ class SvgPreflightTest(unittest.TestCase):
                         "asset_contract": "hero-asset",
                         "risk_flags": [],
                         "source_policy": "Preview image source is marked and will be replaced before production.",
+                        **template_slide_fields("path_flow"),
                     }
                 ],
             }
@@ -1368,6 +1533,7 @@ class SvgPreflightTest(unittest.TestCase):
                         },
                         "risk_flags": ["image_preview_only"],
                         "source_policy": "Preview image source is marked and will be replaced before production.",
+                        **template_slide_fields("path_flow"),
                     }
                 ],
             }
@@ -1376,6 +1542,297 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result["plan"]["issues"]]
         self.assertIn("plan_asset_contract_missing_metadata", codes)
         self.assertEqual(result["summary"]["error_count"], 0)
+
+    def test_multi_image_slots_cannot_be_partially_filled(self) -> None:
+        slide = {
+            "page": 1,
+            "renderer_id": "market_food_grid",
+            "layout_family": "showcase",
+            "density": "medium",
+            **recipe_fields("mask_clip_showcase", ["typography", "image_overlay"]),
+            "asset_strategy": {"strategy_id": "real_image_required", "expected_asset_count": 2},
+            "image_slots": [
+                {"slot_id": "egg-waffle", "required": True, "semantic_subject": "Hong Kong egg waffle", "real_image_required": True},
+                {"slot_id": "fish-ball", "required": True, "semantic_subject": "Hong Kong curry fish balls", "real_image_required": True},
+            ],
+            "asset_contract": [
+                {
+                    "asset_id": "egg-waffle-photo",
+                    "binds_slot": "egg-waffle",
+                    "source_type": "web_search_preview",
+                    "semantic_subject": "Hong Kong egg waffle",
+                    "retrieval_query": "Hong Kong egg waffle street food photo",
+                    "license": "preview_unverified",
+                    "href": "https://example.com/egg-waffle.jpg",
+                    "usage_page": 1,
+                    "source_url": "https://example.com/egg-waffle.jpg",
+                }
+            ],
+        }
+
+        result = svg_preflight.lint_plan({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "slides": [slide]})
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("asset_slot_unfilled", codes)
+        self.assertIn("asset_slot_count_mismatch", codes)
+
+    def test_lint_files_reports_prepared_svg_missing_required_image_slot(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#f8fafc" />
+          <path id="route" slide:role="shape" d="M80 320 C180 260 300 360 420 300" fill="none" stroke="#2563eb" />
+          <line id="callout" slide:role="shape" x1="420" y1="300" x2="500" y2="260" stroke="#111827" />
+        </svg>
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(with_contract(svg), encoding="utf-8")
+            slide = {
+                "page": 1,
+                "renderer_id": "food_route",
+                "layout_family": "flow",
+                "density": "medium",
+                **recipe_fields("path_flow", ["path", "annotation"]),
+                "asset_strategy": {"strategy_id": "real_image_required", "expected_asset_count": 1},
+                "image_slots": [{"slot_id": "hero-food", "required": True, "semantic_subject": "Hong Kong street food", "real_image_required": True}],
+                "asset_contract": [
+                    {
+                        "asset_id": "hero-food-photo",
+                        "binds_slot": "hero-food",
+                        "source_type": "web_search_preview",
+                        "semantic_subject": "Hong Kong street food",
+                        "retrieval_query": "Hong Kong street food dai pai dong photo",
+                        "license": "preview_unverified",
+                        "href": "https://example.com/hong-kong-food.jpg",
+                        "usage_page": 1,
+                        "source_url": "https://example.com/hong-kong-food.jpg",
+                    }
+                ],
+            }
+            plan_path.write_text(json.dumps({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "svg_files": [{"page": 1, "path": "page-001.svg"}], "slides": [slide]}), encoding="utf-8")
+
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+
+        codes = [issue["code"] for issue in result["plan"]["issues"]]
+        self.assertIn("preview_missing_required_image", codes)
+
+    def test_generated_bitmap_cannot_satisfy_real_image_slot(self) -> None:
+        slide = {
+            "page": 1,
+            "renderer_id": "company_cover",
+            "layout_family": "showcase",
+            "density": "medium",
+            **recipe_fields("mask_clip_showcase", ["typography", "image_overlay"]),
+            "asset_strategy": {"strategy_id": "real_image_required", "expected_asset_count": 1},
+            "image_slots": [{"slot_id": "company", "required": True, "semantic_subject": "Zhipu AI and MiniMax product logos", "real_image_required": True}],
+            "asset_contract": {
+                "asset_id": "company-ai-art",
+                "binds_slot": "company",
+                "source_type": "ai_generated_bitmap",
+                "semantic_subject": "Zhipu AI and MiniMax product logos",
+                "generated_by": "image model",
+                "license": "generated_preview",
+                "local_path": "@./assets/company.png",
+                "usage_page": 1,
+            },
+        }
+
+        result = svg_preflight.lint_plan({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "slides": [slide]})
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("generated_bitmap_not_real_image", codes)
+
+    def test_image_subject_mismatch_is_reported(self) -> None:
+        slide = {
+            "page": 1,
+            "renderer_id": "food_photo",
+            "layout_family": "showcase",
+            "density": "medium",
+            **recipe_fields("mask_clip_showcase", ["typography", "image_overlay"]),
+            "asset_strategy": {"strategy_id": "real_image_required", "expected_asset_count": 1},
+            "image_slots": [{"slot_id": "hero-food", "required": True, "semantic_subject": "Hong Kong egg waffle street food", "real_image_required": True}],
+            "asset_contract": {
+                "asset_id": "office-photo",
+                "binds_slot": "hero-food",
+                "source_type": "web_search_preview",
+                "semantic_subject": "corporate office meeting room",
+                "retrieval_query": "corporate office meeting room",
+                "license": "preview_unverified",
+                "href": "https://example.com/office.jpg",
+                "usage_page": 1,
+                "source_url": "https://example.com/office.jpg",
+            },
+        }
+
+        result = svg_preflight.lint_plan({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "slides": [slide]})
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("semantic_mismatch", codes)
+
+    def test_public_url_cannot_satisfy_real_image_slot(self) -> None:
+        slide = {
+            "page": 1,
+            "renderer_id": "company_cover",
+            "layout_family": "showcase",
+            "density": "medium",
+            **recipe_fields("mask_clip_showcase", ["typography", "image_overlay"]),
+            "asset_strategy": {"strategy_id": "real_image_required", "expected_asset_count": 1},
+            "image_slots": [{"slot_id": "company", "required": True, "semantic_subject": "Zhipu and MiniMax product identity", "real_image_required": True}],
+            "asset_contract": {
+                "asset_id": "company-public-url",
+                "binds_slot": "company",
+                "source_type": "public_url",
+                "semantic_subject": "Zhipu and MiniMax product identity",
+                "retrieval_query": "Zhipu MiniMax product identity",
+                "license": "preview_unverified",
+                "href": "https://example.com/company.png",
+                "usage_page": 1,
+                "source_url": "https://example.com/company.png",
+            },
+        }
+
+        result = svg_preflight.lint_plan({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "slides": [slide]})
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("asset_source_type_not_allowed", codes)
+
+    def test_live_submit_requires_file_token_for_required_image_slot(self) -> None:
+        slide = {
+            "page": 1,
+            "renderer_id": "company_cover",
+            "layout_family": "showcase",
+            "density": "medium",
+            **recipe_fields("mask_clip_showcase", ["typography", "image_overlay"]),
+            "asset_strategy": {"strategy_id": "real_image_required", "expected_asset_count": 1, "live_submit_requires_file_token": True},
+            "image_slots": [{"slot_id": "company", "required": True, "semantic_subject": "Zhipu and MiniMax product identity", "real_image_required": True}],
+            "asset_contract": {
+                "asset_id": "company-web-preview",
+                "binds_slot": "company",
+                "source_type": "web_search_preview",
+                "semantic_subject": "Zhipu and MiniMax product identity",
+                "retrieval_query": "Zhipu MiniMax product identity",
+                "license": "preview_unverified",
+                "href": "https://example.com/company.png",
+                "usage_page": 1,
+                "source_url": "https://example.com/company.png",
+            },
+        }
+
+        result = svg_preflight.lint_plan({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "slides": [slide]})
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("live_submit_missing_file_token", codes)
+
+    def test_user_requested_no_images_disables_real_image_requirement(self) -> None:
+        slide = {
+            "page": 1,
+            "renderer_id": "typographic_summary",
+            "layout_family": "hero",
+            "density": "medium",
+            **recipe_fields("hero_typography", ["typography", "geometric_shape"]),
+            "asset_strategy": {"strategy_id": "none_required", "user_override": True, "expected_asset_count": 0},
+            "image_slots": [],
+            "asset_contract": "none_required",
+        }
+
+        result = svg_preflight.lint_plan({"output_mode": "svglide-svg", "page_count": 1, **style_plan_fields(), "slides": [slide]})
+
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("asset_slot_unfilled", codes)
+        self.assertNotIn("generated_bitmap_not_real_image", codes)
+        self.assertNotIn("semantic_mismatch", codes)
+
+    def test_unowned_decorative_path_is_rejected(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             slide:contract-version="svglide-authoring-contract/v1"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" />
+          <path id="p5-steam-path-one" slide:role="shape" d="M120 420 C180 360 240 450 300 390" fill="none" stroke="#999" />
+        </svg>
+        """
+
+        result = svg_preflight.lint_svg(svg)
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("unowned_decorative_primitive", codes)
+
+    def test_family_owned_decorative_motif_is_allowed(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             slide:contract-version="svglide-authoring-contract/v1"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" />
+          <path id="family-steam-path-one" slide:role="shape" data-svglide-motif-owner="pin-and-paper" data-svglide-motif-id="steam-ribbon" d="M120 420 C180 360 240 450 300 390" fill="none" stroke="#999" />
+        </svg>
+        """
+
+        result = svg_preflight.lint_svg(svg)
+
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("unowned_decorative_primitive", codes)
+
+    def test_unbound_flow_route_path_is_rejected(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             slide:contract-version="svglide-authoring-contract/v1"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" />
+          <path id="flow-route" slide:role="shape" d="M120 420 C180 360 240 450 300 390" fill="none" stroke="#999" />
+        </svg>
+        """
+
+        result = svg_preflight.lint_svg(svg)
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("unowned_decorative_primitive", codes)
+
+    def test_semantic_line_primitive_is_allowed(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             slide:contract-version="svglide-authoring-contract/v1"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" />
+          <path id="conversion-trend-line" slide:role="shape" data-svglide-semantic-role="chart-trend-line" d="M120 420 C180 360 240 450 300 390" fill="none" stroke="#2563eb" />
+        </svg>
+        """
+
+        result = svg_preflight.lint_svg(svg)
+
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("unowned_decorative_primitive", codes)
+
+    def test_decorative_primitive_count_respects_family_limits(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             slide:contract-version="svglide-authoring-contract/v1"
+             width="960" height="540" viewBox="0 0 960 540">
+          <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#fff" />
+          <path id="steam-one" slide:role="shape" data-svglide-motif-owner="pin-and-paper" data-svglide-motif-id="steam-ribbon" data-svglide-motif-max-count="2" d="M100 420 C160 360 220 450 280 390" fill="none" stroke="#999" />
+          <path id="steam-two" slide:role="shape" data-svglide-motif-owner="pin-and-paper" data-svglide-motif-id="steam-ribbon" data-svglide-motif-max-count="2" d="M300 420 C360 360 420 450 480 390" fill="none" stroke="#999" />
+          <path id="steam-three" slide:role="shape" data-svglide-motif-owner="pin-and-paper" data-svglide-motif-id="steam-ribbon" data-svglide-motif-max-count="2" d="M500 420 C560 360 620 450 680 390" fill="none" stroke="#999" />
+        </svg>
+        """
+
+        result = svg_preflight.lint_svg(svg)
+
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("decorative_motif_overuse", codes)
 
     def test_lint_files_reports_density_contract_not_met_by_source(self) -> None:
         svg = """

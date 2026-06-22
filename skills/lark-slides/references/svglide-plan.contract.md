@@ -20,13 +20,13 @@ Optional execution lock:
 
 For the expanded execution-lock contract, see `svglide-lock.contract.md`.
 
-Plan confirmation:
+Optional plan confirmation:
 
 ```text
 .lark-slides/plan/<deck-id>/02-plan/plan-confirmation.json
 ```
 
-The runner writes `02-plan/plan-confirmation.request.json` when confirmation is missing. A human-confirmed `plan-confirmation.json` is required before asset collection, `generate_svg`, prepare, dry-run, or live-create.
+`plan-confirmation.json` is a backward-compatible manual approval artifact. It is no longer part of the default SVGlide execution chain; asset collection, `generate_svg`, prepare, dry-run, and live-create rely on source, strategy, palette, selection, plan bundle, asset, quality, visual acceptance, PPE, and pre-submit receipts instead.
 
 ## Minimum Plan Fields
 
@@ -71,26 +71,26 @@ When present, `svglide.lock.json` must include:
       "path": "04-svg/prepared/page-001.svg",
       "rhythm": "anchor",
       "layout_family": "cover",
-      "visual_recipe": "",
-      "required_primitives": [],
-      "svg_effects": []
+      "template_variant": "",
+      "component_selection": [],
+      "asset_strategy": {}
     }
   ],
   "pages": [
     {
       "page": 1,
       "path": "04-svg/prepared/page-001.svg",
-      "visual_recipe": "",
-      "required_primitives": [],
-      "svg_effects": []
+      "template_variant": "",
+      "component_selection": [],
+      "asset_strategy": {}
     }
   ]
 }
 ```
 
-## Confirmation Fields
+## Optional Confirmation Fields
 
-`plan-confirmation.json` must include:
+When a caller explicitly runs the optional `confirm_plan` stage, `plan-confirmation.json` must include:
 
 ```json
 {
@@ -105,7 +105,7 @@ When present, `svglide.lock.json` must include:
 }
 ```
 
-`lock_path` and `lock_sha256` are required only when `02-plan/svglide.lock.json` exists. The hash fields must match the current files so stale confirmations cannot authorize changed plans.
+`lock_path` and `lock_sha256` are required only when `02-plan/svglide.lock.json` exists. The hash fields must match the current files so stale optional confirmations cannot describe changed plans.
 
 ## Conflict Rules
 
@@ -113,4 +113,4 @@ When present, `svglide.lock.json` must include:
 - If plan and lock disagree on route, page count, page path, canvas, safe area, or style profile, preflight reports `plan_lock_conflict`.
 - If the lock is absent, P0 allows the equivalent execution profile to live inside `slide_plan.json` for compatibility.
 - The lock must stay small. It is not a second full plan schema and must not duplicate page copy, speaker notes, or narrative outline.
-- If plan confirmation is absent or stale, runner must stop before generation and create `02-plan/plan-confirmation.request.json`.
+- Missing `plan-confirmation.json` must not block the default generation chain.

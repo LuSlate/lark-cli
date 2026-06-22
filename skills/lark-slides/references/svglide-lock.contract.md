@@ -6,7 +6,7 @@
 
 - `slide_plan.json`：用户可见计划，描述内容、页序、来源、风格意图。
 - `svglide.lock.json`：机器执行锁，描述生成 SVG 时不能漂移的参数。
-- `plan-confirmation.json`：用户确认的 plan/lock hash。plan 或 lock 变化后必须重新确认。
+- `plan-confirmation.json`：可选的兼容确认产物，不再阻塞默认生成链路。
 
 ## Required Shape
 
@@ -37,9 +37,9 @@
       "path": "04-svg/prepared/page-001.svg",
       "rhythm": "anchor",
       "layout_family": "cover",
-      "visual_recipe": "hero_metric",
-      "required_primitives": ["typography", "geometric_shape"],
-      "svg_effects": ["gradient"],
+      "template_variant": "cover",
+      "component_selection": [{"component_id": "title_block", "binds": ["title"]}],
+      "asset_strategy": {"strategy_id": "structured_fallback"},
       "asset_refs": [],
       "chart_ref": null
     }

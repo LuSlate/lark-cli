@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#F5F5F5" />
+  <foreignObject id="title-3" slide:role="shape" slide:shape-type="text" x="64" y="44" width="620" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:44px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">context overview</div></foreignObject>
+  <rect id="metric-bar-1" slide:role="shape" x="120" y="214" width="180" height="18" fill="#2563EB" />
+  <rect id="metric-bar-2" slide:role="shape" x="120" y="258" width="140" height="18" fill="#2563EB" />
+  <rect id="metric-bar-3" slide:role="shape" x="120" y="302" width="210" height="18" fill="#2563EB" />
+  <rect id="metric-bar-4" slide:role="shape" x="120" y="346" width="120" height="18" fill="#2563EB" />
+  <foreignObject id="metric-label-3" slide:role="shape" slide:shape-type="text" x="120" y="150" width="260" height="34"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:18px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">metric structure</div></foreignObject>
+</svg>

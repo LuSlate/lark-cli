@@ -11,11 +11,13 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+import beautiful_template_runtime
+
 
 THEME_SPEC_VERSION = "svglide-theme/v1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-GLOBAL_THEME_REGISTRY = SCRIPT_DIR / "artboard_renderer" / "themes" / "registry.json"
+GLOBAL_THEME_REGISTRY = beautiful_template_runtime.FAMILIES_PATH
 PROJECT_THEME_REGISTRY = Path("02-plan/theme-registry.json")
 PREPARED_SVG_DIR = Path("04-svg/prepared")
 CORE_COLOR_ROLES = (
@@ -90,7 +92,7 @@ def contrast_ratio(foreground: str, background: str) -> float:
 
 def load_registry(root: Path | str | None = None) -> dict[str, Any]:
     path = theme_registry_path(root)
-    payload = _read_json_object(path)
+    payload = beautiful_template_runtime.theme_registry() if path == beautiful_template_runtime.FAMILIES_PATH else _read_json_object(path)
     if not isinstance(payload.get("themes"), list):
         raise ThemeError(f"theme registry must contain a themes array: {path}")
     return payload
@@ -102,7 +104,7 @@ def theme_registry_path(root: Path | str | None = None) -> Path:
 
 def theme_file_path(theme_id: str, root: Path | str | None = None) -> Path | None:
     registry_path = theme_registry_path(root)
-    registry = _read_json_object(registry_path)
+    registry = beautiful_template_runtime.theme_registry() if registry_path == beautiful_template_runtime.FAMILIES_PATH else _read_json_object(registry_path)
     record = _theme_record(registry, theme_id)
     if record is None:
         raise ThemeError(f"theme {theme_id!r} is not present in registry {registry_path}")
@@ -116,7 +118,7 @@ def load_theme(theme_id: str, root: Path | str | None = None) -> dict[str, Any]:
     if not isinstance(theme_id, str) or not theme_id:
         raise ThemeError("theme_id is required")
     registry_path = theme_registry_path(root)
-    registry = _read_json_object(registry_path)
+    registry = beautiful_template_runtime.theme_registry() if registry_path == beautiful_template_runtime.FAMILIES_PATH else _read_json_object(registry_path)
     record = _theme_record(registry, theme_id)
     if record is None:
         raise ThemeError(f"theme {theme_id!r} is not present in registry {registry_path}")
@@ -286,21 +288,15 @@ def prepared_svg_hashes(project_root: Path | str) -> list[dict[str, str]]:
 
 def _theme_registry_path(root: Path | str | None) -> Path:
     if root is None:
-        return GLOBAL_THEME_REGISTRY
+        return beautiful_template_runtime.FAMILIES_PATH
     base = Path(root)
     if base.is_file():
         return base
-    candidates = [
-        base / "registry.json",
-        base / PROJECT_THEME_REGISTRY,
-        base / "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
-        base / "artboard_renderer/themes/registry.json",
-        GLOBAL_THEME_REGISTRY,
-    ]
+    candidates = [base / "registry.json", base / PROJECT_THEME_REGISTRY]
     for candidate in candidates:
         if candidate.exists():
             return candidate
-    raise ThemeError(f"theme registry not found under {base}")
+    return beautiful_template_runtime.FAMILIES_PATH
 
 
 def _read_json_object(path: Path) -> dict[str, Any]:
@@ -333,6 +329,9 @@ def _resolve_theme_payload(registry_path: Path, record: dict[str, Any]) -> dict[
     if isinstance(raw_path, str) and raw_path:
         return _read_json_object(_resolve_theme_file_path(registry_path, raw_path))
     if isinstance(record.get("colors"), dict):
+        theme_id = str(record.get("id") or record.get("theme_id") or "")
+        if theme_id in beautiful_template_runtime.LEGACY_THEME_COLORS:
+            return beautiful_template_runtime.theme_payload(theme_id)
         return record
     raise ThemeError(f"theme record {record.get('id')!r} has no theme payload")
 

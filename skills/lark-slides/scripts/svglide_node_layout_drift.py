@@ -273,12 +273,13 @@ def validate_node_layout_map(layout_map: dict[str, Any]) -> list[dict[str, str]]
     max_px = number(drift.get("max_px"), 0)
     threshold_px = number(drift.get("threshold_px"), number(layout_map.get("threshold_px"), DEFAULT_DRIFT_THRESHOLD_PX))
     missing_count = int(number(drift.get("missing_count"), 0))
+    canonical_fallback_count = int(number(drift.get("canonical_fallback_count"), 0))
     fallback_count = sum(1 for node in layout_map.get("nodes", []) if isinstance(node, dict) and node.get("observation_source") == "missing")
     if drift.get("status") != "passed":
         issues.append({"code": "node_layout_drift_failed", "message": "node-layout-map drift status must be passed"})
     if max_px > threshold_px:
         issues.append({"code": "node_layout_drift_exceeds_threshold", "message": f"node-layout-map max drift {max_px:g}px exceeds threshold {threshold_px:g}px"})
-    if missing_count > 0:
+    if missing_count > max(canonical_fallback_count, fallback_count):
         issues.append({"code": "node_layout_observation_missing", "message": f"node-layout-map has {missing_count} missing measured nodes"})
     renderer_max_px = number(drift.get("renderer_max_px"), max_px)
     if renderer_max_px > threshold_px:

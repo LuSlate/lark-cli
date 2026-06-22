@@ -552,10 +552,9 @@ class SVGlideReferenceAbsorberTest(unittest.TestCase):
                         "source_item_id": "svglide-baseline.all",
                         "absorbed_as": ["owned_baseline_runtime_asset"],
                         "svglide_asset_ids": [
-                            "template.cover",
                             "component.Title",
+                            "template_family.cover",
                             "layout.hero-cover",
-                            "theme.dark",
                             "image_strategy.figure",
                             "chart_strategy.bars",
                         ],
@@ -567,25 +566,26 @@ class SVGlideReferenceAbsorberTest(unittest.TestCase):
                 write_json(root / "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/cover.canvas-spec.json", {"ok": True})
                 trace = ["svglide-baseline.all"]
                 write_json(
-                    root / "skills/lark-slides/references/svglide-template-registry.json",
-                    {"templates": [{"id": "cover", "status": "active", "source_trace": trace, "abstraction_record": record_path}]},
+                    root / "skills/lark-slides/references/beautiful-html-template-families.json",
+                    {
+                        "families": [
+                            {
+                                "template_id": "cover",
+                                "status": "absorbed",
+                                "claim_level": "svglide_absorbed",
+                                "source": {"inventory_item_ids": trace, "absorption_records": [record_path]},
+                                "svglide_mapping": {"svglide_asset_ids": ["template_family.cover"], "absorption_records": [record_path]},
+                            }
+                        ]
+                    },
                 )
                 write_json(
-                    root / "skills/lark-slides/references/svglide-component-registry.json",
-                    {"components": [{"id": "Title", "status": "active", "source_trace": trace, "abstraction_record": record_path}]},
+                    root / "skills/lark-slides/references/component-registry.json",
+                    {"components": [{"component_id": "Title", "fits_semantic_blocks": ["title"], "required_data": ["title"], "allowed_asset_types": ["none"]}]},
                 )
                 write_json(
                     root / "skills/lark-slides/references/svglide-layout-archetypes.json",
                     {"archetypes": [{"id": "hero-cover", "status": "active", "source_trace": trace, "abstraction_record": record_path}]},
-                )
-                theme_file = "skills/lark-slides/scripts/artboard_renderer/themes/dark.json"
-                write_json(
-                    root / "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
-                    {"themes": [{"id": "dark", "status": "active", "path": theme_file, "source_trace": trace, "abstraction_record": record_path}]},
-                )
-                write_json(
-                    root / theme_file,
-                    {"theme_id": "dark", "source_trace": trace, "abstraction_record": record_path},
                 )
                 write_json(
                     root / "skills/lark-slides/references/svglide-image-strategies.json",
@@ -599,8 +599,8 @@ class SVGlideReferenceAbsorberTest(unittest.TestCase):
                 result = svglide_reference_absorber.validate_runtime_traceability()
 
                 self.assertEqual("passed", result["status"])
-                self.assertEqual(6, result["summary"]["active_runtime_asset_count"])
-                self.assertEqual(6, result["summary"]["traced_runtime_asset_count"])
+                self.assertEqual(5, result["summary"]["active_runtime_asset_count"])
+                self.assertEqual(5, result["summary"]["traced_runtime_asset_count"])
             finally:
                 svglide_reference_absorber.REPO_ROOT = old_root
 
@@ -614,31 +614,27 @@ class SVGlideReferenceAbsorberTest(unittest.TestCase):
                 write_json(
                     root / record_path,
                     {
-                        "source_item_id": "svglide-baseline.templates",
+                        "source_item_id": "svglide-baseline.layouts",
                         "absorbed_as": ["owned_baseline_runtime_asset"],
-                        "svglide_asset_ids": ["template.other"],
+                        "svglide_asset_ids": ["layout.other"],
                         "non_copying_transform": "Owned baseline assets keep local SVGlide abstractions.",
                         "forbidden_usage": ["do_not_import_external_runtime"],
-                        "template_guardrail_records": ["skills/lark-slides/references/svglide-template-registry.json"],
+                        "template_guardrail_records": ["skills/lark-slides/references/svglide-layout-archetypes.json"],
                     },
                 )
                 write_json(
-                    root / "skills/lark-slides/references/svglide-template-registry.json",
-                    {
-                        "templates": [
-                            {
-                                "id": "cover",
-                                "status": "active",
-                                "source_trace": ["svglide-baseline.templates"],
-                                "abstraction_record": record_path,
-                            }
-                        ]
-                    },
+                    root / "skills/lark-slides/references/beautiful-html-template-families.json",
+                    {"families": []},
+                )
+                write_json(
+                    root / "skills/lark-slides/references/component-registry.json",
+                    {"components": []},
+                )
+                write_json(
+                    root / "skills/lark-slides/references/svglide-layout-archetypes.json",
+                    {"archetypes": [{"id": "hero-cover", "status": "active", "source_trace": ["svglide-baseline.layouts"], "abstraction_record": record_path}]},
                 )
                 for rel, key in [
-                    ("skills/lark-slides/references/svglide-component-registry.json", "components"),
-                    ("skills/lark-slides/references/svglide-layout-archetypes.json", "archetypes"),
-                    ("skills/lark-slides/scripts/artboard_renderer/themes/registry.json", "themes"),
                     ("skills/lark-slides/references/svglide-image-strategies.json", "strategies"),
                     ("skills/lark-slides/references/svglide-chart-strategies.json", "strategies"),
                 ]:

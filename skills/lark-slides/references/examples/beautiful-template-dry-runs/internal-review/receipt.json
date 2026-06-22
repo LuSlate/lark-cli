@@ -1,0 +1,30 @@
+{
+  "version": "beautiful-template-e2e-dry-run/v1",
+  "case_id": "internal-review",
+  "query": "internal business review for management with metrics evidence and action plan",
+  "selected_template_id": "blue-professional",
+  "candidate_template_ids": [
+    "blue-professional",
+    "signal",
+    "emerald-editorial"
+  ],
+  "slide_count": 10,
+  "template_variant_count": 10,
+  "component_count": 9,
+  "required_image_slots": 0,
+  "rendered_image_count": 0,
+  "required_image_fill_rate": 1.0,
+  "unowned_decorative_primitive_count": 0,
+  "preflight_summary": {
+    "file_count": 10,
+    "error_count": 0,
+    "warning_count": 0,
+    "plan_count": 1
+  },
+  "status": "passed",
+  "artifacts": {
+    "plan": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/examples/beautiful-template-dry-runs/internal-review/slide_plan.json",
+    "preview": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/examples/beautiful-template-dry-runs/internal-review/preview.html",
+    "receipt": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/examples/beautiful-template-dry-runs/internal-review/receipt.json"
+  }
+}

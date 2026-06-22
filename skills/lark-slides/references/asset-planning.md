@@ -4,6 +4,66 @@
 
 本文件只定义轻量资产规划。不要把它理解成素材采集流程。
 
+## SVG Route Asset Slot Contract
+
+XML route still uses `asset_need` as metadata. SVGlide/SVG route adds a stricter contract for pages that require real images because local preview and live submit must not silently drop assets.
+
+When a page requires real images, add both `asset_strategy` and `image_slots`:
+
+```json
+{
+  "asset_strategy": {
+    "strategy_id": "real_image_required",
+    "expected_asset_count": 2,
+    "no_fake_data": true
+  },
+  "image_slots": [
+    {
+      "slot_id": "company_logo",
+      "semantic_subject": "company identity",
+      "asset_type": "logo",
+      "required": true,
+      "real_image_required": true,
+      "shared_asset_allowed": false
+    },
+    {
+      "slot_id": "product_screenshot",
+      "semantic_subject": "product UI screenshot",
+      "asset_type": "screenshot",
+      "required": true,
+      "real_image_required": true,
+      "shared_asset_allowed": false
+    }
+  ]
+}
+```
+
+Each acquired image must bind back to one slot through `asset_contract.binds_slot` or `asset_contract.image_slot_id`:
+
+```json
+{
+  "asset_id": "product_screenshot_asset",
+  "binds_slot": "product_screenshot",
+  "source_type": "public_url",
+  "semantic_subject": "product UI screenshot",
+  "retrieval_query": "product UI screenshot",
+  "license": "preview_unverified",
+  "href": "https://example.com/product.png",
+  "usage_page": 1,
+  "source_url": "https://example.com/product.png"
+}
+```
+
+Rules for the SVG route validation gate:
+
+- `expected_asset_count` must be satisfied by required `image_slots`.
+- Required slots cannot be partially filled.
+- One image reused across slots fails unless every reused slot has `shared_asset_allowed=true`.
+- `source_type=ai_generated_bitmap`, `generated_bitmap`, or local generated image cannot satisfy `real_image_required`.
+- `semantic_subject` / `retrieval_query` must match the slot subject; mismatches fail with `semantic_mismatch`.
+- The prepared SVG must render at least one `<image>` per required image slot before local preview or live submit.
+- If the user explicitly asks for no images, use `asset_strategy.strategy_id="none_required"` with `user_override=true`.
+
 ## Core Rules
 
 - `asset_need` is metadata only. It can guide page design, but it must not require web search, local download, media upload, or external tools.

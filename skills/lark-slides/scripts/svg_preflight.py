@@ -15,6 +15,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+import beautiful_template_runtime
+
 
 SLIDE_NS = "https://slides.bytedance.com/ns"
 XLINK_NS = "http://www.w3.org/1999/xlink"
@@ -74,8 +76,6 @@ SVG_PRIVATE_REQUIRED_RULE_FILES = {
     "skills/lark-slides/references/svglide-create-svg.contract.md",
     "skills/lark-slides/references/lark-slides-create-svg.md",
     "skills/lark-slides/references/svg-protocol.md",
-    "skills/lark-slides/references/style-presets.md",
-    "skills/lark-slides/references/svg-visual-recipes.md",
     "skills/lark-slides/references/svg-aesthetic-review.md",
     "skills/lark-slides/references/svglide-planning-layer.md",
     "skills/lark-slides/references/svglide-validation-checklist.md",
@@ -262,22 +262,17 @@ VISIBLE_PLAN_TEXT_KEYS = [
 
 
 def load_style_preset_catalog() -> dict[str, dict[str, Any]]:
-    path = Path(__file__).resolve().parent.parent / "references" / "style-presets.json"
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    presets = data.get("presets") if isinstance(data, dict) else None
-    if not isinstance(presets, list):
-        return {}
     out: dict[str, dict[str, Any]] = {}
-    for preset in presets:
-        if not isinstance(preset, dict):
+    for family in beautiful_template_runtime.families():
+        template_id = family.get("template_id")
+        if not isinstance(template_id, str) or not template_id.strip():
             continue
-        raw_style_id = preset.get("style_id")
-        style_id = re.sub(r"[^a-z0-9]+", "_", str(raw_style_id or "").strip().lower()).strip("_")
-        if style_id:
-            out[style_id] = preset
+        style_id = re.sub(r"[^a-z0-9]+", "_", template_id.strip().lower()).strip("_")
+        out[style_id] = {
+            "style_id": style_id,
+            "display_name": template_id,
+            "source_token": family.get("source", {}).get("source_template_json") if isinstance(family.get("source"), dict) else "",
+        }
     return out
 
 
@@ -295,6 +290,7 @@ def fail(message: str) -> None:
 def parse_args(argv: list[str]) -> dict[str, Any]:
     inputs: list[str] = []
     plan: str | None = None
+    contract_manifest: str | None = None
     index = 0
     while index < len(argv):
         token = argv[index]
@@ -302,6 +298,12 @@ def parse_args(argv: list[str]) -> dict[str, Any]:
             if index + 1 >= len(argv):
                 fail("--plan requires a slide_plan.json path")
             plan = argv[index + 1]
+            index += 2
+            continue
+        if token == "--contract-manifest":
+            if index + 1 >= len(argv):
+                fail("--contract-manifest requires a manifest path")
+            contract_manifest = argv[index + 1]
             index += 2
             continue
         if token in {"--input", "-i"}:
@@ -316,7 +318,7 @@ def parse_args(argv: list[str]) -> dict[str, Any]:
         index += 1
     if not inputs:
         fail("at least one --input <svg-file> is required")
-    return {"inputs": inputs, "plan": plan}
+    return {"inputs": inputs, "plan": plan, "contract_manifest": contract_manifest}
 
 
 def local_name(tag: str) -> str:
@@ -1510,6 +1512,81 @@ def validate_paths(elements: list[ET.Element]) -> list[dict[str, Any]]:
     return issues
 
 
+def decorative_role(element: ET.Element) -> str:
+    return normalize_name(get_attr(element, "data-svglide-role") or get_attr(element, "data-role") or "")
+
+
+def motif_owner(element: ET.Element) -> str:
+    return textify(get_attr(element, "data-svglide-motif-owner") or get_attr(element, "data-svglide-origin-template")).strip()
+
+
+def semantic_primitive_role(element: ET.Element) -> str:
+    return textify(
+        get_attr(element, "data-svglide-semantic-role")
+        or get_attr(element, "data-svglide-component-id")
+        or get_attr(element, "data-svglide-binds-component")
+    ).strip()
+
+
+def motif_id(element: ET.Element) -> str:
+    return textify(get_attr(element, "data-svglide-motif-id") or get_attr(element, "data-svglide-role") or element_identifier_text(element)).strip()
+
+
+def decorative_motif_max_count(element: ET.Element) -> int | None:
+    return intish(get_attr(element, "data-svglide-motif-max-count") or get_attr(element, "data-svglide-max-count"))
+
+
+def is_decorative_primitive_candidate(element: ET.Element) -> bool:
+    if svg_role(element) != "shape":
+        return False
+    if local_name(element.tag) not in {"path", "line", "polyline"}:
+        return False
+    if decorative_role(element) in {"decorative", "decorative_motif", "motif", "ornament", "texture"}:
+        return True
+    identifier = element_identifier_text(element)
+    return bool(DECORATIVE_PRIMITIVE_RE.search(identifier) or UNBOUND_LINE_PRIMITIVE_RE.search(identifier) or local_name(element.tag) in {"line", "polyline"})
+
+
+def validate_decorative_primitive_ownership(elements: list[ET.Element]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    motif_groups: dict[tuple[str, str], list[ET.Element]] = {}
+    motif_limits: dict[tuple[str, str], int] = {}
+    for element in elements:
+        if not is_decorative_primitive_candidate(element):
+            continue
+        owner = motif_owner(element)
+        mid = motif_id(element)
+        if not owner and not semantic_primitive_role(element):
+            issues.append(
+                issue(
+                    "error",
+                    "unowned_decorative_primitive",
+                    "path/line primitive must declare a template motif owner or semantic component role",
+                    element,
+                    "Remove accidental decorative lines, add data-svglide-motif-owner/data-svglide-motif-id for approved motifs, or add data-svglide-semantic-role for semantic chart/diagram lines.",
+                )
+            )
+            continue
+        key = (owner, mid)
+        motif_groups.setdefault(key, []).append(element)
+        max_count = decorative_motif_max_count(element)
+        if max_count is not None:
+            motif_limits[key] = max_count
+    for key, group in motif_groups.items():
+        max_count = motif_limits.get(key)
+        if max_count is not None and len(group) > max_count:
+            issues.append(
+                issue(
+                    "error",
+                    "decorative_motif_overuse",
+                    f'decorative motif "{key[1]}" from "{key[0]}" appears {len(group)} times, max {max_count}',
+                    group[max_count],
+                    "Reduce motif repetition or raise the family limit in the generated contract only when the template explicitly allows it.",
+                )
+            )
+    return issues
+
+
 PLAN_STRUCTURED_RE = re.compile(
     r"(architecture|atlas|board|canvas|cards|chart|cohort|comparison|dashboard|flow|funnel|grid|heatmap|lane|map|matrix|model|network|pipeline|process|pyramid|quadrant|roadmap|route|scorecard|stack|swimlane|system|table|timeline)",
     re.IGNORECASE,
@@ -1520,6 +1597,32 @@ PLAN_CLOSING_RE = re.compile(r"(closing|conclusion|q-and-a|q&a|summary|thanks|�
 PLAN_MISSING_SOURCE_RE = re.compile(r"(missing|unavailable|pending|缺失|待补|待从|未提供|来源不足)", re.IGNORECASE)
 PLAN_SOURCE_GUARD_RE = re.compile(r"(no numeric|source guard|pending|待补|待从|缺失|来源|未提供|不编造|不虚构|占位)", re.IGNORECASE)
 NO_ASSET_RE = re.compile(r"(none|no[_ -]?asset|no[_ -]?image|not[_ -]?needed|无|不需要)", re.IGNORECASE)
+DECORATIVE_PRIMITIVE_RE = re.compile(
+    r"(decorative|decoration|steam|swoosh|scribble|texture|guide|reference[_ -]?line|grid[_ -]?line|ornament|flourish|confetti|sparkle)",
+    re.IGNORECASE,
+)
+UNBOUND_LINE_PRIMITIVE_RE = re.compile(r"(route|flow|callout|connector|path|line|arrow|spine|rail)", re.IGNORECASE)
+GENERATED_BITMAP_SOURCE_TYPES = {"ai_generated", "ai_generated_bitmap", "generated", "generated_bitmap", "local_generated", "procedural_generated"}
+REAL_IMAGE_SOURCE_TYPE_ALLOWLIST = {"web_search_preview", "user_provided", "uploaded_file"}
+REAL_IMAGE_STRATEGIES = {"real_image_required", "web_real_image_required", "online_image_required", "photo_required"}
+NO_IMAGE_STRATEGIES = {"none_required", "no_image", "no_images", "no_asset", "no_assets"}
+IMAGE_SUBJECT_STOPWORDS = {
+    "and",
+    "the",
+    "for",
+    "with",
+    "from",
+    "photo",
+    "image",
+    "picture",
+    "visual",
+    "hero",
+    "asset",
+    "preview",
+    "product",
+    "logo",
+    "logos",
+}
 
 
 def plan_issue(level: str, code: str, message: str, slide: dict[str, Any] | None = None, hint: str | None = None) -> dict[str, Any]:
@@ -1641,6 +1744,11 @@ def style_system(plan: dict[str, Any]) -> dict[str, Any]:
 
 def is_svg_route_plan(plan: dict[str, Any]) -> bool:
     return normalize_name(plan.get("output_mode")) == "svglide_svg" or normalize_name(plan.get("route")) == "svglide_svg"
+
+
+def is_template_family_route_plan(plan: dict[str, Any]) -> bool:
+    selection = plan.get("template_family_selection")
+    return isinstance(selection, dict) and boolish(selection.get("enabled"), default=False)
 
 
 def slide_visual_plan(slide: dict[str, Any]) -> dict[str, Any]:
@@ -1769,7 +1877,7 @@ def validate_art_direction(plan: dict[str, Any], slides: list[Any]) -> list[dict
         last_slide = slide_visual_plan(slides[-1]) if isinstance(slides[-1], dict) else {}
         first_recipe = normalize_name(first_slide.get("visual_recipe"))
         last_recipe = normalize_name(last_slide.get("visual_recipe"))
-        if first_recipe not in {"hero_typography", "geometric_composition", "brand_system", "mask_clip_showcase"}:
+        if first_recipe and first_recipe not in {"hero_typography", "geometric_composition", "brand_system", "mask_clip_showcase"}:
             issues.append(
                 plan_issue(
                     "error",
@@ -1779,7 +1887,7 @@ def validate_art_direction(plan: dict[str, Any], slides: list[Any]) -> list[dict
                     "Use hero_typography, geometric_composition, brand_system, or mask_clip_showcase for the cover.",
                 )
             )
-        if last_recipe not in {"metaphor_loop", "brand_system", "hero_typography", "path_flow"}:
+        if last_recipe and last_recipe not in {"metaphor_loop", "brand_system", "hero_typography", "path_flow"}:
             issues.append(
                 plan_issue(
                     "error",
@@ -2013,6 +2121,265 @@ def resolve_asset_contract_metadata(contract: Any, contracts_by_id: dict[str, di
     return contract
 
 
+def boolish(value: Any, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    normalized = normalize_name(value)
+    if normalized in {"1", "true", "yes", "y", "required", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "optional", "off"}:
+        return False
+    return default
+
+
+def intish(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def asset_strategy_from_slide(slide: dict[str, Any]) -> dict[str, Any]:
+    value = slide.get("asset_strategy") or slide.get("image_asset_strategy") or nested_dict(slide.get("visual_plan")).get("asset_strategy")
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        return {"strategy_id": value}
+    return {}
+
+
+def asset_strategy_id(slide: dict[str, Any]) -> str:
+    return normalize_name(asset_strategy_from_slide(slide).get("strategy_id") or asset_strategy_from_slide(slide).get("id") or asset_strategy_from_slide(slide).get("mode"))
+
+
+def asset_strategy_disables_images(slide: dict[str, Any]) -> bool:
+    strategy = asset_strategy_from_slide(slide)
+    strategy_id = normalize_name(strategy.get("strategy_id") or strategy.get("id") or strategy.get("mode"))
+    if strategy_id not in NO_IMAGE_STRATEGIES:
+        return False
+    return boolish(strategy.get("user_override") or strategy.get("user_requested") or slide.get("user_requested_no_images"), default=False)
+
+
+def slide_expected_asset_count(slide: dict[str, Any]) -> int | None:
+    strategy = asset_strategy_from_slide(slide)
+    for source in [slide, strategy]:
+        for key in ["expected_asset_count", "required_asset_count", "image_count", "required_image_count"]:
+            count = intish(source.get(key))
+            if count is not None:
+                return count
+    return None
+
+
+def image_slots_from_slide(slide: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates = [
+        slide.get("image_slots"),
+        slide.get("asset_slots"),
+        nested_dict(slide.get("visual_plan")).get("image_slots"),
+        asset_strategy_from_slide(slide).get("image_slots"),
+        asset_strategy_from_slide(slide).get("slots"),
+    ]
+    for value in candidates:
+        if not isinstance(value, list):
+            continue
+        slots: list[dict[str, Any]] = []
+        for index, item in enumerate(value, 1):
+            if not isinstance(item, dict):
+                continue
+            slot_type = normalize_name(item.get("type") or item.get("kind") or item.get("asset_kind") or "image")
+            if slot_type not in {"", "image", "photo", "picture", "real_image"}:
+                continue
+            slot = dict(item)
+            slot_id = textify(slot.get("slot_id") or slot.get("id") or slot.get("name")).strip()
+            if not slot_id:
+                slot_id = f"image-slot-{index}"
+            slot["slot_id"] = slot_id
+            slots.append(slot)
+        return slots
+    return []
+
+
+def required_image_slots(slide: dict[str, Any]) -> list[dict[str, Any]]:
+    if asset_strategy_disables_images(slide):
+        return []
+    return [slot for slot in image_slots_from_slide(slide) if boolish(slot.get("required"), default=True)]
+
+
+def asset_contract_records(contract: Any, contracts_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    resolved = resolve_asset_contract_metadata(contract, contracts_by_id)
+    if isinstance(resolved, list):
+        records: list[dict[str, Any]] = []
+        for item in resolved:
+            records.extend(asset_contract_records(item, contracts_by_id))
+        return records
+    if not isinstance(resolved, dict):
+        return []
+    nested_records: list[dict[str, Any]] = []
+    for key in ["assets", "images", "records"]:
+        value = resolved.get(key)
+        if isinstance(value, list):
+            for item in value:
+                nested_records.extend(asset_contract_records(item, contracts_by_id))
+    if nested_records:
+        return nested_records
+    return [resolved]
+
+
+def asset_bound_slot_id(record: dict[str, Any]) -> str:
+    for key in ["binds_slot", "image_slot_id", "slot_id", "for_slot", "slot"]:
+        value = textify(record.get(key)).strip()
+        if value:
+            return value
+    return ""
+
+
+def asset_record_identity(record: dict[str, Any]) -> str:
+    for key in ["asset_id", "id", "href", "source_url", "local_path", "local_path_or_href", "path"]:
+        value = textify(record.get(key)).strip()
+        if value:
+            return value
+    return json.dumps(record, sort_keys=True, ensure_ascii=True)
+
+
+def image_subject_keywords(value: Any) -> set[str]:
+    text = textify(value).lower()
+    tokens = re.findall(r"[a-z0-9]+|[\u4e00-\u9fff]{2,}", text)
+    return {token for token in tokens if token not in IMAGE_SUBJECT_STOPWORDS and len(token) > 1}
+
+
+def image_subjects_match(slot_subject: Any, asset_subject: Any) -> bool:
+    slot_text = textify(slot_subject).strip().lower()
+    asset_text = textify(asset_subject).strip().lower()
+    if not slot_text or not asset_text:
+        return True
+    if slot_text in asset_text or asset_text in slot_text:
+        return True
+    slot_tokens = image_subject_keywords(slot_text)
+    asset_tokens = image_subject_keywords(asset_text)
+    if not slot_tokens or not asset_tokens:
+        return True
+    return bool(slot_tokens & asset_tokens)
+
+
+def validate_asset_slot_contract(slide: dict[str, Any], contracts_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    if asset_strategy_disables_images(slide):
+        return []
+    slots = required_image_slots(slide)
+    expected_count = slide_expected_asset_count(slide)
+    if not slots and not expected_count:
+        return []
+
+    issues: list[dict[str, Any]] = []
+    records = asset_contract_records(slide.get("asset_contract"), contracts_by_id)
+    records_by_slot: dict[str, list[dict[str, Any]]] = {textify(slot.get("slot_id")): [] for slot in slots}
+    unbound_records: list[dict[str, Any]] = []
+    for record in records:
+        bound_slot = asset_bound_slot_id(record)
+        if bound_slot and bound_slot in records_by_slot:
+            records_by_slot[bound_slot].append(record)
+        elif not bound_slot:
+            unbound_records.append(record)
+    if len(slots) == 1 and unbound_records and not records_by_slot[textify(slots[0].get("slot_id"))]:
+        records_by_slot[textify(slots[0].get("slot_id"))].append(unbound_records[0])
+
+    bound_slot_count = sum(1 for slot_id in records_by_slot if records_by_slot[slot_id])
+    required_count = len(slots)
+    target_count = expected_count if expected_count is not None else required_count
+    if target_count and bound_slot_count < target_count:
+        issues.append(
+            plan_issue(
+                "error",
+                "asset_slot_count_mismatch",
+                f"image asset contract fills {bound_slot_count} required slot(s), expected {target_count}",
+                slide,
+                "Bind one real image asset to every required image_slot before preview or live submit.",
+            )
+        )
+
+    strategy_requires_real_image = asset_strategy_id(slide) in REAL_IMAGE_STRATEGIES
+    live_requires_file_token = boolish(asset_strategy_from_slide(slide).get("live_submit_requires_file_token"), default=False)
+    asset_usage: dict[str, list[str]] = {}
+    for slot in slots:
+        slot_id = textify(slot.get("slot_id")).strip()
+        slot_records = records_by_slot.get(slot_id, [])
+        if not slot_records:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "asset_slot_unfilled",
+                    f'required image slot "{slot_id}" has no bound asset',
+                    slide,
+                    "Acquire a real image asset and set asset_contract.binds_slot to this image slot.",
+                )
+            )
+            continue
+        slot_requires_real_image = strategy_requires_real_image or boolish(slot.get("real_image_required"), default=False)
+        slot_subject = slot.get("semantic_subject") or slot.get("subject") or slot.get("query")
+        for record in slot_records:
+            source_type = normalize_name(record.get("source_type") or record.get("source"))
+            if slot_requires_real_image and source_type in GENERATED_BITMAP_SOURCE_TYPES:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "generated_bitmap_not_real_image",
+                        f'required image slot "{slot_id}" cannot be satisfied by generated bitmap source_type "{source_type}"',
+                        slide,
+                        "Use a real online/user-provided image, or change the explicit asset_strategy when the user asked for no real images.",
+                    )
+                )
+            if slot_requires_real_image and source_type and source_type not in REAL_IMAGE_SOURCE_TYPE_ALLOWLIST:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "asset_source_type_not_allowed",
+                        f'required image slot "{slot_id}" source_type "{source_type}" is not allowed for real_image_required',
+                        slide,
+                        "Use web_search_preview, user_provided, or uploaded_file for real image slots; public_url is only preview metadata, not a verified real-image source type.",
+                    )
+                )
+            if live_requires_file_token and not textify(record.get("file_token") or record.get("media_token")).strip():
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "live_submit_missing_file_token",
+                        f'required image slot "{slot_id}" is missing file_token for live submit',
+                        slide,
+                        "Upload or resolve the image before live submit, or keep the run explicitly preview-only.",
+                    )
+                )
+            asset_subject = record.get("semantic_subject") or record.get("subject") or record.get("retrieval_query") or record.get("image_search_query")
+            if not image_subjects_match(slot_subject, asset_subject):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "semantic_mismatch",
+                        f'required image slot "{slot_id}" subject does not match its bound asset',
+                        slide,
+                        "Make image_slots.semantic_subject and asset_contract.semantic_subject/retrieval_query describe the same thing.",
+                    )
+                )
+            asset_usage.setdefault(asset_record_identity(record), []).append(slot_id)
+
+    slot_lookup = {textify(slot.get("slot_id")): slot for slot in slots}
+    for asset_key, slot_ids in asset_usage.items():
+        unique_slot_ids = sorted(set(slot_ids))
+        if len(unique_slot_ids) < 2:
+            continue
+        disallow_shared = [slot_id for slot_id in unique_slot_ids if not boolish(slot_lookup.get(slot_id, {}).get("shared_asset_allowed"), default=False)]
+        if disallow_shared:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "asset_slot_shared_without_permission",
+                    f"one image asset is reused across required slots without shared_asset_allowed: {', '.join(disallow_shared)}",
+                    slide,
+                    "Use distinct assets, or mark every intentionally shared slot with shared_asset_allowed=true.",
+                )
+            )
+    return issues
+
+
 def source_density_count(kind: str, primitive_summary: dict[str, Any]) -> int:
     counts = primitive_summary.get("counts", {})
     kind = normalize_name(kind)
@@ -2056,9 +2423,47 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
             issues.append(plan_issue("error", "plan_page_count_invalid", "plan page_count must be an integer when present"))
 
     is_svg_plan = is_svg_route_plan(plan)
+    is_template_family_plan = is_template_family_route_plan(plan)
+    if is_svg_plan and not is_template_family_plan:
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_missing_template_family_selection",
+                "SVGlide SVG plans must use template_family_selection from beautiful-html-template-families",
+                None,
+                "Select a template family first, then derive per-slide template_variant, semantic_blocks, component_selection, and asset_strategy.",
+            )
+        )
+        is_template_family_plan = True
+    if is_svg_plan and is_template_family_plan:
+        selection = nested_dict(plan.get("template_family_selection"))
+        selected_template_id = textify(selection.get("selected_template_id") or selection.get("template_id") or selection.get("family_id")).strip()
+        family_ids = {textify(family.get("template_id")).strip() for family in beautiful_template_runtime.families()}
+        normalized_family_ids = {normalize_name(template_id): template_id for template_id in family_ids if template_id}
+        if not selected_template_id:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_missing_template_family_id",
+                    "template_family_selection must include selected_template_id",
+                    None,
+                    "Use a template_id from beautiful-html-template-families.json.",
+                )
+            )
+        elif selected_template_id not in family_ids and normalize_name(selected_template_id) not in normalized_family_ids:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "plan_template_family_unknown",
+                    f'unknown template family "{selected_template_id}"',
+                    None,
+                    "Use one of: " + ", ".join(sorted(family_ids)),
+                )
+            )
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
-    if is_svg_plan:
+    asset_contract_lookup = asset_contracts_by_id(plan)
+    if is_svg_plan and not is_template_family_plan:
         if not STYLE_PRESET_CATALOG:
             issues.append(
                 plan_issue(
@@ -2066,7 +2471,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                     "plan_style_preset_catalog_unavailable",
                     "SVGlide style preset catalog is unavailable",
                     None,
-                    "Ensure references/style-presets.json exists and contains the 35 beautiful-feishu-whiteboard presets.",
+                    "Select a beautiful template family before generating SVG.",
                 )
             )
         if not deck_preset_id:
@@ -2076,7 +2481,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                     "plan_missing_style_preset",
                     "SVGlide plan must include a deck-level style_preset or style_binding.preset_id",
                     None,
-                    "Choose one preset from references/style-presets.json before generating SVG.",
+                    "Select a beautiful template family before generating SVG.",
                 )
             )
         elif deck_preset_id not in STYLE_PRESET_CATALOG:
@@ -2119,6 +2524,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                             f"SVGlide style_system must include {field}",
                         )
                     )
+    if is_svg_plan:
         issues.extend(validate_gate_trace(plan))
         issues.extend(validate_art_direction(plan, slides))
         issues.extend(validate_business_claims(plan, slides))
@@ -2149,7 +2555,44 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                     "Use stable renderer IDs such as cover_full_bleed, agenda_matrix, timeline_rail, comparison_table, or closing_cta.",
                 )
             )
-        if is_svg_plan:
+        if is_svg_plan and is_template_family_plan:
+            if not textify(visual_plan.get("template_variant")).strip():
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_template_variant",
+                        "SVGlide beautiful template family slides must include template_variant",
+                        slide,
+                    )
+                )
+            if not isinstance(visual_plan.get("semantic_blocks"), list) or not visual_plan.get("semantic_blocks"):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_semantic_blocks",
+                        "SVGlide beautiful template family slides must include semantic_blocks",
+                        slide,
+                    )
+                )
+            if not isinstance(visual_plan.get("component_selection"), list) or not visual_plan.get("component_selection"):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_component_selection",
+                        "SVGlide beautiful template family slides must include component_selection",
+                        slide,
+                    )
+                )
+            if not asset_strategy_from_slide(visual_plan):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_asset_strategy",
+                        "SVGlide beautiful template family slides must include asset_strategy",
+                        slide,
+                    )
+                )
+        if is_svg_plan and not is_template_family_plan:
             if not layout_family:
                 issues.append(
                     plan_issue(
@@ -2347,6 +2790,61 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                         'MVP preflight allows missing asset_contract, but use "none_required" when the page has no image asset; otherwise provide preview image metadata including retrieval_query/source_url or mark license="preview_unverified".',
                     )
                 )
+            issues.extend(validate_asset_slot_contract(visual_plan, asset_contract_lookup))
+            if "risk_flags" not in visual_plan:
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_risk_flags",
+                        "SVGlide plan slides must include risk_flags",
+                        slide,
+                        "Use an empty list when no known generation risk applies; otherwise list risks such as text_overflow, image_preview_only, image_query_mismatch, network_image_fetch_unavailable, image_license, or conversion_dasharray.",
+                    )
+                )
+            if not textify(visual_plan.get("source_policy")).strip():
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_source_policy",
+                        "SVGlide plan slides must include source_policy",
+                        slide,
+                        "State how the generator handles missing data and numeric claims.",
+                    )
+                )
+            density_contract = visual_plan.get("content_density_contract")
+            if not textify(density_contract).strip():
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_missing_content_density_contract",
+                        "SVGlide plan slides must include content_density_contract",
+                        slide,
+                        'For high-density pages use a quantified contract such as "dashboard >= 4 metrics" or {"type":"table","min_cells":6}.',
+                    )
+                )
+
+        if is_svg_plan:
+            visible = visible_slide_text(visual_plan)
+            if TOOL_LEAK_RE.search(visible) or PATH_LIKE_RE.search(visible):
+                issues.append(
+                    plan_issue(
+                        "error",
+                        "plan_visible_tool_or_path_leak",
+                        "visible slide fields must not expose prompts, tool names, source tokens, or local file paths",
+                        slide,
+                    )
+                )
+            if not asset_contract_present(visual_plan.get("asset_contract")):
+                issues.append(
+                    plan_issue(
+                        "warning",
+                        "plan_missing_asset_contract",
+                        "SVGlide plan slides must include asset_contract",
+                        slide,
+                        'MVP preflight allows missing asset_contract, but use "none_required" when the page has no image asset; otherwise provide preview image metadata including retrieval_query/source_url or mark license="preview_unverified".',
+                    )
+                )
+            issues.extend(validate_asset_slot_contract(visual_plan, asset_contract_lookup))
             if "risk_flags" not in visual_plan:
                 issues.append(
                     plan_issue(
@@ -2479,7 +2977,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                     "Change the page structure before rendering SVG; recipe names alone are not enough.",
                 )
             )
-    if is_svg_plan and len(slides) >= 8 and len(set(visual_recipe_families)) < 5:
+    if is_svg_plan and not is_template_family_plan and len(slides) >= 8 and len(set(visual_recipe_families)) < 5:
         issues.append(
             plan_issue(
                 "error",
@@ -2666,10 +3164,23 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
     for slide, file in alignments:
         visual_plan = slide_visual_plan(slide)
         recipe = normalize_name(visual_plan.get("visual_recipe"))
-        if recipe not in VISUAL_RECIPE_CATALOG:
-            continue
         source_primitives = set(file.get("visual_primitives", {}).get("present", []))
         source_effects = set(file.get("visual_primitives", {}).get("effects", []))
+        required_slots = required_image_slots(visual_plan)
+        required_image_count = len(required_slots)
+        detected_image_count = int(file.get("visual_primitives", {}).get("counts", {}).get("image", 0))
+        if required_image_count and detected_image_count < required_image_count:
+            issues.append(
+                plan_issue(
+                    "error",
+                    "preview_missing_required_image",
+                    f"SVG source contains {detected_image_count} image primitive(s), but plan requires {required_image_count} image slot(s)",
+                    slide,
+                    f"SVG file {file.get('path')} must render every required image_slot in local preview before live submit.",
+                )
+            )
+        if recipe not in VISUAL_RECIPE_CATALOG:
+            continue
         declared_primitives = normalize_primitives(visual_plan.get("svg_primitives"))
         required_primitives = set(VISUAL_RECIPE_CATALOG[recipe]["required_primitives"]) | required_plan_primitives(visual_plan)
         missing_required = sorted(required_primitives - source_primitives)
@@ -2763,6 +3274,7 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
         + marker_issues
         + validate_styles(root)
         + validate_paths(elements)
+        + validate_decorative_primitive_ownership(elements)
         + geometry_issues
         + validate_text_overlap(text_boxes)
         + validate_layout_pressure(elements, text_boxes, width, height)
@@ -2787,7 +3299,79 @@ def lint_svg(svg: str, path: str = "<svg>") -> dict[str, Any]:
     return result
 
 
-def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]:
+def file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def validate_contract_manifest(manifest_path: str, input_paths: list[str]) -> dict[str, Any]:
+    path = Path(manifest_path)
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise SvgPreflightError(f"missing contract manifest: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise SvgPreflightError(f"invalid contract manifest: {path}: {exc}") from exc
+    issues: list[dict[str, Any]] = []
+    if manifest.get("version") != "svglide-contract-compile-manifest/v1":
+        issues.append({"level": "error", "code": "contract_manifest_version", "message": "contract manifest version must be svglide-contract-compile-manifest/v1"})
+    status = manifest.get("status")
+    if status == "failed":
+        issues.append({"level": "error", "code": "contract_manifest_failed", "message": "contract compile manifest status is failed"})
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages:
+        issues.append({"level": "error", "code": "contract_manifest_pages_missing", "message": "contract manifest must include pages"})
+        pages = []
+    base = path.parent.parent.parent
+    by_output: dict[str, dict[str, Any]] = {}
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        output = page.get("output")
+        if isinstance(output, str):
+            by_output[(base / output).resolve().as_posix()] = page
+        if page.get("status") == "failed":
+            issues.append({"level": "error", "code": "contract_page_failed", "message": f"contract compile page failed: {output}"})
+    for raw_input in input_paths:
+        input_path = Path(raw_input).resolve()
+        key = input_path.as_posix()
+        page = by_output.get(key)
+        compiled_candidate: Path | None = None
+        if page is None and input_path.parent.name == "prepared":
+            compiled_candidate = input_path.parent.parent / input_path.name
+            page = by_output.get(compiled_candidate.resolve().as_posix())
+        if page is None:
+            issues.append({"level": "error", "code": "contract_input_missing", "message": f"input SVG is not listed in contract manifest: {raw_input}"})
+            continue
+        expected_hash = page.get("output_sha256")
+        if isinstance(expected_hash, str) and input_path.exists() and file_sha256(input_path) != expected_hash:
+            code = "contract_prepared_hash_mismatch" if input_path.parent.name == "prepared" else "contract_output_hash_mismatch"
+            issues.append({"level": "error", "code": code, "message": f"contract manifest hash does not match input SVG: {raw_input}"})
+        if isinstance(expected_hash, str) and compiled_candidate is not None and compiled_candidate.exists() and file_sha256(compiled_candidate) != expected_hash:
+            issues.append({"level": "error", "code": "contract_output_hash_mismatch", "message": f"contract manifest hash does not match compiled SVG: {compiled_candidate}"})
+    summary_payload = manifest.get("summary") if isinstance(manifest.get("summary"), dict) else {}
+    blocking = int(summary_payload.get("blocking_issues") or 0)
+    if blocking:
+        issues.append({"level": "error", "code": "contract_blocking_issues", "message": f"contract manifest contains {blocking} blocking issue(s)"})
+    return {
+        "manifest": manifest_path,
+        "status": status or "unknown",
+        "blocking_issues": blocking,
+        "degraded_elements": int(summary_payload.get("degraded_elements") or 0),
+        "rasterized_regions": int(summary_payload.get("rasterized_regions") or 0),
+        "dropped_decorations": int(summary_payload.get("dropped_decorations") or 0),
+        "issues": issues,
+        "summary": {
+            "error_count": sum(1 for item in issues if item.get("level") == "error"),
+            "warning_count": sum(1 for item in issues if item.get("level") == "warning"),
+        },
+    }
+
+
+def lint_files(paths: list[str], plan_path: str | None = None, contract_manifest_path: str | None = None) -> dict[str, Any]:
     files: list[dict[str, Any]] = []
     for path in paths:
         svg = Path(path).read_text(encoding="utf-8")
@@ -2810,6 +3394,12 @@ def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]
         summary["plan_count"] = 1
         summary["error_count"] += plan_result["summary"]["error_count"]
         summary["warning_count"] += plan_result["summary"]["warning_count"]
+    contract_result = None
+    if contract_manifest_path:
+        contract_result = validate_contract_manifest(contract_manifest_path, paths)
+        summary["contract_manifest_count"] = 1
+        summary["error_count"] += contract_result["summary"]["error_count"]
+        summary["warning_count"] += contract_result["summary"]["warning_count"]
     result: dict[str, Any] = {
         "summary": {
             **summary,
@@ -2818,13 +3408,15 @@ def lint_files(paths: list[str], plan_path: str | None = None) -> dict[str, Any]
     }
     if plan_result:
         result["plan"] = plan_result
+    if contract_result:
+        result["contract_compile"] = contract_result
     return result
 
 
 def main(argv: list[str]) -> int:
     try:
         options = parse_args(argv)
-        result = lint_files(options["inputs"], options["plan"])
+        result = lint_files(options["inputs"], options["plan"], options.get("contract_manifest"))
     except SvgPreflightError as error:
         print(f"svg_preflight: {error}", file=sys.stderr)
         return 2

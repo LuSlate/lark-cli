@@ -73,17 +73,21 @@ Do not create a separate SVG-only plan root. The SVG route extends the common `.
 | `02-plan/theme-registry.json` | when project theme overrides are used | `theme_productization` | `theme_validate`, artboard renderer |
 | `02-plan/theme-migration.patch.json` | when migrating a plan theme | `theme_productization` | audit and review |
 | `02-plan/themes/*.json` | when project themes are used | `theme_productization` | `theme_validate`, artboard renderer |
-| `02-plan/plan-confirmation.request.json` | when confirmation is missing | runner confirm_plan | user/chat/confirm surface |
-| `02-plan/plan-confirmation.json` | yes before SVG generation | user/chat/confirm surface | runner confirm_plan, generate_svg, prepare, create |
+| `02-plan/plan-confirmation.request.json` | only when optional `confirm_plan` is run without confirmation | runner confirm_plan | compatibility/manual approval surface |
+| `02-plan/plan-confirmation.json` | optional compatibility artifact | user/chat/confirm surface | optional runner confirm_plan |
 | `source/evidence.json` | yes before strategy/generation | source stage or user-provided evidence | strategy review, semantic review, quality gate |
 | `source/source-receipt.json` | yes before strategy/generation | source stage | assets, generate_svg, quality audit |
 | `03-assets/assets.json` | yes before SVG generation | assets stage | prepare and CLI upload/rewrite |
 | `03-assets/asset-manifest.json` | yes before SVG generation | assets stage | generate_svg and audit |
-| `04-svg/page-###.svg` | yes | `generate_svg` | prepare |
-| `04-svg/page-###.receipt.json` | yes | `generate_svg` | prepare and audit |
-| `04-svg/artboard/page-###.semantic-map.json` | when using `artboard_satori` | artboard renderer | semantic/source-ref quality gate |
-| `04-svg/artboard/page-###.node-observations.json` | when using `artboard_satori` | Satori renderer | node layout map compiler |
-| `04-svg/artboard/page-###.node-layout-map.json` | when using `artboard_satori` | artboard renderer | template-fit and quality gate drift checks |
+| `04-artboard/raw/page-###.visual.svg` | when using `artboard_satori` | artboard renderer | contract compile input, preview evidence, quality gate raw hash check |
+| `04-artboard/raw/page-###.semantic-map.json` | when using `artboard_satori` | artboard renderer | contract compile, semantic/source-ref quality gate |
+| `04-artboard/raw/page-###.node-observations.json` | when using `artboard_satori` | Satori renderer | node layout map compiler |
+| `04-artboard/raw/page-###.node-layout-map.json` | when using `artboard_satori` | artboard renderer | template-fit and quality gate drift checks |
+| `04-artboard/raw/manifest.json` | when using `artboard_satori` | artboard renderer | contract compile input and freshness gate |
+| `04-svg/page-###.svg` | yes after `contract_compile` | contract compile or legacy direct SVG | prepare |
+| `04-svg/contract/page-###.report.json` | yes after `contract_compile` | contract compile | prepare, preflight, quality gate |
+| `04-svg/contract/manifest.json` | yes after `contract_compile` | contract compile | prepare, preflight, quality gate |
+| `04-svg/page-###.receipt.json` | direct SVG only | `generate_svg` compatibility path | audit |
 | `04-svg/prepared/page-###.svg` | yes before preview/check/create | prepare | preview, preflight, `slides +create-svg --file` |
 | `05-preview/preview.html` | yes before preview lint | preview generator | preview lint and aesthetic review |
 | `05-preview/preview-manifest.json` | yes before preview lint | preview generator | preview lint and audit |
@@ -118,10 +122,10 @@ Do not create a separate SVG-only plan root. The SVG route extends the common `.
 ## Path Rules
 
 - `02-plan/slide_plan.json` must include `plan_path` pointing to itself.
-- `02-plan/plan-confirmation.json` must bind the confirmed plan with `plan_sha256`; if `02-plan/svglide.lock.json` exists, it must also bind `lock_sha256`.
+- If present, `02-plan/plan-confirmation.json` must bind the confirmed plan with `plan_sha256`; if `02-plan/svglide.lock.json` exists, it must also bind `lock_sha256`.
 - `svg_files` must list `04-svg/prepared/page-###.svg` pages in the same order as `slides +create-svg --file`.
 - `03-assets/asset-manifest.json` must bind current plan/lock/assets/source receipt hashes before `generate_svg`.
-- Source SVG files under `04-svg/page-###.svg` must not change after `receipts/generate_svg.json`; rerun `generate_svg` before `prepare` if they change.
+- Raw visual artifacts must not change after `receipts/generate_svg.json`; canonical SVG files under `04-svg/page-###.svg` must not change after `receipts/contract_compile.json`; rerun `generate_svg` or `contract_compile` before `prepare` according to the stale input.
 - SVG image placeholders should use local `@./assets/...` paths or file tokens. HTTP(S) and data image hrefs are not valid `slides +create-svg` inputs.
 - Every check record must include the same `plan_path`, relevant input paths, summary counts, and final action. `semantic-review.json` must bind current plan/evidence/prepared SVG hashes; `quality-gate.json` must consume current generator, chart, semantic, runtime, preflight, preview, and aesthetic receipts.
 - Project theme registries may bind productized themes to local templates through `template_bindings.supported_template_ids`; `theme_validate` still rejects unknown templates and unbound themes.

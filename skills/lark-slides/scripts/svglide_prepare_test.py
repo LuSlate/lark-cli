@@ -32,6 +32,56 @@ class SVGlidePrepareTest(unittest.TestCase):
         (project / "03-assets").mkdir(parents=True)
         return project
 
+    def write_artboard_generator_receipt(self, project: Path) -> None:
+        (project / "receipts").mkdir(parents=True, exist_ok=True)
+        (project / "receipts" / "generate_svg.json").write_text(
+            json.dumps({"stage": "generate_svg", "status": "passed", "generation_mode": "artboard_satori"}),
+            encoding="utf-8",
+        )
+
+    def write_contract_manifest(self, project: Path) -> dict[str, object]:
+        output = project / "04-svg" / "page-001.svg"
+        digest = svglide_prepare.file_sha256(output)
+        report = {
+            "version": "svglide-contract-compile/v1",
+            "source": "04-artboard/raw/page-001.visual.svg",
+            "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+            "output": "04-svg/page-001.svg",
+            "status": "passed",
+            "summary": {},
+            "compiled": [],
+            "degraded": [],
+            "rasterized": [],
+            "dropped": [],
+            "blocking_issues": [],
+            "input_sha256": "raw-hash",
+            "semantic_map_sha256": "semantic-hash",
+            "output_sha256": digest,
+        }
+        (project / "04-svg" / "contract").mkdir(parents=True, exist_ok=True)
+        (project / "04-svg" / "contract" / "page-001.report.json").write_text(json.dumps(report), encoding="utf-8")
+        manifest: dict[str, object] = {
+            "version": "svglide-contract-compile-manifest/v1",
+            "stage": "contract_compile",
+            "status": "passed",
+            "pages": [
+                {
+                    "page": 1,
+                    "source": "04-artboard/raw/page-001.visual.svg",
+                    "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+                    "output": "04-svg/page-001.svg",
+                    "report": "04-svg/contract/page-001.report.json",
+                    "status": "passed",
+                    "input_sha256": "raw-hash",
+                    "semantic_map_sha256": "semantic-hash",
+                    "output_sha256": digest,
+                }
+            ],
+            "summary": {"pages": 1, "blocking_issues": 0, "degraded_elements": 0, "rasterized_regions": 0, "dropped_decorations": 0},
+        }
+        (project / "04-svg" / "contract" / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        return manifest
+
     def test_prepare_copies_source_to_prepared_and_writes_receipt(self) -> None:
         project = self.make_project()
         (project / "04-svg" / "page-001.svg").write_text(SIMPLE_SVG, encoding="utf-8")
@@ -43,7 +93,38 @@ class SVGlidePrepareTest(unittest.TestCase):
         self.assertEqual(receipt["status"], "passed")
         self.assertEqual(receipt["source_files"], ["04-svg/page-001.svg"])
         self.assertEqual(receipt["prepared_files"][0]["prepared"], "04-svg/prepared/page-001.svg")
+        self.assertIsNone(receipt["contract_manifest"])
         self.assertTrue((project / "receipts" / "prepare.json").exists())
+
+    def test_prepare_requires_contract_manifest_for_artboard_satori(self) -> None:
+        project = self.make_project()
+        self.write_artboard_generator_receipt(project)
+        (project / "04-svg" / "page-001.svg").write_text(SIMPLE_SVG, encoding="utf-8")
+
+        with self.assertRaisesRegex(svglide_prepare.PrepareError, "missing contract manifest"):
+            svglide_prepare.prepare_project(project)
+
+    def test_prepare_records_contract_manifest_when_current(self) -> None:
+        project = self.make_project()
+        self.write_artboard_generator_receipt(project)
+        (project / "04-svg" / "page-001.svg").write_text(SIMPLE_SVG, encoding="utf-8")
+        self.write_contract_manifest(project)
+
+        receipt = svglide_prepare.prepare_project(project)
+
+        self.assertEqual(receipt["contract_manifest"]["path"], "04-svg/contract/manifest.json")
+        self.assertEqual(receipt["contract_manifest"]["status"], "passed")
+        self.assertEqual(receipt["contract_manifest"]["pages"][0]["output"], "04-svg/page-001.svg")
+
+    def test_prepare_rejects_stale_contract_manifest_output_hash(self) -> None:
+        project = self.make_project()
+        self.write_artboard_generator_receipt(project)
+        (project / "04-svg" / "page-001.svg").write_text(SIMPLE_SVG, encoding="utf-8")
+        self.write_contract_manifest(project)
+        (project / "04-svg" / "page-001.svg").write_text(SIMPLE_SVG.replace("#fff", "#000"), encoding="utf-8")
+
+        with self.assertRaisesRegex(svglide_prepare.PrepareError, "output hash is stale"):
+            svglide_prepare.prepare_project(project)
 
     def test_prepare_fails_when_no_source_svg_exists(self) -> None:
         project = self.make_project()

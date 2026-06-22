@@ -59,13 +59,12 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                     "language": "zh-CN",
                     "audience": "企业管理层",
                     "deck_structure": ["cover", "content", "closing"],
-                    "style_preset": "safe-native-v1",
-                    "style_selection_reason": "用于稳定测试",
-                    "style_system": {
-                        "palette": ["#111111", "#ffffff"],
-                        "typography": "system",
-                        "background_strategy": "solid",
-                        "motif": "test",
+                    "template_family_selection": {
+                        "enabled": True,
+                        "source": "beautiful-html-template-families",
+                        "selected_template_id": "blue-professional",
+                        "candidate_template_ids": ["blue-professional", "signal", "raw-grid"],
+                        "selection_reason": "用于稳定测试",
                     },
                     "loaded_rule_set": ["skills/lark-slides/references/svglide-svg-private.rules.json"],
                     "plan_path": "02-plan/slide_plan.json",
@@ -117,6 +116,16 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                             "content_density_contract": "medium",
                             "risk_flags": [],
                             "source_policy": "source-backed",
+                            "template_variant": "cover",
+                            "semantic_blocks": [
+                                {"block_id": "title", "type": "title", "content": "测试标题"},
+                                {"block_id": "message", "type": "finding", "content": "测试主结论"},
+                            ],
+                            "component_selection": [
+                                {"component_id": "title_block", "binds": ["title"]},
+                                {"component_id": "finding_callout", "binds": ["message"]},
+                            ],
+                            "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": True},
                         },
                         {
                             "page": 2,
@@ -140,6 +149,16 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                             "content_density_contract": "medium",
                             "risk_flags": [],
                             "source_policy": "source-backed",
+                            "template_variant": "case_evidence",
+                            "semantic_blocks": [
+                                {"block_id": "title", "type": "title", "content": "测试正文"},
+                                {"block_id": "evidence", "type": "evidence", "content": "正文主结论"},
+                            ],
+                            "component_selection": [
+                                {"component_id": "title_block", "binds": ["title"]},
+                                {"component_id": "evidence_table", "binds": ["evidence"]},
+                            ],
+                            "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": True},
                         },
                         {
                             "page": 3,
@@ -163,6 +182,16 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                             "content_density_contract": "medium",
                             "risk_flags": [],
                             "source_policy": "source-backed",
+                            "template_variant": "closing",
+                            "semantic_blocks": [
+                                {"block_id": "title", "type": "title", "content": "测试结论"},
+                                {"block_id": "action", "type": "action", "content": "结论主线"},
+                            ],
+                            "component_selection": [
+                                {"component_id": "title_block", "binds": ["title"]},
+                                {"component_id": "action_list", "binds": ["action"]},
+                            ],
+                            "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": True},
                         },
                     ],
                 }
@@ -330,8 +359,6 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         project_root = Path(result["project_root"])
         self.write_plan(project_root)
         self.run_source(project_root)
-        self.write_plan_confirmation(project_root)
-        runner.run_confirm_plan_stage(project_root, runner.load_state(project_root))
         (project_root / "03-assets/asset-manifest.json").write_text(
             json.dumps(
                 {
@@ -498,13 +525,12 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                         "plan_bundle_review",
                     ]:
                         runner.run_stage(project_root, stage, profile="preview_only")
-                    self.write_plan_confirmation(project_root)
-                    runner.run_stage(project_root, "confirm_plan", profile="preview_only")
                     runner.run_stage(project_root, "package_check", profile="preview_only")
                     runner.run_stage(project_root, "assets", profile="preview_only")
                     self.write_protocol_fixture_svgs(project_root)
                     for stage in [
                         "generate_svg",
+                        "contract_compile",
                         "prepare",
                         "preview",
                         "preflight",
@@ -543,7 +569,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                         json.loads((project_root / "06-check/plan-bundle-review.json").read_text(encoding="utf-8"))["status"],
                         "passed",
                     )
-                    self.assertEqual(runner.load_state(project_root)["stages"]["confirm_plan"]["status"], "passed")
+                    self.assertNotIn("confirm_plan", runner.load_state(project_root)["stages"])
                     self.assertEqual(
                         json.loads((project_root / "06-check/quality-gate.json").read_text(encoding="utf-8"))["status"],
                         "passed",
@@ -555,8 +581,6 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def make_artboard_visual_project(self, tmpdir: str) -> Path:
         project_root = self.make_project(tmpdir)
         self.write_artboard_plan(project_root)
-        self.write_plan_confirmation(project_root)
-        runner.run_confirm_plan_stage(project_root, runner.load_state(project_root))
         artboard_dir = project_root / "04-svg/artboard"
         artboard_dir.mkdir(parents=True, exist_ok=True)
         (project_root / "05-preview").mkdir(parents=True, exist_ok=True)
@@ -700,7 +724,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         dry_run = runner.stages_until("dry_run")
         self.assertIn("source", dry_run)
         self.assertIn("select_style", dry_run)
-        self.assertIn("confirm_plan", dry_run)
+        self.assertNotIn("confirm_plan", dry_run)
         self.assertIn("strategy_review", dry_run)
         self.assertIn("theme_validate", dry_run)
         self.assertIn("palette_review", dry_run)
@@ -787,8 +811,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertLess(called_stages.index("theme_validate"), called_stages.index("palette_review"))
             self.assertLess(called_stages.index("palette_review"), called_stages.index("selection_review"))
             self.assertLess(called_stages.index("selection_review"), called_stages.index("plan_bundle_review"))
-            self.assertLess(called_stages.index("plan_bundle_review"), called_stages.index("confirm_plan"))
-            self.assertLess(called_stages.index("confirm_plan"), called_stages.index("package_check"))
+            self.assertNotIn("confirm_plan", called_stages)
+            self.assertLess(called_stages.index("plan_bundle_review"), called_stages.index("package_check"))
             self.assertLess(called_stages.index("chart_verify"), called_stages.index("semantic_review"))
             self.assertLess(called_stages.index("semantic_review"), called_stages.index("quality_gate"))
             self.assertLess(called_stages.index("runtime_review"), called_stages.index("visual_distinctness_review"))
@@ -858,7 +882,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             try:
                 runner.run_implemented_stage = fake_run_implemented_stage
                 with self.assertRaisesRegex(runner.RunnerError, "pre-render validation errors"):
-                    runner.run_until(project_root, "confirm_plan", profile="preview_only", collect_errors=True)
+                    runner.run_until(project_root, "package_check", profile="preview_only", collect_errors=True)
             finally:
                 runner.run_implemented_stage = original_run_implemented_stage
 
@@ -1322,7 +1346,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             project_root = Path(result["project_root"])
             self.write_plan(project_root)
 
-            with self.assertRaisesRegex(runner.RunnerError, "plan confirmation required"):
+            with self.assertRaisesRegex(runner.RunnerError, "optional plan confirmation is missing"):
                 runner.run_stage(project_root, "confirm-plan")
 
             request = json.loads((project_root / "02-plan/plan-confirmation.request.json").read_text(encoding="utf-8"))
@@ -1346,27 +1370,30 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             receipt = json.loads((project_root / "receipts/confirm_plan.json").read_text(encoding="utf-8"))
             self.assertEqual(receipt["confirmation"]["confirmed_by"], "user")
 
-    def test_generate_svg_requires_confirm_plan_stage(self) -> None:
+    def test_generate_svg_requires_assets_stage_without_plan_confirmation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"
             result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
             project_root = Path(result["project_root"])
             self.write_plan(project_root)
-            self.write_plan_confirmation(project_root)
+            self.run_source(project_root)
+            runner.run_stage(project_root, "package-check")
 
-            with self.assertRaisesRegex(runner.RunnerError, "confirm_plan"):
+            with self.assertRaisesRegex(runner.RunnerError, "assets"):
                 runner.run_stage(project_root, "generate-svg")
 
-    def test_assets_requires_confirm_plan_stage(self) -> None:
+    def test_assets_runs_after_package_check_without_plan_confirmation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"
             result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
             project_root = Path(result["project_root"])
             self.write_plan(project_root)
-            self.write_plan_confirmation(project_root)
+            self.run_source(project_root)
+            runner.run_stage(project_root, "package-check")
 
-            with self.assertRaisesRegex(runner.RunnerError, "confirm_plan"):
-                runner.run_stage(project_root, "assets")
+            result = runner.run_stage(project_root, "assets")
+
+            self.assertEqual(result["status"], "passed")
 
     def test_generate_svg_requires_assets_stage(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1471,6 +1498,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             page_receipt = json.loads((project_root / "04-svg/page-001.receipt.json").read_text(encoding="utf-8"))
             self.assertEqual(page_receipt["asset_refs"][0]["asset_id"], "hero")
             self.assertEqual(page_receipt["asset_injection"][0]["status"], "injected")
+            runner.run_stage(project_root, "contract_compile")
             runner.run_stage(project_root, "prepare")
             runner.run_stage(project_root, "preview")
             preview_html = (project_root / "05-preview/preview.html").read_text(encoding="utf-8")
@@ -1526,10 +1554,15 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             source = project_root / "04-svg/page-001.svg"
             self.assertTrue(source.exists())
             self.assertIn('slide:role="slide"', source.read_text(encoding="utf-8"))
+            raw_source = project_root / "04-artboard/raw/page-001.visual.svg"
+            self.assertTrue(raw_source.exists())
+            self.assertNotIn("slide:role", raw_source.read_text(encoding="utf-8"))
             receipt = json.loads((project_root / "receipts/generate_svg.json").read_text(encoding="utf-8"))
             self.assertEqual(receipt["generation_mode"], "artboard_satori")
             self.assertEqual(receipt["generator_mode"], "script")
-            self.assertEqual(receipt["artboard_receipts"], ["04-svg/artboard/page-001.receipt.json"])
+            self.assertEqual(receipt["artboard_receipts"], ["04-artboard/raw/page-001.receipt.json"])
+            self.assertEqual(receipt["raw_visual_manifest"], "04-artboard/raw/manifest.json")
+            self.assertEqual(receipt["raw_visual_files"][0]["path"], "04-artboard/raw/page-001.visual.svg")
             self.assertEqual(
                 receipt["artboard_additional_receipts"],
                 [
@@ -1543,14 +1576,18 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertEqual(receipt["satori_bridge_receipt"], "receipts/satori-bridge.json")
             self.assertEqual(receipt["contact_sheet"]["path"], "05-preview/contact-sheet.png")
             self.assertEqual(receipt["template_fit_check"], "06-check/template-fit.json")
-            self.assertEqual(receipt["page_receipts"], ["04-svg/page-001.receipt.json"])
+            self.assertEqual(receipt["page_receipts"], ["04-artboard/raw/page-001.visual.receipt.json"])
             self.assertTrue((project_root / "06-check/template-fit.json").exists())
             self.assertTrue((project_root / "receipts/template-fit-check.json").exists())
-            self.assertTrue((project_root / "04-svg/artboard/page-001.png").exists())
+            compile_result = runner.run_stage(project_root, "contract_compile")
+            self.assertEqual(compile_result["status"], "passed")
+            self.assertTrue((project_root / "04-svg/page-001.svg").exists())
+            self.assertIn('slide:role="slide"', (project_root / "04-svg/page-001.svg").read_text(encoding="utf-8"))
+            self.assertTrue((project_root / "04-artboard/raw/page-001.visual.png").exists())
             self.assertTrue((project_root / "05-preview/contact-sheet.png").exists())
-            page_receipt = json.loads((project_root / "04-svg/page-001.receipt.json").read_text(encoding="utf-8"))
-            self.assertEqual(page_receipt["generation_mode"], "artboard_satori")
-            self.assertEqual(page_receipt["artboard_receipt"], "04-svg/artboard/page-001.receipt.json")
+            contract_manifest = json.loads((project_root / "04-svg/contract/manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(contract_manifest["stage"], "contract_compile")
+            self.assertEqual(contract_manifest["pages"][0]["output"], "04-svg/page-001.svg")
 
     def test_generate_svg_rejects_artboard_plan_without_canvas_spec(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1571,16 +1608,18 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             with self.assertRaisesRegex(runner.RunnerError, "requires canvas_spec"):
                 runner.run_stage(project_root, "generate-svg")
 
-    def test_prepare_requires_confirm_plan_stage(self) -> None:
+    def test_prepare_requires_generate_svg_stage_without_plan_confirmation(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_root = Path(tmpdir) / ".lark-slides/plan"
             result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
             project_root = Path(result["project_root"])
             self.write_plan(project_root)
-            self.write_plan_confirmation(project_root)
+            self.run_source(project_root)
+            runner.run_stage(project_root, "package-check")
+            runner.run_stage(project_root, "assets")
             (project_root / "04-svg/page-001.svg").write_text("<svg></svg>", encoding="utf-8")
 
-            with self.assertRaisesRegex(runner.RunnerError, "confirm_plan"):
+            with self.assertRaisesRegex(runner.RunnerError, "generate_svg"):
                 runner.run_stage(project_root, "prepare")
 
     def test_prepare_requires_generate_svg_stage(self) -> None:
@@ -1627,9 +1666,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             for page in range(1, 4):
                 (project_root / f"04-svg/page-{page:03d}.svg").write_text("<svg></svg>", encoding="utf-8")
             runner.run_stage(project_root, "generate-svg")
+            runner.run_stage(project_root, "contract_compile")
             source.write_text("<svg><rect /></svg>", encoding="utf-8")
 
-            with self.assertRaisesRegex(runner.RunnerError, "changed after generate_svg"):
+            with self.assertRaisesRegex(runner.RunnerError, "changed after generate_svg|changed after contract_compile|compiled SVG files changed"):
                 runner.run_stage(project_root, "prepare")
 
     def test_dry_run_refuses_failed_quality_gate(self) -> None:

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-contract-compile-manifest.schema.json",
+  "title": "SVGlide contract compile manifest",
+  "type": "object",
+  "required": ["version", "stage", "status", "pages", "summary"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-contract-compile-manifest/v1"},
+    "stage": {"const": "contract_compile"},
+    "status": {"enum": ["passed", "passed_with_warnings", "failed"]},
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "page",
+          "source",
+          "semantic_map",
+          "output",
+          "report",
+          "status",
+          "input_sha256",
+          "semantic_map_sha256",
+          "output_sha256"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "page": {"type": "integer", "minimum": 1},
+          "source": {"type": "string", "minLength": 1},
+          "semantic_map": {"type": "string", "minLength": 1},
+          "output": {"type": "string", "minLength": 1},
+          "report": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "passed_with_warnings", "failed"]},
+          "input_sha256": {"type": "string", "minLength": 1},
+          "semantic_map_sha256": {"type": "string", "minLength": 1},
+          "output_sha256": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["pages", "blocking_issues", "degraded_elements", "rasterized_regions", "dropped_decorations"],
+      "additionalProperties": true,
+      "properties": {
+        "pages": {"type": "integer", "minimum": 1},
+        "blocking_issues": {"type": "integer", "minimum": 0},
+        "degraded_elements": {"type": "integer", "minimum": 0},
+        "rasterized_regions": {"type": "integer", "minimum": 0},
+        "dropped_decorations": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

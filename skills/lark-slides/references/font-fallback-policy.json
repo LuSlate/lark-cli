@@ -1,0 +1,12 @@
+{
+  "version": "svglide-font-fallback-policy/v1",
+  "default_stack": "system-sans-cjk",
+  "stacks": {
+    "system-sans-cjk": ["Inter", "Arial", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+    "system-sans-cjk-heavy": ["Inter", "Arial", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+    "system-sans-cjk-medium": ["Inter", "Arial", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+    "system-sans-cjk-regular": ["Inter", "Arial", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+    "system-mono": ["SFMono-Regular", "Menlo", "Consolas", "monospace"]
+  },
+  "forbidden": ["fonts.googleapis.com", "@font-face", "remote_font_upload"]
+}

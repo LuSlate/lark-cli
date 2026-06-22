@@ -1,0 +1,42 @@
+{
+  "version": "svglide-asset-strategy-registry/v1",
+  "strategies": [
+    {
+      "strategy_id": "real_image_required",
+      "trigger_signals": ["company", "product", "person", "brand", "case study", "food", "place", "event"],
+      "allowed_asset_types": ["logo", "screenshot", "photo"],
+      "fallback_if_missing": "Render a structured identity panel or structured semantic card group. Do not leave empty image boxes.",
+      "source_type_allowlist": ["web_search_preview", "user_provided", "uploaded_file"],
+      "generated_bitmap_allowed_as_real_image": false
+    },
+    {
+      "strategy_id": "identity_structured_fallback",
+      "trigger_signals": ["company", "product", "brand"],
+      "allowed_asset_types": ["none"],
+      "fallback_if_missing": "Render text badge, product/category labels, and source-visible identity metadata without fake logos.",
+      "source_type_allowlist": [],
+      "generated_bitmap_allowed_as_real_image": false
+    },
+    {
+      "strategy_id": "chart_when_quantified",
+      "trigger_signals": ["同比", "环比", "增长", "下降", "占比", "排名", "trend", "share"],
+      "allowed_asset_types": ["chart"],
+      "fallback_if_missing": "Use a clearly marked qualitative comparison table or unlabeled trend skeleton; do not fabricate numbers.",
+      "no_fake_data": true
+    },
+    {
+      "strategy_id": "structured_fallback",
+      "trigger_signals": ["abstract", "no verifiable media", "no data"],
+      "allowed_asset_types": ["none"],
+      "fallback_if_missing": "Use native structured cards, labels, and qualitative layout. Mark fallback explicitly.",
+      "no_fake_data": true
+    },
+    {
+      "strategy_id": "none_required",
+      "trigger_signals": ["user requested no images", "pure vector"],
+      "allowed_asset_types": ["none"],
+      "fallback_if_missing": "No image fallback is required because the user explicitly disabled image assets.",
+      "requires_user_override": true
+    }
+  ]
+}

@@ -5,18 +5,18 @@
   "page_count": 3,
   "target_slide_count": 3,
   "plan_path": "02-plan/slide_plan.json",
-  "style_preset": "cobalt_bloom",
-  "style_selection_reason": "冷色研究基调适合冰岛火山主题，暖色 accent 对应火山活动。",
-  "style_system": {
-    "palette": {"background": "#071827", "text": "#EAF6FF", "accent": "#F97316"},
-    "typography": "Satori-compatible static text hierarchy",
-    "background_strategy": "研究页使用深色蓝图背景，结尾页允许暖色强调。",
-    "motif": "科研蓝图线索和火山暖色标记"
+  "template_family_selection": {
+    "enabled": true,
+    "source": "beautiful-html-template-families",
+    "selected_template_id": "cartesian",
+    "candidate_template_ids": ["cartesian", "signal", "blue-professional"],
+    "selection_reason": "冷色研究基调适合冰岛火山主题，暖色 accent 对应火山活动。"
   },
   "loaded_rule_set": [
     "skills/lark-slides/references/svglide-planning-layer.md",
     "skills/lark-slides/references/svglide-canvas-spec.schema.json",
-    "skills/lark-slides/references/svglide-template-registry.json"
+    "skills/lark-slides/references/beautiful-html-template-families.json",
+    "skills/lark-slides/references/component-registry.json"
   ],
   "quality_gates": {"no_text_overflow": true, "no_debug_guides": true, "no_xml_like_pages": true},
   "art_direction": {
@@ -48,6 +48,16 @@
       "risk_flags": [],
       "source_policy": "topic-provided; no invented metrics",
       "asset_contract": "none_required",
+      "template_variant": "cover",
+      "semantic_blocks": [
+        {"block_id": "title", "type": "title", "content": "冰岛火山研究"},
+        {"block_id": "message", "type": "finding", "content": "研究从地貌、活动迹象和观测路线展开。"}
+      ],
+      "component_selection": [
+        {"component_id": "title_block", "binds": ["title"]},
+        {"component_id": "finding_callout", "binds": ["message"]}
+      ],
+      "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true},
       "canvas_spec": {
         "version": "svglide-canvas-spec/v1",
         "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
@@ -78,6 +88,16 @@
       "risk_flags": [],
       "source_policy": "topic-derived categories; no numeric claims",
       "asset_contract": "none_required",
+      "template_variant": "comparison",
+      "semantic_blocks": [
+        {"block_id": "title", "type": "title", "content": "观测证据对比"},
+        {"block_id": "comparison", "type": "comparison", "content": "不同观测来源共同约束火山活动判断。"}
+      ],
+      "component_selection": [
+        {"component_id": "title_block", "binds": ["title"]},
+        {"component_id": "comparison_matrix", "binds": ["comparison"]}
+      ],
+      "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true},
       "canvas_spec": {
         "version": "svglide-canvas-spec/v1",
         "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
@@ -115,6 +135,16 @@
       "risk_flags": [],
       "source_policy": "topic-derived actions",
       "asset_contract": "none_required",
+      "template_variant": "closing",
+      "semantic_blocks": [
+        {"block_id": "title", "type": "title", "content": "下一步观测"},
+        {"block_id": "action", "type": "action", "content": "后续重点是连续监测和风险沟通。"}
+      ],
+      "component_selection": [
+        {"component_id": "title_block", "binds": ["title"]},
+        {"component_id": "action_list", "binds": ["action"]}
+      ],
+      "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true},
       "canvas_spec": {
         "version": "svglide-canvas-spec/v1",
         "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},

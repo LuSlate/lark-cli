@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/beautiful-html-template-families.schema.json",
+  "title": "SVGlide beautiful-html-template families",
+  "type": "object",
+  "required": ["version", "source", "families"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "beautiful-html-template-families/v1"},
+    "source": {
+      "type": "object",
+      "required": ["repo", "template_count"],
+      "additionalProperties": true,
+      "properties": {
+        "repo": {"const": "beautiful-html-templates"},
+        "template_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "template_id",
+          "source",
+          "status",
+          "claim_level",
+          "runtime_policy",
+          "font_policy",
+          "semantic_fit",
+          "design_tokens",
+          "visual_dna",
+          "component_candidates",
+          "layout_variants",
+          "variants"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "template_id": {"type": "string", "minLength": 1},
+          "source": {
+            "type": "object",
+            "required": ["source_template_json", "source_design_md", "source_template_html", "source_screenshots"],
+            "additionalProperties": true
+          },
+          "status": {"enum": ["source_inventoried", "absorbed", "blocked", "reference_only", "active", "deprecated"]},
+          "claim_level": {"enum": ["source_inventory_only", "reference_asset_only", "svglide_absorbed"]},
+          "runtime_policy": {
+            "type": "object",
+            "required": ["direct_satori_svg_allowed", "requires_contract_compile", "requires_visual_qa"],
+            "additionalProperties": true,
+            "properties": {
+              "direct_satori_svg_allowed": {"const": false},
+              "requires_contract_compile": {"const": true},
+              "requires_visual_qa": {"const": true}
+            }
+          },
+          "font_policy": {
+            "type": "object",
+            "required": ["fallback_stack", "font_role_map"],
+            "additionalProperties": true
+          },
+          "semantic_fit": {
+            "type": "object",
+            "required": ["best_for", "industries", "tones", "avoid_when"],
+            "additionalProperties": true
+          },
+          "design_tokens": {
+            "type": "object",
+            "required": ["colors", "typography", "spacing", "radii", "components", "css_variables", "css_class_names"],
+            "additionalProperties": true
+          },
+          "visual_dna": {
+            "type": "object",
+            "required": ["palette_roles", "typography_roles", "decorative_motifs", "visual_effects", "screenshot_benchmarks"],
+            "additionalProperties": true,
+            "properties": {
+              "visual_effects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["effect_id", "lowering_policy"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "lowering_policy": {"enum": ["native_svg", "css_to_satori", "approximate", "reference_only"]}
+                  }
+                }
+              }
+            }
+          },
+          "component_candidates": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "layout_variants": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["variant_id", "layout_intents", "required_slots"],
+              "additionalProperties": true
+            }
+          },
+          "variants": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["variant_id", "page_roles", "layout_intents", "required_slots"],
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

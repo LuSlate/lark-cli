@@ -1,0 +1,15 @@
+{
+  "version": "beautiful-template-issue-codes/v1",
+  "phase_0_contract_freeze": [
+    "asset_slot_unfilled",
+    "preview_missing_required_image",
+    "generated_bitmap_not_real_image",
+    "semantic_mismatch",
+    "asset_slot_shared_without_permission",
+    "asset_slot_count_mismatch",
+    "asset_source_type_not_allowed",
+    "live_submit_missing_file_token",
+    "unowned_decorative_primitive",
+    "decorative_motif_overuse"
+  ]
+}

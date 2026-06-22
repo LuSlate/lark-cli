@@ -39,6 +39,33 @@
     "canvas_spec_validate": {"type": "string", "minLength": 1},
     "artboard_render_receipt": {"type": "string", "minLength": 1},
     "satori_bridge_receipt": {"type": "string", "minLength": 1},
+    "raw_visual_manifest": {"type": "string", "minLength": 1},
+    "raw_visual_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "additionalProperties": true,
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "semantic_maps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "additionalProperties": true,
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "minLength": 1}
+        }
+      }
+    },
     "template_fit_check": {"type": "string", "minLength": 1},
     "contact_sheet": {
       "type": "object",
@@ -71,6 +98,9 @@
           "canvas_spec_validate",
           "artboard_render_receipt",
           "satori_bridge_receipt",
+          "raw_visual_manifest",
+          "raw_visual_files",
+          "semantic_maps",
           "template_fit_check",
           "contact_sheet"
         ]

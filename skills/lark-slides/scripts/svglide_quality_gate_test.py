@@ -208,32 +208,39 @@ def write_passing_semantic_review(project: Path) -> None:
 
 
 def attach_passing_artboard_receipt(project: Path) -> None:
-    artboard_dir = project / "04-svg/artboard"
+    artboard_dir = project / "04-artboard" / "raw"
     artboard_dir.mkdir(parents=True, exist_ok=True)
-    (project / "04-svg/artboard/raw").mkdir(parents=True, exist_ok=True)
+    (project / "04-svg" / "contract").mkdir(parents=True, exist_ok=True)
     (project / "05-preview").mkdir(parents=True, exist_ok=True)
-    satori_svg = project / "04-svg/artboard/raw/page-001.satori.svg"
-    satori_svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540"/></svg>', encoding="utf-8")
-    canvas_template_svg = project / "04-svg/artboard/page-001.canvas-template.svg"
+    satori_svg = artboard_dir / "page-001.visual.svg"
+    satori_svg.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540">'
+        '<rect data-node-id="background" width="960" height="540"/>'
+        '<text data-node-id="title" data-source-ref="canvas_spec.content.title" x="80" y="120">Title</text>'
+        '</svg>',
+        encoding="utf-8",
+    )
+    canvas_template_svg = artboard_dir / "page-001.canvas-template.svg"
     canvas_template_svg.write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540"/><text x="80" y="120">Title</text></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540"/><text data-node-id="title" x="80" y="120">Title</text></svg>',
         encoding="utf-8",
     )
     (project / "04-svg/page-001.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">'
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" '
+        'slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">'
         '<foreignObject slide:role="shape" slide:shape-type="text" data-node-id="title" data-source-ref="canvas_spec.content.title" x="80" y="80" width="720" height="72">'
         '<div xmlns="http://www.w3.org/1999/xhtml">Title</div>'
         '</foreignObject>'
         '</svg>',
         encoding="utf-8",
     )
-    (project / "04-svg/artboard/page-001.png").write_bytes(b"png")
+    (artboard_dir / "page-001.visual.png").write_bytes(b"png")
     write_json(
-        project / "04-svg/artboard/page-001.render-metadata.json",
+        artboard_dir / "page-001.render-metadata.json",
         {"node_version": "v20.0.0", "satori_version": "0.26.0", "resvg_version": "2.6.2", "font_path": "/tmp/font.ttf"},
     )
     write_json(
-        project / "04-svg/artboard/page-001.semantic-map.json",
+        artboard_dir / "page-001.semantic-map.json",
         {
             "version": "svglide-semantic-map/v1",
             "page": 1,
@@ -254,7 +261,7 @@ def attach_passing_artboard_receipt(project: Path) -> None:
         },
     )
     write_json(
-        project / "04-svg/artboard/page-001.node-layout-map.json",
+        artboard_dir / "page-001.node-layout-map.json",
         {
             "version": "svglide-node-layout-map/v1",
             "page": 1,
@@ -281,13 +288,14 @@ def attach_passing_artboard_receipt(project: Path) -> None:
     )
     (project / "05-preview/contact-sheet.png").write_bytes(b"contact")
     source_hash = svglide_quality_gate.file_sha256(project / "04-svg/page-001.svg")
-    satori_hash = svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg")
+    satori_hash = svglide_quality_gate.file_sha256(satori_svg)
     template_registry_sha256 = "template-registry-hash"
     theme_registry_sha256 = "theme-registry-hash"
     font_hashes = [{"path": "/tmp/font.ttf", "sha256": "font-hash"}]
-    semantic_map_sha256 = svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json")
+    semantic_map_sha256 = svglide_quality_gate.file_sha256(artboard_dir / "page-001.semantic-map.json")
+    node_layout_sha256 = svglide_quality_gate.file_sha256(artboard_dir / "page-001.node-layout-map.json")
     write_json(
-        project / "04-svg/artboard/page-001.receipt.json",
+        artboard_dir / "page-001.receipt.json",
         {
             "version": "svglide-artboard-receipt/v1",
             "stage": "generate_svg",
@@ -307,34 +315,138 @@ def attach_passing_artboard_receipt(project: Path) -> None:
             "resvg_version": "2.6.2",
             "font_hashes": font_hashes,
             "renderer": {"name": "satori-resvg-p0", "engine": "satori-node", "actual_satori_package": True},
-            "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
-            "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
-            "png": "04-svg/artboard/page-001.png",
-            "png_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.png"),
-            "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
-            "render_metadata_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"),
-            "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
-            "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-            "compiler_input": "04-svg/artboard/raw/page-001.satori.svg",
+            "satori_svg": "04-artboard/raw/page-001.visual.svg",
+            "satori_svg_sha256": satori_hash,
+            "png": "04-artboard/raw/page-001.visual.png",
+            "png_sha256": svglide_quality_gate.file_sha256(artboard_dir / "page-001.visual.png"),
+            "render_metadata": "04-artboard/raw/page-001.render-metadata.json",
+            "render_metadata_sha256": svglide_quality_gate.file_sha256(artboard_dir / "page-001.render-metadata.json"),
+            "canvas_template_svg": "04-artboard/raw/page-001.canvas-template.svg",
+            "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(canvas_template_svg),
+            "compiler_input": "04-artboard/raw/page-001.visual.svg",
             "compiler_input_sha256": satori_hash,
             "input_semantic_hash": satori_hash,
-            "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+            "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
             "semantic_map_sha256": semantic_map_sha256,
-            "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
-            "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
-            "svglide_svg": "04-svg/page-001.svg",
-            "svglide_svg_sha256": source_hash,
+            "node_layout_map": "04-artboard/raw/page-001.node-layout-map.json",
+            "node_layout_map_sha256": node_layout_sha256,
             "compiler": {"semantic_source": "SatoriSVG", "compiler_input": "RawSatoriSVG", "satori_svg_usage": "compiler_input", "input_semantic_hash": satori_hash},
+        },
+    )
+    write_json(
+        artboard_dir / "manifest.json",
+        {
+            "version": "svglide-raw-visual-manifest/v1",
+            "stage": "generate_svg",
+            "status": "passed",
+            "pages": [
+                {
+                    "page": 1,
+                    "source": "04-artboard/raw/page-001.visual.svg",
+                    "source_sha256": satori_hash,
+                    "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+                    "semantic_map_sha256": semantic_map_sha256,
+                    "node_layout_map": "04-artboard/raw/page-001.node-layout-map.json",
+                    "node_layout_map_sha256": node_layout_sha256,
+                    "png": "04-artboard/raw/page-001.visual.png",
+                    "png_sha256": svglide_quality_gate.file_sha256(artboard_dir / "page-001.visual.png"),
+                    "receipt": "04-artboard/raw/page-001.receipt.json",
+                }
+            ],
+            "summary": {"page_count": 1, "max_workers": 1},
+        },
+    )
+    write_json(
+        artboard_dir / "page-001.visual.receipt.json",
+        {
+            "version": "svglide-page-generation/v1",
+            "stage": "generate_svg",
+            "page": 1,
+            "source_svg": "04-artboard/raw/page-001.visual.svg",
+            "source_sha256": satori_hash,
+            "generation_mode": "artboard_satori",
+        },
+    )
+    contract_report = {
+        "version": "svglide-contract-compile/v1",
+        "source": "04-artboard/raw/page-001.visual.svg",
+        "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+        "output": "04-svg/page-001.svg",
+        "status": "passed",
+        "summary": {
+            "semantic_required": 1,
+            "visual_required": 0,
+            "decorative_optional": 0,
+            "compiled_elements": 1,
+            "degraded_elements": 0,
+            "rasterized_regions": 0,
+            "dropped_decorations": 0,
+            "blocking_issues": 0,
+        },
+        "compiled": [
+            {
+                "element_id": "title",
+                "source_ref": "canvas_spec.content.title",
+                "importance": "semantic_required",
+                "source_tag": "text",
+                "decision": "compiled",
+                "reason": "compiled to foreignObject text shape",
+                "output_ref": "title",
+            }
+        ],
+        "degraded": [],
+        "rasterized": [],
+        "dropped": [],
+        "blocking_issues": [],
+        "input_sha256": satori_hash,
+        "semantic_map_sha256": semantic_map_sha256,
+        "output_sha256": source_hash,
+    }
+    write_json(project / "04-svg/contract/page-001.report.json", contract_report)
+    contract_manifest = {
+        "version": "svglide-contract-compile-manifest/v1",
+        "stage": "contract_compile",
+        "status": "passed",
+        "pages": [
+            {
+                "page": 1,
+                "source": "04-artboard/raw/page-001.visual.svg",
+                "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
+                "output": "04-svg/page-001.svg",
+                "report": "04-svg/contract/page-001.report.json",
+                "status": "passed",
+                "input_sha256": satori_hash,
+                "semantic_map_sha256": semantic_map_sha256,
+                "output_sha256": source_hash,
+            }
+        ],
+        "summary": {"pages": 1, "blocking_issues": 0, "degraded_elements": 0, "rasterized_regions": 0, "dropped_decorations": 0},
+    }
+    write_json(project / "04-svg/contract/manifest.json", contract_manifest)
+    write_json(
+        project / "receipts/contract_compile.json",
+        {
+            "stage": "contract_compile",
+            "status": "passed",
+            "contract_manifest": "04-svg/contract/manifest.json",
+            "pages": contract_manifest["pages"],
+            "summary": contract_manifest["summary"],
+            "raw_visual_manifest_sha256": svglide_quality_gate.file_sha256(artboard_dir / "manifest.json"),
         },
     )
     receipt = json.loads((project / "receipts/generate_svg.json").read_text(encoding="utf-8"))
     receipt["generation_mode"] = "artboard_satori"
-    receipt["artboard_receipts"] = ["04-svg/artboard/page-001.receipt.json"]
+    receipt["generated_files"] = [{"path": "04-artboard/raw/page-001.visual.svg", "sha256": satori_hash}]
+    receipt["page_receipts"] = ["04-artboard/raw/page-001.visual.receipt.json"]
+    receipt["artboard_receipts"] = ["04-artboard/raw/page-001.receipt.json"]
     receipt["artboard_additional_receipts"] = [
         "receipts/canvas-spec-validate.json",
         "receipts/artboard-render.json",
         "receipts/satori-bridge.json",
     ]
+    receipt["raw_visual_manifest"] = "04-artboard/raw/manifest.json"
+    receipt["raw_visual_files"] = [{"path": "04-artboard/raw/page-001.visual.svg", "sha256": satori_hash}]
+    receipt["semantic_maps"] = [{"path": "04-artboard/raw/page-001.semantic-map.json", "sha256": semantic_map_sha256}]
     receipt["canvas_spec_validate"] = "06-check/canvas-spec-validate.json"
     receipt["artboard_render_receipt"] = "receipts/artboard-render.json"
     receipt["satori_bridge_receipt"] = "receipts/satori-bridge.json"
@@ -397,16 +509,16 @@ def attach_passing_artboard_receipt(project: Path) -> None:
                     "satori_version": "0.26.0",
                     "resvg_version": "2.6.2",
                     "font_hashes": font_hashes,
-                    "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
-                    "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
-                    "png": "04-svg/artboard/page-001.png",
-                    "png_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.png"),
-                    "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
-                    "render_metadata_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"),
-                    "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
-                    "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-                    "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
-                    "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
+                    "satori_svg": "04-artboard/raw/page-001.visual.svg",
+                    "satori_svg_sha256": satori_hash,
+                    "png": "04-artboard/raw/page-001.visual.png",
+                    "png_sha256": svglide_quality_gate.file_sha256(artboard_dir / "page-001.visual.png"),
+                    "render_metadata": "04-artboard/raw/page-001.render-metadata.json",
+                    "render_metadata_sha256": svglide_quality_gate.file_sha256(artboard_dir / "page-001.render-metadata.json"),
+                    "canvas_template_svg": "04-artboard/raw/page-001.canvas-template.svg",
+                    "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(canvas_template_svg),
+                    "node_layout_map": "04-artboard/raw/page-001.node-layout-map.json",
+                    "node_layout_map_sha256": node_layout_sha256,
                 }
             ],
             "contact_sheet": receipt["contact_sheet"],
@@ -429,21 +541,19 @@ def attach_passing_artboard_receipt(project: Path) -> None:
                 {
                     "page": 1,
                     "semantic_source": "SatoriSVG",
-                    "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+                    "semantic_map": "04-artboard/raw/page-001.semantic-map.json",
                     "semantic_map_sha256": semantic_map_sha256,
                     "input_semantic_hash": satori_hash,
-                    "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
-                    "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
-                    "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
-                    "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-                    "compiler_input": "04-svg/artboard/raw/page-001.satori.svg",
+                    "node_layout_map": "04-artboard/raw/page-001.node-layout-map.json",
+                    "node_layout_map_sha256": node_layout_sha256,
+                    "canvas_template_svg": "04-artboard/raw/page-001.canvas-template.svg",
+                    "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(canvas_template_svg),
+                    "compiler_input": "04-artboard/raw/page-001.visual.svg",
                     "compiler_input_sha256": satori_hash,
                     "compiler_input_type": "RawSatoriSVG",
                     "satori_svg_usage": "compiler_input",
-                    "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+                    "satori_svg": "04-artboard/raw/page-001.visual.svg",
                     "satori_svg_sha256": satori_hash,
-                    "svglide_svg": "04-svg/page-001.svg",
-                    "svglide_svg_sha256": source_hash,
                 }
             ],
             "summary": {"error_count": 0, "warning_count": 0, "page_count": 1},
@@ -460,7 +570,7 @@ def attach_passing_artboard_receipt(project: Path) -> None:
                 "plan_sha256": svglide_quality_gate.file_sha256(project / "02-plan/slide_plan.json"),
                 "generator_receipt": "receipts/generate_svg.json",
                 "generator_receipt_sha256": svglide_quality_gate.file_sha256(project / "receipts/generate_svg.json"),
-                "artboard_receipts": ["04-svg/artboard/page-001.receipt.json"],
+                "artboard_receipts": ["04-artboard/raw/page-001.receipt.json"],
                 "template_registry_sha256": template_registry_sha256,
                 "theme_registry_sha256": theme_registry_sha256,
             },
@@ -473,9 +583,9 @@ def attach_passing_artboard_receipt(project: Path) -> None:
 
 
 def refresh_artboard_node_layout_hashes(project: Path) -> None:
-    node_layout_sha = svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json")
+    node_layout_sha = svglide_quality_gate.file_sha256(project / "04-artboard/raw/page-001.node-layout-map.json")
     for receipt_rel in [
-        "04-svg/artboard/page-001.receipt.json",
+        "04-artboard/raw/page-001.receipt.json",
         "receipts/artboard-render.json",
         "receipts/satori-bridge.json",
     ]:
@@ -484,7 +594,7 @@ def refresh_artboard_node_layout_hashes(project: Path) -> None:
         if "node_layout_map_sha256" in receipt:
             receipt["node_layout_map_sha256"] = node_layout_sha
         for page in receipt.get("pages", []) if isinstance(receipt.get("pages"), list) else []:
-            if isinstance(page, dict) and page.get("node_layout_map") == "04-svg/artboard/page-001.node-layout-map.json":
+            if isinstance(page, dict) and page.get("node_layout_map") == "04-artboard/raw/page-001.node-layout-map.json":
                 page["node_layout_map_sha256"] = node_layout_sha
         write_json(receipt_path, receipt)
     satori_bridge = project / "receipts/satori-bridge.json"
@@ -1180,7 +1290,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            (project / "04-svg/artboard/raw/page-001.satori.svg").write_text("<svg changed='true'/>", encoding="utf-8")
+            (project / "04-artboard/raw/page-001.visual.svg").write_text("<svg changed='true'/>", encoding="utf-8")
 
             result = svglide_quality_gate.run_quality_gate(project)
 
@@ -1190,7 +1300,9 @@ class SVGlideQualityGateTest(unittest.TestCase):
                 for check in result["checks"]
                 for issue in check["issues"]
             }
+            self.assertIn("generator_raw_visual_stale", failed_codes)
             self.assertIn("generator_artboard_artifact_stale", failed_codes)
+            self.assertIn("contract_manifest_source_stale", failed_codes)
 
     def test_quality_gate_rejects_semantic_map_ir_as_artboard_compiler_input(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1200,14 +1312,14 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            receipt_path = project / "04-svg/artboard/page-001.receipt.json"
+            receipt_path = project / "04-artboard/raw/page-001.receipt.json"
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-            semantic_map_hash = svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json")
+            semantic_map_hash = svglide_quality_gate.file_sha256(project / "04-artboard/raw/page-001.semantic-map.json")
             receipt["compiler"]["semantic_source"] = "CanvasSpec"
             receipt["compiler"]["compiler_input"] = "SemanticMapIR"
             receipt["compiler"]["satori_svg_usage"] = "preview_only"
             receipt["compiler"]["input_semantic_hash"] = semantic_map_hash
-            receipt["compiler_input"] = "04-svg/artboard/page-001.semantic-map.json"
+            receipt["compiler_input"] = "04-artboard/raw/page-001.semantic-map.json"
             receipt["compiler_input_sha256"] = semantic_map_hash
             receipt["input_semantic_hash"] = semantic_map_hash
             write_json(receipt_path, receipt)
@@ -1233,7 +1345,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            (project / "04-svg/artboard/raw/page-001.satori.svg").write_text("<svg changed='compiler-input'/>", encoding="utf-8")
+            (project / "04-artboard/raw/page-001.visual.svg").write_text("<svg changed='compiler-input'/>", encoding="utf-8")
 
             result = svglide_quality_gate.run_quality_gate(project)
 
@@ -1254,7 +1366,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            node_layout_path = project / "04-svg/artboard/page-001.node-layout-map.json"
+            node_layout_path = project / "04-artboard/raw/page-001.node-layout-map.json"
             node_layout = json.loads(node_layout_path.read_text(encoding="utf-8"))
             node_layout["drift"] = {"status": "failed", "max_px": 48, "threshold_px": 8, "missing_count": 0}
             node_layout["nodes"][0]["x"] = 128
@@ -1281,7 +1393,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            receipt_path = project / "04-svg/artboard/page-001.receipt.json"
+            receipt_path = project / "04-artboard/raw/page-001.receipt.json"
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
             receipt.pop("version")
             write_json(receipt_path, receipt)

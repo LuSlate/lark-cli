@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#F5F5F5" />
+  <foreignObject id="title-4" slide:role="shape" slide:shape-type="text" x="64" y="44" width="620" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:44px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">comparison</div></foreignObject>
+  <rect id="dashboard-card-0" slide:role="shape" x="80" y="150" width="170" height="110" fill="#ffffff" stroke="#CBD5E1" />
+  <rect id="dashboard-bar-0" slide:role="shape" x="98" y="230" width="90" height="16" fill="#2563EB" />
+  <rect id="dashboard-card-1" slide:role="shape" x="285" y="150" width="170" height="110" fill="#ffffff" stroke="#CBD5E1" />
+  <rect id="dashboard-bar-1" slide:role="shape" x="303" y="230" width="102" height="16" fill="#2563EB" />
+  <rect id="dashboard-card-2" slide:role="shape" x="490" y="150" width="170" height="110" fill="#ffffff" stroke="#CBD5E1" />
+  <rect id="dashboard-bar-2" slide:role="shape" x="508" y="230" width="114" height="16" fill="#2563EB" />
+  <rect id="dashboard-card-3" slide:role="shape" x="695" y="150" width="170" height="110" fill="#ffffff" stroke="#CBD5E1" />
+  <rect id="dashboard-bar-3" slide:role="shape" x="713" y="230" width="126" height="16" fill="#2563EB" />
+</svg>

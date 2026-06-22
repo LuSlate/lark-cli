@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import svglide_schema
+import beautiful_template_runtime
 
 
 PLAN_PATH = Path("02-plan/slide_plan.json")
@@ -19,7 +20,6 @@ OUTPUT_PATH = Path("02-plan/strategy-review.json")
 ALLOWED_PAGE_TYPES = {"cover", "section", "content", "closing"}
 DEFAULT_FULL_DECK_MIN_SLIDES = 10
 SAMPLE_DECK_INTENTS = {"sample", "quick_preview", "single_page", "one_page", "fixture", "smoke", "test"}
-STYLE_PRESETS_PATH = Path(__file__).resolve().parent.parent / "references" / "style-presets.json"
 DEFAULT_RENDERERS = {
     "cover",
     "cover_full_bleed",
@@ -206,20 +206,13 @@ def infer_theme_archetype(plan: dict[str, Any]) -> str | None:
 
 
 def style_presets_by_id() -> dict[str, dict[str, Any]]:
-    try:
-        payload = json.loads(STYLE_PRESETS_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    presets = payload.get("presets") if isinstance(payload, dict) else None
-    if not isinstance(presets, list):
-        return {}
     result: dict[str, dict[str, Any]] = {}
-    for item in presets:
-        if not isinstance(item, dict):
+    for theme in beautiful_template_runtime.theme_registry().get("themes", []):
+        if not isinstance(theme, dict):
             continue
-        style_id = item.get("style_id") or item.get("id") or item.get("preset_id")
-        if isinstance(style_id, str) and style_id:
-            result[style_id] = item
+        theme_id = theme.get("id")
+        if isinstance(theme_id, str) and theme_id:
+            result[theme_id] = {"style_id": theme_id, "palette": theme.get("colors") if isinstance(theme.get("colors"), dict) else {}}
     return result
 
 
@@ -301,7 +294,8 @@ def validate_visual_identity(plan: dict[str, Any], slides: list[Any]) -> list[di
         issues.append(issue("visual_identity_distinctness_target_missing", "visual_identity.distinctness_target is required"))
 
     palette_intent = design_palette_intent(design_dna)
-    background_dark = style_background_is_dark(plan.get("style_preset") if isinstance(plan.get("style_preset"), str) else None)
+    selected_theme = plan.get("project_theme") or plan.get("theme_id") or plan.get("style_preset")
+    background_dark = style_background_is_dark(selected_theme if isinstance(selected_theme, str) else None)
     if background_dark is not None:
         wants_light = any(token in palette_intent for token in ["light", "white", "bright", "浅", "白", "明亮"])
         wants_dark = any(token in palette_intent for token in ["dark", "black", "deep", "深", "黑"])

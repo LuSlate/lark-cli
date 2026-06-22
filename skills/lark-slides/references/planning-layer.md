@@ -124,6 +124,53 @@ Each slide must include:
 
 SVG route planning extensions are loaded only after route admission. XML route plans must not include SVG-only fields.
 
+## SVG Route Template Family Extensions
+
+When route admission selects SVGlide/SVG and the request needs a theme, template family, or topic-only generation, the plan must include the SVG private template family planning fields. These fields are produced by SVG private route logic loaded after route admission, then consumed by the SVG/artboard route before `contract_compile`.
+
+Top-level SVG route fields:
+
+```json
+{
+  "template_family_selection": {
+    "enabled": true,
+    "source": "svg-private-template-family-registry",
+    "selected_template_id": "blue-professional",
+    "candidate_template_ids": ["blue-professional", "signal", "emerald-editorial"],
+    "selection_reason": "Formal internal review with metrics, evidence, and action plan."
+  }
+}
+```
+
+Per-slide SVG route fields:
+
+```json
+{
+  "template_variant": "metric_dashboard",
+  "semantic_blocks": [
+    {"block_id": "metric_1", "type": "metric", "content": "metric from provided source"},
+    {"block_id": "finding_1", "type": "finding", "content": "main finding"}
+  ],
+  "component_selection": [
+    {"component_id": "metric_card", "binds": ["metric_1"]},
+    {"component_id": "finding_callout", "binds": ["finding_1"]}
+  ],
+  "asset_strategy": {
+    "strategy_id": "chart_when_quantified",
+    "no_fake_data": true
+  }
+}
+```
+
+Rules:
+
+- `selected_template_id` must come from the SVG private template family registry loaded after route admission.
+- A deck must use one deck-level `selected_template_id`; per-page variation should happen through `template_variant`, not random theme switching.
+- Decks of 10 or more pages should use at least 6 distinct `template_variant` values when content allows.
+- Every slide should have `semantic_blocks` and `component_selection`; do not let the generator invent components directly from layout names.
+- `asset_strategy` must be explicit. If no real data or image is available, use a structured fallback and set `no_fake_data=true`.
+- Needing real images requires `image_slots`; see `asset-planning.md`.
+
 ## Layout Vocabulary
 
 Use one of these `layout_type` values unless the user explicitly needs a custom structure:

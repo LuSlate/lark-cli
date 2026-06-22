@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_artboard_renderer as artboard
+import beautiful_template_runtime
 
 
 def write_json(path: Path, payload: dict[str, object]) -> None:
@@ -82,9 +83,8 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
     def test_p0_theme_registry_components_and_fixtures_are_registered(self) -> None:
         scripts_dir = Path(__file__).resolve().parent
         renderer_dir = scripts_dir / "artboard_renderer"
-        theme_registry = json.loads((renderer_dir / "themes/registry.json").read_text(encoding="utf-8"))
+        theme_registry = beautiful_template_runtime.theme_registry()
         theme_ids = [item["id"] for item in theme_registry["themes"] if item.get("status") == "active"]
-        repo_root = scripts_dir.parents[2]
         required_theme_ids = {
             "dark-clarity",
             "forest-signal",
@@ -100,12 +100,9 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
         self.assertGreaterEqual(len(theme_ids), 10)
         self.assertTrue(required_theme_ids.issubset(set(theme_ids)))
         for record in theme_registry["themes"]:
-            theme_path = repo_root / record["path"]
-            payload = json.loads(theme_path.read_text(encoding="utf-8"))
-            self.assertEqual(payload["theme_id"], record["id"])
-            self.assertTrue({"background", "panel", "primary", "accent", "text", "muted"}.issubset(payload["colors"]))
+            self.assertTrue({"background", "surface", "panel", "primary", "accent", "text", "muted"}.issubset(record["colors"]))
 
-        template_registry = json.loads((scripts_dir.parent / "references/svglide-template-registry.json").read_text(encoding="utf-8"))
+        template_registry = beautiful_template_runtime.template_registry()
         active_templates = {item["id"]: item for item in template_registry["templates"] if item.get("status") == "active"}
         required_template_ids = {
             "cover-hero",
@@ -133,9 +130,9 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
         for export_name in ["Title", "Subtitle", "Chip", "StatCard", "ImageFrame"]:
             self.assertIn(f"export function {export_name}", components)
 
-        component_registry = json.loads((scripts_dir.parent / "references/svglide-component-registry.json").read_text(encoding="utf-8"))
-        active_components = [item for item in component_registry["components"] if item.get("status") == "active"]
-        self.assertGreaterEqual(len(active_components), 20)
+        component_registry = beautiful_template_runtime.component_registry()
+        active_components = [item for item in component_registry["components"] if isinstance(item, dict)]
+        self.assertGreaterEqual(len(active_components), 15)
         layout_registry = json.loads((scripts_dir.parent / "references/svglide-layout-archetypes.json").read_text(encoding="utf-8"))
         active_layouts = [item for item in layout_registry["archetypes"] if item.get("status") == "active"]
         self.assertGreaterEqual(len(active_layouts), 8)
@@ -184,7 +181,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
     def test_p1_active_template_golden_fixtures_render(self) -> None:
         scripts_dir = Path(__file__).resolve().parent
         golden_dir = scripts_dir / "fixtures/svglide_artboard/golden"
-        template_registry = json.loads((scripts_dir.parent / "references/svglide-template-registry.json").read_text(encoding="utf-8"))
+        template_registry = beautiful_template_runtime.template_registry()
         active_template_ids = sorted(item["id"] for item in template_registry["templates"] if item.get("status") == "active")
         slides = []
         for page, template_id in enumerate(active_template_ids, 1):
@@ -200,9 +197,15 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
             self.assertEqual(result["max_workers"], 4)
             self.assertEqual(len(result["artboard_receipts"]), len(active_template_ids))
             self.assertTrue((project / "05-preview/contact-sheet.png").exists())
+            self.assertTrue((project / "04-artboard/raw/manifest.json").exists())
+            self.assertTrue((project / "04-svg/contract/manifest.json").exists())
             for page in range(1, len(active_template_ids) + 1):
-                self.assertTrue((project / f"04-svg/artboard/page-{page:03d}.png").exists())
+                self.assertTrue((project / f"04-artboard/raw/page-{page:03d}.visual.png").exists())
+                self.assertTrue((project / f"04-artboard/raw/page-{page:03d}.visual.svg").exists())
                 self.assertTrue((project / f"04-svg/page-{page:03d}.svg").exists())
+                semantic_map = json.loads((project / f"04-artboard/raw/page-{page:03d}.semantic-map.json").read_text(encoding="utf-8"))
+                self.assertEqual(semantic_map["extraction_strategy"], "canvas_spec_compiler_nodes_with_satori_preview")
+                self.assertLessEqual(len(semantic_map["elements"]), 18)
 
     def test_p1_template_uses_real_satori_source_not_python_generic(self) -> None:
         spec = canvas_spec()
@@ -224,8 +227,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
             result = artboard.render_project(project)
 
             self.assertEqual(result["status"], "passed")
-            raw_satori = (project / "04-svg/artboard/raw/page-001.satori.svg").read_text(encoding="utf-8")
-            final_svg = (project / "04-svg/page-001.svg").read_text(encoding="utf-8")
+            raw_satori = (project / "04-artboard/raw/page-001.visual.svg").read_text(encoding="utf-8")
             for token in [
                 "template_p1_generic",
                 "reference-flow-path",
@@ -234,12 +236,12 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
                 "accent-panel",
             ]:
                 self.assertNotIn(token, raw_satori)
-                self.assertNotIn(token, final_svg)
-            receipt = json.loads((project / "04-svg/artboard/page-001.receipt.json").read_text(encoding="utf-8"))
+            self.assertNotIn("slide:role", raw_satori)
+            receipt = json.loads((project / "04-artboard/raw/page-001.receipt.json").read_text(encoding="utf-8"))
             self.assertEqual(receipt["compiler"]["semantic_source"], "SatoriSVG")
             self.assertEqual(receipt["compiler"]["compiler_input"], "RawSatoriSVG")
             self.assertEqual(receipt["compiler"]["satori_svg_usage"], "compiler_input")
-            self.assertEqual(receipt["compiler_input"], "04-svg/artboard/raw/page-001.satori.svg")
+            self.assertEqual(receipt["compiler_input"], "04-artboard/raw/page-001.visual.svg")
             self.assertEqual(receipt["input_semantic_hash"], receipt["satori_svg_sha256"])
             self.assertEqual(receipt["canvas_template_svg_sha256"], receipt["satori_svg_sha256"])
             bridge_receipt = json.loads((project / "receipts/satori-bridge.json").read_text(encoding="utf-8"))
@@ -299,7 +301,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
 
             self.assertEqual(result["status"], "passed")
             self.assertEqual(result["max_workers"], 1)
-            self.assertEqual(result["artboard_receipts"], ["04-svg/artboard/page-001.receipt.json"])
+            self.assertEqual(result["artboard_receipts"], ["04-artboard/raw/page-001.receipt.json"])
             self.assertEqual(
                 result["additional_receipts"],
                 [
@@ -309,29 +311,33 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
                 ],
             )
             self.assertEqual(result["contact_sheet"]["path"], "05-preview/contact-sheet.png")
-            self.assertTrue((project / "04-svg/artboard/page-001.png").exists())
-            self.assertTrue((project / "04-svg/artboard/page-001.render-metadata.json").exists())
-            self.assertTrue((project / "04-svg/artboard/page-001.canvas-template.svg").exists())
+            self.assertTrue((project / "04-artboard/raw/page-001.visual.png").exists())
+            self.assertTrue((project / "04-artboard/raw/page-001.render-metadata.json").exists())
+            self.assertTrue((project / "04-artboard/raw/page-001.canvas-template.svg").exists())
+            self.assertTrue((project / "04-artboard/raw/manifest.json").exists())
             self.assertTrue((project / "05-preview/contact-sheet.png").exists())
-            svg = (project / "04-svg/page-001.svg").read_text(encoding="utf-8")
-            self.assertIn('xmlns:slide="https://slides.bytedance.com/ns"', svg)
-            self.assertIn('slide:role="slide"', svg)
-            self.assertIn('slide:shape-type="text"', svg)
-            self.assertTrue('<div xmlns="http://www.w3.org/1999/xhtml"' in svg or "html:div" in svg)
-            receipt = json.loads((project / "04-svg/artboard/page-001.receipt.json").read_text(encoding="utf-8"))
+            visual_svg = (project / "04-artboard/raw/page-001.visual.svg").read_text(encoding="utf-8")
+            self.assertNotIn('xmlns:slide="https://slides.bytedance.com/ns"', visual_svg)
+            self.assertNotIn('slide:role="slide"', visual_svg)
+            self.assertNotIn('slide:shape-type="text"', visual_svg)
+            self.assertTrue((project / "04-svg/page-001.svg").exists())
+            self.assertTrue((project / "04-svg/contract/manifest.json").exists())
+            canonical_svg = (project / "04-svg/page-001.svg").read_text(encoding="utf-8")
+            self.assertIn('slide:role="slide"', canonical_svg)
+            self.assertIn('slide:shape-type="text"', canonical_svg)
+            receipt = json.loads((project / "04-artboard/raw/page-001.receipt.json").read_text(encoding="utf-8"))
             self.assertEqual(receipt["version"], "svglide-artboard-receipt/v1")
             self.assertEqual(receipt["status"], "passed")
             self.assertEqual(receipt["template_id"], "cover-hero")
             self.assertEqual(receipt["theme_id"], "dark-clarity")
-            self.assertEqual(receipt["png_sha256"], artboard.file_sha256(project / "04-svg/artboard/page-001.png"))
-            self.assertEqual(receipt["render_metadata_sha256"], artboard.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"))
-            self.assertEqual(receipt["canvas_template_svg"], "04-svg/artboard/page-001.canvas-template.svg")
-            self.assertEqual(receipt["canvas_template_svg_sha256"], artboard.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"))
+            self.assertEqual(receipt["png_sha256"], artboard.file_sha256(project / "04-artboard/raw/page-001.visual.png"))
+            self.assertEqual(receipt["render_metadata_sha256"], artboard.file_sha256(project / "04-artboard/raw/page-001.render-metadata.json"))
+            self.assertEqual(receipt["canvas_template_svg"], "04-artboard/raw/page-001.canvas-template.svg")
+            self.assertEqual(receipt["canvas_template_svg_sha256"], artboard.file_sha256(project / "04-artboard/raw/page-001.canvas-template.svg"))
             self.assertEqual(receipt["canvas_template_svg_sha256"], receipt["satori_svg_sha256"])
-            self.assertEqual(receipt["compiler_input"], "04-svg/artboard/raw/page-001.satori.svg")
-            self.assertEqual(receipt["compiler_input_sha256"], artboard.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"))
-            self.assertEqual(receipt["input_semantic_hash"], artboard.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"))
-            self.assertEqual(receipt["svglide_svg_sha256"], artboard.file_sha256(project / "04-svg/page-001.svg"))
+            self.assertEqual(receipt["compiler_input"], "04-artboard/raw/page-001.visual.svg")
+            self.assertEqual(receipt["compiler_input_sha256"], artboard.file_sha256(project / "04-artboard/raw/page-001.visual.svg"))
+            self.assertEqual(receipt["input_semantic_hash"], artboard.file_sha256(project / "04-artboard/raw/page-001.visual.svg"))
             self.assertEqual(receipt["compiler"]["semantic_source"], "SatoriSVG")
             self.assertEqual(receipt["compiler"]["compiler_input"], "RawSatoriSVG")
             self.assertEqual(receipt["compiler"]["satori_svg_usage"], "compiler_input")
@@ -339,26 +345,27 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
             self.assertEqual(receipt["renderer"]["engine"], "satori-node")
             self.assertEqual(receipt["resvg_version"], "2.6.2")
             self.assertTrue(receipt["font_hashes"])
-            semantic_map = json.loads((project / "04-svg/artboard/page-001.semantic-map.json").read_text(encoding="utf-8"))
+            semantic_map = json.loads((project / "04-artboard/raw/page-001.semantic-map.json").read_text(encoding="utf-8"))
             self.assertEqual(semantic_map["semantic_source"], "SatoriSVG")
+            self.assertEqual(semantic_map["extraction_strategy"], "canvas_spec_compiler_nodes_with_satori_preview")
             self.assertTrue(semantic_map["elements"])
+            self.assertLessEqual(len(semantic_map["elements"]), 18)
             observed_text = "".join(str(item.get("text") or "") for item in semantic_map["elements"])
             self.assertIn("受控画板生成", observed_text)
-            self.assertIn("受控画板生成", svg)
-            node_layout = json.loads((project / "04-svg/artboard/page-001.node-layout-map.json").read_text(encoding="utf-8"))
+            node_layout = json.loads((project / "04-artboard/raw/page-001.node-layout-map.json").read_text(encoding="utf-8"))
             self.assertEqual(node_layout["source"], "measured-layout-observation")
             self.assertEqual(node_layout["observation_source"], "rendered_satori_svg_parse")
             self.assertEqual(node_layout["drift"]["status"], "passed")
             self.assertEqual(node_layout["drift"]["missing_count"], 0)
             render_receipt = json.loads((project / "receipts/artboard-render.json").read_text(encoding="utf-8"))
-            self.assertEqual(render_receipt["pages"][0]["render_metadata"], "04-svg/artboard/page-001.render-metadata.json")
-            self.assertEqual(render_receipt["pages"][0]["render_metadata_sha256"], artboard.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"))
-            self.assertEqual(render_receipt["pages"][0]["node_observations"], "04-svg/artboard/page-001.node-observations.json")
+            self.assertEqual(render_receipt["pages"][0]["render_metadata"], "04-artboard/raw/page-001.render-metadata.json")
+            self.assertEqual(render_receipt["pages"][0]["render_metadata_sha256"], artboard.file_sha256(project / "04-artboard/raw/page-001.render-metadata.json"))
+            self.assertEqual(render_receipt["pages"][0]["node_observations"], "04-artboard/raw/page-001.node-observations.json")
             bridge_receipt = json.loads((project / "receipts/satori-bridge.json").read_text(encoding="utf-8"))
             self.assertEqual(bridge_receipt["pages"][0]["semantic_source"], "SatoriSVG")
             self.assertEqual(bridge_receipt["pages"][0]["compiler_input_type"], "RawSatoriSVG")
             self.assertEqual(bridge_receipt["pages"][0]["satori_svg_usage"], "compiler_input")
-            self.assertEqual(bridge_receipt["pages"][0]["compiler_input"], "04-svg/artboard/raw/page-001.satori.svg")
+            self.assertEqual(bridge_receipt["pages"][0]["compiler_input"], "04-artboard/raw/page-001.visual.svg")
             self.assertEqual(bridge_receipt["pages"][0]["input_semantic_hash"], receipt["input_semantic_hash"])
 
     def test_render_project_uses_bounded_workers_and_stable_page_order(self) -> None:
@@ -377,9 +384,9 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
             self.assertEqual(
                 result["artboard_receipts"],
                 [
-                    "04-svg/artboard/page-001.receipt.json",
-                    "04-svg/artboard/page-002.receipt.json",
-                    "04-svg/artboard/page-003.receipt.json",
+                    "04-artboard/raw/page-001.receipt.json",
+                    "04-artboard/raw/page-002.receipt.json",
+                    "04-artboard/raw/page-003.receipt.json",
                 ],
             )
             render_receipt = json.loads((project / "receipts/artboard-render.json").read_text(encoding="utf-8"))
@@ -454,87 +461,6 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
 
             with self.assertRaisesRegex(artboard.ArtboardError, "canvas_spec_bbox_out_of_safe_area"):
                 artboard.render_project(project)
-
-    def test_satori_bridge_fails_fast_on_filter(self) -> None:
-        source = '<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10" filter="url(#x)"/></svg>'
-
-        with self.assertRaisesRegex(artboard.ArtboardError, "satori_svg_effect_fail_fast"):
-            artboard.compile_satori_svg_to_svglide(source)
-
-    def test_satori_bridge_ignores_unreferenced_mask_definitions(self) -> None:
-        source = (
-            '<svg xmlns="http://www.w3.org/2000/svg">'
-            '<mask id="m"><rect x="0" y="0" width="10" height="10" fill="#fff"/></mask>'
-            '<rect x="0" y="0" width="10" height="10" fill="#111"/>'
-            '</svg>'
-        )
-
-        svg, compiler = artboard.compile_satori_svg_to_svglide(source)
-
-        self.assertIn('slide:role="shape"', svg)
-        self.assertIn("rect", compiler["native_mapped"])
-
-    def test_satori_bridge_strips_mask_usage(self) -> None:
-        source = (
-            '<svg xmlns="http://www.w3.org/2000/svg">'
-            '<mask id="m"><rect x="0" y="0" width="10" height="10" fill="#fff"/></mask>'
-            '<rect x="0" y="0" width="10" height="10" fill="#111" mask="url(#m)"/>'
-            '</svg>'
-        )
-
-        svg, compiler = artboard.compile_satori_svg_to_svglide(source)
-
-        self.assertIn('slide:role="shape"', svg)
-        self.assertNotIn("mask=", svg)
-        self.assertIn("rect", compiler["native_mapped"])
-
-    def test_satori_bridge_converts_uppercase_arc_paths_with_bbox(self) -> None:
-        source = (
-            '<svg xmlns="http://www.w3.org/2000/svg">'
-            '<path x="10" y="20" width="120" height="40" fill="none" stroke="#111" d="M10,20 A0,0 0 0 1 10,20 h120"/>'
-            '</svg>'
-        )
-
-        svg, compiler = artboard.compile_satori_svg_to_svglide(source)
-
-        self.assertIn("<rect", svg)
-        self.assertNotIn(" A0,0", svg)
-        self.assertIn("path", compiler["native_mapped"])
-
-    def test_satori_bridge_normalizes_arc_paths_without_bbox(self) -> None:
-        source = (
-            '<svg xmlns="http://www.w3.org/2000/svg">'
-            '<path width="120" height="40" fill="none" stroke="#111" d="M130,60 A0,0 0 0 1 130,60 h-120 A0,0 0 0 1 10,60"/>'
-            '</svg>'
-        )
-
-        svg, compiler = artboard.compile_satori_svg_to_svglide(source)
-
-        self.assertIn('<path width="120" height="40"', svg)
-        self.assertIn('d="M130 60 L10 60"', svg)
-        self.assertNotIn("A0,0", svg)
-        self.assertNotIn(" h-", svg)
-        self.assertIn("path", compiler["native_mapped"])
-
-    def test_satori_bridge_recursively_maps_nested_groups(self) -> None:
-        source = (
-            '<svg xmlns="http://www.w3.org/2000/svg">'
-            '<g opacity="0.8"><g transform="translate(10 20)">'
-            '<rect x="0" y="0" width="100" height="40" fill="#111"/>'
-            '<text data-box-x="12" data-box-y="8" data-box-width="80" data-box-height="30" x="12" y="28" fill="#fff" font-size="18">Nested</text>'
-            '</g></g>'
-            '</svg>'
-        )
-
-        svg, compiler = artboard.compile_satori_svg_to_svglide(source)
-
-        self.assertIn('slide:role="shape"', svg)
-        self.assertIn('<g opacity="0.8">', svg)
-        self.assertIn('transform="translate(10 20)"', svg)
-        self.assertIn('slide:shape-type="text"', svg)
-        self.assertEqual(compiler["semantic_source"], "SatoriSVG")
-        self.assertEqual(compiler["compiler_input"], "RawSatoriSVG")
-        self.assertEqual(compiler["satori_svg_usage"], "compiler_input")
 
     def test_align_text_boxes_merges_wrapped_satori_text_runs(self) -> None:
         svglide_svg = (

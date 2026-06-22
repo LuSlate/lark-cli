@@ -4,6 +4,8 @@
 
 默认画布按 `960 x 540` 规划。模板 XML 可以覆盖具体坐标，但不能覆盖这些原则：页面要有主视觉区域、文本要受密度约束、不同 `layout_type` 必须产生明显不同的坐标结构。
 
+SVG / SVGlide route must not inherit this XML document as a low-level `path` / `line` / `arrow` recipe source. After SVG route admission, theme and layout variation come from the SVG private template family registry, `template_variant`, `component_selection`, and the contract compile boundary. This file may still inform high-level layout intent and text safety, but it must not force timeline/process/architecture pages to use explicit line/path primitives.
+
 ## Core Rules
 
 - `layout_type` must change geometry: element positions, region sizes, alignment, and visual rhythm must differ across page types.

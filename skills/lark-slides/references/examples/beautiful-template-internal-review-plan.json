@@ -1,0 +1,23 @@
+{
+  "version": "beautiful-template-plan/v1",
+  "target_slide_count": 10,
+  "template_family_selection": {
+    "enabled": true,
+    "source": "beautiful-html-template-families",
+    "selected_template_id": "blue-professional",
+    "candidate_template_ids": ["blue-professional", "emerald-editorial", "signal"],
+    "selection_reason": "Formal internal review with metrics, evidence, problem analysis, and action plan."
+  },
+  "slides": [
+    {"page": 1, "template_variant": "cover", "semantic_blocks": [{"block_id": "cover_title", "type": "finding", "content": "内部业务复盘"}], "component_selection": [{"component_id": "title_block", "binds": ["cover_title"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 2, "template_variant": "agenda", "semantic_blocks": [{"block_id": "agenda_items", "type": "finding", "content": "关键结论、问题、原因、动作"}], "component_selection": [{"component_id": "finding_callout", "binds": ["agenda_items"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 3, "template_variant": "context_overview", "semantic_blocks": [{"block_id": "context", "type": "finding", "content": "背景与目标"}], "component_selection": [{"component_id": "finding_callout", "binds": ["context"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 4, "template_variant": "metric_dashboard", "semantic_blocks": [{"block_id": "metric_1", "type": "metric", "content": "指标占位，等待真实数据"}], "component_selection": [{"component_id": "metric_card", "binds": ["metric_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 5, "template_variant": "problem_analysis", "semantic_blocks": [{"block_id": "problem_1", "type": "finding", "content": "核心问题"}], "component_selection": [{"component_id": "finding_callout", "binds": ["problem_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 6, "template_variant": "cause_analysis", "semantic_blocks": [{"block_id": "cause_1", "type": "process", "content": "原因链路"}], "component_selection": [{"component_id": "process_flow", "binds": ["cause_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 7, "template_variant": "comparison", "semantic_blocks": [{"block_id": "compare_1", "type": "comparison", "content": "方案对比"}], "component_selection": [{"component_id": "comparison_matrix", "binds": ["compare_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 8, "template_variant": "case_evidence", "semantic_blocks": [{"block_id": "evidence_1", "type": "evidence", "content": "证据与案例"}], "component_selection": [{"component_id": "evidence_table", "binds": ["evidence_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 9, "template_variant": "action_plan", "semantic_blocks": [{"block_id": "action_1", "type": "action", "content": "后续动作"}], "component_selection": [{"component_id": "action_list", "binds": ["action_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}},
+    {"page": 10, "template_variant": "closing", "semantic_blocks": [{"block_id": "close_1", "type": "finding", "content": "总结与决策请求"}], "component_selection": [{"component_id": "title_block", "binds": ["close_1"]}], "asset_strategy": {"strategy_id": "structured_fallback", "no_fake_data": true}}
+  ]
+}

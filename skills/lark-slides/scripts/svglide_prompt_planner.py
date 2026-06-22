@@ -19,6 +19,7 @@ import svglide_planner_contracts
 import svglide_palette_selector
 import svglide_schema
 import svglide_theme_template_selector
+import beautiful_template_runtime
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -47,10 +48,8 @@ SCHEMA_PATHS = {
 }
 SVG_PRIVATE_REQUIRED_RULE_FILES = [
     "skills/lark-slides/references/lark-slides-create-svg.md",
-    "skills/lark-slides/references/style-presets.md",
     "skills/lark-slides/references/svg-aesthetic-review.md",
     "skills/lark-slides/references/svg-protocol.md",
-    "skills/lark-slides/references/svg-visual-recipes.md",
     "skills/lark-slides/references/svglide-artifacts.spec.md",
     "skills/lark-slides/references/svglide-assets.contract.md",
     "skills/lark-slides/references/svglide-checks.checklist.md",
@@ -152,27 +151,19 @@ def validate_payload(payload: dict[str, Any], schema_rel: Path, *, output_path: 
 
 
 def theme_registry_bundle() -> list[dict[str, Any]]:
-    registry_path = repo_path("skills/lark-slides/scripts/artboard_renderer/themes/registry.json")
-    registry = read_json(registry_path)
+    registry = beautiful_template_runtime.theme_registry()
     result: list[dict[str, Any]] = []
     for item in registry.get("themes", []) if isinstance(registry, dict) else []:
         if not isinstance(item, dict) or item.get("status") != "active":
             continue
         record = {"id": item.get("id"), "status": item.get("status")}
-        theme_path = item.get("path")
-        if isinstance(theme_path, str):
-            path = repo_path(theme_path)
-            if path.exists():
-                theme = read_json(path)
-                if isinstance(theme, dict):
-                    record["colors"] = theme.get("colors")
-                    record["typography"] = theme.get("typography")
+        record["colors"] = item.get("colors")
         result.append(record)
     return result
 
 
 def template_registry_bundle() -> list[dict[str, Any]]:
-    registry = read_json(repo_path("skills/lark-slides/references/svglide-template-registry.json"))
+    registry = beautiful_template_runtime.template_registry()
     result: list[dict[str, Any]] = []
     for item in registry.get("templates", []) if isinstance(registry, dict) else []:
         if not isinstance(item, dict) or item.get("status") != "active":
@@ -215,7 +206,7 @@ def load_context(project: Path | None = None) -> dict[str, Any]:
         "templates": template_registry_bundle(),
         "themes": theme_registry_bundle(),
         "layout_archetypes": read_json(repo_path("skills/lark-slides/references/svglide-layout-archetypes.json")),
-        "component_registry": read_json(repo_path("skills/lark-slides/references/svglide-component-registry.json")),
+        "component_registry": beautiful_template_runtime.component_registry(),
         "canvas_spec_schema": read_json(repo_path("skills/lark-slides/references/svglide-canvas-spec.schema.json")),
         "planner_prompt_contracts": read_json(repo_path("skills/lark-slides/references/svglide-planner-prompt-contracts.json")),
     }
@@ -321,36 +312,17 @@ def build_canvas_prompt(instruction: dict[str, Any], deck_plan: dict[str, Any], 
         "slide_plan": slide_plan,
         "available_template_registry": context["templates"],
         "available_theme_registry": context["themes"],
+        "component_registry": context["component_registry"],
         "selection_context": context.get("selection", {}),
         "canvas_spec_schema": context["canvas_spec_schema"],
         "output_schema": read_json(repo_path(SCHEMA_PATHS["canvas-planner"])),
         "required_loaded_rule_set": SVG_PRIVATE_REQUIRED_RULE_FILES,
-        "allowed_style_preset_examples": ["raw_grid", "cobalt_bloom", "editorial_forest", "neo_grid_bold"],
-        "allowed_visual_recipes": [
-            "hero_typography",
-            "geometric_composition",
-            "path_flow",
-            "infographic_scorecard",
-            "icon_capability_map",
-            "gradient_depth",
-            "mask_clip_showcase",
-            "technical_texture",
-            "metaphor_loop",
-            "spotlight_annotation",
-            "fake_ui_dashboard",
-            "brand_system",
-        ],
-        "allowed_svg_effects": [
-            "chart_geometry",
-            "connector_flow",
-            "gradient",
-            "grid_geometry",
-            "image_overlay",
-            "path",
-            "spotlight",
-            "texture",
-            "typography",
-            "watermark_text",
+        "required_family_plan_fields": [
+            "template_family_selection",
+            "template_variant",
+            "semantic_blocks",
+            "component_selection",
+            "asset_strategy",
         ],
         "content_key_guidance": {
             "cover-hero": ["eyebrow", "title", "subtitle", "chips"],
@@ -383,10 +355,9 @@ def build_canvas_prompt(instruction: dict[str, Any], deck_plan: dict[str, Any], 
             "Use generation_mode artboard_satori and route svglide-svg.",
             "The top-level plan must include project_palette, project_theme, palette_selection_receipt, and selection_receipt from selection_context.",
             "The top-level plan must include language, audience, deck_structure, and visual_identity before plan confirmation is written.",
-            "style_preset must be an id from style-presets.json; prefer raw_grid unless there is a stronger reason.",
             "loaded_rule_set must include every path in required_loaded_rule_set.",
-            "visual_recipe and svg_effects must use only allowed_visual_recipes and allowed_svg_effects from the input bundle.",
-            "required_primitives and svg_primitives must include the selected visual_recipe hard requirements.",
+            "Use template_family_selection, template_variant, semantic_blocks, component_selection, and asset_strategy for visual planning.",
+            "Do not output legacy low-level primitive planning fields; keep visual planning at template family, semantic block, component, and asset strategy level.",
             "Every slide must include asset_contract; use none_required only when the final SVG will not use image primitives.",
             "Every visible numeric or business claim must have a top-level business_claims entry with source_type and source_note/assumption/derivation.",
             "deck_structure must include at least cover, content, and closing. Do not output a single-slide poster plan.",
@@ -394,7 +365,7 @@ def build_canvas_prompt(instruction: dict[str, Any], deck_plan: dict[str, Any], 
             "Every slide must include page_type, section, role, body_points, and source_refs; content slides need at least 2 body_points and source_refs.",
             "For each selected template, provide every visible content key listed in content_key_guidance. Do not rely on renderer fallback/default text.",
             "For data-story, metrics must be a list of short strings, not objects; metric_labels and milestones must be explicit visible string lists.",
-            "If svg_effects includes chart_geometry or required_primitives/svg_primitives includes micro_chart, include chart_contract with type, source_refs, encoding, and claims.",
+            "If component_selection includes a chart component, include chart_contract with type, source_refs, encoding, and claims.",
             "Canvas specs must use 960x540 canvas, safe_area x=48 y=40 width=864 height=460, and at least one semantic element bbox inside safe_area.",
             "Keep visible text short; no title over 34 Chinese chars or 44 Latin chars.",
             "Input bundle:",

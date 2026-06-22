@@ -12,12 +12,12 @@ from typing import Any
 
 import svglide_brand_palette_resolver as brand_resolver
 import svglide_semantic_asset_matcher as semantic_matcher
+import beautiful_template_runtime
 
 
 SCHEMA_VERSION = "svglide-palette-selection/v1"
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[2]
-PALETTE_REGISTRY_PATH = SCRIPT_DIR.parent / "references" / "svglide-palette-registry.json"
 INSTRUCTION_PATH = Path("00-input/instruction.json")
 PALETTE_SELECTION_PATH = Path("02-plan/palette-selection.json")
 PALETTE_RECEIPT_PATH = Path("receipts/palette_selection.json")
@@ -45,7 +45,7 @@ def stable_seed(payload: Any) -> str:
 
 
 def load_palette_registry() -> dict[str, Any]:
-    return read_json(PALETTE_REGISTRY_PATH)
+    return beautiful_template_runtime.palette_registry()
 
 
 def project_brief(project_root: Path, explicit_brief: str | None = None) -> str:

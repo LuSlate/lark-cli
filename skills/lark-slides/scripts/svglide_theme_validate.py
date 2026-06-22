@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import svglide_theme
+import beautiful_template_runtime
 
 
 SCHEMA_VERSION = "svglide-theme-validate/v1"
@@ -19,7 +20,6 @@ STAGE = "theme_validate"
 PLAN_PATH = Path("02-plan/slide_plan.json")
 CHECK_PATH = Path("06-check/theme-validate.json")
 RECEIPT_PATH = Path("receipts/theme-validate.json")
-TEMPLATE_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "references" / "svglide-template-registry.json"
 
 
 def now_iso() -> str:
@@ -62,7 +62,7 @@ def display_path(path: Path, project_root: Path) -> str:
 
 
 def template_records() -> dict[str, dict[str, Any]]:
-    payload = read_json(TEMPLATE_REGISTRY_PATH)
+    payload = beautiful_template_runtime.template_registry()
     templates = payload.get("templates") if isinstance(payload.get("templates"), list) else []
     return {item["id"]: item for item in templates if isinstance(item, dict) and isinstance(item.get("id"), str)}
 
@@ -171,7 +171,7 @@ def validate_project(project_root: Path) -> dict[str, Any]:
     try:
         templates = template_records()
     except (OSError, json.JSONDecodeError, ValueError) as err:
-        issues.append(issue("template_registry_invalid", str(err), path=TEMPLATE_REGISTRY_PATH.as_posix()))
+        issues.append(issue("template_registry_invalid", str(err), path=beautiful_template_runtime.FAMILIES_PATH.as_posix()))
 
     slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
     if not slides:
@@ -253,8 +253,8 @@ def validate_project(project_root: Path) -> dict[str, Any]:
             "theme_registry_sha256": svglide_theme.file_sha256(registry_path)
             if registry_path.exists()
             else None,
-            "template_registry": relpath(TEMPLATE_REGISTRY_PATH, svglide_theme.REPO_ROOT),
-            "template_registry_sha256": svglide_theme.file_sha256(TEMPLATE_REGISTRY_PATH) if TEMPLATE_REGISTRY_PATH.exists() else None,
+            "template_registry": relpath(beautiful_template_runtime.FAMILIES_PATH, svglide_theme.REPO_ROOT),
+            "template_registry_sha256": svglide_theme.file_sha256(beautiful_template_runtime.FAMILIES_PATH) if beautiful_template_runtime.FAMILIES_PATH.exists() else None,
         },
         "theme_files": theme_files,
         "pages": pages,

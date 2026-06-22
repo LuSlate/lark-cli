@@ -17,6 +17,8 @@ from typing import Any
 
 SVG_IMAGE_TAG_RE = re.compile(r"<image\b[^>]*>", re.IGNORECASE | re.DOTALL)
 SVG_IMAGE_HREF_RE = re.compile(r"""(?:^|\s)(?:xlink:href|href)\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
+CONTRACT_MANIFEST = Path("04-svg/contract/manifest.json")
+GENERATOR_RECEIPT = Path("receipts/generate_svg.json")
 
 
 class PrepareError(Exception):
@@ -53,6 +55,25 @@ def load_assets(project: Path) -> dict[str, str]:
     return out
 
 
+def read_json_object(path: Path, label: str) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise PrepareError(f"invalid {label} json: {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise PrepareError(f"invalid {label} json: {path}: expected object")
+    return data
+
+
+def generation_mode(project: Path) -> str | None:
+    path = project / GENERATOR_RECEIPT
+    if not path.exists():
+        return None
+    data = read_json_object(path, "generator receipt")
+    raw = data.get("generation_mode")
+    return raw if isinstance(raw, str) else None
+
+
 def source_svg_files(project: Path) -> list[Path]:
     svg_dir = project / "04-svg"
     if not svg_dir.exists():
@@ -61,6 +82,63 @@ def source_svg_files(project: Path) -> list[Path]:
     if not files:
         raise PrepareError(f"no source SVG files found in {svg_dir}")
     return files
+
+
+def validate_contract_manifest(project: Path, sources: list[Path]) -> dict[str, Any] | None:
+    manifest_path = project / CONTRACT_MANIFEST
+    mode = generation_mode(project)
+    if not manifest_path.exists():
+        if mode == "artboard_satori":
+            raise PrepareError(f"missing contract manifest for artboard_satori generation: {manifest_path}")
+        return None
+
+    manifest = read_json_object(manifest_path, "contract manifest")
+    if manifest.get("status") == "failed":
+        raise PrepareError(f"contract manifest status is failed: {manifest_path}")
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages:
+        raise PrepareError(f"contract manifest has no pages: {manifest_path}")
+
+    source_hashes = {str(path.relative_to(project)): file_sha256(path) for path in sources}
+    manifest_outputs: set[str] = set()
+    page_summaries: list[dict[str, Any]] = []
+    for page in pages:
+        if not isinstance(page, dict):
+            raise PrepareError(f"contract manifest page must be an object: {manifest_path}")
+        if page.get("status") == "failed":
+            raise PrepareError(f"contract manifest page status is failed: {page.get('page')}")
+        output = page.get("output")
+        output_sha256 = page.get("output_sha256")
+        report = page.get("report")
+        if not isinstance(output, str) or not output:
+            raise PrepareError("contract manifest page is missing output")
+        if not isinstance(output_sha256, str) or not output_sha256:
+            raise PrepareError(f"contract manifest page output_sha256 is missing: {output}")
+        if output not in source_hashes:
+            raise PrepareError(f"contract manifest output is not a prepared source SVG: {output}")
+        if source_hashes[output] != output_sha256:
+            raise PrepareError(f"contract manifest output hash is stale: {output}")
+        if not isinstance(report, str) or not (project / report).exists():
+            raise PrepareError(f"contract manifest report is missing: {report}")
+        report_payload = read_json_object(project / report, "contract report")
+        if report_payload.get("status") == "failed":
+            raise PrepareError(f"contract report status is failed: {report}")
+        if report_payload.get("output") != output or report_payload.get("output_sha256") != output_sha256:
+            raise PrepareError(f"contract report output does not match manifest: {report}")
+        manifest_outputs.add(output)
+        page_summaries.append({"page": page.get("page"), "output": output, "status": page.get("status"), "report": report})
+
+    missing = sorted(set(source_hashes) - manifest_outputs)
+    extra = sorted(manifest_outputs - set(source_hashes))
+    if missing or extra:
+        raise PrepareError(f"contract manifest outputs do not match source SVG files: missing={missing}, extra={extra}")
+
+    return {
+        "path": CONTRACT_MANIFEST.as_posix(),
+        "sha256": file_sha256(manifest_path),
+        "status": manifest.get("status"),
+        "pages": page_summaries,
+    }
 
 
 def image_hrefs(svg_text: str) -> list[str]:
@@ -105,6 +183,7 @@ def prepare_project(project: Path) -> dict[str, Any]:
     project = project.resolve()
     assets = load_assets(project)
     sources = source_svg_files(project)
+    contract_manifest = validate_contract_manifest(project, sources)
     prepared_dir = project / "04-svg" / "prepared"
     prepared_dir.mkdir(parents=True, exist_ok=True)
     receipts_dir = project / "receipts"
@@ -136,6 +215,7 @@ def prepare_project(project: Path) -> dict[str, Any]:
         "source_files": [item["source"] for item in prepared_files],
         "prepared_files": prepared_files,
         "assets_json": "03-assets/assets.json" if (project / "03-assets" / "assets.json").exists() else None,
+        "contract_manifest": contract_manifest,
         "asset_refs": asset_refs,
         "normalizations": [],
     }

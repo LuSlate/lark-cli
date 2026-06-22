@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/component-registry.schema.json",
+  "title": "SVGlide semantic component registry",
+  "type": "object",
+  "required": ["version", "components"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-component-registry/v1"},
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["component_id", "fits_semantic_blocks", "required_data", "allowed_asset_types", "compile_notes"],
+        "additionalProperties": true
+      }
+    }
+  }
+}

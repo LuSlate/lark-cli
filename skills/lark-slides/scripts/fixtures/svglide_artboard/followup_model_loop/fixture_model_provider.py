@@ -20,10 +20,11 @@ THEME = {
 
 LOADED_RULE_SET = [
     "skills/lark-slides/references/lark-slides-create-svg.md",
-    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/beautiful-html-template-families.json",
+    "skills/lark-slides/references/component-registry.json",
+    "skills/lark-slides/references/asset-strategy-registry.json",
     "skills/lark-slides/references/svg-aesthetic-review.md",
     "skills/lark-slides/references/svg-protocol.md",
-    "skills/lark-slides/references/svg-visual-recipes.md",
     "skills/lark-slides/references/svglide-artifacts.spec.md",
     "skills/lark-slides/references/svglide-assets.contract.md",
     "skills/lark-slides/references/svglide-checks.checklist.md",
@@ -738,9 +739,13 @@ def canvas_plan(profile: dict[str, object]) -> dict[str, object]:
         "page_count": 3,
         "target_slide_count": 3,
         "plan_path": "02-plan/slide_plan.json",
-        "style_preset": profile["style_preset"],
-        "style_selection_reason": profile["theme_reason"],
-        "style_system": profile["style_system"],
+        "template_family_selection": {
+            "enabled": True,
+            "source": "beautiful-html-template-families",
+            "selected_template_id": "blue-professional",
+            "candidate_template_ids": ["blue-professional", "signal", "cobalt-grid"],
+            "selection_reason": profile["theme_reason"],
+        },
         "visual_identity": {
             "theme_archetype": profile["visual_dna"]["theme_archetype"],
             "design_dna": {
@@ -794,19 +799,21 @@ def canvas_slide(slide: dict[str, object], profile: dict[str, object]) -> dict[s
         "source_refs": slide_source_refs(),
         "renderer_id": slide["renderer_id"],
         "layout_family": slide["layout_family"],
-        "visual_recipe": slide["visual_recipe"],
-        "visual_intent": slide["visual_intent"],
-        "visual_focal_point": slide["visual_focal_point"],
-        "visual_signature": slide["visual_signature"],
-        "svg_effects": slide["svg_effects"],
+        "template_variant": str(slide["template_id"]).replace("-", "_"),
+        "semantic_blocks": [
+            {"block_id": "title", "type": "title", "content": slide["title"]},
+            {"block_id": "message", "type": "finding", "content": slide["key_message"]},
+        ],
+        "component_selection": [
+            {"component_id": "title_block", "binds": ["title"]},
+            {"component_id": "finding_callout", "binds": ["message"]},
+        ],
+        "asset_strategy": {"strategy_id": "structured_fallback", "decision": "none_required"},
         "asset_contract": "none_required",
-        "required_primitives": slide["required_primitives"],
-        "svg_primitives": slide["svg_primitives"],
-        "xml_like_risk": slide["xml_like_risk"],
         "content_density_contract": slide["content_density_contract"],
         "risk_flags": [],
         "source_policy": profile["source_policy"],
-            "canvas_spec": canvas_spec_for(slide["template_id"], content, theme=profile["theme"]),
+        "canvas_spec": canvas_spec_for(slide["template_id"], content, theme=profile["theme"]),
     }
     if "chart_contract" in slide:
         payload["chart_contract"] = slide["chart_contract"]

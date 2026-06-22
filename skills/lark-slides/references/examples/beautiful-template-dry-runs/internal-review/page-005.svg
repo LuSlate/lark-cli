@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <defs><linearGradient id="depth-gradient" x1="0" x2="1"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#F2D4CF"/></linearGradient></defs>
+  <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#F5F5F5" />
+  <foreignObject id="title-5" slide:role="shape" slide:shape-type="text" x="64" y="44" width="620" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:44px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">problem analysis</div></foreignObject>
+  <rect id="gradient-slab" slide:role="shape" x="90" y="150" width="740" height="230" fill="url(#depth-gradient)" />
+</svg>

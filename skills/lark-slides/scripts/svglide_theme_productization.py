@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 import svglide_theme
+import beautiful_template_runtime
 
 
 PRODUCTIZATION_VERSION = "svglide-theme-productization/v1"
@@ -25,7 +26,6 @@ PROJECT_REGISTRY = Path("02-plan/theme-registry.json")
 OUTPUT_PATH = Path("06-check/theme-productization.json")
 RECEIPT_PATH = Path("receipts/theme-productization.json")
 DEFAULT_MIGRATED_PLAN = Path("02-plan/slide_plan.theme-migrated.json")
-TEMPLATE_REGISTRY = Path("skills/lark-slides/references/svglide-template-registry.json")
 CORE_COLOR_ROLES = (
     "background",
     "surface",
@@ -216,11 +216,7 @@ def extract_theme(request: dict[str, Any], project: Path) -> tuple[dict[str, Any
 
 
 def read_template_ids() -> list[str]:
-    path = Path(__file__).resolve().parents[3] / TEMPLATE_REGISTRY
-    try:
-        payload = read_json(path)
-    except ThemeProductizationError:
-        return []
+    payload = beautiful_template_runtime.template_registry()
     templates = payload.get("templates")
     if not isinstance(templates, list):
         return []

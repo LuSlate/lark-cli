@@ -21,13 +21,14 @@ import (
 )
 
 const (
-	maxSVGFileSizeBytes       int64 = 2 * 1024 * 1024
-	svglideSlideNS                  = "https://slides.bytedance.com/ns"
-	svglideContractVersion          = "svglide-authoring-contract/v1"
-	svglideChartMarkerVersion       = "svglide-chart-inline/v1"
-	svglideChartFormat              = "svglide-chart-spec-v1"
-	svglideChartSpecVersion         = "svglide-chart-spec/v1"
-	svglideChartEncoding            = "base64url-json"
+	maxSVGFileSizeBytes           int64 = 2 * 1024 * 1024
+	svglideSlideNS                      = "https://slides.bytedance.com/ns"
+	svglideContractVersion              = "svglide-authoring-contract/v1"
+	svglideChartMarkerVersion           = "svglide-chart-inline/v1"
+	svglideChartFormat                  = "svglide-chart-spec-v1"
+	svglideChartSpecVersion             = "svglide-chart-spec/v1"
+	svglideChartEncoding                = "base64url-json"
+	svglideCustomFontFamilyPrefix       = "slide-font-"
 )
 
 type svglideChartSpecPayload struct {
@@ -58,6 +59,8 @@ var (
 	svgMetadataRegex    = regexp.MustCompile(`(?is)<metadata\b[^>]*\bdata-svglide-assets\s*=\s*(["'])true(["'])[^>]*>.*?</metadata>`)
 	svgMetadataEndRegex = regexp.MustCompile(`(?is)</metadata\s*>`)
 	svgMetadataImgRegex = regexp.MustCompile(`(?is)<img\b[^>]*\bsrc\s*=\s*(["'])([^"']+)(["'])`)
+	svgStyleAttrRegex   = regexp.MustCompile(`(?is)(^|\s)style\s*=\s*(["'])([^"']*)(["'])`)
+	svgFontAttrRegex    = regexp.MustCompile(`(?is)(^|\s)font-family\s*=\s*(["'])([^"']*)(["'])`)
 	svgNumberRegex      = regexp.MustCompile(`^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?:px)?$`)
 	svgPathNumberRegex  = regexp.MustCompile(`[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?`)
 	svgTransformRegex   = regexp.MustCompile(`(?is)([a-zA-Z]+)\(([^)]*)\)`)
@@ -154,6 +157,200 @@ func readSVGFiles(runtime *common.RuntimeContext, paths []string) ([]string, err
 		svgs = append(svgs, svg)
 	}
 	return svgs, nil
+}
+
+func normalizeSVGFontFamily(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", nil
+	}
+	parts := strings.Split(raw, ",")
+	families := make([]string, 0, len(parts))
+	for _, part := range parts {
+		family := strings.TrimSpace(part)
+		if family == "" {
+			return "", output.ErrValidation("--font-family contains an empty family name")
+		}
+		if strings.HasPrefix(strings.ToLower(family), svglideCustomFontFamilyPrefix) {
+			return "", output.ErrValidation("--font-family only supports existing web/system fonts; custom slide-font-* fonts are not supported")
+		}
+		for _, r := range family {
+			if r < 0x20 || strings.ContainsRune(`"'&;:{}()[]<>\`, r) {
+				return "", output.ErrValidation("--font-family contains unsupported character %q", r)
+			}
+		}
+		families = append(families, family)
+	}
+	return strings.Join(families, ", "), nil
+}
+
+func applySVGlideFontFamily(svg, fontFamily string) string {
+	if strings.TrimSpace(fontFamily) == "" {
+		return svg
+	}
+	var out strings.Builder
+	offset := 0
+	for {
+		rel := strings.Index(svg[offset:], "<foreignObject")
+		if rel < 0 {
+			out.WriteString(svg[offset:])
+			return out.String()
+		}
+		start := offset + rel
+		end := findSVGTagEnd(svg, start)
+		if end < 0 {
+			out.WriteString(svg[offset:])
+			return out.String()
+		}
+		name, attrs, selfClosing := parseSVGStartTag(svg[start+1 : end])
+		if name != "foreignObject" || !hasXMLAttr(attrs, "slide:role", "shape") || !hasXMLAttr(attrs, "slide:shape-type", "text") {
+			out.WriteString(svg[offset : end+1])
+			offset = end + 1
+			continue
+		}
+
+		out.WriteString(svg[offset:start])
+		out.WriteString(rewriteSVGStartTagFontFamily(svg[start:end+1], fontFamily, true))
+		if selfClosing {
+			offset = end + 1
+			continue
+		}
+
+		closeStart, closeEnd := findSVGElementClose(svg, end+1, name)
+		if closeStart < 0 {
+			out.WriteString(svg[end+1:])
+			return out.String()
+		}
+		out.WriteString(rewriteSVGTextFragmentFontFamily(svg[end+1:closeStart], fontFamily))
+		out.WriteString(svg[closeStart : closeEnd+1])
+		offset = closeEnd + 1
+	}
+}
+
+func rewriteSVGTextFragmentFontFamily(fragment, fontFamily string) string {
+	var out strings.Builder
+	offset := 0
+	for offset < len(fragment) {
+		rel := strings.IndexByte(fragment[offset:], '<')
+		if rel < 0 {
+			out.WriteString(fragment[offset:])
+			break
+		}
+		start := offset + rel
+		out.WriteString(fragment[offset:start])
+		switch {
+		case strings.HasPrefix(fragment[start:], "</"),
+			strings.HasPrefix(fragment[start:], "<!"),
+			strings.HasPrefix(fragment[start:], "<?"):
+			end := findSVGTagEnd(fragment, start)
+			if end < 0 {
+				out.WriteString(fragment[start:])
+				return out.String()
+			}
+			out.WriteString(fragment[start : end+1])
+			offset = end + 1
+			continue
+		}
+		end := findSVGTagEnd(fragment, start)
+		if end < 0 {
+			out.WriteString(fragment[start:])
+			return out.String()
+		}
+		out.WriteString(rewriteSVGStartTagFontFamily(fragment[start:end+1], fontFamily, false))
+		offset = end + 1
+	}
+	return out.String()
+}
+
+func rewriteSVGStartTagFontFamily(tag, fontFamily string, forceStyle bool) string {
+	if !strings.HasPrefix(tag, "<") || strings.HasPrefix(tag, "</") || len(tag) < 3 {
+		return tag
+	}
+	name, attrs, selfClosing := parseSVGStartTag(tag[1 : len(tag)-1])
+	if name == "" {
+		return tag
+	}
+
+	changed := false
+	var attrChanged bool
+	attrs, attrChanged = setXMLAttr(attrs, "font-family", fontFamily, false)
+	changed = changed || attrChanged
+	attrs, attrChanged = setSVGStyleFontFamily(attrs, fontFamily, forceStyle)
+	changed = changed || attrChanged
+	if !changed {
+		return tag
+	}
+
+	var b strings.Builder
+	b.WriteByte('<')
+	b.WriteString(name)
+	if strings.TrimSpace(attrs) != "" {
+		b.WriteByte(' ')
+		b.WriteString(strings.TrimSpace(attrs))
+	}
+	if selfClosing {
+		b.WriteString("/>")
+	} else {
+		b.WriteByte('>')
+	}
+	return b.String()
+}
+
+func setXMLAttr(attrs, name, value string, add bool) (string, bool) {
+	re := regexp.MustCompile(`(?is)(^|\s)` + regexp.QuoteMeta(name) + `\s*=\s*(["'])([^"']*)(["'])`)
+	loc := re.FindStringSubmatchIndex(attrs)
+	if loc == nil {
+		if !add {
+			return attrs, false
+		}
+		sep := ""
+		if strings.TrimSpace(attrs) != "" {
+			sep = " "
+		}
+		return strings.TrimSpace(attrs) + sep + name + `="` + value + `"`, true
+	}
+	leading := attrs[loc[2]:loc[3]]
+	quote := attrs[loc[4]:loc[5]]
+	replacement := leading + name + "=" + quote + value + quote
+	return attrs[:loc[0]] + replacement + attrs[loc[1]:], true
+}
+
+func setSVGStyleFontFamily(attrs, fontFamily string, force bool) (string, bool) {
+	loc := svgStyleAttrRegex.FindStringSubmatchIndex(attrs)
+	if loc == nil {
+		if !force {
+			return attrs, false
+		}
+		return setXMLAttr(attrs, "style", "font-family:"+fontFamily+";", true)
+	}
+	leading := attrs[loc[2]:loc[3]]
+	quote := attrs[loc[4]:loc[5]]
+	style := rewriteCSSFontFamily(attrs[loc[6]:loc[7]], fontFamily)
+	replacement := leading + "style=" + quote + style + quote
+	return attrs[:loc[0]] + replacement + attrs[loc[1]:], true
+}
+
+func rewriteCSSFontFamily(style, fontFamily string) string {
+	parts := strings.Split(style, ";")
+	out := make([]string, 0, len(parts)+1)
+	found := false
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed == "" {
+			continue
+		}
+		key, _, ok := strings.Cut(trimmed, ":")
+		if ok && strings.EqualFold(strings.TrimSpace(key), "font-family") {
+			out = append(out, "font-family:"+fontFamily)
+			found = true
+			continue
+		}
+		out = append(out, trimmed)
+	}
+	if !found {
+		out = append(out, "font-family:"+fontFamily)
+	}
+	return strings.Join(out, ";") + ";"
 }
 
 func validateSVGlideSVG(svg, path string) error {

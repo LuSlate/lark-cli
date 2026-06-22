@@ -1,0 +1,30 @@
+{
+  "version": "beautiful-template-e2e-dry-run/v1",
+  "case_id": "zhipu-minimax",
+  "query": "Zhipu and MiniMax product comparison with company identity and real image slots",
+  "selected_template_id": "blue-professional",
+  "candidate_template_ids": [
+    "blue-professional",
+    "raw-grid",
+    "cartesian"
+  ],
+  "slide_count": 10,
+  "template_variant_count": 6,
+  "component_count": 7,
+  "required_image_slots": 2,
+  "rendered_image_count": 2,
+  "required_image_fill_rate": 1.0,
+  "unowned_decorative_primitive_count": 0,
+  "preflight_summary": {
+    "file_count": 10,
+    "error_count": 0,
+    "warning_count": 2,
+    "plan_count": 1
+  },
+  "status": "passed",
+  "artifacts": {
+    "plan": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/examples/beautiful-template-dry-runs/zhipu-minimax/slide_plan.json",
+    "preview": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/examples/beautiful-template-dry-runs/zhipu-minimax/preview.html",
+    "receipt": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/examples/beautiful-template-dry-runs/zhipu-minimax/receipt.json"
+  }
+}

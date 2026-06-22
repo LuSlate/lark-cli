@@ -1,0 +1,223 @@
+{
+  "version": "beautiful-html-template-cleanup-map/v1",
+  "policy": "default_delete_extract_unique_signal_only",
+  "cleanup_candidates": [
+    {
+      "target": "skills/lark-slides/references/style-presets.json",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "no runtime code imports style-presets.json or style-presets.md",
+        "golden preview cases pass with family tokens only"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/style-presets.md",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "no prompt, planner, matcher, or renderer imports style-presets.md",
+        "banned low-level SVG instruction patterns have zero runtime references"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/svg-visual-recipes.md",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "no prompt, planner, matcher, or renderer imports svg-visual-recipes.md",
+        "path_flow, connector_flow, svg_effects, required_primitives, and explicit path/line prompt rules have zero runtime references"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/scripts/artboard_renderer/themes",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "theme cache can be generated from beautiful-html-template-families.json",
+        "renderer tests pass without hand-written theme source files"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/svglide-template-registry.json",
+      "action": "extract_minimal_signal_then_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [
+        "page_role to variant mapping that cannot be reconstructed from beautiful-html-template metadata"
+      ],
+      "extract_to": [
+        "skills/lark-slides/references/beautiful-html-template-families.json::families[].variants"
+      ],
+      "delete_after": [
+        "template family matcher covers old template selection golden cases",
+        "no runtime code imports svglide-template-registry.json"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/svglide-component-registry.json",
+      "action": "extract_minimal_signal_then_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [
+        "semantic block to component binding not already represented in component-registry.json"
+      ],
+      "extract_to": [
+        "skills/lark-slides/references/component-registry.json"
+      ],
+      "delete_after": [
+        "component selection tests pass with unified component-registry.json",
+        "no runtime code imports svglide-component-registry.json"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/svglide-palette-registry.json",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "family palette roles and protected brand override cover runtime palette selection",
+        "no runtime code imports svglide-palette-registry.json"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/absorptions/beautiful-html-templates",
+      "action": "extract_minimal_signal_then_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [
+        "source_item_id, source_context_refs, svglide_asset_ids, absorbed_as provenance"
+      ],
+      "extract_to": [
+        "skills/lark-slides/references/beautiful-html-template-families.json::families[].source",
+        "skills/lark-slides/references/beautiful-html-template-families.json::families[].svglide_mapping"
+      ],
+      "delete_after": [
+        "all 15 existing absorption records are represented in family registry provenance",
+        "no runtime code imports absorption JSON directly"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/beautiful-html-template-presets.json",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "beautiful-html-template-families.json is the only beautiful template runtime entrypoint",
+        "no compatibility alias or fallback preset index remains"
+      ],
+      "runtime_import_allowed": false
+    },
+    {
+      "target": "skills/lark-slides/references/beautiful-html-template-presets.md",
+      "action": "default_delete",
+      "deletion_allowed": true,
+      "unique_signal_evidence": [],
+      "extract_to": [],
+      "delete_after": [
+        "SKILL.md points to family registry and matcher, not presets",
+        "no compatibility alias or fallback preset doc remains"
+      ],
+      "runtime_import_allowed": false
+    }
+  ],
+  "content_cleanup_candidates": [
+    {
+      "target": "skills/lark-slides/references/svglide-canvas-plan.schema.json",
+      "action": "remove_required_low_level_svg_fields",
+      "delete_fields": [
+        "style_preset",
+        "style_selection_reason",
+        "style_system",
+        "visual_recipe",
+        "visual_signature",
+        "svg_effects",
+        "required_primitives",
+        "svg_primitives"
+      ],
+      "keep_fields": [
+        "template_family_selection",
+        "template_variant",
+        "semantic_blocks",
+        "component_selection",
+        "asset_strategy",
+        "image_slots"
+      ],
+      "runtime_import_allowed": true
+    },
+    {
+      "target": "skills/lark-slides/references/svglide-visual-planning.md",
+      "action": "partial_rewrite",
+      "delete_patterns": [
+        "SVG-native advantage",
+        "path composition",
+        "dense geometry",
+        "dashboard frame",
+        "technical_texture"
+      ],
+      "keep_scope": [
+        "text safety",
+        "box model",
+        "safe area",
+        "overflow prevention"
+      ],
+      "runtime_import_allowed": true
+    },
+    {
+      "target": "skills/lark-slides/references/visual-planning.md",
+      "action": "partial_rewrite",
+      "delete_patterns": [
+        "spine",
+        "connected by arrows or lines",
+        "timeline line",
+        "process arrow"
+      ],
+      "keep_scope": [
+        "layout intent",
+        "text density",
+        "title area",
+        "page role"
+      ],
+      "runtime_import_allowed": true
+    }
+  ],
+  "banned_low_level_svg_instruction_patterns": [
+    "path_flow",
+    "connector_flow",
+    "svg_effects",
+    "required_primitives",
+    "svg_primitives",
+    "explicit path/line",
+    "curved route path",
+    "connector density",
+    "SVG-native advantage",
+    "dashboard frame",
+    "technical_texture"
+  ],
+  "protected_assets": [
+    {"target": "satori", "reason": "renderer capability reference"},
+    {"target": "og-images-generator", "reason": "pipeline reference"},
+    {"target": "skills/lark-slides/scripts/svglide_contract_compile.py", "reason": "protocol injection boundary"},
+    {"target": "skills/lark-slides/scripts/svg_preflight.py", "reason": "validation boundary"},
+    {"target": "skills/lark-slides/references/svglide-generate-svg.contract.md", "reason": "generate_svg stage contract"},
+    {"target": "skills/lark-slides/references/safe-native-v1.profile.json", "reason": "renderer safety profile"},
+    {"target": "skills/lark-slides/references/svglide-brand-palette-registry.json", "reason": "brand override layer"},
+    {"target": "ppt-master", "reason": "external reference for chart and deck structure"},
+    {"target": "skills/lark-slides/assets/templates", "reason": "legacy XML entrypoints may serve non-SVGlide flows"}
+  ]
+}

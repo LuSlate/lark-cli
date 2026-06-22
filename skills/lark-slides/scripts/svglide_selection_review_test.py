@@ -35,6 +35,10 @@ def make_project(root: Path, brief: str = "内部业务复盘，高管经营看�
         {
             "palette_selection_receipt": "02-plan/palette-selection.json",
             "selection_receipt": "02-plan/theme-template-selection.json",
+            "fallback_policy": {
+                "when": "selection_confidence_low",
+                "action": "use structured fallback with selected candidate family and keep plan-declared template IDs auditable",
+            },
             "project_palette": project_palette,
             "project_theme": {
                 "base_theme_id": theme_id,
@@ -116,6 +120,10 @@ class SelectionReviewTest(unittest.TestCase):
                 {
                     "palette_selection_receipt": "02-plan/palette-selection.json",
                     "selection_receipt": "02-plan/theme-template-selection.json",
+                    "fallback_policy": {
+                        "when": "selection_confidence_low",
+                        "action": "keep plan-declared template IDs and require selection_trace for each page",
+                    },
                     "project_palette": project_palette,
                     "project_theme": {
                         "base_theme_id": selection["selected_theme_id"],

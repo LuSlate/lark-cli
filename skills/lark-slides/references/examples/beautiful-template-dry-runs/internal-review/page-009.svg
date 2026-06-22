@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#F5F5F5" />
+  <foreignObject id="title-9" slide:role="shape" slide:shape-type="text" x="64" y="44" width="620" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:44px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">action plan</div></foreignObject>
+  <circle id="capability-glyph-0" slide:role="shape" cx="96" cy="160" r="22" fill="#2563EB" />
+  <circle id="capability-glyph-1" slide:role="shape" cx="266" cy="160" r="22" fill="#2563EB" />
+  <circle id="capability-glyph-2" slide:role="shape" cx="436" cy="160" r="22" fill="#2563EB" />
+  <circle id="capability-glyph-3" slide:role="shape" cx="96" cy="270" r="22" fill="#2563EB" />
+  <circle id="capability-glyph-4" slide:role="shape" cx="266" cy="270" r="22" fill="#2563EB" />
+  <circle id="capability-glyph-5" slide:role="shape" cx="436" cy="270" r="22" fill="#2563EB" />
+</svg>

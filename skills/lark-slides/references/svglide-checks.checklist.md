@@ -33,16 +33,18 @@ route admission
 - [ ] Run `svglide_project_runner.py stage .lark-slides/plan/<deck-id> source` and confirm `source/source-receipt.json` has `status: "passed"`.
 - [ ] Verify `02-plan/slide_plan.json` has route, canvas, safe area, style system, art direction, source policy, business claims, assets, and ordered `svg_files`.
 - [ ] Run `svglide_project_runner.py stage .lark-slides/plan/<deck-id> strategy_review` and confirm `02-plan/strategy-review.json` has `status: "passed"`.
-- [ ] Confirm `02-plan/plan-confirmation.json` has `status: "confirmed"`, `confirmed_by: "user"`, and current `plan_sha256` / optional `lock_sha256`.
+- [ ] Confirm `strategy_review`, `palette_review`, `selection_review`, and `plan_bundle_review` receipts have `status: "passed"` before rendering.
 - [ ] Run `svglide_project_runner.py stage .lark-slides/plan/<deck-id> assets` and confirm `03-assets/asset-manifest.json` has `status: "passed"`.
-- [ ] Run `svglide_project_runner.py stage .lark-slides/plan/<deck-id> generate_svg` to generate or register source SVG pages under `.lark-slides/plan/<deck-id>/04-svg/`.
-- [ ] Confirm `receipts/generate_svg.json` has `status: "passed"` and lists the generated source SVG hashes.
-- [ ] Run `svglide_prepare.py` and verify prepared SVG pages under `.lark-slides/plan/<deck-id>/04-svg/prepared/`.
+- [ ] Run `svglide_project_runner.py stage .lark-slides/plan/<deck-id> generate_svg` to generate direct SVG pages or artboard raw visual artifacts.
+- [ ] Confirm `receipts/generate_svg.json` has `status: "passed"` and, for `artboard_satori`, lists `04-artboard/raw/manifest.json`, raw visual file hashes, semantic maps, and artboard receipts.
+- [ ] Run `svglide_project_runner.py stage .lark-slides/plan/<deck-id> contract_compile` and verify `04-svg/page-###.svg`, `04-svg/contract/page-###.report.json`, `04-svg/contract/manifest.json`, and `receipts/contract_compile.json`.
+- [ ] Run `svglide_prepare.py` and verify prepared SVG pages under `.lark-slides/plan/<deck-id>/04-svg/prepared/`; `prepare` must reject missing or stale contract manifest.
 - [ ] Run source preflight:
 
 ```bash
 python3 skills/lark-slides/scripts/svg_preflight.py \
   --plan .lark-slides/plan/<deck-id>/02-plan/slide_plan.json \
+  --contract-manifest .lark-slides/plan/<deck-id>/04-svg/contract/manifest.json \
   --input .lark-slides/plan/<deck-id>/04-svg/prepared/page-001.svg
 ```
 

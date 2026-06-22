@@ -63,24 +63,25 @@ Pass criteria:
 
 - `summary.error_count == 0`; any error blocks live API calls.
 - `loaded_rule_set` records the SVG private design and validation files loaded for the run.
-- `art_direction` records cover, section-divider/tempo, closing, deck motif, and at least 3 source-backed SVG-native moments.
+- `art_direction` records cover, section-divider/tempo, closing, deck motif, and at least 3 family-backed visual moments.
 - `quality_gates` includes `no_text_overflow`, `no_debug_guides`, and `no_xml_like_pages` set to true.
 - Visible numeric or business claims have `business_claims` source records; derived or assumed claims include derivation/assumption notes.
-- The selected style preset exists in `style-presets.json`.
-- The style system contains palette, typography, background strategy, and motif.
+- `template_family_selection` exists, is enabled, and references `beautiful-html-template-families`.
+- Every page declares `template_variant`, `semantic_blocks`, `component_selection`, and `asset_strategy`.
 - Every page declares the SVG-only planning fields listed in `svglide-planning-layer.md`.
-- Declared effects and required primitives match the corresponding source SVG.
-- Visible slide text does not leak preset names, source tokens, prompts, tool names, or local file paths.
+- Required image slots are filled for preview, and live submit has upload/file token evidence when required.
+- Unowned decorative primitives are absent; decorative motifs must be family-owned and within budget.
+- Visible slide text does not leak source tokens, prompts, tool names, or local file paths.
 
 Common remediation:
 
 | code | Meaning | Action |
 |------|---------|--------|
-| `plan_style_preset_unknown` | Unknown preset id | Choose a valid id from `style-presets.json` |
-| `plan_missing_visual_signature` | No SVG visual memory point | State the distinctive structure on that page |
-| `plan_missing_svg_effects` | No declared SVG capability | Declare real source-backed effects |
-| `plan_svg_effect_not_found` | Declared effect missing in source | Adjust source SVG or remove inaccurate metadata |
-| `plan_style_preset_visible_leak` | Preset/source metadata leaked into visible text | Keep metadata in plan only |
+| `plan_missing_template_family_selection` | No deck-level family selection | Select a family from `beautiful-html-template-families.json` |
+| `plan_missing_template_variant` | Page lacks a family variant | Choose a variant supported by the selected family |
+| `plan_missing_component_selection` | Page semantic blocks are not bound to components | Bind blocks to `component-registry.json` components |
+| `asset_slot_unfilled` | Required image slot is empty | Fetch/upload a matching asset or downgrade the whole group to structured fallback |
+| `unowned_decorative_primitive` | Decorative line/path is not owned by a family motif | Remove it or attach a valid family motif owner |
 | `plan_missing_loaded_rule_set` | SVG private refs were not recorded | Add the manifest-required SVG rule file list |
 | `plan_missing_art_direction` | No deck-level design strategy | Add cover/section/closing treatments, motif, and SVG-native moments |
 | `plan_missing_business_claims` | Visible numeric/business claims lack source records | Mark each claim as prompt-provided, derived, assumption, etc. |

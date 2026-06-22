@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/asset-strategy-registry.schema.json",
+  "title": "SVGlide asset strategy registry",
+  "type": "object",
+  "required": ["version", "strategies"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "svglide-asset-strategy-registry/v1"},
+    "strategies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["strategy_id", "trigger_signals", "allowed_asset_types", "fallback_if_missing"],
+        "additionalProperties": true
+      }
+    }
+  }
+}

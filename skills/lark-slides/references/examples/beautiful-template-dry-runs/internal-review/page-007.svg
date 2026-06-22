@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="#F5F5F5" />
+  <foreignObject id="title-7" slide:role="shape" slide:shape-type="text" x="64" y="44" width="620" height="90"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:44px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">comparison</div></foreignObject>
+  <rect id="brand-system-panel" slide:role="shape" x="90" y="150" width="740" height="230" fill="#ffffff" stroke="#111827" />
+  <foreignObject id="brand-system-7" slide:role="shape" slide:shape-type="text" x="130" y="210" width="260" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:24px;font-weight:800;font-family:Arial;color:#111827;line-height:1.16;">summary</div></foreignObject>
+</svg>

@@ -1,11 +1,168 @@
 {
-  "action": "continue_to_generate_svg",
+  "action": "repair_and_rerun",
   "inputs": {
     "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/gate10_planner",
     "prompt_contracts": "skills/lark-slides/references/svglide-planner-prompt-contracts.json",
-    "prompt_contracts_sha256": "a04fbc7ccef868a0f37aebc735a710933f3a23ad58a2208ae1bbe93cc2a65d63"
+    "prompt_contracts_sha256": "9a645344af87363c6b745147343eb8f6be6c21ae9747d51c369e3733db830064"
   },
-  "issues": [],
+  "issues": [
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.template_family_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].template_variant",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].semantic_blocks",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].component_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].asset_strategy",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].template_variant",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].semantic_blocks",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].component_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].asset_strategy",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].template_variant",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].semantic_blocks",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].component_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].asset_strategy",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.template_family_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].template_variant",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].semantic_blocks",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].component_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[0].asset_strategy",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].template_variant",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].semantic_blocks",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].component_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[1].asset_strategy",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].template_variant",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].semantic_blocks",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].component_selection",
+      "prompt_id": "canvas-planner"
+    },
+    {
+      "code": "schema_required_missing",
+      "message": "required property is missing",
+      "path": "$.slides[2].asset_strategy",
+      "prompt_id": "canvas-planner"
+    }
+  ],
   "output_path": "06-check/planner-contract-check.json",
   "planner_outputs": [
     {
@@ -23,7 +180,7 @@
       "schema": "skills/lark-slides/references/svglide-slide-plan.schema.json"
     },
     {
-      "error_count": 0,
+      "error_count": 26,
       "output_path": "02-plan/slide_plan.json",
       "output_sha256": "9c5f68a5f3536a91e07486e29ccd6961e95738de450e526727577960be672f1e",
       "prompt_id": "canvas-planner",
@@ -70,9 +227,9 @@
   "receipt_path": "receipts/planner-contract-check.json",
   "schema_version": "svglide-planner-contract-check/v1",
   "stage": "planner-contract-check",
-  "status": "passed",
+  "status": "failed",
   "summary": {
-    "error_count": 0,
+    "error_count": 26,
     "planner_output_count": 4,
     "prompt_contract_count": 4,
     "warning_count": 0

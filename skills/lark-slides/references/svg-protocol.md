@@ -95,7 +95,7 @@ CLI 会把这些几何属性作为生成质量门禁：值只能是数字或 `px
 | `<image opacity="...">` | MVP preflight 只 warning；高保真场景应预合成到图片，或在图片上方加半透明 `rect slide:role="shape"` |
 | iconfont / 外链 SVG 图标 | 用 SVGlide-safe path/line/rect/circle 组合本地绘制，或先转成受支持的本地图片资产 |
 
-每个 SVG 页面应通过 `visual_recipe` 证明自己值得使用 SVG：要么有强视觉主标题，要么有路径/流向/隐喻/标注/图标系统/微图表/纹理/仪表盘等 SVG-native 结构。只有 `rect + foreignObject` 的普通卡片页应优先走 XML/SXSD。
+每个 SVGlide 页面应通过 template family、variant、semantic blocks、component selection 和 asset strategy 证明它不是普通卡片页。只有 `rect + foreignObject` 的普通卡片页应优先走 XML/SXSD，或重新选择更合适的 family variant。
 
 文本样式应使用 parser 友好的显式 CSS 属性，例如 `font-size`、`font-weight`、`font-family`、`color`、`line-height`、`text-align`、`letter-spacing`。不要依赖 `font:` shorthand、复杂 flex 布局或浏览器默认样式来表达关键字号、加粗和行距；这些在转换到 SXSD/XML 时可能降级为默认样式。
 

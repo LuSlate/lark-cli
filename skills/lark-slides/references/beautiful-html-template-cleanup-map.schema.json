@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/beautiful-html-template-cleanup-map.schema.json",
+  "title": "SVGlide beautiful template cleanup map",
+  "type": "object",
+  "required": ["version", "policy", "cleanup_candidates", "content_cleanup_candidates", "banned_low_level_svg_instruction_patterns", "protected_assets"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {"const": "beautiful-html-template-cleanup-map/v1"},
+    "policy": {"const": "default_delete_extract_unique_signal_only"},
+    "cleanup_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target", "action", "deletion_allowed", "unique_signal_evidence", "extract_to", "delete_after", "runtime_import_allowed"],
+        "additionalProperties": true,
+        "properties": {
+          "action": {"enum": ["default_delete", "extract_minimal_signal_then_delete"]},
+          "deletion_allowed": {"const": true},
+          "runtime_import_allowed": {"const": false}
+        }
+      }
+    },
+    "content_cleanup_candidates": {"type": "array"},
+    "banned_low_level_svg_instruction_patterns": {"type": "array", "items": {"type": "string"}},
+    "protected_assets": {"type": "array", "items": {"type": "object", "required": ["target", "reason"], "additionalProperties": true}}
+  }
+}

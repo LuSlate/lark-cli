@@ -26,6 +26,9 @@ EVIDENCE_PATH = Path("source/evidence.json")
 SOURCE_RECEIPT_PATH = Path("source/source-receipt.json")
 ASSET_MANIFEST_PATH = Path("03-assets/asset-manifest.json")
 GENERATOR_RECEIPT_PATH = Path("receipts/generate_svg.json")
+RAW_VISUAL_MANIFEST = Path("04-artboard/raw/manifest.json")
+CONTRACT_MANIFEST = Path("04-svg/contract/manifest.json")
+CONTRACT_COMPILE_RECEIPT = Path("receipts/contract_compile.json")
 TEMPLATE_FIT_PATH = Path("06-check/template-fit.json")
 CANVAS_SPEC_VALIDATE_RECEIPT = Path("receipts/canvas-spec-validate.json")
 TEMPLATE_FIT_RECEIPT = Path("receipts/template-fit-check.json")
@@ -216,6 +219,38 @@ def source_file_hashes(project: Path) -> list[dict[str, str]]:
     ]
 
 
+def raw_visual_file_hashes(project: Path) -> list[dict[str, str]]:
+    manifest = read_json_optional(project, RAW_VISUAL_MANIFEST)
+    pages = manifest.get("pages") if isinstance(manifest.get("pages"), list) else []
+    files: list[dict[str, str]] = []
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        rel = page.get("source")
+        if not isinstance(rel, str) or not rel:
+            continue
+        path = project / rel
+        if path.exists() and path.is_file():
+            files.append({"path": rel, "sha256": file_sha256(path)})
+    return files
+
+
+def contract_output_hashes(project: Path) -> list[dict[str, str]]:
+    manifest = read_json_optional(project, CONTRACT_MANIFEST)
+    pages = manifest.get("pages") if isinstance(manifest.get("pages"), list) else []
+    files: list[dict[str, str]] = []
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        rel = page.get("output")
+        if not isinstance(rel, str) or not rel:
+            continue
+        path = project / rel
+        if path.exists() and path.is_file():
+            files.append({"path": rel, "sha256": file_sha256(path)})
+    return files
+
+
 def optional_file_sha256(project: Path, rel: Path) -> str | None:
     path = project / rel
     return file_sha256(path) if path.exists() else None
@@ -310,6 +345,89 @@ def check_contact_sheet(project: Path, contact_sheet: Any, issues: list[dict[str
         return
     if recorded != file_sha256(project / CONTACT_SHEET):
         issues.append(issue("artboard_contact_sheet_stale", "contact sheet hash does not match current file"))
+
+
+def contract_manifest_issues(project: Path) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    manifest_path = project / CONTRACT_MANIFEST
+    if not manifest_path.exists():
+        return [issue("contract_manifest_missing", f"contract manifest is required: {CONTRACT_MANIFEST.as_posix()}")]
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return [issue("contract_manifest_invalid_json", f"could not read contract manifest JSON: {error}")]
+    if not isinstance(manifest, dict):
+        return [issue("contract_manifest_invalid", "contract manifest must be an object")]
+    schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-contract-compile-manifest.schema.json"))
+    issues.extend(issue("contract_manifest_schema_invalid", f"{item['path']}: {item['message']}") for item in svglide_schema.validate_json_schema(manifest, schema))
+    if manifest.get("status") == "failed":
+        issues.append(issue("contract_manifest_failed", "contract manifest status must not be failed"))
+
+    receipt = read_json_optional(project, CONTRACT_COMPILE_RECEIPT)
+    if not receipt:
+        issues.append(issue("contract_compile_receipt_missing", f"contract compile receipt is required: {CONTRACT_COMPILE_RECEIPT.as_posix()}"))
+    else:
+        if receipt.get("status") == "failed":
+            issues.append(issue("contract_compile_receipt_failed", "contract compile receipt status must not be failed"))
+        if receipt.get("contract_manifest") != CONTRACT_MANIFEST.as_posix():
+            issues.append(issue("contract_compile_manifest_path_invalid", "contract compile receipt must point to the contract manifest"))
+        if receipt.get("raw_visual_manifest_sha256") != optional_file_sha256(project, RAW_VISUAL_MANIFEST):
+            issues.append(issue("contract_compile_raw_manifest_stale", "contract compile raw_visual_manifest_sha256 is stale"))
+
+    pages = manifest.get("pages") if isinstance(manifest.get("pages"), list) else []
+    if not pages:
+        issues.append(issue("contract_manifest_pages_missing", "contract manifest must include pages"))
+    outputs: list[dict[str, str]] = []
+    report_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-contract-compile-report.schema.json"))
+    for page in pages:
+        if not isinstance(page, dict):
+            issues.append(issue("contract_manifest_page_invalid", "contract manifest pages must be objects"))
+            continue
+        if page.get("status") == "failed":
+            issues.append(issue("contract_manifest_page_failed", f"contract manifest page status must not be failed: {page.get('page')}"))
+        for path_key, hash_key in [
+            ("source", "input_sha256"),
+            ("semantic_map", "semantic_map_sha256"),
+            ("output", "output_sha256"),
+        ]:
+            rel = page.get(path_key)
+            recorded = page.get(hash_key)
+            if not isinstance(rel, str) or not rel:
+                issues.append(issue(f"contract_manifest_{path_key}_missing", f"contract manifest page must include {path_key}"))
+                continue
+            path = project / rel
+            if not path.exists():
+                issues.append(issue(f"contract_manifest_{path_key}_artifact_missing", f"contract manifest artifact is missing: {rel}"))
+                continue
+            if recorded != file_sha256(path):
+                issues.append(issue(f"contract_manifest_{path_key}_stale", f"contract manifest hash is stale: {rel}"))
+            if path_key == "output":
+                outputs.append({"path": rel, "sha256": file_sha256(path)})
+        report_rel = page.get("report")
+        if not isinstance(report_rel, str) or not report_rel:
+            issues.append(issue("contract_manifest_report_missing", "contract manifest page must include report"))
+            continue
+        report_path = project / report_rel
+        if not report_path.exists():
+            issues.append(issue("contract_manifest_report_artifact_missing", f"contract report is missing: {report_rel}"))
+            continue
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            issues.append(issue("contract_report_invalid_json", f"could not read contract report JSON: {error}"))
+            continue
+        if isinstance(report, dict):
+            issues.extend(issue("contract_report_schema_invalid", f"{report_rel} {item['path']}: {item['message']}") for item in svglide_schema.validate_json_schema(report, report_schema))
+            if report.get("status") == "failed":
+                issues.append(issue("contract_report_failed", f"contract report status must not be failed: {report_rel}"))
+            if report.get("output") != page.get("output") or report.get("output_sha256") != page.get("output_sha256"):
+                issues.append(issue("contract_report_output_mismatch", f"contract report output does not match manifest: {report_rel}"))
+        else:
+            issues.append(issue("contract_report_invalid", f"contract report must be an object: {report_rel}"))
+
+    if outputs and outputs != source_file_hashes(project):
+        issues.append(issue("contract_manifest_outputs_stale", "contract manifest outputs do not match current canonical SVG files"))
+    return issues
 
 
 def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
@@ -484,8 +602,15 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
         check["issues"].append(issue("generator_page_identity_summary_missing", "generator receipt must include page_identity_summary"))
     if profile in STRICT_PROFILES and payload.get("fallback_skeleton_used") is True:
         check["issues"].append(issue("fallback_skeleton_used", "production profiles cannot use the generic fallback SVG skeleton"))
-    if payload.get("generated_files") != source_file_hashes(project):
-        check["issues"].append(issue("generator_source_stale", "generator receipt generated_files do not match current source SVG files"))
+    generation_mode = payload.get("generation_mode") or "direct_svg"
+    if generation_mode not in {"direct_svg", "artboard_satori"}:
+        check["issues"].append(issue("generator_generation_mode_invalid", "generation_mode must be direct_svg or artboard_satori"))
+    expected_generated_files = raw_visual_file_hashes(project) if generation_mode == "artboard_satori" else source_file_hashes(project)
+    if payload.get("generated_files") != expected_generated_files:
+        if generation_mode == "artboard_satori":
+            check["issues"].append(issue("generator_raw_visual_stale", "generator receipt generated_files do not match current raw visual files"))
+        else:
+            check["issues"].append(issue("generator_source_stale", "generator receipt generated_files do not match current source SVG files"))
     expected = {
         "plan_sha256": optional_file_sha256(project, PLAN_PATH),
         "evidence_sha256": optional_file_sha256(project, EVIDENCE_PATH),
@@ -511,10 +636,12 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
             page_receipt = project / item
             if not page_receipt.exists():
                 check["issues"].append(issue("generator_page_receipt_missing", f"page receipt is missing: {item}"))
-    generation_mode = payload.get("generation_mode") or "direct_svg"
-    if generation_mode not in {"direct_svg", "artboard_satori"}:
-        check["issues"].append(issue("generator_generation_mode_invalid", "generation_mode must be direct_svg or artboard_satori"))
     if generation_mode == "artboard_satori":
+        if payload.get("raw_visual_manifest") != RAW_VISUAL_MANIFEST.as_posix():
+            check["issues"].append(issue("generator_raw_visual_manifest_missing", "artboard_satori generator receipt must include raw_visual_manifest"))
+        raw_manifest = read_json_optional(project, RAW_VISUAL_MANIFEST)
+        if raw_manifest.get("status") != "passed":
+            check["issues"].append(issue("generator_raw_visual_manifest_not_passed", "raw visual manifest status must be passed"))
         if payload.get("canvas_spec_validate") != "06-check/canvas-spec-validate.json":
             check["issues"].append(issue("generator_canvas_spec_validate_missing", "artboard_satori generator receipt must include canvas_spec_validate"))
         if payload.get("artboard_render_receipt") != ARTBOARD_RENDER_RECEIPT.as_posix():
@@ -600,7 +727,6 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                     ("canvas_template_svg", "canvas_template_svg_sha256"),
                     ("compiler_input", "compiler_input_sha256"),
                     ("satori_svg", "satori_svg_sha256"),
-                    ("svglide_svg", "svglide_svg_sha256"),
                 ]:
                     check_recorded_artifact(project, page, path_key, hash_key, check["issues"], code_prefix="satori_bridge")
         template_fit_receipt = require_receipt(project, TEMPLATE_FIT_RECEIPT, check["issues"], code_prefix="template_fit_receipt")
@@ -632,7 +758,7 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
             artboard_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-artboard-receipt.schema.json"))
             semantic_map_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-semantic-map.schema.json"))
             node_layout_schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-node-layout-map.schema.json"))
-            by_svg = {item.get("path"): item.get("sha256") for item in generated if isinstance(item, dict)} if isinstance(generated, list) else {}
+            by_raw_svg = {item.get("path"): item.get("sha256") for item in generated if isinstance(item, dict)} if isinstance(generated, list) else {}
             for item in artboard_receipts:
                 if not isinstance(item, str):
                     check["issues"].append(issue("generator_artboard_receipt_invalid", "artboard_receipts must be string paths"))
@@ -653,10 +779,10 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                 if not isinstance(artboard_receipt, dict) or artboard_receipt.get("status") != "passed":
                     check["issues"].append(issue("generator_artboard_receipt_not_passed", f"artboard receipt status must be passed: {item}"))
                     continue
-                svglide_svg = artboard_receipt.get("svglide_svg")
-                svglide_svg_sha256 = artboard_receipt.get("svglide_svg_sha256")
-                if not isinstance(svglide_svg, str) or by_svg.get(svglide_svg) != svglide_svg_sha256:
-                    check["issues"].append(issue("generator_artboard_output_stale", f"artboard receipt output does not match generated_files: {item}"))
+                satori_svg = artboard_receipt.get("satori_svg")
+                satori_svg_sha256 = artboard_receipt.get("satori_svg_sha256")
+                if not isinstance(satori_svg, str) or by_raw_svg.get(satori_svg) != satori_svg_sha256:
+                    check["issues"].append(issue("generator_artboard_raw_output_stale", f"artboard receipt raw output does not match generated_files: {item}"))
                 for path_key, hash_key in [
                     ("satori_svg", "satori_svg_sha256"),
                     ("png", "png_sha256"),
@@ -665,7 +791,6 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                     ("compiler_input", "compiler_input_sha256"),
                     ("semantic_map", "semantic_map_sha256"),
                     ("node_layout_map", "node_layout_map_sha256"),
-                    ("svglide_svg", "svglide_svg_sha256"),
                 ]:
                     rel = artboard_receipt.get(path_key)
                     recorded = artboard_receipt.get(hash_key)
@@ -715,14 +840,15 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                         continue
                     schema_issues = svglide_schema.validate_json_schema(artifact, artifact_schema)
                     check["issues"].extend(issue(code, f"{rel} {schema_issue['path']}: {schema_issue['message']}") for schema_issue in schema_issues)
-                    if path_key == "semantic_map" and artifact.get("semantic_source") == "CanvasSpec":
-                        svglide_rel = artboard_receipt.get("svglide_svg")
-                        if isinstance(svglide_rel, str) and (project / svglide_rel).exists():
-                            semantic_issues = svglide_semantic_map_ir.validate_semantic_map_against_svg(artifact, project / svglide_rel)
+                    if path_key == "semantic_map" and artifact.get("semantic_source") in {"CanvasSpec", "SatoriSVG"}:
+                        raw_svg_rel = artboard_receipt.get("satori_svg")
+                        if isinstance(raw_svg_rel, str) and (project / raw_svg_rel).exists():
+                            semantic_issues = svglide_semantic_map_ir.validate_semantic_map_against_svg(artifact, project / raw_svg_rel)
                             check["issues"].extend(issue(f"generator_artboard_{semantic_issue['code']}", f"{rel}: {semantic_issue['message']}") for semantic_issue in semantic_issues)
                     if path_key == "node_layout_map":
                         drift_issues = svglide_node_layout_drift.validate_node_layout_map(artifact)
                         check["issues"].extend(issue(f"generator_artboard_{drift_issue['code']}", f"{rel}: {drift_issue['message']}") for drift_issue in drift_issues)
+        check["issues"].extend(contract_manifest_issues(project))
     check["error_count"] = len(check["issues"])
     check["status"] = "failed" if check["issues"] else "passed"
     return check

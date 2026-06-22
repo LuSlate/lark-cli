@@ -1,0 +1,668 @@
+{
+  "page_count": 10,
+  "output_mode": "svglide-svg",
+  "plan_path": ".lark-slides/plan/zhipu-minimax/slide_plan.json",
+  "loaded_rule_set": [
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svg-protocol.md",
+    "skills/lark-slides/references/svglide-artifacts.spec.md",
+    "skills/lark-slides/references/svglide-assets.contract.md",
+    "skills/lark-slides/references/svglide-checks.checklist.md",
+    "skills/lark-slides/references/svglide-create-svg.contract.md",
+    "skills/lark-slides/references/svglide-generate-svg.contract.md",
+    "skills/lark-slides/references/svglide-lock.contract.md",
+    "skills/lark-slides/references/svglide-plan.contract.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+    "skills/lark-slides/references/svglide-preview.spec.md",
+    "skills/lark-slides/references/svglide-readback.contract.md",
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-svg-private.rules.json",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+    "skills/lark-slides/references/svglide-workflow.spec.md"
+  ],
+  "quality_gates": {
+    "no_text_overflow": true,
+    "no_debug_guides": true,
+    "no_xml_like_pages": true
+  },
+  "art_direction": {
+    "cover_treatment": "template-family cover with one dominant structured visual block",
+    "section_divider_treatment": "template-family section rhythm when section pages exist",
+    "closing_treatment": "closing summary mirrors the selected family motif",
+    "deck_motif": "beautiful-html-template family translated into native SVG structure",
+    "svg_native_moments": [
+      "cover structure",
+      "comparison grid",
+      "closing motif"
+    ]
+  },
+  "template_family_selection": {
+    "enabled": true,
+    "source": "beautiful-html-template-families",
+    "selected_template_id": "blue-professional",
+    "candidate_template_ids": [
+      "blue-professional",
+      "raw-grid",
+      "cartesian"
+    ],
+    "selection_reason": "supports image panel; company/product comparison fit"
+  },
+  "svg_files": [
+    {
+      "page": 1,
+      "path": "page-001.svg"
+    },
+    {
+      "page": 2,
+      "path": "page-002.svg"
+    },
+    {
+      "page": 3,
+      "path": "page-003.svg"
+    },
+    {
+      "page": 4,
+      "path": "page-004.svg"
+    },
+    {
+      "page": 5,
+      "path": "page-005.svg"
+    },
+    {
+      "page": 6,
+      "path": "page-006.svg"
+    },
+    {
+      "page": 7,
+      "path": "page-007.svg"
+    },
+    {
+      "page": 8,
+      "path": "page-008.svg"
+    },
+    {
+      "page": 9,
+      "path": "page-009.svg"
+    },
+    {
+      "page": 10,
+      "path": "page-010.svg"
+    }
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "title": "cover",
+      "renderer_id": "hero_1",
+      "layout_family": "hero",
+      "density": "medium",
+      "visual_intent": "show cover with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "cover rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": [
+        {
+          "asset_id": "zhipu-minimax-product-image",
+          "binds_slot": "company-product-image",
+          "source_type": "web_search_preview",
+          "semantic_subject": "Zhipu and MiniMax product identity",
+          "retrieval_query": "Zhipu AI MiniMax product identity screenshot",
+          "license": "preview_unverified",
+          "href": "https://example.com/zhipu-minimax-product.png",
+          "usage_page": 1,
+          "source_url": "https://example.com/zhipu-minimax-product.png"
+        }
+      ],
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "cover",
+      "semantic_blocks": [
+        {
+          "block_id": "title_1",
+          "type": "title",
+          "content": "cover key message"
+        },
+        {
+          "block_id": "hero_finding_1",
+          "type": "finding",
+          "content": "Zhipu and MiniMax product comparison with company identity and real image slots"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_1"
+          ]
+        },
+        {
+          "component_id": "finding_callout",
+          "binds": [
+            "hero_finding_1"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "real_image_required",
+        "expected_asset_count": 1
+      },
+      "image_slots": [
+        {
+          "slot_id": "company-product-image",
+          "semantic_subject": "Zhipu and MiniMax product identity",
+          "asset_type": "screenshot",
+          "required": true,
+          "real_image_required": true,
+          "shared_asset_allowed": false
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "title": "agenda",
+      "renderer_id": "capability_map_2",
+      "layout_family": "capability_map",
+      "density": "medium",
+      "visual_intent": "show agenda with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "agenda rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "agenda",
+      "semantic_blocks": [
+        {
+          "block_id": "title_2",
+          "type": "title",
+          "content": "agenda key message"
+        },
+        {
+          "block_id": "agenda_2",
+          "type": "agenda",
+          "content": "Key sections and decision flow"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_2"
+          ]
+        },
+        {
+          "component_id": "action_list",
+          "binds": [
+            "agenda_2"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 3,
+      "title": "context overview",
+      "renderer_id": "scorecard_3",
+      "layout_family": "scorecard",
+      "density": "medium",
+      "visual_intent": "show context_overview with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "context_overview rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "context_overview",
+      "semantic_blocks": [
+        {
+          "block_id": "title_3",
+          "type": "title",
+          "content": "context_overview key message"
+        },
+        {
+          "block_id": "finding_3",
+          "type": "finding",
+          "content": "context_overview finding"
+        },
+        {
+          "block_id": "evidence_3",
+          "type": "evidence",
+          "content": "Source-backed evidence table"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_3"
+          ]
+        },
+        {
+          "component_id": "finding_callout",
+          "binds": [
+            "finding_3"
+          ]
+        },
+        {
+          "component_id": "evidence_table",
+          "binds": [
+            "evidence_3"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 4,
+      "title": "comparison",
+      "renderer_id": "dashboard_4",
+      "layout_family": "dashboard",
+      "density": "medium",
+      "visual_intent": "show comparison with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "comparison rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "comparison",
+      "semantic_blocks": [
+        {
+          "block_id": "title_4",
+          "type": "title",
+          "content": "comparison key message"
+        },
+        {
+          "block_id": "comparison_4",
+          "type": "comparison",
+          "content": "Compare entities, claims, and constraints"
+        },
+        {
+          "block_id": "company_4",
+          "type": "company",
+          "content": "Zhipu and MiniMax product comparison with company identity and real image slots"
+        },
+        {
+          "block_id": "evidence_4",
+          "type": "evidence",
+          "content": "Evidence slot tied to source material"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_4"
+          ]
+        },
+        {
+          "component_id": "comparison_matrix",
+          "binds": [
+            "comparison_4"
+          ]
+        },
+        {
+          "component_id": "image_panel",
+          "binds": [
+            "company_4"
+          ]
+        },
+        {
+          "component_id": "evidence_table",
+          "binds": [
+            "evidence_4"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 5,
+      "title": "action plan",
+      "renderer_id": "depth_5",
+      "layout_family": "depth",
+      "density": "medium",
+      "visual_intent": "show action_plan with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "action_plan rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "action_plan",
+      "semantic_blocks": [
+        {
+          "block_id": "title_5",
+          "type": "title",
+          "content": "action_plan key message"
+        },
+        {
+          "block_id": "action_5",
+          "type": "action",
+          "content": "Owner, next action, and deadline"
+        },
+        {
+          "block_id": "process_5",
+          "type": "process",
+          "content": "Execution sequence"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_5"
+          ]
+        },
+        {
+          "component_id": "action_list",
+          "binds": [
+            "action_5"
+          ]
+        },
+        {
+          "component_id": "process_flow",
+          "binds": [
+            "process_5"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 6,
+      "title": "closing",
+      "renderer_id": "annotation_6",
+      "layout_family": "annotation",
+      "density": "medium",
+      "visual_intent": "show closing with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "closing rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "closing",
+      "semantic_blocks": [
+        {
+          "block_id": "title_6",
+          "type": "title",
+          "content": "closing key message"
+        },
+        {
+          "block_id": "finding_6",
+          "type": "finding",
+          "content": "closing key message"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_6"
+          ]
+        },
+        {
+          "component_id": "finding_callout",
+          "binds": [
+            "finding_6"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 7,
+      "title": "cover",
+      "renderer_id": "brand_7",
+      "layout_family": "brand",
+      "density": "medium",
+      "visual_intent": "show cover with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "cover rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": [
+        {
+          "asset_id": "zhipu-minimax-product-image",
+          "binds_slot": "company-product-image",
+          "source_type": "web_search_preview",
+          "semantic_subject": "Zhipu and MiniMax product identity",
+          "retrieval_query": "Zhipu AI MiniMax product identity screenshot",
+          "license": "preview_unverified",
+          "href": "https://example.com/zhipu-minimax-product.png",
+          "usage_page": 7,
+          "source_url": "https://example.com/zhipu-minimax-product.png"
+        }
+      ],
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "cover",
+      "semantic_blocks": [
+        {
+          "block_id": "title_7",
+          "type": "title",
+          "content": "cover key message"
+        },
+        {
+          "block_id": "hero_finding_7",
+          "type": "finding",
+          "content": "Zhipu and MiniMax product comparison with company identity and real image slots"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_7"
+          ]
+        },
+        {
+          "component_id": "finding_callout",
+          "binds": [
+            "hero_finding_7"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "real_image_required",
+        "expected_asset_count": 1
+      },
+      "image_slots": [
+        {
+          "slot_id": "company-product-image",
+          "semantic_subject": "Zhipu and MiniMax product identity",
+          "asset_type": "screenshot",
+          "required": true,
+          "real_image_required": true,
+          "shared_asset_allowed": false
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "title": "agenda",
+      "renderer_id": "hero_8",
+      "layout_family": "hero",
+      "density": "medium",
+      "visual_intent": "show agenda with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "agenda rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "agenda",
+      "semantic_blocks": [
+        {
+          "block_id": "title_8",
+          "type": "title",
+          "content": "agenda key message"
+        },
+        {
+          "block_id": "agenda_8",
+          "type": "agenda",
+          "content": "Key sections and decision flow"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_8"
+          ]
+        },
+        {
+          "component_id": "action_list",
+          "binds": [
+            "agenda_8"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 9,
+      "title": "context overview",
+      "renderer_id": "capability_map_9",
+      "layout_family": "capability_map",
+      "density": "medium",
+      "visual_intent": "show context_overview with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "context_overview rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "context_overview",
+      "semantic_blocks": [
+        {
+          "block_id": "title_9",
+          "type": "title",
+          "content": "context_overview key message"
+        },
+        {
+          "block_id": "finding_9",
+          "type": "finding",
+          "content": "context_overview finding"
+        },
+        {
+          "block_id": "evidence_9",
+          "type": "evidence",
+          "content": "Source-backed evidence table"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_9"
+          ]
+        },
+        {
+          "component_id": "finding_callout",
+          "binds": [
+            "finding_9"
+          ]
+        },
+        {
+          "component_id": "evidence_table",
+          "binds": [
+            "evidence_9"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    },
+    {
+      "page": 10,
+      "title": "Closing summary",
+      "renderer_id": "brand_10",
+      "layout_family": "brand",
+      "density": "medium",
+      "visual_intent": "show comparison with the selected template family",
+      "visual_focal_point": "main structured visual block",
+      "visual_signature": "comparison rendered through family variant structure",
+      "content_density_contract": "medium-density structured template page",
+      "asset_contract": "none_required",
+      "risk_flags": [],
+      "source_policy": "Use prompt-provided content only; do not fabricate numbers.",
+      "template_variant": "comparison",
+      "semantic_blocks": [
+        {
+          "block_id": "title_10",
+          "type": "title",
+          "content": "comparison key message"
+        },
+        {
+          "block_id": "comparison_10",
+          "type": "comparison",
+          "content": "Compare entities, claims, and constraints"
+        },
+        {
+          "block_id": "company_10",
+          "type": "company",
+          "content": "Zhipu and MiniMax product comparison with company identity and real image slots"
+        },
+        {
+          "block_id": "evidence_10",
+          "type": "evidence",
+          "content": "Evidence slot tied to source material"
+        }
+      ],
+      "component_selection": [
+        {
+          "component_id": "title_block",
+          "binds": [
+            "title_10"
+          ]
+        },
+        {
+          "component_id": "comparison_matrix",
+          "binds": [
+            "comparison_10"
+          ]
+        },
+        {
+          "component_id": "image_panel",
+          "binds": [
+            "company_10"
+          ]
+        },
+        {
+          "component_id": "evidence_table",
+          "binds": [
+            "evidence_10"
+          ]
+        }
+      ],
+      "asset_strategy": {
+        "strategy_id": "structured_fallback",
+        "no_fake_data": true
+      }
+    }
+  ]
+}

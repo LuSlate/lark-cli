@@ -197,6 +197,119 @@ func TestSlidesCreateSVGRequestHeaderPassesToCreateAndSlideCalls(t *testing.T) {
 	}
 }
 
+func TestSlidesCreateSVGFontFamilyRewritesTextContent(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720">` +
+		`<foreignObject slide:role="shape" slide:shape-type="text" x="80" y="80" width="320" height="80" style="font-family:Inter;color:#111;">` +
+		`<div xmlns="http://www.w3.org/1999/xhtml"><span style="font-family:Arial;color:#222;">hello</span></div>` +
+		`</foreignObject></svg>`
+	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"xml_presentation_id": "pres_font", "revision_id": 1}},
+	})
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_font/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_font", "revision_id": 2}},
+	}
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_font", "https://x.feishu.cn/slides/pres_font")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--font-family", "Noto Serif SC",
+		"--title", "font family",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var body map[string]interface{}
+	if err := json.Unmarshal(slideStub.CapturedBody, &body); err != nil {
+		t.Fatalf("decode slide body: %v", err)
+	}
+	slide, ok := body["slide"].(map[string]interface{})
+	if !ok || len(slide) != 1 {
+		t.Fatalf("slide create body should be {slide:{content}}, got: %v", body)
+	}
+	content := slide["content"].(string)
+	for _, want := range []string{
+		`font-family:Noto Serif SC`,
+		`slide:contract-version="svglide-authoring-contract/v1"`,
+	} {
+		if !strings.Contains(content, want) {
+			t.Fatalf("slide content missing %s: %s", want, content)
+		}
+	}
+	for _, notWant := range []string{`font-family:Inter`, `font-family:Arial`} {
+		if strings.Contains(content, notWant) {
+			t.Fatalf("slide content should not contain %s: %s", notWant, content)
+		}
+	}
+	if data := decodeSlidesCreateEnvelope(t, stdout); data["font_family"] != "Noto Serif SC" {
+		t.Fatalf("font_family = %v, want Noto Serif SC", data["font_family"])
+	}
+}
+
+func TestSlidesCreateSVGFontFamilyDryRunReportsSelectedFamily(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage2), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--font-family", "Noto Serif SC",
+		"--dry-run",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(stdout.Bytes(), &data); err != nil {
+		t.Fatalf("decode dry-run output: %v\nraw=%s", err, stdout.String())
+	}
+	if data["font_family"] != "Noto Serif SC" {
+		t.Fatalf("font_family = %v, want Noto Serif SC", data["font_family"])
+	}
+}
+
+func TestSlidesCreateSVGRejectsCustomFontFamily(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage2), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--font-family", "slide-font-0123456789abcdef0123456789abcdef",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected custom font family to fail")
+	}
+	if !strings.Contains(err.Error(), "custom slide-font-* fonts are not supported") {
+		t.Fatalf("err = %v, want custom font guidance", err)
+	}
+}
+
 func TestSlidesCreateSVGRejectsUnsupportedRequestHeader(t *testing.T) {
 	dir := t.TempDir()
 	withSlidesTestWorkingDir(t, dir)

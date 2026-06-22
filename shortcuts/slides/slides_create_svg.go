@@ -36,6 +36,7 @@ var SlidesCreateSVG = common.Shortcut{
 			Desc:     "SVG file path; repeat for multiple pages",
 		},
 		{Name: "assets", Desc: "optional assets.json path mapping SVG @path placeholders to uploaded file tokens"},
+		{Name: "font-family", Desc: "optional supported font family to apply to SVGlide text; custom slide-font-* fonts are not supported"},
 		{Name: "request-header", Type: "string_array", Desc: "internal request header for SVGlide live lanes; repeat key=value, currently only x-tt-env=ppe_pure_svg is allowed"},
 	},
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
@@ -45,11 +46,18 @@ var SlidesCreateSVG = common.Shortcut{
 		if err := validateSVGAssetsPath(runtime, runtime.Str("assets")); err != nil {
 			return err
 		}
+		if _, err := normalizeSVGFontFamily(runtime.Str("font-family")); err != nil {
+			return err
+		}
 		_, err := parseSVGRequestHeaders(runtime.StrArray("request-header"))
 		return err
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		title := effectiveTitle(runtime.Str("title"))
+		fontFamily, err := normalizeSVGFontFamily(runtime.Str("font-family"))
+		if err != nil {
+			return common.NewDryRunAPI().Set("error", err.Error())
+		}
 		requestHeaders, err := parseSVGRequestHeaders(runtime.StrArray("request-header"))
 		if err != nil {
 			return common.NewDryRunAPI().Set("error", err.Error())
@@ -83,7 +91,11 @@ var SlidesCreateSVG = common.Shortcut{
 
 		slideStepStart := 2 + len(uploadPaths)
 		for i, page := range pages {
-			content, injectErr := injectSVGTransportAssetMetadata(page.Content, page.Tokens)
+			content := page.Content
+			if fontFamily != "" {
+				content = applySVGlideFontFamily(content, fontFamily)
+			}
+			content, injectErr := injectSVGTransportAssetMetadata(content, page.Tokens)
 			if injectErr != nil {
 				return common.NewDryRunAPI().Set("error", injectErr.Error())
 			}
@@ -99,10 +111,17 @@ var SlidesCreateSVG = common.Shortcut{
 		if len(requestHeaders) > 0 {
 			dry.Set("request_headers", svgRequestHeadersForOutput(requestHeaders))
 		}
+		if fontFamily != "" {
+			dry.Set("font_family", fontFamily)
+		}
 		return dry.Set("title", title)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		title := effectiveTitle(runtime.Str("title"))
+		fontFamily, err := normalizeSVGFontFamily(runtime.Str("font-family"))
+		if err != nil {
+			return err
+		}
 		requestHeaders, err := parseSVGRequestHeaders(runtime.StrArray("request-header"))
 		if err != nil {
 			return err
@@ -130,6 +149,9 @@ var SlidesCreateSVG = common.Shortcut{
 		if len(requestHeaders) > 0 {
 			result["request_headers"] = svgRequestHeadersForOutput(requestHeaders)
 		}
+		if fontFamily != "" {
+			result["font_family"] = fontFamily
+		}
 
 		pages, uploaded, err := rewriteSVGImagePlaceholders(runtime, presentationID, svgs, assets)
 		if err != nil {
@@ -147,7 +169,11 @@ var SlidesCreateSVG = common.Shortcut{
 		)
 		var slideIDs []string
 		for i, page := range pages {
-			content, err := injectSVGTransportAssetMetadata(page.Content, page.Tokens)
+			content := page.Content
+			if fontFamily != "" {
+				content = applySVGlideFontFamily(content, fontFamily)
+			}
+			content, err := injectSVGTransportAssetMetadata(content, page.Tokens)
 			if err != nil {
 				return output.Errorf(output.ExitValidation, "validation",
 					"page %d/%d failed before API call: %v (presentation %s was created; %d slide(s) added; slide_ids=%s)",

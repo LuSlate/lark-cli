@@ -127,6 +127,70 @@ func TestEnsureSVGlideRootContractVersionRejectsWrongVersion(t *testing.T) {
 	}
 }
 
+func TestNormalizeSVGFontFamily(t *testing.T) {
+	t.Parallel()
+
+	got, err := normalizeSVGFontFamily(" Noto Serif SC, Arial ")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "Noto Serif SC, Arial" {
+		t.Fatalf("font family = %q, want normalized list", got)
+	}
+
+	for _, raw := range []string{
+		"slide-font-0123456789abcdef0123456789abcdef",
+		"Noto Sans; color:red",
+		"Noto Sans,",
+	} {
+		if _, err := normalizeSVGFontFamily(raw); err == nil {
+			t.Fatalf("normalizeSVGFontFamily(%q) should fail", raw)
+		}
+	}
+}
+
+func TestApplySVGlideFontFamilyOnlyRewritesTextForeignObjects(t *testing.T) {
+	t.Parallel()
+
+	in := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` +
+		`<rect slide:role="shape" x="0" y="0" width="100" height="50" style="font-family:Inter;fill:#fff;"/>` +
+		`<foreignObject slide:role="shape" slide:shape-type="text" x="0" y="0" width="200" height="80" style="color:#111;font-family:Inter;">` +
+		`<div xmlns="http://www.w3.org/1999/xhtml"><span style="font-family:Arial;color:#333;" font-family="Arial">hello</span></div>` +
+		`</foreignObject></svg>`
+
+	got := applySVGlideFontFamily(in, "Noto Serif SC")
+	if !strings.Contains(got, `style="font-family:Inter;fill:#fff;"`) {
+		t.Fatalf("non-text shape font-family should stay untouched: %s", got)
+	}
+	for _, want := range []string{
+		`style="color:#111;font-family:Noto Serif SC;"`,
+		`style="font-family:Noto Serif SC;color:#333;"`,
+		`font-family="Noto Serif SC"`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("rewritten SVG missing %s: %s", want, got)
+		}
+	}
+	for _, notWant := range []string{`font-family:Arial`, `font-family="Arial"`} {
+		if strings.Contains(got, notWant) {
+			t.Fatalf("rewritten SVG should not contain %s: %s", notWant, got)
+		}
+	}
+}
+
+func TestApplySVGlideFontFamilyEmptyIsNoop(t *testing.T) {
+	t.Parallel()
+
+	in := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide">` +
+		`<foreignObject slide:role="shape" slide:shape-type="text" x="0" y="0" width="200" height="80" style="font-family:Inter;">` +
+		`<div xmlns="http://www.w3.org/1999/xhtml"><span style="font-family:Arial;">hello</span></div>` +
+		`</foreignObject></svg>`
+
+	if got := applySVGlideFontFamily(in, ""); got != in {
+		t.Fatalf("empty font family should be no-op:\n got %s\nwant %s", got, in)
+	}
+}
+
 func TestValidateSVGlideSVGRecursiveChildren(t *testing.T) {
 	t.Parallel()
 

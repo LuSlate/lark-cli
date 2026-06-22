@@ -1,0 +1,140 @@
+{
+  "version": "svglide-component-registry/v1",
+  "components": [
+    {
+      "component_id": "title_block",
+      "fits_semantic_blocks": ["title", "context", "section"],
+      "required_data": ["title"],
+      "optional_data": ["subtitle", "eyebrow"],
+      "allowed_asset_types": ["none"],
+      "density": "low",
+      "compile_notes": "Use native text boxes and simple family-owned chrome."
+    },
+    {
+      "component_id": "section_label",
+      "fits_semantic_blocks": ["section", "chapter", "agenda_marker"],
+      "required_data": ["label"],
+      "optional_data": ["index", "subtitle"],
+      "allowed_asset_types": ["none"],
+      "density": "low",
+      "compile_notes": "Use compact family typography and owned divider treatment."
+    },
+    {
+      "component_id": "metric_card",
+      "fits_semantic_blocks": ["metric", "kpi", "delta", "target_progress"],
+      "required_data": ["label", "value"],
+      "optional_data": ["delta", "period", "source_note"],
+      "allowed_asset_types": ["chart", "none"],
+      "density": "medium",
+      "compile_notes": "Use text, rect, and optional mini chart. Do not fabricate numeric data."
+    },
+    {
+      "component_id": "finding_callout",
+      "fits_semantic_blocks": ["finding", "insight", "hypothesis"],
+      "required_data": ["statement"],
+      "optional_data": ["evidence", "owner"],
+      "allowed_asset_types": ["none", "screenshot"],
+      "density": "medium",
+      "compile_notes": "Use family surface and emphasis token, not ad hoc callout styling."
+    },
+    {
+      "component_id": "evidence_table",
+      "fits_semantic_blocks": ["evidence", "table", "source"],
+      "required_data": ["rows"],
+      "optional_data": ["columns", "source_note"],
+      "allowed_asset_types": ["none"],
+      "density": "high",
+      "compile_notes": "Use structured table-like native shapes; keep source notes visible."
+    },
+    {
+      "component_id": "comparison_matrix",
+      "fits_semantic_blocks": ["comparison", "competitor", "before_after"],
+      "required_data": ["items", "dimensions"],
+      "optional_data": ["verdict", "source_note"],
+      "allowed_asset_types": ["logo", "screenshot", "none"],
+      "density": "medium-high",
+      "compile_notes": "Use qualitative cells unless numeric data is provided."
+    },
+    {
+      "component_id": "timeline",
+      "fits_semantic_blocks": ["timeline", "roadmap", "milestone"],
+      "required_data": ["steps"],
+      "optional_data": ["dates", "owners"],
+      "allowed_asset_types": ["none"],
+      "density": "medium",
+      "compile_notes": "Use family variant semantics; do not require explicit path/line primitives."
+    },
+    {
+      "component_id": "process_flow",
+      "fits_semantic_blocks": ["process", "workflow", "journey"],
+      "required_data": ["steps"],
+      "optional_data": ["inputs", "outputs"],
+      "allowed_asset_types": ["none"],
+      "density": "medium",
+      "compile_notes": "Represent process as semantic steps; family decides visual form."
+    },
+    {
+      "component_id": "image_panel",
+      "fits_semantic_blocks": ["company", "product", "person", "case", "food", "place"],
+      "required_data": ["semantic_subject"],
+      "optional_data": ["caption", "source_note"],
+      "allowed_asset_types": ["photo", "logo", "screenshot"],
+      "density": "medium",
+      "compile_notes": "Must bind to image_slots when real_image_required is selected."
+    },
+    {
+      "component_id": "logo_strip",
+      "fits_semantic_blocks": ["company", "partner", "ecosystem"],
+      "required_data": ["logos"],
+      "optional_data": ["labels"],
+      "allowed_asset_types": ["logo"],
+      "density": "medium",
+      "compile_notes": "Logo assets must use logo slots; do not replace with photos."
+    },
+    {
+      "component_id": "mini_chart",
+      "fits_semantic_blocks": ["metric", "trend", "share"],
+      "required_data": ["data"],
+      "optional_data": ["axis_labels", "source_note"],
+      "allowed_asset_types": ["chart"],
+      "density": "medium",
+      "compile_notes": "Only draw concrete values when user or source data provides them."
+    },
+    {
+      "component_id": "qualitative_radar",
+      "fits_semantic_blocks": ["capability", "evaluation", "comparison"],
+      "required_data": ["dimensions", "items"],
+      "optional_data": ["scores", "source_note"],
+      "allowed_asset_types": ["chart", "none"],
+      "density": "medium-high",
+      "compile_notes": "Use qualitative labels unless numeric scores are provided by source data."
+    },
+    {
+      "component_id": "action_list",
+      "fits_semantic_blocks": ["action", "next_step", "owner"],
+      "required_data": ["actions"],
+      "optional_data": ["owners", "deadline"],
+      "allowed_asset_types": ["none"],
+      "density": "medium",
+      "compile_notes": "Use native text list with family token hierarchy."
+    },
+    {
+      "component_id": "risk_matrix",
+      "fits_semantic_blocks": ["risk", "dependency", "decision"],
+      "required_data": ["risks"],
+      "optional_data": ["severity", "mitigation"],
+      "allowed_asset_types": ["none"],
+      "density": "medium-high",
+      "compile_notes": "Use structured cells; do not invent probability values."
+    },
+    {
+      "component_id": "architecture_diagram",
+      "fits_semantic_blocks": ["architecture", "system", "dependency", "module"],
+      "required_data": ["nodes"],
+      "optional_data": ["edges", "risks", "owners"],
+      "allowed_asset_types": ["none", "screenshot"],
+      "density": "medium-high",
+      "compile_notes": "Represent modules and dependencies as semantic boxes; do not require decorative connector primitives."
+    }
+  ]
+}
