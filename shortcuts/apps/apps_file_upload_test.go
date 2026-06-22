@@ -1,0 +1,161 @@
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
+
+package apps
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/larksuite/cli/internal/httpmock"
+)
+
+func TestAppsFileUpload_RequiresAppIDAndFile(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsFileUpload,
+		[]string{"+file-upload", "--app-id", "app_x", "--as", "user"}, factory, stdout); err == nil || !strings.Contains(err.Error(), "file") {
+		t.Fatalf("expected --file required error, got %v", err)
+	}
+}
+
+func TestAppsFileUpload_RejectsDirectory(t *testing.T) {
+	dir := t.TempDir()
+	oldWD, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+	if err := os.Mkdir(filepath.Join(dir, "sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	err := runAppsShortcut(t, AppsFileUpload,
+		[]string{"+file-upload", "--app-id", "app_x", "--file", "sub", "--as", "user"}, factory, stdout)
+	if err == nil || !strings.Contains(err.Error(), "directory") {
+		t.Fatalf("expected directory rejection, got %v", err)
+	}
+}
+
+func TestAppsFileUpload_DryRunPreUpload(t *testing.T) {
+	// Validate 会 Stat --file（在 DryRun 之前），故 dry-run 也需要真实存在的文件。
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "logo.png"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	oldWD, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsFileUpload,
+		[]string{"+file-upload", "--app-id", "app_x", "--file", "logo.png", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("dry-run err=%v", err)
+	}
+	var env struct {
+		API []struct {
+			Method string                 `json:"method"`
+			URL    string                 `json:"url"`
+			Body   map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	_ = json.Unmarshal([]byte(stdout.String()), &env)
+	a := env.API[0]
+	if a.Method != "POST" || a.URL != "/open-apis/spark/v1/apps/app_x/storage/file_pre_upload" {
+		t.Fatalf("dry-run = %s %s", a.Method, a.URL)
+	}
+	if a.Body["file_name"] != "logo.png" {
+		t.Fatalf("dry-run body.file_name = %v, want logo.png (basename)", a.Body["file_name"])
+	}
+}
+
+// 三步直传：pre-upload → 客户端 PUT 字节 → callback。
+func TestAppsFileUpload_EndToEnd(t *testing.T) {
+	var putBody []byte
+	var putContentType, putCD string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		putBody, _ = io.ReadAll(r.Body)
+		putContentType = r.Header.Get("Content-Type")
+		putCD = r.Header.Get("Content-Disposition")
+		w.Header().Set("ETag", `"etag-123"`)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "logo.png"), []byte("PNGBYTES"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	oldWD, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(oldWD) })
+
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: "/open-apis/spark/v1/apps/app_x/storage/file_pre_upload",
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"upload_url": srv.URL, "upload_id": "up-1"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: "/open-apis/spark/v1/apps/app_x/storage/file_upload_callback",
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
+			"file_name": "logo.png", "path": "/1858537546760216.png", "size_bytes": 8, "type": "image/png",
+			"download_url": "/spark/app/x/1858537546760216.png",
+		}},
+	})
+
+	if err := runAppsShortcut(t, AppsFileUpload,
+		[]string{"+file-upload", "--app-id", "app_x", "--file", "logo.png", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	if string(putBody) != "PNGBYTES" {
+		t.Fatalf("PUT body = %q, want file bytes", putBody)
+	}
+	if putContentType != "image/png" {
+		t.Errorf("PUT Content-Type = %q, want image/png", putContentType)
+	}
+	// 原始文件名必须经 Content-Disposition 透传给 TOS（否则后端用 storage key 当文件名）。
+	if putCD != `attachment; filename="logo.png"` {
+		t.Errorf("PUT Content-Disposition = %q, want attachment; filename=\"logo.png\"", putCD)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, `"path": "/1858537546760216.png"`) {
+		t.Errorf("output missing uploaded path:\n%s", got)
+	}
+}
+
+func TestSanitizeUploadFileName_Cases(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"logo.png", "logo.png"},
+		{"a b.png", "a%20b.png"},          // 空格 → %20（encodeURIComponent）
+		{`a:b/c*d?.png`, "abcd.png"},      // 去掉 TOS 非法字符
+		{"///", "download_file"},           // 全非法 → 兜底
+		{"中.txt", "%E4%B8%AD.txt"},        // 非 ASCII → UTF-8 百分号编码
+	}
+	for _, c := range cases {
+		if got := sanitizeUploadFileName(c.in); got != c.want {
+			t.Errorf("sanitizeUploadFileName(%q)=%q want %q", c.in, got, c.want)
+		}
+	}
+}
+
+func TestMimeByExt_Cases(t *testing.T) {
+	if got := mimeByExt("a.png"); !strings.HasPrefix(got, "image/png") {
+		t.Errorf("mimeByExt(a.png)=%q want image/png", got)
+	}
+	if got := mimeByExt("data.unknownext"); got != "application/octet-stream" {
+		t.Errorf("mimeByExt(unknown)=%q want application/octet-stream", got)
+	}
+}

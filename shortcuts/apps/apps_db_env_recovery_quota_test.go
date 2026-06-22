@@ -1,0 +1,312 @@
+// Copyright (c) 2026 Lark Technologies Pte. Ltd.
+// SPDX-License-Identifier: MIT
+
+package apps
+
+import (
+	"encoding/json"
+	"strings"
+	"testing"
+
+	"github.com/larksuite/cli/internal/httpmock"
+)
+
+const (
+	dbEnvMigrateURL       = "/open-apis/spark/v1/apps/app_x/db/env_migrate"
+	dbEnvMigrateStatusURL = "/open-apis/spark/v1/apps/app_x/db/env_migrate_status"
+	dbRecoveryURL         = "/open-apis/spark/v1/apps/app_x/db/env_recovery"
+	dbRecoveryDiffURL     = "/open-apis/spark/v1/apps/app_x/db/env_recovery_diff_status"
+	dbRecoveryApplyURL    = "/open-apis/spark/v1/apps/app_x/db/env_recovery_apply_status"
+	dbQuotaURL            = "/open-apis/spark/v1/apps/app_x/db/quota"
+)
+
+// ── env-diff ──
+
+func TestAppsDBEnvDiff_DryRunBody(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsDBEnvDiff,
+		[]string{"+db-env-diff", "--app-id", "app_x", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("dry-run err=%v", err)
+	}
+	var env struct {
+		API []struct {
+			Method string                 `json:"method"`
+			URL    string                 `json:"url"`
+			Body   map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	_ = json.Unmarshal([]byte(stdout.String()), &env)
+	a := env.API[0]
+	if a.Method != "POST" || a.URL != dbEnvMigrateURL || a.Body["dry_run"] != true {
+		t.Fatalf("dry-run = %s %s body=%v", a.Method, a.URL, a.Body)
+	}
+}
+
+func TestAppsDBEnvDiff_SuccessRendersChanges(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbEnvMigrateURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
+			"from": "dev", "to": "online",
+			"changes": []interface{}{
+				map[string]interface{}{"type": "ALTER_TABLE", "table": "orders", "statement": "ALTER TABLE orders ADD COLUMN note text"},
+			},
+		}},
+	})
+	if err := runAppsShortcut(t, AppsDBEnvDiff,
+		[]string{"+db-env-diff", "--app-id", "app_x", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "dev → online (1 changes)") || !strings.Contains(got, "ALTER TABLE orders ADD COLUMN note text") {
+		t.Fatalf("pretty diff malformed:\n%s", got)
+	}
+}
+
+func TestAppsDBEnvDiff_EmptyChanges(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbEnvMigrateURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"from": "dev", "to": "online", "changes": []interface{}{}}},
+	})
+	if err := runAppsShortcut(t, AppsDBEnvDiff,
+		[]string{"+db-env-diff", "--app-id", "app_x", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	if !strings.Contains(stdout.String(), "No pending changes from dev to online.") {
+		t.Fatalf("expected empty message, got: %s", stdout.String())
+	}
+}
+
+// ── env-migrate ──
+
+func TestAppsDBEnvMigrate_DryRunBody(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsDBEnvMigrate,
+		[]string{"+db-env-migrate", "--app-id", "app_x", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("dry-run err=%v", err)
+	}
+	var env struct {
+		API []struct {
+			Body map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	_ = json.Unmarshal([]byte(stdout.String()), &env)
+	if env.API[0].Body["dry_run"] != false {
+		t.Fatalf("dry-run body=%v (want dry_run:false)", env.API[0].Body)
+	}
+}
+
+// 异步：submit 返 task_id，status 立刻 applied → CLI 对外统一 migrated。
+func TestAppsDBEnvMigrate_AsyncPollSuccess(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbEnvMigrateURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"from": "dev", "to": "online", "task_id": "t1"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbEnvMigrateStatusURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"task_id": "t1", "status": "applied", "changes_applied": 3}},
+	})
+	if err := runAppsShortcut(t, AppsDBEnvMigrate,
+		[]string{"+db-env-migrate", "--app-id", "app_x", "--yes", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "✓ Migrated dev → online (3 changes)") {
+		t.Fatalf("pretty: %s", got)
+	}
+}
+
+func TestAppsDBEnvMigrate_PollFailedSurfacesError(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbEnvMigrateURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"from": "dev", "to": "online", "task_id": "t1"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbEnvMigrateStatusURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"task_id": "t1", "status": "failed", "error_message": "lock timeout"}},
+	})
+	err := runAppsShortcut(t, AppsDBEnvMigrate,
+		[]string{"+db-env-migrate", "--app-id", "app_x", "--yes", "--as", "user"}, factory, stdout)
+	if err == nil || !strings.Contains(err.Error(), "lock timeout") {
+		t.Fatalf("expected failed-status error, got %v", err)
+	}
+}
+
+func TestAppsDBEnvMigrate_RequiresConfirmation(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	// high-risk-write 无 --yes → 应被确认门拦截（非 0 退出）。
+	if err := runAppsShortcut(t, AppsDBEnvMigrate,
+		[]string{"+db-env-migrate", "--app-id", "app_x", "--as", "user"}, factory, stdout); err == nil {
+		t.Fatalf("expected confirmation gate without --yes")
+	}
+}
+
+// ── recovery-diff ──
+
+func TestAppsDBRecoveryDiff_RequiresTarget(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsDBRecoveryDiff,
+		[]string{"+db-recovery-diff", "--app-id", "app_x", "--as", "user"}, factory, stdout); err == nil {
+		t.Fatalf("expected required --target error")
+	}
+}
+
+func TestAppsDBRecoveryDiff_DryRunNormalizesTarget(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsDBRecoveryDiff,
+		[]string{"+db-recovery-diff", "--app-id", "app_x", "--target", "2026-04-15", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("dry-run err=%v", err)
+	}
+	var env struct {
+		API []struct {
+			Method string                 `json:"method"`
+			URL    string                 `json:"url"`
+			Body   map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	_ = json.Unmarshal([]byte(stdout.String()), &env)
+	a := env.API[0]
+	if a.Method != "POST" || a.URL != dbRecoveryURL || a.Body["dry_run"] != true {
+		t.Fatalf("dry-run = %s %s body=%v", a.Method, a.URL, a.Body)
+	}
+	if s, _ := a.Body["target"].(string); !strings.HasSuffix(s, "Z") {
+		t.Fatalf("target not normalized to RFC3339 UTC: %v", a.Body["target"])
+	}
+}
+
+func TestAppsDBRecoveryDiff_SuccessRendersChanges(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbRecoveryURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"preview_request_id": "p1"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbRecoveryDiffURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
+			"preview_status": "success", "tables_affected": 2, "estimated_seconds": 12,
+			"changes": []interface{}{
+				map[string]interface{}{"table": "orders", "inserted": 5, "deleted": 2},
+				map[string]interface{}{"table": "carts", "action": "restore_table"},
+			},
+		}},
+	})
+	if err := runAppsShortcut(t, AppsDBRecoveryDiff,
+		[]string{"+db-recovery-diff", "--app-id", "app_x", "--target", "2h", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	for _, want := range []string{"tables affected: 2", "orders: +5 rows, -2 rows", "carts: table will be restored", "estimated time: ~12s"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestAppsDBRecoveryDiff_PreviewFailed(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbRecoveryURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"preview_request_id": "p1"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbRecoveryDiffURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"preview_status": "failed", "error_message": "snapshot expired"}},
+	})
+	err := runAppsShortcut(t, AppsDBRecoveryDiff,
+		[]string{"+db-recovery-diff", "--app-id", "app_x", "--target", "2h", "--as", "user"}, factory, stdout)
+	if err == nil || !strings.Contains(err.Error(), "snapshot expired") {
+		t.Fatalf("expected preview-failed error, got %v", err)
+	}
+}
+
+// ── recovery-apply ──
+
+func TestAppsDBRecoveryApply_NoChangesShortCircuits(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbRecoveryURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"status": "no_changes"}},
+	})
+	if err := runAppsShortcut(t, AppsDBRecoveryApply,
+		[]string{"+db-recovery-apply", "--app-id", "app_x", "--target", "2h", "--yes", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	if !strings.Contains(stdout.String(), "No changes — database is already at this state.") {
+		t.Fatalf("expected no-changes short-circuit, got: %s", stdout.String())
+	}
+}
+
+func TestAppsDBRecoveryApply_AsyncPollSuccess(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST", URL: dbRecoveryURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"status": "running"}},
+	})
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbRecoveryApplyURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{"status": "success", "restore_time_sec": 8}},
+	})
+	if err := runAppsShortcut(t, AppsDBRecoveryApply,
+		[]string{"+db-recovery-apply", "--app-id", "app_x", "--target", "2h", "--yes", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	if !strings.Contains(stdout.String(), "✓ Database restored to") || !strings.Contains(stdout.String(), "(8s elapsed)") {
+		t.Fatalf("pretty: %s", stdout.String())
+	}
+}
+
+func TestAppsDBRecoveryApply_RequiresConfirmation(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsDBRecoveryApply,
+		[]string{"+db-recovery-apply", "--app-id", "app_x", "--target", "2h", "--as", "user"}, factory, stdout); err == nil {
+		t.Fatalf("expected confirmation gate without --yes")
+	}
+}
+
+// ── quota-get ──
+
+func TestAppsDBQuotaGet_WithQuotaPretty(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbQuotaURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
+			"storage_used_bytes": 1048576, "storage_quota_bytes": 10485760, "usage_percent": 10.0,
+			"tables": 4, "views": 1,
+		}},
+	})
+	if err := runAppsShortcut(t, AppsDBQuotaGet,
+		[]string{"+db-quota-get", "--app-id", "app_x", "--format", "pretty", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	for _, want := range []string{"usage", "(10.0%)", "tables", "4", "views", "1"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q:\n%s", want, got)
+		}
+	}
+}
+
+// 配额未对接（storage_quota_bytes=0）→ json 删 quota/usage_percent，仅留已用量与 tables/views。
+func TestAppsDBQuotaGet_NoQuotaOmitsFields(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "GET", URL: dbQuotaURL,
+		Body: map[string]interface{}{"code": 0, "data": map[string]interface{}{
+			"storage_used_bytes": 2048, "storage_quota_bytes": 0, "tables": 2, "views": 0,
+		}},
+	})
+	if err := runAppsShortcut(t, AppsDBQuotaGet,
+		[]string{"+db-quota-get", "--app-id", "app_x", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	if strings.Contains(got, "storage_quota_bytes") || strings.Contains(got, "usage_percent") {
+		t.Fatalf("quota fields should be omitted when not provisioned:\n%s", got)
+	}
+	if !strings.Contains(got, "storage_used_bytes") || !strings.Contains(got, "\"tables\"") {
+		t.Fatalf("expected used + tables retained:\n%s", got)
+	}
+}

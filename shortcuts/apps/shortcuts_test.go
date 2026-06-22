@@ -10,12 +10,16 @@ import (
 )
 
 // 钉死域内 shortcut 数量。少一条（漏挂）或多一条（误加）都会被这个测试拦截。
-// 6 基础 + 1 init + 3 publish + 1 env-pull + 4 db（table-list/table-schema/sql/dev-init）
-// + 3 git-credential + 5 session（create/list/get/stop/chat）= 23。
-func TestAppsShortcuts_Returns23(t *testing.T) {
+// 6 基础 + 1 init + 3 publish + 1 env-pull
+// + 16 db（table-list/table-schema/sql/dev-init/data-import/data-export/changelog-list/
+//        audit-status/audit-enable/audit-disable/audit-list/
+//        env-diff/env-migrate/recovery-diff/recovery-apply/quota-get）
+// + 3 git-credential + 5 session（create/list/get/stop/chat）
+// + 7 file（list/get/sign/download/upload/delete/quota-get）= 42。
+func TestAppsShortcuts_Returns42(t *testing.T) {
 	got := Shortcuts()
-	if len(got) != 23 {
-		t.Fatalf("Shortcuts() returned %d entries, want 23", len(got))
+	if len(got) != 42 {
+		t.Fatalf("Shortcuts() returned %d entries, want 42", len(got))
 	}
 }
 
