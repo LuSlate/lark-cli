@@ -11,9 +11,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/i18n"
 	"github.com/larksuite/cli/internal/keychain"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/internal/vfs"
 )
@@ -205,6 +205,12 @@ func GetConfigPath() string {
 	return filepath.Join(GetConfigDir(), "config.json")
 }
 
+// ErrMalformedConfig marks a config-load failure caused by malformed file
+// content (unparseable JSON, structurally empty) rather than a missing or
+// unreadable file. Callers classify with errors.Is rather than sniffing the
+// message text.
+var ErrMalformedConfig = errors.New("malformed config")
+
 // LoadMultiAppConfig loads multi-app config from disk.
 func LoadMultiAppConfig() (*MultiAppConfig, error) {
 	data, err := vfs.ReadFile(GetConfigPath())
@@ -214,10 +220,10 @@ func LoadMultiAppConfig() (*MultiAppConfig, error) {
 
 	var multi MultiAppConfig
 	if err := json.Unmarshal(data, &multi); err != nil {
-		return nil, fmt.Errorf("invalid config format: %w", err)
+		return nil, fmt.Errorf("invalid config format: %w: %w", ErrMalformedConfig, err)
 	}
 	if len(multi.Apps) == 0 {
-		return nil, fmt.Errorf("invalid config format: no apps")
+		return nil, fmt.Errorf("invalid config format: no apps: %w", ErrMalformedConfig)
 	}
 	return &multi, nil
 }
@@ -255,12 +261,8 @@ func RequireConfigForProfile(kc keychain.KeychainAccess, profileOverride string)
 func ResolveConfigFromMulti(raw *MultiAppConfig, kc keychain.KeychainAccess, profileOverride string) (*CliConfig, error) {
 	app := raw.CurrentAppConfig(profileOverride)
 	if app == nil {
-		return nil, &ConfigError{
-			Code:    3,
-			Type:    "config",
-			Message: fmt.Sprintf("profile %q not found", profileOverride),
-			Hint:    fmt.Sprintf("available profiles: %s", formatProfileNames(raw.ProfileNames())),
-		}
+		return nil, errs.NewConfigError(errs.SubtypeNotConfigured, "profile %q not found", profileOverride).
+			WithHint("available profiles: %s", formatProfileNames(raw.ProfileNames()))
 	}
 
 	// Validate the auth method first so a malformed profile fails here rather
@@ -270,9 +272,8 @@ func ResolveConfigFromMulti(raw *MultiAppConfig, kc keychain.KeychainAccess, pro
 	switch app.AuthMethod {
 	case "", AuthMethodClientSecret, AuthMethodPrivateKeyJWT:
 	default:
-		return nil, &ConfigError{Code: 3, Type: "config",
-			Message: fmt.Sprintf("unknown authMethod %q", app.AuthMethod),
-			Hint:    fmt.Sprintf("supported: %s, %s (empty defaults to %s)", AuthMethodClientSecret, AuthMethodPrivateKeyJWT, AuthMethodClientSecret)}
+		return nil, errs.NewConfigError(errs.SubtypeInvalidConfig, "unknown authMethod %q", app.AuthMethod).
+			WithHint("supported: %s, %s (empty defaults to %s)", AuthMethodClientSecret, AuthMethodPrivateKeyJWT, AuthMethodClientSecret)
 	}
 
 	// private_key_jwt carries no secret: validate the key handle and skip secret
@@ -281,25 +282,26 @@ func ResolveConfigFromMulti(raw *MultiAppConfig, kc keychain.KeychainAccess, pro
 	var secret string
 	if app.AuthMethod == AuthMethodPrivateKeyJWT {
 		if app.KeyRef == nil || app.KeyRef.Source != "tee" || app.KeyRef.ID == "" {
-			return nil, &ConfigError{Code: 3, Type: "config",
-				Message: "private_key_jwt requires a key handle (keyRef) but none is configured",
-				Hint:    "re-run: lark-cli config init --new --auth-method private_key_jwt"}
+			return nil, errs.NewConfigError(errs.SubtypeInvalidConfig, "private_key_jwt requires a key handle (keyRef) but none is configured").
+				WithHint("re-run: lark-cli config init --new --auth-method private_key_jwt")
 		}
 	} else {
 		if err := ValidateSecretKeyMatch(app.AppId, app.AppSecret); err != nil {
-			return nil, &ConfigError{Code: 3, Type: "config",
-				Message: "appId and appSecret keychain key are out of sync",
-				Hint:    err.Error()}
+			return nil, errs.NewConfigError(errs.SubtypeNotConfigured, "appId and appSecret keychain key are out of sync").
+				WithHint("%s", err.Error()).
+				WithCause(err)
 		}
 		var resolveErr error
 		secret, resolveErr = ResolveSecretInput(app.AppSecret, kc)
 		if resolveErr != nil {
-			// Deprecated: legacy *output.ExitError passthrough; removed after typed migration.
-			var exitErr *output.ExitError
-			if errors.As(resolveErr, &exitErr) {
-				return nil, exitErr
+			if errs.IsTyped(resolveErr) {
+				return nil, resolveErr
 			}
-			return nil, &ConfigError{Code: 3, Type: "config", Message: resolveErr.Error()}
+			subtype := errs.SubtypeNotConfigured
+			if isMalformedConfigError(resolveErr) {
+				subtype = errs.SubtypeInvalidConfig
+			}
+			return nil, errs.NewConfigError(subtype, "%s", resolveErr.Error()).WithCause(resolveErr)
 		}
 	}
 
@@ -308,9 +310,9 @@ func ResolveConfigFromMulti(raw *MultiAppConfig, kc keychain.KeychainAccess, pro
 		AppID:       app.AppId,
 		AppSecret:   secret,
 		Brand:       app.Brand,
-		DefaultAs:   app.DefaultAs,
 		Lang:        app.Lang,
 		AuthMethod:  app.AuthMethod,
+		DefaultAs:   app.DefaultAs,
 	}
 	if app.KeyRef != nil {
 		cfg.KeyLabel = app.KeyRef.ID
@@ -334,7 +336,8 @@ func RequireAuthForProfile(kc keychain.KeychainAccess, profileOverride string) (
 		return nil, err
 	}
 	if cfg.UserOpenId == "" {
-		return nil, &ConfigError{Code: 3, Type: "auth", Message: "not logged in", Hint: "run `lark-cli auth login` in the background. It blocks and outputs a verification URL — retrieve the URL and open it in a browser to complete login."}
+		return nil, errs.NewAuthenticationError(errs.SubtypeTokenMissing, "not logged in").
+			WithHint("run `lark-cli auth login` in the background. It blocks and outputs a verification URL — retrieve the URL and open it in a browser to complete login.")
 	}
 	return cfg, nil
 }

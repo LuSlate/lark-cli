@@ -41,6 +41,7 @@ build_target darwin arm64
 build_target linux amd64
 build_target darwin amd64
 build_target linux arm64
+build_target linux riscv64
 build_target windows amd64
 build_target windows arm64
 
@@ -63,6 +64,7 @@ const platformMap = {
 const archMap = {
   x64: "amd64",
   arm64: "arm64",
+  riscv64: "riscv64",
 };
 
 const platform = platformMap[process.platform];

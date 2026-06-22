@@ -27,10 +27,16 @@ func (authMethodTestSigner) Sign(context.Context, keysigner.KeyRef, []byte) ([]b
 	return nil, "", nil
 }
 
-// TestResolveRegisterAuthMethod covers the non-interactive gating paths. No TEE
-// signer is registered in this test binary, so private_key_jwt must be rejected.
+// TestResolveRegisterAuthMethod covers the non-interactive gating paths. The
+// darwin keychain signer is compiled into every build, so the test cannot rely
+// on the binary lacking a signer — it forces a known no-signer state for the
+// rejection cases, then registers a stub for the success case.
 func TestResolveRegisterAuthMethod(t *testing.T) {
 	f := &cmdutil.Factory{}
+
+	prevSigner := keysigner.Active()
+	t.Cleanup(func() { keysigner.Register(prevSigner) })
+	keysigner.Register(nil)
 
 	if m, err := resolveRegisterAuthMethod(f, core.AuthMethodClientSecret); err != nil || m != core.AuthMethodClientSecret {
 		t.Errorf("client_secret: got (%q, %v), want (client_secret, nil)", m, err)
@@ -48,9 +54,7 @@ func TestResolveRegisterAuthMethod(t *testing.T) {
 		t.Error("private_key_jwt without a signer: expected error")
 	}
 
-	prevSigner := keysigner.Active()
 	keysigner.Register(authMethodTestSigner{})
-	t.Cleanup(func() { keysigner.Register(prevSigner) })
 
 	if m, err := resolveRegisterAuthMethod(f, core.AuthMethodPrivateKeyJWT); err != nil || m != core.AuthMethodPrivateKeyJWT {
 		t.Errorf("private_key_jwt with signer: got (%q, %v), want (private_key_jwt, nil)", m, err)

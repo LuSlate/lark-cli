@@ -6,13 +6,11 @@ package config
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 
 	"github.com/larksuite/cli/errs"
@@ -130,12 +128,9 @@ func guardAgentWorkspace(opts *ConfigInitOptions) error {
 	if ws.IsLocal() {
 		return nil
 	}
-	return &core.ConfigError{
-		Code:    2,
-		Type:    ws.Display(),
-		Message: fmt.Sprintf("config init is refused inside %s context (would create a parallel app and shadow the existing %s binding)", ws.Display(), ws.Display()),
-		Hint:    "see `lark-cli config bind --help` to bind lark-cli to the Agent's existing app instead. Pass --force-init only if the user explicitly wants a separate app in this workspace.",
-	}
+	return errs.NewConfigError(errs.SubtypeNotConfigured,
+		"config init is refused inside %s context (would create a parallel app and shadow the existing %s binding)", ws.Display(), ws.Display()).
+		WithHint("see `lark-cli config bind --help` to bind lark-cli to the Agent's existing app instead. Pass --force-init only if the user explicitly wants a separate app in this workspace.")
 }
 
 // hasAnyNonInteractiveFlag returns true if any non-interactive flag is set.
@@ -221,6 +216,20 @@ func saveInitConfig(profileName string, existing *core.MultiAppConfig, f *cmduti
 	return saveAsOnlyApp(appId, secret, brand, string(preferredLang(i18n.Lang(lang), prior)), authMethod, keyRef)
 }
 
+// wrapSaveConfigError passes an already-typed error (e.g. the --name conflict
+// validation error from saveAsProfile) through unchanged, and classifies any
+// other failure as an internal storage error. Without the passthrough a user
+// input error would surface to agents as a system storage failure.
+func wrapSaveConfigError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if _, ok := errs.ProblemOf(err); ok {
+		return err
+	}
+	return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+}
+
 // saveAsProfile appends or updates a named profile in the config.
 // If a profile with the same name exists, it updates it; otherwise appends.
 // When updating, cleans up old keychain secrets if AppId changed.
@@ -247,7 +256,9 @@ func saveAsProfile(existing *core.MultiAppConfig, kc keychain.KeychainAccess, pr
 		multi.Apps[idx].KeyRef = keyRef
 	} else {
 		if findAppIndexByAppID(multi, profileName) >= 0 {
-			return fmt.Errorf("profile name %q conflicts with existing appId", profileName)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument,
+				"profile name %q conflicts with existing appId", profileName).
+				WithParam("--name")
 		}
 		// Append new profile
 		multi.Apps = append(multi.Apps, core.AppConfig{
@@ -291,17 +302,13 @@ func findAppIndexByAppID(multi *core.MultiAppConfig, appID string) int {
 // wrapUpdateExistingProfileErr classifies the error returned by
 // updateExistingProfileWithoutSecret. Typed errors (e.g. *errs.ValidationError
 // for blank-input) pass through unchanged so their exit code semantics
-// survive; legacy *output.ExitError also passes through; everything else
-// (filesystem, keychain, etc.) is wrapped as InternalError.
+// survive; everything else (filesystem, keychain, etc.) is wrapped as
+// InternalError.
 func wrapUpdateExistingProfileErr(err error) error {
 	if err == nil {
 		return nil
 	}
 	if errs.IsTyped(err) {
-		return err
-	}
-	var exitErr *output.ExitError
-	if errors.As(err, &exitErr) {
 		return err
 	}
 	return errs.NewInternalError(errs.SubtypeSDKError, "failed to save config: %v", err).WithCause(err)
@@ -378,7 +385,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 			return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 		}
 		if err := saveInitConfig(opts.ProfileName, existing, f, opts.AppID, secret, brand, opts.Lang, "", nil); err != nil {
-			return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+			return wrapSaveConfigError(err)
 		}
 		output.PrintSuccess(f.IOStreams.ErrOut, fmt.Sprintf("Configuration saved to %s", core.GetConfigPath()))
 		printLangPreferenceConfirmation(opts)
@@ -395,10 +402,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 	if f.IOStreams.IsTerminal && !opts.langExplicit && !opts.hasAnyNonInteractiveFlag() {
 		lang, err := promptLangSelection()
 		if err != nil {
-			if err == huh.ErrUserAborted {
-				return output.ErrBare(1)
-			}
-			return output.Errorf(output.ExitInternal, "internal", "language selection failed: %v", err)
+			return langSelectionError(err)
 		}
 		opts.Lang = string(lang)
 		opts.UILang = lang
@@ -422,7 +426,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 		// key), so the app_secret probe is skipped.
 		if result.AuthMethod == core.AuthMethodPrivateKeyJWT {
 			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, core.SecretInput{}, result.Brand, opts.Lang, result.AuthMethod, keyRefFromResult(result)); err != nil {
-				return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+				return wrapSaveConfigError(err)
 			}
 			removeStaleSecretForPKJWT(existing, opts.ProfileName, result.AppID, f.Keychain)
 			printLangPreferenceConfirmation(opts)
@@ -438,7 +442,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 			return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 		}
 		if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, secret, result.Brand, opts.Lang, "", nil); err != nil {
-			return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+			return wrapSaveConfigError(err)
 		}
 		printLangPreferenceConfirmation(opts)
 		output.PrintJson(f.IOStreams.Out, map[string]interface{}{"appId": result.AppID, "appSecret": "****", "brand": result.Brand})
@@ -464,7 +468,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 		if result.AuthMethod == core.AuthMethodPrivateKeyJWT {
 			// Secretless create: persist auth method + TEE key ref, no secret.
 			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, core.SecretInput{}, result.Brand, opts.Lang, result.AuthMethod, keyRefFromResult(result)); err != nil {
-				return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+				return wrapSaveConfigError(err)
 			}
 			removeStaleSecretForPKJWT(existing, opts.ProfileName, result.AppID, f.Keychain)
 			if err := runProbePKJWT(opts.Ctx, f, result.Brand, result.AppID, keysigner.Active(), result.KeyLabel); err != nil {
@@ -477,7 +481,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 				return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 			}
 			if err := saveInitConfig(opts.ProfileName, existing, f, result.AppID, secret, result.Brand, opts.Lang, "", nil); err != nil {
-				return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+				return wrapSaveConfigError(err)
 			}
 		} else if result.Mode == "existing" && result.AppID != "" {
 			// Existing app with unchanged secret — update app ID and brand only
@@ -582,7 +586,7 @@ func configInitRun(opts *ConfigInitOptions) error {
 		return errs.NewInternalError(errs.SubtypeSDKError, "%v", err).WithCause(err)
 	}
 	if err := saveInitConfig(opts.ProfileName, existing, f, resolvedAppId, storedSecret, parseBrand(resolvedBrand), opts.Lang, "", nil); err != nil {
-		return errs.NewInternalError(errs.SubtypeStorage, "failed to save config: %v", err).WithCause(err)
+		return wrapSaveConfigError(err)
 	}
 	output.PrintSuccess(f.IOStreams.ErrOut, fmt.Sprintf("Configuration saved to %s", core.GetConfigPath()))
 	printLangPreferenceConfirmation(opts)
