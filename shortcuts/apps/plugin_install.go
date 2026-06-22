@@ -6,6 +6,7 @@ package apps
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,11 +28,12 @@ var AppsPluginInstall = common.Shortcut{
 	Service:     appsService,
 	Command:     "+plugin-install",
 	Description: "Install a plugin package (download, extract, update package.json)",
-	Risk:        "write",
-	Scopes:      []string{"spark:plugin:readonly"},
-	AuthTypes:   []string{"user"},
+	Risk:             "write",
+	ConditionalScopes: []string{"spark:plugin:readonly"},
+	AuthTypes:         []string{"user"},
 	Flags: []common.Flag{
 		{Name: "name", Desc: "plugin key[@version] (e.g. @official-plugins/ai-text-generate@1.0.0); omit to install all declared plugins"},
+		{Name: "local", Desc: "install from a local .tgz file instead of downloading from registry (e.g. --local ./plugin.tgz)"},
 		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
@@ -60,6 +62,10 @@ var AppsPluginInstall = common.Shortcut{
 		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
 		if err != nil {
 			return err
+		}
+
+		if localTgz := strings.TrimSpace(rctx.Str("local")); localTgz != "" {
+			return pluginInstallLocal(rctx, projectPath, localTgz)
 		}
 
 		name := strings.TrimSpace(rctx.Str("name"))
@@ -188,6 +194,80 @@ func pluginInstallAll(ctx context.Context, rctx *common.RuntimeContext, projectP
 			fmt.Fprintln(w, "All declared plugins are already installed.")
 		})
 	}
+	return nil
+}
+
+// pluginInstallLocal installs a plugin from a local .tgz file, skipping API calls.
+// Reads plugin key and version from the extracted package.json inside the tgz.
+func pluginInstallLocal(rctx *common.RuntimeContext, projectPath, tgzPath string) error {
+	tgzData, err := os.ReadFile(tgzPath) //nolint:forbidigo // shortcuts cannot import internal/vfs; local tgz read.
+	if err != nil {
+		return appsValidationParamError("--local", "cannot read tgz file %s: %v", tgzPath, err).WithCause(err)
+	}
+
+	// Extract to a temp dir first to read package.json
+	tmpDir, err := os.MkdirTemp("", "plugin-local-*") //nolint:forbidigo
+	if err != nil {
+		return appsFileIOError(err, "cannot create temp dir")
+	}
+	defer os.RemoveAll(tmpDir) //nolint:forbidigo
+
+	if err := pluginExtractTGZ(bytes.NewReader(tgzData), tmpDir); err != nil {
+		return appsFileIOError(err, "cannot extract tgz")
+	}
+
+	// Read key and version from extracted package.json
+	pkgData, err := os.ReadFile(filepath.Join(tmpDir, "package.json")) //nolint:forbidigo
+	if err != nil {
+		return appsFileIOError(err, "tgz does not contain package.json")
+	}
+	var pkgMeta map[string]interface{}
+	if err := json.Unmarshal(pkgData, &pkgMeta); err != nil {
+		return appsFileIOError(err, "invalid package.json in tgz")
+	}
+	key, _ := pkgMeta["name"].(string)
+	version, _ := pkgMeta["version"].(string)
+	if key == "" {
+		return appsValidationParamError("--local", "package.json in tgz missing 'name' field")
+	}
+	if version == "" {
+		version = "0.0.0"
+	}
+
+	// Move to node_modules
+	destDir := filepath.Join(projectPath, "node_modules", key)
+	if err := os.RemoveAll(destDir); err != nil { //nolint:forbidigo
+		return appsFileIOError(err, "cannot clean %s", destDir)
+	}
+	if err := os.MkdirAll(filepath.Dir(destDir), 0o755); err != nil { //nolint:forbidigo
+		return appsFileIOError(err, "cannot create parent dir for %s", destDir)
+	}
+	if err := os.Rename(tmpDir, destDir); err != nil { //nolint:forbidigo
+		// rename may fail across filesystems; fall back to re-extract
+		if err2 := os.MkdirAll(destDir, 0o755); err2 != nil { //nolint:forbidigo
+			return appsFileIOError(err2, "cannot create %s", destDir)
+		}
+		if err2 := pluginExtractTGZ(bytes.NewReader(tgzData), destDir); err2 != nil {
+			return appsFileIOError(err2, "cannot extract plugin to %s", destDir)
+		}
+	}
+
+	// Update package.json actionPlugins
+	pkg, err := pluginReadPackageJSON(projectPath)
+	if err != nil {
+		return err
+	}
+	pluginSetActionPlugin(pkg, key, version)
+	if err := pluginWritePackageJSON(projectPath, pkg); err != nil {
+		return appsFileIOError(err, "cannot update package.json")
+	}
+
+	result := map[string]interface{}{
+		"key": key, "version": version, "status": "installed", "source": "local",
+	}
+	rctx.OutFormat(result, nil, func(w io.Writer) {
+		fmt.Fprintf(w, "✓ Installed %s@%s (from local %s)\n", key, version, tgzPath)
+	})
 	return nil
 }
 
