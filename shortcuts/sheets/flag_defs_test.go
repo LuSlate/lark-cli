@@ -65,9 +65,9 @@ func TestFlagsFor_MapsAllFields(t *testing.T) {
 	if url == nil || url.Required {
 		t.Errorf("+sheet-create --url should not be cobra-required: %+v", url)
 	}
-	// hidden + int default
+	// visible + int default
 	cap := byName("+cells-get", "max-chars")
-	if cap == nil || !cap.Hidden || cap.Default != "500000" {
+	if cap == nil || cap.Hidden || cap.Default != "500000" {
 		t.Errorf("+cells-get --max-chars not mapped: %+v", cap)
 	}
 	// input sources

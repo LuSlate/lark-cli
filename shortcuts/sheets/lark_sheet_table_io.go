@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/larksuite/cli/errs"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/shortcuts/common"
 )
@@ -818,7 +817,7 @@ func renameSheet(ctx context.Context, runtime *common.RuntimeContext, token, she
 func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, styles *workbookCreateSheetStyles) error {
 	written, err := writeTypedSheets(ctx, runtime, token, payload, "", styles)
 	if err != nil {
-		return tablePutPartial(token, nil, written, err.Error())
+		return tablePutPartial(runtime, token, nil, written, err.Error())
 	}
 	runtime.Out(map[string]interface{}{
 		"spreadsheet_token": token,
@@ -1005,39 +1004,28 @@ func listSheetIDsByName(ctx context.Context, runtime *common.RuntimeContext, tok
 	return byName, dimsByName, nil
 }
 
-// tablePutPartial builds a structured error for a multi-sheet write that failed
-// partway. When some sheets already landed it's a partial_success (their
-// summaries are surfaced so callers can retry the rest or delete the workbook);
-// when nothing landed — the first or only sheet failed — it's a plain failure,
-// so we don't misleadingly claim "some sheets were written".
-func tablePutPartial(token string, spreadsheet interface{}, written []interface{}, reason string) error {
-	detail := map[string]interface{}{
+// tablePutPartial reports a multi-sheet write that failed partway. When some
+// sheets already landed it is a partial_success: their summaries are the primary
+// machine-readable output, so we emit an ok:false result envelope on stdout (via
+// OutPartialFailure) carrying written_sheets, and return the partial-failure exit
+// signal — callers can retry the rest or delete the workbook. When nothing landed
+// — the first or only sheet failed — it is a plain failure, so we return a typed
+// errs.APIError rather than misleadingly claiming "some sheets were written".
+func tablePutPartial(runtime *common.RuntimeContext, token string, spreadsheet interface{}, written []interface{}, reason string) error {
+	if len(written) == 0 {
+		return errs.NewAPIError(errs.SubtypeServerError, "table-put failed on %s: %s", token, reason).
+			WithHint("no sheets were written; fix the cause and retry")
+	}
+	data := map[string]interface{}{
 		"spreadsheet_token": token,
 		"written_sheets":    written,
+		"reason":            reason,
+		"hint":              "some sheets were written; inspect written_sheets, then retry the remaining sheets or delete the spreadsheet",
 	}
 	if spreadsheet != nil {
-		detail["spreadsheet"] = spreadsheet
+		data["spreadsheet"] = spreadsheet
 	}
-	if len(written) == 0 {
-		return &output.ExitError{
-			Code: output.ExitAPI,
-			Detail: &output.ErrDetail{
-				Type:    "api_error",
-				Message: fmt.Sprintf("table-put failed on %s: %s", token, reason),
-				Hint:    "no sheets were written; fix the cause and retry",
-				Detail:  detail,
-			},
-		}
-	}
-	return &output.ExitError{
-		Code: output.ExitAPI,
-		Detail: &output.ErrDetail{
-			Type:    "partial_success",
-			Message: fmt.Sprintf("table-put partially applied to %s: %s", token, reason),
-			Hint:    "some sheets were written; inspect written_sheets, then retry the remaining sheets or delete the spreadsheet",
-			Detail:  detail,
-		},
-	}
+	return runtime.OutPartialFailure(data, nil)
 }
 
 // ─── dry-run ──────────────────────────────────────────────────────────

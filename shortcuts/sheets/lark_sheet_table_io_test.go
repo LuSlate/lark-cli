@@ -5,11 +5,13 @@ package sheets
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/larksuite/cli/internal/httpmock"
+	"github.com/larksuite/cli/internal/output"
 )
 
 // ─── pure helpers: date serial, typed cell mapping ────────────────────
@@ -654,15 +656,22 @@ func TestTablePut_ExecutePartialFailure(t *testing.T) {
 			`{"sheets":[{"name":"汇总","columns":["a"],"data":[["x"]]},{"name":"明细","columns":["a"],"data":[["y"]]}]}`},
 		structure, writeOK, writeErr)
 	if err == nil {
-		t.Fatalf("expected partial-success error; got nil. out=%s", out)
+		t.Fatalf("expected partial-failure exit signal; got nil. out=%s", out)
 	}
-	if !strings.Contains(err.Error(), "partially applied") && !strings.Contains(out, "partially applied") {
-		t.Errorf("expected partial_success (not total failure); got err=%v out=%s", err, out)
+	// Per the typed-error contract, a partial success is a result, not an error
+	// envelope: the ok:false result (with written_sheets and the failing sheet's
+	// name) lands on stdout, and err is the bare partial-failure exit signal.
+	var pfErr *output.PartialFailureError
+	if !errors.As(err, &pfErr) {
+		t.Errorf("expected *output.PartialFailureError exit signal; got %T %v", err, err)
 	}
-	// The failing sheet is named in the message; the written one lives in the
-	// structured written_sheets detail.
-	if !strings.Contains(err.Error(), "明细") {
-		t.Errorf("partial_success should name the failed sheet 明细; got err=%v", err)
+	if !strings.Contains(out, "written_sheets") {
+		t.Errorf("expected written_sheets in the partial-success result; got out=%s", out)
+	}
+	// The failing sheet is named in the reason; the written one lives in
+	// written_sheets — both on stdout.
+	if !strings.Contains(out, "明细") {
+		t.Errorf("partial_success should name the failed sheet 明细; got out=%s", out)
 	}
 }
 
