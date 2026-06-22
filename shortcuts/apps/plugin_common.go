@@ -252,13 +252,23 @@ func pluginValidateJSONFlag(flagName, value string) error {
 	return nil
 }
 
-// pluginCheckInstalled verifies that the plugin package is installed in node_modules.
+// pluginCheckInstalled verifies that the plugin package is installed in node_modules
+// with a valid manifest.json. Distinguishes three failure cases:
+//   - plugin directory does not exist → "not installed"
+//   - plugin directory exists but manifest.json missing → "not built"
+//   - other I/O error
 func pluginCheckInstalled(projectPath, pluginKey string) error {
-	manifestPath := filepath.Join(projectPath, "node_modules", pluginKey, "manifest.json")
+	pluginDir := filepath.Join(projectPath, "node_modules", pluginKey)
+	manifestPath := filepath.Join(pluginDir, "manifest.json")
 	if _, err := os.Stat(manifestPath); err != nil { //nolint:forbidigo // shortcuts cannot import internal/vfs; local stat for plugin check.
 		if os.IsNotExist(err) {
+			if pluginDirExists(pluginDir) {
+				return appsFailedPreconditionError(
+					"plugin %q exists in node_modules but manifest.json is missing; the package may not have been built correctly", pluginKey,
+				).WithHint("reinstall with a properly built .tgz (ap build + npm pack), or run 'lark-cli apps +plugin-install --local <built.tgz>' to replace it")
+			}
 			return appsFailedPreconditionError("plugin %q is not installed", pluginKey).
-				WithHint("run 'lark-cli apps +plugin-install %s' first", pluginKey)
+				WithHint("run 'lark-cli apps +plugin-install --local <tgz>' or 'lark-cli apps +plugin-install --name %s' to install", pluginKey)
 		}
 		return appsFileIOError(err, "cannot check plugin installation for %s", pluginKey)
 	}

@@ -16,6 +16,7 @@ import (
 
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -33,7 +34,7 @@ var AppsPluginInstall = common.Shortcut{
 	AuthTypes:         []string{"user"},
 	Flags: []common.Flag{
 		{Name: "name", Desc: "plugin key[@version] (e.g. @official-plugins/ai-text-generate@1.0.0); omit to install all declared plugins"},
-		{Name: "local", Desc: "install from a local .tgz file instead of downloading from registry (e.g. --local ./plugin.tgz)"},
+		{Name: "local", Desc: "install from a local .tgz file (dev/test only)", Hidden: true},
 		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
@@ -284,7 +285,13 @@ func pluginResolveVersion(ctx context.Context, rctx *common.RuntimeContext, key,
 
 	data, err := rctx.CallAPITyped("POST", apiBasePath+"/plugins/-/versions/batch_get", nil, body)
 	if err != nil {
-		return "", "", "", withAppsHint(err, "check plugin key spelling and network")
+		p, ok := errs.ProblemOf(err)
+		if ok && p.Subtype == errs.SubtypeInvalidResponse {
+			p.Message = fmt.Sprintf("plugin registry API is not available (returned non-JSON for %s)", key)
+			p.Hint = "the plugin registry endpoint may not be registered yet; check with the backend team"
+			return "", "", "", err
+		}
+		return "", "", "", withAppsHint(err, fmt.Sprintf("failed to fetch plugin version for %s; check plugin key spelling and network", key))
 	}
 
 	versions := pluginExtractVersionInfo(data, key)
