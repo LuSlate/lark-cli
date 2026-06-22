@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"sort"
 	"strings"
 	"sync"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/larksuite/cli/internal/errclass"
 	"github.com/larksuite/cli/internal/i18n"
 	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -50,6 +52,8 @@ type RuntimeContext struct {
 	botInfoFunc   func() (*BotInfo, error)          // sync.OnceValues; lazy bot identity from /bot/v3/info
 	larkSDK       *lark.Client                      // eagerly initialized in mountDeclarative
 	stdinConsumed bool                              // set when an Input flag has consumed stdin (`-`); guards against a second flag also using `-` within the same call
+	projectable   bool                              // set when Shortcut.Projectable is true
+	outputProps   *schema.OrderedProps              // command OutputSchema props when it marks fields; nil = pass-through
 }
 
 // ── Identity ──
@@ -694,19 +698,49 @@ func (ctx *RuntimeContext) emit(data interface{}, meta *output.Meta, raw, ok boo
 		return
 	}
 
+	var droppedNames map[string]bool
+	if ctx.projectable && ctx.outputProps != nil {
+		if !ctx.Bool("full") {
+			// Capture what projection trims from the real response (before the
+			// reassign below) so the jq-miss hint can name the specific field.
+			droppedNames = droppedFieldNames(data, ctx.outputProps)
+		}
+		data = ProjectBySchema(data, ctx.outputProps, ctx.Bool("full"))
+	}
+
 	env := output.Envelope{OK: ok, Identity: string(ctx.As()), Data: data, Meta: meta, Notice: output.GetNotice()}
 	if scanResult.Alert != nil {
 		env.ContentSafetyAlert = scanResult.Alert
 	}
 
 	if ctx.JqExpr != "" {
-		filter := output.JqFilter
+		var err error
 		if raw {
-			filter = output.JqFilterRaw
+			_, err = output.JqFilterRawCount(ctx.IO().Out, env, ctx.JqExpr)
+		} else {
+			_, err = output.JqFilterCount(ctx.IO().Out, env, ctx.JqExpr)
 		}
-		if err := filter(ctx.IO().Out, env, ctx.JqExpr); err != nil {
+		if err != nil {
 			fmt.Fprintf(ctx.IO().ErrOut, "error: %v\n", err)
 			ctx.outputErrOnce.Do(func() { ctx.outputErr = err })
+			return
+		}
+		// Fire whenever the agent's jq references a field projection dropped —
+		// regardless of result count. A jq path to a trimmed field yields null
+		// (one result), not an empty result, so a count==0 gate would miss it.
+		if len(droppedNames) > 0 {
+			keys := make([]string, 0, len(droppedNames))
+			for n := range droppedNames {
+				keys = append(keys, n)
+			}
+			sort.Strings(keys) // deterministic
+			for _, name := range keys {
+				if strings.Contains(ctx.JqExpr, name) {
+					fmt.Fprintf(ctx.IO().ErrOut,
+						"note: field `%s` exists but is full-only in this command; re-run with --full (or --full --jq <path> for just that field)\n", name)
+					break
+				}
+			}
 		}
 		return
 	}
@@ -777,6 +811,11 @@ func (ctx *RuntimeContext) outFormat(data interface{}, meta *output.Meta, pretty
 		format, formatOK := output.ParseFormat(ctx.Format)
 		if !formatOK {
 			fmt.Fprintf(ctx.IO().ErrOut, "warning: unknown format %q, falling back to json\n", ctx.Format)
+		}
+		// Projection applies to non-JSON formats too, so pretty/table/csv match
+		// --json (all formats show the same curated view; --full returns all).
+		if ctx.projectable && ctx.outputProps != nil {
+			data = ProjectBySchema(data, ctx.outputProps, ctx.Bool("full"))
 		}
 		output.FormatValue(ctx.IO().Out, data, format)
 	}
@@ -942,6 +981,15 @@ func runShortcut(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bo
 	}
 	if err := output.ValidateJqFlags(rctx.JqExpr, "", rctx.Format); err != nil {
 		return err
+	}
+	if s.Projectable {
+		rctx.projectable = true
+		if anyProjected(s.OutputSchema) {
+			rctx.outputProps = s.OutputSchema
+		}
+	}
+	if s.NoFullViewHint != "" && rctx.Bool("full") {
+		fmt.Fprintln(rctx.IO().ErrOut, s.NoFullViewHint)
 	}
 	if s.Validate != nil {
 		if err := s.Validate(rctx.ctx, rctx); err != nil {
@@ -1237,6 +1285,15 @@ func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f
 		if cmd.Flags().Lookup("flag-name") == nil {
 			cmd.Flags().String("flag-name", "", "flag whose schema to print (omit to list introspectable flags); used with --print-schema")
 		}
+	}
+	if s.Projectable && cmd.Flags().Lookup("full") == nil {
+		cmd.Flags().Bool("full", false,
+			"return the complete upstream payload instead of the schema-curated default view; "+
+				"to fetch one hidden field, prefer --jq <path> (--full returns everything)")
+	}
+	if s.NoFullViewHint != "" && cmd.Flags().Lookup("full") == nil {
+		cmd.Flags().Bool("full", false, "(this command has no full view — see the note printed when used)")
+		_ = cmd.Flags().MarkHidden("full")
 	}
 	cmd.Flags().StringP("jq", "q", "", "jq expression to filter JSON output")
 	cmdutil.AddShortcutIdentityFlag(ctx, cmd, f, s.AuthTypes)

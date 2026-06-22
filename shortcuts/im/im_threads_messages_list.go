@@ -20,15 +20,16 @@ import (
 const threadsMessagesMaxPageSize = 500
 
 var ImThreadsMessagesList = common.Shortcut{
-	Service:     "im",
-	Command:     "+threads-messages-list",
-	Description: "List messages in a thread; user/bot; accepts om_/omt_ input, resolves message IDs to thread_id, supports sort/pagination",
-	Risk:        "read",
-	Scopes:      []string{"im:message:readonly"},
-	UserScopes:  []string{"im:message.group_msg:get_as_user", "im:message.p2p_msg:get_as_user", "im:message.reactions:read", "contact:user.basic_profile:readonly"},
-	BotScopes:   []string{"im:message.group_msg", "im:message.p2p_msg:readonly", "im:message.reactions:read", "contact:user.base:readonly"},
-	AuthTypes:   []string{"user", "bot"},
-	HasFormat:   true,
+	Service:        "im",
+	Command:        "+threads-messages-list",
+	Description:    "List messages in a thread; user/bot; accepts om_/omt_ input, resolves message IDs to thread_id, supports sort/pagination",
+	Risk:           "read",
+	Scopes:         []string{"im:message:readonly"},
+	UserScopes:     []string{"im:message.group_msg:get_as_user", "im:message.p2p_msg:get_as_user", "im:message.reactions:read", "contact:user.basic_profile:readonly"},
+	BotScopes:      []string{"im:message.group_msg", "im:message.p2p_msg:readonly", "im:message.reactions:read", "contact:user.base:readonly"},
+	AuthTypes:      []string{"user", "bot"},
+	HasFormat:      true,
+	NoFullViewHint: imMessageNoFullHint,
 	Flags: []common.Flag{
 		{Name: "thread", Desc: "thread ID (om_xxx or omt_xxx)", Required: true},
 		{Name: "order", Default: "asc", Desc: "sort order: asc | desc", Enum: []string{"asc", "desc"}},

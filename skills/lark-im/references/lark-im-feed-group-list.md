@@ -58,6 +58,15 @@ JSON keeps the raw envelope; with `--page-all` both lists are returned fully mer
 
 > `page_size` counts live and deleted groups together, and the per-page count can be smaller still when entries are filtered — so never infer completeness from counts. Pagination is governed solely by `has_more`.
 
+## Default view and `--full`
+
+Output is a **curated view**: each group keeps `group_id`, `name`, and `type`. The `rules` object (shown in the example above) is **hidden by default**.
+
+- `--full` returns the complete upstream payload (`rules` included).
+- Need `rules`? Use **`--full --jq <path>`** (e.g. `--full --jq '.data.groups[].rules'`). The `--full` is required even with `--jq`: `--jq` filters the curated view, where hidden fields are already trimmed away — so a bare `--jq '.data.groups[].rules'` returns `null` (and stderr prints a `... is full-only ... re-run with --full` note). Pairing `--jq` with `--full` keeps the output to just that field, so you avoid dumping the whole payload back into context.
+- A field missing from the default view does **not** mean it doesn't exist — it may be full-only. Don't conclude "no such field" from its absence here.
+- Don't try `lark-cli schema` to introspect this command (it isn't in the catalog); the field list is in this doc.
+
 ## See also
 
 - [lark-im-feed-groups.md](lark-im-feed-groups.md) — raw `feed.groups.*` APIs, enums, and rule guidance

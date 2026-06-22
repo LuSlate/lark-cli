@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/larksuite/cli/errs"
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/larksuite/cli/shortcuts/common"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 )
@@ -17,13 +18,15 @@ import (
 // ImFlagList provides the +flag-list shortcut for listing bookmarks.
 // Feed-type thread entries are auto-enriched with message content.
 var ImFlagList = common.Shortcut{
-	Service:     "im",
-	Command:     "+flag-list",
-	Description: "List bookmarks; user-only; auto-enriches feed-type thread entries with message content; supports `--page-all` auto-pagination",
-	Risk:        "read",
-	UserScopes:  []string{flagReadScope},
-	AuthTypes:   []string{"user"},
-	HasFormat:   true,
+	Service:      "im",
+	Command:      "+flag-list",
+	Description:  "List bookmarks; user-only; auto-enriches feed-type thread entries with message content; supports `--page-all` auto-pagination",
+	Risk:         "read",
+	UserScopes:   []string{flagReadScope},
+	AuthTypes:    []string{"user"},
+	HasFormat:    true,
+	Projectable:  true,
+	OutputSchema: flagListOutputSchema(),
 	Flags: []common.Flag{
 		{Name: "page-size", Type: "int", Default: "50", Desc: "page size (1-50)"},
 		{Name: "page-token", Desc: "pagination token for next page"},
@@ -68,6 +71,27 @@ var ImFlagList = common.Shortcut{
 		runtime.Out(data, nil)
 		return nil
 	},
+}
+
+// flagListOutputSchema declares the default (projected) view for +flag-list.
+// Each bookmark item keeps its identity/type/timestamps; the enriched feed-thread
+// `message` is narrowed to message_id + msg_type + body.content (the rest of the
+// raw mget message — sender, mentions, chat_id, etc. — stays full-only). The two
+// list wrappers (flag_items, delete_flag_items), the inline messages array, and
+// pagination (has_more/page_token) are all marked so they survive trimming.
+func flagListOutputSchema() *schema.OrderedProps {
+	body := common.KeepFields("content")
+	message := common.KeepFields("message_id", "msg_type")
+	message.Set("body", common.ObjectOf(body))
+
+	item := common.KeepFields("item_id", "flag_type", "item_type", "create_time", "update_time")
+	item.Set("message", common.ObjectOf(message))
+
+	root := common.KeepFields("has_more", "page_token")
+	root.Set("flag_items", common.ArrayOf(item))
+	root.Set("delete_flag_items", common.ArrayOf(item))
+	root.Set("messages", common.ArrayOf(message))
+	return root
 }
 
 func validateListOptions(rt *common.RuntimeContext) error {

@@ -19,7 +19,8 @@ import (
 // Complex values (maps, arrays) are printed as indented JSON with Go's default
 // HTML escaping (<, >, & → <, >, &).
 func JqFilter(w io.Writer, data interface{}, expr string) error {
-	return jqFilter(w, data, expr, false)
+	_, err := jqFilter(w, data, expr, false)
+	return err
 }
 
 // JqFilterRaw is like JqFilter but disables HTML escaping when re-marshaling
@@ -27,17 +28,30 @@ func JqFilter(w io.Writer, data interface{}, expr string) error {
 // carries XML/HTML content that must survive --jq '.data.document' style
 // projections without getting mangled into < escapes.
 func JqFilterRaw(w io.Writer, data interface{}, expr string) error {
+	_, err := jqFilter(w, data, expr, true)
+	return err
+}
+
+// JqFilterCount applies expr to data, writes results to w, and returns the
+// number of result values produced (0 = empty result; drives the on-demand
+// full-only miss hint).
+func JqFilterCount(w io.Writer, data interface{}, expr string) (int, error) {
+	return jqFilter(w, data, expr, false)
+}
+
+// JqFilterRawCount is JqFilterCount with HTML escaping disabled (see JqFilterRaw).
+func JqFilterRawCount(w io.Writer, data interface{}, expr string) (int, error) {
 	return jqFilter(w, data, expr, true)
 }
 
-func jqFilter(w io.Writer, data interface{}, expr string, raw bool) error {
+func jqFilter(w io.Writer, data interface{}, expr string, raw bool) (int, error) {
 	query, err := gojq.Parse(expr)
 	if err != nil {
-		return errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid jq expression: %s", err).WithCause(err)
+		return 0, errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid jq expression: %s", err).WithCause(err)
 	}
 	code, err := gojq.Compile(query)
 	if err != nil {
-		return errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid jq expression: %s", err).WithCause(err)
+		return 0, errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid jq expression: %s", err).WithCause(err)
 	}
 
 	// Normalize data through toGeneric so typed structs become map[string]any.
@@ -45,6 +59,7 @@ func jqFilter(w io.Writer, data interface{}, expr string, raw bool) error {
 	// Convert json.Number values to gojq-compatible types.
 	normalized = convertNumbers(normalized)
 
+	var count int
 	iter := code.Run(normalized)
 	for {
 		v, ok := iter.Next()
@@ -52,13 +67,14 @@ func jqFilter(w io.Writer, data interface{}, expr string, raw bool) error {
 			break
 		}
 		if err, isErr := v.(error); isErr {
-			return errs.NewAPIError(errs.SubtypeUnknown, "jq error: %s", err).WithCause(err)
+			return count, errs.NewAPIError(errs.SubtypeUnknown, "jq error: %s", err).WithCause(err)
 		}
 		if err := writeJqValue(w, v, raw); err != nil {
-			return err
+			return count, err
 		}
+		count++
 	}
-	return nil
+	return count, nil
 }
 
 // ValidateJqFlags checks --jq flag compatibility with --output and --format flags,

@@ -51,6 +51,8 @@ Each message contains:
 | `sender` | Sender information (includes `name`) |
 | `content` | Message content |
 
+The `sender` sub-object is **intentionally minimal**: `{id, sender_type, name}`. This command has **no `--full` view** — passing `--full` just prints a one-line note to stderr and outputs normally. For fuller sender details, take `sender.id` to the **contact domain** (e.g. `lark-cli contact +search-user`, or contact user get). Do **not** retry this command with `--full` to expand the sender.
+
 ## Usage Scenarios
 
 ### Scenario 1: Fetch the full content of a specific message

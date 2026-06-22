@@ -71,6 +71,15 @@ lark-cli im +chat-list --as user --types p2p
 | `p2p_target_type` | Peer type, e.g., `user` |
 | `p2p_target_id` | Peer ID (type controlled by `--user-id-type`) |
 
+## Default view and `--full`
+
+Output is a **curated view**: only the fields above. Verbose / low-value fields on each chat (`avatar`, `tenant_key`, `owner_id_type`) are **hidden by default**.
+
+- `--full` returns the complete upstream payload (all hidden fields included).
+- Need one hidden field? Use **`--full --jq <path>`** (e.g. `--full --jq '.data.chats[].avatar'`). The `--full` is required even with `--jq`: `--jq` filters the curated view, where hidden fields are already trimmed away — so a bare `--jq '.data.chats[].avatar'` returns `null` (and stderr prints a `... is full-only ... re-run with --full` note). Pairing `--jq` with `--full` keeps the output to just that field, so you avoid dumping the whole payload back into context.
+- A field missing from the default view does **not** mean it doesn't exist — it may be full-only. Don't conclude "no such field" from its absence here.
+- Don't try `lark-cli schema` to introspect this command (it isn't in the catalog); the field list is in this doc.
+
 ## Including p2p single chats
 
 Default behavior lists groups only — same as before this feature. To include p2p, pass `--types`:

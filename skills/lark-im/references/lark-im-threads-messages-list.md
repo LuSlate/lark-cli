@@ -72,6 +72,10 @@ Thread messages do not support `start_time` / `end_time` filtering because of Fe
 | Read the full thread in chronological order | `--order asc --page-size 50`, then paginate as needed |
 | Just confirm whether replies exist | `--order desc --page-size 1` |
 
+### 5. Sender is minimal; no `--full` view
+
+The `sender` sub-object on each reply is **intentionally minimal**: `{id, sender_type, name}`. This command has **no `--full` view** — passing `--full` just prints a one-line note to stderr and outputs normally. For fuller sender details, take `sender.id` to the **contact domain** (e.g. `lark-cli contact +search-user`, or contact user get). Do **not** retry this command with `--full` to expand the sender.
+
 ## Usage Scenarios
 
 ### Scenario 1: Expand a thread discovered in group messages

@@ -11,6 +11,7 @@ import (
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -39,13 +40,15 @@ func writeBotStripP2pWarning(errOut io.Writer) {
 // list groups the current user/bot is a member of. Supports sort order,
 // pagination, and (user identity only) muted-chat filtering via --exclude-muted.
 var ImChatList = common.Shortcut{
-	Service:     "im",
-	Command:     "+chat-list",
-	Description: "List chats the current user/bot is a member of; defaults to groups; pass --types=p2p,group to include p2p single chats (user-only); user/bot; supports sorting, pagination, --exclude-muted (user-only)",
-	Risk:        "read",
-	Scopes:      []string{"im:chat:read"},
-	AuthTypes:   []string{"user", "bot"},
-	HasFormat:   true,
+	Service:      "im",
+	Command:      "+chat-list",
+	Description:  "List chats the current user/bot is a member of; defaults to groups; pass --types=p2p,group to include p2p single chats (user-only); user/bot; supports sorting, pagination, --exclude-muted (user-only)",
+	Risk:         "read",
+	Scopes:       []string{"im:chat:read"},
+	AuthTypes:    []string{"user", "bot"},
+	HasFormat:    true,
+	Projectable:  true,
+	OutputSchema: chatListOutputSchema(),
 	Flags: []common.Flag{
 		{Name: "user-id-type", Default: "open_id", Desc: "ID type for owner_id in response", Enum: []string{"open_id", "union_id", "user_id"}},
 		{Name: "sort", Default: "create_time", Desc: "sort field: create_time (ascending) | active_time (descending)", Enum: []string{"create_time", "active_time"}},
@@ -195,6 +198,20 @@ var ImChatList = common.Shortcut{
 		})
 		return nil
 	},
+}
+
+// chatListOutputSchema declares the default (projected) view for +chat-list:
+// the chat object's useful fields + pagination + filter/notices metadata. The
+// chat's avatar / tenant_key / owner_id_type are left unmarked, so they are
+// hidden by default and recoverable via --full (§6.7 initial setting).
+func chatListOutputSchema() *schema.OrderedProps {
+	chat := common.KeepFields(
+		"chat_id", "name", "description", "owner_id", "external",
+		"chat_status", "chat_mode", "p2p_target_type", "p2p_target_id",
+	)
+	root := common.KeepFields("has_more", "page_token", "filter", "notices")
+	root.Set("chats", common.ArrayOf(chat))
+	return root
 }
 
 // normalizeTypes validates and normalizes the --types slice already parsed by cobra.

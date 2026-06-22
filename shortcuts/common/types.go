@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/spf13/cobra"
 )
 
@@ -52,6 +53,20 @@ type Shortcut struct {
 	HasFormat bool     // Deprecated: --format is now always injected; this field has no effect.
 	Tips      []string // optional tips shown in --help output
 	Hidden    bool     // hide from --help / tab completion (still executable); use when deprecating a command in favor of a replacement
+
+	// Projectable opts the command into framework output projection: the framework
+	// auto-injects a --full flag and, after Execute, trims the envelope data by the
+	// command's OutputSchema. No-op/fail-open when OutputSchema is nil or marks nothing.
+	Projectable bool
+	// OutputSchema describes the data this command emits, with projected marks
+	// selecting the default view (build it with KeepFields/ArrayOf/ObjectOf). Consulted
+	// only when Projectable is true; lives on the command, no registry dependency.
+	OutputSchema *schema.OrderedProps
+	// NoFullViewHint, when non-empty, registers a hidden --full flag for a command
+	// that has no full view (e.g. message commands whose output is already a curated
+	// layer). Passing --full prints this redirect to stderr and otherwise runs
+	// normally — turning a flailing "unknown flag" retry into one clear path.
+	NoFullViewHint string
 
 	// Business logic hooks.
 	DryRun   func(ctx context.Context, runtime *RuntimeContext) *DryRunAPI // optional: framework prints & returns when --dry-run is set

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/larksuite/cli/shortcuts/common"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 )
@@ -30,6 +31,8 @@ var ImFeedShortcutList = common.Shortcut{
 	ConditionalUserScopes: []string{chatBatchQueryScope},
 	AuthTypes:             []string{"user"},
 	HasFormat:             true,
+	Projectable:           true,
+	OutputSchema:          feedShortcutListOutputSchema(),
 	Flags: []common.Flag{
 		{Name: "page-token",
 			Desc: "opaque pagination token from the previous response; omit for the first page. If a token is rejected because the list changed, restart by omitting it."},
@@ -67,6 +70,24 @@ var ImFeedShortcutList = common.Shortcut{
 		runtime.Out(data, nil)
 		return nil
 	},
+}
+
+// feedShortcutListOutputSchema declares the default (projected) view for
+// +feed-shortcut-list. Each entry keeps feed_card_id + type, and the enriched
+// `detail` (full chat object from im.chats.batch_query) is narrowed to
+// chat_id/name/chat_mode — its avatar / tenant_key / owner_id* / description /
+// external stay full-only. The wrapper key (shortcuts), pagination
+// (has_more/page_token), and the data-level _notice the command may emit on
+// enrichment failure are all marked so they survive trimming.
+func feedShortcutListOutputSchema() *schema.OrderedProps {
+	detail := common.KeepFields("chat_id", "name", "chat_mode")
+
+	item := common.KeepFields("feed_card_id", "type")
+	item.Set("detail", common.ObjectOf(detail))
+
+	root := common.KeepFields("has_more", "page_token", "_notice")
+	root.Set("shortcuts", common.ArrayOf(item))
+	return root
 }
 
 // feedShortcutListQuery omits the page_token key entirely when the token is

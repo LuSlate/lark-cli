@@ -180,7 +180,7 @@ func formatMessageItem(m map[string]interface{}, runtime *common.RuntimeContext,
 		"message_id":  messageId,
 		"msg_type":    msgType,
 		"content":     content,
-		"sender":      m["sender"],
+		"sender":      projectSender(m["sender"]),
 		"create_time": common.FormatTime(m["create_time"]),
 		"deleted":     deleted,
 		"updated":     updated,
@@ -415,6 +415,22 @@ func extractMentionOpenId(id interface{}) string {
 		}
 	}
 	return ""
+}
+
+// projectSender tightens the message sender to {id, sender_type, name}. It keeps
+// sender_type (real signal: user vs app coexist) and drops the constant id_type
+// (always open_id) and tenant_key (constant within a tenant). name is injected
+// later by the contact-name resolver.
+func projectSender(v interface{}) interface{} {
+	s, ok := v.(map[string]interface{})
+	if !ok {
+		return v
+	}
+	out := map[string]interface{}{"id": s["id"]}
+	if st, ok := s["sender_type"]; ok {
+		out["sender_type"] = st
+	}
+	return out
 }
 
 // TruncateContent truncates a string for table display.

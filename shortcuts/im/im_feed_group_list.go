@@ -11,6 +11,7 @@ import (
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/larksuite/cli/shortcuts/common"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 )
@@ -25,13 +26,15 @@ const feedGroupListPath = "/open-apis/im/v1/groups"
 // which follows only one array field and silently drops the other list's later
 // pages; this shortcut paginates the dual-list response itself.
 var ImFeedGroupList = common.Shortcut{
-	Service:     "im",
-	Command:     "+feed-group-list",
-	Description: "List the caller's feed groups (tags); user-only; supports `--page-all` auto-pagination",
-	Risk:        "read",
-	UserScopes:  []string{feedGroupReadScope},
-	AuthTypes:   []string{"user"},
-	HasFormat:   true,
+	Service:      "im",
+	Command:      "+feed-group-list",
+	Description:  "List the caller's feed groups (tags); user-only; supports `--page-all` auto-pagination",
+	Risk:         "read",
+	UserScopes:   []string{feedGroupReadScope},
+	AuthTypes:    []string{"user"},
+	HasFormat:    true,
+	Projectable:  true,
+	OutputSchema: feedGroupListOutputSchema(),
 	Flags: []common.Flag{
 		{Name: "page-size", Type: "int", Default: "50", Desc: "page size (1-50)"},
 		{Name: "page-token", Desc: "pagination token for next page"},
@@ -69,6 +72,18 @@ var ImFeedGroupList = common.Shortcut{
 		})
 		return nil
 	},
+}
+
+// feedGroupListOutputSchema declares the default (projected) view for
+// +feed-group-list. Each group keeps group_id/name/type; its rules stay
+// full-only. Both list wrappers (groups, deleted_groups) and pagination
+// (has_more/page_token) are marked so they survive trimming.
+func feedGroupListOutputSchema() *schema.OrderedProps {
+	group := common.KeepFields("group_id", "name", "type")
+	root := common.KeepFields("has_more", "page_token")
+	root.Set("groups", common.ArrayOf(group))
+	root.Set("deleted_groups", common.ArrayOf(group))
+	return root
 }
 
 func validateFeedGroupListPageOptions(rt *common.RuntimeContext) error {

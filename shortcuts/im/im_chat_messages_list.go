@@ -17,16 +17,22 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 )
 
+// imMessageNoFullHint redirects an agent that reflexively passes --full to a
+// message command (which has no full view) to the right path instead of leaving
+// it to flail on an "unknown flag" error.
+const imMessageNoFullHint = "note: messages have no --full view; sender is intentionally minimal ({id, sender_type, name}). Do not retry with --full — for fuller sender details resolve the id via the contact domain (e.g. `lark-cli contact +search-user`, or contact user get)."
+
 var ImChatMessageList = common.Shortcut{
-	Service:     "im",
-	Command:     "+chat-messages-list",
-	Description: "List messages in a chat or P2P conversation; user/bot; accepts --chat-id or --user-id, resolves P2P chat_id, supports time range/sort/pagination",
-	Risk:        "read",
-	Scopes:      []string{"im:message:readonly"},
-	UserScopes:  []string{"im:message.group_msg:get_as_user", "im:message.p2p_msg:get_as_user", "im:message.reactions:read", "contact:user.base:readonly"},
-	BotScopes:   []string{"im:message.group_msg", "im:message.p2p_msg:readonly", "im:message.reactions:read"},
-	AuthTypes:   []string{"user", "bot"},
-	HasFormat:   true,
+	Service:        "im",
+	Command:        "+chat-messages-list",
+	Description:    "List messages in a chat or P2P conversation; user/bot; accepts --chat-id or --user-id, resolves P2P chat_id, supports time range/sort/pagination",
+	Risk:           "read",
+	Scopes:         []string{"im:message:readonly"},
+	UserScopes:     []string{"im:message.group_msg:get_as_user", "im:message.p2p_msg:get_as_user", "im:message.reactions:read", "contact:user.base:readonly"},
+	BotScopes:      []string{"im:message.group_msg", "im:message.p2p_msg:readonly", "im:message.reactions:read"},
+	AuthTypes:      []string{"user", "bot"},
+	HasFormat:      true,
+	NoFullViewHint: imMessageNoFullHint,
 	Flags: []common.Flag{
 		{Name: "chat-id", Desc: "(required, mutually exclusive with --user-id) chat ID (oc_xxx)"},
 		{Name: "user-id", Desc: "(required, mutually exclusive with --chat-id; user identity only) user open_id (ou_xxx)"},

@@ -104,6 +104,8 @@ Each message contains:
 | `mentions` | Array of @mentions in the message; each item contains `{id, key, name}`. Present only when the message contains @mentions |
 | `thread_id` | Thread ID (`omt_xxx`) if the message has replies in a thread. Present only when replies exist |
 
+The `sender` sub-object is **intentionally minimal**: `{id, sender_type, name}`. This command has **no `--full` view** — passing `--full` just prints a one-line note to stderr and outputs normally. For fuller sender details, take `sender.id` to the **contact domain** (e.g. `lark-cli contact +search-user`, or contact user get). Do **not** retry this command with `--full` to expand the sender.
+
 ## Pagination (`has_more` / `page_token`)
 
 `im +chat-messages-list` returns `has_more` and `page_token` when more data is available. Use `--page-token` to continue:

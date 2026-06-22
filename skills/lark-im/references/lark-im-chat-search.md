@@ -72,6 +72,15 @@ lark-cli im +chat-search --query "project" --dry-run
 | `external` | Whether the chat is external |
 | `chat_status` | Chat status (`normal` / `dissolved` / `dissolved_save`) |
 
+## Default view and `--full`
+
+Output is a **curated view**: only the fields above (plus `create_time`). Verbose / low-value fields on each chat (`avatar`, `tenant_key`, `owner_id_type`) are **hidden by default**.
+
+- `--full` returns the complete upstream payload (all hidden fields included).
+- Need one hidden field? Use **`--full --jq <path>`** (e.g. `--full --jq '.data.chats[].avatar'`). The `--full` is required even with `--jq`: `--jq` filters the curated view, where hidden fields are already trimmed away — so a bare `--jq '.data.chats[].avatar'` returns `null` (and stderr prints a `... is full-only ... re-run with --full` note). Pairing `--jq` with `--full` keeps the output to just that field, so you avoid dumping the whole payload back into context.
+- A field missing from the default view does **not** mean it doesn't exist — it may be full-only. Don't conclude "no such field" from its absence here.
+- Don't try `lark-cli schema` to introspect this command (it isn't in the catalog); the field list is in this doc.
+
 ## Filtering muted chats
 
 `--exclude-muted` (user identity only) drops chats the current user has set to do-not-disturb. After the search call, the CLI batches the page's chat_ids through `POST /open-apis/im/v1/chat_user_setting/batch_get_mute_status` and filters client-side. Under `--as bot`, the mute API is UAT-only and the filter is silently skipped.

@@ -12,6 +12,7 @@ import (
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/internal/schema"
 	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/shortcuts/common"
 )
@@ -21,13 +22,15 @@ import (
 // member/type filters, sort order, pagination, and (user identity only) the
 // --exclude-muted client-side mute filter.
 var ImChatSearch = common.Shortcut{
-	Service:     "im",
-	Command:     "+chat-search",
-	Description: "Search visible group chats by --query keyword and/or --member-ids; user/bot; e.g. look up chat_id by group name; supports type filters, sorting, pagination, and --exclude-muted (user identity only)",
-	Risk:        "read",
-	Scopes:      []string{"im:chat:read"},
-	AuthTypes:   []string{"user", "bot"},
-	HasFormat:   true,
+	Service:      "im",
+	Command:      "+chat-search",
+	Description:  "Search visible group chats by --query keyword and/or --member-ids; user/bot; e.g. look up chat_id by group name; supports type filters, sorting, pagination, and --exclude-muted (user identity only)",
+	Risk:         "read",
+	Scopes:       []string{"im:chat:read"},
+	AuthTypes:    []string{"user", "bot"},
+	HasFormat:    true,
+	Projectable:  true,
+	OutputSchema: chatSearchOutputSchema(),
 	Flags: []common.Flag{
 		{Name: "query", Desc: "search keyword (server may return data.notice for overly long input)"},
 		{Name: "search-types", Desc: "chat types, comma-separated (private, external, public_joined, public_not_joined)"},
@@ -205,6 +208,22 @@ var ImChatSearch = common.Shortcut{
 		})
 		return nil
 	},
+}
+
+// chatSearchOutputSchema declares the default (projected) view for +chat-search.
+// Mirrors +chat-list's chat object plus create_time (the search meta_data carries
+// it), and marks the wrapper key (chats), pagination (has_more/page_token), and
+// the total count so they survive trimming. The chat's avatar / tenant_key /
+// owner_id_type stay unmarked → hidden by default, recoverable via --full.
+func chatSearchOutputSchema() *schema.OrderedProps {
+	chat := common.KeepFields(
+		"chat_id", "name", "description", "owner_id", "external",
+		"chat_status", "chat_mode", "p2p_target_type", "p2p_target_id",
+		"create_time",
+	)
+	root := common.KeepFields("has_more", "page_token", "total", "filter")
+	root.Set("chats", common.ArrayOf(chat))
+	return root
 }
 
 // buildSearchChatBody builds the JSON request body for POST /im/v2/chats/search

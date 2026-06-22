@@ -64,6 +64,15 @@ Note: `(thread, feed)` / `(msg_thread, feed)` entries are automatically enriched
 
 - **delete_flag_items are not enriched**: Message content is only fetched for active flags (`flag_items`), not canceled flags (`delete_flag_items`). If you need message content for a canceled flag, query the message separately using `+messages-mget --message-ids <item_id>`.
 
+## Default view and `--full`
+
+Output is a **curated view**. The enriched feed-thread `message` on each item is narrowed to `message_id`, `msg_type`, and `body.content`; the rest of the raw mget message (`sender`, `mentions`, `chat_id`, etc.) is **hidden by default**.
+
+- `--full` returns the complete upstream payload (full message objects included).
+- Need one hidden field? Use **`--full --jq <path>`** (e.g. `--full --jq '.data.flag_items[].message.sender'`). The `--full` is required even with `--jq`: `--jq` filters the curated view, where hidden fields are already trimmed away — so a bare `--jq '.data.flag_items[].message.sender'` returns `null` (and stderr prints a `... is full-only ... re-run with --full` note). Pairing `--jq` with `--full` keeps the output to just that field, so you avoid dumping the whole payload back into context.
+- A field missing from the default view does **not** mean it doesn't exist — it may be full-only. Don't conclude "no such field" from its absence here.
+- Don't try `lark-cli schema` to introspect this command (it isn't in the catalog); the field list is in this doc.
+
 ## Response Example (Sanitized)
 
 ```json

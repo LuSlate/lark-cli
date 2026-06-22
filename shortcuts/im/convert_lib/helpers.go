@@ -113,25 +113,10 @@ func ResolveSenderNames(runtime *common.RuntimeContext, messages []map[string]in
 		}
 	}
 
-	// Collect sender IDs still missing a name
-	seen := make(map[string]bool)
-	var missingIDs []string
-	for _, msg := range messages {
-		sender, ok := msg["sender"].(map[string]interface{})
-		if !ok {
-			continue
-		}
-		senderType, _ := sender["sender_type"].(string)
-		if senderType != "user" {
-			continue
-		}
-		id, _ := sender["id"].(string)
-		if id == "" || !strings.HasPrefix(id, "ou_") || seen[id] || nameMap[id] != "" {
-			continue
-		}
-		seen[id] = true
-		missingIDs = append(missingIDs, id)
-	}
+	// Collect sender IDs still missing a name, identified by ou_ prefix.
+	// Decoupled from sender_type: projectSender runs before resolution and strips
+	// noise fields; keying on the ou_ prefix is order-independent and robust.
+	missingIDs := unresolvedUserSenderIDs(messages, nameMap)
 	if len(missingIDs) == 0 {
 		return nameMap
 	}
@@ -213,6 +198,24 @@ func batchResolveUsers(runtime *common.RuntimeContext, missingIDs []string, name
 			}
 		}
 	}
+}
+
+// unresolvedUserSenderIDs collects distinct ou_-prefixed (user) sender ids that
+// still need a name. Decoupled from sender_type on purpose: tightening runs
+// before resolution, so keying on the ou_ prefix is order-independent and robust.
+func unresolvedUserSenderIDs(messages []map[string]interface{}, nameMap map[string]string) []string {
+	var ids []string
+	seen := map[string]bool{}
+	for _, msg := range messages {
+		s, _ := msg["sender"].(map[string]interface{})
+		id, _ := s["id"].(string)
+		if id == "" || !strings.HasPrefix(id, "ou_") || seen[id] || nameMap[id] != "" {
+			continue
+		}
+		seen[id] = true
+		ids = append(ids, id)
+	}
+	return ids
 }
 
 // AttachSenderNames enriches message sender objects with resolved display names.

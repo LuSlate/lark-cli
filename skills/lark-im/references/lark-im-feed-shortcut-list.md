@@ -96,6 +96,15 @@ The `detail` payload is dispatched **per `type`**. Today only CHAT is wired in; 
 - **P2P chats** return an empty `name` because the Feishu client renders the partner's display name there. The rest of the object (especially `p2p_target_id`) still flows through, so callers can resolve the partner via `+contact-search` if a display title is needed.
 - **Lookup failure** (missing scope, network error) → the list still returns successfully; a warning is printed to stderr, the data payload carries a `_notice` field (`"detail enrichment skipped: ..."`), and affected entries simply lack the `detail` field. Check `_notice` to tell "enrichment skipped" from "nothing to enrich".
 
+## Default view and `--full`
+
+Output is a **curated view**. The `detail` object is narrowed to `chat_id`, `name`, and `chat_mode`; its other chat fields (`avatar`, `tenant_key`, `owner_id*`, `description`, `external`, `p2p_target_*`) shown in the example above are **hidden by default**.
+
+- `--full` returns the complete upstream payload (full `detail` chat objects included).
+- Need one hidden field? Use **`--full --jq <path>`** (e.g. `--full --jq '.data.shortcuts[].detail.p2p_target_id'`). The `--full` is required even with `--jq`: `--jq` filters the curated view, where hidden fields are already trimmed away — so a bare `--jq '.data.shortcuts[].detail.p2p_target_id'` returns `null` (and stderr prints a `... is full-only ... re-run with --full` note). Pairing `--jq` with `--full` keeps the output to just that field, so you avoid dumping the whole payload back into context.
+- A field missing from the default view does **not** mean it doesn't exist — it may be full-only. Don't conclude "no such field" from its absence here.
+- Don't try `lark-cli schema` to introspect this command (it isn't in the catalog); the field list is in this doc.
+
 ## Permissions
 
 - Required scope: `im:feed.shortcut:read`

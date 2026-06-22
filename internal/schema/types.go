@@ -61,6 +61,10 @@ type Property struct {
 	Required         []string      `json:"required,omitempty"`
 	Properties       *OrderedProps `json:"properties,omitempty"`
 	Items            *Property     `json:"items,omitempty"`
+	// Projected marks a response field for the schema-curated default view: the
+	// output projection engine keeps it by default and hides unmarked fields
+	// (recoverable via --full). Carries no security/permission meaning.
+	Projected bool `json:"projected,omitempty"`
 }
 
 // Meta is the Lark-specific extension namespace.
