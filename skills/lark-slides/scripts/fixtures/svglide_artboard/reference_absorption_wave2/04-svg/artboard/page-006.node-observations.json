@@ -1,0 +1,117 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 52,
+      "top": 48,
+      "width": 856,
+      "height": 1,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 58,
+      "top": 66,
+      "width": 103,
+      "height": 20,
+      "type": "div",
+      "textContent": "STUDIO NOTE",
+      "props": {}
+    },
+    {
+      "left": 864,
+      "top": 66,
+      "width": 38,
+      "height": 20,
+      "type": "div",
+      "textContent": "06/06",
+      "props": {}
+    },
+    {
+      "left": 58,
+      "top": 118,
+      "width": 800,
+      "height": 72,
+      "type": "div",
+      "textContent": "重点只说一遍",
+      "props": {}
+    },
+    {
+      "left": 62,
+      "top": 368,
+      "width": 520,
+      "height": 52,
+      "type": "div",
+      "textContent": "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 327,
+      "width": 248,
+      "height": 135,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 327,
+      "width": 248,
+      "height": 45,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 341,
+      "width": 108,
+      "height": 19,
+      "type": "div",
+      "textContent": "一个核心信息",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 372,
+      "width": 248,
+      "height": 45,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 386,
+      "width": 108,
+      "height": 19,
+      "type": "div",
+      "textContent": "三条支撑理由",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 417,
+      "width": 248,
+      "height": 45,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 642,
+      "top": 431,
+      "width": 90,
+      "height": 19,
+      "type": "div",
+      "textContent": "不需要装饰",
+      "props": {}
+    }
+  ]
+}

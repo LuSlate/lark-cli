@@ -1,0 +1,397 @@
+{
+  "schema_version": "svglide-text-inventory/v1",
+  "generated_at": "2026-06-21T20:03:10.194953+00:00",
+  "slides": [
+    {
+      "page": 1,
+      "svg": "04-svg/prepared/page-001.svg",
+      "texts": [
+        {
+          "text": "OPERATING LEDGER",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "复盘事项账本",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "把结论、证据和 owner 放进克制的黑白账本结构。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "增长口径已统一",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "风险归因待复核",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "Owner 已明确",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "下周完成验证",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 2,
+      "svg": "04-svg/prepared/page-002.svg",
+      "texts": [
+        {
+          "text": "PRIVATE BRIEF",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "组织信号简报",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "指标移动前的协作信号",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "约束来自跨团队边界",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "下轮验证需要单 owner",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 3,
+      "svg": "04-svg/prepared/page-003.svg",
+      "texts": [
+        {
+          "text": "PROGRAM",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "团队晚餐式议程",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "开场观察",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "主议题讨论",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "行动项确认",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "复盘收束",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 4,
+      "svg": "04-svg/prepared/page-004.svg",
+      "texts": [
+        {
+          "text": "CONTROL PANEL",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "发布控制面板",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "Build status: OK",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "Open issues: 12",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "Owner: Platform",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "ETA: Friday",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 5,
+      "svg": "04-svg/prepared/page-005.svg",
+      "texts": [
+        {
+          "text": "CATALOG DROP",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        },
+        {
+          "text": "功能货架更新",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        },
+        {
+          "text": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        },
+        {
+          "text": "智能推荐",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        },
+        {
+          "text": "批量导入",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        },
+        {
+          "text": "权限看板",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        },
+        {
+          "text": "异常提醒",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[4]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 6,
+      "svg": "04-svg/prepared/page-006.svg",
+      "texts": [
+        {
+          "text": "STUDIO NOTE",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[5]",
+          "status": "matched"
+        },
+        {
+          "text": "重点只说一遍",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[5]",
+          "status": "matched"
+        },
+        {
+          "text": "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[5]",
+          "status": "matched"
+        },
+        {
+          "text": "一个核心信息",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[5]",
+          "status": "matched"
+        },
+        {
+          "text": "三条支撑理由",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[5]",
+          "status": "matched"
+        },
+        {
+          "text": "不需要装饰",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[5]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 7,
+      "svg": "04-svg/prepared/page-007.svg",
+      "texts": [
+        {
+          "text": "BATTLECARD",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "方案评分矩阵",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "成本可控",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "接入最快",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "风险最低",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "Owner 清晰",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "迁移成本",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        },
+        {
+          "text": "证据充分",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[6]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 8,
+      "svg": "04-svg/prepared/page-008.svg",
+      "texts": [
+        {
+          "text": "FIELD NOTE",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[7]",
+          "status": "matched"
+        },
+        {
+          "text": "用户访谈证据墙",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[7]",
+          "status": "matched"
+        },
+        {
+          "text": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[7]",
+          "status": "matched"
+        },
+        {
+          "text": "用户绕过默认流程",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[7]",
+          "status": "matched"
+        },
+        {
+          "text": "关键证据需要回访",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[7]",
+          "status": "matched"
+        },
+        {
+          "text": "下一步由体验组 owner",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[7]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    }
+  ],
+  "summary": {
+    "slide_count": 8,
+    "text_count": 55,
+    "unmatched_text_count": 0
+  }
+}

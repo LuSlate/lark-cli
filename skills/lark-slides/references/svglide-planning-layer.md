@@ -8,7 +8,7 @@ Compatibility note: new runner-first artifact paths are defined in `svglide-arti
 
 When the user asks for an SVG/SVGlide deck but does not specify page count, or uses ambiguous wording such as "a slide", "a PPT", "make a slide", or "generate a slide", default to `10` pages. Generate `1` page only when the user explicitly asks for one page, a single page, onepage, one slide, or only a cover. Explicit page counts always win.
 
-Default 10-page SVG decks must record `page_count` or `target_slide_count: 10` and include an explicit closing slide.
+Default 10-page SVG decks must record `deck_intent: "full_deck"` plus `page_count` or `target_slide_count: 10` and include an explicit closing slide. Short outputs must opt in with `deck_intent: "sample"`, `"single_page"`, `"fixture"`, or `"smoke"`; otherwise a 4-page cover/content/content/closing structure is treated as an incomplete deck.
 
 ## Required Top-Level Extensions
 
@@ -20,6 +20,10 @@ SVG route plans must include:
 - `style_preset`: a preset id from `style-presets.json`.
 - `style_selection_reason`: why the preset fits the audience, topic, density, and tone.
 - `style_system`: executable palette, typography, background strategy, and motif derived from the preset.
+- `deck_intent`: `full_deck` for ordinary user generation; `sample`, `single_page`, `fixture`, or `smoke` only when the user or test explicitly asks for that shorter shape.
+- `target_slide_count` or `page_count`: ordinary `full_deck` generation defaults to at least `10`.
+- `theme_policy`: deck-level theme scope. Default is `{"scope": "deck", "allow_multi_theme": false}`; multiple `theme_id` values require an explicit reason and `allow_multi_theme: true`.
+- `asset_policy`: real-preview asset expectations. For ordinary local previews use `{"required": true, "minimum_visual_asset_count": 3}`.
 - `visual_identity`: the theme-specific visual system that prevents unrelated decks from sharing the same skeleton. Required fields:
   - `theme_archetype`: such as `company_ecosystem`, `space_capital_market`, `travel_destination`, or `academic_paper`.
   - `design_dna`: `palette`, `layout_motif`, `shape_language`, `image_treatment`, `component_bias`, plus at least 3 theme-specific visual anchors.
@@ -63,6 +67,8 @@ Each SVG slide must include:
 {
   "route": "svglide-svg",
   "output_mode": "svglide-svg",
+  "deck_intent": "full_deck",
+  "target_slide_count": 10,
   "page_count": 10,
   "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
   "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
@@ -74,6 +80,8 @@ Each SVG slide must include:
     "background_strategy": "muted grid panels with one stable background family",
     "motif": "dense grid panels with restrained accent labels"
   },
+  "theme_policy": {"scope": "deck", "allow_multi_theme": false},
+  "asset_policy": {"required": true, "minimum_visual_asset_count": 3},
   "visual_identity": {
     "theme_archetype": "company_ecosystem",
     "design_dna": {

@@ -1,0 +1,53 @@
+{
+  "schema_version": "svglide-evidence/v1",
+  "source_status": "ready",
+  "research_status": "fixture_local_reference_absorption",
+  "items": [
+    {
+      "id": "local-reference-inventory",
+      "text": "reference_absorption_wave1 使用本地 beautiful-html-templates 抽象记录、SVGlide 主题 registry、组件 registry、layout registry 和 CanvasSpec fixture 作为证据来源。",
+      "source": "skills/lark-slides/references/svglide-reference-source-inventory.json"
+    },
+    {
+      "id": "non-copying-transform",
+      "text": "参考仓库中的 HTML、CSS、截图和外部 renderer 代码不作为 SVGlide 运行时依赖；这里只吸收设计意图、布局信号、主题 token 和组件抽象。",
+      "source": "skills/lark-slides/references/absorptions/beautiful-html-templates"
+    },
+    {
+      "id": "fixture-proof-chain",
+      "text": "reference_absorption_wave1 在本地生成 CanvasSpec、Satori 预览、SVGlide protocol SVG、PNG preview、contact sheet 和 runner receipts，用于证明吸收资产可执行。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1"
+    },
+    {
+      "id": "beautiful-html-templates:dense-panel-grid",
+      "text": "beautiful-html-templates:dense-panel-grid 是 reference_absorption_wave1 第 1 页《渠道健康度复盘》的本地参考吸收证据。该页的结论是：12x8 面板节奏承载高密度指标，强调异常和下一步。。页面使用中文 body_points：12x8 面板节奏承载高密度指标，强调异常和下一步。；北区增长稳定；瓶颈转向交付；Owner 需要清晰。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:cobalt-grid",
+      "text": "svglide-theme:cobalt-grid 是 reference_absorption_wave1 第 1 页《渠道健康度复盘》的本地参考吸收证据。该页的结论是：12x8 面板节奏承载高密度指标，强调异常和下一步。。页面使用中文 body_points：12x8 面板节奏承载高密度指标，强调异常和下一步。；北区增长稳定；瓶颈转向交付；Owner 需要清晰。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:executive-dashboard",
+      "text": "beautiful-html-templates:executive-dashboard 是 reference_absorption_wave1 第 2 页《内部业务复盘》的本地参考吸收证据。该页的结论是：单一强调色组织关键指标、渠道排序和管理层行动口径。。页面使用中文 body_points：单一强调色组织关键指标、渠道排序和管理层行动口径。；收入 +14%；留存 118%；流失 2.1%。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:paper-research",
+      "text": "svglide-theme:paper-research 是 reference_absorption_wave1 第 2 页《内部业务复盘》的本地参考吸收证据。该页的结论是：单一强调色组织关键指标、渠道排序和管理层行动口径。。页面使用中文 body_points：单一强调色组织关键指标、渠道排序和管理层行动口径。；收入 +14%；留存 118%；流失 2.1%。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:editorial-quote-chart",
+      "text": "beautiful-html-templates:editorial-quote-chart 是 reference_absorption_wave1 第 3 页《组织信号复盘》的本地参考吸收证据。该页的结论是：组织信号复盘。页面使用中文 body_points：仪表盘变化之前，组织协作方式已经先变了。；信号早于指标移动；约束来自协作边界；行动项需要 owner。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:warm-editorial",
+      "text": "svglide-theme:warm-editorial 是 reference_absorption_wave1 第 3 页《组织信号复盘》的本地参考吸收证据。该页的结论是：组织信号复盘。页面使用中文 body_points：仪表盘变化之前，组织协作方式已经先变了。；信号早于指标移动；约束来自协作边界；行动项需要 owner。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/02-plan/slide_plan.json"
+    }
+  ],
+  "generated_at": "2026-06-21T19:58:09+00:00"
+}

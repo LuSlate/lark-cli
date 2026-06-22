@@ -1,0 +1,401 @@
+{
+  "drift": {
+    "canonical_fallback_count": 0,
+    "max_px": 0.0,
+    "missing_count": 0,
+    "renderer_max_px": 570.0,
+    "status": "passed",
+    "threshold_px": 8.0
+  },
+  "nodes": [
+    {
+      "drift_px": 0.0,
+      "expected_bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "height": 540.0,
+      "id": "background",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 0.0,
+      "text": null,
+      "width": 960.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "drift_px": 323.0,
+      "expected_bbox": {
+        "height": 344.0,
+        "width": 8.0,
+        "x": 64.0,
+        "y": 72.0
+      },
+      "height": 344.0,
+      "id": "accent-rule",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 21.0,
+        "width": 120.0,
+        "x": 72.0,
+        "y": 72.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 323.0,
+      "text": null,
+      "width": 8.0,
+      "x": 64.0,
+      "y": 72.0
+    },
+    {
+      "drift_px": 190.0,
+      "expected_bbox": {
+        "height": 30.0,
+        "width": 420.0,
+        "x": 92.0,
+        "y": 64.0
+      },
+      "height": 30.0,
+      "id": "eyebrow",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 59.0,
+        "width": 610.0,
+        "x": 70.0,
+        "y": 104.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 190.0,
+      "text": "POSTER CLAIM",
+      "width": 420.0,
+      "x": 92.0,
+      "y": 64.0
+    },
+    {
+      "drift_px": 348.0,
+      "expected_bbox": {
+        "height": 96.0,
+        "width": 700.0,
+        "x": 92.0,
+        "y": 108.0
+      },
+      "height": 96.0,
+      "id": "title",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 444.0,
+        "width": 864.0,
+        "x": 48.0,
+        "y": 48.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 348.0,
+      "text": "现在就做判断",
+      "width": 700.0,
+      "x": 92.0,
+      "y": 108.0
+    },
+    {
+      "drift_px": 190.0,
+      "expected_bbox": {
+        "height": 54.0,
+        "width": 660.0,
+        "x": 94.0,
+        "y": 212.0
+      },
+      "height": 54.0,
+      "id": "subtitle",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 52.0,
+        "width": 470.0,
+        "x": 74.0,
+        "y": 272.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 190.0,
+      "text": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+      "width": 660.0,
+      "x": 94.0,
+      "y": 212.0
+    },
+    {
+      "drift_px": 46.0,
+      "expected_bbox": {
+        "height": 116.0,
+        "width": 736.0,
+        "x": 92.0,
+        "y": 362.0
+      },
+      "height": 116.0,
+      "id": "reference-flow-path",
+      "kind": "path",
+      "measured_bbox": {
+        "height": 86.0,
+        "width": 782.0,
+        "x": 74.0,
+        "y": 378.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 46.0,
+      "text": null,
+      "width": 736.0,
+      "x": 92.0,
+      "y": 362.0
+    },
+    {
+      "drift_px": 82.0,
+      "expected_bbox": {
+        "height": 86.0,
+        "width": 230.0,
+        "x": 612.0,
+        "y": 178.0
+      },
+      "height": 86.0,
+      "id": "reference-annotation-line",
+      "kind": "line",
+      "measured_bbox": {
+        "height": 101.0,
+        "width": 184.0,
+        "x": 694.0,
+        "y": 96.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 82.0,
+      "text": null,
+      "width": 230.0,
+      "x": 612.0,
+      "y": 178.0
+    },
+    {
+      "drift_px": 236.0,
+      "expected_bbox": {
+        "height": 26.0,
+        "width": 14.0,
+        "x": 760.0,
+        "y": 350.0
+      },
+      "height": 26.0,
+      "id": "dashboard-metric-bar-1",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 86.0,
+        "width": 250.0,
+        "x": 606.0,
+        "y": 378.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 236.0,
+      "text": null,
+      "width": 14.0,
+      "x": 760.0,
+      "y": 350.0
+    },
+    {
+      "drift_px": 146.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 14.0,
+        "x": 784.0,
+        "y": 332.0
+      },
+      "height": 44.0,
+      "id": "dashboard-metric-bar-2",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 71.0,
+        "width": 80.0,
+        "x": 638.0,
+        "y": 393.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 146.0,
+      "text": null,
+      "width": 14.0,
+      "x": 784.0,
+      "y": 332.0
+    },
+    {
+      "drift_px": 202.0,
+      "expected_bbox": {
+        "height": 62.0,
+        "width": 14.0,
+        "x": 808.0,
+        "y": 314.0
+      },
+      "height": 62.0,
+      "id": "dashboard-metric-bar-3",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 65.0,
+        "width": 32.0,
+        "x": 606.0,
+        "y": 393.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 202.0,
+      "text": null,
+      "width": 14.0,
+      "x": 808.0,
+      "y": 314.0
+    },
+    {
+      "drift_px": 72.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 92.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-1",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 86.0,
+        "width": 250.0,
+        "x": 74.0,
+        "y": 378.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 72.0,
+      "text": null,
+      "width": 244.0,
+      "x": 92.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 132.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 108.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-1",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 71.0,
+        "width": 80.0,
+        "x": 106.0,
+        "y": 393.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 132.0,
+      "text": "结论明确",
+      "width": 212.0,
+      "x": 108.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 72.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 360.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-2",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 86.0,
+        "width": 250.0,
+        "x": 340.0,
+        "y": 378.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 72.0,
+      "text": null,
+      "width": 244.0,
+      "x": 360.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 132.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 376.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-2",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 71.0,
+        "width": 80.0,
+        "x": 372.0,
+        "y": 393.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 132.0,
+      "text": "证据充分",
+      "width": 212.0,
+      "x": 376.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 288.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 628.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-3",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 65.0,
+        "width": 32.0,
+        "x": 340.0,
+        "y": 393.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 288.0,
+      "text": null,
+      "width": 244.0,
+      "x": 628.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 570.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 644.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-3",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 65.0,
+        "width": 32.0,
+        "x": 74.0,
+        "y": 393.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 570.0,
+      "text": "行动立即",
+      "width": 212.0,
+      "x": 644.0,
+      "y": 321.0
+    }
+  ],
+  "observation_source": "satori_on_node_detected",
+  "page": 4,
+  "source": "measured-layout-observation",
+  "threshold_px": 8.0,
+  "version": "svglide-node-layout-map/v1"
+}

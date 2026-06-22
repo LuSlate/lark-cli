@@ -1,0 +1,73 @@
+{
+  "schema_version": "svglide-strategy-review/v1",
+  "status": "passed",
+  "language": "zh-CN",
+  "audience": "SVGlide engineers",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "page_type": "cover",
+      "section": "OPERATING GRID",
+      "role": "thesis",
+      "title": "渠道健康度复盘",
+      "key_message": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+      "body_points": [
+        "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+        "北区增长稳定",
+        "瓶颈转向交付",
+        "Owner 需要清晰"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:dense-panel-grid",
+        "svglide-theme:cobalt-grid"
+      ]
+    },
+    {
+      "page": 2,
+      "page_type": "content",
+      "section": "BUSINESS REVIEW",
+      "role": "evidence",
+      "title": "内部业务复盘",
+      "key_message": "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+      "body_points": [
+        "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+        "收入 +14%",
+        "留存 118%",
+        "流失 2.1%"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:executive-dashboard",
+        "svglide-theme:paper-research"
+      ]
+    },
+    {
+      "page": 3,
+      "page_type": "closing",
+      "section": "FIELD NOTE",
+      "role": "evidence",
+      "title": "组织信号复盘",
+      "key_message": "组织信号复盘",
+      "body_points": [
+        "仪表盘变化之前，组织协作方式已经先变了。",
+        "信号早于指标移动",
+        "约束来自协作边界",
+        "行动项需要 owner"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:editorial-quote-chart",
+        "svglide-theme:warm-editorial"
+      ]
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "issues": [],
+  "generated_at": "2026-06-21T20:04:38.471052+00:00"
+}

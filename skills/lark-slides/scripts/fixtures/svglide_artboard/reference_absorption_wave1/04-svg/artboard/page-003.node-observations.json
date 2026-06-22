@@ -1,0 +1,153 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 54,
+      "top": 48,
+      "width": 852,
+      "height": 72,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 60,
+      "top": 72,
+      "width": 95,
+      "height": 21,
+      "type": "div",
+      "textContent": "FIELD NOTE",
+      "props": {}
+    },
+    {
+      "left": 783,
+      "top": 72,
+      "width": 115,
+      "height": 21,
+      "type": "div",
+      "textContent": "POSTMORTEM",
+      "props": {}
+    },
+    {
+      "left": 58,
+      "top": 142,
+      "width": 36,
+      "height": 86,
+      "type": "div",
+      "textContent": "“",
+      "props": {}
+    },
+    {
+      "left": 132,
+      "top": 148,
+      "width": 518,
+      "height": 90,
+      "type": "div",
+      "textContent": "仪表盘变化之前，组织协作方式已经先变了。",
+      "props": {}
+    },
+    {
+      "left": 138,
+      "top": 352,
+      "width": 420,
+      "height": 24,
+      "type": "div",
+      "textContent": "复盘访谈节选 / 2026 Q2",
+      "props": {}
+    },
+    {
+      "left": 678,
+      "top": 154,
+      "width": 212,
+      "height": 262,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 678,
+      "top": 154,
+      "width": 212,
+      "height": 78,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 692,
+      "top": 168,
+      "width": 32,
+      "height": 50,
+      "type": "div",
+      "textContent": "1",
+      "props": {}
+    },
+    {
+      "left": 724,
+      "top": 168,
+      "width": 152,
+      "height": 50,
+      "type": "div",
+      "textContent": "信号早于指标移动",
+      "props": {}
+    },
+    {
+      "left": 678,
+      "top": 246,
+      "width": 212,
+      "height": 78,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 692,
+      "top": 260,
+      "width": 32,
+      "height": 50,
+      "type": "div",
+      "textContent": "2",
+      "props": {}
+    },
+    {
+      "left": 724,
+      "top": 260,
+      "width": 152,
+      "height": 50,
+      "type": "div",
+      "textContent": "约束来自协作边界",
+      "props": {}
+    },
+    {
+      "left": 678,
+      "top": 338,
+      "width": 212,
+      "height": 78,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 692,
+      "top": 352,
+      "width": 32,
+      "height": 50,
+      "type": "div",
+      "textContent": "3",
+      "props": {}
+    },
+    {
+      "left": 724,
+      "top": 352,
+      "width": 152,
+      "height": 50,
+      "type": "div",
+      "textContent": "行动项需要 owner",
+      "props": {}
+    }
+  ]
+}

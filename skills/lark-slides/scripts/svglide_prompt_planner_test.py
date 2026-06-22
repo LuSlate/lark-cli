@@ -36,6 +36,13 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
             audience="旅行内容策划读者",
         )
         context = prompt_planner.load_context()
+        context["selection"] = {
+            "palette_selection": {"selected_palette_id": "brand.zhipu"},
+            "theme_template_selection": {
+                "template_candidates": [{"template_id": "executive-dashboard"}],
+                "theme_candidates": [{"theme_id": "glass-neon"}],
+            },
+        }
         deck_plan = {
             "schema_version": "svglide-deck-plan/v1",
             "topic": "新西兰风光",
@@ -56,6 +63,9 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
             self.assertNotIn("SpaceX", planner_prompt)
             self.assertNotIn("confirmed IPO", planner_prompt)
             self.assertNotIn("investment-analysis", planner_prompt)
+        self.assertIn("selection_context", prompts[2])
+        self.assertIn("selection_context", prompts[3])
+        self.assertIn("template_id/theme_id/palette_id must come from its candidates", prompts[3])
 
     def fake_provider(self, tmpdir: str) -> Path:
         provider = Path(tmpdir) / "fake_provider.py"
@@ -240,10 +250,12 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                 audience=str(topic["audience"]),
                 provider="command",
                 planner_command=self.fixture_provider_command(),
+                trusted_provider_id="fixture-model-provider",
             )
 
             self.assertEqual("passed", receipt["status"])
             self.assertEqual("command", receipt["provider_type"])
+            self.assertEqual("fixture-model-provider", receipt["trusted_provider_evidence"]["trusted_provider_id"])
             self.assertEqual(4, len(receipt["planner_raw_outputs"]))
             self.assertTrue(all(item["sha256"] for item in receipt["planner_raw_outputs"]))
             self.assertTrue((project / "00-input/instruction.json").exists())
@@ -267,10 +279,39 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
             result = runner.init_project("spacex-auto", "SpaceX Auto", plan_root=plan_root)
             project = Path(result["project_root"])
             command = self.fixture_provider_command()
-            prompt_planner.run_prompt_plan(project, prompt="spacex IPO 分析", target_slide_count=1, provider="command", planner_command=command)
+            prompt_planner.run_prompt_plan(
+                project,
+                prompt="spacex IPO 分析",
+                target_slide_count=1,
+                provider="command",
+                planner_command=command,
+                trusted_provider_id="fixture-model-provider",
+            )
 
             with self.assertRaisesRegex(prompt_planner.PromptPlannerError, "already exist"):
-                prompt_planner.run_prompt_plan(project, prompt="spacex IPO 分析", target_slide_count=1, provider="command", planner_command=command)
+                prompt_planner.run_prompt_plan(
+                    project,
+                    prompt="spacex IPO 分析",
+                    target_slide_count=1,
+                    provider="command",
+                    planner_command=command,
+                    trusted_provider_id="fixture-model-provider",
+                )
+
+    def test_external_planner_requires_trusted_provider_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("spacex-auto", "SpaceX Auto", plan_root=plan_root)
+            project = Path(result["project_root"])
+
+            with self.assertRaisesRegex(prompt_planner.PromptPlannerError, "trusted_provider_id"):
+                prompt_planner.run_prompt_plan(
+                    project,
+                    prompt="spacex IPO 分析",
+                    target_slide_count=1,
+                    provider="command",
+                    planner_command=self.fixture_provider_command(),
+                )
 
 
 if __name__ == "__main__":

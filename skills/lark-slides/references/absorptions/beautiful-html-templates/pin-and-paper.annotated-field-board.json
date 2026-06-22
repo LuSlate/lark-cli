@@ -1,0 +1,56 @@
+{
+  "source_item_id": "beautiful-html-templates.template.pin-and-paper.design.md",
+  "absorbed_as": [
+    "template_candidate",
+    "theme_rule",
+    "layout_archetype",
+    "component_variant",
+    "planner_selection_signal"
+  ],
+  "svglide_asset_ids": [
+    "component.NotebookTag",
+    "component.PinnedEvidenceCard",
+    "component.StampBadge",
+    "component.pinned_evidence_note",
+    "image_strategy.annotation-note-card",
+    "image_strategy.stamp-status-mark",
+    "layout.annotated_field_board",
+    "layout.annotation-board",
+    "template.annotated-field-board",
+    "theme.field-notebook",
+    "theme.field_notebook"
+  ],
+  "non_copying_transform": "Pin & Paper is converted into an annotated evidence board with stamped status, pinned note cards, and compact tags. The SVGlide version uses native boxes and text only, not source HTML/CSS or screenshot pixels.",
+  "forbidden_usage": [
+    "do_not_embed_beautiful_html_css_or_js",
+    "do_not_copy_reference_screenshot_pixels",
+    "do_not_count_fixture_preview_as_backend_readback"
+  ],
+  "source_context_refs": [
+    "beautiful-html-templates.template.pin-and-paper.template.json",
+    "beautiful-html-templates.screenshot.pin-and-paper-1",
+    "beautiful-html-templates.screenshot.pin-and-paper-11",
+    "beautiful-html-templates.screenshot.pin-and-paper-3"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/artboard/page-008.canvas-spec.json"
+  ],
+  "satori_outputs": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/artboard/raw/page-008.satori.svg"
+  ],
+  "svglide_protocol_outputs": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/page-008.svg"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/receipts/canvas-spec-validate.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/artboard/page-008.receipt.json"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-template-registry.json"
+  ],
+  "negative_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/gate8_special_cases/unsupported-filter.canvas-spec.json"
+  ],
+  "review_notes": "Wave2 absorption for pin-and-paper. Suitable prompts: 用户访谈、workshop 产出、实验观察、手账风复盘、证据墙. This is fixture-backed and does not claim production-live backend proof."
+}

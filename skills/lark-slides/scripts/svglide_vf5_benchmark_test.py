@@ -35,7 +35,7 @@ def args_for(tmpdir: str, **overrides: object) -> argparse.Namespace:
         "timeout": 60,
         "no_search": False,
         "network_policy": "auto",
-        "asset_provider": "trusted:test",
+        "asset_provider": "trusted:internal-test",
         "image_backend": "stage_command",
         "trusted_provider_id": "internal-test",
         "no_online_research": False,
@@ -200,6 +200,13 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
         self.assertIn("ai_image_disabled", codes)
         self.assertIn("image_backend_none", codes)
 
+    def test_real_mode_requires_matching_trusted_asset_provider_id(self) -> None:
+        config = args_for(tempfile.gettempdir(), asset_provider="trusted:other", trusted_provider_id="internal-test")
+
+        codes = {item["code"] for item in benchmark.assert_real_mode(config)}
+
+        self.assertIn("asset_provider_trusted_id_mismatch", codes)
+
     def test_benchmark_runs_three_cases_to_visual_acceptance_without_live_create(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             config = args_for(tmpdir)
@@ -218,6 +225,8 @@ class SVGlideVF5BenchmarkTest(unittest.TestCase):
             self.assertEqual(3, result["summary"]["case_count"])
             self.assertEqual(3, result["summary"]["deliverable_pass_count"])
             self.assertTrue(result["stopped_before_live_create"])
+            self.assertEqual("internal-test", result["trusted_provider_evidence"]["trusted_provider_id"])
+            self.assertTrue(result["trusted_provider_evidence"]["image_stage_command_present"])
             self.assertTrue((Path(result["run_root"]) / "06-check/vf5-benchmark.json").exists())
             self.assertTrue((Path(result["run_root"]) / "receipts/vf5-benchmark.json").exists())
             self.assertTrue(all(item["stage_statuses"]["live_create"] is None for item in result["cases"]))

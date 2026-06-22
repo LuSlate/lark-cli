@@ -1,0 +1,103 @@
+{
+  "schema_version": "svglide-template-fit/v1",
+  "stage": "template-fit-check",
+  "status": "passed",
+  "action": "create_live",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "generator_receipt": "receipts/generate_svg.json",
+    "generator_receipt_sha256": "278f44670b75f5702555640122054c352f58a90846603217f50d0ccfa5a4b31d",
+    "artboard_receipts": [
+      "04-svg/artboard/page-001.receipt.json",
+      "04-svg/artboard/page-002.receipt.json",
+      "04-svg/artboard/page-003.receipt.json",
+      "04-svg/artboard/page-004.receipt.json",
+      "04-svg/artboard/page-005.receipt.json",
+      "04-svg/artboard/page-006.receipt.json",
+      "04-svg/artboard/page-007.receipt.json",
+      "04-svg/artboard/page-008.receipt.json"
+    ],
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "06332c3299a7ffc32c2fa9f3773416f13ce45f47bf08a2f7bcebf9d940e2c81e",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/ivory-ledger.json"
+    ]
+  },
+  "pages": [
+    {
+      "page": 1,
+      "artboard_receipt": "04-svg/artboard/page-001.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "eaee8c8bc43ca941195d021b8bcf5554f25b1a22628b26f3c74115ae403946b4",
+      "node_count": 18,
+      "error_count": 0
+    },
+    {
+      "page": 2,
+      "artboard_receipt": "04-svg/artboard/page-002.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "8f30c5b0fa2ae2aeb8fa87712c9b4838c081477be4470a1af5cf7e582f549feb",
+      "node_count": 16,
+      "error_count": 0
+    },
+    {
+      "page": 3,
+      "artboard_receipt": "04-svg/artboard/page-003.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "a74e48a2e390223c17ab08b44318faa8b9489b6610cae3b670ee1a33fe3dd6f9",
+      "node_count": 18,
+      "error_count": 0
+    },
+    {
+      "page": 4,
+      "artboard_receipt": "04-svg/artboard/page-004.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+      "node_layout_map_sha256": "ffc113c96362e6e5d66830620010d68b10d0fe3df52700c6be08783579f5aaa2",
+      "node_count": 18,
+      "error_count": 0
+    },
+    {
+      "page": 5,
+      "artboard_receipt": "04-svg/artboard/page-005.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-005.node-layout-map.json",
+      "node_layout_map_sha256": "5da6645be731f2b661890a19702d2556b54d56139ee0714d7f97ce002ab8e9cc",
+      "node_count": 18,
+      "error_count": 0
+    },
+    {
+      "page": 6,
+      "artboard_receipt": "04-svg/artboard/page-006.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-006.node-layout-map.json",
+      "node_layout_map_sha256": "f831884ffe37a712c23091a854557904885eaa15037f350f57952a801f57036c",
+      "node_count": 16,
+      "error_count": 0
+    },
+    {
+      "page": 7,
+      "artboard_receipt": "04-svg/artboard/page-007.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-007.node-layout-map.json",
+      "node_layout_map_sha256": "608b3bdbec68ef70424bb57eee87228316e014234707a0591e389299efe974b4",
+      "node_count": 22,
+      "error_count": 0
+    },
+    {
+      "page": 8,
+      "artboard_receipt": "04-svg/artboard/page-008.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-008.node-layout-map.json",
+      "node_layout_map_sha256": "1ebd6d3a1d7fbfead87df3d3c9a15b34b12edf13dacdf05c9500943540e85e37",
+      "node_count": 16,
+      "error_count": 0
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "page_count": 8
+  },
+  "issues": [],
+  "output_path": "06-check/template-fit.json",
+  "receipt_path": "receipts/template-fit-check.json"
+}

@@ -1,0 +1,516 @@
+{
+  "generation_mode": "artboard_satori",
+  "slides": [
+    {
+      "canvas_spec": {
+        "canvas": {
+          "height": 540,
+          "viewBox": "0 0 960 540",
+          "width": 960
+        },
+        "content": {
+          "eyebrow": "ARCHITECTURE SPEC",
+          "rows": [
+            "输入边界",
+            "处理结构",
+            "接口契约",
+            "交付节奏"
+          ],
+          "subtitle": "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
+          "title": "系统架构规格"
+        },
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "height": 460,
+            "width": 864,
+            "x": 48,
+            "y": 40
+          }
+        },
+        "safe_area": {
+          "height": 460,
+          "width": 864,
+          "x": 48,
+          "y": 40
+        },
+        "semantic_elements": [
+          {
+            "bbox": {
+              "height": 132,
+              "width": 760,
+              "x": 56,
+              "y": 70
+            },
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title"
+          }
+        ],
+        "template_id": "architectural-spec",
+        "theme": {
+          "colors": {
+            "accent": "#A28A6A",
+            "background": "#EFE9DC",
+            "muted": "#756B60",
+            "panel": "#F8F4EA",
+            "primary": "#5F5549",
+            "text": "#27221D"
+          }
+        },
+        "theme_id": "stone-architect",
+        "version": "svglide-canvas-spec/v1"
+      },
+      "page": 1,
+      "title": "系统架构规格",
+      "key_message": "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
+      "renderer_id": "artboard_satori.architectural-spec",
+      "layout_family": "architectural-spec",
+      "visual_recipe": "hero_typography",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "系统架构规格",
+      "visual_signature": "architectural-spec layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "thesis",
+      "page_type": "cover",
+      "section": "ARCHITECTURE SPEC",
+      "body_points": [
+        "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
+        "输入边界",
+        "处理结构",
+        "接口契约"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:architectural-spec",
+        "svglide-theme:stone-architect"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "canvas_spec": {
+        "canvas": {
+          "height": 540,
+          "viewBox": "0 0 960 540",
+          "width": 960
+        },
+        "content": {
+          "eyebrow": "TREND INDEX",
+          "subtitle": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+          "title": "AI 应用趋势索引",
+          "trends": [
+            "模型成本压力",
+            "Agent 工作流成形",
+            "设计运营成熟",
+            "治理缺口扩大"
+          ]
+        },
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "height": 460,
+            "width": 864,
+            "x": 48,
+            "y": 40
+          }
+        },
+        "safe_area": {
+          "height": 460,
+          "width": 864,
+          "x": 48,
+          "y": 40
+        },
+        "semantic_elements": [
+          {
+            "bbox": {
+              "height": 132,
+              "width": 760,
+              "x": 56,
+              "y": 70
+            },
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title"
+          }
+        ],
+        "template_id": "trend-grid-report",
+        "theme": {
+          "colors": {
+            "accent": "#5560E5",
+            "background": "#F0EBDE",
+            "muted": "#4F5AB8",
+            "panel": "#E6E0CE",
+            "primary": "#1F2BE0",
+            "text": "#171B2F"
+          }
+        },
+        "theme_id": "magazine-cobalt",
+        "version": "svglide-canvas-spec/v1"
+      },
+      "page": 2,
+      "title": "AI 应用趋势索引",
+      "key_message": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+      "renderer_id": "artboard_satori.trend-grid-report",
+      "layout_family": "trend-grid-report",
+      "visual_recipe": "infographic_scorecard",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "AI 应用趋势索引",
+      "visual_signature": "trend-grid-report layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "chart_geometry",
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "micro_chart"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "TREND INDEX",
+      "body_points": [
+        "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+        "AI 应用趋势索引 的模板资产化验证",
+        "AI 应用趋势索引 的证据链验证"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:trend-grid-report",
+        "svglide-theme:magazine-cobalt"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "canvas_spec": {
+        "canvas": {
+          "height": 540,
+          "viewBox": "0 0 960 540",
+          "width": 960
+        },
+        "content": {
+          "cards": [
+            "质量稳定",
+            "叙事更聚焦",
+            "证据仍需补齐"
+          ],
+          "eyebrow": "EDITORIAL NOTE",
+          "stat": "73%",
+          "subtitle": "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+          "title": "证据改变了决策"
+        },
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "height": 460,
+            "width": 864,
+            "x": 48,
+            "y": 40
+          }
+        },
+        "safe_area": {
+          "height": 460,
+          "width": 864,
+          "x": 48,
+          "y": 40
+        },
+        "semantic_elements": [
+          {
+            "bbox": {
+              "height": 132,
+              "width": 760,
+              "x": 56,
+              "y": 70
+            },
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title"
+          }
+        ],
+        "template_id": "serif-stat-editorial",
+        "theme": {
+          "colors": {
+            "accent": "#E89CB1",
+            "background": "#EFE7D4",
+            "muted": "#50634B",
+            "panel": "#E6DCC4",
+            "primary": "#2E4A2A",
+            "text": "#1A1A17"
+          }
+        },
+        "theme_id": "forest-editorial",
+        "version": "svglide-canvas-spec/v1"
+      },
+      "page": 3,
+      "title": "证据改变了决策",
+      "key_message": "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+      "renderer_id": "artboard_satori.serif-stat-editorial",
+      "layout_family": "serif-stat-editorial",
+      "visual_recipe": "path_flow",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "证据改变了决策",
+      "visual_signature": "serif-stat-editorial layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "path",
+        "connector_flow"
+      ],
+      "required_primitives": [
+        "path",
+        "annotation"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "EDITORIAL NOTE",
+      "body_points": [
+        "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+        "质量稳定",
+        "叙事更聚焦",
+        "证据仍需补齐"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:serif-stat-editorial",
+        "svglide-theme:forest-editorial"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "canvas_spec": {
+        "canvas": {
+          "height": 540,
+          "viewBox": "0 0 960 540",
+          "width": 960
+        },
+        "content": {
+          "eyebrow": "POSTER CLAIM",
+          "pillars": [
+            "结论明确",
+            "证据充分",
+            "行动立即"
+          ],
+          "stat": "3X",
+          "subtitle": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+          "title": "现在就做判断"
+        },
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "height": 460,
+            "width": 864,
+            "x": 48,
+            "y": 40
+          }
+        },
+        "safe_area": {
+          "height": 460,
+          "width": 864,
+          "x": 48,
+          "y": 40
+        },
+        "semantic_elements": [
+          {
+            "bbox": {
+              "height": 132,
+              "width": 760,
+              "x": 56,
+              "y": 70
+            },
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title"
+          }
+        ],
+        "template_id": "poster-stat-punch",
+        "theme": {
+          "colors": {
+            "accent": "#1C1410",
+            "background": "#FFFFFF",
+            "muted": "#5A4036",
+            "panel": "#F5F2EF",
+            "primary": "#D8000F",
+            "text": "#1C1410"
+          }
+        },
+        "theme_id": "tomato-poster",
+        "version": "svglide-canvas-spec/v1"
+      },
+      "page": 4,
+      "title": "现在就做判断",
+      "key_message": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+      "renderer_id": "artboard_satori.poster-stat-punch",
+      "layout_family": "poster-stat-punch",
+      "visual_recipe": "brand_system",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "现在就做判断",
+      "visual_signature": "poster-stat-punch layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "closing",
+      "section": "POSTER CLAIM",
+      "body_points": [
+        "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+        "现在就做判断 的模板资产化验证"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:poster-stat-punch",
+        "svglide-theme:tomato-poster"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    }
+  ],
+  "visual_identity": {
+    "design_dna": {
+      "component_bias": "editorial_profile, chart, timeline_rail",
+      "image_treatment": "图片只做主题证据信号",
+      "layout_motif": "结构化说明路径",
+      "palette": "neutral editorial explainer",
+      "shape_language": "信息块、连接线、总结条",
+      "theme_visual_anchors": [
+        "主题对象",
+        "结构路径",
+        "结论卡片"
+      ]
+    },
+    "distinctness_target": {
+      "layout_sequence_similarity_max": 0.75,
+      "palette_overlap_max": 0.67,
+      "renderer_sequence_similarity_max": 0.75
+    },
+    "forbidden_reuse": {
+      "avoid_default_skeleton": true,
+      "avoid_same_cover_structure": true,
+      "avoid_same_palette": true,
+      "recent_decks": 5
+    },
+    "theme_archetype": "academic_paper"
+  },
+  "route": "svglide-svg",
+  "title": "Reference Absorption Wave 3",
+  "audience": "SVGlide engineers",
+  "language": "zh-CN",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "style_preset": "neo_grid_bold",
+  "style_selection_reason": "参考模板吸收 fixture 需要高对比网格、清晰层级和可审计的 SVG-native 原语。",
+  "style_system": {
+    "background_strategy": "registry token background with explicit SVG primitive layer",
+    "motif": "reference absorption proof deck",
+    "palette": "high-contrast registry tokens with accent bars and paths",
+    "typography": "Satori-compatible system typography",
+    "style_preset": "neo_grid_bold"
+  },
+  "loaded_rule_set": [
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svg-protocol.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svglide-artifacts.spec.md",
+    "skills/lark-slides/references/svglide-assets.contract.md",
+    "skills/lark-slides/references/svglide-checks.checklist.md",
+    "skills/lark-slides/references/svglide-create-svg.contract.md",
+    "skills/lark-slides/references/svglide-generate-svg.contract.md",
+    "skills/lark-slides/references/svglide-lock.contract.md",
+    "skills/lark-slides/references/svglide-plan.contract.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-reference-absorption-execution-plan.md",
+    "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+    "skills/lark-slides/references/svglide-reference-absorption-report.md",
+    "skills/lark-slides/references/svglide-preview.spec.md",
+    "skills/lark-slides/references/svglide-readback.contract.md",
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-svg-private.rules.json",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+    "skills/lark-slides/references/svglide-workflow.spec.md"
+  ],
+  "plan_path": "02-plan/slide_plan.json",
+  "quality_gates": {
+    "no_debug_guides": true,
+    "no_text_overflow": true,
+    "no_xml_like_pages": true,
+    "no_runtime_reference_dependency": true
+  },
+  "art_direction": {
+    "cover_treatment": "reference-derived but non-copying template abstractions",
+    "deck_motif": "asset registry expansion with evidence-backed fixtures",
+    "section_divider_treatment": "each slide proves one absorbed template/theme pair",
+    "closing_treatment": "fixture chain feeds runner and visual acceptance evidence",
+    "svg_native_moments": [
+      "Satori-compatible HTML/CSS",
+      "template/theme registry tokens",
+      "SVGlide protocol SVG"
+    ]
+  },
+  "output_mode": "svglide-svg",
+  "theme_policy": {
+    "allow_multi_theme": true,
+    "reason": "reference absorption coverage fixture intentionally exercises multiple absorbed theme tokens in one proof deck"
+  }
+}

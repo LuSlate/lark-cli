@@ -568,6 +568,44 @@ def validate_visual_acceptance(
                         category="missing_input",
                     )
                 )
+            page_preview_sha = item.get("preview_sha256")
+            page_preview_manifest_sha = item.get("preview_manifest_sha256")
+            if not isinstance(page_preview_sha, str) or not page_preview_sha:
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_preview_hash_missing",
+                        "visual acceptance visual_evidence.pages entries must include preview_sha256",
+                        category="missing_input",
+                    )
+                )
+            elif isinstance(inputs.get("preview_sha256"), str) and page_preview_sha != inputs.get("preview_sha256"):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_preview_hash_stale",
+                        "visual acceptance visual_evidence.pages preview_sha256 does not match current preview evidence",
+                        category="stale_hash",
+                    )
+                )
+            if not isinstance(page_preview_manifest_sha, str) or not page_preview_manifest_sha:
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_preview_manifest_hash_missing",
+                        "visual acceptance visual_evidence.pages entries must include preview_manifest_sha256",
+                        category="missing_input",
+                    )
+                )
+            elif isinstance(inputs.get("preview_manifest_sha256"), str) and page_preview_manifest_sha != inputs.get("preview_manifest_sha256"):
+                issues.append(
+                    issue(
+                        "visual_acceptance",
+                        "visual_acceptance_visual_evidence_preview_manifest_hash_stale",
+                        "visual acceptance visual_evidence.pages preview_manifest_sha256 does not match current preview manifest evidence",
+                        category="stale_hash",
+                    )
+                )
             if not isinstance(item.get("contact_sheet_tile"), dict):
                 issues.append(
                     issue(

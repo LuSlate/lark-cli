@@ -1,0 +1,506 @@
+{
+  "contact_sheet": {
+    "grid": {
+      "cols": 3,
+      "gap": 16,
+      "rows": 3,
+      "tile_height": 180,
+      "tile_width": 320
+    },
+    "pages": [
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 1,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-001.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 2,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-002.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 3,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-003.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 4,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-004.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 5,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-005.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 212
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 6,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-006.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 212
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 408
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 7,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-007.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 408
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 408
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 8,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-008.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 408
+        }
+      }
+    ],
+    "path": "05-preview/contact-sheet.png",
+    "sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+    "source_pngs": [
+      "04-svg/artboard/page-001.png",
+      "04-svg/artboard/page-002.png",
+      "04-svg/artboard/page-003.png",
+      "04-svg/artboard/page-004.png",
+      "04-svg/artboard/page-005.png",
+      "04-svg/artboard/page-006.png",
+      "04-svg/artboard/page-007.png",
+      "04-svg/artboard/page-008.png"
+    ]
+  },
+  "created_at": "2026-06-22T04:03:09+08:00",
+  "inputs": {
+    "canvas_spec_validate": "receipts/canvas-spec-validate.json",
+    "canvas_spec_validate_sha256": "95f8fb7146fa5247877a53cfbb3bcd0ab50cbba37f6e096bd18f90ed09055bf8",
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/ivory-ledger.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "06332c3299a7ffc32c2fa9f3773416f13ce45f47bf08a2f7bcebf9d940e2c81e"
+  },
+  "pages": [
+    {
+      "canvas_spec_sha256": "d07c27dd69ff6df6686430c1eb9e062d8d2705dec91c1b4f736d90d0033bdc14",
+      "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+      "canvas_template_svg_sha256": "fdec653963ce2862ee4695bb0c4b968a0062ade8d10b187cc6a480474a7d9fd4",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "eaee8c8bc43ca941195d021b8bcf5554f25b1a22628b26f3c74115ae403946b4",
+      "node_observations": "04-svg/artboard/page-001.node-observations.json",
+      "node_observations_sha256": "ba6c95ad3c7bb774366d0c9bb25ded53fa197488b5eda84a75ceb8c36ed261f3",
+      "node_version": "v20.18.1",
+      "page": 1,
+      "png": "04-svg/artboard/page-001.png",
+      "png_sha256": "e578740de5ffa440c2e5e8ad463b49c292fc72058a69a00090ec95509464a0bd",
+      "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+      "render_metadata_sha256": "7f2f929f209b11d8d6e95c45b83bb529d0bd356dca4727c9ca29ba3cfa2bc45d",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+      "satori_svg_sha256": "3c55fc935a4d391c5b317a2784eba20781deb0e75d199e3818e11a4be02e0e0e",
+      "satori_version": "0.26.0",
+      "template_id": "ledger-briefing",
+      "theme_id": "ivory-ledger"
+    },
+    {
+      "canvas_spec_sha256": "c12c0254620a1bd6d17c21cc12c69d21d6f2993f69f0085723387ad88aa18534",
+      "canvas_template_svg": "04-svg/artboard/page-002.canvas-template.svg",
+      "canvas_template_svg_sha256": "96c82a074b18f35abf688a49bce5ac768827a2956959df02ba54a6fca9d2eec6",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "8f30c5b0fa2ae2aeb8fa87712c9b4838c081477be4470a1af5cf7e582f549feb",
+      "node_observations": "04-svg/artboard/page-002.node-observations.json",
+      "node_observations_sha256": "a48d1e4bc290bccac0a48262f40e931f5f535023955771fb4a7ba681638a31f6",
+      "node_version": "v20.18.1",
+      "page": 2,
+      "png": "04-svg/artboard/page-002.png",
+      "png_sha256": "94506202748211b3bf97647c10ea6bb1e2666ece4ef560e3e0610b6ee8436b5c",
+      "render_metadata": "04-svg/artboard/page-002.render-metadata.json",
+      "render_metadata_sha256": "5d2b44d5aaa9df225fc2582d640d278d799fd89efa834134b0eff75ea1f4f823",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-002.satori.svg",
+      "satori_svg_sha256": "4d59d32b2ca10e85e43925085e10f84c513b53d1ab47cc97de47c196bb848ee4",
+      "satori_version": "0.26.0",
+      "template_id": "intelligence-brief",
+      "theme_id": "signal-navy"
+    },
+    {
+      "canvas_spec_sha256": "3a91c9dfdb2e0505a549f0d3ac465ee3fd3f6bd6930cab2397716f46a073b6a5",
+      "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+      "canvas_template_svg_sha256": "abfcf56ec3211f30d4822cc697797039ab575c5f3456ce0f4d11926d8a80e5b9",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "a74e48a2e390223c17ab08b44318faa8b9489b6610cae3b670ee1a33fe3dd6f9",
+      "node_observations": "04-svg/artboard/page-003.node-observations.json",
+      "node_observations_sha256": "a641710cfba99d983fbb308b3227d79341c3895048534fe55bbfe8a59488294e",
+      "node_version": "v20.18.1",
+      "page": 3,
+      "png": "04-svg/artboard/page-003.png",
+      "png_sha256": "44e951bb860a401b41692671d0a754df1c9afcf05ad37e448869c44840f5e718",
+      "render_metadata": "04-svg/artboard/page-003.render-metadata.json",
+      "render_metadata_sha256": "16ac8c18f714e29618f3228dc6614aab8a7ee8c2e871ac2424e3deaaddfc48b3",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+      "satori_svg_sha256": "a2d455c1515068ae368802ad560b2b84650867aad749c4d469f7bfde04cecf37",
+      "satori_version": "0.26.0",
+      "template_id": "printed-program",
+      "theme_id": "terracotta-program"
+    },
+    {
+      "canvas_spec_sha256": "47f025e624c88e89da9d79c6d90c6503372e63681231b83bc23c2ab705a76e80",
+      "canvas_template_svg": "04-svg/artboard/page-004.canvas-template.svg",
+      "canvas_template_svg_sha256": "8db73ffc8309610a9a13ac762b5ab83e76ba6eb1447061a34d874d68660abd31",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+      "node_layout_map_sha256": "ffc113c96362e6e5d66830620010d68b10d0fe3df52700c6be08783579f5aaa2",
+      "node_observations": "04-svg/artboard/page-004.node-observations.json",
+      "node_observations_sha256": "75908e8dd30f4200b3ee715cffb7014b8514fedd84893e9a27aca7eb70dd9b91",
+      "node_version": "v20.18.1",
+      "page": 4,
+      "png": "04-svg/artboard/page-004.png",
+      "png_sha256": "fda6108703e81dda6f0278c9c4c441a3e7c8b438ec319c81a6c5f62ee02c2c81",
+      "render_metadata": "04-svg/artboard/page-004.render-metadata.json",
+      "render_metadata_sha256": "371955484f5d6cde33b87cbcb27161814486f407c5d3a15282dcfa6fd2216781",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-004.satori.svg",
+      "satori_svg_sha256": "116879925fa747f499a4fbe677e6cef05709dabc9111606875a191c220706609",
+      "satori_version": "0.26.0",
+      "template_id": "retro-ui-dashboard",
+      "theme_id": "retro-desktop"
+    },
+    {
+      "canvas_spec_sha256": "617f167fe822a81e0fad4f46756981a846b14690253d18049e41b21701fd17d7",
+      "canvas_template_svg": "04-svg/artboard/page-005.canvas-template.svg",
+      "canvas_template_svg_sha256": "0e26d4a8a9d97aa213c0060c2795a0e3d81220a8f6ec5ca220a6b660405fdf48",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-005.node-layout-map.json",
+      "node_layout_map_sha256": "5da6645be731f2b661890a19702d2556b54d56139ee0714d7f97ce002ab8e9cc",
+      "node_observations": "04-svg/artboard/page-005.node-observations.json",
+      "node_observations_sha256": "543dfc8e0c8fb640a9d3cec0f4ce38b1f39b7227806bc5d0ec8890c0d52a535e",
+      "node_version": "v20.18.1",
+      "page": 5,
+      "png": "04-svg/artboard/page-005.png",
+      "png_sha256": "8be01d3bba2a888571d379d331739a7ca925a1e82e74ccd9fc6995ea4b4329d8",
+      "render_metadata": "04-svg/artboard/page-005.render-metadata.json",
+      "render_metadata_sha256": "44df6c13e9be436ee36b959ffd5852280adfa7689fb4d392d3b8c7aeacfceb46",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-005.satori.svg",
+      "satori_svg_sha256": "5e618ddd29e1079b94808077593660d1b1ca2450033bc6a67ad793a1f85157e9",
+      "satori_version": "0.26.0",
+      "template_id": "product-ribbon",
+      "theme_id": "sakura-catalog"
+    },
+    {
+      "canvas_spec_sha256": "c18688af4a1ed56b83e101003ab241d6f5e0956e7c09eec0fbefab52883393b9",
+      "canvas_template_svg": "04-svg/artboard/page-006.canvas-template.svg",
+      "canvas_template_svg_sha256": "1626ddd20ea09bf3e3dc94d17d3c3357fe99930e5246ef04e019277fe348bf33",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-006.node-layout-map.json",
+      "node_layout_map_sha256": "f831884ffe37a712c23091a854557904885eaa15037f350f57952a801f57036c",
+      "node_observations": "04-svg/artboard/page-006.node-observations.json",
+      "node_observations_sha256": "049dc42caef61ef2e0e8212f05a1a605c6736c5244e7b91fbb46b7a8be453d30",
+      "node_version": "v20.18.1",
+      "page": 6,
+      "png": "04-svg/artboard/page-006.png",
+      "png_sha256": "5e0c225b8da3834f3cb875fd931a0bab860add87aa4dc92acb7e27fc853a3d5b",
+      "render_metadata": "04-svg/artboard/page-006.render-metadata.json",
+      "render_metadata_sha256": "dd0d4154180272b1b42748c0a35cd2aacb56369bdaf5b97a9de9c9f1d64e2d75",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-006.satori.svg",
+      "satori_svg_sha256": "0bedd0ad1de693b374fb5f1344a4612efa83302f10e06d727cd207cd0341eeb2",
+      "satori_version": "0.26.0",
+      "template_id": "type-mass-poster",
+      "theme_id": "acid-studio"
+    },
+    {
+      "canvas_spec_sha256": "f71fcc8b5c452626973274229f2d6679b47fd264444bc4c107da12237163e10a",
+      "canvas_template_svg": "04-svg/artboard/page-007.canvas-template.svg",
+      "canvas_template_svg_sha256": "36f07c7d4ef238e32bdac4f24a092ef8bccc56a244f2f97cd408b069f5b4e40f",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-007.node-layout-map.json",
+      "node_layout_map_sha256": "608b3bdbec68ef70424bb57eee87228316e014234707a0591e389299efe974b4",
+      "node_observations": "04-svg/artboard/page-007.node-observations.json",
+      "node_observations_sha256": "e7fc0599da1d9326eeeae470737b7114f44d8061f8ee5baf7edab34e7cb72908",
+      "node_version": "v20.18.1",
+      "page": 7,
+      "png": "04-svg/artboard/page-007.png",
+      "png_sha256": "ce35fb13668127c687478ea1036547d3c4e39b1022a389b2b2ee9d8a5e32cdc8",
+      "render_metadata": "04-svg/artboard/page-007.render-metadata.json",
+      "render_metadata_sha256": "db42117d8610848df90d77c208c4709c05db7af4d80a89cd5f822d059f342a7e",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-007.satori.svg",
+      "satori_svg_sha256": "c2fef1763bf14d9967f00343689aea323581d9b6007d19bff13d40b6ab2b4a01",
+      "satori_version": "0.26.0",
+      "template_id": "brutalist-matrix",
+      "theme_id": "raw-grid-mono"
+    },
+    {
+      "canvas_spec_sha256": "bb46893c7bc9f35f8dbad2738738456babce4da5f6c6a357c63b800e31887f8b",
+      "canvas_template_svg": "04-svg/artboard/page-008.canvas-template.svg",
+      "canvas_template_svg_sha256": "75662301517b4c9668fdd8ad70c5ed2c8765f9809c9374779956ddbdc3ee26ec",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-008.node-layout-map.json",
+      "node_layout_map_sha256": "1ebd6d3a1d7fbfead87df3d3c9a15b34b12edf13dacdf05c9500943540e85e37",
+      "node_observations": "04-svg/artboard/page-008.node-observations.json",
+      "node_observations_sha256": "bdd85914364b8023722f849e872d52e8dcc0ef973744fce95f5304dcd1375e7d",
+      "node_version": "v20.18.1",
+      "page": 8,
+      "png": "04-svg/artboard/page-008.png",
+      "png_sha256": "ce51d4e5bfe80c1ad3e1328be8701257cc848689fb948f61f72d6dedf16c39a3",
+      "render_metadata": "04-svg/artboard/page-008.render-metadata.json",
+      "render_metadata_sha256": "da59b7f33744849ddb570e99bb91857cba7afa6a24a5ada2dca664172683e3b1",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-008.satori.svg",
+      "satori_svg_sha256": "34c4136d510f2081994f72c8f5354eeeae94d8e4c2ba3674e7de2216fb6fafc1",
+      "satori_version": "0.26.0",
+      "template_id": "annotated-field-board",
+      "theme_id": "field-notebook"
+    }
+  ],
+  "stage": "artboard-render",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "max_workers": 4,
+    "page_count": 8,
+    "warning_count": 0
+  },
+  "version": "svglide-artboard-render/v1"
+}

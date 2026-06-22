@@ -1,0 +1,32 @@
+{
+  "version": "svglide-aesthetic-review/v1",
+  "review_mode": "deterministic_aesthetic_auto_approval",
+  "reviewed_at": "2026-06-21T20:03:10.102697+00:00",
+  "status": "passed",
+  "approval": {
+    "status": "approved",
+    "policy": "preview-lint-page-count-asset-safety/v1",
+    "model": null,
+    "human_review_required": false
+  },
+  "boundaries": {
+    "aesthetic_model": "not_connected",
+    "scope": "deterministic preview artifact checks; not a learned visual taste model"
+  },
+  "preview_path": "05-preview/preview.html",
+  "manifest_path": "05-preview/preview-manifest.json",
+  "page_count": 8,
+  "asset_review": {
+    "manifest_status": "passed",
+    "asset_count": 0,
+    "real_asset_count": 0,
+    "fallback_asset_count": 0
+  },
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "issues": [],
+  "warnings": [],
+  "action": "create_live"
+}

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SVGlide Preview</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f5f7;
+        --panel: #ffffff;
+        --text: #17202a;
+        --muted: #627183;
+        --line: #d7dde5;
+        --accent: #2364aa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.96);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar h1 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .topbar nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover { text-decoration: underline; }
+      main {
+        width: min(1120px, calc(100vw - 32px));
+        margin: 24px auto 48px;
+      }
+      .slide-page {
+        margin: 0 0 28px;
+      }
+      .slide-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 0 0 10px;
+      }
+      .slide-header strong {
+        display: block;
+        font-size: 15px;
+      }
+      .slide-header span {
+        color: var(--muted);
+        word-break: break-word;
+      }
+      .pager {
+        display: flex;
+        gap: 12px;
+        white-space: nowrap;
+      }
+      .slide-frame {
+        overflow: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 16px;
+        box-shadow: 0 8px 22px rgba(23, 32, 42, 0.08);
+      }
+      .slide-frame svg {
+        display: block;
+        width: min(100%, 960px);
+        height: auto;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>SVGlide Preview: reference_absorption_wave2</h1>
+      <nav aria-label="Pages">
+          <a href="#page-1">1</a>
+          <a href="#page-2">2</a>
+          <a href="#page-3">3</a>
+          <a href="#page-4">4</a>
+          <a href="#page-5">5</a>
+          <a href="#page-6">6</a>
+          <a href="#page-7">7</a>
+          <a href="#page-8">8</a>
+      </nav>
+    </header>
+    <main>
+      <section class="slide-page" id="page-1">
+        <header class="slide-header">
+          <div>
+            <strong>Page 1 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-001.svg</span>
+          </div>
+          <div class="pager"><span>Previous</span><a href="#page-2">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#FAFADF"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#1A1A16"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">OPERATING LEDGER</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">复盘事项账本</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">把结论、证据和 owner 放进克制的黑白账本结构。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#5E5E54" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#1A1A16" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#1A1A16" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#1A1A16" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#5E5E54" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#F5F0E4"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">增长口径已统一</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#F5F0E4"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">风险归因待复核</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#F5F0E4"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">Owner 已明确</div></foreignObject>
+  <rect data-node-id="item-card-4" slide:role="shape" x="92" y="398" width="244" height="72" fill="#F5F0E4"/>
+  <foreignObject data-node-id="item-4" slide:role="shape" slide:shape-type="text" fill="#1A1A16" color="#1A1A16" x="108" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#1A1A16;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">下周完成验证</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-2">
+        <header class="slide-header">
+          <div>
+            <strong>Page 2 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-002.svg</span>
+          </div>
+          <div class="pager"><a href="#page-1">Previous</a><a href="#page-3">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#1C2644"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#C8A870"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#E2DCD0" color="#E2DCD0" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#E2DCD0;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">PRIVATE BRIEF</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#E2DCD0" color="#E2DCD0" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#E2DCD0;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">组织信号简报</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#E2DCD0" color="#E2DCD0" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#E2DCD0;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">用深色情报简报结构承载高层判断、早期信号和建议行动。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#C8A870" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#C8A870" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#C8A870" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#C8A870" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#C8A870" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#232F55"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#E2DCD0" color="#E2DCD0" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#E2DCD0;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">指标移动前的协作信号</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#232F55"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#E2DCD0" color="#E2DCD0" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#E2DCD0;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">约束来自跨团队边界</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#232F55"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#E2DCD0" color="#E2DCD0" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#E2DCD0;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">下轮验证需要单 owner</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-3">
+        <header class="slide-header">
+          <div>
+            <strong>Page 3 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-003.svg</span>
+          </div>
+          <div class="pager"><a href="#page-2">Previous</a><a href="#page-4">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#FAF1E2"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#B53D2A"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">PROGRAM</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">团队晚餐式议程</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#8E2D1F" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#B53D2A" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#B53D2A" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#B53D2A" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#8E2D1F" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#F2E5CF"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">开场观察</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#F2E5CF"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">主议题讨论</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#F2E5CF"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">行动项确认</div></foreignObject>
+  <rect data-node-id="item-card-4" slide:role="shape" x="92" y="398" width="244" height="72" fill="#F2E5CF"/>
+  <foreignObject data-node-id="item-4" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="108" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">复盘收束</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-4">
+        <header class="slide-header">
+          <div>
+            <strong>Page 4 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-004.svg</span>
+          </div>
+          <div class="pager"><a href="#page-3">Previous</a><a href="#page-5">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#C0C0C0"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#000080"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">CONTROL PANEL</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">发布控制面板</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#FFFFFF" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#000080" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#000080" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#000080" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#FFFFFF" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#D4D0C8"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">Build status: OK</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#D4D0C8"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">Open issues: 12</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#D4D0C8"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">Owner: Platform</div></foreignObject>
+  <rect data-node-id="item-card-4" slide:role="shape" x="92" y="398" width="244" height="72" fill="#D4D0C8"/>
+  <foreignObject data-node-id="item-4" slide:role="shape" slide:shape-type="text" fill="#222222" color="#222222" x="108" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#222222;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">ETA: Friday</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-5">
+        <header class="slide-header">
+          <div>
+            <strong>Page 5 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-005.svg</span>
+          </div>
+          <div class="pager"><a href="#page-4">Previous</a><a href="#page-6">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#F1E6CB"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#E5392A"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">CATALOG DROP</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">功能货架更新</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#F09131" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#E5392A" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#E5392A" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#E5392A" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#F09131" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#E54489"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">智能推荐</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#E54489"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">批量导入</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#E54489"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">权限看板</div></foreignObject>
+  <rect data-node-id="item-card-4" slide:role="shape" x="92" y="398" width="244" height="72" fill="#E54489"/>
+  <foreignObject data-node-id="item-4" slide:role="shape" slide:shape-type="text" fill="#3A2516" color="#3A2516" x="108" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3A2516;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">异常提醒</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-6">
+        <header class="slide-header">
+          <div>
+            <strong>Page 6 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-006.svg</span>
+          </div>
+          <div class="pager"><a href="#page-5">Previous</a><a href="#page-7">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#1C1C1C"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#F5D200"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#F5D200" color="#F5D200" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#F5D200;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">STUDIO NOTE</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#F5D200" color="#F5D200" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#F5D200;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">重点只说一遍</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#F5D200" color="#F5D200" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#F5D200;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#F0CC00" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#F5D200" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#F5D200" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#F5D200" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#F0CC00" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#242422"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#F5D200" color="#F5D200" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#F5D200;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">一个核心信息</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#242422"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#F5D200" color="#F5D200" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#F5D200;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">三条支撑理由</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#242422"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#F5D200" color="#F5D200" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#F5D200;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">不需要装饰</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-7">
+        <header class="slide-header">
+          <div>
+            <strong>Page 7 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-007.svg</span>
+          </div>
+          <div class="pager"><a href="#page-6">Previous</a><a href="#page-8">Next</a></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#F7F2E8"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#111111"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">BATTLECARD</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">方案评分矩阵</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">硬边框矩阵用于竞品对比、方案评分和关键约束排序。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#22C55E" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#111111" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#111111" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#111111" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#22C55E" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#FDE68A"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">成本可控</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#FDE68A"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">接入最快</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#FDE68A"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">风险最低</div></foreignObject>
+  <rect data-node-id="item-card-4" slide:role="shape" x="92" y="398" width="244" height="72" fill="#FDE68A"/>
+  <foreignObject data-node-id="item-4" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="108" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">Owner 清晰</div></foreignObject>
+  <rect data-node-id="item-card-5" slide:role="shape" x="360" y="398" width="244" height="72" fill="#FDE68A"/>
+  <foreignObject data-node-id="item-5" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="376" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">迁移成本</div></foreignObject>
+  <rect data-node-id="item-card-6" slide:role="shape" x="628" y="398" width="244" height="72" fill="#FDE68A"/>
+  <foreignObject data-node-id="item-6" slide:role="shape" slide:shape-type="text" fill="#111111" color="#111111" x="644" y="413" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#111111;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">证据充分</div></foreignObject>
+</svg>
+        </div>
+      </section>
+      <section class="slide-page" id="page-8">
+        <header class="slide-header">
+          <div>
+            <strong>Page 8 of 8</strong>
+            <span>Source path: 04-svg/prepared/page-008.svg</span>
+          </div>
+          <div class="pager"><a href="#page-7">Previous</a><span>Next</span></div>
+        </header>
+        <div class="slide-frame">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect data-node-id="background" slide:role="shape" x="0" y="0" width="960" height="540" fill="#F8E8B8"/>
+  <rect data-node-id="accent-rule" slide:role="shape" x="64" y="72" width="8" height="344" fill="#C2410C"/>
+  <foreignObject data-node-id="eyebrow" data-source-ref="canvas_spec.content.eyebrow" slide:role="shape" slide:shape-type="text" fill="#3B2F22" color="#3B2F22" x="92" y="64" width="420" height="30"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3B2F22;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">FIELD NOTE</div></foreignObject>
+  <foreignObject data-node-id="title" data-source-ref="canvas_spec.content.title" slide:role="shape" slide:shape-type="text" fill="#3B2F22" color="#3B2F22" x="92" y="108" width="700" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3B2F22;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">用户访谈证据墙</div></foreignObject>
+  <foreignObject data-node-id="subtitle" data-source-ref="canvas_spec.content.subtitle" slide:role="shape" slide:shape-type="text" fill="#3B2F22" color="#3B2F22" x="94" y="212" width="660" height="54"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3B2F22;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">把访谈洞察、证据和下一步贴在同一张标注板上。</div></foreignObject>
+  <path data-node-id="reference-flow-path" slide:role="shape" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" fill="none" opacity="0.48" stroke="#1D4ED8" stroke-width="3"/>
+  <line data-node-id="reference-annotation-line" slide:role="shape" x1="612" y1="264" x2="842" y2="178" stroke="#C2410C" stroke-width="2" opacity="0.5"/>
+  <rect data-node-id="dashboard-metric-bar-1" slide:role="shape" x="760" y="350" width="14" height="26" fill="#C2410C" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-2" slide:role="shape" x="784" y="332" width="14" height="44" fill="#C2410C" opacity="0.72"/>
+  <rect data-node-id="dashboard-metric-bar-3" slide:role="shape" x="808" y="314" width="14" height="62" fill="#1D4ED8" opacity="0.72"/>
+  <rect data-node-id="item-card-1" slide:role="shape" x="92" y="306" width="244" height="72" fill="#FFF7D6"/>
+  <foreignObject data-node-id="item-1" slide:role="shape" slide:shape-type="text" fill="#3B2F22" color="#3B2F22" x="108" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3B2F22;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">用户绕过默认流程</div></foreignObject>
+  <rect data-node-id="item-card-2" slide:role="shape" x="360" y="306" width="244" height="72" fill="#FFF7D6"/>
+  <foreignObject data-node-id="item-2" slide:role="shape" slide:shape-type="text" fill="#3B2F22" color="#3B2F22" x="376" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3B2F22;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">关键证据需要回访</div></foreignObject>
+  <rect data-node-id="item-card-3" slide:role="shape" x="628" y="306" width="244" height="72" fill="#FFF7D6"/>
+  <foreignObject data-node-id="item-3" slide:role="shape" slide:shape-type="text" fill="#3B2F22" color="#3B2F22" x="644" y="321" width="212" height="44"><div xmlns="http://www.w3.org/1999/xhtml" style="color:#3B2F22;font-size:18px;font-weight:700;font-family:Inter,Arial,sans-serif;line-height:1.18;">下一步由体验组 owner</div></foreignObject>
+</svg>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

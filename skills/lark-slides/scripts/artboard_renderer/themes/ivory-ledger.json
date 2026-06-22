@@ -1,0 +1,26 @@
+{
+  "theme_id": "ivory-ledger",
+  "colors": {
+    "background": "#FAFADF",
+    "panel": "#F5F0E4",
+    "primary": "#1A1A16",
+    "accent": "#5E5E54",
+    "text": "#1A1A16",
+    "muted": "#5E5E54"
+  },
+  "typography": {
+    "title": 54,
+    "subtitle": 20,
+    "body": 18,
+    "label": 15
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.monochrome.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+}

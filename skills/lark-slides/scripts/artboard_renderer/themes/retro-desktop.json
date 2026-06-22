@@ -1,0 +1,26 @@
+{
+  "theme_id": "retro-desktop",
+  "colors": {
+    "background": "#C0C0C0",
+    "panel": "#D4D0C8",
+    "primary": "#000080",
+    "accent": "#FFFFFF",
+    "text": "#222222",
+    "muted": "#555555"
+  },
+  "typography": {
+    "title": 38,
+    "subtitle": 19,
+    "body": 18,
+    "label": 15
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.retro-windows.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+}

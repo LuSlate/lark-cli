@@ -2,32 +2,998 @@
   "schema_version": "svglide-component-registry/v1",
   "runtime_contract": {
     "format": "Satori-compatible JSX/render tree",
-    "allowed_styles": ["static flex layout", "absolute positioning", "solid backgrounds", "font tokens", "bounded text boxes"],
-    "forbidden_styles": ["CSS animation", "filter effects", "external stylesheets", "arbitrary HTML passthrough"]
+    "allowed_styles": [
+      "static flex layout",
+      "absolute positioning",
+      "solid backgrounds",
+      "font tokens",
+      "bounded text boxes"
+    ],
+    "forbidden_styles": [
+      "CSS animation",
+      "filter effects",
+      "external stylesheets",
+      "arbitrary HTML passthrough"
+    ]
   },
   "components": [
-    {"id": "Title", "status": "active", "role": "primary text hierarchy", "source": "components/primitives.mjs"},
-    {"id": "Subtitle", "status": "active", "role": "secondary text hierarchy", "source": "components/primitives.mjs"},
-    {"id": "TextBlock", "status": "active", "role": "bounded text surface", "source": "components/primitives.mjs"},
-    {"id": "Badge", "status": "active", "role": "eyebrow or metadata label", "source": "components/primitives.mjs"},
-    {"id": "Chip", "status": "active", "role": "short categorical tag", "source": "components/primitives.mjs"},
-    {"id": "StatCard", "status": "active", "role": "numbered takeaway card", "source": "components/primitives.mjs"},
-    {"id": "ImageFrame", "status": "active", "role": "bounded visual placeholder", "source": "components/primitives.mjs"},
-    {"id": "MetricTile", "status": "active", "role": "dashboard metric block", "source": "templates/p0-templates.mjs"},
-    {"id": "TimelineNode", "status": "active", "role": "milestone marker", "source": "templates/p0-templates.mjs"},
-    {"id": "ProcessStep", "status": "active", "role": "pipeline step card", "source": "templates/p0-templates.mjs"},
-    {"id": "QuoteBlock", "status": "active", "role": "large quotation layout", "source": "templates/p0-templates.mjs"},
-    {"id": "RiskBanner", "status": "active", "role": "severity and risk grouping", "source": "templates/p0-templates.mjs"},
-    {"id": "RoadmapLane", "status": "active", "role": "horizontal roadmap row", "source": "templates/p0-templates.mjs"},
-    {"id": "ArchitectureNode", "status": "active", "role": "system node block", "source": "templates/p0-templates.mjs"},
-    {"id": "Callout", "status": "active", "role": "emphasis panel", "source": "templates/p0-templates.mjs"},
-    {"id": "SectionHeader", "status": "active", "role": "compact page heading cluster", "source": "templates/p0-templates.mjs"},
-    {"id": "FigurePlaceholder", "status": "active", "role": "image or diagram placeholder", "source": "templates/p0-templates.mjs"},
-    {"id": "LegendDot", "status": "active", "role": "comparison and chart marker", "source": "templates/p0-templates.mjs"},
-    {"id": "IndexNumber", "status": "active", "role": "ordered list number", "source": "templates/p0-templates.mjs"},
-    {"id": "DividerRule", "status": "active", "role": "section or timeline divider", "source": "templates/p0-templates.mjs"},
-    {"id": "PosterSection", "status": "active", "role": "research poster content block", "source": "templates/p0-templates.mjs"},
-    {"id": "BarMark", "status": "active", "role": "simple data story bar", "source": "templates/p0-templates.mjs"},
-    {"id": "AccentShape", "status": "active", "role": "bounded decorative visual signal", "source": "templates/p0-templates.mjs"}
+    {
+      "id": "Title",
+      "status": "active",
+      "role": "primary text hierarchy",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "Subtitle",
+      "status": "active",
+      "role": "secondary text hierarchy",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "TextBlock",
+      "status": "active",
+      "role": "bounded text surface",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "Badge",
+      "status": "active",
+      "role": "eyebrow or metadata label",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "Chip",
+      "status": "active",
+      "role": "short categorical tag",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "StatCard",
+      "status": "active",
+      "role": "numbered takeaway card",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ImageFrame",
+      "status": "active",
+      "role": "bounded visual placeholder",
+      "source": "components/primitives.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "MetricTile",
+      "status": "active",
+      "role": "dashboard metric block",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "TimelineNode",
+      "status": "active",
+      "role": "milestone marker",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ProcessStep",
+      "status": "active",
+      "role": "pipeline step card",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "QuoteBlock",
+      "status": "active",
+      "role": "large quotation layout",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "RiskBanner",
+      "status": "active",
+      "role": "severity and risk grouping",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "RoadmapLane",
+      "status": "active",
+      "role": "horizontal roadmap row",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ArchitectureNode",
+      "status": "active",
+      "role": "system node block",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "Callout",
+      "status": "active",
+      "role": "emphasis panel",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "SectionHeader",
+      "status": "active",
+      "role": "compact page heading cluster",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "FigurePlaceholder",
+      "status": "active",
+      "role": "image or diagram placeholder",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "LegendDot",
+      "status": "active",
+      "role": "comparison and chart marker",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "IndexNumber",
+      "status": "active",
+      "role": "ordered list number",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "DividerRule",
+      "status": "active",
+      "role": "section or timeline divider",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "PosterSection",
+      "status": "active",
+      "role": "research poster content block",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "BarMark",
+      "status": "active",
+      "role": "simple data story bar",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "AccentShape",
+      "status": "active",
+      "role": "bounded decorative visual signal",
+      "source": "templates/p0-templates.mjs",
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "LedgerMetricField",
+      "status": "active",
+      "role": "metric",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "ledger-briefing"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/ledger-briefing.canvas-spec.json"
+      ],
+      "description": "Small hairline stat field for quiet ledger pages",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+    },
+    {
+      "id": "LedgerDecisionRow",
+      "status": "active",
+      "role": "table",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "ledger-briefing"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/ledger-briefing.canvas-spec.json"
+      ],
+      "description": "Numbered ledger row with hairline divider",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+    },
+    {
+      "id": "BriefChromeBar",
+      "status": "active",
+      "role": "section",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "intelligence-brief"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.signal.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.canvas-spec.json"
+      ],
+      "description": "Top briefing chrome with label/date",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json"
+    },
+    {
+      "id": "GoldSignalItem",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "intelligence-brief"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.signal.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.canvas-spec.json"
+      ],
+      "description": "Gold-accent stacked signal note",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json"
+    },
+    {
+      "id": "ProgramEditionBadge",
+      "status": "active",
+      "role": "section",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "printed-program"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.long-table.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/printed-program.canvas-spec.json"
+      ],
+      "description": "Single-ink edition label",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json"
+    },
+    {
+      "id": "ProgramRow",
+      "status": "active",
+      "role": "table",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "printed-program"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.long-table.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/printed-program.canvas-spec.json"
+      ],
+      "description": "Menu-style numbered agenda row",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json"
+    },
+    {
+      "id": "WindowFrame",
+      "status": "active",
+      "role": "section",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "retro-ui-dashboard"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/retro-ui-dashboard.canvas-spec.json"
+      ],
+      "description": "Retro desktop outer window",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+    },
+    {
+      "id": "TitleBar",
+      "status": "active",
+      "role": "section",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "retro-ui-dashboard"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/retro-ui-dashboard.canvas-spec.json"
+      ],
+      "description": "OS-style title bar",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+    },
+    {
+      "id": "SunkenStatusFooter",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "retro-ui-dashboard"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/retro-ui-dashboard.canvas-spec.json"
+      ],
+      "description": "Retro status strip",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+    },
+    {
+      "id": "WindowPanel",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "retro-ui-dashboard"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/retro-ui-dashboard.canvas-spec.json"
+      ],
+      "description": "Bordered status panel",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+    },
+    {
+      "id": "RibbonBand",
+      "status": "active",
+      "role": "section",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "product-ribbon"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json"
+      ],
+      "description": "Multicolor catalog ribbon",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+    },
+    {
+      "id": "ProductCard",
+      "status": "active",
+      "role": "image",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "product-ribbon"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json"
+      ],
+      "description": "Numbered catalog card",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+    },
+    {
+      "id": "RosetteSeal",
+      "status": "active",
+      "role": "badge",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "product-ribbon"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json"
+      ],
+      "description": "Round launch seal badge",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+    },
+    {
+      "id": "MassHeadline",
+      "status": "active",
+      "role": "text",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "type-mass-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/type-mass-poster.canvas-spec.json"
+      ],
+      "description": "Oversized uppercase statement block",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json"
+    },
+    {
+      "id": "MonoChromeBar",
+      "status": "active",
+      "role": "section",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "type-mass-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/type-mass-poster.canvas-spec.json"
+      ],
+      "description": "Monospace top chrome and counter",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json"
+    },
+    {
+      "id": "TypeMassNote",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "type-mass-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/type-mass-poster.canvas-spec.json"
+      ],
+      "description": "Short high-contrast note row",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json"
+    },
+    {
+      "id": "HardBorderMatrixCell",
+      "status": "active",
+      "role": "table",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "brutalist-matrix"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/brutalist-matrix.canvas-spec.json"
+      ],
+      "description": "Thick-border matrix cell",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json"
+    },
+    {
+      "id": "MatrixCalloutBox",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "brutalist-matrix"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/brutalist-matrix.canvas-spec.json"
+      ],
+      "description": "High-contrast matrix winner callout",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json"
+    },
+    {
+      "id": "PinnedEvidenceCard",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "annotated-field-board"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json"
+      ],
+      "description": "Pinned evidence note card",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    },
+    {
+      "id": "StampBadge",
+      "status": "active",
+      "role": "badge",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "annotated-field-board"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json"
+      ],
+      "description": "Stamped review badge",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    },
+    {
+      "id": "NotebookTag",
+      "status": "active",
+      "role": "badge",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "annotated-field-board"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json"
+      ],
+      "description": "Compact notebook tag",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    },
+    {
+      "id": "GeometryPlaceholder",
+      "status": "active",
+      "role": "image",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "architectural-spec"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cartesian.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/architectural-spec.canvas-spec.json"
+      ],
+      "description": "Hairline geometry placeholder",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json"
+    },
+    {
+      "id": "SpecRow",
+      "status": "active",
+      "role": "table",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "architectural-spec"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cartesian.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/architectural-spec.canvas-spec.json"
+      ],
+      "description": "Low-density architectural spec row",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json"
+    },
+    {
+      "id": "PixelGridPatch",
+      "status": "active",
+      "role": "image",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "trend-grid-report"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/trend-grid-report.canvas-spec.json"
+      ],
+      "description": "Cobalt pixel grid patch",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+    },
+    {
+      "id": "TrendIndexRow",
+      "status": "active",
+      "role": "table",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "trend-grid-report"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/trend-grid-report.canvas-spec.json"
+      ],
+      "description": "Trend index row with status",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+    },
+    {
+      "id": "SerifStatFigure",
+      "status": "active",
+      "role": "metric",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "serif-stat-editorial"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/serif-stat-editorial.canvas-spec.json"
+      ],
+      "description": "Large serif stat figure",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+    },
+    {
+      "id": "EditorialStatCard",
+      "status": "active",
+      "role": "metric",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "serif-stat-editorial"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/serif-stat-editorial.canvas-spec.json"
+      ],
+      "description": "Serif editorial evidence card",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+    },
+    {
+      "id": "PosterStatFigure",
+      "status": "active",
+      "role": "metric",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "poster-stat-punch"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/poster-stat-punch.canvas-spec.json"
+      ],
+      "description": "Oversized poster stat",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+    },
+    {
+      "id": "PosterPillar",
+      "status": "active",
+      "role": "poster",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "poster-stat-punch"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/poster-stat-punch.canvas-spec.json"
+      ],
+      "description": "Poster-style evidence pillar",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+    },
+    {
+      "id": "SingleAccentMetricCard",
+      "status": "active",
+      "role": "metric",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "executive-dashboard"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.blue-professional.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json"
+      ],
+      "description": "Single-accent executive metric card",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/blue-professional.executive-dashboard.json"
+    },
+    {
+      "id": "RankingBar",
+      "status": "active",
+      "role": "chart",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "executive-dashboard"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.blue-professional.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json"
+      ],
+      "description": "Simple ranking bar",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/blue-professional.executive-dashboard.json"
+    },
+    {
+      "id": "DenseMetricPanel",
+      "status": "active",
+      "role": "metric",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "dense-panel-grid"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.neo-grid-bold.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/dense-panel-grid.canvas-spec.json"
+      ],
+      "description": "Dense metric panel",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json"
+    },
+    {
+      "id": "DenseNotePanel",
+      "status": "active",
+      "role": "callout",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "dense-panel-grid"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.neo-grid-bold.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/dense-panel-grid.canvas-spec.json"
+      ],
+      "description": "Dense grid side note",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json"
+    },
+    {
+      "id": "QuoteWithRankedPoint",
+      "status": "active",
+      "role": "quote",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "editorial-quote-chart"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.broadside.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/editorial-quote-chart.canvas-spec.json"
+      ],
+      "description": "Quote plus ranked evidence point",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json"
+    },
+    {
+      "id": "ChartCalloutPanel",
+      "status": "active",
+      "role": "chart",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "editorial-quote-chart"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.broadside.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/editorial-quote-chart.canvas-spec.json"
+      ],
+      "description": "Editorial chart callout panel",
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json"
+    },
+    {
+      "id": "BarSeries",
+      "status": "active",
+      "role": "chart",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "data-story"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/data-story.canvas-spec.json"
+      ],
+      "description": "Simple bar series for data story",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "RoadmapProgressLine",
+      "status": "active",
+      "role": "timeline",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "roadmap-lanes"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/roadmap-lanes.canvas-spec.json"
+      ],
+      "description": "Roadmap lane progress line",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ArchitectureNodeBlock",
+      "status": "active",
+      "role": "diagram",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "architecture-blueprint"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/architecture-blueprint.canvas-spec.json"
+      ],
+      "description": "Bordered system architecture node",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ResearchSectionBlock",
+      "status": "active",
+      "role": "poster",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "research-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/research-poster.canvas-spec.json"
+      ],
+      "description": "Research poster section block",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "AffiliationMarker",
+      "status": "active",
+      "role": "logo/affiliation",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "research-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/research-poster.canvas-spec.json"
+      ],
+      "description": "Affiliation or logo placeholder marker",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ImageCaptionBlock",
+      "status": "active",
+      "role": "image",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "image-feature"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/image-feature.canvas-spec.json"
+      ],
+      "description": "Image caption block",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "RiskSeverityPill",
+      "status": "active",
+      "role": "badge",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "risk-alert"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/risk-alert.canvas-spec.json"
+      ],
+      "description": "Risk severity badge",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "ProcessStepCard",
+      "status": "active",
+      "role": "process",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "process-flow"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/process-flow.canvas-spec.json"
+      ],
+      "description": "Process step card",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    },
+    {
+      "id": "TimelineStepMarker",
+      "status": "active",
+      "role": "timeline",
+      "source": "templates/p0-templates.mjs",
+      "template_ids": [
+        "timeline-steps"
+      ],
+      "source_trace": [
+        "svglide-baseline.components"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/timeline-steps.canvas-spec.json"
+      ],
+      "description": "Timeline step marker",
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/components.json"
+    }
   ]
 }

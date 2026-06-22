@@ -1,0 +1,32 @@
+{
+  "source_item_id": "svglide-baseline.chart_strategies",
+  "absorbed_as": [
+    "owned_baseline_runtime_asset",
+    "chart_strategy"
+  ],
+  "svglide_asset_ids": [
+    "chart_strategy.data-story-bar-series",
+    "chart_strategy.risk-row-stack",
+    "chart_strategy.roadmap-lane-progress",
+    "chart_strategy.timeline-step-sequence"
+  ],
+  "non_copying_transform": "Existing SVGlide strategy catalog entries are recorded as owned baseline strategy abstractions with fixture-only claim scope.",
+  "forbidden_usage": [
+    "do_not_relabel_baseline_assets_as_external_reference_absorption",
+    "do_not_import_raw_external_runtime_artifacts",
+    "do_not_claim_backend_readback_without_receipt"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-chart-strategies.json"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/data-story.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/roadmap-lanes.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/timeline-steps.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/risk-alert.canvas-spec.json"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/references/svglide-reference-absorption-report.md"
+  ],
+  "review_notes": "Baseline strategy records do not claim trusted image provider or backend chart readback evidence."
+}

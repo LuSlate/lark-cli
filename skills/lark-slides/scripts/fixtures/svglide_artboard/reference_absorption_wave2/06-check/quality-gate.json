@@ -1,0 +1,211 @@
+{
+  "version": "svglide-quality-gate/v1",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2",
+  "profile": "production_live",
+  "status": "passed",
+  "inputs": {
+    "preflight": "06-check/preflight.json",
+    "preview_lint": "06-check/preview-lint.json",
+    "aesthetic_review": "06-check/aesthetic-review.json",
+    "runtime_review": "06-check/runtime-review.json",
+    "semantic_review": "06-check/semantic-review.json",
+    "visual_distinctness": "06-check/visual-distinctness.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_adherence": "06-check/theme-adherence.json",
+    "artboard_package_check": "06-check/artboard-package-check.json",
+    "generator_receipt": "receipts/generate_svg.json",
+    "generation_mode": "artboard_satori"
+  },
+  "input_hashes": {
+    "preflight": "9835cfa26155367d9c03e7254b901727298cce6bf4ed9a98471127a4e332d8e6",
+    "preview_lint": "143a748f54d2f5a3951425298956d07cf205238bad55bef82d49afb837cb88da",
+    "aesthetic_review": "f4928020b502fbb253c6f1057a415ea319a3105e6f1d5c3106cf0bec837af783",
+    "runtime_review": "abbb3550943c7aebf049b3e2fa4682ffd6e51694a126c377c9534a7f0f9c1387",
+    "semantic_review": "1bb6c75e0e1c9d1f05f2cbc58db57d5bc605a1195e9dc1e1e5e7c7a9b60b3002",
+    "visual_distinctness": "95294525612cfd13fc8592503db93706ff2a27ab1ae126a9ca4054bc245b4a9c",
+    "theme_validate": "eea65cff7505dfb477cce7a9d3e6b8a11568394b18946241a12b7663a6c1528c",
+    "theme_adherence": "d898a6e64f043ba125eccfcd31993efacbba85b2830172cc87dd55c0e92fc255",
+    "artboard_package_check": "8a6de4658967d3ca84234b57852d5c7422dbe74cfd540d1e5dc8123d9d787884",
+    "generator_receipt": "278f44670b75f5702555640122054c352f58a90846603217f50d0ccfa5a4b31d"
+  },
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "9934c0e613972e72f7c39656501f88b7a399860b1cb986fd21fdcfc4a0439ce0"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "935753359e75ac6a5d25458a254ff3d06a84a0a0360a0fcaa77593737e78c56b"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "9099243fa376e04edc65515467e6b229db089769edd12c6c1b078a37966ef667"
+    },
+    {
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "95ac7d9cdc5e91fe250b30e22702534585a4c6fb645e044a55e442f32687a44d"
+    },
+    {
+      "path": "04-svg/prepared/page-005.svg",
+      "sha256": "cd1750229533360bd4914298ea87b91883df67801588f217177291cb29bf942c"
+    },
+    {
+      "path": "04-svg/prepared/page-006.svg",
+      "sha256": "3696e2d9ebccf40834e1c0bf6e88c64de96f6739b14e6e947f616f288bd54bc6"
+    },
+    {
+      "path": "04-svg/prepared/page-007.svg",
+      "sha256": "8ca2ceab8dafcc934226157ab26f5085dd0e984d2309060b7f9e47868e049713"
+    },
+    {
+      "path": "04-svg/prepared/page-008.svg",
+      "sha256": "6325e2ad723055111b0ff29258a660e11d25ed3032a2259cd3ad27b9c3291930"
+    }
+  ],
+  "waivers": [],
+  "summary": {
+    "check_count": 12,
+    "failed_check_count": 0,
+    "waiver_check_count": 0,
+    "source_error_count": 0,
+    "research_status": "fixture_local_reference_absorption",
+    "asset_status": "passed",
+    "asset_real_coverage": 0,
+    "asset_acquired_count": 0,
+    "asset_local_file_count": 0,
+    "asset_mapped_token_count": 0,
+    "asset_fallback_count": 0,
+    "image_job_count": 0
+  },
+  "checks": [
+    {
+      "name": "generator-receipt",
+      "path": "receipts/generate_svg.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": null,
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "online-readiness",
+      "path": "source/source-receipt.json + 03-assets/asset-manifest.json",
+      "required": false,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": [],
+      "research_status": "fixture_local_reference_absorption",
+      "asset_status": "passed",
+      "asset_real_coverage": 0,
+      "asset_acquired_count": 0,
+      "asset_local_file_count": 0,
+      "asset_mapped_token_count": 0,
+      "asset_fallback_count": 0,
+      "image_job_count": 0
+    },
+    {
+      "name": "preflight",
+      "path": "06-check/preflight.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": null,
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "preview-lint",
+      "path": "06-check/preview-lint.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "aesthetic-review",
+      "path": "06-check/aesthetic-review.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "runtime-review",
+      "path": "06-check/runtime-review.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "semantic-review",
+      "path": "06-check/semantic-review.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "visual-distinctness",
+      "path": "06-check/visual-distinctness.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "continue_pipeline",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "theme-validate",
+      "path": "06-check/theme-validate.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "theme-adherence",
+      "path": "06-check/theme-adherence.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "artboard-package-check",
+      "path": "06-check/artboard-package-check.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "chart-verify",
+      "path": "06-check/chart-verify.json",
+      "required": false,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    }
+  ],
+  "output_path": "06-check/quality-gate.json"
+}

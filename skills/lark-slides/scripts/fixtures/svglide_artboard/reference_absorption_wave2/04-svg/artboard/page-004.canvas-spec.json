@@ -1,0 +1,78 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "CONTROL PANEL",
+    "panels": [
+      "Build status: OK",
+      "Open issues: 12",
+      "Owner: Platform",
+      "ETA: Friday"
+    ],
+    "status": "READY",
+    "subtitle": "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+    "title": "发布控制面板",
+    "window_title": "SVGLIDE.EXE"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "retro-ui-dashboard",
+  "theme": {
+    "colors": {
+      "accent": "#FFFFFF",
+      "background": "#C0C0C0",
+      "muted": "#555555",
+      "panel": "#D4D0C8",
+      "primary": "#000080",
+      "text": "#222222"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.retro-windows.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "retro-desktop",
+    "typography": {
+      "body": 18,
+      "label": 15,
+      "subtitle": 19,
+      "title": 38
+    }
+  },
+  "theme_id": "retro-desktop",
+  "version": "svglide-canvas-spec/v1"
+}

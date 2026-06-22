@@ -34,6 +34,18 @@
     },
     "style_preset": {"type": "string", "minLength": 1},
     "style_selection_reason": {"type": "string", "minLength": 1},
+    "palette_selection_receipt": {"type": "string", "minLength": 1},
+    "selection_receipt": {"type": "string", "minLength": 1},
+    "project_palette": {
+      "type": "object",
+      "required": ["palette_id", "source", "confidence", "selection_receipt", "colors", "data_series"],
+      "additionalProperties": true
+    },
+    "project_theme": {
+      "type": "object",
+      "required": ["base_theme_id", "palette_ref", "token_overrides"],
+      "additionalProperties": true
+    },
     "style_system": {
       "type": "object",
       "required": ["palette", "typography", "background_strategy", "motif"],
@@ -200,6 +212,12 @@
                     },
                     "template_id": {"type": "string", "minLength": 1},
                     "theme_id": {"type": "string", "minLength": 1},
+                    "palette_id": {"type": "string", "minLength": 1},
+                    "selection_trace": {
+                      "type": "object",
+                      "required": ["palette_candidate_rank", "template_candidate_rank", "theme_candidate_rank", "selection_reason"],
+                      "additionalProperties": true
+                    },
                     "safe_area": {
                       "type": "object",
                       "required": ["x", "y", "width", "height"],

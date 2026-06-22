@@ -33,6 +33,7 @@ RECEIPT_PATH = Path("receipts/assets.json")
 NETWORK_POLICIES = {"auto", "online", "offline", "fixture"}
 IMAGE_BACKENDS = {"auto", "openai", "gemini", "qwen", "flux", "stage_command", "none"}
 STAGE_COMMAND_ENV = "SVGLIDE_IMAGE_STAGE_COMMAND"
+REAL_PREVIEW_PROFILES = {"local_real_preview"}
 
 
 class AssetsError(Exception):
@@ -78,6 +79,40 @@ def file_sha256(path: Path) -> str:
 
 def optional_sha256(path: Path | None) -> str | None:
     return file_sha256(path) if path and path.exists() and path.is_file() else None
+
+
+def validate_image_file(path: Path) -> tuple[bool, str | None, dict[str, Any]]:
+    if not path.exists() or not path.is_file():
+        return False, "missing_image_file", {}
+    try:
+        size = path.stat().st_size
+    except OSError as error:
+        return False, f"image_stat_failed: {error}", {}
+    if size < 32:
+        return False, "image_file_too_small", {"byte_size": size}
+    header = path.read_bytes()[:16]
+    if not (
+        header.startswith(b"\x89PNG\r\n\x1a\n")
+        or header.startswith(b"\xff\xd8\xff")
+        or header.startswith(b"RIFF")
+        or header.startswith(b"GIF8")
+    ):
+        return False, "unsupported_or_invalid_image_header", {"byte_size": size}
+    meta: dict[str, Any] = {"byte_size": size}
+    try:
+        from PIL import Image  # type: ignore
+    except ImportError:
+        return True, None, meta
+    try:
+        with Image.open(path) as image:
+            image.verify()
+        with Image.open(path) as image:
+            meta["width"], meta["height"] = image.size
+    except (OSError, SyntaxError) as error:
+        return False, f"image_decode_failed: {error}", meta
+    if meta.get("width", 0) <= 0 or meta.get("height", 0) <= 0:
+        return False, "image_has_invalid_dimensions", meta
+    return True, None, meta
 
 
 def dominant_colors(path: Path, *, limit: int = 5) -> list[str]:
@@ -157,6 +192,26 @@ def collect_asset_contracts(plan: dict[str, Any], lock: dict[str, Any]) -> list[
     return contracts
 
 
+def asset_policy(plan: dict[str, Any]) -> dict[str, Any]:
+    raw = plan.get("asset_policy")
+    return raw if isinstance(raw, dict) else {}
+
+
+def asset_policy_requires_visual_assets(plan: dict[str, Any], *, profile: str) -> bool:
+    policy = asset_policy(plan)
+    return profile in REAL_PREVIEW_PROFILES or policy.get("required") is True
+
+
+def minimum_visual_asset_count(plan: dict[str, Any], *, profile: str) -> int:
+    policy = asset_policy(plan)
+    raw = policy.get("minimum_visual_asset_count")
+    if isinstance(raw, bool):
+        raw = None
+    if isinstance(raw, int) and raw > 0:
+        return raw
+    return 3 if profile in REAL_PREVIEW_PROFILES else 1
+
+
 def placement_role(contract: dict[str, Any]) -> str:
     raw = contract.get("placement_role") or contract.get("role") or contract.get("usage")
     if isinstance(raw, str) and raw:
@@ -232,6 +287,13 @@ def save_download(project: Path, *, asset_id: str, url: str) -> Path:
     target = target_dir / f"{asset_id}{extension_from_url(url, content_type)}"
     target.write_bytes(body)
     return target
+
+
+def save_download_to_path(path: Path, *, url: str) -> Path:
+    body, _content_type = http_get(url)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(body)
+    return path
 
 
 def build_image_job(contract: dict[str, Any], *, asset_id: str, backend: str) -> dict[str, Any]:
@@ -326,7 +388,12 @@ def run_stage_command_image(
     elif not output_path.exists() or not output_path.is_file():
         job.update({"status": "failed", "error": f"stage command did not create {output_path}"})
     else:
-        job["status"] = "acquired"
+        image_ok, image_error, image_meta = validate_image_file(output_path)
+        job["image_meta"] = image_meta
+        if image_ok:
+            job["status"] = "acquired"
+        else:
+            job.update({"status": "failed", "error": image_error or "invalid image output"})
     if job["status"] != "acquired":
         return {
             "asset_id": asset_id,
@@ -364,6 +431,8 @@ def run_stage_command_image(
         "fallback_reason": None,
         "required": bool(contract.get("required", True)),
     }
+    if isinstance(job.get("image_meta"), dict):
+        item["image_meta"] = job["image_meta"]
     colors = dominant_colors(output_path)
     if colors:
         item["dominant_colors"] = colors
@@ -404,11 +473,49 @@ def acquire_contract_asset(
     if isinstance(href, str):
         local = local_asset_path(project, href)
         if local is not None and local.exists() and local.is_file():
-            base.update({"asset_kind": "user_file", "file": relpath(local, project), "sha256": file_sha256(local), "status": "local_file"})
+            source_url = contract.get("source_url")
+            if isinstance(source_url, str) and source_url.startswith(("http://", "https://")):
+                base.update(
+                    {
+                        "asset_kind": "web_image",
+                        "file": relpath(local, project),
+                        "sha256": file_sha256(local),
+                        "source_url": source_url,
+                        "license": base["license"] or "source_url_provided",
+                        "retrieved_at": contract.get("retrieved_at") if isinstance(contract.get("retrieved_at"), str) else now_iso(),
+                        "status": "acquired",
+                    }
+                )
+            else:
+                base.update({"asset_kind": "user_file", "file": relpath(local, project), "sha256": file_sha256(local), "status": "local_file"})
             colors = dominant_colors(local)
             if colors:
                 base["dominant_colors"] = colors
             return base, None
+        source_url = contract.get("source_url")
+        if local is not None and isinstance(source_url, str) and source_url.startswith(("http://", "https://")) and online_enabled(policy):
+            try:
+                downloaded = save_download_to_path(local, url=source_url)
+                base.update(
+                    {
+                        "asset_kind": "web_image",
+                        "file": relpath(downloaded, project),
+                        "sha256": file_sha256(downloaded),
+                        "source_url": source_url,
+                        "license": base["license"] or "source_url_provided",
+                        "retrieved_at": now_iso(),
+                        "status": "acquired",
+                        "safe_text_zones": base["safe_text_zones"] or [{"x": 0.05, "y": 0.12, "w": 0.42, "h": 0.72}],
+                    }
+                )
+                colors = dominant_colors(downloaded)
+                if colors:
+                    base["dominant_colors"] = colors
+                return base, None
+            except (OSError, urllib.error.URLError, TimeoutError) as error:
+                base["fallback_reason"] = f"source_url_download_failed: {error}"
+        if image_backend == "stage_command" and provider.startswith("trusted:") and not no_ai_image:
+            return run_stage_command_image(project, contract, asset_id=asset_id, provider=provider)
         if href.startswith(("http://", "https://")) and online_enabled(policy) and not no_image_search:
             try:
                 downloaded = save_download(project, asset_id=asset_id, url=href)
@@ -541,6 +648,7 @@ def run_assets(
     network_policy: str = "offline",
     asset_provider: str = "auto",
     image_backend: str = "none",
+    profile: str = "production",
     no_image_search: bool = False,
     no_ai_image: bool = False,
     refresh_online: bool = False,
@@ -557,6 +665,9 @@ def run_assets(
     acquired: list[dict[str, Any]] = []
     image_jobs: list[dict[str, Any]] = []
     for index, contract in enumerate(contracts, 1):
+        evaluated_item = evaluated[index - 1] if index - 1 < len(evaluated) else {}
+        if evaluated_item.get("status") == "mapped_token":
+            continue
         item, job = acquire_contract_asset(
             project,
             contract,
@@ -585,6 +696,29 @@ def run_assets(
                 evaluated_item["status"] = "acquired"
                 evaluated_item["issues"] = []
     issues = [issue for item in evaluated for issue in item["issues"]]
+    strict_assets = asset_policy_requires_visual_assets(plan, profile=profile)
+    min_visual_assets = minimum_visual_asset_count(plan, profile=profile)
+    fulfilled_count = sum(1 for item in acquired if item.get("status") == "acquired") + sum(
+        1 for item in evaluated if item["status"] == "mapped_token"
+    )
+    planned_image_count = sum(1 for item in acquired if item.get("status") == "planned") + len(image_jobs)
+    if strict_assets:
+        if policy == "offline":
+            issues.append({"code": "real_preview_network_policy_offline", "message": "real local preview requires network_policy auto/online"})
+        if backend == "none":
+            issues.append({"code": "real_preview_image_backend_none", "message": "real local preview cannot use image_backend=none"})
+        if not contracts:
+            issues.append({"code": "real_preview_asset_contracts_empty", "message": "real local preview requires non-empty asset_contracts"})
+        generated_count = sum(1 for item in acquired if item.get("asset_kind") in {"generated_image", "ai_image"})
+        if generated_count > 0:
+            issues.append({"code": "real_preview_generated_asset_blocked", "message": "real local preview cannot use generated_image or ai_image assets"})
+        if fulfilled_count < min_visual_assets:
+            issues.append(
+                {
+                    "code": "real_preview_visual_asset_count_too_low",
+                    "message": f"real local preview requires at least {min_visual_assets} acquired or token-backed online visual assets",
+                }
+            )
     for item in acquired:
         if item.get("status") == "failed" and item.get("required", True):
             issues.append(
@@ -601,6 +735,7 @@ def run_assets(
         "network_policy": policy,
         "asset_provider": asset_provider,
         "image_backend": backend,
+        "profile": profile,
         "plan_path": PLAN_PATH.as_posix(),
         "plan_sha256": file_sha256(project / PLAN_PATH),
         "lock_path": LOCK_PATH.as_posix() if (project / LOCK_PATH).exists() else None,
@@ -622,6 +757,8 @@ def run_assets(
             "acquired_count": sum(1 for item in acquired if item.get("status") == "acquired"),
             "fallback_count": sum(1 for item in acquired if item.get("status") == "fallback_used"),
             "image_job_count": len(image_jobs),
+            "real_visual_asset_count": fulfilled_count,
+            "planned_image_count": planned_image_count,
         },
         "issues": issues,
     }
@@ -653,6 +790,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--network-policy", default="offline", choices=sorted(NETWORK_POLICIES))
     parser.add_argument("--asset-provider", default="auto")
     parser.add_argument("--image-backend", default="none", choices=sorted(IMAGE_BACKENDS))
+    parser.add_argument("--profile", default="production", choices=["production", "production_live", "preview_only", "local_real_preview", "debug"])
     parser.add_argument("--no-image-search", action="store_true")
     parser.add_argument("--no-ai-image", action="store_true")
     parser.add_argument("--refresh-online", action="store_true")
@@ -668,6 +806,7 @@ def main(argv: list[str] | None = None) -> int:
             network_policy=args.network_policy,
             asset_provider=args.asset_provider,
             image_backend=args.image_backend,
+            profile=args.profile,
             no_image_search=args.no_image_search,
             no_ai_image=args.no_ai_image,
             refresh_online=args.refresh_online,

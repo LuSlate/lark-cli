@@ -1,0 +1,97 @@
+{
+  "created_at": "2026-06-22T03:47:03+08:00",
+  "current_stage": "visual_acceptance",
+  "runner_version": "svglide-project-runner/v0",
+  "stages": {
+    "aesthetic_review": {
+      "receipt": "receipts/aesthetic_review.json",
+      "status": "passed"
+    },
+    "assets": {
+      "receipt": "receipts/assets.json",
+      "status": "passed"
+    },
+    "chart_verify": {
+      "receipt": "receipts/chart_verify.json",
+      "status": "passed"
+    },
+    "confirm_plan": {
+      "receipt": "receipts/confirm_plan.json",
+      "status": "passed"
+    },
+    "dry_run": {
+      "receipt": "receipts/dry_run.json",
+      "status": "passed"
+    },
+    "generate_svg": {
+      "receipt": "receipts/generate_svg.json",
+      "status": "passed"
+    },
+    "init": {
+      "receipt": "receipts/init.json",
+      "status": "passed"
+    },
+    "package_check": {
+      "receipt": "receipts/package_check.json",
+      "status": "passed"
+    },
+    "plan": {
+      "receipt": "receipts/plan.json",
+      "status": "passed"
+    },
+    "preflight": {
+      "receipt": "receipts/preflight.json",
+      "status": "passed"
+    },
+    "prepare": {
+      "receipt": "receipts/prepare.json",
+      "status": "passed"
+    },
+    "preview": {
+      "receipt": "receipts/preview.json",
+      "status": "passed"
+    },
+    "preview_lint": {
+      "receipt": "receipts/preview_lint.json",
+      "status": "passed"
+    },
+    "quality_gate": {
+      "receipt": "receipts/quality_gate.json",
+      "status": "passed"
+    },
+    "runtime_review": {
+      "receipt": "receipts/runtime_review.json",
+      "status": "passed"
+    },
+    "semantic_review": {
+      "receipt": "receipts/semantic_review.json",
+      "status": "passed"
+    },
+    "source": {
+      "receipt": "receipts/source.json",
+      "status": "passed"
+    },
+    "strategy_review": {
+      "receipt": "receipts/strategy_review.json",
+      "status": "passed"
+    },
+    "theme_adherence": {
+      "receipt": "receipts/theme_adherence.json",
+      "status": "passed"
+    },
+    "theme_validate": {
+      "receipt": "receipts/theme_validate.json",
+      "status": "passed"
+    },
+    "visual_acceptance": {
+      "receipt": "receipts/visual_acceptance.json",
+      "status": "passed"
+    },
+    "visual_distinctness_review": {
+      "receipt": "receipts/visual_distinctness_review.json",
+      "status": "passed"
+    }
+  },
+  "updated_at": "2026-06-22T04:04:42+08:00",
+  "version": "svglide-state/v1"
+}

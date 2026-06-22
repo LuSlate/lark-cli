@@ -1,0 +1,56 @@
+{
+  "source_item_id": "beautiful-html-templates.template.sakura-chroma.design.md",
+  "absorbed_as": [
+    "template_candidate",
+    "theme_rule",
+    "layout_archetype",
+    "component_variant",
+    "planner_selection_signal"
+  ],
+  "svglide_asset_ids": [
+    "component.ProductCard",
+    "component.RibbonBand",
+    "component.RosetteSeal",
+    "component.ribbon_catalog_cards",
+    "image_strategy.product-catalog-card",
+    "image_strategy.rosette-seal-badge",
+    "layout.product-catalog-ribbon",
+    "layout.ribbon_product_catalog",
+    "template.product-ribbon",
+    "theme.sakura-catalog",
+    "theme.sakura_catalog"
+  ],
+  "non_copying_transform": "Sakura Chroma is converted into an SVGlide product ribbon: fixed color band, numbered catalog cards, and seal badge. Decorative blobs, source CSS, and Japanese packaging artwork are not copied.",
+  "forbidden_usage": [
+    "do_not_embed_beautiful_html_css_or_js",
+    "do_not_copy_reference_screenshot_pixels",
+    "do_not_count_fixture_preview_as_backend_readback"
+  ],
+  "source_context_refs": [
+    "beautiful-html-templates.template.sakura-chroma.template.json",
+    "beautiful-html-templates.screenshot.sakura-chroma-1",
+    "beautiful-html-templates.screenshot.sakura-chroma-3",
+    "beautiful-html-templates.screenshot.sakura-chroma-4"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/artboard/page-005.canvas-spec.json"
+  ],
+  "satori_outputs": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/artboard/raw/page-005.satori.svg"
+  ],
+  "svglide_protocol_outputs": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/page-005.svg"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/receipts/canvas-spec-validate.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/artboard/page-005.receipt.json"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-template-registry.json"
+  ],
+  "negative_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/gate8_special_cases/unsupported-filter.canvas-spec.json"
+  ],
+  "review_notes": "Wave2 absorption for sakura-chroma. Suitable prompts: 产品目录、功能发布、品牌活动、年轻化但有秩序的展示. This is fixture-backed and does not claim production-live backend proof."
+}

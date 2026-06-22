@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="#081C4A"/>
+<rect data-node-id="accent-rule" x="64" y="72" width="8" height="344" fill="#60A5FA"/>
+<rect data-node-id="accent-panel" x="760" y="60" width="120" height="120" fill="#FDE047" opacity="0.20"/>
+<text data-node-id="eyebrow" data-box-x="92" data-box-y="64" data-box-width="420" data-box-height="30" x="92" y="84" fill="#60A5FA" font-size="18" font-weight="800" font-family="Inter">OPERATING GRID</text>
+<text data-node-id="title" data-box-x="92" data-box-y="108" data-box-width="700" data-box-height="96" x="92" y="158" fill="#EEF6FF" font-size="46" font-weight="850" font-family="Inter">渠道健康度复盘</text>
+<text data-node-id="subtitle" data-box-x="94" data-box-y="212" data-box-width="660" data-box-height="54" x="94" y="240" fill="#B7C8E8" font-size="22" font-weight="500" font-family="Inter">12x8 面板节奏承载高密度指标，强调异常和下一步。</text>
+<path data-node-id="reference-flow-path" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" x="92" y="362" width="736" height="116" fill="none" stroke="#FDE047" stroke-width="3" opacity="0.48"/>
+<line data-node-id="reference-annotation-line" x1="612" y1="264" x2="842" y2="178" stroke="#60A5FA" stroke-width="2" opacity="0.5"/>
+<rect data-node-id="dashboard-metric-bar-1" x="760" y="350" width="14" height="26" fill="#60A5FA" opacity="0.72"/>
+<rect data-node-id="dashboard-metric-bar-2" x="784" y="332" width="14" height="44" fill="#60A5FA" opacity="0.72"/>
+<rect data-node-id="dashboard-metric-bar-3" x="808" y="314" width="14" height="62" fill="#FDE047" opacity="0.72"/>
+<rect data-node-id="item-card-1" x="92" y="306" width="244" height="86" fill="#102C6B" opacity="0.84"/>
+<text data-node-id="item-1" data-box-x="108" data-box-y="319" data-box-width="212" data-box-height="62" x="108" y="347" fill="#EEF6FF" font-size="19" font-weight="720" font-family="Inter">转化 +12%</text>
+<rect data-node-id="item-card-2" x="360" y="306" width="244" height="86" fill="#102C6B" opacity="0.84"/>
+<text data-node-id="item-2" data-box-x="376" data-box-y="319" data-box-width="212" data-box-height="62" x="376" y="347" fill="#EEF6FF" font-size="19" font-weight="720" font-family="Inter">履约 94%</text>
+<rect data-node-id="item-card-3" x="628" y="306" width="244" height="86" fill="#102C6B" opacity="0.84"/>
+<text data-node-id="item-3" data-box-x="644" data-box-y="319" data-box-width="212" data-box-height="62" x="644" y="347" fill="#EEF6FF" font-size="19" font-weight="720" font-family="Inter">成本 -8%</text>
+<rect data-node-id="item-card-4" x="92" y="398" width="244" height="86" fill="#102C6B" opacity="0.84"/>
+<text data-node-id="item-4" data-box-x="108" data-box-y="411" data-box-width="212" data-box-height="62" x="108" y="439" fill="#EEF6FF" font-size="19" font-weight="720" font-family="Inter">风险 L2</text>
+<rect data-node-id="item-card-5" x="360" y="398" width="244" height="86" fill="#102C6B" opacity="0.84"/>
+<text data-node-id="item-5" data-box-x="376" data-box-y="411" data-box-width="212" data-box-height="62" x="376" y="439" fill="#EEF6FF" font-size="19" font-weight="720" font-family="Inter">样本 42k</text>
+<rect data-node-id="item-card-6" x="628" y="398" width="244" height="86" fill="#102C6B" opacity="0.84"/>
+<text data-node-id="item-6" data-box-x="644" data-box-y="411" data-box-width="212" data-box-height="62" x="644" y="439" fill="#EEF6FF" font-size="19" font-weight="720" font-family="Inter">NPS 48</text>
+</svg>

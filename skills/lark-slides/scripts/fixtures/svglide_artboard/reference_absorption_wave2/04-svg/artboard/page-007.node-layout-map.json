@@ -1,0 +1,545 @@
+{
+  "drift": {
+    "canonical_fallback_count": 0,
+    "max_px": 0.0,
+    "missing_count": 0,
+    "renderer_max_px": 648.0,
+    "status": "passed",
+    "threshold_px": 8.0
+  },
+  "nodes": [
+    {
+      "drift_px": 0.0,
+      "expected_bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "height": 540.0,
+      "id": "background",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 0.0,
+      "text": null,
+      "width": 960.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "drift_px": 298.0,
+      "expected_bbox": {
+        "height": 344.0,
+        "width": 8.0,
+        "x": 64.0,
+        "y": 72.0
+      },
+      "height": 344.0,
+      "id": "accent-rule",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 34.0,
+        "x": 84.0,
+        "y": 330.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 298.0,
+      "text": null,
+      "width": 8.0,
+      "x": 64.0,
+      "y": 72.0
+    },
+    {
+      "drift_px": 320.0,
+      "expected_bbox": {
+        "height": 30.0,
+        "width": 420.0,
+        "x": 92.0,
+        "y": 64.0
+      },
+      "height": 30.0,
+      "id": "eyebrow",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 20.0,
+        "width": 100.0,
+        "x": 70.0,
+        "y": 74.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 320.0,
+      "text": "BATTLECARD",
+      "width": 420.0,
+      "x": 92.0,
+      "y": 64.0
+    },
+    {
+      "drift_px": 208.0,
+      "expected_bbox": {
+        "height": 96.0,
+        "width": 700.0,
+        "x": 92.0,
+        "y": 108.0
+      },
+      "height": 96.0,
+      "id": "title",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 48.0,
+        "width": 492.0,
+        "x": 70.0,
+        "y": 104.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 208.0,
+      "text": "方案评分矩阵",
+      "width": 700.0,
+      "x": 92.0,
+      "y": 108.0
+    },
+    {
+      "drift_px": 234.0,
+      "expected_bbox": {
+        "height": 54.0,
+        "width": 660.0,
+        "x": 94.0,
+        "y": 212.0
+      },
+      "height": 54.0,
+      "id": "subtitle",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 426.0,
+        "x": 70.0,
+        "y": 222.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 234.0,
+      "text": "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+      "width": 660.0,
+      "x": 94.0,
+      "y": 212.0
+    },
+    {
+      "drift_px": 463.0,
+      "expected_bbox": {
+        "height": 116.0,
+        "width": 736.0,
+        "x": 92.0,
+        "y": 362.0
+      },
+      "height": 116.0,
+      "id": "reference-flow-path",
+      "kind": "path",
+      "measured_bbox": {
+        "height": 74.0,
+        "width": 273.0,
+        "x": 343.0,
+        "y": 390.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 463.0,
+      "text": null,
+      "width": 736.0,
+      "x": 92.0,
+      "y": 362.0
+    },
+    {
+      "drift_px": 102.0,
+      "expected_bbox": {
+        "height": 86.0,
+        "width": 230.0,
+        "x": 612.0,
+        "y": 178.0
+      },
+      "height": 86.0,
+      "id": "reference-annotation-line",
+      "kind": "line",
+      "measured_bbox": {
+        "height": 92.0,
+        "width": 314.0,
+        "x": 574.0,
+        "y": 76.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 102.0,
+      "text": null,
+      "width": 230.0,
+      "x": 612.0,
+      "y": 178.0
+    },
+    {
+      "drift_px": 197.0,
+      "expected_bbox": {
+        "height": 26.0,
+        "width": 14.0,
+        "x": 760.0,
+        "y": 350.0
+      },
+      "height": 26.0,
+      "id": "dashboard-metric-bar-1",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 211.0,
+        "x": 664.0,
+        "y": 330.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 197.0,
+      "text": null,
+      "width": 14.0,
+      "x": 760.0,
+      "y": 350.0
+    },
+    {
+      "drift_px": 259.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 14.0,
+        "x": 784.0,
+        "y": 332.0
+      },
+      "height": 44.0,
+      "id": "dashboard-metric-bar-2",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 74.0,
+        "width": 273.0,
+        "x": 616.0,
+        "y": 316.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 259.0,
+      "text": null,
+      "width": 14.0,
+      "x": 784.0,
+      "y": 332.0
+    },
+    {
+      "drift_px": 197.0,
+      "expected_bbox": {
+        "height": 62.0,
+        "width": 14.0,
+        "x": 808.0,
+        "y": 314.0
+      },
+      "height": 62.0,
+      "id": "dashboard-metric-bar-3",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 211.0,
+        "x": 664.0,
+        "y": 404.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 197.0,
+      "text": null,
+      "width": 14.0,
+      "x": 808.0,
+      "y": 314.0
+    },
+    {
+      "drift_px": 29.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 92.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-1",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 74.0,
+        "width": 273.0,
+        "x": 70.0,
+        "y": 316.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 29.0,
+      "text": null,
+      "width": 244.0,
+      "x": 92.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 10.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 108.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-1",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 211.0,
+        "x": 118.0,
+        "y": 330.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 10.0,
+      "text": "成本可控",
+      "width": 212.0,
+      "x": 108.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 29.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 360.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-2",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 74.0,
+        "width": 273.0,
+        "x": 343.0,
+        "y": 316.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 29.0,
+      "text": null,
+      "width": 244.0,
+      "x": 360.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 15.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 376.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-2",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 211.0,
+        "x": 391.0,
+        "y": 330.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 15.0,
+      "text": "接入最快",
+      "width": 212.0,
+      "x": 376.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 84.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 628.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-3",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 74.0,
+        "width": 273.0,
+        "x": 616.0,
+        "y": 390.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 84.0,
+      "text": null,
+      "width": 244.0,
+      "x": 628.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 178.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 644.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-3",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 34.0,
+        "x": 630.0,
+        "y": 330.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 178.0,
+      "text": "风险最低",
+      "width": 212.0,
+      "x": 644.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 29.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 92.0,
+        "y": 398.0
+      },
+      "height": 72.0,
+      "id": "item-card-4",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 74.0,
+        "width": 273.0,
+        "x": 70.0,
+        "y": 390.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 29.0,
+      "text": null,
+      "width": 244.0,
+      "x": 92.0,
+      "y": 398.0
+    },
+    {
+      "drift_px": 10.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 108.0,
+        "y": 413.0
+      },
+      "height": 44.0,
+      "id": "item-4",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 211.0,
+        "x": 118.0,
+        "y": 404.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 10.0,
+      "text": "Owner 清晰",
+      "width": 212.0,
+      "x": 108.0,
+      "y": 413.0
+    },
+    {
+      "drift_px": 33.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 360.0,
+        "y": 398.0
+      },
+      "height": 72.0,
+      "id": "item-card-5",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 211.0,
+        "x": 391.0,
+        "y": 404.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 33.0,
+      "text": null,
+      "width": 244.0,
+      "x": 360.0,
+      "y": 398.0
+    },
+    {
+      "drift_px": 608.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 376.0,
+        "y": 413.0
+      },
+      "height": 44.0,
+      "id": "item-5",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 148.0,
+        "width": 820.0,
+        "x": 70.0,
+        "y": 316.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 608.0,
+      "text": "迁移成本",
+      "width": 212.0,
+      "x": 376.0,
+      "y": 413.0
+    },
+    {
+      "drift_px": 210.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 628.0,
+        "y": 398.0
+      },
+      "height": 72.0,
+      "id": "item-card-6",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 46.0,
+        "width": 34.0,
+        "x": 630.0,
+        "y": 404.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 210.0,
+      "text": null,
+      "width": 244.0,
+      "x": 628.0,
+      "y": 398.0
+    },
+    {
+      "drift_px": 648.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 644.0,
+        "y": 413.0
+      },
+      "height": 44.0,
+      "id": "item-6",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 440.0,
+        "width": 860.0,
+        "x": 50.0,
+        "y": 50.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 648.0,
+      "text": "证据充分",
+      "width": 212.0,
+      "x": 644.0,
+      "y": 413.0
+    }
+  ],
+  "observation_source": "satori_on_node_detected",
+  "page": 7,
+  "source": "measured-layout-observation",
+  "threshold_px": 8.0,
+  "version": "svglide-node-layout-map/v1"
+}

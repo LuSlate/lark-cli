@@ -1,0 +1,152 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 56,
+      "top": 56,
+      "width": 848,
+      "height": 52,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 62,
+      "top": 72,
+      "width": 113,
+      "height": 20,
+      "type": "div",
+      "textContent": "PRIVATE BRIEF",
+      "props": {}
+    },
+    {
+      "left": 840,
+      "top": 72,
+      "width": 58,
+      "height": 20,
+      "type": "div",
+      "textContent": "2026 Q2",
+      "props": {}
+    },
+    {
+      "left": 70,
+      "top": 148,
+      "width": 602,
+      "height": 53,
+      "type": "div",
+      "textContent": "组织信号简报",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 282,
+      "width": 536,
+      "height": 26,
+      "type": "div",
+      "textContent": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+      "props": {}
+    },
+    {
+      "left": 650,
+      "top": 150,
+      "width": 238,
+      "height": 226,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 650,
+      "top": 150,
+      "width": 238,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 667,
+      "top": 150,
+      "width": 221,
+      "height": 19,
+      "type": "div",
+      "textContent": "S1",
+      "props": {}
+    },
+    {
+      "left": 667,
+      "top": 177,
+      "width": 221,
+      "height": 21,
+      "type": "div",
+      "textContent": "指标移动前的协作信号",
+      "props": {}
+    },
+    {
+      "left": 650,
+      "top": 230,
+      "width": 238,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 667,
+      "top": 230,
+      "width": 221,
+      "height": 19,
+      "type": "div",
+      "textContent": "S2",
+      "props": {}
+    },
+    {
+      "left": 667,
+      "top": 257,
+      "width": 221,
+      "height": 21,
+      "type": "div",
+      "textContent": "约束来自跨团队边界",
+      "props": {}
+    },
+    {
+      "left": 650,
+      "top": 310,
+      "width": 238,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 667,
+      "top": 310,
+      "width": 221,
+      "height": 19,
+      "type": "div",
+      "textContent": "S3",
+      "props": {}
+    },
+    {
+      "left": 667,
+      "top": 337,
+      "width": 221,
+      "height": 21,
+      "type": "div",
+      "textContent": "下轮验证需要单 owner",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 469,
+      "width": 720,
+      "height": 1,
+      "type": "div",
+      "props": {}
+    }
+  ]
+}

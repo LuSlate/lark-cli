@@ -1,0 +1,35 @@
+{
+  "source_item_id": "svglide-baseline.themes",
+  "absorbed_as": [
+    "owned_baseline_runtime_asset",
+    "theme_rule"
+  ],
+  "svglide_asset_ids": [
+    "theme.blueprint-technical",
+    "theme.cobalt-grid",
+    "theme.dark-clarity",
+    "theme.editorial-tritone",
+    "theme.finance-dark",
+    "theme.forest-signal",
+    "theme.glass-neon",
+    "theme.paper-research",
+    "theme.swiss-red",
+    "theme.warm-editorial"
+  ],
+  "non_copying_transform": "Existing SVGlide theme token files are recorded as owned baseline token abstractions, retaining local color/spacing/typography contracts.",
+  "forbidden_usage": [
+    "do_not_relabel_baseline_assets_as_external_reference_absorption",
+    "do_not_import_raw_external_runtime_artifacts",
+    "do_not_claim_backend_readback_without_receipt"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/registry.json"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/cover-hero.canvas-spec.json"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/references/svglide-reference-absorption-report.md"
+  ],
+  "review_notes": "Baseline themes are validated by theme registry loading and existing artboard fixture renders."
+}

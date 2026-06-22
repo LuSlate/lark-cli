@@ -1,10 +1,33 @@
 {
   "schema_version": "svglide-template-guardrails/v1",
   "defaults": {
-    "allowed_kinds": ["rect", "circle", "ellipse", "line", "text", "foreignObject", "image"],
+    "allowed_kinds": [
+      "rect",
+      "circle",
+      "ellipse",
+      "line",
+      "text",
+      "foreignObject",
+      "image"
+    ],
     "decorative": {
-      "allowed_kinds": ["rect", "circle", "ellipse", "line"],
-      "admitted_motifs": ["background", "panel", "card", "accent", "rule", "grid", "dot", "signal", "orbit"],
+      "allowed_kinds": [
+        "rect",
+        "circle",
+        "ellipse",
+        "line"
+      ],
+      "admitted_motifs": [
+        "background",
+        "panel",
+        "card",
+        "accent",
+        "rule",
+        "grid",
+        "dot",
+        "signal",
+        "orbit"
+      ],
       "max_count": 8
     },
     "density": {
@@ -16,49 +39,141 @@
     },
     "image": {
       "requires_canvas_slot": true,
-      "allowed_slot_fields": ["asset_slots", "image_slots", "assets", "image_asset", "key_visual", "hero_image"]
+      "allowed_slot_fields": [
+        "asset_slots",
+        "image_slots",
+        "assets",
+        "image_asset",
+        "key_visual",
+        "hero_image"
+      ]
     }
   },
   "templates": {
     "cover-hero": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "ellipse", "line"],
-        "admitted_motifs": ["background", "panel", "accent", "orbit", "signal"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "accent",
+          "orbit",
+          "signal"
+        ],
         "max_count": 6
       }
     },
     "comparison-cards": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "divider"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "divider"
+        ],
         "max_count": 8
       }
     },
     "summary-final": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "metric", "bar", "takeaway"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "metric",
+          "bar",
+          "takeaway"
+        ],
         "max_count": 10
       }
     },
     "agenda-list": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "trajectory", "rail", "node", "stack", "bar"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "trajectory",
+          "rail",
+          "node",
+          "stack",
+          "bar"
+        ],
         "max_count": 16
       }
     },
     "timeline-steps": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "orbit", "rail", "pin", "node", "timeline"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "orbit",
+          "rail",
+          "pin",
+          "node",
+          "timeline"
+        ],
         "max_count": 18
       }
     },
     "process-flow": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "flow", "connector", "arrow", "node", "conclusion", "process"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "flow",
+          "connector",
+          "arrow",
+          "node",
+          "conclusion",
+          "process"
+        ],
         "max_count": 18
       }
     },
@@ -67,8 +182,25 @@
         "requires_contract": true
       },
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "dot", "metric", "dashboard", "trend", "grid", "signal"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "dot",
+          "metric",
+          "dashboard",
+          "trend",
+          "grid",
+          "signal"
+        ],
         "max_count": 10
       }
     },
@@ -77,52 +209,554 @@
         "requires_contract": true
       },
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "dot", "data", "bar", "terminal", "unlock", "axis", "node", "callout", "price", "curve"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "dot",
+          "data",
+          "bar",
+          "terminal",
+          "unlock",
+          "axis",
+          "node",
+          "callout",
+          "price",
+          "curve"
+        ],
         "max_count": 10
       }
     },
     "risk-alert": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "warning", "severity", "gauge", "node", "risk"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "warning",
+          "severity",
+          "gauge",
+          "node",
+          "risk"
+        ],
         "max_count": 16
       }
     },
     "roadmap-lanes": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "axis", "quarter", "lane", "bar", "milestone", "roadmap"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "axis",
+          "quarter",
+          "lane",
+          "bar",
+          "milestone",
+          "roadmap"
+        ],
         "max_count": 18
       }
     },
     "architecture-blueprint": {
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "link", "loop", "node", "port", "blueprint"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "link",
+          "loop",
+          "node",
+          "port",
+          "blueprint"
+        ],
         "max_count": 18
       }
     },
     "image-feature": {
       "image": {
         "requires_canvas_slot": true,
-        "allowed_slot_fields": ["asset_slots", "image_slots", "assets", "image_asset", "key_visual", "hero_image"]
+        "allowed_slot_fields": [
+          "asset_slots",
+          "image_slots",
+          "assets",
+          "image_asset",
+          "key_visual",
+          "hero_image"
+        ]
       },
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line", "path"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "asset", "slot", "page", "feature", "point", "dot", "trajectory"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "asset",
+          "slot",
+          "page",
+          "feature",
+          "point",
+          "dot",
+          "trajectory"
+        ],
         "max_count": 7
       }
     },
     "research-poster": {
       "image": {
         "requires_canvas_slot": true,
-        "allowed_slot_fields": ["asset_slots", "image_slots", "assets", "image_asset", "key_visual", "hero_image"]
+        "allowed_slot_fields": [
+          "asset_slots",
+          "image_slots",
+          "assets",
+          "image_asset",
+          "key_visual",
+          "hero_image"
+        ]
       },
       "decorative": {
-        "allowed_kinds": ["rect", "circle", "line"],
-        "admitted_motifs": ["background", "panel", "card", "accent", "rule", "grid"],
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "line"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "grid"
+        ],
         "max_count": 10
+      }
+    },
+    "dense-panel-grid": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "executive-dashboard": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "editorial-quote-chart": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "ledger-briefing": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "intelligence-brief": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "printed-program": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "retro-ui-dashboard": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "product-ribbon": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "type-mass-poster": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "brutalist-matrix": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "annotated-field-board": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "architectural-spec": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "trend-grid-report": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "serif-stat-editorial": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
+      }
+    },
+    "poster-stat-punch": {
+      "decorative": {
+        "allowed_kinds": [
+          "rect",
+          "circle",
+          "ellipse",
+          "line",
+          "path"
+        ],
+        "admitted_motifs": [
+          "background",
+          "panel",
+          "card",
+          "accent",
+          "rule",
+          "reference",
+          "flow",
+          "annotation",
+          "dashboard",
+          "metric",
+          "bar",
+          "item"
+        ],
+        "max_count": 12
       }
     }
   }

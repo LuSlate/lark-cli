@@ -1,0 +1,77 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-22T04:01:50+08:00",
+  "contrast_failures": [],
+  "contrast_unresolved": [],
+  "inputs": {
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "slide_plan": "02-plan/slide_plan.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_validate_sha256": "5472b8fe81df0aba9def0990df5b48de0d4458f00de0ffcf7a497107408668a0"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-adherence.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "f06459de8de24059fd0de179ae49d9e9313c2031bbd4a4260bb5f4d43f57f925",
+      "status": "passed",
+      "theme_id": "stone-architect"
+    },
+    {
+      "issues": [],
+      "page": 2,
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "7359c8faf9e8827c3c45761056c453e5f08aa29f0f74aac848f1345c8bad2064",
+      "status": "passed",
+      "theme_id": "magazine-cobalt"
+    },
+    {
+      "issues": [],
+      "page": 3,
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "ad94d4af0e7a8a0e2c2671338fc939e67a266b48fb9e7a16e966d4b215eac9a0",
+      "status": "passed",
+      "theme_id": "forest-editorial"
+    },
+    {
+      "issues": [],
+      "page": 4,
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "a9fd88d8dcbc379884b8bfbc0814096fbc8ce422b714fb96262db939cdd310ac",
+      "status": "passed",
+      "theme_id": "tomato-poster"
+    }
+  ],
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "f06459de8de24059fd0de179ae49d9e9313c2031bbd4a4260bb5f4d43f57f925"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "7359c8faf9e8827c3c45761056c453e5f08aa29f0f74aac848f1345c8bad2064"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "ad94d4af0e7a8a0e2c2671338fc939e67a266b48fb9e7a16e966d4b215eac9a0"
+    },
+    {
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "a9fd88d8dcbc379884b8bfbc0814096fbc8ce422b714fb96262db939cdd310ac"
+    }
+  ],
+  "schema_version": "svglide-theme-adherence/v1",
+  "stage": "theme_adherence",
+  "status": "passed",
+  "summary": {
+    "contrast_unresolved_count": 0,
+    "error_count": 0,
+    "prepared_svg_count": 4,
+    "unknown_color_count": 0,
+    "warning_count": 0
+  },
+  "unknown_colors": []
+}

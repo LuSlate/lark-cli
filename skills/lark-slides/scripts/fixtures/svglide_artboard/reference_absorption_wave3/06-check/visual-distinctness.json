@@ -1,0 +1,112 @@
+{
+  "schema_version": "svglide-visual-distinctness/v1",
+  "status": "passed",
+  "action": "continue_pipeline",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+  "started_at": "2026-06-21T20:01:50.487832+00:00",
+  "ended_at": "2026-06-21T20:01:50.490367+00:00",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "history_limit": 5,
+    "allow_style_reuse": false
+  },
+  "signature": {
+    "title": "Reference Absorption Wave 3",
+    "style_preset": "neo_grid_bold",
+    "theme_archetype": "academic_paper",
+    "palette": [],
+    "renderer_sequence": [
+      "artboard_satori.architectural-spec",
+      "artboard_satori.trend-grid-report",
+      "artboard_satori.serif-stat-editorial",
+      "artboard_satori.poster-stat-punch"
+    ],
+    "layout_sequence": [
+      "architectural-spec",
+      "trend-grid-report",
+      "serif-stat-editorial",
+      "poster-stat-punch"
+    ],
+    "recipe_sequence": [
+      "hero_typography",
+      "infographic_scorecard",
+      "path_flow",
+      "brand_system"
+    ],
+    "cover_treatment": "reference-derived but non-copying template abstractions"
+  },
+  "comparisons": [
+    {
+      "style_preset_match": true,
+      "cover_treatment_match": true,
+      "palette_overlap": 0.0,
+      "renderer_sequence_similarity": 0.0,
+      "layout_sequence_similarity": 0.0,
+      "recipe_sequence_similarity": 0.75,
+      "same_theme_archetype": false,
+      "project": "reference_absorption_wave2",
+      "title": "Reference Absorption Wave 2",
+      "style_preset": "neo_grid_bold",
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "style_preset_match": true,
+      "cover_treatment_match": true,
+      "palette_overlap": 0.0,
+      "renderer_sequence_similarity": 0.0,
+      "layout_sequence_similarity": 0.0,
+      "recipe_sequence_similarity": 0.6667,
+      "same_theme_archetype": false,
+      "project": "reference_absorption_wave1",
+      "title": "Reference Absorption Wave 1",
+      "style_preset": "neo_grid_bold",
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "style_preset_match": false,
+      "cover_treatment_match": false,
+      "palette_overlap": 0.0,
+      "renderer_sequence_similarity": 0.0,
+      "layout_sequence_similarity": 0.0,
+      "recipe_sequence_similarity": 0.3333,
+      "same_theme_archetype": false,
+      "project": "gate10_planner",
+      "title": null,
+      "style_preset": "cobalt_bloom",
+      "theme_archetype": null
+    },
+    {
+      "style_preset_match": false,
+      "cover_treatment_match": false,
+      "palette_overlap": 0.0,
+      "renderer_sequence_similarity": 0.0,
+      "layout_sequence_similarity": 0.0,
+      "recipe_sequence_similarity": 0.3333,
+      "same_theme_archetype": false,
+      "project": "p0c-live",
+      "title": "Artboard P0b Three Page",
+      "style_preset": "cobalt_bloom",
+      "theme_archetype": "general_explainer"
+    },
+    {
+      "style_preset_match": false,
+      "cover_treatment_match": false,
+      "palette_overlap": 0.0,
+      "renderer_sequence_similarity": 0.0,
+      "layout_sequence_similarity": 0.0,
+      "recipe_sequence_similarity": 0.3333,
+      "same_theme_archetype": false,
+      "project": "p0b-three-page",
+      "title": "Artboard P0b Three Page",
+      "style_preset": "cobalt_bloom",
+      "theme_archetype": "general_explainer"
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "comparison_count": 5
+  },
+  "issues": [],
+  "output_path": "06-check/visual-distinctness.json"
+}

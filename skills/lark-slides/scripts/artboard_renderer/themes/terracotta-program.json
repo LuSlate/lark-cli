@@ -1,0 +1,26 @@
+{
+  "theme_id": "terracotta-program",
+  "colors": {
+    "background": "#FAF1E2",
+    "panel": "#F2E5CF",
+    "primary": "#B53D2A",
+    "accent": "#8E2D1F",
+    "text": "#3A2516",
+    "muted": "#8E2D1F"
+  },
+  "typography": {
+    "title": 54,
+    "subtitle": 20,
+    "body": 20,
+    "label": 17
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.long-table.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json"
+}

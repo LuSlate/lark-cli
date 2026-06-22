@@ -1,0 +1,40 @@
+{
+  "schema_version": "svglide-source-receipt/v1",
+  "stage": "source",
+  "status": "passed",
+  "started_at": "2026-06-21T20:03:06.210777+00:00",
+  "ended_at": "2026-06-21T20:03:06.214513+00:00",
+  "inputs": {
+    "source_notes": null,
+    "source_notes_sha256": null,
+    "evidence": "source/evidence.json",
+    "evidence_sha256": "c1210552043ac78503cef04277e66ff2b58ab605c119c075e0506a7aff779db7",
+    "network_policy": "offline",
+    "no_online_research": false,
+    "refresh_online": false
+  },
+  "outputs": {
+    "evidence": "source/evidence.json",
+    "research_queries": "source/research_queries.json",
+    "research": null,
+    "source_receipt": "source/source-receipt.json"
+  },
+  "generated_evidence_from_notes": false,
+  "source_status": "ready",
+  "research": {
+    "status": "fixture_local_reference_absorption",
+    "network_policy": "offline",
+    "queries": [
+      "reference_absorption_wave2",
+      "reference_absorption_wave2 最新数据",
+      "reference_absorption_wave2 背景 分析"
+    ],
+    "sources": [],
+    "claims": []
+  },
+  "summary": {
+    "error_count": 0,
+    "evidence_item_count": 19
+  },
+  "issues": []
+}

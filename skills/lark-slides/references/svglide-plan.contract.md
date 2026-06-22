@@ -38,6 +38,10 @@ The runner writes `02-plan/plan-confirmation.request.json` when confirmation is 
 - `canvas` with `width: 960`, `height: 540`, and `viewBox: "0 0 960 540"`
 - `safe_area`
 - `style_system` or equivalent style profile
+- `deck_intent`: ordinary user generation uses `full_deck`; short samples must explicitly use `sample`, `single_page`, `fixture`, or `smoke`
+- `target_slide_count` or `page_count`: `full_deck` defaults to at least 10 slides
+- `theme_policy`: default `{"scope": "deck", "allow_multi_theme": false}` so one deck uses one visual system unless multi-theme is intentional
+- `asset_policy`: default real-preview policy `{"required": true, "minimum_visual_asset_count": 3}`
 - `art_direction`
 - `quality_gates`
 - `business_claims` when visible claims are used

@@ -32,6 +32,8 @@ metadata:
 
 **CRITICAL — SVG route 激活后，生成前 MUST 在 `slide_plan.json` 记录 `loaded_rule_set`、`art_direction`、`quality_gates` 和必要的 `business_claims`。`loaded_rule_set` 必须覆盖 manifest 中的 SVG 设计与验证文档；`art_direction` 必须说明封面、章节/节奏页、结尾页、deck motif 和至少 3 个 SVG-native moments；可见业务数字或推导性商业声明必须记录来源或假设。**
 
+**CRITICAL — Planner Ownership：当前执行者必须亲自完成 Deck Planner / Slide Planner / Canvas Planner 的推理和产物生成。不得为了完成当前链路再调用另一个 agent、subagent、`codex exec`、`claude`、Tika、AIME、BitsAI 或任何外部 planner 来生成 deck plan / slide plan / canvas spec，除非用户在当前请求中明确要求验证“CLI 无人值守自动调用模型/provider”。允许使用普通工具做文件读取、事实检索、素材获取、渲染、校验和导出；这些工具不得接管 planner 决策。若使用 reviewer，reviewer 只审查证据，不生成 planning 产物。**
+
 **CRITICAL — 走 XML 创建/编辑路径时，生成任何 XML 之前，MUST 先用 Read 工具读取 [xml-schema-quick-ref.md](references/xml-schema-quick-ref.md)，禁止凭记忆猜测 XML 结构。走 SVG 创建路径时，先完成 route admission，再读取 SVG 私有协议和创建文档。**
 
 **CRITICAL — 新建演示文稿或大幅改写页面时，MUST 先生成 plan，再生成 XML 或已准入的 SVG route 产物。XML 路径使用 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`；SVG route 准入后使用 `.lark-slides/plan/<deck-or-task-id>/02-plan/slide_plan.json`。先创建对应目录，XML 规划层规则和中间产物生命周期见 [planning-layer.md](references/planning-layer.md)；SVG 扩展规划只在 route admission 后加载。仅替换一个标题、插入一个块等小型已有页编辑可豁免。**

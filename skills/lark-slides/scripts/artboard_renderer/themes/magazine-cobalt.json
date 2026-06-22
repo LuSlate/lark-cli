@@ -1,0 +1,26 @@
+{
+  "theme_id": "magazine-cobalt",
+  "colors": {
+    "background": "#F0EBDE",
+    "panel": "#E6E0CE",
+    "primary": "#1F2BE0",
+    "accent": "#5560E5",
+    "text": "#171B2F",
+    "muted": "#4F5AB8"
+  },
+  "typography": {
+    "title": 58,
+    "subtitle": 19,
+    "body": 19,
+    "label": 15
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.cobalt-grid.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+}

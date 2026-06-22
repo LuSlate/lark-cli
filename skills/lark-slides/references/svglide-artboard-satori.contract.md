@@ -4,9 +4,9 @@ P0a adds an `artboard_satori` generation mode inside `generate_svg`.
 
 This mode is intentionally narrow:
 
-- `CanvasSpec` is the semantic source of truth.
-- A CanvasSpec-owned template artifact / semantic map is the direct compiler input for SVGlide private SVG.
-- Raw Satori SVG is preview/layout evidence only; it is not the semantic source for final live SVG.
+- `CanvasSpec` is the planning and template input.
+- Raw Satori SVG is the final compiler input for SVGlide private SVG.
+- The semantic map remains an audit/readability artifact derived from the rendered Satori output; it is not the final compiler input.
 - `SVGLIDE_ARTBOARD_USE_NODE_SATORI=1` enables the Node adapter. Published skills must use the bundled adapter at `skills/lark-slides/scripts/artboard_renderer/dist/render.mjs`.
 - Published CLI/skill resources must not require a sibling Satori source checkout; Satori is bundled into `dist/render.mjs`.
 - The native `@resvg/resvg-js` package is still a runtime dependency and must be installed from the locked skill subpackage before `artboard_satori` runs.
@@ -17,7 +17,7 @@ This mode is intentionally narrow:
 
 Do not pass arbitrary Satori SVG to `slides +create-svg`.
 
-The compiler must receive CanvasSpec-derived template IR, then produce SVGlide protocol SVG with private `slide:*` markers. P0 records this with per-page artboard receipts in `artboard_receipts` and aggregate child receipts in `artboard_additional_receipts`.
+The compiler must receive raw Satori SVG produced by the bundled Node/Satori renderer, then produce SVGlide protocol SVG with private `slide:*` markers. Artboard receipts record this with per-page `artboard_receipts` and aggregate child receipts in `artboard_additional_receipts`.
 
 Default offline chain:
 
@@ -37,8 +37,8 @@ CanvasSpec
   -> bundled Satori runtime
   -> 04-svg/artboard/raw/page-xxx.satori.svg
   -> resvg PNG preview
-  -> CanvasSpec template artifact remains compiler input
-  -> compile_canvas_template_svg_to_svglide
+  -> raw Satori SVG becomes compiler input
+  -> compile_satori_svg_to_svglide
   -> 04-svg/page-xxx.svg
 ```
 
@@ -143,9 +143,9 @@ Each per-page artboard receipt must bind:
 - CanvasSpec hash
 - raw Satori preview SVG hash
 - CanvasSpec template SVG hash
-- compiler input path and hash; current main path uses `semantic-map/v1`
+- compiler input path and hash; current main path uses `04-svg/artboard/raw/page-xxx.satori.svg`
 - renderer mode (`local-static` or `satori-node`)
-- compiler mode (`SemanticMapIR` / `preview_only`)
+- compiler mode (`RawSatoriSVG` / `compiler_input`)
 - semantic map hash
 - node layout map hash
 - final SVGlide SVG hash

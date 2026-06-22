@@ -1,0 +1,45 @@
+{
+  "command": [
+    "go",
+    "run",
+    ".",
+    "slides",
+    "+create-svg",
+    "--as",
+    "user",
+    "--title",
+    "reference_absorption_wave2",
+    "--assets",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/03-assets/assets.json",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-001.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-002.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-003.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-004.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-005.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-006.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-007.svg",
+    "--file",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-008.svg",
+    "--dry-run"
+  ],
+  "ended_at": "2026-06-22T04:03:13+08:00",
+  "error": null,
+  "inputs": [
+    "06-check/quality-gate.json",
+    "04-svg/prepared"
+  ],
+  "outputs": [
+    "07-create/create-command.txt",
+    "07-create/dry-run.json"
+  ],
+  "stage": "dry_run",
+  "started_at": "2026-06-22T04:03:10+08:00",
+  "status": "passed"
+}

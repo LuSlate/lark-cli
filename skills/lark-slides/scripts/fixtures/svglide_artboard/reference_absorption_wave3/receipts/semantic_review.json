@@ -1,0 +1,24 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_semantic_review.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+    "--profile",
+    "production_live",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:01:50+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json",
+    "source/evidence.json",
+    "04-svg/prepared"
+  ],
+  "outputs": [
+    "06-check/semantic-review.json",
+    "06-check/text-inventory.json"
+  ],
+  "stage": "semantic_review",
+  "started_at": "2026-06-22T04:01:50+08:00",
+  "status": "passed"
+}

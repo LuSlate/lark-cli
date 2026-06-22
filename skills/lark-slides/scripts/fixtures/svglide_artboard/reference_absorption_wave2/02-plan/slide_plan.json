@@ -1,0 +1,955 @@
+{
+  "generation_mode": "artboard_satori",
+  "slides": [
+    {
+      "page": 1,
+      "title": "复盘事项账本",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "ledger-briefing",
+        "theme_id": "ivory-ledger",
+        "theme": {
+          "colors": {
+            "background": "#FAFADF",
+            "panel": "#F5F0E4",
+            "primary": "#1A1A16",
+            "accent": "#5E5E54",
+            "text": "#1A1A16",
+            "muted": "#5E5E54"
+          }
+        },
+        "content": {
+          "eyebrow": "OPERATING LEDGER",
+          "title": "复盘事项账本",
+          "subtitle": "把结论、证据和 owner 放进克制的黑白账本结构。",
+          "items": [
+            "增长口径已统一",
+            "风险归因待复核",
+            "Owner 已明确",
+            "下周完成验证"
+          ],
+          "metrics": [
+            "Q2",
+            "18%",
+            "04"
+          ]
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 80,
+              "width": 760,
+              "height": 120
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "把结论、证据和 owner 放进克制的黑白账本结构。",
+      "renderer_id": "artboard_satori.ledger-briefing",
+      "layout_family": "ledger-briefing",
+      "visual_recipe": "hero_typography",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "复盘事项账本",
+      "visual_signature": "ledger-briefing layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "thesis",
+      "page_type": "cover",
+      "section": "OPERATING LEDGER",
+      "body_points": [
+        "把结论、证据和 owner 放进克制的黑白账本结构。",
+        "增长口径已统一",
+        "风险归因待复核",
+        "Owner 已明确"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:ledger-briefing",
+        "svglide-theme:ivory-ledger"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 2,
+      "title": "组织信号简报",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "intelligence-brief",
+        "theme_id": "signal-navy",
+        "theme": {
+          "colors": {
+            "background": "#1C2644",
+            "panel": "#232F55",
+            "primary": "#C8A870",
+            "accent": "#C8A870",
+            "text": "#E2DCD0",
+            "muted": "#8A96A8"
+          }
+        },
+        "content": {
+          "eyebrow": "PRIVATE BRIEF",
+          "title": "组织信号简报",
+          "subtitle": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+          "points": [
+            "指标移动前的协作信号",
+            "约束来自跨团队边界",
+            "下轮验证需要单 owner"
+          ],
+          "date": "2026 Q2"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 80,
+              "width": 760,
+              "height": 120
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+      "renderer_id": "artboard_satori.intelligence-brief",
+      "layout_family": "intelligence-brief",
+      "visual_recipe": "infographic_scorecard",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "组织信号简报",
+      "visual_signature": "intelligence-brief layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "chart_geometry",
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "micro_chart"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "PRIVATE BRIEF",
+      "body_points": [
+        "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+        "指标移动前的协作信号",
+        "约束来自跨团队边界",
+        "下轮验证需要单 owner"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:intelligence-brief",
+        "svglide-theme:signal-navy"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 3,
+      "title": "团队晚餐式议程",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "printed-program",
+        "theme_id": "terracotta-program",
+        "theme": {
+          "colors": {
+            "background": "#FAF1E2",
+            "panel": "#F2E5CF",
+            "primary": "#B53D2A",
+            "accent": "#8E2D1F",
+            "text": "#3A2516",
+            "muted": "#8E2D1F"
+          }
+        },
+        "content": {
+          "eyebrow": "PROGRAM",
+          "title": "团队晚餐式议程",
+          "subtitle": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+          "items": [
+            "开场观察",
+            "主议题讨论",
+            "行动项确认",
+            "复盘收束"
+          ],
+          "edition": "EDITION 04",
+          "footer": "Internal Workshop"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 80,
+              "width": 760,
+              "height": 120
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+      "renderer_id": "artboard_satori.printed-program",
+      "layout_family": "printed-program",
+      "visual_recipe": "path_flow",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "团队晚餐式议程",
+      "visual_signature": "printed-program layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "path",
+        "connector_flow"
+      ],
+      "required_primitives": [
+        "path",
+        "annotation"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "PROGRAM",
+      "body_points": [
+        "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+        "开场观察",
+        "主议题讨论",
+        "行动项确认"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:printed-program",
+        "svglide-theme:terracotta-program"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 4,
+      "title": "发布控制面板",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "retro-ui-dashboard",
+        "theme_id": "retro-desktop",
+        "theme": {
+          "colors": {
+            "background": "#C0C0C0",
+            "panel": "#D4D0C8",
+            "primary": "#000080",
+            "accent": "#FFFFFF",
+            "text": "#222222",
+            "muted": "#555555"
+          }
+        },
+        "content": {
+          "eyebrow": "CONTROL PANEL",
+          "title": "发布控制面板",
+          "subtitle": "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+          "panels": [
+            "Build status: OK",
+            "Open issues: 12",
+            "Owner: Platform",
+            "ETA: Friday"
+          ],
+          "window_title": "SVGLIDE.EXE",
+          "status": "READY"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 80,
+              "width": 760,
+              "height": 120
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+      "renderer_id": "artboard_satori.retro-ui-dashboard",
+      "layout_family": "retro-ui-dashboard",
+      "visual_recipe": "fake_ui_dashboard",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "发布控制面板",
+      "visual_signature": "retro-ui-dashboard layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "chart_geometry",
+        "typography"
+      ],
+      "required_primitives": [
+        "dashboard",
+        "micro_chart"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "CONTROL PANEL",
+      "body_points": [
+        "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+        "发布控制面板 的模板资产化验证",
+        "发布控制面板 的证据链验证"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:retro-ui-dashboard",
+        "svglide-theme:retro-desktop"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 5,
+      "title": "功能货架更新",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "product-ribbon",
+        "theme_id": "sakura-catalog",
+        "theme": {
+          "colors": {
+            "background": "#F1E6CB",
+            "panel": "#E54489",
+            "primary": "#E5392A",
+            "accent": "#F09131",
+            "text": "#3A2516",
+            "muted": "#3F8BC4"
+          }
+        },
+        "content": {
+          "eyebrow": "CATALOG DROP",
+          "title": "功能货架更新",
+          "subtitle": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+          "cards": [
+            "智能推荐",
+            "批量导入",
+            "权限看板",
+            "异常提醒"
+          ],
+          "seal": "NEW"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 80,
+              "width": 760,
+              "height": 120
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+      "renderer_id": "artboard_satori.product-ribbon",
+      "layout_family": "product-ribbon",
+      "visual_recipe": "geometric_composition",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "功能货架更新",
+      "visual_signature": "product-ribbon layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "path"
+      ],
+      "required_primitives": [
+        "geometric_shape",
+        "path"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "CATALOG DROP",
+      "body_points": [
+        "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+        "智能推荐",
+        "批量导入",
+        "权限看板"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:product-ribbon",
+        "svglide-theme:sakura-catalog"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 6,
+      "title": "重点只说一遍",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "type-mass-poster",
+        "theme_id": "acid-studio",
+        "theme": {
+          "colors": {
+            "background": "#1C1C1C",
+            "panel": "#242422",
+            "primary": "#F5D200",
+            "accent": "#F0CC00",
+            "text": "#F5D200",
+            "muted": "#9A860C"
+          }
+        },
+        "content": {
+          "eyebrow": "STUDIO NOTE",
+          "title": "重点只说一遍",
+          "subtitle": "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+          "notes": [
+            "一个核心信息",
+            "三条支撑理由",
+            "不需要装饰"
+          ],
+          "counter": "06/06"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 80,
+              "width": 760,
+              "height": 120
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+      "renderer_id": "artboard_satori.type-mass-poster",
+      "layout_family": "type-mass-poster",
+      "visual_recipe": "brand_system",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "重点只说一遍",
+      "visual_signature": "type-mass-poster layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "STUDIO NOTE",
+      "body_points": [
+        "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+        "一个核心信息",
+        "三条支撑理由",
+        "不需要装饰"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:type-mass-poster",
+        "svglide-theme:acid-studio"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 7,
+      "title": "方案评分矩阵",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "brutalist-matrix",
+        "theme_id": "raw-grid-mono",
+        "theme": {
+          "colors": {
+            "background": "#F7F2E8",
+            "panel": "#FDE68A",
+            "primary": "#111111",
+            "accent": "#22C55E",
+            "text": "#111111",
+            "muted": "#44403C"
+          }
+        },
+        "content": {
+          "eyebrow": "BATTLECARD",
+          "title": "方案评分矩阵",
+          "subtitle": "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+          "cells": [
+            "成本可控",
+            "接入最快",
+            "风险最低",
+            "Owner 清晰",
+            "迁移成本",
+            "证据充分"
+          ],
+          "callout": "优先方案 B"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 70,
+              "width": 760,
+              "height": 132
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+      "renderer_id": "artboard_satori.brutalist-matrix",
+      "layout_family": "brutalist-matrix",
+      "visual_recipe": "metaphor_loop",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "方案评分矩阵",
+      "visual_signature": "brutalist-matrix layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "path",
+        "connector_flow"
+      ],
+      "required_primitives": [
+        "path",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "BATTLECARD",
+      "body_points": [
+        "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+        "优先方案 B",
+        "成本可控",
+        "接入最快"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:brutalist-matrix",
+        "svglide-theme:raw-grid-mono"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 8,
+      "title": "用户访谈证据墙",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "annotated-field-board",
+        "theme_id": "field-notebook",
+        "theme": {
+          "colors": {
+            "background": "#F8E8B8",
+            "panel": "#FFF7D6",
+            "primary": "#C2410C",
+            "accent": "#1D4ED8",
+            "text": "#3B2F22",
+            "muted": "#6B5B45"
+          }
+        },
+        "content": {
+          "eyebrow": "FIELD NOTE",
+          "title": "用户访谈证据墙",
+          "subtitle": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+          "notes": [
+            "用户绕过默认流程",
+            "关键证据需要回访",
+            "下一步由体验组 owner"
+          ],
+          "stamp": "REVIEWED",
+          "tags": [
+            "USER",
+            "EVIDENCE",
+            "NEXT"
+          ]
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 70,
+              "width": 760,
+              "height": 132
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 15,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+      "renderer_id": "artboard_satori.annotated-field-board",
+      "layout_family": "annotated-field-board",
+      "visual_recipe": "brand_system",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "用户访谈证据墙",
+      "visual_signature": "annotated-field-board layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "closing",
+      "section": "FIELD NOTE",
+      "body_points": [
+        "把访谈洞察、证据和下一步贴在同一张标注板上。",
+        "用户绕过默认流程",
+        "关键证据需要回访",
+        "下一步由体验组 owner"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:annotated-field-board",
+        "svglide-theme:field-notebook"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    }
+  ],
+  "route": "svglide-svg",
+  "title": "Reference Absorption Wave 2",
+  "audience": "SVGlide engineers",
+  "language": "zh-CN",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "style_preset": "neo_grid_bold",
+  "style_selection_reason": "参考模板吸收 fixture 需要高对比网格、清晰层级和可审计的 SVG-native 原语。",
+  "style_system": {
+    "background_strategy": "registry token background with explicit SVG primitive layer",
+    "motif": "reference absorption proof deck",
+    "palette": "high-contrast registry tokens with accent bars and paths",
+    "typography": "Satori-compatible system typography",
+    "style_preset": "neo_grid_bold"
+  },
+  "loaded_rule_set": [
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svg-protocol.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svglide-artifacts.spec.md",
+    "skills/lark-slides/references/svglide-assets.contract.md",
+    "skills/lark-slides/references/svglide-checks.checklist.md",
+    "skills/lark-slides/references/svglide-create-svg.contract.md",
+    "skills/lark-slides/references/svglide-generate-svg.contract.md",
+    "skills/lark-slides/references/svglide-lock.contract.md",
+    "skills/lark-slides/references/svglide-plan.contract.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-reference-absorption-execution-plan.md",
+    "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+    "skills/lark-slides/references/svglide-reference-absorption-report.md",
+    "skills/lark-slides/references/svglide-preview.spec.md",
+    "skills/lark-slides/references/svglide-readback.contract.md",
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-svg-private.rules.json",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+    "skills/lark-slides/references/svglide-workflow.spec.md"
+  ],
+  "plan_path": "02-plan/slide_plan.json",
+  "quality_gates": {
+    "no_debug_guides": true,
+    "no_text_overflow": true,
+    "no_xml_like_pages": true,
+    "no_runtime_reference_dependency": true
+  },
+  "art_direction": {
+    "cover_treatment": "reference-derived but non-copying template abstractions",
+    "deck_motif": "asset registry expansion with evidence-backed fixtures",
+    "section_divider_treatment": "each slide proves one absorbed template/theme pair",
+    "closing_treatment": "fixture chain feeds runner and visual acceptance evidence",
+    "svg_native_moments": [
+      "Satori-compatible HTML/CSS",
+      "template/theme registry tokens",
+      "SVGlide protocol SVG"
+    ]
+  },
+  "visual_identity": {
+    "theme_archetype": "reference_absorption",
+    "design_dna": {
+      "palette": "template/theme registry tokens",
+      "layout_motif": "absorbed reference templates converted to SVGlide assets",
+      "shape_language": "rectilinear panels, structured typography, chart-like primitives",
+      "image_treatment": "fixture-only asset strategy; no backend image readback promise",
+      "component_bias": "registry-backed components and layout archetypes",
+      "theme_visual_anchors": [
+        "beautiful-html-templates",
+        "Satori subset",
+        "SVGlide visual acceptance"
+      ]
+    },
+    "forbidden_reuse": {
+      "copy_source_html": true,
+      "runtime_reference_dependency": true
+    },
+    "distinctness_target": {
+      "palette_overlap_max": 0.67,
+      "renderer_sequence_similarity_max": 0.75
+    }
+  },
+  "output_mode": "svglide-svg",
+  "theme_policy": {
+    "allow_multi_theme": true,
+    "reason": "reference absorption coverage fixture intentionally exercises multiple absorbed theme tokens in one proof deck"
+  }
+}

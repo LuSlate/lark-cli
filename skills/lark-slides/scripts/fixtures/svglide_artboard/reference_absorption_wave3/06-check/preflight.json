@@ -1,0 +1,194 @@
+{
+  "summary": {
+    "file_count": 4,
+    "error_count": 0,
+    "warning_count": 0,
+    "plan_count": 1
+  },
+  "files": [
+    {
+      "path": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/04-svg/prepared/page-001.svg",
+      "width": 960.0,
+      "height": 540.0,
+      "element_count": 18,
+      "text_box_count": 7,
+      "visual_primitives": {
+        "present": [
+          "annotation",
+          "dashboard",
+          "geometric_shape",
+          "micro_chart",
+          "path",
+          "typography"
+        ],
+        "counts": {
+          "path": 1,
+          "line": 1,
+          "rect": 9,
+          "circle": 0,
+          "ellipse": 0,
+          "image": 0,
+          "foreignObject": 7,
+          "chart_marker": 0,
+          "card_like_rect": 4,
+          "small_shape": 4,
+          "bar_like_rect": 3
+        },
+        "gradient_count": 0,
+        "filter_count": 0,
+        "effects": [
+          "chart_geometry",
+          "connector_flow",
+          "path",
+          "typography"
+        ]
+      },
+      "business_claim_fragments": [],
+      "summary": {
+        "error_count": 0,
+        "warning_count": 0
+      }
+    },
+    {
+      "path": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/04-svg/prepared/page-002.svg",
+      "width": 960.0,
+      "height": 540.0,
+      "element_count": 18,
+      "text_box_count": 7,
+      "visual_primitives": {
+        "present": [
+          "annotation",
+          "dashboard",
+          "geometric_shape",
+          "micro_chart",
+          "path",
+          "typography"
+        ],
+        "counts": {
+          "path": 1,
+          "line": 1,
+          "rect": 9,
+          "circle": 0,
+          "ellipse": 0,
+          "image": 0,
+          "foreignObject": 7,
+          "chart_marker": 0,
+          "card_like_rect": 4,
+          "small_shape": 4,
+          "bar_like_rect": 3
+        },
+        "gradient_count": 0,
+        "filter_count": 0,
+        "effects": [
+          "chart_geometry",
+          "connector_flow",
+          "path",
+          "typography"
+        ]
+      },
+      "business_claim_fragments": [],
+      "summary": {
+        "error_count": 0,
+        "warning_count": 0
+      }
+    },
+    {
+      "path": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/04-svg/prepared/page-003.svg",
+      "width": 960.0,
+      "height": 540.0,
+      "element_count": 16,
+      "text_box_count": 6,
+      "visual_primitives": {
+        "present": [
+          "annotation",
+          "dashboard",
+          "geometric_shape",
+          "micro_chart",
+          "path",
+          "typography"
+        ],
+        "counts": {
+          "path": 1,
+          "line": 1,
+          "rect": 8,
+          "circle": 0,
+          "ellipse": 0,
+          "image": 0,
+          "foreignObject": 6,
+          "chart_marker": 0,
+          "card_like_rect": 3,
+          "small_shape": 4,
+          "bar_like_rect": 3
+        },
+        "gradient_count": 0,
+        "filter_count": 0,
+        "effects": [
+          "chart_geometry",
+          "connector_flow",
+          "path",
+          "typography"
+        ]
+      },
+      "business_claim_fragments": [],
+      "summary": {
+        "error_count": 0,
+        "warning_count": 0
+      }
+    },
+    {
+      "path": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/04-svg/prepared/page-004.svg",
+      "width": 960.0,
+      "height": 540.0,
+      "element_count": 16,
+      "text_box_count": 6,
+      "visual_primitives": {
+        "present": [
+          "annotation",
+          "dashboard",
+          "geometric_shape",
+          "micro_chart",
+          "path",
+          "typography"
+        ],
+        "counts": {
+          "path": 1,
+          "line": 1,
+          "rect": 8,
+          "circle": 0,
+          "ellipse": 0,
+          "image": 0,
+          "foreignObject": 6,
+          "chart_marker": 0,
+          "card_like_rect": 3,
+          "small_shape": 4,
+          "bar_like_rect": 3
+        },
+        "gradient_count": 0,
+        "filter_count": 0,
+        "effects": [
+          "chart_geometry",
+          "connector_flow",
+          "path",
+          "typography"
+        ]
+      },
+      "business_claim_fragments": [],
+      "summary": {
+        "error_count": 0,
+        "warning_count": 0
+      }
+    }
+  ],
+  "plan": {
+    "path": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json",
+    "slide_count": 4,
+    "distinct_renderer_count": 4,
+    "distinct_layout_family_count": 4,
+    "distinct_visual_recipe_count": 4,
+    "distinct_visual_recipe_family_count": 4,
+    "summary": {
+      "error_count": 0,
+      "warning_count": 0
+    }
+  }
+}

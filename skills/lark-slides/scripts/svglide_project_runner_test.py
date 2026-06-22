@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
+import contextlib
+import html
+import io
 import json
 import os
 import subprocess
@@ -12,16 +15,47 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import svg_preflight
 import svglide_project_runner as runner
 
 
 class SVGlideProjectRunnerTest(unittest.TestCase):
+    def test_local_real_preview_profile_targets_visual_acceptance(self) -> None:
+        self.assertEqual(runner.resolve_run_target(None, "local_real_preview"), "visual_acceptance")
+
+    def test_local_real_preview_assets_args_preserve_explicit_disable_flags(self) -> None:
+        saved_options = dict(runner.RUNNER_OPTIONS)
+        try:
+            runner.RUNNER_OPTIONS.update(
+                {
+                    "network_policy": "online",
+                    "offline": False,
+                    "no_image_search": True,
+                    "no_ai_image": True,
+                    "asset_provider": "auto",
+                    "image_backend": "auto",
+                }
+            )
+
+            args = runner.asset_option_args(profile="local_real_preview")
+
+            self.assertIn("--profile", args)
+            self.assertEqual(args[args.index("--profile") + 1], "local_real_preview")
+            self.assertIn("--no-image-search", args)
+            self.assertIn("--no-ai-image", args)
+            self.assertIn("--network-policy", args)
+            self.assertEqual(args[args.index("--network-policy") + 1], "online")
+        finally:
+            runner.RUNNER_OPTIONS.clear()
+            runner.RUNNER_OPTIONS.update(saved_options)
+
     def write_plan(self, project_root: Path) -> None:
         (project_root / "02-plan").mkdir(parents=True, exist_ok=True)
         (project_root / "02-plan/slide_plan.json").write_text(
             json.dumps(
                 {
                     "route": "svglide-svg",
+                    "deck_intent": "smoke",
                     "language": "zh-CN",
                     "audience": "企业管理层",
                     "deck_structure": ["cover", "content", "closing"],
@@ -186,6 +220,37 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         plan["slides"] = [first_slide]
         (project_root / "02-plan/slide_plan.json").write_text(json.dumps(plan), encoding="utf-8")
 
+    def write_selection_ready_plan(self, project_root: Path, brief: str) -> None:
+        self.write_plan(project_root)
+        plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+        plan["title"] = brief
+        plan["topic"] = brief
+        plan["style_preset"] = "cobalt_bloom"
+        plan["loaded_rule_set"] = sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES)
+        for slide in plan["slides"]:
+            slide["canvas_spec"] = {}
+            slide["visual_recipe"] = "geometric_composition"
+            slide["svg_effects"] = ["path"]
+            slide["required_primitives"] = ["geometric_shape", "path"]
+            slide["svg_primitives"] = ["geometric_shape", "path"]
+            slide["asset_contract"] = "none_required"
+        (project_root / "02-plan/slide_plan.json").write_text(
+            json.dumps(plan, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+    def write_instruction(self, project_root: Path, brief: str) -> None:
+        (project_root / "00-input/instruction.json").write_text(
+            json.dumps(
+                {
+                    "version": "svglide-instruction/v1",
+                    "raw_prompt": brief,
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
     def write_plan_confirmation(self, project_root: Path) -> None:
         plan = project_root / "02-plan/slide_plan.json"
         payload = {
@@ -225,6 +290,39 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def run_source(self, project_root: Path) -> None:
         self.write_evidence(project_root)
         runner.run_stage(project_root, "source")
+
+    def make_selection_project(self, tmpdir: str, deck_id: str, brief: str) -> Path:
+        plan_root = Path(tmpdir) / ".lark-slides/plan"
+        result = runner.init_project(deck_id, brief[:40] or deck_id, plan_root=plan_root)
+        project_root = Path(result["project_root"])
+        self.write_instruction(project_root, brief)
+        self.write_selection_ready_plan(project_root, brief)
+        return project_root
+
+    def write_protocol_fixture_svgs(self, project_root: Path) -> None:
+        plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+        colors = plan["project_palette"]["colors"]
+        background = colors["background"]
+        surface = colors["surface"]
+        text = colors["text"]
+        primary = colors["primary"]
+        accent = colors["accent"]
+        muted = colors["muted"]
+        for slide in plan["slides"]:
+            page = int(slide["page"])
+            title = html.escape(slide["title"])
+            key_message = html.escape(slide["key_message"])
+            svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">
+  <rect slide:role="shape" x="0" y="0" width="960" height="540" fill="{background}"/>
+  <rect slide:role="shape" x="48" y="48" width="864" height="444" fill="{surface}"/>
+  <path slide:role="shape" d="M72 248 L836 248 L796 288 L112 288 Z" fill="{primary}" opacity="0.10"/>
+  <foreignObject id="title" data-source-ref="slide_plan.slides[{page}].title" slide:role="shape" slide:shape-type="text" x="72" y="82" width="760" height="70"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:34px;font-weight:700;color:{text};line-height:1.2">{title}</div></foreignObject>
+  <foreignObject id="message" data-source-ref="slide_plan.slides[{page}].key_message" slide:role="shape" slide:shape-type="text" x="72" y="168" width="740" height="60"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:22px;font-weight:500;color:{text};line-height:1.35">{key_message}</div></foreignObject>
+  <rect slide:role="shape" x="72" y="310" width="210" height="96" fill="{primary}" opacity="0.14"/>
+  <rect slide:role="shape" x="306" y="310" width="210" height="96" fill="{accent}" opacity="0.16"/>
+  <rect slide:role="shape" x="540" y="310" width="210" height="96" fill="{muted}" opacity="0.14"/>
+</svg>'''
+            (project_root / f"04-svg/page-{page:03d}.svg").write_text(svg, encoding="utf-8")
 
     def make_project(self, tmpdir: str) -> Path:
         plan_root = Path(tmpdir) / ".lark-slides/plan"
@@ -366,16 +464,105 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         )
         return project_root
 
+    def test_selection_pipeline_runs_three_fixture_briefs_to_quality_gate(self) -> None:
+        briefs = [
+            ("selection_internal_review", "生成一份内部业务复盘，高管经营看板，包含指标、趋势和行动项"),
+            ("selection_brand_ai", "生成一份主题为智谱和 MiniMax 的 slide，从头走到本地预览"),
+            ("selection_unknown_topic", "一个不存在于模板库的主题：量子陶瓷供应链"),
+        ]
+        saved_options = dict(runner.RUNNER_OPTIONS)
+        try:
+            runner.RUNNER_OPTIONS.update(
+                {
+                    "network_policy": "fixture",
+                    "offline": False,
+                    "no_online_research": False,
+                    "no_image_search": True,
+                    "no_ai_image": True,
+                    "refresh_online": False,
+                    "asset_provider": "auto",
+                    "image_backend": "none",
+                }
+            )
+            with tempfile.TemporaryDirectory() as tmpdir:
+                for deck_id, brief in briefs:
+                    project_root = self.make_selection_project(tmpdir, deck_id, brief)
+                    for stage in [
+                        "source",
+                        "select_style",
+                        "plan",
+                        "strategy_review",
+                        "theme_validate",
+                        "palette_review",
+                        "selection_review",
+                        "plan_bundle_review",
+                    ]:
+                        runner.run_stage(project_root, stage, profile="preview_only")
+                    self.write_plan_confirmation(project_root)
+                    runner.run_stage(project_root, "confirm_plan", profile="preview_only")
+                    runner.run_stage(project_root, "package_check", profile="preview_only")
+                    runner.run_stage(project_root, "assets", profile="preview_only")
+                    self.write_protocol_fixture_svgs(project_root)
+                    for stage in [
+                        "generate_svg",
+                        "prepare",
+                        "preview",
+                        "preflight",
+                        "preview_lint",
+                        "aesthetic_review",
+                        "chart_verify",
+                        "semantic_review",
+                        "runtime_review",
+                        "visual_distinctness_review",
+                        "theme_adherence",
+                        "quality_gate",
+                    ]:
+                        runner.run_stage(project_root, stage, profile="preview_only")
+
+                    plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+                    palette = json.loads((project_root / "02-plan/palette-selection.json").read_text(encoding="utf-8"))
+                    selection = json.loads((project_root / "02-plan/theme-template-selection.json").read_text(encoding="utf-8"))
+                    self.assertEqual(plan["project_palette"], palette["project_palette"])
+                    self.assertEqual(plan["project_theme"]["base_theme_id"], selection["selected_theme_id"])
+                    template_candidates = {item["template_id"] for item in selection["template_candidates"]}
+                    theme_candidates = {item["theme_id"] for item in selection["theme_candidates"]}
+                    for slide in plan["slides"]:
+                        spec = slide["canvas_spec"]
+                        self.assertIn(spec["template_id"], template_candidates)
+                        self.assertIn(spec["theme_id"], theme_candidates)
+                        self.assertIn("selection_trace", spec)
+                    self.assertEqual(
+                        json.loads((project_root / "06-check/palette-review.json").read_text(encoding="utf-8"))["status"],
+                        "passed",
+                    )
+                    self.assertEqual(
+                        json.loads((project_root / "06-check/theme-template-selection-review.json").read_text(encoding="utf-8"))["status"],
+                        "passed",
+                    )
+                    self.assertEqual(
+                        json.loads((project_root / "06-check/plan-bundle-review.json").read_text(encoding="utf-8"))["status"],
+                        "passed",
+                    )
+                    self.assertEqual(runner.load_state(project_root)["stages"]["confirm_plan"]["status"], "passed")
+                    self.assertEqual(
+                        json.loads((project_root / "06-check/quality-gate.json").read_text(encoding="utf-8"))["status"],
+                        "passed",
+                    )
+        finally:
+            runner.RUNNER_OPTIONS.clear()
+            runner.RUNNER_OPTIONS.update(saved_options)
+
     def make_artboard_visual_project(self, tmpdir: str) -> Path:
         project_root = self.make_project(tmpdir)
         self.write_artboard_plan(project_root)
         self.write_plan_confirmation(project_root)
+        runner.run_confirm_plan_stage(project_root, runner.load_state(project_root))
         artboard_dir = project_root / "04-svg/artboard"
         artboard_dir.mkdir(parents=True, exist_ok=True)
         (project_root / "05-preview").mkdir(parents=True, exist_ok=True)
         (artboard_dir / "page-001.png").write_bytes(b"page-png")
         (project_root / "05-preview/contact-sheet.png").write_bytes(b"contact-sheet")
-        (project_root / "05-preview/preview.html").write_text("<html><body>preview</body></html>", encoding="utf-8")
+        (project_root / "05-preview/preview.html").write_text('<html><body><section id="page-1">preview</section></body></html>', encoding="utf-8")
         (project_root / "05-preview/preview-manifest.json").write_text(
             json.dumps({"page_count": 1, "pages": [{"page": 1, "source_path": "04-svg/prepared/page-001.svg", "source_bytes": (project_root / "04-svg/prepared/page-001.svg").stat().st_size}]}),
             encoding="utf-8",
@@ -474,8 +661,15 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def test_normalize_stage_accepts_aliases(self) -> None:
         self.assertEqual(runner.normalize_stage("confirm-plan"), "confirm_plan")
         self.assertEqual(runner.normalize_stage("source-review"), "source")
+        self.assertEqual(runner.normalize_stage("select-style"), "select_style")
+        self.assertEqual(runner.normalize_stage("theme-template-selection"), "select_style")
+        self.assertEqual(runner.normalize_stage("palette-selection"), "select_style")
         self.assertEqual(runner.normalize_stage("strategy-review"), "strategy_review")
         self.assertEqual(runner.normalize_stage("theme-validate"), "theme_validate")
+        self.assertEqual(runner.normalize_stage("palette-review"), "palette_review")
+        self.assertEqual(runner.normalize_stage("selection-review"), "selection_review")
+        self.assertEqual(runner.normalize_stage("theme-template-selection-review"), "selection_review")
+        self.assertEqual(runner.normalize_stage("plan-bundle-review"), "plan_bundle_review")
         self.assertEqual(runner.normalize_stage("package-check"), "package_check")
         self.assertEqual(runner.normalize_stage("artboard-package-check"), "package_check")
         self.assertEqual(runner.normalize_stage("aesthetic-review"), "aesthetic_review")
@@ -505,9 +699,13 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def test_stages_until_uses_normalized_stage_graph(self) -> None:
         dry_run = runner.stages_until("dry_run")
         self.assertIn("source", dry_run)
+        self.assertIn("select_style", dry_run)
         self.assertIn("confirm_plan", dry_run)
         self.assertIn("strategy_review", dry_run)
         self.assertIn("theme_validate", dry_run)
+        self.assertIn("palette_review", dry_run)
+        self.assertIn("selection_review", dry_run)
+        self.assertIn("plan_bundle_review", dry_run)
         self.assertIn("package_check", dry_run)
         self.assertIn("assets", dry_run)
         self.assertIn("generate_svg", dry_run)
@@ -518,7 +716,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("visual_distinctness_review", dry_run)
         self.assertIn("theme_adherence", dry_run)
         self.assertIn("quality_gate", dry_run)
+        self.assertIn("generation_benchmark", dry_run)
         self.assertIn("dry_run", dry_run)
+        self.assertLess(dry_run.index("quality_gate"), dry_run.index("generation_benchmark"))
+        self.assertLess(dry_run.index("generation_benchmark"), dry_run.index("dry_run"))
         self.assertNotIn("visual_acceptance", dry_run)
         self.assertNotIn("ppe_proof", dry_run)
         self.assertNotIn("live_create", dry_run)
@@ -572,6 +773,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
             called_stages = [stage for stage, _ in calls]
             self.assertIn("source", called_stages)
+            self.assertIn("select_style", called_stages)
             self.assertIn("chart_verify", called_stages)
             self.assertIn("semantic_review", called_stages)
             self.assertIn("runtime_review", called_stages)
@@ -579,8 +781,13 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("theme_validate", called_stages)
             self.assertIn("package_check", called_stages)
             self.assertIn("theme_adherence", called_stages)
+            self.assertLess(called_stages.index("source"), called_stages.index("select_style"))
+            self.assertLess(called_stages.index("select_style"), called_stages.index("plan"))
             self.assertLess(called_stages.index("strategy_review"), called_stages.index("theme_validate"))
-            self.assertLess(called_stages.index("theme_validate"), called_stages.index("confirm_plan"))
+            self.assertLess(called_stages.index("theme_validate"), called_stages.index("palette_review"))
+            self.assertLess(called_stages.index("palette_review"), called_stages.index("selection_review"))
+            self.assertLess(called_stages.index("selection_review"), called_stages.index("plan_bundle_review"))
+            self.assertLess(called_stages.index("plan_bundle_review"), called_stages.index("confirm_plan"))
             self.assertLess(called_stages.index("confirm_plan"), called_stages.index("package_check"))
             self.assertLess(called_stages.index("chart_verify"), called_stages.index("semantic_review"))
             self.assertLess(called_stages.index("semantic_review"), called_stages.index("quality_gate"))
@@ -594,6 +801,71 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertNotIn("live_create", called_stages)
             self.assertNotIn("readback", called_stages)
             self.assertTrue(all(profile == "preview_only" for _, profile in calls))
+
+    def test_complete_stage_writes_timing_report_with_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            (project_root / "02-plan/slide_plan.json").write_text("{}", encoding="utf-8")
+            state = runner.load_state(project_root)
+            state["profile"] = "preview_only"
+            runner.complete_stage(
+                project_root,
+                state,
+                "plan",
+                "passed",
+                started_at=runner.now_iso(),
+                inputs=["02-plan/slide_plan.json"],
+                outputs=["receipts/plan.json"],
+            )
+            receipt = json.loads((project_root / "receipts/plan.json").read_text(encoding="utf-8"))
+            report = json.loads((project_root / "06-check/timing-report.json").read_text(encoding="utf-8"))
+            self.assertIn("02-plan/slide_plan.json", receipt["input_hashes"])
+            self.assertEqual(report["schema_version"], "svglide-timing-report/v1")
+            self.assertEqual(report["stage_attempts"]["plan"], 1)
+            self.assertEqual(report["sla"]["profile"], "preview_only")
+
+    def test_collect_errors_stops_before_render_and_writes_structured_report(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            original_run_implemented_stage = runner.run_implemented_stage
+
+            def fake_run_implemented_stage(project_root: Path, stage: str, state: dict[str, object], *, profile: str = "production") -> dict[str, object]:
+                if stage == "plan_bundle_review":
+                    runner.complete_stage(
+                        project_root,
+                        state,
+                        stage,
+                        "failed",
+                        started_at=runner.now_iso(),
+                        error={
+                            "code": "stage_command_failed",
+                            "issues": [
+                                {
+                                    "code": "project_palette_missing",
+                                    "message": "missing palette",
+                                    "root_cause_group": "palette_adoption",
+                                }
+                            ],
+                        },
+                    )
+                    raise runner.RunnerError("plan bundle failed")
+                return runner.complete_stage(project_root, state, stage, "passed", started_at=runner.now_iso())
+
+            try:
+                runner.run_implemented_stage = fake_run_implemented_stage
+                with self.assertRaisesRegex(runner.RunnerError, "pre-render validation errors"):
+                    runner.run_until(project_root, "confirm_plan", profile="preview_only", collect_errors=True)
+            finally:
+                runner.run_implemented_stage = original_run_implemented_stage
+
+            collected = json.loads((project_root / "06-check/collected-errors.json").read_text(encoding="utf-8"))
+            self.assertEqual(collected["status"], "failed")
+            self.assertEqual(collected["issues"][0]["root_cause_group"], "palette_adoption")
+            self.assertNotIn("confirm_plan", runner.load_state(project_root)["stages"])
 
     def test_production_live_profile_runs_ppe_before_live_create(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -626,6 +898,122 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertLess(called_stages.index("ppe_proof"), called_stages.index("pre_submit_review"))
             self.assertLess(called_stages.index("pre_submit_review"), called_stages.index("live_create"))
             self.assertTrue(all(profile == "production_live" for _, profile in calls))
+
+    def test_agent_progress_reports_four_artboard_milestones_to_stderr_and_jsonl(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_artboard_plan(project_root)
+            calls: list[str] = []
+            original_run_implemented_stage = runner.run_implemented_stage
+            original_implemented_stages = runner.IMPLEMENTED_STAGES
+
+            def fake_run_implemented_stage(project_root: Path, stage: str, state: dict[str, object], *, profile: str = "production") -> dict[str, object]:
+                calls.append(stage)
+                return runner.complete_stage(project_root, state, stage, "passed", started_at=runner.now_iso())
+
+            stderr = io.StringIO()
+            try:
+                runner.IMPLEMENTED_STAGES = set(runner.IMPLEMENTED_STAGES) | set(runner.stages_until("readback"))
+                runner.run_implemented_stage = fake_run_implemented_stage
+                with contextlib.redirect_stderr(stderr):
+                    runner.run_until(
+                        project_root,
+                        runner.resolve_run_target(None, "production_live"),
+                        profile="production_live",
+                        progress="agent",
+                    )
+            finally:
+                runner.run_implemented_stage = original_run_implemented_stage
+                runner.IMPLEMENTED_STAGES = original_implemented_stages
+
+            output = stderr.getvalue()
+            self.assertIn("正在生成主题 plan 和图片资产", output)
+            self.assertIn("已完成 1/4 关键产物: 主题 plan + 图片资产", output)
+            self.assertIn("已完成 2/4 关键产物: Satori-compatible HTML/CSS", output)
+            self.assertIn("已完成 3/4 关键产物: Satori SVG + SVGlide SVG", output)
+            self.assertIn("已完成 4/4 关键产物: 本地预览 + gates", output)
+            self.assertIn("生成完成：", output)
+            self.assertIn("assets", calls)
+            self.assertIn("visual_acceptance", calls)
+            events = [
+                json.loads(line)
+                for line in (project_root / "logs/agent-progress.jsonl").read_text(encoding="utf-8").splitlines()
+            ]
+            milestones = [event for event in events if event["event"] == "milestone_completed"]
+            self.assertEqual(milestones[-1]["completed"], 4)
+            self.assertEqual(milestones[-1]["total"], 4)
+            self.assertEqual(events[-1]["event"], "completed")
+
+    def test_agent_progress_reports_direct_svg_denominator_separately(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_plan(project_root)
+            original_run_implemented_stage = runner.run_implemented_stage
+            original_implemented_stages = runner.IMPLEMENTED_STAGES
+
+            def fake_run_implemented_stage(project_root: Path, stage: str, state: dict[str, object], *, profile: str = "production") -> dict[str, object]:
+                return runner.complete_stage(project_root, state, stage, "passed", started_at=runner.now_iso())
+
+            stderr = io.StringIO()
+            try:
+                runner.IMPLEMENTED_STAGES = set(runner.IMPLEMENTED_STAGES) | set(runner.stages_until("readback"))
+                runner.run_implemented_stage = fake_run_implemented_stage
+                with contextlib.redirect_stderr(stderr):
+                    runner.run_until(project_root, "readback", progress="agent")
+            finally:
+                runner.run_implemented_stage = original_run_implemented_stage
+                runner.IMPLEMENTED_STAGES = original_implemented_stages
+
+            output = stderr.getvalue()
+            self.assertIn("已完成 1/3 关键产物: 素材资产", output)
+            self.assertIn("已完成 2/3 关键产物: SVGlide protocol SVG", output)
+            self.assertIn("已完成 3/3 关键产物: backend snapshot JSON", output)
+            self.assertNotIn("4/4", output)
+
+    def test_agent_progress_failure_is_concise_and_stdout_json_is_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            self.write_artboard_plan(project_root)
+            original_run_implemented_stage = runner.run_implemented_stage
+            original_implemented_stages = runner.IMPLEMENTED_STAGES
+
+            def fake_run_implemented_stage(project_root: Path, stage: str, state: dict[str, object], *, profile: str = "production") -> dict[str, object]:
+                if stage == "assets":
+                    raise runner.RunnerError("asset stage missing trusted image materializer")
+                return runner.complete_stage(project_root, state, stage, "passed", started_at=runner.now_iso())
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            try:
+                runner.IMPLEMENTED_STAGES = set(runner.IMPLEMENTED_STAGES) | set(runner.stages_until("readback"))
+                runner.run_implemented_stage = fake_run_implemented_stage
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    exit_code = runner.main(
+                        [
+                            "run",
+                            project_root.as_posix(),
+                            "--profile",
+                            "production_live",
+                            "--progress",
+                            "agent",
+                        ]
+                    )
+            finally:
+                runner.run_implemented_stage = original_run_implemented_stage
+                runner.IMPLEMENTED_STAGES = original_implemented_stages
+
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(stdout.getvalue(), "")
+            error_output = stderr.getvalue()
+            self.assertEqual(error_output.count("生成已阻断:"), 1)
+            self.assertNotIn("\nasset stage missing trusted image materializer\n", error_output)
+            self.assertNotIn("Traceback", error_output)
 
     def test_pre_submit_review_uses_documented_human_review_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -679,6 +1067,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             plan_root = Path(tmpdir) / ".lark-slides/plan"
             result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
             project_root = Path(result["project_root"])
+            (project_root / "receipts/readback.json").write_text(
+                json.dumps({"stage": "readback", "status": "passed", "profile": "production"}),
+                encoding="utf-8",
+            )
             state = runner.load_state(project_root)
             state.setdefault("stages", {})["readback"] = {"status": "passed", "receipt": "receipts/readback.json"}
             runner.write_state(project_root, state)
@@ -806,6 +1198,49 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                 runner.run_until(project_root, "dry_run")
 
             self.assertIn("required stage 'plan' is skipped", str(err.exception))
+
+    def test_run_until_retries_existing_failed_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            state = runner.load_state(project_root)
+            for stage in runner.stages_until("dry_run"):
+                receipt = project_root / "receipts" / f"{stage}.json"
+                receipt.write_text(json.dumps({"stage": stage, "status": "failed" if stage == "dry_run" else "passed"}), encoding="utf-8")
+                runner.record_stage(state, stage, "failed" if stage == "dry_run" else "passed", receipt)
+            runner.write_state(project_root, state)
+
+            called: list[str] = []
+            original_run_implemented_stage = runner.run_implemented_stage
+            original_require_existing_stage_current = runner.require_existing_stage_current
+            original_detect_stale_stages = runner.svglide_stage_invalidation.detect_stale_stages
+
+            def fake_run_implemented_stage(project_root_arg: Path, stage: str, state_arg: dict[str, object], *, profile: str = "production") -> dict[str, object]:
+                called.append(stage)
+                return runner.complete_stage(
+                    project_root_arg,
+                    state_arg,
+                    stage,
+                    "passed",
+                    started_at=runner.now_iso(),
+                    command=["fake", stage],
+                )
+
+            try:
+                runner.run_implemented_stage = fake_run_implemented_stage
+                runner.require_existing_stage_current = lambda *_args, **_kwargs: None
+                runner.svglide_stage_invalidation.detect_stale_stages = lambda *_args, **_kwargs: []
+                runner.run_until(project_root, "dry_run", profile="preview_only")
+            finally:
+                runner.run_implemented_stage = original_run_implemented_stage
+                runner.require_existing_stage_current = original_require_existing_stage_current
+                runner.svglide_stage_invalidation.detect_stale_stages = original_detect_stale_stages
+
+            updated = runner.load_state(project_root)
+            self.assertEqual(called, ["dry_run"])
+            self.assertEqual(updated["stages"]["dry_run"]["status"], "passed")
+            self.assertIn("dry_run", updated["stale_pruned"])
 
     def test_plan_stage_validates_existing_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1205,6 +1640,13 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             with self.assertRaisesRegex(runner.RunnerError, "quality gate"):
                 runner.run_create_stage(project_root, runner.load_state(project_root), "dry_run", dry_run=True, command_runner=lambda *a, **k: self.completed(a[0]))
 
+    def test_dry_run_stage_requires_generation_benchmark(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+
+            with self.assertRaisesRegex(runner.RunnerError, "generation_benchmark"):
+                runner.run_stage(project_root, "dry-run")
+
     def test_dry_run_refuses_changed_prepared_hashes_after_quality_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = self.make_project(tmpdir)
@@ -1232,6 +1674,17 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             with self.assertRaisesRegex(runner.RunnerError, "visual_distinctness"):
                 runner.run_stage(project_root, "quality_gate")
 
+    def test_existing_quality_gate_missing_selection_inputs_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            plan_path = project_root / "02-plan/slide_plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["selection_receipt"] = "02-plan/theme-template-selection.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "palette_review"):
+                runner.require_quality_gate_current(project_root)
+
     def test_dry_run_command_includes_assets_when_present(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = self.make_project(tmpdir)
@@ -1245,6 +1698,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             runner.run_create_stage(project_root, runner.load_state(project_root), "dry_run", dry_run=True, command_runner=fake)
 
             self.assertIn("--assets", captured[0])
+            self.assertEqual(captured[0][captured[0].index("--assets") + 1], "03-assets/assets.json")
+            self.assertEqual(captured[0][captured[0].index("--file") + 1], "04-svg/prepared/page-001.svg")
             self.assertIn("--dry-run", captured[0])
             dry_run = json.loads((project_root / "07-create/dry-run.json").read_text(encoding="utf-8"))
             self.assertEqual(dry_run["prepared_files"][0]["path"], "04-svg/prepared/page-001.svg")
@@ -1395,6 +1850,29 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             (project_root / "receipts/visual_acceptance.json").write_text(json.dumps(check), encoding="utf-8")
 
             with self.assertRaisesRegex(runner.RunnerError, "visual_evidence.pages"):
+                runner.run_stage(project_root, "ppe-proof")
+
+    def test_ppe_proof_refuses_visual_evidence_pages_without_preview_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_artboard_visual_project(tmpdir)
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            runner.run_stage(project_root, "visual-acceptance")
+            self.write_ppe_input(project_root)
+            check_path = project_root / "06-check/visual-acceptance.json"
+            check = json.loads(check_path.read_text(encoding="utf-8"))
+            page = check["visual_evidence"]["pages"][0]
+            page.pop("preview_sha256", None)
+            page.pop("preview_manifest_sha256", None)
+            check_path.write_text(json.dumps(check), encoding="utf-8")
+            (project_root / "receipts/visual_acceptance.json").write_text(json.dumps(check), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "preview_sha256"):
                 runner.run_stage(project_root, "ppe-proof")
 
     def test_ppe_proof_refuses_missing_deck_rhythm(self) -> None:

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-reference-abstraction.schema.json",
+  "title": "SVGlide reference abstraction record",
+  "type": "object",
+  "required": [
+    "source_item_id",
+    "absorbed_as",
+    "svglide_asset_ids",
+    "non_copying_transform",
+    "forbidden_usage"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "source_item_id": {"type": "string", "minLength": 1},
+    "absorbed_as": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "svglide_asset_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "non_copying_transform": {"type": "string", "minLength": 1},
+    "forbidden_usage": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "canvas_spec_fixtures": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "satori_outputs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "svglide_protocol_outputs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "quality_receipts": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "template_guardrail_records": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "dry_run_or_readback_receipts": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "vf5_benchmark_receipts": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "trusted_provider_evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "negative_fixtures": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "review_notes": {"type": "string"}
+  },
+  "anyOf": [
+    {"required": ["canvas_spec_fixtures"]},
+    {"required": ["satori_outputs"]},
+    {"required": ["svglide_protocol_outputs"]},
+    {"required": ["quality_receipts"]},
+    {"required": ["template_guardrail_records"]},
+    {"required": ["dry_run_or_readback_receipts"]},
+    {"required": ["vf5_benchmark_receipts"]},
+    {"required": ["negative_fixtures"]}
+  ]
+}

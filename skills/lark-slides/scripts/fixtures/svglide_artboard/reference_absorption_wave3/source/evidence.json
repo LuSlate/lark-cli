@@ -1,0 +1,63 @@
+{
+  "schema_version": "svglide-evidence/v1",
+  "source_status": "ready",
+  "research_status": "fixture_local_reference_absorption",
+  "items": [
+    {
+      "id": "local-reference-inventory",
+      "text": "reference_absorption_wave3 使用本地 beautiful-html-templates 抽象记录、SVGlide 主题 registry、组件 registry、layout registry 和 CanvasSpec fixture 作为证据来源。",
+      "source": "skills/lark-slides/references/svglide-reference-source-inventory.json"
+    },
+    {
+      "id": "non-copying-transform",
+      "text": "参考仓库中的 HTML、CSS、截图和外部 renderer 代码不作为 SVGlide 运行时依赖；这里只吸收设计意图、布局信号、主题 token 和组件抽象。",
+      "source": "skills/lark-slides/references/absorptions/beautiful-html-templates"
+    },
+    {
+      "id": "fixture-proof-chain",
+      "text": "reference_absorption_wave3 在本地生成 CanvasSpec、Satori 预览、SVGlide protocol SVG、PNG preview、contact sheet 和 runner receipts，用于证明吸收资产可执行。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3"
+    },
+    {
+      "id": "beautiful-html-templates:architectural-spec",
+      "text": "beautiful-html-templates:architectural-spec 是 reference_absorption_wave3 第 1 页《系统架构规格》的本地参考吸收证据。该页的结论是：低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。。页面使用中文 body_points：低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。；输入边界；处理结构；接口契约。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:stone-architect",
+      "text": "svglide-theme:stone-architect 是 reference_absorption_wave3 第 1 页《系统架构规格》的本地参考吸收证据。该页的结论是：低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。。页面使用中文 body_points：低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。；输入边界；处理结构；接口契约。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:trend-grid-report",
+      "text": "beautiful-html-templates:trend-grid-report 是 reference_absorption_wave3 第 2 页《AI 应用趋势索引》的本地参考吸收证据。该页的结论是：用杂志式 grid、索引行和像素块表达趋势报告与市场观察。。页面使用中文 body_points：用杂志式 grid、索引行和像素块表达趋势报告与市场观察。；AI 应用趋势索引 的模板资产化验证；AI 应用趋势索引 的证据链验证。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:magazine-cobalt",
+      "text": "svglide-theme:magazine-cobalt 是 reference_absorption_wave3 第 2 页《AI 应用趋势索引》的本地参考吸收证据。该页的结论是：用杂志式 grid、索引行和像素块表达趋势报告与市场观察。。页面使用中文 body_points：用杂志式 grid、索引行和像素块表达趋势报告与市场观察。；AI 应用趋势索引 的模板资产化验证；AI 应用趋势索引 的证据链验证。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:serif-stat-editorial",
+      "text": "beautiful-html-templates:serif-stat-editorial 是 reference_absorption_wave3 第 3 页《证据改变了决策》的本地参考吸收证据。该页的结论是：适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。。页面使用中文 body_points：适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。；质量稳定；叙事更聚焦；证据仍需补齐。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:forest-editorial",
+      "text": "svglide-theme:forest-editorial 是 reference_absorption_wave3 第 3 页《证据改变了决策》的本地参考吸收证据。该页的结论是：适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。。页面使用中文 body_points：适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。；质量稳定；叙事更聚焦；证据仍需补齐。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:poster-stat-punch",
+      "text": "beautiful-html-templates:poster-stat-punch 是 reference_absorption_wave3 第 4 页《现在就做判断》的本地参考吸收证据。该页的结论是：用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。。页面使用中文 body_points：用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。；现在就做判断 的模板资产化验证。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:tomato-poster",
+      "text": "svglide-theme:tomato-poster 是 reference_absorption_wave3 第 4 页《现在就做判断》的本地参考吸收证据。该页的结论是：用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。。页面使用中文 body_points：用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。；现在就做判断 的模板资产化验证。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/02-plan/slide_plan.json"
+    }
+  ],
+  "generated_at": "2026-06-21T19:58:09+00:00"
+}

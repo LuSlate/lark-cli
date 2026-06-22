@@ -1,0 +1,26 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_source.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+    "--network-policy",
+    "offline",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:01:47+08:00",
+  "error": null,
+  "inputs": [
+    "source/source-notes.md",
+    "source/evidence.json"
+  ],
+  "outputs": [
+    "source/evidence.json",
+    "source/research.md",
+    "source/research_queries.json",
+    "source/source-receipt.json",
+    "receipts/source.json"
+  ],
+  "stage": "source",
+  "started_at": "2026-06-22T04:01:47+08:00",
+  "status": "passed"
+}

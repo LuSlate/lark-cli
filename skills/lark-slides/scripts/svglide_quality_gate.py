@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
@@ -43,13 +44,41 @@ THEME_REQUIRED_CHECKS = [
     ("theme-validate", CHECK_DIR / "theme-validate.json"),
     ("theme-adherence", CHECK_DIR / "theme-adherence.json"),
 ]
+SELECTION_CHECKS = [
+    ("palette-review", CHECK_DIR / "palette-review.json"),
+    ("theme-template-selection-review", CHECK_DIR / "theme-template-selection-review.json"),
+    ("plan-bundle-review", CHECK_DIR / "plan-bundle-review.json"),
+]
 ARTBOARD_PACKAGE_CHECK = ("artboard-package-check", CHECK_DIR / "artboard-package-check.json")
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
 OPTIONAL_CHECKS = []
 PASS_ACTION = "create_live"
 FAIL_ACTIONS = {"repair_and_rerun", "failed", "fail"}
 PRODUCTION_PROFILE = "production"
-STRICT_PROFILES = {PRODUCTION_PROFILE, "production_live"}
+REAL_PREVIEW_PROFILE = "local_real_preview"
+STRICT_PROFILES = {PRODUCTION_PROFILE, "production_live", REAL_PREVIEW_PROFILE}
+USER_VISIBLE_ASSET_PROFILES = STRICT_PROFILES | {"preview_only"}
+BLOCKED_ASSET_SOURCE_TYPES = {"local_preview"}
+BLOCKED_ASSET_SOURCE_REFS = {"local-generated-preview-asset"}
+BLOCKED_ASSET_KINDS = {"generated_image", "ai_image"}
+BLOCKED_ASSET_LICENSES = {"preview_unverified"}
+INTERNAL_ASSET_SCHEMES = {"internal"}
+ASSET_METADATA_KEYS = {
+    "asset_id",
+    "asset_kind",
+    "crop_hint",
+    "file",
+    "href",
+    "license",
+    "local_path_or_href",
+    "path",
+    "placement_role",
+    "safe_text_zones",
+    "source_ref",
+    "source_type",
+    "source_url",
+    "usage_page",
+}
 
 
 def relpath(path: Path, base: Path) -> str:
@@ -61,6 +90,94 @@ def relpath(path: Path, base: Path) -> str:
 
 def issue(code: str, message: str) -> dict[str, str]:
     return {"code": code, "message": message}
+
+
+def has_asset_metadata(value: dict[str, Any]) -> bool:
+    return any(key in value for key in ASSET_METADATA_KEYS)
+
+
+def iter_asset_metadata(value: Any, path: str) -> list[tuple[str, dict[str, Any]]]:
+    items: list[tuple[str, dict[str, Any]]] = []
+    if isinstance(value, dict):
+        if has_asset_metadata(value):
+            items.append((path, value))
+        for key, child in value.items():
+            if isinstance(child, (dict, list)):
+                items.extend(iter_asset_metadata(child, f"{path}.{key}"))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            if isinstance(child, (dict, list)):
+                items.extend(iter_asset_metadata(child, f"{path}[{index}]"))
+    return items
+
+
+def is_allowed_online_source_url(value: str) -> bool:
+    parsed = urllib.parse.urlparse(value)
+    return (parsed.scheme in {"http", "https"} and bool(parsed.netloc)) or (parsed.scheme in INTERNAL_ASSET_SCHEMES and bool(parsed.netloc))
+
+
+def source_url_issue_code(value: str) -> str:
+    parsed = urllib.parse.urlparse(value)
+    if value.startswith(("@./", "@/")) or parsed.scheme in {"", "file"}:
+        return "asset_source_url_not_http"
+    if parsed.scheme in INTERNAL_ASSET_SCHEMES:
+        return "asset_source_url_internal_invalid"
+    return "asset_source_url_not_http"
+
+
+def asset_record_requires_online_source(value: dict[str, Any]) -> bool:
+    if value.get("status") in {"fallback_used", "planned", "failed", "missing", "missing_optional", "metadata_only"}:
+        return False
+    return any(key in value for key in {"href", "local_path_or_href", "file", "source_url", "asset_id", "asset_kind"})
+
+
+def user_visible_asset_issues(project: Path, asset_manifest: dict[str, Any]) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    sources = [
+        (PLAN_PATH.as_posix(), read_json_optional(project, PLAN_PATH)),
+        (ASSET_MANIFEST_PATH.as_posix(), asset_manifest),
+    ]
+    seen: set[tuple[str, str, str]] = set()
+    for source_name, payload in sources:
+        for metadata_path, metadata in iter_asset_metadata(payload, source_name):
+            source_type = metadata.get("source_type")
+            if isinstance(source_type, str) and source_type in BLOCKED_ASSET_SOURCE_TYPES:
+                seen_key = ("asset_source_type_blocked", metadata_path, source_type)
+                if seen_key not in seen:
+                    issues.append(issue("asset_source_type_blocked", f"{metadata_path} uses blocked source_type={source_type!r}"))
+                    seen.add(seen_key)
+            source_ref = metadata.get("source_ref")
+            if isinstance(source_ref, str) and source_ref in BLOCKED_ASSET_SOURCE_REFS:
+                seen_key = ("asset_source_ref_blocked", metadata_path, source_ref)
+                if seen_key not in seen:
+                    issues.append(issue("asset_source_ref_blocked", f"{metadata_path} uses blocked source_ref={source_ref!r}"))
+                    seen.add(seen_key)
+            asset_kind = metadata.get("asset_kind")
+            if isinstance(asset_kind, str) and asset_kind in BLOCKED_ASSET_KINDS:
+                seen_key = ("asset_kind_blocked", metadata_path, asset_kind)
+                if seen_key not in seen:
+                    issues.append(issue("asset_kind_blocked", f"{metadata_path} uses blocked asset_kind={asset_kind!r}"))
+                    seen.add(seen_key)
+            license_value = metadata.get("license")
+            if isinstance(license_value, str) and license_value in BLOCKED_ASSET_LICENSES:
+                seen_key = ("asset_license_blocked", metadata_path, license_value)
+                if seen_key not in seen:
+                    issues.append(issue("asset_license_blocked", f"{metadata_path} uses blocked license={license_value!r}"))
+                    seen.add(seen_key)
+            if asset_record_requires_online_source(metadata):
+                source_url = metadata.get("source_url")
+                if not isinstance(source_url, str) or not source_url.strip():
+                    seen_key = ("asset_source_url_missing", metadata_path, "")
+                    if seen_key not in seen:
+                        issues.append(issue("asset_source_url_missing", f"{metadata_path} must include an http(s) source_url"))
+                        seen.add(seen_key)
+                elif not is_allowed_online_source_url(source_url):
+                    code = source_url_issue_code(source_url)
+                    seen_key = (code, metadata_path, source_url)
+                    if seen_key not in seen:
+                        issues.append(issue(code, f"{metadata_path} has non-online source_url={source_url!r}"))
+                        seen.add(seen_key)
+    return issues
 
 
 def file_sha256(path: Path) -> str:
@@ -205,22 +322,35 @@ def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
     acquired_count = int(asset_summary.get("acquired_count") or 0)
     local_file_count = int(asset_summary.get("local_file_count") or 0)
     mapped_token_count = int(asset_summary.get("mapped_token_count") or 0)
-    fulfilled_count = acquired_count + local_file_count + mapped_token_count
+    image_job_count = int(asset_summary.get("image_job_count") or 0)
+    fulfilled_count = acquired_count + mapped_token_count
     issues: list[dict[str, str]] = []
     if profile in STRICT_PROFILES and research_status in {"blocked_by_network", "skipped_by_user"}:
         issues.append(issue("research_missing_for_current_topic", f"research status is {research_status}"))
     if asset_status == "failed":
         issues.append(issue("asset_manifest_failed", "asset manifest status is failed"))
-    if profile in STRICT_PROFILES:
+    if profile in USER_VISIBLE_ASSET_PROFILES:
         contract_count = int(asset_summary.get("contract_count") or 0)
-        image_job_count = int(asset_summary.get("image_job_count") or 0)
         if contract_count > 0 and image_job_count > 0 and fulfilled_count == 0:
             issues.append(
                 issue(
                     "visual_asset_contracts_unfulfilled",
-                    "asset contracts produced image jobs but no acquired, local, or token-backed asset",
+                    "asset contracts produced image jobs but no acquired or token-backed online asset",
                 )
             )
+    if profile in USER_VISIBLE_ASSET_PROFILES:
+        issues.extend(user_visible_asset_issues(project, asset_manifest))
+    if profile == REAL_PREVIEW_PROFILE:
+        contract_count = int(asset_summary.get("contract_count") or 0)
+        planned_count = int(asset_summary.get("planned_image_count") or image_job_count or 0)
+        if asset_manifest.get("network_policy") == "offline":
+            issues.append(issue("real_preview_network_policy_offline", "local_real_preview cannot use offline asset acquisition"))
+        if asset_manifest.get("image_backend") == "none":
+            issues.append(issue("real_preview_image_backend_none", "local_real_preview cannot use image_backend=none"))
+        if contract_count == 0:
+            issues.append(issue("real_preview_asset_contracts_empty", "local_real_preview requires non-empty asset contracts"))
+        if fulfilled_count + planned_count == 0:
+            issues.append(issue("real_preview_visual_assets_missing", "local_real_preview requires acquired or token-backed online visual assets"))
     status = "failed" if issues else "skipped" if not source_receipt and not asset_manifest else "passed"
     return {
         "name": "online-readiness",
@@ -238,7 +368,7 @@ def load_online_readiness(project: Path, *, profile: str) -> dict[str, Any]:
         "asset_local_file_count": local_file_count,
         "asset_mapped_token_count": mapped_token_count,
         "asset_fallback_count": asset_summary.get("fallback_count"),
-        "image_job_count": asset_summary.get("image_job_count"),
+        "image_job_count": image_job_count,
     }
 
 
@@ -259,6 +389,31 @@ def plan_requires_chart_verify(project: Path) -> bool | None:
         contract = slide.get("chart_contract")
         if isinstance(contract, dict) and (contract.get("verify") == "required" or contract.get("precision") == "exact"):
             return True
+    return False
+
+
+def plan_declares_selection(project: Path) -> bool:
+    path = project / PLAN_PATH
+    if not path.exists():
+        return False
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(payload, dict):
+        return False
+    if payload.get("selection_receipt") or payload.get("palette_selection_receipt"):
+        return True
+    if isinstance(payload.get("project_palette"), dict) or isinstance(payload.get("project_theme"), dict):
+        return True
+    slides = payload.get("slides")
+    if isinstance(slides, list):
+        for slide in slides:
+            if not isinstance(slide, dict):
+                continue
+            spec = slide.get("canvas_spec")
+            if isinstance(spec, dict) and (spec.get("palette_id") or spec.get("selection_trace")):
+                return True
     return False
 
 
@@ -427,14 +582,18 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                 if not isinstance(page, dict):
                     check["issues"].append(issue("satori_bridge_page_invalid", "satori-bridge pages must be objects"))
                     continue
-                if page.get("semantic_source") != "CanvasSpec":
-                    check["issues"].append(issue("satori_bridge_semantic_source_invalid", "satori-bridge semantic_source must be CanvasSpec"))
-                if page.get("input_semantic_hash") != page.get("semantic_map_sha256"):
-                    check["issues"].append(issue("satori_bridge_input_semantic_hash_mismatch", "satori-bridge input_semantic_hash must match semantic_map_sha256"))
-                if page.get("compiler_input_type") != "SemanticMapIR":
-                    check["issues"].append(issue("satori_bridge_compiler_input_type_invalid", "satori-bridge compiler_input_type must be SemanticMapIR"))
-                if page.get("satori_svg_usage") != "preview_only":
-                    check["issues"].append(issue("satori_bridge_satori_usage_invalid", "satori-bridge satori_svg_usage must be preview_only"))
+                if page.get("semantic_source") != "SatoriSVG":
+                    check["issues"].append(issue("satori_bridge_semantic_source_invalid", "satori-bridge semantic_source must be SatoriSVG"))
+                if page.get("input_semantic_hash") != page.get("satori_svg_sha256"):
+                    check["issues"].append(issue("satori_bridge_input_semantic_hash_mismatch", "satori-bridge input_semantic_hash must match satori_svg_sha256"))
+                if page.get("compiler_input_type") != "RawSatoriSVG":
+                    check["issues"].append(issue("satori_bridge_compiler_input_type_invalid", "satori-bridge compiler_input_type must be RawSatoriSVG"))
+                if page.get("satori_svg_usage") != "compiler_input":
+                    check["issues"].append(issue("satori_bridge_satori_usage_invalid", "satori-bridge satori_svg_usage must be compiler_input"))
+                if page.get("compiler_input") != page.get("satori_svg"):
+                    check["issues"].append(issue("satori_bridge_compiler_input_path_invalid", "satori-bridge compiler_input must point to satori_svg"))
+                if page.get("compiler_input_sha256") != page.get("satori_svg_sha256"):
+                    check["issues"].append(issue("satori_bridge_compiler_input_hash_mismatch", "satori-bridge compiler_input_sha256 must match satori_svg_sha256"))
                 for path_key, hash_key in [
                     ("semantic_map", "semantic_map_sha256"),
                     ("node_layout_map", "node_layout_map_sha256"),
@@ -524,24 +683,24 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                 if not isinstance(artboard_receipt.get("font_hashes"), list) or not artboard_receipt.get("font_hashes"):
                     check["issues"].append(issue("generator_artboard_font_hash_missing", f"artboard receipt must include font_hashes: {item}"))
                 compiler = artboard_receipt.get("compiler") if isinstance(artboard_receipt.get("compiler"), dict) else {}
-                if compiler.get("semantic_source") != "CanvasSpec":
-                    check["issues"].append(issue("generator_artboard_compiler_semantic_source_invalid", f"artboard compiler semantic_source must be CanvasSpec: {item}"))
-                if compiler.get("compiler_input") != "SemanticMapIR":
-                    check["issues"].append(issue("generator_artboard_compiler_input_invalid", f"artboard compiler_input must be SemanticMapIR: {item}"))
-                if compiler.get("satori_svg_usage") != "preview_only":
-                    check["issues"].append(issue("generator_artboard_compiler_satori_usage_invalid", f"artboard compiler satori_svg_usage must be preview_only: {item}"))
-                if artboard_receipt.get("compiler_input") != artboard_receipt.get("semantic_map"):
-                    check["issues"].append(issue("generator_artboard_compiler_input_path_invalid", f"artboard compiler_input must point to semantic_map: {item}"))
+                if compiler.get("semantic_source") != "SatoriSVG":
+                    check["issues"].append(issue("generator_artboard_compiler_semantic_source_invalid", f"artboard compiler semantic_source must be SatoriSVG: {item}"))
+                if compiler.get("compiler_input") != "RawSatoriSVG":
+                    check["issues"].append(issue("generator_artboard_compiler_input_invalid", f"artboard compiler_input must be RawSatoriSVG: {item}"))
+                if compiler.get("satori_svg_usage") != "compiler_input":
+                    check["issues"].append(issue("generator_artboard_compiler_satori_usage_invalid", f"artboard compiler satori_svg_usage must be compiler_input: {item}"))
+                if artboard_receipt.get("compiler_input") != artboard_receipt.get("satori_svg"):
+                    check["issues"].append(issue("generator_artboard_compiler_input_path_invalid", f"artboard compiler_input must point to satori_svg: {item}"))
                 input_semantic_hash = artboard_receipt.get("input_semantic_hash")
-                semantic_map_sha256 = artboard_receipt.get("semantic_map_sha256")
+                satori_svg_sha256 = artboard_receipt.get("satori_svg_sha256")
                 if not isinstance(input_semantic_hash, str) or not input_semantic_hash:
                     check["issues"].append(issue("generator_artboard_input_semantic_hash_missing", f"artboard receipt must include input_semantic_hash: {item}"))
-                elif input_semantic_hash != semantic_map_sha256:
-                    check["issues"].append(issue("generator_artboard_input_semantic_hash_mismatch", f"artboard input_semantic_hash must match semantic_map_sha256: {item}"))
-                if artboard_receipt.get("compiler_input_sha256") != semantic_map_sha256:
-                    check["issues"].append(issue("generator_artboard_compiler_input_hash_mismatch", f"artboard compiler_input_sha256 must match semantic_map_sha256: {item}"))
-                if compiler.get("input_semantic_hash") != semantic_map_sha256:
-                    check["issues"].append(issue("generator_artboard_compiler_input_semantic_hash_mismatch", f"artboard compiler input_semantic_hash must match semantic_map_sha256: {item}"))
+                elif input_semantic_hash != satori_svg_sha256:
+                    check["issues"].append(issue("generator_artboard_input_semantic_hash_mismatch", f"artboard input_semantic_hash must match satori_svg_sha256: {item}"))
+                if artboard_receipt.get("compiler_input_sha256") != satori_svg_sha256:
+                    check["issues"].append(issue("generator_artboard_compiler_input_hash_mismatch", f"artboard compiler_input_sha256 must match satori_svg_sha256: {item}"))
+                if compiler.get("input_semantic_hash") != satori_svg_sha256:
+                    check["issues"].append(issue("generator_artboard_compiler_input_semantic_hash_mismatch", f"artboard compiler input_semantic_hash must match satori_svg_sha256: {item}"))
                 for path_key, artifact_schema, code in [
                     ("semantic_map", semantic_map_schema, "generator_artboard_semantic_map_schema_invalid"),
                     ("node_layout_map", node_layout_schema, "generator_artboard_node_layout_schema_invalid"),
@@ -556,7 +715,7 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
                         continue
                     schema_issues = svglide_schema.validate_json_schema(artifact, artifact_schema)
                     check["issues"].extend(issue(code, f"{rel} {schema_issue['path']}: {schema_issue['message']}") for schema_issue in schema_issues)
-                    if path_key == "semantic_map":
+                    if path_key == "semantic_map" and artifact.get("semantic_source") == "CanvasSpec":
                         svglide_rel = artboard_receipt.get("svglide_svg")
                         if isinstance(svglide_rel, str) and (project / svglide_rel).exists():
                             semantic_issues = svglide_semantic_map_ir.validate_semantic_map_against_svg(artifact, project / svglide_rel)
@@ -694,6 +853,8 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     checks.append(load_online_readiness(project, profile=profile))
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in REQUIRED_CHECKS)
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in THEME_REQUIRED_CHECKS)
+    selection_checks_required = plan_declares_selection(project) or any((project / rel).exists() for _, rel in SELECTION_CHECKS)
+    checks.extend(load_check(project, name, rel, required=selection_checks_required, profile=profile) for name, rel in SELECTION_CHECKS)
     generation_mode = generator_generation_mode(project)
     conditional_checks: list[tuple[str, Path]] = []
     if generation_mode == "artboard_satori":
@@ -721,8 +882,15 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     source_error_count = sum(check["error_count"] or 0 for check in checks)
     status = "failed" if failed_checks else "passed_with_waiver" if waiver_checks else "passed"
     output_path = project / CHECK_DIR / QUALITY_GATE_NAME
-    input_checks = REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + conditional_checks + ([CHART_VERIFY_CHECK] if chart_required else []) + OPTIONAL_CHECKS
+    active_selection_checks = [
+        item
+        for item in SELECTION_CHECKS
+        if selection_checks_required or (project / item[1]).exists()
+    ]
+    input_checks = REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + active_selection_checks + conditional_checks + ([CHART_VERIFY_CHECK] if chart_required else []) + OPTIONAL_CHECKS
     required_input_names = {item[0] for item in REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + conditional_checks}
+    if selection_checks_required:
+        required_input_names.update(item[0] for item in SELECTION_CHECKS)
     result = {
         "version": "svglide-quality-gate/v1",
         "project": str(project),
@@ -784,7 +952,7 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Evaluate SVGlide preflight and preview lint outputs.")
     parser.add_argument("project", help="SVGlide project directory containing 06-check/preflight.json and preview-lint.json")
-    parser.add_argument("--profile", default=PRODUCTION_PROFILE, choices=["production", "debug", "preview_only", "production_live"])
+    parser.add_argument("--profile", default=PRODUCTION_PROFILE, choices=["production", "debug", "fixture", "preview_only", "local_real_preview", "production_live"])
     parser.add_argument("--pretty", action="store_true", help="pretty-print JSON output")
     args = parser.parse_args(argv)
 

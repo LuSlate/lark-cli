@@ -1,0 +1,140 @@
+{
+  "schema_version": "svglide-selection-metadata-schema/v1",
+  "definitions": {
+    "non_empty_string_array": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "template_selection_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "best_for",
+        "avoid_for",
+        "industry_tags",
+        "occasion_tags",
+        "audience_tags",
+        "tone_tags",
+        "density",
+        "formality",
+        "content_shapes",
+        "visual_signature",
+        "required_assets",
+        "decorative_elements"
+      ],
+      "properties": {
+        "best_for": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "avoid_for": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "industry_tags": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "occasion_tags": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "audience_tags": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "tone_tags": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "density": {
+          "enum": [
+            "low",
+            "medium",
+            "medium-high",
+            "high"
+          ]
+        },
+        "formality": {
+          "enum": [
+            "low",
+            "medium",
+            "medium-high",
+            "high"
+          ]
+        },
+        "content_shapes": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "visual_signature": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "required_assets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "decorative_elements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "theme_selection_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "mood_tags",
+        "brand_affinity",
+        "primary_color_bias",
+        "contrast_profile",
+        "supported_template_ids",
+        "token_override_policy"
+      ],
+      "properties": {
+        "scheme": {
+          "enum": [
+            "light",
+            "dark",
+            "mixed"
+          ]
+        },
+        "mood_tags": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "brand_affinity": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "primary_color_bias": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "contrast_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supported_template_ids": {
+          "$ref": "#/definitions/non_empty_string_array"
+        },
+        "token_override_policy": {
+          "enum": [
+            "allowed",
+            "restricted",
+            "forbidden"
+          ]
+        }
+      }
+    }
+  }
+}

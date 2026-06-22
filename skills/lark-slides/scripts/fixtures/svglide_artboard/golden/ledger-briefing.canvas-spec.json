@@ -1,0 +1,66 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {
+    "width": 960,
+    "height": 540,
+    "viewBox": "0 0 960 540"
+  },
+  "safe_area": {
+    "x": 48,
+    "y": 40,
+    "width": 864,
+    "height": 460
+  },
+  "template_id": "ledger-briefing",
+  "theme_id": "ivory-ledger",
+  "theme": {
+    "colors": {
+      "background": "#FAFADF",
+      "panel": "#F5F0E4",
+      "primary": "#1A1A16",
+      "accent": "#5E5E54",
+      "text": "#1A1A16",
+      "muted": "#5E5E54"
+    }
+  },
+  "content": {
+    "eyebrow": "OPERATING LEDGER",
+    "title": "复盘事项账本",
+    "subtitle": "把结论、证据和 owner 放进克制的黑白账本结构。",
+    "items": [
+      "增长口径已统一",
+      "风险归因待复核",
+      "Owner 已明确",
+      "下周完成验证"
+    ],
+    "metrics": [
+      "Q2",
+      "18%",
+      "04"
+    ]
+  },
+  "semantic_elements": [
+    {
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "bbox": {
+        "x": 56,
+        "y": 80,
+        "width": 760,
+        "height": 120
+      }
+    }
+  ],
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "x": 48,
+      "y": 40,
+      "width": 864,
+      "height": 460
+    }
+  }
+}

@@ -24,6 +24,7 @@ def base_plan(title: str, archetype: str = "company_ecosystem") -> dict[str, obj
     return {
         "language": "zh-CN",
         "title": title,
+        "deck_intent": "sample",
         "audience": "业务负责人",
         "deck_structure": ["cover", "content", "closing"],
         "style_preset": "avocado_press",
@@ -139,6 +140,83 @@ class SVGlideStrategyReviewTest(unittest.TestCase):
             result = svglide_strategy_review.run_strategy_review(project)
 
             self.assertEqual(result["status"], "passed")
+
+    def test_full_deck_fails_for_four_page_sample_structure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            plan = base_plan("智谱和 MiniMax")
+            plan["deck_intent"] = "full_deck"
+            plan["target_slide_count"] = 10
+            plan["deck_structure"] = ["cover", "content", "content", "closing"]
+            plan["slides"].insert(
+                2,
+                {
+                    "page": 3,
+                    "page_type": "content",
+                    "section": "对比",
+                    "role": "comparison",
+                    "title": "能力路径对比",
+                    "key_message": "这是一条中文对比结论。",
+                    "body_points": ["中文证据一", "中文证据二"],
+                    "source_refs": ["item-002"],
+                    "renderer_id": "comparison_matrix",
+                    "layout_family": "matrix",
+                },
+            )
+            plan["slides"][3]["page"] = 4
+            write_json(project / "02-plan/slide_plan.json", plan)
+
+            result = svglide_strategy_review.run_strategy_review(project)
+
+        self.assertEqual(result["status"], "failed")
+        codes = {item["code"] for item in result["issues"]}
+        self.assertIn("full_deck_slide_count_too_low", codes)
+        self.assertIn("full_deck_minimal_sample_structure", codes)
+
+    def test_full_deck_passes_with_ten_page_narrative(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            plan = base_plan("智谱和 MiniMax")
+            plan["deck_intent"] = "full_deck"
+            plan["target_slide_count"] = 10
+            plan["deck_structure"] = ["cover", "content", "closing"]
+            titles = [
+                ("核心结论", "thesis", "核心结论是两家公司路径不同。"),
+                ("公司定位", "context", "公司定位决定产品路径。"),
+                ("模型能力对比", "comparison", "模型能力需要按场景比较。"),
+                ("产品入口", "evidence", "产品入口体现用户路径。"),
+                ("场景与用户路径", "evidence", "场景拆分能解释差异。"),
+                ("商业化与生态", "evidence", "生态协同影响交付。"),
+                ("安全治理与合规风险", "risk", "安全治理需要持续观察。"),
+                ("差异矩阵", "comparison", "差异矩阵帮助统一判断口径。"),
+            ]
+            slides = [plan["slides"][0]]
+            for index, (title, role, key_message) in enumerate(titles, start=2):
+                slides.append(
+                    {
+                        "page": index,
+                        "page_type": "content",
+                        "section": "正文",
+                        "role": role,
+                        "title": title,
+                        "key_message": key_message,
+                        "body_points": ["中文证据一", "中文证据二"],
+                        "source_refs": ["item-001"],
+                        "renderer_id": "ecosystem_wall" if index % 2 else "comparison_matrix",
+                        "layout_family": "ecosystem" if index % 2 else "matrix",
+                    }
+                )
+            closing = dict(plan["slides"][-1])
+            closing["page"] = 10
+            closing["title"] = "后续观察指标"
+            closing["key_message"] = "后续观察指标包括治理、合规和产品留存。"
+            slides.append(closing)
+            plan["slides"] = slides
+            write_json(project / "02-plan/slide_plan.json", plan)
+
+            result = svglide_strategy_review.run_strategy_review(project)
+
+        self.assertEqual(result["status"], "passed", result["issues"])
 
 
 if __name__ == "__main__":

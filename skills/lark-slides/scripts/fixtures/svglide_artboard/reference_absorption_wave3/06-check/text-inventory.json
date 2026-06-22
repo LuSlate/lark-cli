@@ -1,0 +1,195 @@
+{
+  "schema_version": "svglide-text-inventory/v1",
+  "generated_at": "2026-06-21T20:01:50.409471+00:00",
+  "slides": [
+    {
+      "page": 1,
+      "svg": "04-svg/prepared/page-001.svg",
+      "texts": [
+        {
+          "text": "ARCHITECTURE SPEC",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "系统架构规格",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "输入边界",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "处理结构",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "接口契约",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "交付节奏",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 2,
+      "svg": "04-svg/prepared/page-002.svg",
+      "texts": [
+        {
+          "text": "TREND INDEX",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "AI 应用趋势索引",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "模型成本压力",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "Agent 工作流成形",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "设计运营成熟",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "治理缺口扩大",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 3,
+      "svg": "04-svg/prepared/page-003.svg",
+      "texts": [
+        {
+          "text": "EDITORIAL NOTE",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "证据改变了决策",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "质量稳定",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "叙事更聚焦",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "证据仍需补齐",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 4,
+      "svg": "04-svg/prepared/page-004.svg",
+      "texts": [
+        {
+          "text": "POSTER CLAIM",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "现在就做判断",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "结论明确",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "证据充分",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        },
+        {
+          "text": "行动立即",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[3]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    }
+  ],
+  "summary": {
+    "slide_count": 4,
+    "text_count": 26,
+    "unmatched_text_count": 0
+  }
+}

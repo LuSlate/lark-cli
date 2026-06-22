@@ -1,0 +1,12 @@
+{
+  "artifact_root": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1",
+  "cli_git_commit": "551f333563f5a26ec9568ad8090a0f14a1a419c7",
+  "created_at": "2026-06-22T03:47:03+08:00",
+  "created_by": "lark-cli",
+  "deck_id": "reference_absorption_wave1",
+  "route": "svglide-svg",
+  "runner_version": "svglide-project-runner/v0",
+  "stage_graph": "svglide-workflow/v1",
+  "title": "reference_absorption_wave1",
+  "version": "svglide-project/v1"
+}

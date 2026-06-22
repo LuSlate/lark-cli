@@ -46,7 +46,7 @@
   "usage_page": 1,
   "placement_role": "cover | background | body_visual | inline_figure | closing",
   "query": "search phrase or image prompt seed",
-  "license": "owned | preview_unverified | generated | user_provided"
+  "license": "owned | user_provided | cc-by | cc0 | unsplash | pexels | pixabay | public_domain | internal_licensed"
 }
 ```
 
@@ -54,15 +54,26 @@
 
 `assets` stage 默认由 runner 传入 `--network-policy auto`，按以下顺序处理素材：
 
-1. 已有本地 `@./...` 文件或 `assets.json` file token。
-2. 外部 stage command 或用户预置文件。
+1. 已上传 file token 或带 `source_url`/license provenance 的线上缓存文件。
+2. 用户预置文件；用户可见 profile 中必须同时提供线上来源或明确 `user_provided` provenance。
 3. 可联网时下载 HTTP 图片或通过 provider 搜索图片。
-4. 配置 image backend 时写入 `03-assets/image-jobs.json`，由外部 backend 生成。
+4. 配置 image backend 时写入 `03-assets/image-jobs.json`，仅用于 debug/fixture 或离线开发；用户可见 profile 不把 planned/generated image 当作真实图片资产。
 5. 不能获取真实图片时记录 `svg_fallback`，生成阶段必须用 SVG-native component 兜底。
 
 测试、golden 和 CI 使用 `--network-policy fixture` 或 `--offline`，不得依赖真实网络。
 
 `image-jobs.json` 只记录 prompt 和 backend 计划，不要求主模型具备多模态能力，也不在 runner 内强制调用图片生成服务。
+
+## Local Real Preview Profile
+
+`local_real_preview` is the default profile for user-facing local generation that should demonstrate real SVGlide output quality without submitting to the Slides backend. In this profile:
+
+- `network_policy` must be `auto` or `online`.
+- `image_backend=none` is blocked.
+- `asset_contracts` must be non-empty.
+- The manifest must contain at least `asset_policy.minimum_visual_asset_count` acquired HTTP/internal assets or mapped file tokens; local-only files and planned image jobs do not count as real coverage.
+- Empty image placeholders and all-fallback asset manifests cannot be reported as a successful visual preview.
+- `preview_unverified`, `local_preview`, `local-generated-preview-asset`, `stage_command`, `data:` and `file:` sources are blocked for user-visible preview.
 
 ## Blocking Rules
 

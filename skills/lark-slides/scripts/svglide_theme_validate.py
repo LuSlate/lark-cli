@@ -127,6 +127,21 @@ def slide_template_id(slide: dict[str, Any]) -> str | None:
     return raw if isinstance(raw, str) and raw else None
 
 
+def theme_policy_allows_multi_theme(plan: dict[str, Any]) -> bool:
+    policy = plan.get("theme_policy")
+    if not isinstance(policy, dict):
+        return False
+    return policy.get("allow_multi_theme") is True
+
+
+def theme_policy_scope(plan: dict[str, Any]) -> str:
+    policy = plan.get("theme_policy")
+    if not isinstance(policy, dict):
+        return "deck"
+    raw = policy.get("scope")
+    return raw if isinstance(raw, str) and raw else "deck"
+
+
 def validate_project(project_root: Path) -> dict[str, Any]:
     project_root = project_root.resolve()
     plan_file = project_root / PLAN_PATH
@@ -134,6 +149,7 @@ def validate_project(project_root: Path) -> dict[str, Any]:
     pages: list[dict[str, Any]] = []
     theme_files: list[dict[str, str]] = []
     theme_file_seen: set[str] = set()
+    theme_ids_seen: set[str] = set()
     plan: dict[str, Any] = {}
     registry: dict[str, Any] = {}
     registry_path = svglide_theme.GLOBAL_THEME_REGISTRY
@@ -174,6 +190,7 @@ def validate_project(project_root: Path) -> dict[str, Any]:
         if not theme_id:
             page_issues.append(issue("theme_id_missing", "slide or canvas_spec must declare theme_id", page=index))
         else:
+            theme_ids_seen.add(theme_id)
             try:
                 theme = svglide_theme.load_theme(theme_id, project_root)
                 theme_hash = svglide_theme.theme_sha256(theme)
@@ -205,6 +222,23 @@ def validate_project(project_root: Path) -> dict[str, Any]:
         )
         issues.extend(page_issues)
 
+    if len(theme_ids_seen) > 1 and not theme_policy_allows_multi_theme(plan):
+        issues.append(
+            issue(
+                "deck_theme_not_unified",
+                "deck-level generation defaults to one unified theme; set theme_policy.allow_multi_theme=true only for an intentional multi-theme deck",
+                path="$.theme_policy.allow_multi_theme",
+            )
+        )
+    if len(theme_ids_seen) > 1 and theme_policy_scope(plan) == "deck" and theme_policy_allows_multi_theme(plan):
+        issues.append(
+            issue(
+                "deck_theme_scope_conflict",
+                "theme_policy.scope=deck conflicts with allow_multi_theme=true",
+                path="$.theme_policy.scope",
+            )
+        )
+
     status = "passed" if not issues else "failed"
     result = {
         "schema_version": SCHEMA_VERSION,
@@ -224,7 +258,12 @@ def validate_project(project_root: Path) -> dict[str, Any]:
         },
         "theme_files": theme_files,
         "pages": pages,
-        "summary": {"error_count": len(issues), "warning_count": 0, "page_count": len(pages), "theme_count": len(theme_files)},
+        "summary": {
+            "error_count": len(issues),
+            "warning_count": 0,
+            "page_count": len(pages),
+            "theme_count": len(theme_ids_seen),
+        },
         "issues": issues,
         "output_path": CHECK_PATH.as_posix(),
     }

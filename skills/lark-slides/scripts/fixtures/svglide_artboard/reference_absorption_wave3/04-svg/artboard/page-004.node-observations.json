@@ -1,0 +1,144 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 48,
+      "top": 48,
+      "width": 864,
+      "height": 444,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 72,
+      "width": 120,
+      "height": 21,
+      "type": "div",
+      "textContent": "POSTER CLAIM",
+      "props": {}
+    },
+    {
+      "left": 70,
+      "top": 104,
+      "width": 610,
+      "height": 59,
+      "type": "div",
+      "textContent": "现在就做判断",
+      "props": {}
+    },
+    {
+      "left": 694,
+      "top": 96,
+      "width": 184,
+      "height": 101,
+      "type": "div",
+      "textContent": "3X",
+      "props": {}
+    },
+    {
+      "left": 74,
+      "top": 272,
+      "width": 470,
+      "height": 52,
+      "type": "div",
+      "textContent": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+      "props": {}
+    },
+    {
+      "left": 74,
+      "top": 378,
+      "width": 782,
+      "height": 86,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 74,
+      "top": 378,
+      "width": 250,
+      "height": 86,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 74,
+      "top": 393,
+      "width": 32,
+      "height": 65,
+      "type": "div",
+      "textContent": "01",
+      "props": {}
+    },
+    {
+      "left": 106,
+      "top": 393,
+      "width": 80,
+      "height": 71,
+      "type": "div",
+      "textContent": "结论明确",
+      "props": {}
+    },
+    {
+      "left": 340,
+      "top": 378,
+      "width": 250,
+      "height": 86,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 340,
+      "top": 393,
+      "width": 32,
+      "height": 65,
+      "type": "div",
+      "textContent": "02",
+      "props": {}
+    },
+    {
+      "left": 372,
+      "top": 393,
+      "width": 80,
+      "height": 71,
+      "type": "div",
+      "textContent": "证据充分",
+      "props": {}
+    },
+    {
+      "left": 606,
+      "top": 378,
+      "width": 250,
+      "height": 86,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 606,
+      "top": 393,
+      "width": 32,
+      "height": 65,
+      "type": "div",
+      "textContent": "03",
+      "props": {}
+    },
+    {
+      "left": 638,
+      "top": 393,
+      "width": 80,
+      "height": 71,
+      "type": "div",
+      "textContent": "行动立即",
+      "props": {}
+    }
+  ]
+}

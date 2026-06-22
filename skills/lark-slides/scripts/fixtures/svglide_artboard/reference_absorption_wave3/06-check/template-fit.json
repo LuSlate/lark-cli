@@ -1,0 +1,67 @@
+{
+  "schema_version": "svglide-template-fit/v1",
+  "stage": "template-fit-check",
+  "status": "passed",
+  "action": "create_live",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "generator_receipt": "receipts/generate_svg.json",
+    "generator_receipt_sha256": "6c37913fd602030859830c21b874429159ff998696915db69f2a48db037a3016",
+    "artboard_receipts": [
+      "04-svg/artboard/page-001.receipt.json",
+      "04-svg/artboard/page-002.receipt.json",
+      "04-svg/artboard/page-003.receipt.json",
+      "04-svg/artboard/page-004.receipt.json"
+    ],
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "fb65d4355df08b29cb8dac4a6442c71b79528e6ac24b67dd9bac03ab9226fae2",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/stone-architect.json"
+    ]
+  },
+  "pages": [
+    {
+      "page": 1,
+      "artboard_receipt": "04-svg/artboard/page-001.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "e12450ec5f6395b5ab5d8eadc0d218410c4556a6e05cfa681c2c06bec5c6359a",
+      "node_count": 18,
+      "error_count": 0
+    },
+    {
+      "page": 2,
+      "artboard_receipt": "04-svg/artboard/page-002.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "43afdbd8ebe8df05c543fbb7c5db33293825c999e0f54ec4144471f5f9be1e7f",
+      "node_count": 18,
+      "error_count": 0
+    },
+    {
+      "page": 3,
+      "artboard_receipt": "04-svg/artboard/page-003.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "7276f86a7bedea1bd89f7fe18bc5c1a784b0ab37cc710c1cb981878b9293ae8c",
+      "node_count": 16,
+      "error_count": 0
+    },
+    {
+      "page": 4,
+      "artboard_receipt": "04-svg/artboard/page-004.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+      "node_layout_map_sha256": "4aa2819ae8d44392e0a9b490578c29a3a05304290b3cb6a2480a8cdc67c34b60",
+      "node_count": 16,
+      "error_count": 0
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "page_count": 4
+  },
+  "issues": [],
+  "output_path": "06-check/template-fit.json",
+  "receipt_path": "receipts/template-fit-check.json"
+}

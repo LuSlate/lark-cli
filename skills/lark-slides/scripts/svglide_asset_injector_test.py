@@ -278,7 +278,7 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
         self.assertLess(svg.index('data-node-id="asset-slot-page"'), svg.index('data-svglide-asset-id="figure"'))
         self.assertLess(svg.index('data-svglide-asset-id="figure"'), svg.index('data-node-id="image-label"'))
 
-    def test_body_visual_without_slot_uses_ambient_fallback(self) -> None:
+    def test_body_visual_without_slot_uses_ambient_overlay_fallback(self) -> None:
         project = self.make_project()
         self.write_svg(project, 1, '<rect x="0" y="0" width="960" height="540" fill="#10201A"/><text>Title</text>')
         asset_file = self.write_asset(project)
@@ -307,12 +307,14 @@ class SVGlideAssetInjectorTest(unittest.TestCase):
 
         self.assertEqual(result["used_count"], 1)
         self.assertEqual(result["by_page"][0]["status"], "injected")
-        self.assertEqual(result["by_page"][0]["renderer_id"], "ambient_asset_background")
-        self.assertEqual(result["by_page"][0]["slot_strategy"], "ambient_fallback")
-        self.assertIn('data-svglide-slot-strategy="ambient_fallback"', svg)
+        self.assertEqual(result["by_page"][0]["renderer_id"], "ambient_asset_overlay")
+        self.assertEqual(result["by_page"][0]["slot_strategy"], "ambient_overlay_fallback")
+        self.assertIn('data-svglide-slot-strategy="ambient_overlay_fallback"', svg)
         self.assertIn('href="@./03-assets/raw/hero.png"', svg)
+        self.assertIn('id="svglide-asset-image-market-signal" href="@./03-assets/raw/hero.png" x="0" y="0" width="960" height="540" preserveAspectRatio="xMidYMid slice" opacity="0.34"', svg)
         self.assertIn('fill="#10201A"', svg)
         self.assertIn("<text>Title</text>", svg)
+        self.assertLess(svg.index("<text>Title</text>"), svg.index('data-svglide-asset-id="market-signal"'))
 
 
 if __name__ == "__main__":

@@ -6,165 +6,2762 @@
       "status": "active",
       "renderer_id": "artboard_satori.cover-hero",
       "layout_family": "cover",
-      "required_content": ["title"],
-      "optional_content": ["eyebrow", "subtitle", "chips"],
-      "max_items": {"chips": 4},
-      "text_budget": {"eyebrow": 28, "title": 32, "subtitle": 80, "chips": 16},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "chips"
+      ],
+      "max_items": {
+        "chips": 4
+      },
+      "text_budget": {
+        "eyebrow": 28,
+        "title": 32,
+        "subtitle": 80,
+        "chips": 16
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "opening narrative",
+          "brand story",
+          "product launch"
+        ],
+        "avoid_for": [
+          "formal audit committee"
+        ],
+        "industry_tags": [
+          "brand",
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "opening narrative",
+          "brand story",
+          "product launch"
+        ],
+        "audience_tags": [
+          "executive",
+          "customer",
+          "internal"
+        ],
+        "tone_tags": [
+          "bold",
+          "narrative",
+          "structured"
+        ],
+        "density": "medium",
+        "formality": "medium-high",
+        "content_shapes": [
+          "cover hero",
+          "big claim"
+        ],
+        "visual_signature": [
+          "hero typography",
+          "large title"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "decorative rule",
+          "background panel"
+        ]
+      }
     },
     {
       "id": "comparison-cards",
       "status": "active",
       "renderer_id": "artboard_satori.comparison-cards",
       "layout_family": "comparison",
-      "required_content": ["title", "left_title", "right_title", "left_points", "right_points"],
-      "optional_content": ["conclusion"],
-      "max_items": {"left_points": 3, "right_points": 3},
-      "text_budget": {"title": 36, "left_title": 16, "right_title": 16, "left_points": 22, "right_points": 22, "conclusion": 52},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "left_title",
+        "right_title",
+        "left_points",
+        "right_points"
+      ],
+      "optional_content": [
+        "conclusion"
+      ],
+      "max_items": {
+        "left_points": 3,
+        "right_points": 3
+      },
+      "text_budget": {
+        "title": 36,
+        "left_title": 16,
+        "right_title": 16,
+        "left_points": 22,
+        "right_points": 22,
+        "conclusion": 52
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "competitive analysis",
+          "business review",
+          "technical comparison"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "competitive analysis",
+          "business review",
+          "technical comparison"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive",
+          "customer"
+        ],
+        "tone_tags": [
+          "analytical",
+          "comparative",
+          "structured"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "comparison matrix",
+          "versus",
+          "feature matrix"
+        ],
+        "visual_signature": [
+          "two column",
+          "balanced cards"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "divider rule"
+        ]
+      }
     },
     {
       "id": "summary-final",
       "status": "active",
       "renderer_id": "artboard_satori.summary-final",
       "layout_family": "closing",
-      "required_content": ["title"],
-      "optional_content": ["eyebrow", "subtitle", "takeaways"],
-      "max_items": {"takeaways": 3},
-      "text_budget": {"eyebrow": 20, "title": 34, "subtitle": 76, "takeaways": 24},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "takeaways"
+      ],
+      "max_items": {
+        "takeaways": 3
+      },
+      "text_budget": {
+        "eyebrow": 20,
+        "title": 34,
+        "subtitle": 76,
+        "takeaways": 24
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "summary",
+          "decision review",
+          "business review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "summary",
+          "decision review",
+          "business review"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive"
+        ],
+        "tone_tags": [
+          "clear",
+          "controlled",
+          "conclusive"
+        ],
+        "density": "medium",
+        "formality": "medium-high",
+        "content_shapes": [
+          "takeaways",
+          "action plan"
+        ],
+        "visual_signature": [
+          "summary stack"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "closing rule"
+        ]
+      }
     },
     {
       "id": "section-title",
       "status": "active",
       "renderer_id": "artboard_satori.section-title",
       "layout_family": "section",
-      "required_content": ["title"],
-      "optional_content": ["eyebrow", "subtitle"],
+      "required_content": [
+        "title"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
       "max_items": {},
-      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 72},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 34,
+        "subtitle": 72
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "section divider",
+          "strategy offsite",
+          "business review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "section divider",
+          "strategy offsite",
+          "business review"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive"
+        ],
+        "tone_tags": [
+          "structured",
+          "clean"
+        ],
+        "density": "low",
+        "formality": "medium-high",
+        "content_shapes": [
+          "section divider",
+          "transition"
+        ],
+        "visual_signature": [
+          "large heading"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "section rule"
+        ]
+      }
     },
     {
       "id": "agenda-list",
       "status": "active",
       "renderer_id": "artboard_satori.agenda-list",
       "layout_family": "agenda",
-      "required_content": ["title", "items"],
-      "optional_content": ["eyebrow", "subtitle"],
-      "max_items": {"items": 6},
-      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 72, "items": 28},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "items"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "items": 6
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 36,
+        "subtitle": 72,
+        "items": 28
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "workshop",
+          "business review",
+          "planning"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "workshop",
+          "business review",
+          "planning"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive"
+        ],
+        "tone_tags": [
+          "structured",
+          "instructional"
+        ],
+        "density": "medium",
+        "formality": "medium-high",
+        "content_shapes": [
+          "agenda",
+          "checklist",
+          "steps"
+        ],
+        "visual_signature": [
+          "ordered list"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "number markers"
+        ]
+      }
     },
     {
       "id": "timeline-steps",
       "status": "active",
       "renderer_id": "artboard_satori.timeline-steps",
       "layout_family": "timeline",
-      "required_content": ["title", "events"],
-      "optional_content": ["eyebrow", "subtitle"],
-      "max_items": {"events": 5},
-      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 72, "events": 22},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "events"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "events": 5
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 36,
+        "subtitle": 72,
+        "events": 22
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "postmortem",
+          "roadmap",
+          "retrospective"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "postmortem",
+          "roadmap",
+          "retrospective"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive"
+        ],
+        "tone_tags": [
+          "structured",
+          "analytical"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "timeline",
+          "milestone",
+          "phase"
+        ],
+        "visual_signature": [
+          "timeline path"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "connector line"
+        ]
+      }
     },
     {
       "id": "process-flow",
       "status": "active",
       "renderer_id": "artboard_satori.process-flow",
       "layout_family": "process",
-      "required_content": ["title", "steps"],
-      "optional_content": ["eyebrow", "subtitle", "conclusion"],
-      "max_items": {"steps": 5},
-      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 72, "steps": 24, "conclusion": 56},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "steps"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "conclusion"
+      ],
+      "max_items": {
+        "steps": 5
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 36,
+        "subtitle": 72,
+        "steps": 24,
+        "conclusion": 56
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "workflow",
+          "action plan",
+          "postmortem"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "workflow",
+          "action plan",
+          "postmortem"
+        ],
+        "audience_tags": [
+          "internal",
+          "operator"
+        ],
+        "tone_tags": [
+          "instructional",
+          "structured"
+        ],
+        "density": "medium-high",
+        "formality": "medium",
+        "content_shapes": [
+          "process",
+          "steps",
+          "owner action"
+        ],
+        "visual_signature": [
+          "flow nodes"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "connector line"
+        ]
+      }
     },
     {
       "id": "metric-dashboard",
       "status": "active",
       "renderer_id": "artboard_satori.metric-dashboard",
       "layout_family": "dashboard",
-      "required_content": ["title", "metrics"],
-      "optional_content": ["eyebrow", "subtitle"],
-      "max_items": {"metrics": 6},
-      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 68, "metrics": 20},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "metrics"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "metrics": 6
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 34,
+        "subtitle": 68,
+        "metrics": 20
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "business review",
+          "internal review",
+          "operating review"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "business review",
+          "internal review",
+          "operating review"
+        ],
+        "audience_tags": [
+          "executive",
+          "internal"
+        ],
+        "tone_tags": [
+          "analytical",
+          "controlled",
+          "professional"
+        ],
+        "density": "high",
+        "formality": "high",
+        "content_shapes": [
+          "dashboard",
+          "metrics",
+          "scorecard",
+          "trend"
+        ],
+        "visual_signature": [
+          "metric cards",
+          "grid"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "grid line",
+          "section rule"
+        ]
+      }
     },
     {
       "id": "quote-focus",
       "status": "active",
       "renderer_id": "artboard_satori.quote-focus",
       "layout_family": "quote",
-      "required_content": ["title", "quote"],
-      "optional_content": ["attribution"],
+      "required_content": [
+        "title",
+        "quote"
+      ],
+      "optional_content": [
+        "attribution"
+      ],
       "max_items": {},
-      "text_budget": {"title": 36, "quote": 88, "attribution": 36},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "text_budget": {
+        "title": 36,
+        "quote": 88,
+        "attribution": 36
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "editorial feature",
+          "insight review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "editorial feature",
+          "insight review"
+        ],
+        "audience_tags": [
+          "internal",
+          "customer"
+        ],
+        "tone_tags": [
+          "narrative",
+          "editorial"
+        ],
+        "density": "low",
+        "formality": "medium-high",
+        "content_shapes": [
+          "quote",
+          "claim"
+        ],
+        "visual_signature": [
+          "pull quote"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "quote mark"
+        ]
+      }
     },
     {
       "id": "image-feature",
       "status": "active",
       "renderer_id": "artboard_satori.image-feature",
       "layout_family": "image_text",
-      "required_content": ["title", "points"],
-      "optional_content": ["eyebrow", "subtitle", "image_label", "caption"],
-      "max_items": {"points": 3},
-      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 64, "points": 24, "caption": 52, "image_label": 18},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "points"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "image_label",
+        "caption"
+      ],
+      "max_items": {
+        "points": 3
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 34,
+        "subtitle": 64,
+        "points": 24,
+        "caption": 52,
+        "image_label": 18
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "brand story",
+          "image story",
+          "case study"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "occasion_tags": [
+          "brand story",
+          "image story",
+          "case study"
+        ],
+        "audience_tags": [
+          "customer",
+          "internal"
+        ],
+        "tone_tags": [
+          "narrative",
+          "polished"
+        ],
+        "density": "medium",
+        "formality": "medium",
+        "content_shapes": [
+          "image story",
+          "evidence cards"
+        ],
+        "visual_signature": [
+          "image and text split"
+        ],
+        "required_assets": [
+          "image"
+        ],
+        "decorative_elements": [
+          "image frame"
+        ]
+      }
     },
     {
       "id": "research-poster",
       "status": "active",
       "renderer_id": "artboard_satori.research-poster",
       "layout_family": "poster",
-      "required_content": ["title", "sections"],
-      "optional_content": ["eyebrow", "authors", "key_visual"],
-      "max_items": {"sections": 6},
-      "text_budget": {"eyebrow": 24, "title": 42, "authors": 48, "sections": 22, "key_visual": 28},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "sections"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "authors",
+        "key_visual"
+      ],
+      "max_items": {
+        "sections": 6
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 42,
+        "authors": 48,
+        "sections": 22,
+        "key_visual": 28
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "research poster",
+          "academic conference"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business",
+          "research"
+        ],
+        "occasion_tags": [
+          "research poster",
+          "academic conference"
+        ],
+        "audience_tags": [
+          "academic",
+          "public"
+        ],
+        "tone_tags": [
+          "structured",
+          "scholarly"
+        ],
+        "density": "high",
+        "formality": "high",
+        "content_shapes": [
+          "research poster",
+          "method",
+          "findings"
+        ],
+        "visual_signature": [
+          "poster grid"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "section rule"
+        ]
+      }
     },
     {
       "id": "data-story",
       "status": "active",
       "renderer_id": "artboard_satori.data-story",
       "layout_family": "data_story",
-      "required_content": ["title", "metrics"],
-      "optional_content": ["eyebrow", "subtitle", "callout"],
-      "max_items": {"metrics": 4},
-      "text_budget": {"eyebrow": 24, "title": 34, "subtitle": 64, "metrics": 18, "callout": 48},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "metrics"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "callout"
+      ],
+      "max_items": {
+        "metrics": 4
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 34,
+        "subtitle": 64,
+        "metrics": 18,
+        "callout": 48
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "business review",
+          "investor update",
+          "operating review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "business review",
+          "investor update",
+          "operating review"
+        ],
+        "audience_tags": [
+          "executive",
+          "investor",
+          "internal"
+        ],
+        "tone_tags": [
+          "analytical",
+          "polished"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "metrics",
+          "trend",
+          "diagnosis"
+        ],
+        "visual_signature": [
+          "data callout"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "chart rule"
+        ]
+      }
     },
     {
       "id": "risk-alert",
       "status": "active",
       "renderer_id": "artboard_satori.risk-alert",
       "layout_family": "risk",
-      "required_content": ["title", "risks"],
-      "optional_content": ["eyebrow", "subtitle", "summary", "severity"],
-      "max_items": {"risks": 4},
-      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 64, "risks": 28, "summary": 52, "severity": 8},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "risks"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "summary",
+        "severity"
+      ],
+      "max_items": {
+        "risks": 4
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 36,
+        "subtitle": 64,
+        "risks": 28,
+        "summary": 52,
+        "severity": 8
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "security review",
+          "postmortem",
+          "regulatory update"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business",
+          "governance"
+        ],
+        "occasion_tags": [
+          "security review",
+          "postmortem",
+          "regulatory update"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive",
+          "audit"
+        ],
+        "tone_tags": [
+          "serious",
+          "controlled"
+        ],
+        "density": "medium-high",
+        "formality": "high",
+        "content_shapes": [
+          "risk matrix",
+          "controls",
+          "remediation"
+        ],
+        "visual_signature": [
+          "alert blocks"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "alert badge"
+        ]
+      }
     },
     {
       "id": "roadmap-lanes",
       "status": "active",
       "renderer_id": "artboard_satori.roadmap-lanes",
       "layout_family": "roadmap",
-      "required_content": ["title", "lanes"],
-      "optional_content": ["eyebrow", "subtitle"],
-      "max_items": {"lanes": 4},
-      "text_budget": {"eyebrow": 24, "title": 36, "subtitle": 64, "lanes": 18},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "lanes"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "lanes": 4
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 36,
+        "subtitle": 64,
+        "lanes": 18
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "strategy offsite",
+          "operating review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "strategy offsite",
+          "operating review"
+        ],
+        "audience_tags": [
+          "executive",
+          "internal"
+        ],
+        "tone_tags": [
+          "pragmatic",
+          "structured"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "roadmap",
+          "quarterly priorities",
+          "owner action"
+        ],
+        "visual_signature": [
+          "lane roadmap"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "lane rule"
+        ]
+      }
     },
     {
       "id": "architecture-blueprint",
       "status": "active",
       "renderer_id": "artboard_satori.architecture-blueprint",
       "layout_family": "architecture",
-      "required_content": ["title", "nodes"],
-      "optional_content": ["eyebrow", "subtitle"],
-      "max_items": {"nodes": 6},
-      "text_budget": {"eyebrow": 24, "title": 38, "subtitle": 64, "nodes": 22},
-      "supported_theme_ids": ["dark-clarity", "forest-signal", "warm-editorial", "blueprint-technical", "editorial-tritone", "cobalt-grid", "finance-dark", "swiss-red", "glass-neon", "paper-research"]
+      "required_content": [
+        "title",
+        "nodes"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "nodes": 6
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 38,
+        "subtitle": 64,
+        "nodes": 22
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "svglide-baseline.templates"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/templates.json",
+      "selection_metadata": {
+        "best_for": [
+          "technical architecture",
+          "system design"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "technical architecture",
+          "system design"
+        ],
+        "audience_tags": [
+          "technical",
+          "internal"
+        ],
+        "tone_tags": [
+          "technical",
+          "structured"
+        ],
+        "density": "high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "architecture",
+          "dependency map",
+          "nodes"
+        ],
+        "visual_signature": [
+          "blueprint diagram"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "grid line"
+        ]
+      }
+    },
+    {
+      "id": "dense-panel-grid",
+      "status": "active",
+      "renderer_id": "artboard_satori.dense-panel-grid",
+      "layout_family": "dense_grid",
+      "required_content": [
+        "title",
+        "metrics"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "notes"
+      ],
+      "max_items": {
+        "metrics": 6,
+        "notes": 3
+      },
+      "text_budget": {
+        "eyebrow": 20,
+        "title": 42,
+        "subtitle": 74,
+        "metrics": 18,
+        "notes": 32
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.neo-grid-bold.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json",
+      "selection_metadata": {
+        "best_for": [
+          "business review",
+          "operating review",
+          "technical analysis"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "business review",
+          "operating review",
+          "technical analysis"
+        ],
+        "audience_tags": [
+          "executive",
+          "internal"
+        ],
+        "tone_tags": [
+          "technical",
+          "analytical",
+          "structured"
+        ],
+        "density": "high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "dense grid",
+          "panel grid",
+          "metrics",
+          "dashboard"
+        ],
+        "visual_signature": [
+          "dense panels"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "grid line"
+        ]
+      }
+    },
+    {
+      "id": "executive-dashboard",
+      "status": "active",
+      "renderer_id": "artboard_satori.executive-dashboard",
+      "layout_family": "dashboard",
+      "required_content": [
+        "title",
+        "metrics"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "bars",
+        "chart_title"
+      ],
+      "max_items": {
+        "metrics": 6,
+        "bars": 4
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 42,
+        "subtitle": 76,
+        "metrics": 20,
+        "bars": 22,
+        "chart_title": 24
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.blue-professional.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/blue-professional.executive-dashboard.json",
+      "selection_metadata": {
+        "best_for": [
+          "business review",
+          "internal review",
+          "operating review"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "business review",
+          "internal review",
+          "operating review"
+        ],
+        "audience_tags": [
+          "executive",
+          "internal"
+        ],
+        "tone_tags": [
+          "analytical",
+          "controlled",
+          "professional"
+        ],
+        "density": "high",
+        "formality": "high",
+        "content_shapes": [
+          "dashboard",
+          "metrics",
+          "scorecard",
+          "trend"
+        ],
+        "visual_signature": [
+          "metric cards",
+          "grid"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "grid line",
+          "section rule"
+        ]
+      }
+    },
+    {
+      "id": "editorial-quote-chart",
+      "status": "active",
+      "renderer_id": "artboard_satori.editorial-quote-chart",
+      "layout_family": "quote_chart",
+      "required_content": [
+        "quote",
+        "points"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "section",
+        "attribution",
+        "title"
+      ],
+      "max_items": {
+        "points": 3
+      },
+      "text_budget": {
+        "eyebrow": 18,
+        "section": 18,
+        "quote": 96,
+        "points": 36,
+        "attribution": 48,
+        "title": 72
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.broadside.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json",
+      "selection_metadata": {
+        "best_for": [
+          "editorial feature",
+          "data story"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "editorial feature",
+          "data story"
+        ],
+        "audience_tags": [
+          "internal",
+          "customer"
+        ],
+        "tone_tags": [
+          "editorial",
+          "analytical"
+        ],
+        "density": "medium",
+        "formality": "medium-high",
+        "content_shapes": [
+          "quote",
+          "chart",
+          "insight"
+        ],
+        "visual_signature": [
+          "quote chart"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "vertical rule"
+        ]
+      }
+    },
+    {
+      "id": "ledger-briefing",
+      "status": "active",
+      "renderer_id": "artboard_satori.ledger-briefing",
+      "layout_family": "ledger",
+      "required_content": [
+        "title",
+        "items"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "metrics"
+      ],
+      "max_items": {
+        "items": 5,
+        "metrics": 3
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 36,
+        "subtitle": 70,
+        "items": 28,
+        "metrics": 12
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json",
+      "selection_metadata": {
+        "best_for": [
+          "business review",
+          "audit committee",
+          "decision review"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business",
+          "governance"
+        ],
+        "occasion_tags": [
+          "business review",
+          "audit committee",
+          "decision review"
+        ],
+        "audience_tags": [
+          "executive",
+          "audit",
+          "internal"
+        ],
+        "tone_tags": [
+          "serious",
+          "controlled"
+        ],
+        "density": "medium-high",
+        "formality": "high",
+        "content_shapes": [
+          "ledger",
+          "table",
+          "decision rows"
+        ],
+        "visual_signature": [
+          "ledger rows"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "hairline rule"
+        ]
+      }
+    },
+    {
+      "id": "intelligence-brief",
+      "status": "active",
+      "renderer_id": "artboard_satori.intelligence-brief",
+      "layout_family": "briefing",
+      "required_content": [
+        "title",
+        "points"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "date"
+      ],
+      "max_items": {
+        "points": 4
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 38,
+        "subtitle": 78,
+        "date": 20,
+        "points": 34
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.signal.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json",
+      "selection_metadata": {
+        "best_for": [
+          "intelligence brief",
+          "strategy review",
+          "security review"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business",
+          "governance"
+        ],
+        "occasion_tags": [
+          "intelligence brief",
+          "strategy review",
+          "security review"
+        ],
+        "audience_tags": [
+          "executive",
+          "internal"
+        ],
+        "tone_tags": [
+          "serious",
+          "controlled"
+        ],
+        "density": "medium-high",
+        "formality": "high",
+        "content_shapes": [
+          "briefing",
+          "risk matrix",
+          "action plan"
+        ],
+        "visual_signature": [
+          "briefing stack"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "chrome bar"
+        ]
+      }
+    },
+    {
+      "id": "printed-program",
+      "status": "active",
+      "renderer_id": "artboard_satori.printed-program",
+      "layout_family": "program",
+      "required_content": [
+        "title",
+        "items"
+      ],
+      "optional_content": [
+        "edition",
+        "subtitle",
+        "footer"
+      ],
+      "max_items": {
+        "items": 5
+      },
+      "text_budget": {
+        "edition": 18,
+        "title": 30,
+        "subtitle": 72,
+        "items": 24,
+        "footer": 28
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.long-table.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json",
+      "selection_metadata": {
+        "best_for": [
+          "planning",
+          "workshop",
+          "operating review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "planning",
+          "workshop",
+          "operating review"
+        ],
+        "audience_tags": [
+          "internal"
+        ],
+        "tone_tags": [
+          "procedural",
+          "structured"
+        ],
+        "density": "high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "program",
+          "table",
+          "agenda"
+        ],
+        "visual_signature": [
+          "program rows"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "row divider"
+        ]
+      }
+    },
+    {
+      "id": "retro-ui-dashboard",
+      "status": "active",
+      "renderer_id": "artboard_satori.retro-ui-dashboard",
+      "layout_family": "retro_ui",
+      "required_content": [
+        "title",
+        "panels"
+      ],
+      "optional_content": [
+        "subtitle",
+        "window_title",
+        "status"
+      ],
+      "max_items": {
+        "panels": 4
+      },
+      "text_budget": {
+        "window_title": 20,
+        "title": 32,
+        "subtitle": 72,
+        "panels": 28,
+        "status": 20
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json",
+      "selection_metadata": {
+        "best_for": [
+          "product history",
+          "retro campaign",
+          "dashboard"
+        ],
+        "avoid_for": [
+          "formal audit committee"
+        ],
+        "industry_tags": [
+          "brand",
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "product history",
+          "retro campaign",
+          "dashboard"
+        ],
+        "audience_tags": [
+          "internal",
+          "customer"
+        ],
+        "tone_tags": [
+          "retro",
+          "graphic"
+        ],
+        "density": "medium-high",
+        "formality": "medium",
+        "content_shapes": [
+          "dashboard",
+          "campaign",
+          "status panels"
+        ],
+        "visual_signature": [
+          "window panels"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "title bar"
+        ]
+      }
+    },
+    {
+      "id": "product-ribbon",
+      "status": "active",
+      "renderer_id": "artboard_satori.product-ribbon",
+      "layout_family": "catalog",
+      "required_content": [
+        "title",
+        "cards"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "seal"
+      ],
+      "max_items": {
+        "cards": 4
+      },
+      "text_budget": {
+        "eyebrow": 22,
+        "title": 30,
+        "subtitle": 72,
+        "cards": 18,
+        "seal": 8
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json",
+      "selection_metadata": {
+        "best_for": [
+          "product launch",
+          "brand deck",
+          "catalog"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "brand",
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "product launch",
+          "brand deck",
+          "catalog"
+        ],
+        "audience_tags": [
+          "customer",
+          "internal"
+        ],
+        "tone_tags": [
+          "playful",
+          "polished"
+        ],
+        "density": "medium",
+        "formality": "medium",
+        "content_shapes": [
+          "catalog",
+          "product cards",
+          "brand system"
+        ],
+        "visual_signature": [
+          "ribbon cards"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "ribbon band"
+        ]
+      }
+    },
+    {
+      "id": "type-mass-poster",
+      "status": "active",
+      "renderer_id": "artboard_satori.type-mass-poster",
+      "layout_family": "poster_statement",
+      "required_content": [
+        "title"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "notes",
+        "counter"
+      ],
+      "max_items": {
+        "notes": 3
+      },
+      "text_budget": {
+        "eyebrow": 22,
+        "title": 28,
+        "subtitle": 72,
+        "notes": 22,
+        "counter": 8
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json",
+      "selection_metadata": {
+        "best_for": [
+          "brand deck",
+          "product launch",
+          "campaign"
+        ],
+        "avoid_for": [
+          "formal audit committee"
+        ],
+        "industry_tags": [
+          "brand",
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "brand deck",
+          "product launch",
+          "campaign"
+        ],
+        "audience_tags": [
+          "public",
+          "customer"
+        ],
+        "tone_tags": [
+          "bold",
+          "graphic"
+        ],
+        "density": "low",
+        "formality": "medium",
+        "content_shapes": [
+          "cover hero",
+          "poster statement"
+        ],
+        "visual_signature": [
+          "type mass"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "poster bar"
+        ]
+      }
+    },
+    {
+      "id": "brutalist-matrix",
+      "status": "active",
+      "renderer_id": "artboard_satori.brutalist-matrix",
+      "layout_family": "matrix",
+      "required_content": [
+        "title",
+        "cells"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "callout"
+      ],
+      "max_items": {
+        "cells": 6
+      },
+      "text_budget": {
+        "eyebrow": 22,
+        "title": 30,
+        "subtitle": 72,
+        "cells": 18,
+        "callout": 18
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json",
+      "selection_metadata": {
+        "best_for": [
+          "competitive analysis",
+          "decision review",
+          "technical analysis"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "competitive analysis",
+          "decision review",
+          "technical analysis"
+        ],
+        "audience_tags": [
+          "internal",
+          "executive"
+        ],
+        "tone_tags": [
+          "analytical",
+          "brutalist"
+        ],
+        "density": "high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "comparison matrix",
+          "decision matrix",
+          "table"
+        ],
+        "visual_signature": [
+          "hard border matrix"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "grid line"
+        ]
+      }
+    },
+    {
+      "id": "annotated-field-board",
+      "status": "active",
+      "renderer_id": "artboard_satori.annotated-field-board",
+      "layout_family": "annotation_board",
+      "required_content": [
+        "title",
+        "notes"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "stamp",
+        "tags"
+      ],
+      "max_items": {
+        "notes": 4,
+        "tags": 3
+      },
+      "text_budget": {
+        "eyebrow": 22,
+        "title": 34,
+        "subtitle": 72,
+        "notes": 28,
+        "stamp": 12,
+        "tags": 12
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json",
+      "selection_metadata": {
+        "best_for": [
+          "workshop",
+          "postmortem",
+          "field notes"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "workshop",
+          "postmortem",
+          "field notes"
+        ],
+        "audience_tags": [
+          "internal",
+          "operator"
+        ],
+        "tone_tags": [
+          "practical",
+          "annotated"
+        ],
+        "density": "medium-high",
+        "formality": "medium",
+        "content_shapes": [
+          "notes",
+          "evidence board",
+          "action plan"
+        ],
+        "visual_signature": [
+          "pinned notes"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "pin marker"
+        ]
+      }
+    },
+    {
+      "id": "architectural-spec",
+      "status": "active",
+      "renderer_id": "artboard_satori.architectural-spec",
+      "layout_family": "architectural_spec",
+      "required_content": [
+        "title",
+        "rows"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "rows": 4
+      },
+      "text_budget": {
+        "eyebrow": 26,
+        "title": 34,
+        "subtitle": 78,
+        "rows": 20
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cartesian.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json",
+      "selection_metadata": {
+        "best_for": [
+          "technical architecture",
+          "spec review"
+        ],
+        "avoid_for": [
+          "playful casual launch"
+        ],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "occasion_tags": [
+          "technical architecture",
+          "spec review"
+        ],
+        "audience_tags": [
+          "technical",
+          "internal"
+        ],
+        "tone_tags": [
+          "technical",
+          "precise"
+        ],
+        "density": "high",
+        "formality": "high",
+        "content_shapes": [
+          "architecture",
+          "spec rows",
+          "dependency map"
+        ],
+        "visual_signature": [
+          "spec rows"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "hairline rule"
+        ]
+      }
+    },
+    {
+      "id": "trend-grid-report",
+      "status": "active",
+      "renderer_id": "artboard_satori.trend-grid-report",
+      "layout_family": "trend_grid",
+      "required_content": [
+        "title",
+        "trends"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle"
+      ],
+      "max_items": {
+        "trends": 4
+      },
+      "text_budget": {
+        "eyebrow": 22,
+        "title": 34,
+        "subtitle": 76,
+        "trends": 28
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json",
+      "selection_metadata": {
+        "best_for": [
+          "business review",
+          "market analysis",
+          "operating review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "business review",
+          "market analysis",
+          "operating review"
+        ],
+        "audience_tags": [
+          "executive",
+          "internal"
+        ],
+        "tone_tags": [
+          "analytical",
+          "modern"
+        ],
+        "density": "high",
+        "formality": "medium-high",
+        "content_shapes": [
+          "trend",
+          "metrics",
+          "bar ranking"
+        ],
+        "visual_signature": [
+          "trend grid"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "pixel grid"
+        ]
+      }
+    },
+    {
+      "id": "serif-stat-editorial",
+      "status": "active",
+      "renderer_id": "artboard_satori.serif-stat-editorial",
+      "layout_family": "serif_stat",
+      "required_content": [
+        "title",
+        "stat"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "cards"
+      ],
+      "max_items": {
+        "cards": 3
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 34,
+        "subtitle": 78,
+        "stat": 8,
+        "cards": 24
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json",
+      "selection_metadata": {
+        "best_for": [
+          "editorial feature",
+          "business review"
+        ],
+        "avoid_for": [],
+        "industry_tags": [
+          "business"
+        ],
+        "occasion_tags": [
+          "editorial feature",
+          "business review"
+        ],
+        "audience_tags": [
+          "internal",
+          "customer"
+        ],
+        "tone_tags": [
+          "editorial",
+          "serious"
+        ],
+        "density": "medium",
+        "formality": "medium-high",
+        "content_shapes": [
+          "stat",
+          "quote",
+          "insight"
+        ],
+        "visual_signature": [
+          "serif stat"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "editorial rule"
+        ]
+      }
+    },
+    {
+      "id": "poster-stat-punch",
+      "status": "active",
+      "renderer_id": "artboard_satori.poster-stat-punch",
+      "layout_family": "poster_stat",
+      "required_content": [
+        "title",
+        "stat"
+      ],
+      "optional_content": [
+        "eyebrow",
+        "subtitle",
+        "pillars"
+      ],
+      "max_items": {
+        "pillars": 3
+      },
+      "text_budget": {
+        "eyebrow": 24,
+        "title": 28,
+        "subtitle": 76,
+        "stat": 8,
+        "pillars": 18
+      },
+      "supported_theme_ids": [
+        "dark-clarity",
+        "forest-signal",
+        "warm-editorial",
+        "blueprint-technical",
+        "editorial-tritone",
+        "cobalt-grid",
+        "finance-dark",
+        "swiss-red",
+        "glass-neon",
+        "paper-research",
+        "ivory-ledger",
+        "signal-navy",
+        "terracotta-program",
+        "retro-desktop",
+        "sakura-catalog",
+        "acid-studio",
+        "raw-grid-mono",
+        "field-notebook",
+        "stone-architect",
+        "magazine-cobalt",
+        "forest-editorial",
+        "tomato-poster"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json",
+      "selection_metadata": {
+        "best_for": [
+          "product launch",
+          "brand deck",
+          "business review"
+        ],
+        "avoid_for": [
+          "formal audit committee"
+        ],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "occasion_tags": [
+          "product launch",
+          "brand deck",
+          "business review"
+        ],
+        "audience_tags": [
+          "customer",
+          "internal"
+        ],
+        "tone_tags": [
+          "bold",
+          "direct"
+        ],
+        "density": "medium",
+        "formality": "medium",
+        "content_shapes": [
+          "stat",
+          "poster",
+          "kpi big number"
+        ],
+        "visual_signature": [
+          "poster stat"
+        ],
+        "required_assets": [],
+        "decorative_elements": [
+          "poster block"
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svg_preview_lint.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3/05-preview/preview.html",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:01:50+08:00",
+  "error": null,
+  "inputs": [
+    "05-preview/preview.html"
+  ],
+  "outputs": [
+    "06-check/preview-lint.json"
+  ],
+  "stage": "preview_lint",
+  "started_at": "2026-06-22T04:01:50+08:00",
+  "status": "passed"
+}

@@ -74,3 +74,5 @@ The SVG route is private to `slides +create-svg`. XML creation, XML edit, and SX
 ## Online-First Controls
 
 User generation defaults to `--network-policy auto`: `source` may acquire current web evidence and `assets` may acquire web images or write AI image jobs. Deterministic suites should pass `--network-policy fixture` or `--offline`; resume reuses existing source/assets unless `--refresh-online` is set. `--no-online-research`, `--no-image-search`, and `--no-ai-image` disable the corresponding acquisition path without changing the stage graph.
+
+For user-facing local generation, use `--profile local_real_preview`. It targets `visual_acceptance`, does not run `live_create` or `readback`, and applies strict full-deck, unified-theme, and real-asset checks before the preview can be treated as deliverable.

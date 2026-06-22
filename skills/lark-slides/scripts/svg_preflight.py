@@ -1991,6 +1991,28 @@ def asset_contract_declares_no_asset(contract: Any) -> bool:
     return bool(isinstance(contract, str) and NO_ASSET_RE.search(contract))
 
 
+def asset_contracts_by_id(plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    contracts = plan.get("asset_contracts")
+    if not isinstance(contracts, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for item in contracts:
+        if not isinstance(item, dict):
+            continue
+        asset_id = textify(item.get("id") or item.get("asset_id")).strip()
+        if asset_id:
+            result[asset_id] = item
+    return result
+
+
+def resolve_asset_contract_metadata(contract: Any, contracts_by_id: dict[str, dict[str, Any]]) -> Any:
+    if isinstance(contract, list):
+        return [resolve_asset_contract_metadata(item, contracts_by_id) for item in contract]
+    if isinstance(contract, str) and not asset_contract_declares_no_asset(contract):
+        return contracts_by_id.get(contract, contract)
+    return contract
+
+
 def source_density_count(kind: str, primitive_summary: dict[str, Any]) -> int:
     counts = primitive_summary.get("counts", {})
     kind = normalize_name(kind)
@@ -2606,6 +2628,7 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
         return []
 
     files_by_name = {Path(textify(file.get("path"))).name: file for file in files if textify(file.get("path"))}
+    asset_contract_lookup = asset_contracts_by_id(plan)
     alignments: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for index, slide in enumerate(slides):
         if not isinstance(slide, dict):
@@ -2698,7 +2721,7 @@ def lint_plan_svg_alignment(plan: dict[str, Any], files: list[dict[str, Any]]) -
                     )
                 )
         if "image" in source_primitives:
-            contract_value = visual_plan.get("asset_contract")
+            contract_value = resolve_asset_contract_metadata(visual_plan.get("asset_contract"), asset_contract_lookup)
             if asset_contract_declares_no_asset(contract_value) or not asset_contract_has_metadata(contract_value):
                 issues.append(
                     plan_issue(

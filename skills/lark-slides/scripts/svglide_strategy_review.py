@@ -17,6 +17,8 @@ import svglide_schema
 PLAN_PATH = Path("02-plan/slide_plan.json")
 OUTPUT_PATH = Path("02-plan/strategy-review.json")
 ALLOWED_PAGE_TYPES = {"cover", "section", "content", "closing"}
+DEFAULT_FULL_DECK_MIN_SLIDES = 10
+SAMPLE_DECK_INTENTS = {"sample", "quick_preview", "single_page", "one_page", "fixture", "smoke", "test"}
 STYLE_PRESETS_PATH = Path(__file__).resolve().parent.parent / "references" / "style-presets.json"
 DEFAULT_RENDERERS = {
     "cover",
@@ -78,6 +80,15 @@ def list_of_strings(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str) and item.strip()]
 
 
+def first_positive_int(*values: Any) -> int | None:
+    for value in values:
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, int) and value > 0:
+            return value
+    return None
+
+
 def collect_strings(value: Any) -> list[str]:
     strings: list[str] = []
     if isinstance(value, str):
@@ -90,6 +101,96 @@ def collect_strings(value: Any) -> list[str]:
         for item in value.values():
             strings.extend(collect_strings(item))
     return strings
+
+
+def plan_deck_intent(plan: dict[str, Any]) -> str:
+    raw = plan.get("deck_intent") or plan.get("generation_intent") or plan.get("intent")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().lower()
+    return "full_deck"
+
+
+def is_sample_deck(plan: dict[str, Any]) -> bool:
+    intent = plan_deck_intent(plan)
+    if intent in SAMPLE_DECK_INTENTS:
+        return True
+    target = first_positive_int(plan.get("target_slide_count"), plan.get("page_count"))
+    return target == 1
+
+
+def text_haystack(values: Any) -> str:
+    return " ".join(collect_strings(values)).lower()
+
+
+def contains_any(haystack: str, keywords: list[str]) -> bool:
+    return any(keyword.lower() in haystack for keyword in keywords)
+
+
+def validate_full_deck_strategy(plan: dict[str, Any], slides: list[Any], deck_structure: list[str]) -> list[dict[str, Any]]:
+    if is_sample_deck(plan):
+        return []
+
+    issues: list[dict[str, Any]] = []
+    slide_count = len([slide for slide in slides if isinstance(slide, dict)])
+    target_count = first_positive_int(plan.get("target_slide_count"), plan.get("page_count"))
+    required_count = max(DEFAULT_FULL_DECK_MIN_SLIDES, target_count or DEFAULT_FULL_DECK_MIN_SLIDES)
+    content_count = sum(1 for slide in slides if isinstance(slide, dict) and slide.get("page_type") == "content")
+    page_types = [slide.get("page_type") for slide in slides if isinstance(slide, dict)]
+
+    if target_count is None:
+        issues.append(
+            issue(
+                "full_deck_target_slide_count_missing",
+                "full deck plans must declare target_slide_count or page_count; default user decks should target 10 slides",
+                path="$.target_slide_count",
+            )
+        )
+    elif target_count < DEFAULT_FULL_DECK_MIN_SLIDES:
+        issues.append(
+            issue(
+                "full_deck_target_slide_count_too_low",
+                f"full deck target_slide_count/page_count must be at least {DEFAULT_FULL_DECK_MIN_SLIDES}; use deck_intent=sample for short samples",
+                path="$.target_slide_count",
+            )
+        )
+    if slide_count < required_count:
+        issues.append(
+            issue(
+                "full_deck_slide_count_too_low",
+                f"full deck requires at least {required_count} slides; use deck_intent=sample for a short preview",
+                path="$.slides",
+            )
+        )
+    if page_types == ["cover", "content", "content", "closing"]:
+        issues.append(
+            issue(
+                "full_deck_minimal_sample_structure",
+                "cover + two content pages + closing is a sample structure, not a complete presentation",
+                path="$.slides",
+            )
+        )
+    if content_count < 6:
+        issues.append(
+            issue(
+                "full_deck_content_pages_too_few",
+                "full deck plans need at least 6 content pages to support a complete narrative",
+                path="$.slides",
+            )
+        )
+    if "cover" not in deck_structure or "content" not in deck_structure or "closing" not in deck_structure:
+        issues.append(issue("full_deck_structure_incomplete", "full deck deck_structure must include cover, content, and closing"))
+
+    haystack = text_haystack({"slides": slides, "deck_structure": deck_structure, "title": plan.get("title"), "topic": plan.get("topic")})
+    required_signals = [
+        ("full_deck_missing_core_conclusion", ["核心结论", "关键结论", "结论先行", "executive summary", "insight", "洞察"]),
+        ("full_deck_missing_positioning", ["定位", "背景", "公司", "格局", "context", "positioning"]),
+        ("full_deck_missing_comparison", ["对比", "比较", "差异", "矩阵", "comparison", "matrix"]),
+        ("full_deck_missing_risk_or_next_steps", ["风险", "治理", "合规", "安全", "后续", "观察", "next"]),
+    ]
+    for code, keywords in required_signals:
+        if not contains_any(haystack, keywords):
+            issues.append(issue(code, f"full deck narrative is missing signal: {', '.join(keywords[:3])}"))
+    return issues
 
 
 def infer_theme_archetype(plan: dict[str, Any]) -> str | None:
@@ -247,6 +348,7 @@ def run_strategy_review(project: Path) -> dict[str, Any]:
     if not isinstance(slides, list) or not slides:
         issues.append(issue("slides_missing", "slide_plan.slides must be a non-empty array"))
         slides = []
+    issues.extend(validate_full_deck_strategy(plan, slides, deck_structure))
     issues.extend(validate_visual_identity(plan, slides))
     for index, raw_slide in enumerate(slides, 1):
         if not isinstance(raw_slide, dict):
@@ -289,8 +391,10 @@ def run_strategy_review(project: Path) -> dict[str, Any]:
         "language": plan.get("language"),
         "audience": plan.get("audience"),
         "deck_structure": deck_structure,
+        "deck_intent": plan_deck_intent(plan),
+        "target_slide_count": first_positive_int(plan.get("target_slide_count"), plan.get("page_count")),
         "slides": slide_receipts,
-        "summary": {"error_count": len(issues), "warning_count": 0},
+        "summary": {"error_count": len(issues), "warning_count": 0, "slide_count": len(slide_receipts)},
         "issues": issues,
         "generated_at": now_iso(),
     }

@@ -41,6 +41,49 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def apply_project_theme_overrides(theme: dict[str, Any], plan: dict[str, Any], theme_id: str) -> dict[str, Any]:
+    project_theme = plan.get("project_theme") if isinstance(plan.get("project_theme"), dict) else {}
+    base_theme_id = project_theme.get("base_theme_id")
+    if isinstance(base_theme_id, str) and base_theme_id and base_theme_id != theme_id:
+        return theme
+    overrides = project_theme.get("token_overrides") if isinstance(project_theme.get("token_overrides"), dict) else {}
+    project_palette = plan.get("project_palette") if isinstance(plan.get("project_palette"), dict) else {}
+    if not overrides and not isinstance(project_palette.get("data_series"), list):
+        return theme
+
+    adapted = dict(theme)
+    colors = dict(adapted.get("colors") if isinstance(adapted.get("colors"), dict) else {})
+    tokens = dict(adapted.get("tokens") if isinstance(adapted.get("tokens"), dict) else {})
+    for token, raw_value in overrides.items():
+        if not isinstance(token, str) or not isinstance(raw_value, str):
+            continue
+        try:
+            value = svglide_theme.normalize_hex_color(raw_value)
+        except svglide_theme.ThemeError:
+            continue
+        tokens[token] = value
+        if token.startswith("color."):
+            role = token.removeprefix("color.")
+            if role in svglide_theme.CORE_COLOR_ROLES:
+                colors[role] = value
+    adapted["colors"] = colors
+    adapted["tokens"] = tokens
+
+    data_series = project_palette.get("data_series")
+    if isinstance(data_series, list):
+        normalized_series: list[str] = []
+        for raw_value in data_series:
+            if not isinstance(raw_value, str):
+                continue
+            try:
+                normalized_series.append(svglide_theme.normalize_hex_color(raw_value))
+            except svglide_theme.ThemeError:
+                continue
+        if normalized_series:
+            adapted["data_series"] = normalized_series
+    return adapted
+
+
 def issue(code: str, message: str, *, page: int | None = None, path: str | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {"code": code, "message": message}
     if page is not None:
@@ -92,6 +135,21 @@ def element_text_color(element: ElementTree.Element) -> str | None:
     return None
 
 
+def text_color_for_item(element: ElementTree.Element) -> str | None:
+    color = element_text_color(element)
+    if color:
+        return color
+    if local_name(element.tag).lower() != "foreignobject":
+        return None
+    for child in element.iter():
+        if child is element:
+            continue
+        color = element_text_color(child)
+        if color:
+            return color
+    return None
+
+
 def svg_text_colors(svg_path: Path) -> list[dict[str, Any]]:
     root = ElementTree.fromstring(svg_path.read_text(encoding="utf-8"))
     items: list[dict[str, Any]] = []
@@ -99,7 +157,7 @@ def svg_text_colors(svg_path: Path) -> list[dict[str, Any]]:
         if local_name(element.tag).lower() not in {"text", "foreignobject"}:
             continue
         text = "".join(element.itertext()).strip()
-        items.append({"tag": local_name(element.tag), "text": text, "color": element_text_color(element)})
+        items.append({"tag": local_name(element.tag), "text": text, "color": text_color_for_item(element)})
     return items
 
 
@@ -129,9 +187,10 @@ def validate_project(project_root: Path) -> dict[str, Any]:
 
     plan_file = project_root / PLAN_PATH
     validate_file = project_root / THEME_VALIDATE_PATH
+    plan: dict[str, Any] = {}
     validate_receipt: dict[str, Any] = {}
     try:
-        read_json(plan_file)
+        plan = read_json(plan_file)
     except (OSError, json.JSONDecodeError, ValueError) as err:
         issues.append(issue("plan_invalid", f"could not read {PLAN_PATH.as_posix()}: {err}", path=PLAN_PATH.as_posix()))
     try:
@@ -158,6 +217,7 @@ def validate_project(project_root: Path) -> dict[str, Any]:
         else:
             try:
                 theme = svglide_theme.load_theme(theme_id, project_root)
+                theme = apply_project_theme_overrides(theme, plan, theme_id)
             except (OSError, svglide_theme.ThemeError, json.JSONDecodeError) as err:
                 page_issues.append(issue("theme_load_failed", str(err), page=index, path=rel))
         if theme:

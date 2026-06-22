@@ -1,0 +1,23 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_artboard_package_check.py",
+    "--repo-root",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private",
+    "--output-dir",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:04:39+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json"
+  ],
+  "outputs": [
+    "06-check/artboard-package-check.json",
+    "receipts/artboard-package-check.json"
+  ],
+  "stage": "package_check",
+  "started_at": "2026-06-22T04:04:38+08:00",
+  "status": "passed"
+}

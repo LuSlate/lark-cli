@@ -1,0 +1,63 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {
+    "width": 960,
+    "height": 540,
+    "viewBox": "0 0 960 540"
+  },
+  "safe_area": {
+    "x": 48,
+    "y": 40,
+    "width": 864,
+    "height": 460
+  },
+  "template_id": "printed-program",
+  "theme_id": "terracotta-program",
+  "theme": {
+    "colors": {
+      "background": "#FAF1E2",
+      "panel": "#F2E5CF",
+      "primary": "#B53D2A",
+      "accent": "#8E2D1F",
+      "text": "#3A2516",
+      "muted": "#8E2D1F"
+    }
+  },
+  "content": {
+    "eyebrow": "PROGRAM",
+    "title": "团队晚餐式议程",
+    "subtitle": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+    "items": [
+      "开场观察",
+      "主议题讨论",
+      "行动项确认",
+      "复盘收束"
+    ],
+    "edition": "EDITION 04",
+    "footer": "Internal Workshop"
+  },
+  "semantic_elements": [
+    {
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "bbox": {
+        "x": 56,
+        "y": 80,
+        "width": 760,
+        "height": 120
+      }
+    }
+  ],
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "x": 48,
+      "y": 40,
+      "width": 864,
+      "height": 460
+    }
+  }
+}

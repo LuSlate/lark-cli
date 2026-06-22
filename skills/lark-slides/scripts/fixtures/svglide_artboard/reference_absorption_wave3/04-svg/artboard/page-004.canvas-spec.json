@@ -1,0 +1,76 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "POSTER CLAIM",
+    "pillars": [
+      "结论明确",
+      "证据充分",
+      "行动立即"
+    ],
+    "stat": "3X",
+    "subtitle": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+    "title": "现在就做判断"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 132,
+        "width": 760,
+        "x": 56,
+        "y": 70
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "poster-stat-punch",
+  "theme": {
+    "colors": {
+      "accent": "#1C1410",
+      "background": "#FFFFFF",
+      "muted": "#5A4036",
+      "panel": "#F5F2EF",
+      "primary": "#D8000F",
+      "text": "#1C1410"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.bold-poster.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "tomato-poster",
+    "typography": {
+      "body": 20,
+      "label": 16,
+      "subtitle": 20,
+      "title": 66
+    }
+  },
+  "theme_id": "tomato-poster",
+  "version": "svglide-canvas-spec/v1"
+}

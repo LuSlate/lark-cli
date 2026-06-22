@@ -1,0 +1,58 @@
+{
+  "schema_version": "svglide-template-fit/v1",
+  "stage": "template-fit-check",
+  "status": "passed",
+  "action": "create_live",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "8badb7d1e36e7a5a519f548c1f7b8627272808e617def86e13d4e267f9f17298",
+    "generator_receipt": "receipts/generate_svg.json",
+    "generator_receipt_sha256": "7b7fc05448a9bc2e4e4a9b8ca6f46f94193c0d44b47748776e0ba9b7114c6ed2",
+    "artboard_receipts": [
+      "04-svg/artboard/page-001.receipt.json",
+      "04-svg/artboard/page-002.receipt.json",
+      "04-svg/artboard/page-003.receipt.json"
+    ],
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "30e07fbf0dd59605cf81fc93f6ddf9e56fe1e142c142bf36de7766a276d7bc9f",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json"
+    ]
+  },
+  "pages": [
+    {
+      "page": 1,
+      "artboard_receipt": "04-svg/artboard/page-001.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "c9a5199daf2e3e0241e6fa7dece694643993186b81dc7e4cc7395deea3ee9ba7",
+      "node_count": 22,
+      "error_count": 0
+    },
+    {
+      "page": 2,
+      "artboard_receipt": "04-svg/artboard/page-002.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "391070b4b7560d1c9b5af4bc8b51d3828f86f5de9d4a00080dfae6bb9bac9962",
+      "node_count": 22,
+      "error_count": 0
+    },
+    {
+      "page": 3,
+      "artboard_receipt": "04-svg/artboard/page-003.receipt.json",
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "4b539b07a5d3203b6c685f2bdfd5c66b6805341cabbc3792ea3d5f9ff78ec2ee",
+      "node_count": 20,
+      "error_count": 0
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "page_count": 3
+  },
+  "issues": [],
+  "output_path": "06-check/template-fit.json",
+  "receipt_path": "receipts/template-fit-check.json"
+}

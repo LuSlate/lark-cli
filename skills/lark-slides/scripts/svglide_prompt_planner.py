@@ -16,7 +16,9 @@ from pathlib import Path
 from typing import Any
 
 import svglide_planner_contracts
+import svglide_palette_selector
 import svglide_schema
+import svglide_theme_template_selector
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -190,8 +192,26 @@ def template_registry_bundle() -> list[dict[str, Any]]:
     return result
 
 
-def load_context() -> dict[str, Any]:
-    return {
+def load_selection_context(project: Path | None = None) -> dict[str, Any]:
+    if project is None:
+        return {}
+    context: dict[str, Any] = {}
+    for key, rel in {
+        "palette_selection": Path("02-plan/palette-selection.json"),
+        "theme_template_selection": Path("02-plan/theme-template-selection.json"),
+    }.items():
+        path = project / rel
+        if not path.exists():
+            continue
+        try:
+            context[key] = read_json(path)
+        except (OSError, json.JSONDecodeError):
+            context[key] = {"status": "unreadable", "path": rel.as_posix()}
+    return context
+
+
+def load_context(project: Path | None = None) -> dict[str, Any]:
+    context = {
         "templates": template_registry_bundle(),
         "themes": theme_registry_bundle(),
         "layout_archetypes": read_json(repo_path("skills/lark-slides/references/svglide-layout-archetypes.json")),
@@ -199,6 +219,8 @@ def load_context() -> dict[str, Any]:
         "canvas_spec_schema": read_json(repo_path("skills/lark-slides/references/svglide-canvas-spec.schema.json")),
         "planner_prompt_contracts": read_json(repo_path("skills/lark-slides/references/svglide-planner-prompt-contracts.json")),
     }
+    context["selection"] = load_selection_context(project)
+    return context
 
 
 def instruction_payload(*, prompt: str, language: str, target_slide_count: int, audience: str) -> dict[str, Any]:
@@ -208,6 +230,7 @@ def instruction_payload(*, prompt: str, language: str, target_slide_count: int, 
         "raw_prompt": prompt,
         "language": language,
         "target_slide_count": target_slide_count,
+        "deck_intent": "full_deck" if target_slide_count > 1 else "single_page",
         "audience": audience,
         "route": "svglide-svg",
         "generation_mode": "artboard_satori",
@@ -275,12 +298,13 @@ def build_slide_prompt(instruction: dict[str, Any], deck_plan: dict[str, Any], c
         "available_theme_registry": context["themes"],
         "layout_archetypes": context["layout_archetypes"],
         "component_registry": context["component_registry"],
+        "selection_context": context.get("selection", {}),
         "output_schema": read_json(repo_path(SCHEMA_PATHS["slide-planner"])),
     }
     return "\n\n".join(
         [
             base,
-            "Additional run instruction: output JSON only and use only active template_id/theme_id values from the registry.",
+            "Additional run instruction: output JSON only and use only palette/template/theme candidates from selection_context when present.",
             "Use varied page shapes that fit this topic. Include at least one image-feature page when visual assets are requested and one evidence/data/story page when the content has claims or comparisons.",
             "Do not output asset contracts here; only choose template/theme/content requirements.",
             "Input bundle:",
@@ -297,6 +321,7 @@ def build_canvas_prompt(instruction: dict[str, Any], deck_plan: dict[str, Any], 
         "slide_plan": slide_plan,
         "available_template_registry": context["templates"],
         "available_theme_registry": context["themes"],
+        "selection_context": context.get("selection", {}),
         "canvas_spec_schema": context["canvas_spec_schema"],
         "output_schema": read_json(repo_path(SCHEMA_PATHS["canvas-planner"])),
         "required_loaded_rule_set": SVG_PRIVATE_REQUIRED_RULE_FILES,
@@ -345,12 +370,18 @@ def build_canvas_prompt(instruction: dict[str, Any], deck_plan: dict[str, Any], 
         [
             base,
             "Additional run instruction: output JSON only.",
+            "When selection_context is present, template_id/theme_id/palette_id must come from its candidates and every canvas_spec must include selection_trace.",
             "The top-level object must also be the final 02-plan/slide_plan.json.",
+            "For ordinary user prompts, set deck_intent to full_deck, target_slide_count/page_count to the instruction target, and produce that many slides.",
+            "Do not produce a 4-page sample unless instruction.deck_intent is sample/single_page/fixture.",
+            "The top-level plan must include theme_policy with scope deck and allow_multi_theme false unless the user explicitly asks for multiple theme chapters.",
+            "The top-level plan must include asset_policy with required true and minimum_visual_asset_count at least 3.",
             "It must include top-level asset_contracts as an array of at least 3 objects for real visual acquisition.",
             "Each asset contract must include id, page or usage_page, placement_role, query, required true, safe_text_zones, and crop_hint.",
             "Use placement_role cover for page 1, body_visual for image-feature pages, and closing for the final page.",
             "For body_visual assets, choose image-feature pages so the generated SVG has an asset slot.",
             "Use generation_mode artboard_satori and route svglide-svg.",
+            "The top-level plan must include project_palette, project_theme, palette_selection_receipt, and selection_receipt from selection_context.",
             "The top-level plan must include language, audience, deck_structure, and visual_identity before plan confirmation is written.",
             "style_preset must be an id from style-presets.json; prefer raw_grid unless there is a stronger reason.",
             "loaded_rule_set must include every path in required_loaded_rule_set.",
@@ -401,6 +432,21 @@ def provider_command(
     raise PromptPlannerError(f"unsupported planner provider: {provider}")
 
 
+def trusted_provider_evidence(provider: str, planner_command: str | None, trusted_provider_id: str | None) -> dict[str, Any]:
+    requires_trusted_provider = provider != "codex" or bool(planner_command)
+    if requires_trusted_provider and not trusted_provider_id:
+        raise PromptPlannerError(
+            "trusted_provider_id is required when using an external planner provider or --planner-command"
+        )
+    return {
+        "provider": provider,
+        "planner_command_present": bool(planner_command),
+        "requires_trusted_provider": requires_trusted_provider,
+        "trusted_provider_id": trusted_provider_id,
+        "authorized": (not requires_trusted_provider) or bool(trusted_provider_id),
+    }
+
+
 def planner_file(stage: str, suffix: str) -> Path:
     safe = stage.replace("_", "-")
     return PLANNER_DIR / f"{safe}.{suffix}"
@@ -415,6 +461,7 @@ def call_planner(
     schema_rel: Path | None,
     provider: str,
     planner_command: str | None,
+    trusted_provider_id: str | None,
     search: bool,
     timeout: int,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -470,6 +517,7 @@ def call_planner(
         "stage": stage,
         "status": status,
         "provider": provider,
+        "trusted_provider_id": trusted_provider_id,
         "search_enabled": search,
         "started_at": started_at,
         "ended_at": now_iso(),
@@ -582,21 +630,22 @@ def run_prompt_plan(
     project: Path,
     *,
     prompt: str,
-    target_slide_count: int = 8,
+    target_slide_count: int = 10,
     language: str = "zh-CN",
     audience: str = "投资/战略分析读者",
     provider: str = "codex",
     planner_command: str | None = None,
+    trusted_provider_id: str | None = None,
     search: bool = True,
     timeout: int = 300,
     force: bool = False,
 ) -> dict[str, Any]:
     project = project.resolve()
     started_at = now_iso()
+    provider_evidence = trusted_provider_evidence(provider, planner_command, trusted_provider_id)
     ensure_fresh_outputs(project, force=force)
     instruction = instruction_payload(prompt=prompt, language=language, target_slide_count=target_slide_count, audience=audience)
     write_json(project / INSTRUCTION_PATH, instruction)
-    context = load_context()
     receipts: list[dict[str, Any]] = []
 
     source_plan, source_receipt = call_planner(
@@ -607,11 +656,18 @@ def run_prompt_plan(
         schema_rel=None,
         provider=provider,
         planner_command=planner_command,
+        trusted_provider_id=trusted_provider_id,
         search=search,
         timeout=timeout,
     )
     write_source_outputs(project, source_plan)
     receipts.append(source_receipt)
+    evidence = source_plan.get("evidence") if isinstance(source_plan.get("evidence"), dict) else None
+    palette_selection = svglide_palette_selector.select_palette(project, prompt, top_k=5, evidence=evidence)
+    svglide_palette_selector.write_palette_selection(project, palette_selection)
+    theme_template_selection = svglide_theme_template_selector.select_theme_template(project, prompt, top_k=5, evidence=evidence)
+    svglide_theme_template_selector.write_selection(project, theme_template_selection)
+    context = load_context(project)
 
     deck_plan, deck_receipt = call_planner(
         project,
@@ -621,6 +677,7 @@ def run_prompt_plan(
         schema_rel=SCHEMA_PATHS["deck-planner"],
         provider=provider,
         planner_command=planner_command,
+        trusted_provider_id=trusted_provider_id,
         search=search,
         timeout=timeout,
     )
@@ -635,6 +692,7 @@ def run_prompt_plan(
         schema_rel=SCHEMA_PATHS["slide-planner"],
         provider=provider,
         planner_command=planner_command,
+        trusted_provider_id=trusted_provider_id,
         search=search,
         timeout=timeout,
     )
@@ -648,6 +706,7 @@ def run_prompt_plan(
         schema_rel=SCHEMA_PATHS["canvas-planner"],
         provider=provider,
         planner_command=planner_command,
+        trusted_provider_id=trusted_provider_id,
         search=search,
         timeout=timeout,
     )
@@ -666,6 +725,7 @@ def run_prompt_plan(
         "status": "passed",
         "provider": provider,
         "provider_type": provider,
+        "trusted_provider_evidence": provider_evidence,
         "search_enabled": search,
         "started_at": started_at,
         "ended_at": now_iso(),
@@ -718,6 +778,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--audience", default="投资/战略分析读者")
     parser.add_argument("--provider", default="codex", choices=["codex", "claude", "command"])
     parser.add_argument("--planner-command", help="custom command with {stage}, {raw_output}, and {schema} placeholders")
+    parser.add_argument("--trusted-provider-id", help="required for external planner providers or --planner-command")
     parser.add_argument("--no-search", action="store_true")
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--force", action="store_true")
@@ -737,6 +798,7 @@ def main(argv: list[str] | None = None) -> int:
             audience=args.audience,
             provider=args.provider,
             planner_command=args.planner_command,
+            trusted_provider_id=args.trusted_provider_id,
             search=not args.no_search,
             timeout=args.timeout,
             force=args.force,

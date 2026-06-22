@@ -1,0 +1,162 @@
+{
+  "schema_version": "svglide-strategy-review/v1",
+  "status": "passed",
+  "language": "zh-CN",
+  "audience": "SVGlide engineers",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "page_type": "cover",
+      "section": "OPERATING LEDGER",
+      "role": "thesis",
+      "title": "复盘事项账本",
+      "key_message": "把结论、证据和 owner 放进克制的黑白账本结构。",
+      "body_points": [
+        "把结论、证据和 owner 放进克制的黑白账本结构。",
+        "增长口径已统一",
+        "风险归因待复核",
+        "Owner 已明确"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:ledger-briefing",
+        "svglide-theme:ivory-ledger"
+      ]
+    },
+    {
+      "page": 2,
+      "page_type": "content",
+      "section": "PRIVATE BRIEF",
+      "role": "evidence",
+      "title": "组织信号简报",
+      "key_message": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+      "body_points": [
+        "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+        "指标移动前的协作信号",
+        "约束来自跨团队边界",
+        "下轮验证需要单 owner"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:intelligence-brief",
+        "svglide-theme:signal-navy"
+      ]
+    },
+    {
+      "page": 3,
+      "page_type": "content",
+      "section": "PROGRAM",
+      "role": "evidence",
+      "title": "团队晚餐式议程",
+      "key_message": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+      "body_points": [
+        "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+        "开场观察",
+        "主议题讨论",
+        "行动项确认"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:printed-program",
+        "svglide-theme:terracotta-program"
+      ]
+    },
+    {
+      "page": 4,
+      "page_type": "content",
+      "section": "CONTROL PANEL",
+      "role": "evidence",
+      "title": "发布控制面板",
+      "key_message": "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+      "body_points": [
+        "把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。",
+        "发布控制面板 的模板资产化验证",
+        "发布控制面板 的证据链验证"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:retro-ui-dashboard",
+        "svglide-theme:retro-desktop"
+      ]
+    },
+    {
+      "page": 5,
+      "page_type": "content",
+      "section": "CATALOG DROP",
+      "role": "evidence",
+      "title": "功能货架更新",
+      "key_message": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+      "body_points": [
+        "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+        "智能推荐",
+        "批量导入",
+        "权限看板"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:product-ribbon",
+        "svglide-theme:sakura-catalog"
+      ]
+    },
+    {
+      "page": 6,
+      "page_type": "content",
+      "section": "STUDIO NOTE",
+      "role": "evidence",
+      "title": "重点只说一遍",
+      "key_message": "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+      "body_points": [
+        "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+        "一个核心信息",
+        "三条支撑理由",
+        "不需要装饰"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:type-mass-poster",
+        "svglide-theme:acid-studio"
+      ]
+    },
+    {
+      "page": 7,
+      "page_type": "content",
+      "section": "BATTLECARD",
+      "role": "evidence",
+      "title": "方案评分矩阵",
+      "key_message": "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+      "body_points": [
+        "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+        "优先方案 B",
+        "成本可控",
+        "接入最快"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:brutalist-matrix",
+        "svglide-theme:raw-grid-mono"
+      ]
+    },
+    {
+      "page": 8,
+      "page_type": "closing",
+      "section": "FIELD NOTE",
+      "role": "evidence",
+      "title": "用户访谈证据墙",
+      "key_message": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+      "body_points": [
+        "把访谈洞察、证据和下一步贴在同一张标注板上。",
+        "用户绕过默认流程",
+        "关键证据需要回访",
+        "下一步由体验组 owner"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:annotated-field-board",
+        "svglide-theme:field-notebook"
+      ]
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "issues": [],
+  "generated_at": "2026-06-21T20:03:06.263839+00:00"
+}

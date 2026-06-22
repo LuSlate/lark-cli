@@ -1,0 +1,65 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-22T04:04:41+08:00",
+  "contrast_failures": [],
+  "contrast_unresolved": [],
+  "inputs": {
+    "plan_sha256": "8badb7d1e36e7a5a519f548c1f7b8627272808e617def86e13d4e267f9f17298",
+    "slide_plan": "02-plan/slide_plan.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_validate_sha256": "c47d806f3f4363509e1f4c7469e4263a78eabe0493bde16900cac0c8c9be118a"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-adherence.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "30213109be74d62e87224f8f061f050ff7ce8b1e29fe5b63c5dabec36052b7e5",
+      "status": "passed",
+      "theme_id": "cobalt-grid"
+    },
+    {
+      "issues": [],
+      "page": 2,
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "00bc0bdeff43a9cbe43249fab4a7b1325f5bfa371ebafecefd42841bbd8c332f",
+      "status": "passed",
+      "theme_id": "paper-research"
+    },
+    {
+      "issues": [],
+      "page": 3,
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "a4f2204d3b8b46bec65ed16656b8c4fdf8e3e3d01b09254306af14001e6a764c",
+      "status": "passed",
+      "theme_id": "warm-editorial"
+    }
+  ],
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "30213109be74d62e87224f8f061f050ff7ce8b1e29fe5b63c5dabec36052b7e5"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "00bc0bdeff43a9cbe43249fab4a7b1325f5bfa371ebafecefd42841bbd8c332f"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "a4f2204d3b8b46bec65ed16656b8c4fdf8e3e3d01b09254306af14001e6a764c"
+    }
+  ],
+  "schema_version": "svglide-theme-adherence/v1",
+  "stage": "theme_adherence",
+  "status": "passed",
+  "summary": {
+    "contrast_unresolved_count": 0,
+    "error_count": 0,
+    "prepared_svg_count": 3,
+    "unknown_color_count": 0,
+    "warning_count": 0
+  },
+  "unknown_colors": []
+}

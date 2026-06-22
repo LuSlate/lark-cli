@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -44,9 +45,45 @@ SUPPORTED_TEMPLATES = {
     "risk-alert",
     "roadmap-lanes",
     "architecture-blueprint",
+    "dense-panel-grid",
+    "executive-dashboard",
+    "editorial-quote-chart",
+    "ledger-briefing",
+    "intelligence-brief",
+    "printed-program",
+    "retro-ui-dashboard",
+    "product-ribbon",
+    "type-mass-poster",
+    "brutalist-matrix",
+    "annotated-field-board",
+    "architectural-spec",
+    "trend-grid-report",
+    "serif-stat-editorial",
+    "poster-stat-punch",
 }
-SUPPORTED_SATORI_ELEMENTS = {"svg", "g", "mask", "rect", "circle", "ellipse", "line", "path", "text"}
-FAIL_FAST_ELEMENTS = {"defs", "filter", "clipPath", "pattern", "foreignObject", "image", "use", "linearGradient", "radialGradient"}
+PYTHON_TEMPLATE_IDS = {
+    "cover-hero",
+    "cover_hero",
+    "comparison-cards",
+    "summary-final",
+    "section-title",
+    "section_title",
+    "comparison",
+    "agenda-list",
+    "timeline-steps",
+    "process-flow",
+    "metric-dashboard",
+    "risk-alert",
+    "roadmap-lanes",
+    "architecture-blueprint",
+    "image-feature",
+    "data-story",
+}
+SATORI_INTERNAL_ELEMENTS = {"defs", "clipPath", "mask"}
+SUPPORTED_SATORI_ELEMENTS = {"svg", "g", "defs", "clipPath", "mask", "rect", "circle", "ellipse", "line", "path", "text"}
+FAIL_FAST_ELEMENTS = {"filter", "pattern", "foreignObject", "image", "use", "linearGradient", "radialGradient"}
+STRIPPED_SATORI_ATTRS = {"clip-path", "mask"}
+PATH_TOKEN_RE = re.compile(r"[AaCcHhLlMmQqVvZz]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 ARTBOARD_RENDERER_DIR = Path(__file__).resolve().parent / "artboard_renderer"
 SCRIPT_DIR = Path(__file__).resolve().parent
 REFERENCES_DIR = SCRIPT_DIR.parent / "references"
@@ -610,29 +647,119 @@ def semantic_source_ref_for_node(node: dict[str, Any]) -> str | None:
     return None
 
 
-def semantic_elements_from_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def semantic_element_type_for_node(node: dict[str, Any], role: str) -> str:
+    kind = str(node.get("kind") or "unknown")
+    if role == "decorative" and kind == "line":
+        return "decorative_line"
+    if role == "decorative" and kind == "path":
+        return "decorative_path"
+    if role == "background":
+        return "background"
+    if role == "container":
+        return "layout_container"
+    return kind
+
+
+def semantic_purpose_for_node(node: dict[str, Any], role: str) -> str | None:
+    explicit = node.get("semantic_purpose") or node.get("purpose")
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip()
+    if role != "decorative":
+        return None
+    node_id = str(node.get("id") or "").lower()
+    kind = str(node.get("kind") or "").lower()
+    if kind not in {"line", "path"}:
+        return None
+    if any(token in node_id for token in ("connector", "flow", "arrow", "link")):
+        return "connector"
+    if any(token in node_id for token in ("timeline", "milestone", "rail", "lane")):
+        return "timeline or lane structure"
+    if any(token in node_id for token in ("divider", "rule", "separator")):
+        return "section divider"
+    if "annotation" in node_id or "callout" in node_id:
+        return "annotation pointer"
+    return None
+
+
+def origin_for_semantic_node(node: dict[str, Any], role: str, spec: dict[str, Any] | None) -> dict[str, Any] | None:
+    node_id = str(node.get("id") or "")
+    if role == "background":
+        return {"type": "theme", "id": str((spec or {}).get("theme_id") or "unknown-theme"), "reason": "canvas background"}
+    if semantic_source_ref_for_node(node):
+        return None
+    if role in {"decorative", "container", "data_chart"}:
+        template_id = str((spec or {}).get("template_id") or "unknown-template")
+        reason = "template visual structure"
+        if role == "data_chart":
+            reason = "template data visualization scaffold"
+        elif "line" in node_id or str(node.get("kind")) == "line":
+            reason = "template decorative rule"
+        elif "grid" in node_id:
+            reason = "template grid decoration"
+        elif "panel" in node_id or "card" in node_id:
+            reason = "template layout container"
+        return {"type": "template", "id": template_id, "reason": reason}
+    return None
+
+
+def semantic_elements_from_nodes(nodes: list[dict[str, Any]], spec: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     elements: list[dict[str, Any]] = []
     for node in nodes:
         node_id = str(node.get("id") or "")
         if not node_id:
             continue
-        elements.append(
-            {
-                "element_id": node_id,
-                "kind": str(node.get("kind") or "unknown"),
-                "role": semantic_role_for_node(node),
-                "source_ref": semantic_source_ref_for_node(node),
-                "text": node.get("text") if isinstance(node.get("text"), str) else None,
-                "bbox": {
-                    "x": number(node.get("x"), 0),
-                    "y": number(node.get("y"), 0),
-                    "width": number(node.get("width"), 0),
-                    "height": number(node.get("height"), 0),
-                },
-                "style": semantic_style_for_node(node),
-            }
-        )
+        role = semantic_role_for_node(node)
+        source_ref = semantic_source_ref_for_node(node)
+        origin = origin_for_semantic_node(node, role, spec)
+        element: dict[str, Any] = {
+            "element_id": node_id,
+            "kind": str(node.get("kind") or "unknown"),
+            "role": role,
+            "element_type": semantic_element_type_for_node(node, role),
+            "source_ref": source_ref,
+            "text": node.get("text") if isinstance(node.get("text"), str) else None,
+            "bbox": {
+                "x": number(node.get("x"), 0),
+                "y": number(node.get("y"), 0),
+                "width": number(node.get("width"), 0),
+                "height": number(node.get("height"), 0),
+            },
+            "style": semantic_style_for_node(node),
+        }
+        if origin is not None:
+            element["origin"] = origin
+        semantic_purpose = semantic_purpose_for_node(node, role)
+        if semantic_purpose:
+            element["semantic_purpose"] = semantic_purpose
+        elements.append(element)
     return elements
+
+
+def decorative_trace_summary(elements: list[dict[str, Any]]) -> dict[str, Any]:
+    required_roles = {"background", "container", "decorative"}
+    required = [
+        item
+        for item in elements
+        if isinstance(item, dict) and item.get("role") in required_roles
+    ]
+    missing = [
+        str(item.get("element_id"))
+        for item in required
+        if not isinstance(item.get("origin"), dict)
+    ]
+    by_origin_type: dict[str, int] = {}
+    for item in required:
+        origin = item.get("origin")
+        if isinstance(origin, dict):
+            origin_type = str(origin.get("type") or "unknown")
+            by_origin_type[origin_type] = by_origin_type.get(origin_type, 0) + 1
+    return {
+        "schema_version": "svglide-decorative-trace-summary/v1",
+        "required_origin_count": len(required),
+        "missing_origin_count": len(missing),
+        "missing_origin_element_ids": missing,
+        "by_origin_type": by_origin_type,
+    }
 
 
 def semantic_style_for_node(node: dict[str, Any]) -> dict[str, Any]:
@@ -642,6 +769,35 @@ def semantic_style_for_node(node: dict[str, Any]) -> dict[str, Any]:
         if value is not None:
             style[key] = value
     return style
+
+
+def nodes_from_satori_svg(satori_svg_path: Path) -> list[dict[str, Any]]:
+    observations = svglide_node_layout_drift.observations_from_svg(satori_svg_path)
+    nodes: list[dict[str, Any]] = []
+    counters: dict[str, int] = {}
+    for observation in observations:
+        bbox = observation.get("bbox") if isinstance(observation.get("bbox"), dict) else {}
+        kind = str(observation.get("kind") or "node")
+        raw_id = observation.get("id")
+        node_id = str(raw_id) if isinstance(raw_id, str) and raw_id else ""
+        if not node_id:
+            counters[kind] = counters.get(kind, 0) + 1
+            node_id = f"satori-{kind}-{counters[kind]}"
+        height = number(bbox.get("height"), 0)
+        if kind == "text":
+            height = max(height, 24)
+        nodes.append(
+            {
+                "id": node_id,
+                "kind": "text" if kind == "text" else kind,
+                "x": number(bbox.get("x"), 0),
+                "y": number(bbox.get("y"), 0),
+                "width": number(bbox.get("width"), 0),
+                "height": height,
+                "text": observation.get("text") if isinstance(observation.get("text"), str) else None,
+            }
+        )
+    return nodes
 
 
 def template_cover_hero(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]]:
@@ -1057,8 +1213,28 @@ def template_p1_generic(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
     attribution = content_text(spec, "attribution", "")
     items = content_first_list(
         spec,
-        ["items", "steps", "events", "metrics", "points", "sections", "risks", "lanes", "nodes", "takeaways"],
-        ["Context", "Evidence", "Decision"],
+        [
+            "items",
+            "steps",
+            "events",
+            "metrics",
+            "points",
+            "sections",
+            "risks",
+            "lanes",
+            "nodes",
+            "takeaways",
+            "rows",
+            "trends",
+            "cards",
+            "pillars",
+            "notes",
+            "panels",
+            "bars",
+            "cells",
+            "tags",
+        ],
+        ["背景", "证据", "判断"],
     )[:6]
     if quote:
         items = [quote, attribution or "Source"] + items[:3]
@@ -1073,7 +1249,6 @@ def template_p1_generic(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
         f'<svg xmlns="{SVG_NS}" width="960" height="540" viewBox="0 0 960 540">',
         f'<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="{theme["background"]}"/>',
         f'<rect data-node-id="accent-rule" x="64" y="72" width="8" height="344" fill="{theme["primary"]}"/>',
-        f'<rect data-node-id="accent-panel" x="760" y="60" width="120" height="120" fill="{theme["accent"]}" opacity="0.20"/>',
         f'<text data-node-id="eyebrow" data-box-x="92" data-box-y="64" data-box-width="420" data-box-height="30" x="92" y="84" fill="{theme["primary"]}" font-size="18" font-weight="800" font-family="Inter">{escape(eyebrow)}</text>',
         f'<text data-node-id="title" data-box-x="92" data-box-y="108" data-box-width="700" data-box-height="96" x="92" y="158" fill="{theme["text"]}" font-size="46" font-weight="850" font-family="Inter">{escape(title)}</text>',
         f'<text data-node-id="subtitle" data-box-x="94" data-box-y="212" data-box-width="660" data-box-height="54" x="94" y="240" fill="{theme["muted"]}" font-size="22" font-weight="500" font-family="Inter">{escape(subtitle)}</text>',
@@ -1083,12 +1258,12 @@ def template_p1_generic(spec: dict[str, Any]) -> tuple[str, list[dict[str, Any]]
         y = 306 + (index // 3) * 92
         nodes.extend(
             [
-                {"id": f"item-card-{index + 1}", "kind": "rect", "x": x, "y": y, "width": 244, "height": 72},
-                {"id": f"item-{index + 1}", "kind": "text", "x": x + 16, "y": y + 15, "width": 212, "height": 44, "text": item},
+                {"id": f"item-card-{index + 1}", "kind": "rect", "x": x, "y": y, "width": 244, "height": 86},
+                {"id": f"item-{index + 1}", "kind": "text", "x": x + 16, "y": y + 13, "width": 212, "height": 62, "text": item},
             ]
         )
-        parts.append(f'<rect data-node-id="item-card-{index + 1}" x="{x}" y="{y}" width="244" height="72" fill="{theme["panel"]}" opacity="0.84"/>')
-        parts.append(f'<text data-node-id="item-{index + 1}" data-box-x="{x + 16}" data-box-y="{y + 15}" data-box-width="212" data-box-height="44" x="{x + 16}" y="{y + 43}" fill="{theme["text"]}" font-size="21" font-weight="720" font-family="Inter">{escape(item)}</text>')
+        parts.append(f'<rect data-node-id="item-card-{index + 1}" x="{x}" y="{y}" width="244" height="86" fill="{theme["panel"]}" opacity="0.84"/>')
+        parts.append(f'<text data-node-id="item-{index + 1}" data-box-x="{x + 16}" data-box-y="{y + 13}" data-box-width="212" data-box-height="62" x="{x + 16}" y="{y + 41}" fill="{theme["text"]}" font-size="19" font-weight="720" font-family="Inter">{escape(item)}</text>')
     parts.append("</svg>")
     return "\n".join(parts) + "\n", nodes
 
@@ -1124,7 +1299,7 @@ def render_satori_compatible_svg(spec: dict[str, Any]) -> tuple[str, list[dict[s
     if template_id == "data-story":
         return template_data_story(spec)
     if template_id in SUPPORTED_TEMPLATES:
-        return template_p1_generic(spec)
+        raise ArtboardError(f"template_id {template_id} requires the Node/Satori renderer; Python generic fallback is not allowed")
     raise ArtboardError(f"unsupported template_id: {template_id}")
 
 
@@ -1177,11 +1352,192 @@ def render_node_satori_svg(spec_path: Path, output_path: Path, png_path: Path, m
     return renderer
 
 
+def fmt_path_number(value: float) -> str:
+    return f"{value:g}"
+
+
+def is_path_command(token: str) -> bool:
+    return len(token) == 1 and token.isalpha()
+
+
+def read_path_number(tokens: list[str], index: int) -> tuple[float, int] | None:
+    if index >= len(tokens) or is_path_command(tokens[index]):
+        return None
+    try:
+        return float(tokens[index]), index + 1
+    except ValueError:
+        return None
+
+
+def read_path_numbers(tokens: list[str], index: int, count: int) -> tuple[list[float], int] | None:
+    values: list[float] = []
+    next_index = index
+    for _ in range(count):
+        read = read_path_number(tokens, next_index)
+        if read is None:
+            return None
+        value, next_index = read
+        values.append(value)
+    return values, next_index
+
+
+def normalize_satori_path_d(d: str) -> str | None:
+    tokens = PATH_TOKEN_RE.findall(d)
+    if not tokens:
+        return None
+    index = 0
+    command: str | None = None
+    x = 0.0
+    y = 0.0
+    start_x = 0.0
+    start_y = 0.0
+    parts: list[str] = []
+
+    while index < len(tokens):
+        if is_path_command(tokens[index]):
+            command = tokens[index]
+            index += 1
+        if command is None:
+            return None
+        lower = command.lower()
+        relative = command.islower()
+
+        if lower == "m":
+            read = read_path_numbers(tokens, index, 2)
+            if read is None:
+                return None
+            values, index = read
+            x = x + values[0] if relative else values[0]
+            y = y + values[1] if relative else values[1]
+            start_x = x
+            start_y = y
+            parts.append(f"M{fmt_path_number(x)} {fmt_path_number(y)}")
+            command = "l" if relative else "L"
+            continue
+
+        if lower == "l":
+            consumed = False
+            while index < len(tokens) and not is_path_command(tokens[index]):
+                read = read_path_numbers(tokens, index, 2)
+                if read is None:
+                    return None
+                values, index = read
+                x = x + values[0] if relative else values[0]
+                y = y + values[1] if relative else values[1]
+                parts.append(f"L{fmt_path_number(x)} {fmt_path_number(y)}")
+                consumed = True
+            if not consumed:
+                return None
+            continue
+
+        if lower == "h":
+            consumed = False
+            while index < len(tokens) and not is_path_command(tokens[index]):
+                read = read_path_number(tokens, index)
+                if read is None:
+                    return None
+                value, index = read
+                x = x + value if relative else value
+                parts.append(f"L{fmt_path_number(x)} {fmt_path_number(y)}")
+                consumed = True
+            if not consumed:
+                return None
+            continue
+
+        if lower == "v":
+            consumed = False
+            while index < len(tokens) and not is_path_command(tokens[index]):
+                read = read_path_number(tokens, index)
+                if read is None:
+                    return None
+                value, index = read
+                y = y + value if relative else value
+                parts.append(f"L{fmt_path_number(x)} {fmt_path_number(y)}")
+                consumed = True
+            if not consumed:
+                return None
+            continue
+
+        if lower == "a":
+            consumed = False
+            while index < len(tokens) and not is_path_command(tokens[index]):
+                read = read_path_numbers(tokens, index, 7)
+                if read is None:
+                    return None
+                values, index = read
+                end_x = x + values[5] if relative else values[5]
+                end_y = y + values[6] if relative else values[6]
+                if abs(end_x - x) > 0.001 or abs(end_y - y) > 0.001:
+                    parts.append(f"L{fmt_path_number(end_x)} {fmt_path_number(end_y)}")
+                x = end_x
+                y = end_y
+                consumed = True
+            if not consumed:
+                return None
+            continue
+
+        if lower == "c":
+            consumed = False
+            while index < len(tokens) and not is_path_command(tokens[index]):
+                read = read_path_numbers(tokens, index, 6)
+                if read is None:
+                    return None
+                values, index = read
+                if relative:
+                    x1, y1 = x + values[0], y + values[1]
+                    x2, y2 = x + values[2], y + values[3]
+                    end_x, end_y = x + values[4], y + values[5]
+                else:
+                    x1, y1, x2, y2, end_x, end_y = values
+                parts.append(
+                    f"C{fmt_path_number(x1)} {fmt_path_number(y1)} "
+                    f"{fmt_path_number(x2)} {fmt_path_number(y2)} "
+                    f"{fmt_path_number(end_x)} {fmt_path_number(end_y)}"
+                )
+                x = end_x
+                y = end_y
+                consumed = True
+            if not consumed:
+                return None
+            continue
+
+        if lower == "q":
+            consumed = False
+            while index < len(tokens) and not is_path_command(tokens[index]):
+                read = read_path_numbers(tokens, index, 4)
+                if read is None:
+                    return None
+                values, index = read
+                if relative:
+                    x1, y1 = x + values[0], y + values[1]
+                    end_x, end_y = x + values[2], y + values[3]
+                else:
+                    x1, y1, end_x, end_y = values
+                parts.append(f"Q{fmt_path_number(x1)} {fmt_path_number(y1)} {fmt_path_number(end_x)} {fmt_path_number(end_y)}")
+                x = end_x
+                y = end_y
+                consumed = True
+            if not consumed:
+                return None
+            continue
+
+        if lower == "z":
+            x = start_x
+            y = start_y
+            parts.append("Z")
+            command = None
+            continue
+
+        return None
+
+    return " ".join(parts) if parts else None
+
+
 def copy_shape(element: ElementTree.Element) -> str:
     name = local_name(element.tag)
-    attrs = {key: value for key, value in element.attrib.items() if not key.startswith("data-")}
+    attrs = {key: value for key, value in element.attrib.items() if not key.startswith("data-") and key not in STRIPPED_SATORI_ATTRS}
     attrs["slide:role"] = "shape"
-    if name == "path" and "d" in attrs and "a" in str(attrs.get("d", "")) and {"x", "y", "width", "height"}.issubset(attrs):
+    if name == "path" and "d" in attrs and any(command in str(attrs.get("d", "")) for command in ("a", "A")) and {"x", "y", "width", "height"}.issubset(attrs):
         x = number(attrs.get("x"), 0)
         y = number(attrs.get("y"), 0)
         width = number(attrs.get("width"), 0)
@@ -1193,14 +1549,18 @@ def copy_shape(element: ElementTree.Element) -> str:
         if width > 0 and height > 0:
             replacement_attrs.update({"x": f"{x:g}", "y": f"{y:g}", "width": f"{width:g}", "height": f"{height:g}"})
             return f"<rect {svg_attrs(replacement_attrs)} />"
+    if name == "path" and "d" in attrs:
+        normalized_d = normalize_satori_path_d(str(attrs["d"]))
+        if normalized_d:
+            attrs["d"] = normalized_d
     return f"<{name} {svg_attrs(attrs)} />"
 
 
 def text_style_from_element(element: ElementTree.Element) -> dict[str, str]:
     x = number(attr(element, "data-box-x") or attr(element, "x"), 0)
     y = number(attr(element, "data-box-y"), number(attr(element, "y"), 0) - number(attr(element, "font-size"), 18))
-    width = number(attr(element, "data-box-width"), 360)
-    height = number(attr(element, "data-box-height"), number(attr(element, "font-size"), 18) * 1.35)
+    width = number(attr(element, "data-box-width") or attr(element, "width"), 360)
+    height = number(attr(element, "data-box-height") or attr(element, "height"), number(attr(element, "font-size"), 18) * 1.35)
     font_size = attr(element, "font-size") or "18"
     font_weight = attr(element, "font-weight") or "400"
     fill = attr(element, "fill") or "#111827"
@@ -1265,12 +1625,31 @@ def has_cjk(text: str) -> bool:
     return any("\u4e00" <= char <= "\u9fff" for char in text)
 
 
+def estimated_run_width(text: str, font_size: float, measured_span: float) -> float:
+    if text.strip().isdigit() and measured_span > 0:
+        return measured_span
+    total = 0.0
+    for char in text:
+        if "\u4e00" <= char <= "\u9fff":
+            total += font_size
+        elif char.isspace():
+            total += font_size * 0.35
+        elif char.isascii() and (char.isalnum() or char in "-_/"):
+            total += font_size * 0.62
+        else:
+            total += font_size * 0.72
+    if not text:
+        total = measured_span
+    factor = 1.04 if has_cjk(text) else 1.12
+    return max(measured_span, total * factor)
+
+
 def text_run_to_foreign_object(elements: list[ElementTree.Element]) -> str:
     first = elements[0]
     font_size = number(attr(first, "font-size"), 18)
     x_values = [number(attr(item, "x"), 0) for item in elements]
     x = min(x_values) if x_values else 0
-    y = number(attr(first, "y"), 0) - font_size
+    y = number(attr(first, "y"), 0) - font_size * 0.9
     text_parts: list[str] = []
     max_x = x
     previous_right: float | None = None
@@ -1278,16 +1657,20 @@ def text_run_to_foreign_object(elements: list[ElementTree.Element]) -> str:
         item_x = number(attr(item, "x"), x)
         text = "".join(item.itertext())
         measured_width = number(attr(item, "width"), 0)
-        estimated_width = max(measured_width, font_size * 0.45, len(text) * font_size * 0.62)
+        if text.strip().isdigit() and measured_width > 0:
+            estimated_width = measured_width
+        else:
+            estimated_width = max(measured_width, font_size * 0.45, len(text) * font_size * 0.62)
         if previous_right is not None and item_x - previous_right > font_size * 0.35:
             text_parts.append(" ")
         text_parts.append(text)
         previous_right = item_x + estimated_width
         max_x = max(max_x, previous_right)
     text = "".join(text_parts).strip()
-    conservative_width = len(text) * font_size if has_cjk(text) else 0
-    box_width = min(960 - x, max(max_x - x, conservative_width, font_size * 2))
-    box_height = max(number(attr(first, "height"), font_size * 1.35), font_size * 1.35, 45)
+    measured_span = max_x - x
+    conservative_width = estimated_run_width(text, font_size, measured_span)
+    box_width = min(960 - x, max(measured_span, conservative_width, font_size * 0.8) + 8)
+    box_height = max(number(attr(first, "height"), font_size * 1.25), font_size * 1.25) + 4
     synthetic = ElementTree.Element(first.tag, dict(first.attrib))
     synthetic.text = text
     synthetic.set("data-box-x", f"{x:g}")
@@ -1297,15 +1680,155 @@ def text_run_to_foreign_object(elements: list[ElementTree.Element]) -> str:
     return text_to_foreign_object(synthetic)
 
 
+def parse_css_number(style: str, key: str, fallback: float) -> float:
+    for part in style.split(";"):
+        if ":" not in part:
+            continue
+        name, value = part.split(":", 1)
+        if name.strip().lower() != key:
+            continue
+        raw = value.strip().lower().removesuffix("px")
+        try:
+            return float(raw)
+        except ValueError:
+            return fallback
+    return fallback
+
+
+def foreign_object_font_size(element: ElementTree.Element) -> float:
+    for child in list(element):
+        style = child.attrib.get("style")
+        if isinstance(style, str):
+            return parse_css_number(style, "font-size", 18.0)
+    return 18.0
+
+
+def foreign_object_text(element: ElementTree.Element) -> str:
+    return "".join(element.itertext()).strip()
+
+
+def preview_estimated_text_width(text: str, font_size: float) -> float:
+    width = 0.0
+    for char in text:
+        width += font_size * (0.92 if "\u4e00" <= char <= "\u9fff" else 0.56)
+    return width
+
+
+def foreign_object_bbox(element: ElementTree.Element) -> dict[str, float] | None:
+    try:
+        return {
+            "x": float(element.attrib.get("x", "0")),
+            "y": float(element.attrib.get("y", "0")),
+            "width": float(element.attrib.get("width", "0")),
+            "height": float(element.attrib.get("height", "0")),
+        }
+    except ValueError:
+        return None
+
+
+def bbox_right(bbox: dict[str, float]) -> float:
+    return bbox["x"] + bbox["width"]
+
+
+def bbox_bottom(bbox: dict[str, float]) -> float:
+    return bbox["y"] + bbox["height"]
+
+
+def bbox_intersects(left: dict[str, float], right: dict[str, float]) -> bool:
+    return not (
+        bbox_right(left) <= right["x"]
+        or bbox_right(right) <= left["x"]
+        or bbox_bottom(left) <= right["y"]
+        or bbox_bottom(right) <= left["y"]
+    )
+
+
+def set_svg_number_attr(element: ElementTree.Element, key: str, value: float) -> None:
+    element.set(key, f"{value:g}")
+
+
+def repair_foreign_object_layout(svg_text: str) -> str:
+    try:
+        root = ElementTree.fromstring(svg_text)
+    except ElementTree.ParseError:
+        return svg_text
+    changed = False
+    text_elements = [element for element in root.iter() if local_name(element.tag) == "foreignObject"]
+
+    for element in text_elements:
+        text_value = foreign_object_text(element)
+        if text_value.isdigit() and len(text_value) >= 2:
+            font_size = foreign_object_font_size(element)
+            bbox = foreign_object_bbox(element)
+            if bbox:
+                min_width = min(960.0 - bbox["x"], preview_estimated_text_width(text_value, font_size) + 10)
+                if bbox["width"] < min_width:
+                    set_svg_number_attr(element, "width", min_width)
+                    changed = True
+                if bbox["height"] < font_size * 2.5:
+                    set_svg_number_attr(element, "height", font_size * 2.5)
+                    changed = True
+
+    for _ in range(12):
+        moved = False
+        items: list[tuple[ElementTree.Element, dict[str, float]]] = []
+        for element in text_elements:
+            bbox = foreign_object_bbox(element)
+            if bbox:
+                items.append((element, bbox))
+        items.sort(key=lambda item: (item[1]["y"], item[1]["x"]))
+        for left_index, (left_element, left_bbox) in enumerate(items):
+            for right_element, right_bbox in items[left_index + 1 :]:
+                if not bbox_intersects(left_bbox, right_bbox):
+                    continue
+                same_row = abs(left_bbox["y"] - right_bbox["y"]) <= min(left_bbox["height"], right_bbox["height"]) * 0.65
+                if same_row and left_bbox["x"] <= right_bbox["x"]:
+                    left_text = foreign_object_text(left_element)
+                    right_text = foreign_object_text(right_element)
+                    if right_text.isdigit() and not left_text.isdigit():
+                        new_left_x = max(48.0, right_bbox["x"] - left_bbox["width"] - 4)
+                        if new_left_x < left_bbox["x"]:
+                            set_svg_number_attr(left_element, "x", new_left_x)
+                            moved = True
+                            changed = True
+                            break
+                    new_x = bbox_right(left_bbox) + 4
+                    if new_x + right_bbox["width"] <= 920:
+                        set_svg_number_attr(right_element, "x", new_x)
+                        moved = True
+                        changed = True
+                        break
+                lower_element, upper_bbox = (right_element, left_bbox) if right_bbox["y"] >= left_bbox["y"] else (left_element, right_bbox)
+                lower_bbox = right_bbox if lower_element is right_element else left_bbox
+                new_y = bbox_bottom(upper_bbox) + 2
+                if new_y + lower_bbox["height"] <= 512:
+                    set_svg_number_attr(lower_element, "y", new_y)
+                    moved = True
+                    changed = True
+                    break
+            if moved:
+                break
+        if not moved:
+            break
+
+    if not changed:
+        return svg_text
+    ElementTree.register_namespace("", SVG_NS)
+    ElementTree.register_namespace("slide", SLIDE_NS)
+    return ElementTree.tostring(root, encoding="unicode") + "\n"
+
+
 def scan_unsupported(root: ElementTree.Element) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     for element in root.iter():
         name = local_name(element.tag)
+        if name in SATORI_INTERNAL_ELEMENTS:
+            continue
         if name in FAIL_FAST_ELEMENTS:
             issues.append({"code": "satori_svg_element_fail_fast", "message": f"unsupported Satori SVG element in P0a: {name}"})
         elif name not in SUPPORTED_SATORI_ELEMENTS:
             issues.append({"code": "satori_svg_element_unsupported", "message": f"unsupported Satori SVG element in P0a: {name}"})
-        if "filter" in element.attrib or "clip-path" in element.attrib or "mask" in element.attrib:
+        if "filter" in element.attrib:
             issues.append({"code": "satori_svg_effect_fail_fast", "message": f"unsupported effect attribute on {name}"})
     return issues
 
@@ -1356,11 +1879,13 @@ def compile_svg_markup_to_svglide(
             group_children = compile_sequence(list(element))
             if not group_children:
                 return []
-            attrs = {key: value for key, value in element.attrib.items() if not key.startswith("data-")}
+            attrs = {key: value for key, value in element.attrib.items() if not key.startswith("data-") and key not in STRIPPED_SATORI_ATTRS}
             attr_text = svg_attrs(attrs)
             if attr_text:
                 return [f"<g {attr_text}>\n" + "\n".join(f"    {child}" for child in group_children) + "\n  </g>"]
             return group_children
+        if name in SATORI_INTERNAL_ELEMENTS:
+            return []
         if name == "text":
             native_mapped.append("text->foreignObject")
             return [text_to_foreign_object(element)]
@@ -1800,8 +2325,6 @@ def render_project(project: Path) -> dict[str, Any]:
         semantic_map_path = artboard_dir / f"{page_name}.semantic-map.json"
         node_layout_path = artboard_dir / f"{page_name}.node-layout-map.json"
         svglide_path = project / "04-svg" / f"{page_name}.svg"
-        canvas_template_svg, nodes = render_satori_compatible_svg(spec)
-        canvas_template_path.write_text(canvas_template_svg, encoding="utf-8")
         write_json(canvas_spec_artifact_path, spec)
         actual_satori_package = use_node_satori_renderer()
         node_adapter_path: Path | None = None
@@ -1809,25 +2332,39 @@ def render_project(project: Path) -> dict[str, Any]:
         if actual_satori_package:
             node_adapter_path = render_node_satori_svg(canvas_spec_artifact_path, satori_path, png_path, metadata_path, node_observations_path)
             satori_svg = satori_path.read_text(encoding="utf-8")
+            canvas_template_svg = satori_svg
+            canvas_template_path.write_text(canvas_template_svg, encoding="utf-8")
+            nodes = nodes_from_satori_svg(satori_path)
             renderer_metadata = read_json(metadata_path)
             satori_preview = validate_satori_preview_svg(satori_svg, strict=False)
+            svglide_svg, compiler = compile_satori_svg_to_svglide(satori_svg)
+            svglide_svg = repair_foreign_object_layout(svglide_svg)
+            semantic_source = "SatoriSVG"
+            compiler_input_path = satori_path
         else:
+            canvas_template_svg, nodes = render_satori_compatible_svg(spec)
+            canvas_template_path.write_text(canvas_template_svg, encoding="utf-8")
             satori_svg = canvas_template_svg
             satori_preview = validate_satori_preview_svg(satori_svg, strict=True)
             metadata_path.write_text(json.dumps({"node_version": None, "satori_version": None, "resvg_version": None, "font_path": None}, indent=2) + "\n", encoding="utf-8")
             write_json(node_observations_path, {"version": "svglide-node-observations/v1", "observation_source": "rendered_satori_svg_parse", "nodes": []})
+            svglide_svg, compiler = compile_canvas_template_svg_to_svglide(canvas_template_svg)
+            semantic_source = "CanvasSpec"
+            compiler_input_path = canvas_template_path
+        semantic_elements = semantic_elements_from_nodes(nodes, spec)
+        trace_summary = decorative_trace_summary(semantic_elements)
         semantic_map = {
             "version": SEMANTIC_MAP_VERSION,
             "page": index,
             "template_id": spec.get("template_id"),
             "theme_id": spec.get("theme_id"),
             "theme": normalize_theme(spec),
-            "semantic_source": "CanvasSpec",
+            "semantic_source": semantic_source,
             "content_keys": sorted((spec.get("content") or {}).keys()) if isinstance(spec.get("content"), dict) else [],
-            "elements": semantic_elements_from_nodes(nodes),
+            "elements": semantic_elements,
+            "trace_summary": trace_summary,
         }
         write_json(semantic_map_path, semantic_map)
-        svglide_svg, compiler = compile_semantic_map_to_svglide(semantic_map)
         satori_path.write_text(satori_svg, encoding="utf-8")
         svglide_path.write_text(svglide_svg, encoding="utf-8")
         if not png_path.exists():
@@ -1841,14 +2378,21 @@ def render_project(project: Path) -> dict[str, Any]:
             observations_payload = read_json(node_observations_path)
             raw_observations = observations_payload.get("nodes")
             renderer_observations = raw_observations if isinstance(raw_observations, list) else []
+        layout_observations = renderer_observations
+        if semantic_source == "SatoriSVG":
+            # The semantic/layout nodes above are parsed from the final raw
+            # Satori SVG. Renderer hook observations are useful audit evidence,
+            # but they describe intermediate flex nodes and must not be matched
+            # against final SVG element boxes for drift gating.
+            layout_observations = []
         node_layout_map = svglide_node_layout_drift.build_node_layout_map(
             page=index,
             expected_nodes=nodes,
-            renderer_observations=renderer_observations,
+            renderer_observations=layout_observations,
             satori_svg_path=satori_path,
         )
         write_json(node_layout_path, node_layout_map)
-        input_semantic_hash = file_sha256(semantic_map_path)
+        input_semantic_hash = file_sha256(compiler_input_path)
         compiler["input_semantic_hash"] = input_semantic_hash
         receipt_path = artboard_dir / f"{page_name}.receipt.json"
         receipt = {
@@ -1883,8 +2427,8 @@ def render_project(project: Path) -> dict[str, Any]:
             "render_metadata_sha256": file_sha256(metadata_path),
             "canvas_template_svg": relpath(canvas_template_path, project),
             "canvas_template_svg_sha256": file_sha256(canvas_template_path),
-            "compiler_input": relpath(semantic_map_path, project),
-            "compiler_input_sha256": file_sha256(semantic_map_path),
+            "compiler_input": relpath(compiler_input_path, project),
+            "compiler_input_sha256": file_sha256(compiler_input_path),
             "input_semantic_hash": input_semantic_hash,
             "semantic_map": relpath(semantic_map_path, project),
             "semantic_map_sha256": file_sha256(semantic_map_path),
@@ -1893,6 +2437,7 @@ def render_project(project: Path) -> dict[str, Any]:
             "svglide_svg": relpath(svglide_path, project),
             "svglide_svg_sha256": file_sha256(svglide_path),
             "compiler": compiler,
+            "decorative_trace_summary": trace_summary,
             "satori_preview": satori_preview,
             "created_at": now_iso(),
         }
@@ -1926,7 +2471,7 @@ def render_project(project: Path) -> dict[str, Any]:
             },
             "bridge_page": {
                 "page": index,
-                "semantic_source": "CanvasSpec",
+                "semantic_source": compiler.get("semantic_source"),
                 "canvas_spec_sha256": json_sha256(spec),
                 "semantic_map": relpath(semantic_map_path, project),
                 "semantic_map_sha256": file_sha256(semantic_map_path),
@@ -1935,8 +2480,8 @@ def render_project(project: Path) -> dict[str, Any]:
                 "node_layout_map_sha256": file_sha256(node_layout_path),
                 "canvas_template_svg": relpath(canvas_template_path, project),
                 "canvas_template_svg_sha256": file_sha256(canvas_template_path),
-                "compiler_input": relpath(semantic_map_path, project),
-                "compiler_input_sha256": file_sha256(semantic_map_path),
+                "compiler_input": relpath(compiler_input_path, project),
+                "compiler_input_sha256": file_sha256(compiler_input_path),
                 "compiler_input_type": compiler.get("compiler_input"),
                 "satori_svg_usage": compiler.get("satori_svg_usage"),
                 "satori_svg": relpath(satori_path, project),

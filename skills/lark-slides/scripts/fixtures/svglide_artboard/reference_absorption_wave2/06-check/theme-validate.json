@@ -1,0 +1,123 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-22T04:03:06+08:00",
+  "inputs": {
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "9fca2cd8e406fd89cceeaf1bf3e67b710d6824713b0a95ac11f3a66fb6572959"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-validate.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "status": "passed",
+      "template_id": "ledger-briefing",
+      "theme_id": "ivory-ledger",
+      "theme_sha256": "894e3f6900214dab29a499f4641cf7027867274c04f679175c5802d1810dd866"
+    },
+    {
+      "issues": [],
+      "page": 2,
+      "status": "passed",
+      "template_id": "intelligence-brief",
+      "theme_id": "signal-navy",
+      "theme_sha256": "3ea0f19137bcfe341d12a28154d3acb20cbb1e6447ef2a2d8a8a35517a9ff2e4"
+    },
+    {
+      "issues": [],
+      "page": 3,
+      "status": "passed",
+      "template_id": "printed-program",
+      "theme_id": "terracotta-program",
+      "theme_sha256": "91382f387b77993a95149360a80a5a243019c89ab09a161b55804026ca519c28"
+    },
+    {
+      "issues": [],
+      "page": 4,
+      "status": "passed",
+      "template_id": "retro-ui-dashboard",
+      "theme_id": "retro-desktop",
+      "theme_sha256": "8acec003071e67f9a76a1ff8ba4782d870a4fb5a4d267ca9ab1566b1c01d26a6"
+    },
+    {
+      "issues": [],
+      "page": 5,
+      "status": "passed",
+      "template_id": "product-ribbon",
+      "theme_id": "sakura-catalog",
+      "theme_sha256": "a9b51298f1d3fe904e0b38e135510ba161a8a33bd42ab6ac93ad9ce389a08e51"
+    },
+    {
+      "issues": [],
+      "page": 6,
+      "status": "passed",
+      "template_id": "type-mass-poster",
+      "theme_id": "acid-studio",
+      "theme_sha256": "78a58a02554b3e000d7566ba04f7f6b861c5835a3caddf423a82d83a73f7b14a"
+    },
+    {
+      "issues": [],
+      "page": 7,
+      "status": "passed",
+      "template_id": "brutalist-matrix",
+      "theme_id": "raw-grid-mono",
+      "theme_sha256": "323370a1c49e365d00d1928cff4ec366c6819e72b063ddfaa8433f4688fc6547"
+    },
+    {
+      "issues": [],
+      "page": 8,
+      "status": "passed",
+      "template_id": "annotated-field-board",
+      "theme_id": "field-notebook",
+      "theme_sha256": "7e8f772d177cc2abcf9c95fe9cb8bb0c93e770dcea2b1316e98d60ad19d3ca3b"
+    }
+  ],
+  "schema_version": "svglide-theme-validate/v1",
+  "stage": "theme_validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 8,
+    "theme_count": 8,
+    "warning_count": 0
+  },
+  "theme_files": [
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/ivory-ledger.json",
+      "sha256": "a5135528b9072d2374bf51d299f3426b2a57d0ac591377dac8576e95d7903f5e"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/signal-navy.json",
+      "sha256": "73a9a17da3031e969e12d67e7b05a3e8caf96b116bbf80ec7a3ced293e00b8a3"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/terracotta-program.json",
+      "sha256": "03a61440d0032ecc553cb9426bfaf2115801fa7a21153d38bf30a5b6fd687d9e"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/retro-desktop.json",
+      "sha256": "27fccd3001641638e6966d1806539bc487b8db12c643aed3d07d8c039787d6b5"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/sakura-catalog.json",
+      "sha256": "038cfd82e4825ff0cc5d1209d5cfabf13f524ba544e752ca04e84d1af291c579"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/acid-studio.json",
+      "sha256": "ee79d22fa14d7a8e586f01c9b8fe1d9a77c279cb77341274480a2ea7ec5c3d6b"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/raw-grid-mono.json",
+      "sha256": "1dbcf5a6ed13cc8c89f6bfe6c3816d0375f12e24bc48b03f9888ef6cc632e026"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/field-notebook.json",
+      "sha256": "008256d00374a1ad3e3ecb037623f4c1c2bbc8e7cd22a604c236e76392fd25bb"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": "svglide-strategy-review/v1",
+  "status": "passed",
+  "language": "zh-CN",
+  "audience": "SVGlide engineers",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "page_type": "cover",
+      "section": "ARCHITECTURE SPEC",
+      "role": "thesis",
+      "title": "系统架构规格",
+      "key_message": "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
+      "body_points": [
+        "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
+        "输入边界",
+        "处理结构",
+        "接口契约"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:architectural-spec",
+        "svglide-theme:stone-architect"
+      ]
+    },
+    {
+      "page": 2,
+      "page_type": "content",
+      "section": "TREND INDEX",
+      "role": "evidence",
+      "title": "AI 应用趋势索引",
+      "key_message": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+      "body_points": [
+        "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+        "AI 应用趋势索引 的模板资产化验证",
+        "AI 应用趋势索引 的证据链验证"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:trend-grid-report",
+        "svglide-theme:magazine-cobalt"
+      ]
+    },
+    {
+      "page": 3,
+      "page_type": "content",
+      "section": "EDITORIAL NOTE",
+      "role": "evidence",
+      "title": "证据改变了决策",
+      "key_message": "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+      "body_points": [
+        "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+        "质量稳定",
+        "叙事更聚焦",
+        "证据仍需补齐"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:serif-stat-editorial",
+        "svglide-theme:forest-editorial"
+      ]
+    },
+    {
+      "page": 4,
+      "page_type": "closing",
+      "section": "POSTER CLAIM",
+      "role": "evidence",
+      "title": "现在就做判断",
+      "key_message": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+      "body_points": [
+        "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+        "现在就做判断 的模板资产化验证"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:poster-stat-punch",
+        "svglide-theme:tomato-poster"
+      ]
+    }
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "issues": [],
+  "generated_at": "2026-06-21T20:01:48.031226+00:00"
+}

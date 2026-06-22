@@ -1,0 +1,38 @@
+{
+  "schema_version": "svglide-chart-verify/v1",
+  "status": "passed",
+  "action": "create_live",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+  "started_at": "2026-06-21T20:01:50.363233+00:00",
+  "ended_at": "2026-06-21T20:01:50.364494+00:00",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "svg_dir": "04-svg/prepared"
+  },
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "f06459de8de24059fd0de179ae49d9e9313c2031bbd4a4260bb5f4d43f57f925"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "7359c8faf9e8827c3c45761056c453e5f08aa29f0f74aac848f1345c8bad2064"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "ad94d4af0e7a8a0e2c2671338fc939e67a266b48fb9e7a16e966d4b215eac9a0"
+    },
+    {
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "a9fd88d8dcbc379884b8bfbc0814096fbc8ce422b714fb96262db939cdd310ac"
+    }
+  ],
+  "pages": [],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "required_chart_count": 0
+  },
+  "issues": []
+}

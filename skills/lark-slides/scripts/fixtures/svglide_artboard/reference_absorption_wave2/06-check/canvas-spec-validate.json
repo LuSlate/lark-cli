@@ -1,0 +1,98 @@
+{
+  "action": "create_live",
+  "inputs": {
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/ivory-ledger.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "06332c3299a7ffc32c2fa9f3773416f13ce45f47bf08a2f7bcebf9d940e2c81e"
+  },
+  "issues": [],
+  "output_path": "06-check/canvas-spec-validate.json",
+  "pages": [
+    {
+      "canvas_spec_sha256": "4a5a6bcd7b969481c2b40339d8b387396ee1d76b60903e6869b62f12100d7f47",
+      "error_count": 0,
+      "page": 1,
+      "template_id": "ledger-briefing",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "ivory-ledger",
+      "theme_registry_sha256": "06332c3299a7ffc32c2fa9f3773416f13ce45f47bf08a2f7bcebf9d940e2c81e"
+    },
+    {
+      "canvas_spec_sha256": "4d126a7946f304caf3e946f61c973861bb32cf41b0b5d3fcafe98aab1908cd5e",
+      "error_count": 0,
+      "page": 2,
+      "template_id": "intelligence-brief",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "signal-navy",
+      "theme_registry_sha256": "a1841dab1303b1cefa083ff97ab874cc7ae45645338037423d542b4ab54a6f1e"
+    },
+    {
+      "canvas_spec_sha256": "bf9257281eb053cd3addada6e1e0da346373ccb160c656663ee610964cb10069",
+      "error_count": 0,
+      "page": 3,
+      "template_id": "printed-program",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "terracotta-program",
+      "theme_registry_sha256": "e689c1f022a267d1c3f1ea6a3c1d6985204f91bce0d3855391123d1676dde692"
+    },
+    {
+      "canvas_spec_sha256": "e7e46c00543527fe0ae80eb7158741fe6a1a9a426789c2c6cdbf1225513818dc",
+      "error_count": 0,
+      "page": 4,
+      "template_id": "retro-ui-dashboard",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "retro-desktop",
+      "theme_registry_sha256": "710f6b4e9fa6ef45aa331782ea3e34fbd247f026d3b771b9544f49a70c524fae"
+    },
+    {
+      "canvas_spec_sha256": "3707b229263ba7bb554f6cff285f16a3177cbd6162911f3e4f8eff8c854fdde8",
+      "error_count": 0,
+      "page": 5,
+      "template_id": "product-ribbon",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "sakura-catalog",
+      "theme_registry_sha256": "3b088549ae5d807603cc30047ae77deac4aa1c063b606a6687979719b46df145"
+    },
+    {
+      "canvas_spec_sha256": "a187561107a76d3fe199b3823b9dbd34d99b603e92604a252ecfbb36c7f710ee",
+      "error_count": 0,
+      "page": 6,
+      "template_id": "type-mass-poster",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "acid-studio",
+      "theme_registry_sha256": "eb131f6e5a92a20a2f5f67bdeddccbc793811ed5bbcd68b94dc5d577ab1e4b80"
+    },
+    {
+      "canvas_spec_sha256": "3721b111d04a50a07c2c32ef809d912ec2d7c07f60d79fb549c7a601fbc13afc",
+      "error_count": 0,
+      "page": 7,
+      "template_id": "brutalist-matrix",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "raw-grid-mono",
+      "theme_registry_sha256": "8b6e5030cb22d99b131d9bede8501229709fc7b2d0dfdd0bab35763fad59e96a"
+    },
+    {
+      "canvas_spec_sha256": "b31c5936c26b5159c00f96d4c3aebe86850955c71b7aaf79f992492f083fa43c",
+      "error_count": 0,
+      "page": 8,
+      "template_id": "annotated-field-board",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "field-notebook",
+      "theme_registry_sha256": "2e327102644374c09ebb67c2906ac6be53a4e4f36e070969d5c8a41d0ac74bed"
+    }
+  ],
+  "schema_version": "svglide-canvas-spec-validate/v1",
+  "stage": "canvas-spec-validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 8,
+    "warning_count": 0
+  }
+}

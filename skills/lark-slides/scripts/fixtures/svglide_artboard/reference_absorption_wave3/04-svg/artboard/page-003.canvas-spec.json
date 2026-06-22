@@ -1,0 +1,76 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "cards": [
+      "质量稳定",
+      "叙事更聚焦",
+      "证据仍需补齐"
+    ],
+    "eyebrow": "EDITORIAL NOTE",
+    "stat": "73%",
+    "subtitle": "适合年度报告、用户研究、组织叙事中的大数字与编辑式卡片。",
+    "title": "证据改变了决策"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 132,
+        "width": 760,
+        "x": 56,
+        "y": 70
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "serif-stat-editorial",
+  "theme": {
+    "colors": {
+      "accent": "#E89CB1",
+      "background": "#EFE7D4",
+      "muted": "#50634B",
+      "panel": "#E6DCC4",
+      "primary": "#2E4A2A",
+      "text": "#1A1A17"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.editorial-forest.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "forest-editorial",
+    "typography": {
+      "body": 22,
+      "label": 16,
+      "subtitle": 20,
+      "title": 44
+    }
+  },
+  "theme_id": "forest-editorial",
+  "version": "svglide-canvas-spec/v1"
+}

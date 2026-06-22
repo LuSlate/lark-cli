@@ -1,0 +1,197 @@
+{
+  "canvas_spec_path": "02-plan/slide_plan.json#/slides/0/canvas_spec",
+  "canvas_spec_sha256": "d07c27dd69ff6df6686430c1eb9e062d8d2705dec91c1b4f736d90d0033bdc14",
+  "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+  "canvas_template_svg_sha256": "fdec653963ce2862ee4695bb0c4b968a0062ade8d10b187cc6a480474a7d9fd4",
+  "compiler": {
+    "compiler_input": "SemanticMapIR",
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "input_semantic_hash": "b8af528254239aeef26fa9639d4124b192e02940326cfedb385135895fed30a9",
+    "native_mapped": [
+      "rect",
+      "rect",
+      "text",
+      "text",
+      "text",
+      "path",
+      "line",
+      "rect",
+      "rect",
+      "rect",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text"
+    ],
+    "satori_svg_usage": "preview_only",
+    "semantic_source": "CanvasSpec"
+  },
+  "compiler_input": "04-svg/artboard/page-001.semantic-map.json",
+  "compiler_input_sha256": "b8af528254239aeef26fa9639d4124b192e02940326cfedb385135895fed30a9",
+  "created_at": "2026-06-22T04:03:08+08:00",
+  "font_hashes": [
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+      "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+    }
+  ],
+  "input_semantic_hash": "b8af528254239aeef26fa9639d4124b192e02940326cfedb385135895fed30a9",
+  "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+  "node_layout_map_sha256": "eaee8c8bc43ca941195d021b8bcf5554f25b1a22628b26f3c74115ae403946b4",
+  "node_version": "v20.18.1",
+  "page": 1,
+  "png": "04-svg/artboard/page-001.png",
+  "png_sha256": "e578740de5ffa440c2e5e8ad463b49c292fc72058a69a00090ec95509464a0bd",
+  "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+  "render_metadata_sha256": "7f2f929f209b11d8d6e95c45b83bb529d0bd356dca4727c9ca29ba3cfa2bc45d",
+  "renderer": {
+    "actual_satori_package": true,
+    "adapter": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "engine": "satori-node",
+    "name": "satori-resvg-p0"
+  },
+  "resvg_version": "2.6.2",
+  "satori_preview": {
+    "element_counts": {
+      "clipPath": 7,
+      "defs": 7,
+      "mask": 29,
+      "path": 14,
+      "rect": 39,
+      "svg": 1,
+      "text": 67
+    },
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "issues": [
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      }
+    ],
+    "status": "warning",
+    "strict": false
+  },
+  "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+  "satori_svg_sha256": "3c55fc935a4d391c5b317a2784eba20781deb0e75d199e3818e11a4be02e0e0e",
+  "satori_version": "0.26.0",
+  "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+  "semantic_map_sha256": "b8af528254239aeef26fa9639d4124b192e02940326cfedb385135895fed30a9",
+  "stage": "generate_svg",
+  "status": "passed",
+  "svglide_svg": "04-svg/page-001.svg",
+  "svglide_svg_sha256": "9934c0e613972e72f7c39656501f88b7a399860b1cb986fd21fdcfc4a0439ce0",
+  "template_id": "ledger-briefing",
+  "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+  "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+  "theme_files": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/ivory-ledger.json"
+  ],
+  "theme_id": "ivory-ledger",
+  "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+  "theme_registry_sha256": "06332c3299a7ffc32c2fa9f3773416f13ce45f47bf08a2f7bcebf9d940e2c81e",
+  "version": "svglide-artboard-receipt/v1"
+}

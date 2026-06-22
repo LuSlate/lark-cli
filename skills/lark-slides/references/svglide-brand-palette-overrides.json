@@ -1,0 +1,49 @@
+{
+  "schema_version": "svglide-brand-palette-overrides/v1",
+  "updated_at": "2026-06-22",
+  "policy": "Project-level token overrides must come from user_provided colors, brand palette registry, source asset extraction, verified official lookup, or stable fallback. Manual seed entries cannot be promoted to high confidence without verified source_trace.",
+  "overrides": {
+    "nvidia": {
+      "primary": "#76B900",
+      "accent": "#111111",
+      "scheme": "dark",
+      "confidence": "medium",
+      "source_ref": "svglide-brand-palette-registry.json:nvidia"
+    },
+    "amd": {
+      "primary": "#ED1C24",
+      "accent": "#111111",
+      "scheme": "dark",
+      "confidence": "medium",
+      "source_ref": "svglide-brand-palette-registry.json:amd"
+    },
+    "apple": {
+      "primary": "#A2AAAD",
+      "accent": "#111111",
+      "scheme": "light",
+      "confidence": "medium",
+      "source_ref": "svglide-brand-palette-registry.json:apple"
+    },
+    "openai": {
+      "primary": "#10A37F",
+      "accent": "#111111",
+      "scheme": "mixed",
+      "confidence": "medium",
+      "source_ref": "svglide-brand-palette-registry.json:openai"
+    },
+    "zhipu": {
+      "primary": "#315CFF",
+      "accent": "#7C3AED",
+      "scheme": "dark",
+      "confidence": "low",
+      "source_ref": "svglide-brand-palette-registry.json:zhipu"
+    },
+    "minimax": {
+      "primary": "#4F46E5",
+      "accent": "#06B6D4",
+      "scheme": "dark",
+      "confidence": "low",
+      "source_ref": "svglide-brand-palette-registry.json:minimax"
+    }
+  }
+}

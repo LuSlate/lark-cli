@@ -1,0 +1,57 @@
+{
+  "source_item_id": "svglide-baseline.components",
+  "absorbed_as": [
+    "owned_baseline_runtime_asset",
+    "component_variant"
+  ],
+  "svglide_asset_ids": [
+    "component.AccentShape",
+    "component.AffiliationMarker",
+    "component.ArchitectureNode",
+    "component.ArchitectureNodeBlock",
+    "component.Badge",
+    "component.BarMark",
+    "component.BarSeries",
+    "component.Callout",
+    "component.Chip",
+    "component.DividerRule",
+    "component.FigurePlaceholder",
+    "component.ImageCaptionBlock",
+    "component.ImageFrame",
+    "component.IndexNumber",
+    "component.LegendDot",
+    "component.MetricTile",
+    "component.PosterSection",
+    "component.ProcessStep",
+    "component.ProcessStepCard",
+    "component.QuoteBlock",
+    "component.ResearchSectionBlock",
+    "component.RiskBanner",
+    "component.RiskSeverityPill",
+    "component.RoadmapLane",
+    "component.RoadmapProgressLine",
+    "component.SectionHeader",
+    "component.StatCard",
+    "component.Subtitle",
+    "component.TextBlock",
+    "component.TimelineNode",
+    "component.TimelineStepMarker",
+    "component.Title"
+  ],
+  "non_copying_transform": "Existing SVGlide renderer primitives and baseline component variants are recorded as owned runtime abstractions, not as imported reference code.",
+  "forbidden_usage": [
+    "do_not_relabel_baseline_assets_as_external_reference_absorption",
+    "do_not_import_raw_external_runtime_artifacts",
+    "do_not_claim_backend_readback_without_receipt"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-component-registry.json"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/cover-hero.canvas-spec.json"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/references/svglide-reference-absorption-report.md"
+  ],
+  "review_notes": "Baseline components are exercised through existing golden templates and renderer tests."
+}

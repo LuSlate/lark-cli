@@ -1282,6 +1282,55 @@ class SvgPreflightTest(unittest.TestCase):
         self.assertNotIn("plan_asset_contract_missing_metadata", codes)
         self.assertEqual(result["summary"]["error_count"], 0)
 
+    def test_lint_files_resolves_top_level_asset_contract_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            svg_path = tmp / "page-001.svg"
+            plan_path = tmp / "slide_plan.json"
+            svg_path.write_text(VALID_SVG, encoding="utf-8")
+            plan = {
+                "output_mode": "svglide-svg",
+                "page_count": 1,
+                **style_plan_fields(),
+                "asset_contracts": [
+                    {
+                        "id": "hero-asset",
+                        "source_type": "public_url",
+                        "retrieval_query": "strategy review product route hero image",
+                        "license": "unsplash",
+                        "href": "@./assets/hero.jpg",
+                        "usage_page": 1,
+                        "source_url": "https://images.unsplash.com/photo-1518770660439-4636190af475",
+                    }
+                ],
+                "svg_files": [{"page": 1, "path": "page-001.svg"}],
+                "slides": [
+                    {
+                        "page": 1,
+                        "renderer_id": "route_story",
+                        "layout_family": "flow",
+                        "density": "medium",
+                        "visual_recipe": "path_flow",
+                        "visual_intent": "show a rising product route",
+                        "visual_focal_point": "curved route line",
+                        "visual_signature": "curved route path with explicit annotations",
+                        "svg_effects": ["path", "connector_flow", "typography"],
+                        "required_primitives": ["path", "annotation"],
+                        "svg_primitives": ["path", "annotation"],
+                        "xml_like_risk": "would become cards plus arrows in XML",
+                        "content_density_contract": "flow >= 4 stages",
+                        "asset_contract": "hero-asset",
+                        "risk_flags": [],
+                        "source_policy": "Preview image source is marked and will be replaced before production.",
+                    }
+                ],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
+        codes = [issue["code"] for issue in result.get("plan", {}).get("issues", [])]
+        self.assertNotIn("plan_asset_contract_missing_metadata", codes)
+        self.assertEqual(result["summary"]["error_count"], 0)
+
     def test_lint_files_warns_preview_web_image_without_retrieval_query(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

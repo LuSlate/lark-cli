@@ -1,0 +1,53 @@
+{
+  "action": "create_live",
+  "inputs": {
+    "plan_sha256": "8badb7d1e36e7a5a519f548c1f7b8627272808e617def86e13d4e267f9f17298",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "30e07fbf0dd59605cf81fc93f6ddf9e56fe1e142c142bf36de7766a276d7bc9f"
+  },
+  "issues": [],
+  "output_path": "06-check/canvas-spec-validate.json",
+  "pages": [
+    {
+      "canvas_spec_sha256": "719016f078f37c9c5a72354df86b63c0424c9ccee72756b1695e5789f6a4c507",
+      "error_count": 0,
+      "page": 1,
+      "template_id": "dense-panel-grid",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "cobalt-grid",
+      "theme_registry_sha256": "30e07fbf0dd59605cf81fc93f6ddf9e56fe1e142c142bf36de7766a276d7bc9f"
+    },
+    {
+      "canvas_spec_sha256": "f4660ad7a10f4fdad59904f6573bdf98d4cdb5187dc34c41f894abcbb440f369",
+      "error_count": 0,
+      "page": 2,
+      "template_id": "executive-dashboard",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "paper-research",
+      "theme_registry_sha256": "28b95dc9256afb005a89ffcef042fc68818d18c9cb872a6a2143fb2d67e1beae"
+    },
+    {
+      "canvas_spec_sha256": "57d89a7602a733f887497718778918757341958f1d8466646cc436b8d15a03da",
+      "error_count": 0,
+      "page": 3,
+      "template_id": "editorial-quote-chart",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "warm-editorial",
+      "theme_registry_sha256": "dbaaddf04930dafa0a37c35ecb42fa2dd18c52490b9e019653c09f95b85c5527"
+    }
+  ],
+  "schema_version": "svglide-canvas-spec-validate/v1",
+  "stage": "canvas-spec-validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 3,
+    "warning_count": 0
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-22T04:03:10+08:00",
+  "contrast_failures": [],
+  "contrast_unresolved": [],
+  "inputs": {
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "slide_plan": "02-plan/slide_plan.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_validate_sha256": "eea65cff7505dfb477cce7a9d3e6b8a11568394b18946241a12b7663a6c1528c"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-adherence.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "9934c0e613972e72f7c39656501f88b7a399860b1cb986fd21fdcfc4a0439ce0",
+      "status": "passed",
+      "theme_id": "ivory-ledger"
+    },
+    {
+      "issues": [],
+      "page": 2,
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "935753359e75ac6a5d25458a254ff3d06a84a0a0360a0fcaa77593737e78c56b",
+      "status": "passed",
+      "theme_id": "signal-navy"
+    },
+    {
+      "issues": [],
+      "page": 3,
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "9099243fa376e04edc65515467e6b229db089769edd12c6c1b078a37966ef667",
+      "status": "passed",
+      "theme_id": "terracotta-program"
+    },
+    {
+      "issues": [],
+      "page": 4,
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "95ac7d9cdc5e91fe250b30e22702534585a4c6fb645e044a55e442f32687a44d",
+      "status": "passed",
+      "theme_id": "retro-desktop"
+    },
+    {
+      "issues": [],
+      "page": 5,
+      "path": "04-svg/prepared/page-005.svg",
+      "sha256": "cd1750229533360bd4914298ea87b91883df67801588f217177291cb29bf942c",
+      "status": "passed",
+      "theme_id": "sakura-catalog"
+    },
+    {
+      "issues": [],
+      "page": 6,
+      "path": "04-svg/prepared/page-006.svg",
+      "sha256": "3696e2d9ebccf40834e1c0bf6e88c64de96f6739b14e6e947f616f288bd54bc6",
+      "status": "passed",
+      "theme_id": "acid-studio"
+    },
+    {
+      "issues": [],
+      "page": 7,
+      "path": "04-svg/prepared/page-007.svg",
+      "sha256": "8ca2ceab8dafcc934226157ab26f5085dd0e984d2309060b7f9e47868e049713",
+      "status": "passed",
+      "theme_id": "raw-grid-mono"
+    },
+    {
+      "issues": [],
+      "page": 8,
+      "path": "04-svg/prepared/page-008.svg",
+      "sha256": "6325e2ad723055111b0ff29258a660e11d25ed3032a2259cd3ad27b9c3291930",
+      "status": "passed",
+      "theme_id": "field-notebook"
+    }
+  ],
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "9934c0e613972e72f7c39656501f88b7a399860b1cb986fd21fdcfc4a0439ce0"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "935753359e75ac6a5d25458a254ff3d06a84a0a0360a0fcaa77593737e78c56b"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "9099243fa376e04edc65515467e6b229db089769edd12c6c1b078a37966ef667"
+    },
+    {
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "95ac7d9cdc5e91fe250b30e22702534585a4c6fb645e044a55e442f32687a44d"
+    },
+    {
+      "path": "04-svg/prepared/page-005.svg",
+      "sha256": "cd1750229533360bd4914298ea87b91883df67801588f217177291cb29bf942c"
+    },
+    {
+      "path": "04-svg/prepared/page-006.svg",
+      "sha256": "3696e2d9ebccf40834e1c0bf6e88c64de96f6739b14e6e947f616f288bd54bc6"
+    },
+    {
+      "path": "04-svg/prepared/page-007.svg",
+      "sha256": "8ca2ceab8dafcc934226157ab26f5085dd0e984d2309060b7f9e47868e049713"
+    },
+    {
+      "path": "04-svg/prepared/page-008.svg",
+      "sha256": "6325e2ad723055111b0ff29258a660e11d25ed3032a2259cd3ad27b9c3291930"
+    }
+  ],
+  "schema_version": "svglide-theme-adherence/v1",
+  "stage": "theme_adherence",
+  "status": "passed",
+  "summary": {
+    "contrast_unresolved_count": 0,
+    "error_count": 0,
+    "prepared_svg_count": 8,
+    "unknown_color_count": 0,
+    "warning_count": 0
+  },
+  "unknown_colors": []
+}

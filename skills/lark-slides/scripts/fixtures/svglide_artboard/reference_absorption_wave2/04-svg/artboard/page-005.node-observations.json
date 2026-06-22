@@ -1,0 +1,210 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 28,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 0,
+      "top": 0,
+      "width": 240,
+      "height": 28,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 240,
+      "top": 0,
+      "width": 240,
+      "height": 28,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 480,
+      "top": 0,
+      "width": 240,
+      "height": 28,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 720,
+      "top": 0,
+      "width": 240,
+      "height": 28,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 64,
+      "top": 70,
+      "width": 128,
+      "height": 21,
+      "type": "div",
+      "textContent": "CATALOG DROP",
+      "props": {}
+    },
+    {
+      "left": 62,
+      "top": 102,
+      "width": 610,
+      "height": 53,
+      "type": "div",
+      "textContent": "功能货架更新",
+      "props": {}
+    },
+    {
+      "left": 66,
+      "top": 238,
+      "width": 470,
+      "height": 52,
+      "type": "div",
+      "textContent": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+      "props": {}
+    },
+    {
+      "left": 64,
+      "top": 360,
+      "width": 824,
+      "height": 118,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 64,
+      "top": 360,
+      "width": 194,
+      "height": 118,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 80,
+      "top": 376,
+      "width": 27,
+      "height": 74,
+      "type": "div",
+      "textContent": "01",
+      "props": {}
+    },
+    {
+      "left": 107,
+      "top": 376,
+      "width": 72,
+      "height": 86,
+      "type": "div",
+      "textContent": "智能推荐",
+      "props": {}
+    },
+    {
+      "left": 274,
+      "top": 360,
+      "width": 194,
+      "height": 118,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 290,
+      "top": 376,
+      "width": 27,
+      "height": 74,
+      "type": "div",
+      "textContent": "02",
+      "props": {}
+    },
+    {
+      "left": 317,
+      "top": 376,
+      "width": 72,
+      "height": 86,
+      "type": "div",
+      "textContent": "批量导入",
+      "props": {}
+    },
+    {
+      "left": 484,
+      "top": 360,
+      "width": 194,
+      "height": 118,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 500,
+      "top": 376,
+      "width": 27,
+      "height": 74,
+      "type": "div",
+      "textContent": "03",
+      "props": {}
+    },
+    {
+      "left": 527,
+      "top": 376,
+      "width": 72,
+      "height": 86,
+      "type": "div",
+      "textContent": "权限看板",
+      "props": {}
+    },
+    {
+      "left": 694,
+      "top": 360,
+      "width": 194,
+      "height": 118,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 710,
+      "top": 376,
+      "width": 27,
+      "height": 74,
+      "type": "div",
+      "textContent": "04",
+      "props": {}
+    },
+    {
+      "left": 737,
+      "top": 376,
+      "width": 72,
+      "height": 86,
+      "type": "div",
+      "textContent": "异常提醒",
+      "props": {}
+    },
+    {
+      "left": 770,
+      "top": 94,
+      "width": 112,
+      "height": 112,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 797,
+      "top": 134,
+      "width": 59,
+      "height": 33,
+      "type": "div",
+      "textContent": "NEW",
+      "props": {}
+    }
+  ]
+}

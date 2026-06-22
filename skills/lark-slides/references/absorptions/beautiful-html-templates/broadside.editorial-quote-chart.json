@@ -1,0 +1,52 @@
+{
+  "source_item_id": "beautiful-html-templates.template.broadside.design.md",
+  "absorbed_as": [
+    "template_candidate",
+    "layout_archetype",
+    "component_variant",
+    "visual_acceptance_rule"
+  ],
+  "svglide_asset_ids": [
+    "chart_strategy.quote-ranked-points",
+    "component.ChartCalloutPanel",
+    "component.QuoteWithRankedPoint",
+    "component.quote_with_ranked_points",
+    "image_strategy.editorial-quote-mark",
+    "layout.dark_editorial_quote_chart",
+    "layout.editorial-story",
+    "template.editorial-quote-chart"
+  ],
+  "non_copying_transform": "Broadside is converted into an SVGlide-owned dark editorial quote/chart pattern: large quote hierarchy, top chrome rule, and compact ranked point blocks. No source CSS, motion, HTML structure, or external runtime is copied.",
+  "forbidden_usage": [
+    "do_not_embed_beautiful_html_css_or_js",
+    "do_not_copy_motion_or_deck_stage_runtime",
+    "do_not_call_fixture_vf5_real_benchmark"
+  ],
+  "source_context_refs": [
+    "beautiful-html-templates.template.broadside.template.json",
+    "beautiful-html-templates.screenshot.broadside-1",
+    "beautiful-html-templates.screenshot.broadside-4",
+    "beautiful-html-templates.screenshot.broadside-13"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/editorial-quote-chart.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/04-svg/artboard/page-003.canvas-spec.json"
+  ],
+  "satori_outputs": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/04-svg/artboard/raw/page-003.satori.svg"
+  ],
+  "svglide_protocol_outputs": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/04-svg/page-003.svg"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/receipts/canvas-spec-validate.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1/04-svg/artboard/page-003.receipt.json"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-template-registry.json"
+  ],
+  "negative_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/gate8_special_cases/unsupported-filter.canvas-spec.json"
+  ],
+  "review_notes": "First-wave editorial pattern. Fixture proof shows Satori-compatible render and SVGlide protocol SVG output only."
+}

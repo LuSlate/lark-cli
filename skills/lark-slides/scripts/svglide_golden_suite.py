@@ -69,6 +69,7 @@ def positive_plan(case_type: str) -> dict[str, Any]:
     archetype, evidence_renderer, evidence_family, anchor_a, anchor_b, anchor_c = identities[case_type]
     return {
         "route": "svglide-svg",
+        "deck_intent": "fixture",
         "language": "zh-CN",
         "audience": "业务决策团队",
         "deck_structure": ["cover", "content", "content", "closing"],

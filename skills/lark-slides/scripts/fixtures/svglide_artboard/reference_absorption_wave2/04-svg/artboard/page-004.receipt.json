@@ -1,0 +1,185 @@
+{
+  "canvas_spec_path": "02-plan/slide_plan.json#/slides/3/canvas_spec",
+  "canvas_spec_sha256": "47f025e624c88e89da9d79c6d90c6503372e63681231b83bc23c2ab705a76e80",
+  "canvas_template_svg": "04-svg/artboard/page-004.canvas-template.svg",
+  "canvas_template_svg_sha256": "8db73ffc8309610a9a13ac762b5ab83e76ba6eb1447061a34d874d68660abd31",
+  "compiler": {
+    "compiler_input": "SemanticMapIR",
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "input_semantic_hash": "060e01b76f08ff4f03b3b94166a91cee90173210d0b4564c1ee19272b1b9b768",
+    "native_mapped": [
+      "rect",
+      "rect",
+      "text",
+      "text",
+      "text",
+      "path",
+      "line",
+      "rect",
+      "rect",
+      "rect",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text"
+    ],
+    "satori_svg_usage": "preview_only",
+    "semantic_source": "CanvasSpec"
+  },
+  "compiler_input": "04-svg/artboard/page-004.semantic-map.json",
+  "compiler_input_sha256": "060e01b76f08ff4f03b3b94166a91cee90173210d0b4564c1ee19272b1b9b768",
+  "created_at": "2026-06-22T04:03:08+08:00",
+  "font_hashes": [
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+      "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+    }
+  ],
+  "input_semantic_hash": "060e01b76f08ff4f03b3b94166a91cee90173210d0b4564c1ee19272b1b9b768",
+  "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+  "node_layout_map_sha256": "ffc113c96362e6e5d66830620010d68b10d0fe3df52700c6be08783579f5aaa2",
+  "node_version": "v20.18.1",
+  "page": 4,
+  "png": "04-svg/artboard/page-004.png",
+  "png_sha256": "fda6108703e81dda6f0278c9c4c441a3e7c8b438ec319c81a6c5f62ee02c2c81",
+  "render_metadata": "04-svg/artboard/page-004.render-metadata.json",
+  "render_metadata_sha256": "371955484f5d6cde33b87cbcb27161814486f407c5d3a15282dcfa6fd2216781",
+  "renderer": {
+    "actual_satori_package": true,
+    "adapter": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "engine": "satori-node",
+    "name": "satori-resvg-p0"
+  },
+  "resvg_version": "2.6.2",
+  "satori_preview": {
+    "element_counts": {
+      "clipPath": 6,
+      "defs": 6,
+      "mask": 17,
+      "path": 12,
+      "rect": 31,
+      "svg": 1,
+      "text": 58
+    },
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "issues": [
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      }
+    ],
+    "status": "warning",
+    "strict": false
+  },
+  "satori_svg": "04-svg/artboard/raw/page-004.satori.svg",
+  "satori_svg_sha256": "116879925fa747f499a4fbe677e6cef05709dabc9111606875a191c220706609",
+  "satori_version": "0.26.0",
+  "semantic_map": "04-svg/artboard/page-004.semantic-map.json",
+  "semantic_map_sha256": "060e01b76f08ff4f03b3b94166a91cee90173210d0b4564c1ee19272b1b9b768",
+  "stage": "generate_svg",
+  "status": "passed",
+  "svglide_svg": "04-svg/page-004.svg",
+  "svglide_svg_sha256": "95ac7d9cdc5e91fe250b30e22702534585a4c6fb645e044a55e442f32687a44d",
+  "template_id": "retro-ui-dashboard",
+  "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+  "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+  "theme_files": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/retro-desktop.json"
+  ],
+  "theme_id": "retro-desktop",
+  "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+  "theme_registry_sha256": "710f6b4e9fa6ef45aa331782ea3e34fbd247f026d3b771b9544f49a70c524fae",
+  "version": "svglide-artboard-receipt/v1"
+}

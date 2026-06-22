@@ -1,0 +1,77 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "cards": [
+      "智能推荐",
+      "批量导入",
+      "权限看板",
+      "异常提醒"
+    ],
+    "eyebrow": "CATALOG DROP",
+    "seal": "NEW",
+    "subtitle": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
+    "title": "功能货架更新"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "product-ribbon",
+  "theme": {
+    "colors": {
+      "accent": "#F09131",
+      "background": "#F1E6CB",
+      "muted": "#3F8BC4",
+      "panel": "#E54489",
+      "primary": "#E5392A",
+      "text": "#3A2516"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.sakura-chroma.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "sakura-catalog",
+    "typography": {
+      "body": 18,
+      "label": 16,
+      "subtitle": 20,
+      "title": 58
+    }
+  },
+  "theme_id": "sakura-catalog",
+  "version": "svglide-canvas-spec/v1"
+}

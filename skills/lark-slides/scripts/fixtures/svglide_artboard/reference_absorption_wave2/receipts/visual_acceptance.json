@@ -1,0 +1,967 @@
+{
+  "action": "deliverable_pass",
+  "artboard_artifacts": [
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-001.receipt.json",
+      "sha256": "3f0b7d581172b8a75760d05f33579ffbdf20df0d4e3575f3e02640bd96905306"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-001.semantic-map.json",
+      "sha256": "b8af528254239aeef26fa9639d4124b192e02940326cfedb385135895fed30a9"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-001.node-layout-map.json",
+      "sha256": "eaee8c8bc43ca941195d021b8bcf5554f25b1a22628b26f3c74115ae403946b4"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-001.png",
+      "sha256": "e578740de5ffa440c2e5e8ad463b49c292fc72058a69a00090ec95509464a0bd"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-002.receipt.json",
+      "sha256": "ec0b9e52bc3a0b4063a251a06aedd6701fdb008873a0cd8c8b9b36fc3ae69db7"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-002.semantic-map.json",
+      "sha256": "542573868f90b23e78a45baa59de998a63ebaf2f8273baf2ac0b015c0846ee6b"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-002.node-layout-map.json",
+      "sha256": "8f30c5b0fa2ae2aeb8fa87712c9b4838c081477be4470a1af5cf7e582f549feb"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-002.png",
+      "sha256": "94506202748211b3bf97647c10ea6bb1e2666ece4ef560e3e0610b6ee8436b5c"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-003.receipt.json",
+      "sha256": "683854008a1a9a351ff16f1d14205f8fd5e2a40fc45a9361d196646b4e950241"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-003.semantic-map.json",
+      "sha256": "c1f8f63742a459a12e95da73640e9d9aa4a9698d4ffb4aeda6132c0ad8f8074a"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-003.node-layout-map.json",
+      "sha256": "a74e48a2e390223c17ab08b44318faa8b9489b6610cae3b670ee1a33fe3dd6f9"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-003.png",
+      "sha256": "44e951bb860a401b41692671d0a754df1c9afcf05ad37e448869c44840f5e718"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-004.receipt.json",
+      "sha256": "9f7b0629c88002ac19645e7c22b6bbb091e1416fade3223effa9ccdf6ad2b0cc"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-004.semantic-map.json",
+      "sha256": "060e01b76f08ff4f03b3b94166a91cee90173210d0b4564c1ee19272b1b9b768"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-004.node-layout-map.json",
+      "sha256": "ffc113c96362e6e5d66830620010d68b10d0fe3df52700c6be08783579f5aaa2"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-004.png",
+      "sha256": "fda6108703e81dda6f0278c9c4c441a3e7c8b438ec319c81a6c5f62ee02c2c81"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-005.receipt.json",
+      "sha256": "a6a7b65e94841ebcf29040a6ab16ffbe23134e95f30bec03e120e144fc0cb25f"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-005.semantic-map.json",
+      "sha256": "08ecfce58e22fa77f7f23e2f72db937b6d67c4ad8cfc2a5a83d67b85a574c3eb"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-005.node-layout-map.json",
+      "sha256": "5da6645be731f2b661890a19702d2556b54d56139ee0714d7f97ce002ab8e9cc"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-005.png",
+      "sha256": "8be01d3bba2a888571d379d331739a7ca925a1e82e74ccd9fc6995ea4b4329d8"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-006.receipt.json",
+      "sha256": "06f3bd63ce7d638c8ceffbc690e14470390c3b18f60039b41927996cafc7a307"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-006.semantic-map.json",
+      "sha256": "513bd4e56735457f9e9c6b5eccf69e16341e33a3d0c53ed18b07499bab59bbcb"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-006.node-layout-map.json",
+      "sha256": "f831884ffe37a712c23091a854557904885eaa15037f350f57952a801f57036c"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-006.png",
+      "sha256": "5e0c225b8da3834f3cb875fd931a0bab860add87aa4dc92acb7e27fc853a3d5b"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-007.receipt.json",
+      "sha256": "fa65e22ccd4b1f0c45357540e2b3ffffcf328ecc02b8dba88decf231cf6b7a9e"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-007.semantic-map.json",
+      "sha256": "3b7c51619f79981998a3e6b2023cb11cbf6e4af2b12a787a587f943e2ccf7aa1"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-007.node-layout-map.json",
+      "sha256": "608b3bdbec68ef70424bb57eee87228316e014234707a0591e389299efe974b4"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-007.png",
+      "sha256": "ce35fb13668127c687478ea1036547d3c4e39b1022a389b2b2ee9d8a5e32cdc8"
+    },
+    {
+      "kind": "artboard_receipt",
+      "path": "04-svg/artboard/page-008.receipt.json",
+      "sha256": "79c344d19c40fb9aabb64cbf154580f5088ee571d935c70fbbeda29be2641c69"
+    },
+    {
+      "kind": "semantic_map",
+      "path": "04-svg/artboard/page-008.semantic-map.json",
+      "sha256": "073a2ae9db080f575c0d7d66f6b97c5163a346eddf8fbfc7dae445957192fbda"
+    },
+    {
+      "kind": "node_layout_map",
+      "path": "04-svg/artboard/page-008.node-layout-map.json",
+      "sha256": "1ebd6d3a1d7fbfead87df3d3c9a15b34b12edf13dacdf05c9500943540e85e37"
+    },
+    {
+      "kind": "page_png",
+      "path": "04-svg/artboard/page-008.png",
+      "sha256": "ce51d4e5bfe80c1ad3e1328be8701257cc848689fb948f61f72d6dedf16c39a3"
+    }
+  ],
+  "claim_boundary": "passed visual_acceptance is required before high-quality or upper-bound visual claims",
+  "deck_rhythm": {
+    "layout_family_sequence": [
+      "ledger-briefing",
+      "intelligence-brief",
+      "printed-program",
+      "retro-ui-dashboard",
+      "product-ribbon",
+      "type-mass-poster",
+      "brutalist-matrix",
+      "annotated-field-board"
+    ],
+    "longest_layout_run": {
+      "length": 1,
+      "value": "ledger-briefing"
+    },
+    "longest_renderer_run": {
+      "length": 1,
+      "value": "artboard_satori.ledger-briefing"
+    },
+    "longest_visual_recipe_run": {
+      "length": 1,
+      "value": "hero_typography"
+    },
+    "renderer_sequence": [
+      "artboard_satori.ledger-briefing",
+      "artboard_satori.intelligence-brief",
+      "artboard_satori.printed-program",
+      "artboard_satori.retro-ui-dashboard",
+      "artboard_satori.product-ribbon",
+      "artboard_satori.type-mass-poster",
+      "artboard_satori.brutalist-matrix",
+      "artboard_satori.annotated-field-board"
+    ],
+    "schema_version": "svglide-deck-rhythm/v1",
+    "slide_count": 8,
+    "theme_ids": [
+      "ivory-ledger",
+      "signal-navy",
+      "terracotta-program",
+      "retro-desktop",
+      "sakura-catalog",
+      "acid-studio",
+      "raw-grid-mono",
+      "field-notebook"
+    ],
+    "theme_policy": {
+      "allow_multi_theme": true,
+      "reason": "reference absorption coverage fixture intentionally exercises multiple absorbed theme tokens in one proof deck"
+    },
+    "thresholds": {
+      "max_consecutive_renderer_repeat": 3,
+      "max_theme_ids": 2,
+      "min_unique_layout_families_for_4plus": 2,
+      "min_unique_renderers_for_4plus": 2,
+      "min_unique_visual_recipes_for_4plus": 2
+    },
+    "unique_layout_family_count": 8,
+    "unique_renderer_count": 8,
+    "unique_theme_id_count": 8,
+    "unique_visual_recipe_count": 7,
+    "visual_recipe_sequence": [
+      "hero_typography",
+      "infographic_scorecard",
+      "path_flow",
+      "fake_ui_dashboard",
+      "geometric_composition",
+      "brand_system",
+      "metaphor_loop",
+      "brand_system"
+    ]
+  },
+  "deliverable_pass": true,
+  "ended_at": "2026-06-22T10:05:58+00:00",
+  "engineering_pass": {
+    "dry_run_status": "passed",
+    "quality_gate_status": "passed"
+  },
+  "failed_pages": [],
+  "generation_mode": "artboard_satori",
+  "inputs": {
+    "asset_manifest": "03-assets/asset-manifest.json",
+    "asset_manifest_sha256": "116070bd1d176fbab6ee8c0f31f325801f04241c8fbdd95eb0b8592f04835dab",
+    "contact_sheet": {
+      "path": "05-preview/contact-sheet.png",
+      "sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05"
+    },
+    "dry_run": "07-create/dry-run.json",
+    "dry_run_sha256": "b679653797fa99c897dd7cc1cdad70f728e0d4bd4add48a8bbdfde0181ac6bb8",
+    "generator_receipt": "receipts/generate_svg.json",
+    "generator_receipt_sha256": "278f44670b75f5702555640122054c352f58a90846603217f50d0ccfa5a4b31d",
+    "instruction": null,
+    "instruction_sha256": null,
+    "preview": "05-preview/preview.html",
+    "preview_manifest": "05-preview/preview-manifest.json",
+    "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+    "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+    "quality_gate": "06-check/quality-gate.json",
+    "quality_gate_sha256": "1cb33a166be8325e6432118d3bfed493bd7e56d4f822d8e110b75f22fca438ad",
+    "slide_plan": "02-plan/slide_plan.json",
+    "slide_plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "template_guardrails": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+    "template_guardrails_sha256": "bd74c885fec5550a17c31c128e16bc21b8aa9ce5c92be02f1e893e98523b430d"
+  },
+  "issues": [],
+  "output_path": "06-check/visual-acceptance.json",
+  "pages": [
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-001.receipt.json",
+          "sha256": "3f0b7d581172b8a75760d05f33579ffbdf20df0d4e3575f3e02640bd96905306"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-001.semantic-map.json",
+          "sha256": "b8af528254239aeef26fa9639d4124b192e02940326cfedb385135895fed30a9"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-001.node-layout-map.json",
+          "sha256": "eaee8c8bc43ca941195d021b8bcf5554f25b1a22628b26f3c74115ae403946b4"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-001.png",
+          "sha256": "e578740de5ffa440c2e5e8ad463b49c292fc72058a69a00090ec95509464a0bd"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "page": 1,
+      "path": "04-svg/artboard/page-001.receipt.json",
+      "png": "04-svg/artboard/page-001.png",
+      "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "ledger-briefing",
+      "theme_id": "ivory-ledger",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+        "page": 1,
+        "page_png": "04-svg/artboard/page-001.png",
+        "page_png_sha256": "e578740de5ffa440c2e5e8ad463b49c292fc72058a69a00090ec95509464a0bd",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-1",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-001.svg",
+        "semantic_map": "04-svg/artboard/page-001.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-002.receipt.json",
+          "sha256": "ec0b9e52bc3a0b4063a251a06aedd6701fdb008873a0cd8c8b9b36fc3ae69db7"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-002.semantic-map.json",
+          "sha256": "542573868f90b23e78a45baa59de998a63ebaf2f8273baf2ac0b015c0846ee6b"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-002.node-layout-map.json",
+          "sha256": "8f30c5b0fa2ae2aeb8fa87712c9b4838c081477be4470a1af5cf7e582f549feb"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-002.png",
+          "sha256": "94506202748211b3bf97647c10ea6bb1e2666ece4ef560e3e0610b6ee8436b5c"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "page": 2,
+      "path": "04-svg/artboard/page-002.receipt.json",
+      "png": "04-svg/artboard/page-002.png",
+      "semantic_map": "04-svg/artboard/page-002.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "intelligence-brief",
+      "theme_id": "signal-navy",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+        "page": 2,
+        "page_png": "04-svg/artboard/page-002.png",
+        "page_png_sha256": "94506202748211b3bf97647c10ea6bb1e2666ece4ef560e3e0610b6ee8436b5c",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-2",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-002.svg",
+        "semantic_map": "04-svg/artboard/page-002.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-003.receipt.json",
+          "sha256": "683854008a1a9a351ff16f1d14205f8fd5e2a40fc45a9361d196646b4e950241"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-003.semantic-map.json",
+          "sha256": "c1f8f63742a459a12e95da73640e9d9aa4a9698d4ffb4aeda6132c0ad8f8074a"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-003.node-layout-map.json",
+          "sha256": "a74e48a2e390223c17ab08b44318faa8b9489b6610cae3b670ee1a33fe3dd6f9"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-003.png",
+          "sha256": "44e951bb860a401b41692671d0a754df1c9afcf05ad37e448869c44840f5e718"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "page": 3,
+      "path": "04-svg/artboard/page-003.receipt.json",
+      "png": "04-svg/artboard/page-003.png",
+      "semantic_map": "04-svg/artboard/page-003.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "printed-program",
+      "theme_id": "terracotta-program",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+        "page": 3,
+        "page_png": "04-svg/artboard/page-003.png",
+        "page_png_sha256": "44e951bb860a401b41692671d0a754df1c9afcf05ad37e448869c44840f5e718",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-3",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-003.svg",
+        "semantic_map": "04-svg/artboard/page-003.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-004.receipt.json",
+          "sha256": "9f7b0629c88002ac19645e7c22b6bbb091e1416fade3223effa9ccdf6ad2b0cc"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-004.semantic-map.json",
+          "sha256": "060e01b76f08ff4f03b3b94166a91cee90173210d0b4564c1ee19272b1b9b768"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-004.node-layout-map.json",
+          "sha256": "ffc113c96362e6e5d66830620010d68b10d0fe3df52700c6be08783579f5aaa2"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-004.png",
+          "sha256": "fda6108703e81dda6f0278c9c4c441a3e7c8b438ec319c81a6c5f62ee02c2c81"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+      "page": 4,
+      "path": "04-svg/artboard/page-004.receipt.json",
+      "png": "04-svg/artboard/page-004.png",
+      "semantic_map": "04-svg/artboard/page-004.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "retro-ui-dashboard",
+      "theme_id": "retro-desktop",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+        "page": 4,
+        "page_png": "04-svg/artboard/page-004.png",
+        "page_png_sha256": "fda6108703e81dda6f0278c9c4c441a3e7c8b438ec319c81a6c5f62ee02c2c81",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-4",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-004.svg",
+        "semantic_map": "04-svg/artboard/page-004.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-005.receipt.json",
+          "sha256": "a6a7b65e94841ebcf29040a6ab16ffbe23134e95f30bec03e120e144fc0cb25f"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-005.semantic-map.json",
+          "sha256": "08ecfce58e22fa77f7f23e2f72db937b6d67c4ad8cfc2a5a83d67b85a574c3eb"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-005.node-layout-map.json",
+          "sha256": "5da6645be731f2b661890a19702d2556b54d56139ee0714d7f97ce002ab8e9cc"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-005.png",
+          "sha256": "8be01d3bba2a888571d379d331739a7ca925a1e82e74ccd9fc6995ea4b4329d8"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-005.node-layout-map.json",
+      "page": 5,
+      "path": "04-svg/artboard/page-005.receipt.json",
+      "png": "04-svg/artboard/page-005.png",
+      "semantic_map": "04-svg/artboard/page-005.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "product-ribbon",
+      "theme_id": "sakura-catalog",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 212
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-005.node-layout-map.json",
+        "page": 5,
+        "page_png": "04-svg/artboard/page-005.png",
+        "page_png_sha256": "8be01d3bba2a888571d379d331739a7ca925a1e82e74ccd9fc6995ea4b4329d8",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-5",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-005.svg",
+        "semantic_map": "04-svg/artboard/page-005.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-006.receipt.json",
+          "sha256": "06f3bd63ce7d638c8ceffbc690e14470390c3b18f60039b41927996cafc7a307"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-006.semantic-map.json",
+          "sha256": "513bd4e56735457f9e9c6b5eccf69e16341e33a3d0c53ed18b07499bab59bbcb"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-006.node-layout-map.json",
+          "sha256": "f831884ffe37a712c23091a854557904885eaa15037f350f57952a801f57036c"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-006.png",
+          "sha256": "5e0c225b8da3834f3cb875fd931a0bab860add87aa4dc92acb7e27fc853a3d5b"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-006.node-layout-map.json",
+      "page": 6,
+      "path": "04-svg/artboard/page-006.receipt.json",
+      "png": "04-svg/artboard/page-006.png",
+      "semantic_map": "04-svg/artboard/page-006.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "type-mass-poster",
+      "theme_id": "acid-studio",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 212
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-006.node-layout-map.json",
+        "page": 6,
+        "page_png": "04-svg/artboard/page-006.png",
+        "page_png_sha256": "5e0c225b8da3834f3cb875fd931a0bab860add87aa4dc92acb7e27fc853a3d5b",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-6",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-006.svg",
+        "semantic_map": "04-svg/artboard/page-006.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-007.receipt.json",
+          "sha256": "fa65e22ccd4b1f0c45357540e2b3ffffcf328ecc02b8dba88decf231cf6b7a9e"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-007.semantic-map.json",
+          "sha256": "3b7c51619f79981998a3e6b2023cb11cbf6e4af2b12a787a587f943e2ccf7aa1"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-007.node-layout-map.json",
+          "sha256": "608b3bdbec68ef70424bb57eee87228316e014234707a0591e389299efe974b4"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-007.png",
+          "sha256": "ce35fb13668127c687478ea1036547d3c4e39b1022a389b2b2ee9d8a5e32cdc8"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-007.node-layout-map.json",
+      "page": 7,
+      "path": "04-svg/artboard/page-007.receipt.json",
+      "png": "04-svg/artboard/page-007.png",
+      "semantic_map": "04-svg/artboard/page-007.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "brutalist-matrix",
+      "theme_id": "raw-grid-mono",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 408
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-007.node-layout-map.json",
+        "page": 7,
+        "page_png": "04-svg/artboard/page-007.png",
+        "page_png_sha256": "ce35fb13668127c687478ea1036547d3c4e39b1022a389b2b2ee9d8a5e32cdc8",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-7",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-007.svg",
+        "semantic_map": "04-svg/artboard/page-007.semantic-map.json"
+      }
+    },
+    {
+      "artifacts": [
+        {
+          "kind": "artboard_receipt",
+          "path": "04-svg/artboard/page-008.receipt.json",
+          "sha256": "79c344d19c40fb9aabb64cbf154580f5088ee571d935c70fbbeda29be2641c69"
+        },
+        {
+          "kind": "semantic_map",
+          "path": "04-svg/artboard/page-008.semantic-map.json",
+          "sha256": "073a2ae9db080f575c0d7d66f6b97c5163a346eddf8fbfc7dae445957192fbda"
+        },
+        {
+          "kind": "node_layout_map",
+          "path": "04-svg/artboard/page-008.node-layout-map.json",
+          "sha256": "1ebd6d3a1d7fbfead87df3d3c9a15b34b12edf13dacdf05c9500943540e85e37"
+        },
+        {
+          "kind": "page_png",
+          "path": "04-svg/artboard/page-008.png",
+          "sha256": "ce51d4e5bfe80c1ad3e1328be8701257cc848689fb948f61f72d6dedf16c39a3"
+        }
+      ],
+      "issue_count": 0,
+      "issues": [],
+      "node_layout_map": "04-svg/artboard/page-008.node-layout-map.json",
+      "page": 8,
+      "path": "04-svg/artboard/page-008.receipt.json",
+      "png": "04-svg/artboard/page-008.png",
+      "semantic_map": "04-svg/artboard/page-008.semantic-map.json",
+      "status": "passed",
+      "template_guardrail": {
+        "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-template-guardrails.json",
+        "schema_version": "svglide-template-guardrails/v1"
+      },
+      "template_id": "annotated-field-board",
+      "theme_id": "field-notebook",
+      "visual_evidence": {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 408
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-008.node-layout-map.json",
+        "page": 8,
+        "page_png": "04-svg/artboard/page-008.png",
+        "page_png_sha256": "ce51d4e5bfe80c1ad3e1328be8701257cc848689fb948f61f72d6dedf16c39a3",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-8",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-008.svg",
+        "semantic_map": "04-svg/artboard/page-008.semantic-map.json"
+      }
+    }
+  ],
+  "profile": "local_real_preview",
+  "repair_scope": "none",
+  "schema_version": "svglide-visual-acceptance/v1",
+  "stage": "visual_acceptance",
+  "started_at": "2026-06-22T10:05:58+00:00",
+  "status": "passed",
+  "summary": {
+    "checked_page_count": 8,
+    "error_count": 0,
+    "expected_page_count": 8,
+    "failed_page_count": 0,
+    "warning_count": 0
+  },
+  "visual_evidence": {
+    "contact_sheet": {
+      "path": "05-preview/contact-sheet.png",
+      "sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05"
+    },
+    "contact_sheet_grid": {
+      "gap": 16,
+      "max_cols": 3,
+      "page_count": 8,
+      "tile_height": 180,
+      "tile_width": 320
+    },
+    "pages": [
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+        "page": 1,
+        "page_png": "04-svg/artboard/page-001.png",
+        "page_png_sha256": "e578740de5ffa440c2e5e8ad463b49c292fc72058a69a00090ec95509464a0bd",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-1",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-001.svg",
+        "semantic_map": "04-svg/artboard/page-001.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+        "page": 2,
+        "page_png": "04-svg/artboard/page-002.png",
+        "page_png_sha256": "94506202748211b3bf97647c10ea6bb1e2666ece4ef560e3e0610b6ee8436b5c",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-2",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-002.svg",
+        "semantic_map": "04-svg/artboard/page-002.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+        "page": 3,
+        "page_png": "04-svg/artboard/page-003.png",
+        "page_png_sha256": "44e951bb860a401b41692671d0a754df1c9afcf05ad37e448869c44840f5e718",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-3",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-003.svg",
+        "semantic_map": "04-svg/artboard/page-003.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+        "page": 4,
+        "page_png": "04-svg/artboard/page-004.png",
+        "page_png_sha256": "fda6108703e81dda6f0278c9c4c441a3e7c8b438ec319c81a6c5f62ee02c2c81",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-4",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-004.svg",
+        "semantic_map": "04-svg/artboard/page-004.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 212
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-005.node-layout-map.json",
+        "page": 5,
+        "page_png": "04-svg/artboard/page-005.png",
+        "page_png_sha256": "8be01d3bba2a888571d379d331739a7ca925a1e82e74ccd9fc6995ea4b4329d8",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-5",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-005.svg",
+        "semantic_map": "04-svg/artboard/page-005.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 212
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-006.node-layout-map.json",
+        "page": 6,
+        "page_png": "04-svg/artboard/page-006.png",
+        "page_png_sha256": "5e0c225b8da3834f3cb875fd931a0bab860add87aa4dc92acb7e27fc853a3d5b",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-6",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-006.svg",
+        "semantic_map": "04-svg/artboard/page-006.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 408
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-007.node-layout-map.json",
+        "page": 7,
+        "page_png": "04-svg/artboard/page-007.png",
+        "page_png_sha256": "ce35fb13668127c687478ea1036547d3c4e39b1022a389b2b2ee9d8a5e32cdc8",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-7",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-007.svg",
+        "semantic_map": "04-svg/artboard/page-007.semantic-map.json"
+      },
+      {
+        "contact_sheet": "05-preview/contact-sheet.png",
+        "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
+        "contact_sheet_sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+        "contact_sheet_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 408
+        },
+        "evidence_path": "05-preview/contact-sheet.png",
+        "node_layout_map": "04-svg/artboard/page-008.node-layout-map.json",
+        "page": 8,
+        "page_png": "04-svg/artboard/page-008.png",
+        "page_png_sha256": "ce51d4e5bfe80c1ad3e1328be8701257cc848689fb948f61f72d6dedf16c39a3",
+        "preview": "05-preview/preview.html",
+        "preview_anchor": "05-preview/preview.html#page-8",
+        "preview_manifest_sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5",
+        "preview_sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5",
+        "preview_source_path": "04-svg/prepared/page-008.svg",
+        "semantic_map": "04-svg/artboard/page-008.semantic-map.json"
+      }
+    ],
+    "preview": {
+      "path": "05-preview/preview.html",
+      "sha256": "27252d0934fd98e9aea5af0542feb9ee04e9e9183b8e0f6ba615841bb168c7d5"
+    },
+    "preview_manifest": {
+      "path": "05-preview/preview-manifest.json",
+      "sha256": "88b835bd1a3d3d22f2eddf33bc6140429170165a37d431e904b155f10ec607f5"
+    },
+    "schema_version": "svglide-visual-evidence/v1"
+  },
+  "warnings": []
+}

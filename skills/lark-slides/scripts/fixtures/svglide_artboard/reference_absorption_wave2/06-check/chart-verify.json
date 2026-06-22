@@ -1,0 +1,54 @@
+{
+  "schema_version": "svglide-chart-verify/v1",
+  "status": "passed",
+  "action": "create_live",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2",
+  "started_at": "2026-06-21T20:03:10.142882+00:00",
+  "ended_at": "2026-06-21T20:03:10.143363+00:00",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "svg_dir": "04-svg/prepared"
+  },
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "9934c0e613972e72f7c39656501f88b7a399860b1cb986fd21fdcfc4a0439ce0"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "935753359e75ac6a5d25458a254ff3d06a84a0a0360a0fcaa77593737e78c56b"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "9099243fa376e04edc65515467e6b229db089769edd12c6c1b078a37966ef667"
+    },
+    {
+      "path": "04-svg/prepared/page-004.svg",
+      "sha256": "95ac7d9cdc5e91fe250b30e22702534585a4c6fb645e044a55e442f32687a44d"
+    },
+    {
+      "path": "04-svg/prepared/page-005.svg",
+      "sha256": "cd1750229533360bd4914298ea87b91883df67801588f217177291cb29bf942c"
+    },
+    {
+      "path": "04-svg/prepared/page-006.svg",
+      "sha256": "3696e2d9ebccf40834e1c0bf6e88c64de96f6739b14e6e947f616f288bd54bc6"
+    },
+    {
+      "path": "04-svg/prepared/page-007.svg",
+      "sha256": "8ca2ceab8dafcc934226157ab26f5085dd0e984d2309060b7f9e47868e049713"
+    },
+    {
+      "path": "04-svg/prepared/page-008.svg",
+      "sha256": "6325e2ad723055111b0ff29258a660e11d25ed3032a2259cd3ad27b9c3291930"
+    }
+  ],
+  "pages": [],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "required_chart_count": 0
+  },
+  "issues": []
+}

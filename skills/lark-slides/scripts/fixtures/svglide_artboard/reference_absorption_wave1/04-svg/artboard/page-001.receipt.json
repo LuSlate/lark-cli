@@ -1,0 +1,129 @@
+{
+  "canvas_spec_path": "02-plan/slide_plan.json#/slides/0/canvas_spec",
+  "canvas_spec_sha256": "e451b8902a0b7f9b0b359909716c00fb638c83057363379101f48ea64124ecc1",
+  "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+  "canvas_template_svg_sha256": "dc5b5d7530b860421cf6de0bcd37208d2e1b28221906d9ce0f030b4f49771c16",
+  "compiler": {
+    "compiler_input": "SemanticMapIR",
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "input_semantic_hash": "9c7c5486294ee068bd97637aea1ee7ec4543cfca1a8a6c8309c81509a0f403b1",
+    "native_mapped": [
+      "rect",
+      "rect",
+      "text",
+      "text",
+      "text",
+      "path",
+      "line",
+      "rect",
+      "rect",
+      "rect",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text"
+    ],
+    "satori_svg_usage": "preview_only",
+    "semantic_source": "CanvasSpec"
+  },
+  "compiler_input": "04-svg/artboard/page-001.semantic-map.json",
+  "compiler_input_sha256": "9c7c5486294ee068bd97637aea1ee7ec4543cfca1a8a6c8309c81509a0f403b1",
+  "created_at": "2026-06-22T04:04:40+08:00",
+  "font_hashes": [
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+      "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+    }
+  ],
+  "input_semantic_hash": "9c7c5486294ee068bd97637aea1ee7ec4543cfca1a8a6c8309c81509a0f403b1",
+  "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+  "node_layout_map_sha256": "c9a5199daf2e3e0241e6fa7dece694643993186b81dc7e4cc7395deea3ee9ba7",
+  "node_version": "v20.18.1",
+  "page": 1,
+  "png": "04-svg/artboard/page-001.png",
+  "png_sha256": "5bc054001ab7ddbcbf2e32a2cf09443f4c48b49eed26530fae6cec9ebdfee726",
+  "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+  "render_metadata_sha256": "d4cc98fe4b25d482ca0e3db9f14c2fe5f24b07cd6308ca4b07e08793e0dd9625",
+  "renderer": {
+    "actual_satori_package": true,
+    "adapter": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "engine": "satori-node",
+    "name": "satori-resvg-p0"
+  },
+  "resvg_version": "2.6.2",
+  "satori_preview": {
+    "element_counts": {
+      "clipPath": 1,
+      "defs": 1,
+      "mask": 32,
+      "path": 2,
+      "rect": 44,
+      "svg": 1,
+      "text": 85
+    },
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "issues": [
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      }
+    ],
+    "status": "warning",
+    "strict": false
+  },
+  "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+  "satori_svg_sha256": "bae361bc7302247caa866f7dbb0f63bd4a2213c00c9ea9b27b3b096cb9f9e028",
+  "satori_version": "0.26.0",
+  "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
+  "semantic_map_sha256": "9c7c5486294ee068bd97637aea1ee7ec4543cfca1a8a6c8309c81509a0f403b1",
+  "stage": "generate_svg",
+  "status": "passed",
+  "svglide_svg": "04-svg/page-001.svg",
+  "svglide_svg_sha256": "30213109be74d62e87224f8f061f050ff7ce8b1e29fe5b63c5dabec36052b7e5",
+  "template_id": "dense-panel-grid",
+  "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+  "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+  "theme_files": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json"
+  ],
+  "theme_id": "cobalt-grid",
+  "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+  "theme_registry_sha256": "30e07fbf0dd59605cf81fc93f6ddf9e56fe1e142c142bf36de7766a276d7bc9f",
+  "version": "svglide-artboard-receipt/v1"
+}

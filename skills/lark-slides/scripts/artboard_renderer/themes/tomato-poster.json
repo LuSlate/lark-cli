@@ -1,0 +1,26 @@
+{
+  "theme_id": "tomato-poster",
+  "colors": {
+    "background": "#FFFFFF",
+    "panel": "#F5F2EF",
+    "primary": "#D8000F",
+    "accent": "#1C1410",
+    "text": "#1C1410",
+    "muted": "#5A4036"
+  },
+  "typography": {
+    "title": 66,
+    "subtitle": 20,
+    "body": 20,
+    "label": 16
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.bold-poster.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+}

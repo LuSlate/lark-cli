@@ -1,0 +1,20 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_prepare.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1"
+  ],
+  "ended_at": "2026-06-22T04:04:40+08:00",
+  "error": null,
+  "inputs": [
+    "04-svg",
+    "03-assets/assets.json"
+  ],
+  "outputs": [
+    "04-svg/prepared",
+    "receipts/prepare.json"
+  ],
+  "stage": "prepare",
+  "started_at": "2026-06-22T04:04:40+08:00",
+  "status": "passed"
+}

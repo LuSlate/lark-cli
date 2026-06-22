@@ -1,0 +1,298 @@
+{
+  "content_keys": [
+    "eyebrow",
+    "subtitle",
+    "title",
+    "trends"
+  ],
+  "elements": [
+    {
+      "bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "element_id": "background",
+      "kind": "rect",
+      "role": "background",
+      "source_ref": null,
+      "style": {},
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 344.0,
+        "width": 8.0,
+        "x": 64.0,
+        "y": 72.0
+      },
+      "element_id": "accent-rule",
+      "kind": "rect",
+      "role": "decorative",
+      "source_ref": null,
+      "style": {},
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 30.0,
+        "width": 420.0,
+        "x": 92.0,
+        "y": 64.0
+      },
+      "element_id": "eyebrow",
+      "kind": "text",
+      "role": "eyebrow",
+      "source_ref": "canvas_spec.content.eyebrow",
+      "style": {},
+      "text": "TREND INDEX"
+    },
+    {
+      "bbox": {
+        "height": 96.0,
+        "width": 700.0,
+        "x": 92.0,
+        "y": 108.0
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "style": {},
+      "text": "AI 应用趋势索引"
+    },
+    {
+      "bbox": {
+        "height": 54.0,
+        "width": 660.0,
+        "x": 94.0,
+        "y": 212.0
+      },
+      "element_id": "subtitle",
+      "kind": "text",
+      "role": "subtitle",
+      "source_ref": "canvas_spec.content.subtitle",
+      "style": {},
+      "text": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。"
+    },
+    {
+      "bbox": {
+        "height": 116.0,
+        "width": 736.0,
+        "x": 92.0,
+        "y": 362.0
+      },
+      "element_id": "reference-flow-path",
+      "kind": "path",
+      "role": "decorative",
+      "source_ref": null,
+      "style": {
+        "d": "M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382",
+        "fill": "none",
+        "opacity": 0.48,
+        "stroke": "#5560E5",
+        "stroke_width": 3
+      },
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 86.0,
+        "width": 230.0,
+        "x": 612.0,
+        "y": 178.0
+      },
+      "element_id": "reference-annotation-line",
+      "kind": "line",
+      "role": "decorative",
+      "source_ref": null,
+      "style": {
+        "opacity": 0.5,
+        "stroke": "#1F2BE0",
+        "stroke_width": 2,
+        "x1": 612,
+        "x2": 842,
+        "y1": 264,
+        "y2": 178
+      },
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 26.0,
+        "width": 14.0,
+        "x": 760.0,
+        "y": 350.0
+      },
+      "element_id": "dashboard-metric-bar-1",
+      "kind": "rect",
+      "role": "decorative",
+      "source_ref": null,
+      "style": {
+        "fill": "#1F2BE0",
+        "opacity": 0.72
+      },
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 44.0,
+        "width": 14.0,
+        "x": 784.0,
+        "y": 332.0
+      },
+      "element_id": "dashboard-metric-bar-2",
+      "kind": "rect",
+      "role": "decorative",
+      "source_ref": null,
+      "style": {
+        "fill": "#1F2BE0",
+        "opacity": 0.72
+      },
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 62.0,
+        "width": 14.0,
+        "x": 808.0,
+        "y": 314.0
+      },
+      "element_id": "dashboard-metric-bar-3",
+      "kind": "rect",
+      "role": "decorative",
+      "source_ref": null,
+      "style": {
+        "fill": "#5560E5",
+        "opacity": 0.72
+      },
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 92.0,
+        "y": 306.0
+      },
+      "element_id": "item-card-1",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "style": {},
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 108.0,
+        "y": 321.0
+      },
+      "element_id": "item-1",
+      "kind": "text",
+      "role": "item-1",
+      "source_ref": null,
+      "style": {},
+      "text": "模型成本压力"
+    },
+    {
+      "bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 360.0,
+        "y": 306.0
+      },
+      "element_id": "item-card-2",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "style": {},
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 376.0,
+        "y": 321.0
+      },
+      "element_id": "item-2",
+      "kind": "text",
+      "role": "item-2",
+      "source_ref": null,
+      "style": {},
+      "text": "Agent 工作流成形"
+    },
+    {
+      "bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 628.0,
+        "y": 306.0
+      },
+      "element_id": "item-card-3",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "style": {},
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 644.0,
+        "y": 321.0
+      },
+      "element_id": "item-3",
+      "kind": "text",
+      "role": "item-3",
+      "source_ref": null,
+      "style": {},
+      "text": "设计运营成熟"
+    },
+    {
+      "bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 92.0,
+        "y": 398.0
+      },
+      "element_id": "item-card-4",
+      "kind": "rect",
+      "role": "container",
+      "source_ref": null,
+      "style": {},
+      "text": null
+    },
+    {
+      "bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 108.0,
+        "y": 413.0
+      },
+      "element_id": "item-4",
+      "kind": "text",
+      "role": "item-4",
+      "source_ref": null,
+      "style": {},
+      "text": "治理缺口扩大"
+    }
+  ],
+  "page": 2,
+  "semantic_source": "CanvasSpec",
+  "template_id": "trend-grid-report",
+  "theme": {
+    "accent": "#5560E5",
+    "background": "#F0EBDE",
+    "muted": "#4F5AB8",
+    "panel": "#E6E0CE",
+    "primary": "#1F2BE0",
+    "text": "#171B2F"
+  },
+  "theme_id": "magazine-cobalt",
+  "version": "svglide-semantic-map/v1"
+}

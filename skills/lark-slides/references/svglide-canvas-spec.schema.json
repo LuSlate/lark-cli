@@ -19,6 +19,12 @@
     },
     "template_id": {"type": "string", "minLength": 1},
     "theme_id": {"type": "string", "minLength": 1},
+    "palette_id": {"type": "string", "minLength": 1},
+    "selection_trace": {
+      "type": "object",
+      "required": ["palette_candidate_rank", "template_candidate_rank", "theme_candidate_rank", "selection_reason"],
+      "additionalProperties": true
+    },
     "safe_area": {
       "type": "object",
       "required": ["x", "y", "width", "height"],

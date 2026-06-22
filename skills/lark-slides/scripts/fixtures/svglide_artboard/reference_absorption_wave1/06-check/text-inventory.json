@@ -1,0 +1,182 @@
+{
+  "schema_version": "svglide-text-inventory/v1",
+  "generated_at": "2026-06-21T20:04:40.923011+00:00",
+  "slides": [
+    {
+      "page": 1,
+      "svg": "04-svg/prepared/page-001.svg",
+      "texts": [
+        {
+          "text": "OPERATING GRID",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "渠道健康度复盘",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "转化 +12%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "履约 94%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "成本 -8%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "风险 L2",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "样本 42k",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        },
+        {
+          "text": "NPS 48",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[0]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 2,
+      "svg": "04-svg/prepared/page-002.svg",
+      "texts": [
+        {
+          "text": "BUSINESS REVIEW",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "内部业务复盘",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "收入 +14%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "留存 118%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "流失 2.1%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "管线 3.4x",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "季度 +9%",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        },
+        {
+          "text": "NPS 48",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[1]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    },
+    {
+      "page": 3,
+      "svg": "04-svg/prepared/page-003.svg",
+      "texts": [
+        {
+          "text": "FIELD NOTE",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "组织信号复盘",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "仪表盘变化之前，组织协作方式已经先变了。",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "复盘访谈节选 / 2026 Q2",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "信号早于指标移动",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "约束来自协作边界",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        },
+        {
+          "text": "行动项需要 owner",
+          "source": "slide_plan.json",
+          "source_path": "slide_plan.json:slides[2]",
+          "status": "matched"
+        }
+      ],
+      "unmatched_texts": []
+    }
+  ],
+  "summary": {
+    "slide_count": 3,
+    "text_count": 25,
+    "unmatched_text_count": 0
+  }
+}

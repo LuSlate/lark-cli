@@ -1,0 +1,362 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 56,
+      "top": 56,
+      "width": 848,
+      "height": 117,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 56,
+      "top": 56,
+      "width": 848,
+      "height": 21,
+      "type": "div",
+      "textContent": "BUSINESS REVIEW",
+      "props": {}
+    },
+    {
+      "left": 56,
+      "top": 89,
+      "width": 710,
+      "height": 43,
+      "type": "div",
+      "textContent": "内部业务复盘",
+      "props": {}
+    },
+    {
+      "left": 56,
+      "top": 146,
+      "width": 700,
+      "height": 27,
+      "type": "div",
+      "textContent": "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+      "props": {}
+    },
+    {
+      "left": 68,
+      "top": 214,
+      "width": 548,
+      "height": 206,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 68,
+      "top": 214,
+      "width": 170,
+      "height": 96,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 85,
+      "top": 231,
+      "width": 136,
+      "height": 27,
+      "type": "div",
+      "textContent": "+14%",
+      "props": {}
+    },
+    {
+      "left": 85,
+      "top": 270,
+      "width": 136,
+      "height": 18,
+      "type": "div",
+      "textContent": "收入 +14%",
+      "props": {}
+    },
+    {
+      "left": 252,
+      "top": 214,
+      "width": 170,
+      "height": 96,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 269,
+      "top": 231,
+      "width": 136,
+      "height": 27,
+      "type": "div",
+      "textContent": "118%",
+      "props": {}
+    },
+    {
+      "left": 269,
+      "top": 270,
+      "width": 136,
+      "height": 18,
+      "type": "div",
+      "textContent": "留存 118%",
+      "props": {}
+    },
+    {
+      "left": 436,
+      "top": 214,
+      "width": 170,
+      "height": 96,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 453,
+      "top": 231,
+      "width": 136,
+      "height": 27,
+      "type": "div",
+      "textContent": "2.1%",
+      "props": {}
+    },
+    {
+      "left": 453,
+      "top": 270,
+      "width": 136,
+      "height": 18,
+      "type": "div",
+      "textContent": "流失 2.1%",
+      "props": {}
+    },
+    {
+      "left": 68,
+      "top": 324,
+      "width": 170,
+      "height": 96,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 85,
+      "top": 341,
+      "width": 136,
+      "height": 27,
+      "type": "div",
+      "textContent": "3.4x",
+      "props": {}
+    },
+    {
+      "left": 85,
+      "top": 380,
+      "width": 136,
+      "height": 18,
+      "type": "div",
+      "textContent": "管线 3.4x",
+      "props": {}
+    },
+    {
+      "left": 252,
+      "top": 324,
+      "width": 170,
+      "height": 96,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 269,
+      "top": 341,
+      "width": 136,
+      "height": 27,
+      "type": "div",
+      "textContent": "+9%",
+      "props": {}
+    },
+    {
+      "left": 269,
+      "top": 380,
+      "width": 136,
+      "height": 18,
+      "type": "div",
+      "textContent": "季度 +9%",
+      "props": {}
+    },
+    {
+      "left": 436,
+      "top": 324,
+      "width": 170,
+      "height": 96,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 453,
+      "top": 341,
+      "width": 136,
+      "height": 27,
+      "type": "div",
+      "textContent": "48",
+      "props": {}
+    },
+    {
+      "left": 453,
+      "top": 380,
+      "width": 136,
+      "height": 18,
+      "type": "div",
+      "textContent": "NPS 48",
+      "props": {}
+    },
+    {
+      "left": 632,
+      "top": 214,
+      "width": 258,
+      "height": 290,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 236,
+      "width": 214,
+      "height": 2,
+      "type": "div",
+      "textContent": "渠道健康度",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 258,
+      "width": 214,
+      "height": 40,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 258,
+      "width": 214,
+      "height": 20,
+      "type": "div",
+      "textContent": "企业客户 82",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 286,
+      "width": 214,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 286,
+      "width": 236,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 314,
+      "width": 214,
+      "height": 40,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 314,
+      "width": 214,
+      "height": 20,
+      "type": "div",
+      "textContent": "中型客户 64",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 342,
+      "width": 214,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 342,
+      "width": 194,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 370,
+      "width": 214,
+      "height": 40,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 370,
+      "width": 214,
+      "height": 20,
+      "type": "div",
+      "textContent": "SMB 48",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 398,
+      "width": 214,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 398,
+      "width": 154,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 426,
+      "width": 214,
+      "height": 40,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 426,
+      "width": 214,
+      "height": 20,
+      "type": "div",
+      "textContent": "伙伴 36",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 454,
+      "width": 214,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 654,
+      "top": 454,
+      "width": 112,
+      "height": 12,
+      "type": "div",
+      "props": {}
+    }
+  ]
+}

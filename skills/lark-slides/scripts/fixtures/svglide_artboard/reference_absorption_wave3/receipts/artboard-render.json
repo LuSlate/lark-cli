@@ -1,0 +1,274 @@
+{
+  "contact_sheet": {
+    "grid": {
+      "cols": 3,
+      "gap": 16,
+      "rows": 2,
+      "tile_height": 180,
+      "tile_width": 320
+    },
+    "pages": [
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 1,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-001.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 2,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-002.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 3,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-003.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 4,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-004.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        }
+      }
+    ],
+    "path": "05-preview/contact-sheet.png",
+    "sha256": "10d1937db40addd8fa99ffc3fc624741f8d788867cb386d4e5e6f01f4b68ba8d",
+    "source_pngs": [
+      "04-svg/artboard/page-001.png",
+      "04-svg/artboard/page-002.png",
+      "04-svg/artboard/page-003.png",
+      "04-svg/artboard/page-004.png"
+    ]
+  },
+  "created_at": "2026-06-22T04:01:50+08:00",
+  "inputs": {
+    "canvas_spec_validate": "receipts/canvas-spec-validate.json",
+    "canvas_spec_validate_sha256": "23d4d46ffc0f4be37ad2a3b32d890aea5779123d76b94b250154023e305d5712",
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/stone-architect.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "fb65d4355df08b29cb8dac4a6442c71b79528e6ac24b67dd9bac03ab9226fae2"
+  },
+  "pages": [
+    {
+      "canvas_spec_sha256": "68b76c27efb074be684bd9339bc4169567b66d7919d61a5d467e3acf51abffe9",
+      "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+      "canvas_template_svg_sha256": "ea4021afeac3faa7aaf4cc190f58d1a68d1f97c7e085f2c87e4d946b84e8d69d",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "e12450ec5f6395b5ab5d8eadc0d218410c4556a6e05cfa681c2c06bec5c6359a",
+      "node_observations": "04-svg/artboard/page-001.node-observations.json",
+      "node_observations_sha256": "b9140abec981833e2028ceb6858accbf48ecfa3d7c10478bc435a215d94a4724",
+      "node_version": "v20.18.1",
+      "page": 1,
+      "png": "04-svg/artboard/page-001.png",
+      "png_sha256": "fe3632ba992ae1c8ce04c0197bc9d3f97bcf715a168c8396ed9c6b4549a42853",
+      "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+      "render_metadata_sha256": "72f3faea74d30e62ce18cb615bac85c0097befc79015e36f5f9700519990f4e4",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+      "satori_svg_sha256": "944e0da2bb49d7b33ae846be509aa63ef11d3cffe55b3675c0a730650e9471ae",
+      "satori_version": "0.26.0",
+      "template_id": "architectural-spec",
+      "theme_id": "stone-architect"
+    },
+    {
+      "canvas_spec_sha256": "841b1edd91d3e031c8b230846f12255d89d5e284ca790d58a902081b48a8fb08",
+      "canvas_template_svg": "04-svg/artboard/page-002.canvas-template.svg",
+      "canvas_template_svg_sha256": "ec35670d164d108ecb734af9b14654bd3aa543cceadecc760f0f5e703504b483",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "43afdbd8ebe8df05c543fbb7c5db33293825c999e0f54ec4144471f5f9be1e7f",
+      "node_observations": "04-svg/artboard/page-002.node-observations.json",
+      "node_observations_sha256": "83413c8b55c11b714e17673fc54bce9e1ab562936d9cfe20946fa629a82fe5aa",
+      "node_version": "v20.18.1",
+      "page": 2,
+      "png": "04-svg/artboard/page-002.png",
+      "png_sha256": "433a3c9aa4448a7098e174c3035400bc193279e89d8099d2120e2a8615be9508",
+      "render_metadata": "04-svg/artboard/page-002.render-metadata.json",
+      "render_metadata_sha256": "c898b78e38431e01150a2e8aaa1ab1cef774be1b49ff5e13a08c61cbfc7f0902",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-002.satori.svg",
+      "satori_svg_sha256": "507a1c04e842279d8af9e01e59e97e333679146dea9c27bebd841491780a76ec",
+      "satori_version": "0.26.0",
+      "template_id": "trend-grid-report",
+      "theme_id": "magazine-cobalt"
+    },
+    {
+      "canvas_spec_sha256": "8d4c5cc1f39b31305b3ece00765bbdd649676328e30748135d3b46bac56998f7",
+      "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+      "canvas_template_svg_sha256": "ff6955876a1c2985f2615cc5f64706fe278ff263bd8b368c88a9b7cf3c953157",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "7276f86a7bedea1bd89f7fe18bc5c1a784b0ab37cc710c1cb981878b9293ae8c",
+      "node_observations": "04-svg/artboard/page-003.node-observations.json",
+      "node_observations_sha256": "ec3600eade5bb0893aefc2b546750f722be8000fdb691b86925ad2006749d55e",
+      "node_version": "v20.18.1",
+      "page": 3,
+      "png": "04-svg/artboard/page-003.png",
+      "png_sha256": "8b9582c5a65928c886396d5b5956143714421a9b53bba91937e554d639bdbcbd",
+      "render_metadata": "04-svg/artboard/page-003.render-metadata.json",
+      "render_metadata_sha256": "0b659c66073e8c56dab73d43fcc0f7eafd6a949ece32a075d6281dde65bab76f",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+      "satori_svg_sha256": "184bd6e9a55e198fd4e088e074da31c5858cd8085d80c712a6da3bacdb9e9f2b",
+      "satori_version": "0.26.0",
+      "template_id": "serif-stat-editorial",
+      "theme_id": "forest-editorial"
+    },
+    {
+      "canvas_spec_sha256": "6dd314e1f20beea52c6b5ea06dd55212dfec27dab246cdbdd94cf22c2a555f4b",
+      "canvas_template_svg": "04-svg/artboard/page-004.canvas-template.svg",
+      "canvas_template_svg_sha256": "aafab296cb5bc6efd3cb808252fa17478d2e69399c58b1d540c968bc510d9f27",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-004.node-layout-map.json",
+      "node_layout_map_sha256": "4aa2819ae8d44392e0a9b490578c29a3a05304290b3cb6a2480a8cdc67c34b60",
+      "node_observations": "04-svg/artboard/page-004.node-observations.json",
+      "node_observations_sha256": "4171607d78ee543269759d4d144bdf1fb24b0e356e9b3a1ed46732400935cd0d",
+      "node_version": "v20.18.1",
+      "page": 4,
+      "png": "04-svg/artboard/page-004.png",
+      "png_sha256": "5f51668711058be4a274b3537433274880b3010c9bd1a91084aa4614225e2afa",
+      "render_metadata": "04-svg/artboard/page-004.render-metadata.json",
+      "render_metadata_sha256": "79f38f3c02d26f6a1bcbd2da4fb3d8e4e256bb6ef571b3788b9abedac921d7e3",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-004.satori.svg",
+      "satori_svg_sha256": "7bcd66b9ae53b5febeb07a62f67c9c20a75415943cf773759c8f12a093c50b8a",
+      "satori_version": "0.26.0",
+      "template_id": "poster-stat-punch",
+      "theme_id": "tomato-poster"
+    }
+  ],
+  "stage": "artboard-render",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "max_workers": 4,
+    "page_count": 4,
+    "warning_count": 0
+  },
+  "version": "svglide-artboard-render/v1"
+}

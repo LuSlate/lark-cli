@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect data-node-id="background" x="0" y="0" width="960" height="540" fill="#EFE9DC"/>
+<rect data-node-id="accent-rule" x="64" y="72" width="8" height="344" fill="#5F5549"/>
+<rect data-node-id="accent-panel" x="760" y="60" width="120" height="120" fill="#A28A6A" opacity="0.20"/>
+<text data-node-id="eyebrow" data-box-x="92" data-box-y="64" data-box-width="420" data-box-height="30" x="92" y="84" fill="#5F5549" font-size="18" font-weight="800" font-family="Inter">ARCHITECTURE SPEC</text>
+<text data-node-id="title" data-box-x="92" data-box-y="108" data-box-width="700" data-box-height="96" x="92" y="158" fill="#27221D" font-size="46" font-weight="850" font-family="Inter">系统架构规格</text>
+<text data-node-id="subtitle" data-box-x="94" data-box-y="212" data-box-width="660" data-box-height="54" x="94" y="240" fill="#756B60" font-size="22" font-weight="500" font-family="Inter">低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。</text>
+<path data-node-id="reference-flow-path" d="M92 438 C210 386 306 478 430 420 C552 362 640 444 828 382" x="92" y="362" width="736" height="116" fill="none" stroke="#A28A6A" stroke-width="3" opacity="0.48"/>
+<line data-node-id="reference-annotation-line" x1="612" y1="264" x2="842" y2="178" stroke="#5F5549" stroke-width="2" opacity="0.5"/>
+<rect data-node-id="dashboard-metric-bar-1" x="760" y="350" width="14" height="26" fill="#5F5549" opacity="0.72"/>
+<rect data-node-id="dashboard-metric-bar-2" x="784" y="332" width="14" height="44" fill="#5F5549" opacity="0.72"/>
+<rect data-node-id="dashboard-metric-bar-3" x="808" y="314" width="14" height="62" fill="#A28A6A" opacity="0.72"/>
+<rect data-node-id="item-card-1" x="92" y="306" width="244" height="72" fill="#F8F4EA" opacity="0.84"/>
+<text data-node-id="item-1" data-box-x="108" data-box-y="321" data-box-width="212" data-box-height="44" x="108" y="349" fill="#27221D" font-size="21" font-weight="720" font-family="Inter">输入边界</text>
+<rect data-node-id="item-card-2" x="360" y="306" width="244" height="72" fill="#F8F4EA" opacity="0.84"/>
+<text data-node-id="item-2" data-box-x="376" data-box-y="321" data-box-width="212" data-box-height="44" x="376" y="349" fill="#27221D" font-size="21" font-weight="720" font-family="Inter">处理结构</text>
+<rect data-node-id="item-card-3" x="628" y="306" width="244" height="72" fill="#F8F4EA" opacity="0.84"/>
+<text data-node-id="item-3" data-box-x="644" data-box-y="321" data-box-width="212" data-box-height="44" x="644" y="349" fill="#27221D" font-size="21" font-weight="720" font-family="Inter">接口契约</text>
+<rect data-node-id="item-card-4" x="92" y="398" width="244" height="72" fill="#F8F4EA" opacity="0.84"/>
+<text data-node-id="item-4" data-box-x="108" data-box-y="413" data-box-width="212" data-box-height="44" x="108" y="441" fill="#27221D" font-size="21" font-weight="720" font-family="Inter">交付节奏</text>
+</svg>

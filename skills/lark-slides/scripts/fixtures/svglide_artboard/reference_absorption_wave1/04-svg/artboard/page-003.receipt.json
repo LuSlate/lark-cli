@@ -1,0 +1,127 @@
+{
+  "canvas_spec_path": "02-plan/slide_plan.json#/slides/2/canvas_spec",
+  "canvas_spec_sha256": "79a37ed6e45c3e36ca1dd7c01f2b54f6fdc8133c0028c9157239fa9506236228",
+  "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+  "canvas_template_svg_sha256": "979a71a41aa6702ad2c46c2cdc8bf5436369f1b1d0468231d464de6e5d537597",
+  "compiler": {
+    "compiler_input": "SemanticMapIR",
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "input_semantic_hash": "5f7f091a3b88d97c5b5fe90aad5b2b47e14a0645177c5f4c6755145e0866e802",
+    "native_mapped": [
+      "rect",
+      "rect",
+      "text",
+      "text",
+      "text",
+      "path",
+      "line",
+      "rect",
+      "rect",
+      "rect",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text",
+      "rect",
+      "text"
+    ],
+    "satori_svg_usage": "preview_only",
+    "semantic_source": "CanvasSpec"
+  },
+  "compiler_input": "04-svg/artboard/page-003.semantic-map.json",
+  "compiler_input_sha256": "5f7f091a3b88d97c5b5fe90aad5b2b47e14a0645177c5f4c6755145e0866e802",
+  "created_at": "2026-06-22T04:04:40+08:00",
+  "font_hashes": [
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+      "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+    }
+  ],
+  "input_semantic_hash": "5f7f091a3b88d97c5b5fe90aad5b2b47e14a0645177c5f4c6755145e0866e802",
+  "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+  "node_layout_map_sha256": "4b539b07a5d3203b6c685f2bdfd5c66b6805341cabbc3792ea3d5f9ff78ec2ee",
+  "node_version": "v20.18.1",
+  "page": 3,
+  "png": "04-svg/artboard/page-003.png",
+  "png_sha256": "7b8290cb04124a410e406159abae1b2f60f00d4691a514f2f3145f4b7a0fd40b",
+  "render_metadata": "04-svg/artboard/page-003.render-metadata.json",
+  "render_metadata_sha256": "49f8b775d9c6fa991f22e2cac2bf46b215976dc988fdf350f0ccb5dfaf6950e0",
+  "renderer": {
+    "actual_satori_package": true,
+    "adapter": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "engine": "satori-node",
+    "name": "satori-resvg-p0"
+  },
+  "resvg_version": "2.6.2",
+  "satori_preview": {
+    "element_counts": {
+      "clipPath": 1,
+      "defs": 1,
+      "mask": 17,
+      "path": 2,
+      "rect": 22,
+      "svg": 1,
+      "text": 63
+    },
+    "fail_fast": [
+      "clipPath",
+      "defs",
+      "filter",
+      "foreignObject",
+      "image",
+      "linearGradient",
+      "pattern",
+      "radialGradient",
+      "use"
+    ],
+    "issues": [
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: defs"
+      },
+      {
+        "code": "satori_svg_element_fail_fast",
+        "message": "unsupported Satori SVG element in P0a: clipPath"
+      },
+      {
+        "code": "satori_svg_effect_fail_fast",
+        "message": "unsupported effect attribute on path"
+      }
+    ],
+    "status": "warning",
+    "strict": false
+  },
+  "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+  "satori_svg_sha256": "e9334e48750dbcfc3dc2124f75bb7cc2a32fea49709c55d98207109a8b250a4a",
+  "satori_version": "0.26.0",
+  "semantic_map": "04-svg/artboard/page-003.semantic-map.json",
+  "semantic_map_sha256": "5f7f091a3b88d97c5b5fe90aad5b2b47e14a0645177c5f4c6755145e0866e802",
+  "stage": "generate_svg",
+  "status": "passed",
+  "svglide_svg": "04-svg/page-003.svg",
+  "svglide_svg_sha256": "a4f2204d3b8b46bec65ed16656b8c4fdf8e3e3d01b09254306af14001e6a764c",
+  "template_id": "editorial-quote-chart",
+  "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+  "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+  "theme_files": [
+    "skills/lark-slides/scripts/artboard_renderer/themes/warm-editorial.json"
+  ],
+  "theme_id": "warm-editorial",
+  "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+  "theme_registry_sha256": "dbaaddf04930dafa0a37c35ecb42fa2dd18c52490b9e019653c09f95b85c5527",
+  "version": "svglide-artboard-receipt/v1"
+}

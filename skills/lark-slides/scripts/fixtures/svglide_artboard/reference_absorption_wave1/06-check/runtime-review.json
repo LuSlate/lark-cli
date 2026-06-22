@@ -1,0 +1,68 @@
+{
+  "schema_version": "svglide-runtime-review/v1",
+  "status": "passed",
+  "action": "create_live",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1",
+  "started_at": "2026-06-21T20:04:40.964917+00:00",
+  "ended_at": "2026-06-21T20:04:40.965543+00:00",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "8badb7d1e36e7a5a519f548c1f7b8627272808e617def86e13d4e267f9f17298",
+    "style_preset": "neo_grid_bold"
+  },
+  "registry": {
+    "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-renderer-registry.json",
+    "sha256": "a36c93480b3d94b86f15c8d8b3a3087a0f31b3a6a6c2413c7673a6f0ac2ec7ec"
+  },
+  "pages": [
+    {
+      "page": 1,
+      "renderer_id": "artboard_satori.dense-panel-grid",
+      "registry_status": "active",
+      "layout_family": "dense-panel-grid",
+      "registry_family": "dense-panel-grid",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 2,
+      "renderer_id": "artboard_satori.executive-dashboard",
+      "registry_status": "active",
+      "layout_family": "executive-dashboard",
+      "registry_family": "executive-dashboard",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 3,
+      "renderer_id": "artboard_satori.editorial-quote-chart",
+      "registry_status": "active",
+      "layout_family": "editorial-quote-chart",
+      "registry_family": "editorial-quote-chart",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    }
+  ],
+  "renderers": [
+    "artboard_satori.dense-panel-grid",
+    "artboard_satori.editorial-quote-chart",
+    "artboard_satori.executive-dashboard"
+  ],
+  "layout_families": [
+    "dense-panel-grid",
+    "editorial-quote-chart",
+    "executive-dashboard"
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "slide_count": 3,
+    "renderer_count": 3,
+    "layout_family_count": 3,
+    "asset_page_count": 0
+  },
+  "issues": []
+}

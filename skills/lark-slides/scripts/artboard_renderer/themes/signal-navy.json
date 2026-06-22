@@ -1,0 +1,26 @@
+{
+  "theme_id": "signal-navy",
+  "colors": {
+    "background": "#1C2644",
+    "panel": "#232F55",
+    "primary": "#C8A870",
+    "accent": "#C8A870",
+    "text": "#E2DCD0",
+    "muted": "#8A96A8"
+  },
+  "typography": {
+    "title": 52,
+    "subtitle": 20,
+    "body": 18,
+    "label": 15
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.signal.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json"
+}

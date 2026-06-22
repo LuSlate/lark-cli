@@ -1,0 +1,333 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 52,
+      "top": 52,
+      "width": 856,
+      "height": 436,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 74,
+      "width": 102,
+      "height": 20,
+      "type": "div",
+      "textContent": "TREND INDEX",
+      "props": {}
+    },
+    {
+      "left": 70,
+      "top": 112,
+      "width": 570,
+      "height": 55,
+      "type": "div",
+      "textContent": "AI 应用趋势索引",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 250,
+      "width": 500,
+      "height": 25,
+      "type": "div",
+      "textContent": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+      "props": {}
+    },
+    {
+      "left": 716,
+      "top": 92,
+      "width": 170,
+      "height": 170,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 716,
+      "top": 92,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 754,
+      "top": 92,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 792,
+      "top": 92,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 830,
+      "top": 92,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 716,
+      "top": 130,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 754,
+      "top": 130,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 792,
+      "top": 130,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 830,
+      "top": 130,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 716,
+      "top": 168,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 754,
+      "top": 168,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 792,
+      "top": 168,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 830,
+      "top": 168,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 716,
+      "top": 206,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 754,
+      "top": 206,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 792,
+      "top": 206,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 830,
+      "top": 206,
+      "width": 34,
+      "height": 34,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 298,
+      "width": 810,
+      "height": 168,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 298,
+      "width": 810,
+      "height": 42,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 309,
+      "width": 54,
+      "height": 21,
+      "type": "div",
+      "textContent": "01",
+      "props": {}
+    },
+    {
+      "left": 126,
+      "top": 307,
+      "width": 662,
+      "height": 25,
+      "type": "div",
+      "textContent": "模型成本压力",
+      "props": {}
+    },
+    {
+      "left": 788,
+      "top": 311,
+      "width": 94,
+      "height": 17,
+      "type": "div",
+      "textContent": "WATCH",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 340,
+      "width": 810,
+      "height": 42,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 351,
+      "width": 54,
+      "height": 21,
+      "type": "div",
+      "textContent": "02",
+      "props": {}
+    },
+    {
+      "left": 126,
+      "top": 349,
+      "width": 662,
+      "height": 25,
+      "type": "div",
+      "textContent": "Agent 工作流成形",
+      "props": {}
+    },
+    {
+      "left": 788,
+      "top": 353,
+      "width": 94,
+      "height": 17,
+      "type": "div",
+      "textContent": "RISING",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 382,
+      "width": 810,
+      "height": 42,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 393,
+      "width": 54,
+      "height": 21,
+      "type": "div",
+      "textContent": "03",
+      "props": {}
+    },
+    {
+      "left": 126,
+      "top": 391,
+      "width": 662,
+      "height": 25,
+      "type": "div",
+      "textContent": "设计运营成熟",
+      "props": {}
+    },
+    {
+      "left": 788,
+      "top": 395,
+      "width": 94,
+      "height": 17,
+      "type": "div",
+      "textContent": "WATCH",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 424,
+      "width": 810,
+      "height": 42,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 72,
+      "top": 435,
+      "width": 54,
+      "height": 21,
+      "type": "div",
+      "textContent": "04",
+      "props": {}
+    },
+    {
+      "left": 126,
+      "top": 433,
+      "width": 662,
+      "height": 25,
+      "type": "div",
+      "textContent": "治理缺口扩大",
+      "props": {}
+    },
+    {
+      "left": 788,
+      "top": 437,
+      "width": 94,
+      "height": 17,
+      "type": "div",
+      "textContent": "RISING",
+      "props": {}
+    }
+  ]
+}

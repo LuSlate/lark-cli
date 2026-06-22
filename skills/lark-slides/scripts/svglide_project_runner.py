@@ -13,12 +13,14 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import svglide_asset_injector
 import svglide_schema
+import svglide_stage_invalidation
 
 
 RUNNER_VERSION = "svglide-project-runner/v0"
@@ -37,9 +39,13 @@ DEFAULT_REPAIR_LOOP_FAILING_RECEIPT = Path("06-check/preflight.json")
 STAGES = [
     "init",
     "source",
+    "select_style",
     "plan",
     "strategy_review",
     "theme_validate",
+    "palette_review",
+    "selection_review",
+    "plan_bundle_review",
     "confirm_plan",
     "package_check",
     "assets",
@@ -55,6 +61,7 @@ STAGES = [
     "visual_distinctness_review",
     "theme_adherence",
     "quality_gate",
+    "generation_benchmark",
     "dry_run",
     "visual_acceptance",
     "ppe_proof",
@@ -71,8 +78,15 @@ OPTIONAL_STAGES = {
 STAGE_ALIASES = {
     "confirm-plan": "confirm_plan",
     "source-review": "source",
+    "select-style": "select_style",
+    "theme-template-selection": "select_style",
+    "palette-selection": "select_style",
     "strategy-review": "strategy_review",
     "theme-validate": "theme_validate",
+    "palette-review": "palette_review",
+    "selection-review": "selection_review",
+    "theme-template-selection-review": "selection_review",
+    "plan-bundle-review": "plan_bundle_review",
     "package-check": "package_check",
     "artboard-package-check": "package_check",
     "aesthetic-review": "aesthetic_review",
@@ -121,9 +135,13 @@ PROJECT_DIRS = [
 IMPLEMENTED_STAGES = {
     "init",
     "source",
+    "select_style",
     "plan",
     "strategy_review",
     "theme_validate",
+    "palette_review",
+    "selection_review",
+    "plan_bundle_review",
     "confirm_plan",
     "package_check",
     "assets",
@@ -139,6 +157,7 @@ IMPLEMENTED_STAGES = {
     "visual_distinctness_review",
     "theme_adherence",
     "quality_gate",
+    "generation_benchmark",
     "dry_run",
     "visual_acceptance",
     "ppe_proof",
@@ -150,12 +169,14 @@ IMPLEMENTED_STAGES = {
     "export",
 }
 FAILURE_STATUSES = {"blocked", "failed", "skipped"}
+RERUNNABLE_STAGE_STATUSES = {"blocked", "failed"}
 DECK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 PROFILE_TARGETS = {
     "preview_only": "quality_gate",
+    "local_real_preview": "visual_acceptance",
     "production_live": "readback",
 }
-QUALITY_GATE_PROFILES = {"preview_only", "production_live", "production", "debug"}
+QUALITY_GATE_PROFILES = {"preview_only", "local_real_preview", "production_live", "production", "debug"}
 RUNNER_OPTIONS = {
     "network_policy": "auto",
     "offline": False,
@@ -165,6 +186,68 @@ RUNNER_OPTIONS = {
     "refresh_online": False,
     "asset_provider": "auto",
     "image_backend": "auto",
+    "progress": "none",
+    "collect_errors": False,
+    "auto_repair": False,
+}
+PROGRESS_MODES = {"none", "agent"}
+COLLECTABLE_VALIDATION_STAGES = {
+    "plan",
+    "strategy_review",
+    "theme_validate",
+    "palette_review",
+    "selection_review",
+    "plan_bundle_review",
+}
+AUTO_REPAIR_STAGES = {
+    "plan",
+    "palette_review",
+    "selection_review",
+    "plan_bundle_review",
+    "preview_lint",
+}
+SLA_TARGET_SECONDS = {
+    "local_real_preview": 720,
+    "preview_only": 720,
+    "production": 720,
+    "production_live": 720,
+}
+ROOT_CAUSE_GROUPS = {
+    "project_palette_missing": "palette_adoption",
+    "project_palette_mismatch": "palette_adoption",
+    "project_theme_token_overrides_missing": "palette_adoption",
+    "project_theme_token_override_mismatch": "palette_adoption",
+    "asset_contract_metadata_missing": "asset_contract",
+    "asset_source_url_missing": "asset_contract",
+    "asset_source_url_not_http": "asset_contract",
+    "local_generated_image_forbidden": "asset_contract",
+    "image_opacity_unsupported": "svg_protocol",
+    "unsupported_path_command": "satori_bridge",
+    "text_overflow": "preview_layout",
+    "chart_rich_content_too_thin": "plan_semantic_evidence",
+    "semantic_evidence_missing": "plan_semantic_evidence",
+    "page_count_too_low": "deck_scope_contract",
+    "baseline_theme_template_forbidden": "template_selection",
+    "debug_reference_line_forbidden": "template_selection",
+    "unregistered_template_motif": "template_guardrail",
+    "unregistered_sharp_decoration": "template_guardrail",
+    "decorative_kind_not_allowed": "template_guardrail",
+    "decorative_density_too_high": "template_guardrail",
+    "text_density_too_high": "preview_layout",
+    "page_density_too_high": "preview_layout",
+}
+PROGRESS_STAGE_MILESTONES = {
+    "artboard_satori": [
+        ("assets", "主题 plan + 图片资产"),
+        ("generate_svg", "Satori-compatible HTML/CSS"),
+        ("prepare", "Satori SVG + SVGlide SVG"),
+        ("visual_acceptance", "本地预览 + gates"),
+    ],
+    "direct_svg": [
+        ("assets", "素材资产"),
+        ("generate_svg", "SVGlide protocol SVG"),
+        ("readback", "backend snapshot JSON"),
+    ],
 }
 
 
@@ -200,7 +283,7 @@ def source_option_args() -> list[str]:
     return args
 
 
-def asset_option_args() -> list[str]:
+def asset_option_args(*, profile: str = "production") -> list[str]:
     args = [
         "--network-policy",
         effective_network_policy(),
@@ -208,6 +291,8 @@ def asset_option_args() -> list[str]:
         str(RUNNER_OPTIONS.get("asset_provider") or "auto"),
         "--image-backend",
         str(RUNNER_OPTIONS.get("image_backend") or "auto"),
+        "--profile",
+        profile,
     ]
     if RUNNER_OPTIONS.get("no_image_search"):
         args.append("--no-image-search")
@@ -233,7 +318,7 @@ def resolve_run_target(until: str | None, profile: str | None) -> str:
         return target
     if profile in PROFILE_TARGETS:
         return normalize_stage(PROFILE_TARGETS[profile])
-    raise RunnerError("--until is required unless --profile is preview_only or production_live", exit_code=2)
+    raise RunnerError("--until is required unless --profile is preview_only, local_real_preview, or production_live", exit_code=2)
 
 
 def stage_required_for_profile(stage: str, profile: str) -> bool:
@@ -268,11 +353,451 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def read_json(path: Path) -> dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as err:
         raise RunnerError(f"missing required file: {path}") from err
+
+
+def read_json_optional(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def parse_iso_seconds(value: str | None) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def elapsed_seconds(started_at: str | None, ended_at: str | None) -> float:
+    started = parse_iso_seconds(started_at)
+    ended = parse_iso_seconds(ended_at)
+    if not started or not ended:
+        return 0.0
+    return max(0.0, (ended - started).total_seconds())
+
+
+def issue_root_cause(issue: Any) -> str:
+    if not isinstance(issue, dict):
+        return "unknown"
+    group = issue.get("root_cause_group")
+    if isinstance(group, str) and group:
+        return group
+    code = issue.get("code")
+    return ROOT_CAUSE_GROUPS.get(code, "unknown") if isinstance(code, str) else "unknown"
+
+
+def issues_from_payload(payload: Any) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    if not isinstance(payload, dict):
+        return issues
+    raw = payload.get("issues")
+    if isinstance(raw, list):
+        issues.extend(item for item in raw if isinstance(item, dict))
+    error = payload.get("error")
+    if isinstance(error, dict) and isinstance(error.get("issues"), list):
+        issues.extend(item for item in error["issues"] if isinstance(item, dict))
+    stages = payload.get("stages")
+    if isinstance(stages, list):
+        for stage in stages:
+            if isinstance(stage, dict) and isinstance(stage.get("issues"), list):
+                issues.extend(item for item in stage["issues"] if isinstance(item, dict))
+    return issues
+
+
+def failure_summary_path(project_root: Path) -> Path:
+    return project_root / "06-check" / "failure-summary.json"
+
+
+def write_failure_summary(
+    project_root: Path,
+    *,
+    blocking_stage: str,
+    issues: list[dict[str, Any]] | None = None,
+    message: str | None = None,
+    rerun_from: str | None = None,
+) -> dict[str, Any]:
+    issue_list = issues or []
+    primary = issue_list[0] if issue_list else {}
+    code = primary.get("code") if isinstance(primary, dict) else None
+    root_cause = issue_root_cause(primary) if primary else "unknown"
+    repair_hint = primary.get("repair_hint") if isinstance(primary, dict) else None
+    payload = {
+        "schema_version": "svglide-failure-summary/v1",
+        "blocking_stage": blocking_stage,
+        "root_cause_group": root_cause,
+        "user_visible_summary": message or (primary.get("message") if isinstance(primary.get("message"), str) else f"{blocking_stage} failed"),
+        "repair_hint": repair_hint or "inspect the structured issues and rerun from the blocking stage",
+        "rerun_from": rerun_from or blocking_stage,
+    }
+    if code:
+        payload["code"] = code
+    if issue_list:
+        payload["issues"] = issue_list
+    write_json(failure_summary_path(project_root), payload)
+    return payload
+
+
+def collected_errors_path(project_root: Path) -> Path:
+    return project_root / "06-check" / "collected-errors.json"
+
+
+def normalize_issue(stage: str, issue: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(issue)
+    normalized.setdefault("severity", "error")
+    normalized.setdefault("stage", stage)
+    normalized.setdefault("root_cause_group", issue_root_cause(normalized))
+    normalized.setdefault("repairability", "manual")
+    return normalized
+
+
+def write_collected_errors(project_root: Path, state: dict[str, Any], failures: list[dict[str, Any]]) -> None:
+    normalized_stages: list[dict[str, Any]] = []
+    all_issues: list[dict[str, Any]] = []
+    for failure in failures:
+        stage = str(failure.get("stage") or "unknown")
+        issues = [normalize_issue(stage, issue) for issue in failure.get("issues", []) if isinstance(issue, dict)]
+        all_issues.extend(issues)
+        normalized_stages.append(
+            {
+                "stage": stage,
+                "status": failure.get("status") or "failed",
+                "issues": issues,
+                **({"skip_reason": failure["skip_reason"]} if failure.get("skip_reason") else {}),
+                **({"upstream_stage": failure["upstream_stage"]} if failure.get("upstream_stage") else {}),
+            }
+        )
+    payload = {
+        "schema_version": "svglide-collected-errors/v1",
+        "status": "failed" if normalized_stages else "passed",
+        "stages": normalized_stages,
+        "issues": all_issues,
+        "summary": {"error_count": len(all_issues), "stage_count": len(normalized_stages)},
+    }
+    write_json(collected_errors_path(project_root), payload)
+    state["collected_errors"] = project_relpath(collected_errors_path(project_root), project_root)
+    write_state(project_root, state)
+    if normalized_stages:
+        write_failure_summary(
+            project_root,
+            blocking_stage=normalized_stages[0]["stage"],
+            issues=all_issues,
+            message="生成前校验聚合到阻断问题",
+            rerun_from=normalized_stages[0]["stage"],
+        )
+
+
+def run_auto_repair_command(project_root: Path) -> dict[str, Any]:
+    command = ["python3", (SCRIPT_DIR / "svglide_auto_repair.py").as_posix(), project_root.as_posix(), "--pretty"]
+    completed = subprocess.run(command, cwd=repo_root(), check=False, capture_output=True, text=True)
+    payload = parse_json_or_none(completed.stdout)
+    if isinstance(payload, dict):
+        return payload
+    return {"status": "failed", "stdout": completed.stdout, "stderr": completed.stderr, "returncode": completed.returncode}
+
+
+def repair_existing_failed_stage(project_root: Path, state: dict[str, Any], stage: str) -> bool:
+    record = state.get("stages", {}).get(stage)
+    if not isinstance(record, dict) or record.get("status") not in FAILURE_STATUSES:
+        return False
+    if stage not in AUTO_REPAIR_STAGES or not RUNNER_OPTIONS.get("auto_repair"):
+        return False
+    result = run_auto_repair_command(project_root)
+    if result.get("status") != "patched":
+        return False
+    state.get("stages", {}).pop(stage, None)
+    state.setdefault("auto_repair_history", []).append({"stage": stage, "result": result})
+    write_state(project_root, state)
+    return True
+
+
+def prune_stage_and_descendants(state: dict[str, Any], stage: str, target: str) -> list[str]:
+    stages = state.get("stages")
+    if not isinstance(stages, dict):
+        return []
+    start = STAGES.index(stage) if stage in STAGES else 0
+    end = STAGES.index(target) if target in STAGES else len(STAGES) - 1
+    stale = [name for name in STAGES[start : end + 1] if name in stages]
+    for name in stale:
+        stages.pop(name, None)
+    if stale:
+        state["stale_pruned"] = stale
+    return stale
+
+
+def is_rerun_required_error(err: RunnerError, stage: str) -> bool:
+    message = str(err)
+    return "rerun" in message and (stage in message or "current project files" in message or "stale" in message)
+
+
+def timing_report_path(project_root: Path) -> Path:
+    return project_root / "06-check" / "timing-report.json"
+
+
+def timing_receipt_path(project_root: Path) -> Path:
+    return project_root / "receipts" / "timing.json"
+
+
+def stage_attempt(events: list[dict[str, Any]], stage: str) -> int:
+    return sum(1 for event in events if event.get("stage") == stage) + 1
+
+
+def record_timing_event(
+    state: dict[str, Any],
+    *,
+    stage: str,
+    status: str,
+    started_at: str,
+    ended_at: str,
+    wall_time_seconds: float | None = None,
+    root_cause_group: str | None = None,
+    cache_hit: bool | None = None,
+) -> None:
+    events = state.setdefault("timing_events", [])
+    if not isinstance(events, list):
+        events = []
+        state["timing_events"] = events
+    event: dict[str, Any] = {
+        "stage": stage,
+        "attempt": stage_attempt(events, stage),
+        "status": status,
+        "started_at": started_at,
+        "ended_at": ended_at,
+        "wall_time_seconds": round(wall_time_seconds if wall_time_seconds is not None else elapsed_seconds(started_at, ended_at), 3),
+    }
+    if root_cause_group:
+        event["root_cause_group"] = root_cause_group
+    if cache_hit is not None:
+        event["cache_hit"] = cache_hit
+    events.append(event)
+
+
+def build_stage_input_hashes(project_root: Path, inputs: list[str] | None) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for rel in inputs or []:
+        if not isinstance(rel, str):
+            continue
+        path = project_root / rel
+        if path.is_file():
+            hashes[rel] = file_sha256(path)
+    return hashes
+
+
+def build_script_hashes(command: list[str] | None) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for item in command or []:
+        if not isinstance(item, str):
+            continue
+        path = Path(item)
+        if not path.is_absolute():
+            path = repo_root() / item
+        if path.is_file():
+            try:
+                hashes[path.resolve().relative_to(repo_root()).as_posix()] = file_sha256(path)
+            except ValueError:
+                hashes[path.as_posix()] = file_sha256(path)
+    return hashes
+
+
+def write_timing_report(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+    events = state.get("timing_events") if isinstance(state.get("timing_events"), list) else []
+    stage_runtime: dict[str, float] = {}
+    stage_attempts: dict[str, int] = {}
+    root_cause_runtime: dict[str, float] = {}
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        stage = event.get("stage")
+        seconds = event.get("wall_time_seconds")
+        if not isinstance(stage, str) or not isinstance(seconds, (int, float)):
+            continue
+        stage_runtime[stage] = round(stage_runtime.get(stage, 0.0) + float(seconds), 3)
+        stage_attempts[stage] = stage_attempts.get(stage, 0) + 1
+        group = event.get("root_cause_group")
+        if isinstance(group, str) and group:
+            root_cause_runtime[group] = round(root_cause_runtime.get(group, 0.0) + float(seconds), 3)
+    total = round(sum(stage_runtime.values()), 3)
+    profile = str(state.get("profile") or "unknown")
+    target_seconds = SLA_TARGET_SECONDS.get(profile, 720)
+    slowest_root_cause = None
+    if root_cause_runtime:
+        slowest_root_cause = max(root_cause_runtime.items(), key=lambda item: item[1])[0]
+    payload = {
+        "schema_version": "svglide-timing-report/v1",
+        "total_wall_time_seconds": total,
+        "sla": {
+            "profile": profile,
+            "target_seconds": target_seconds,
+            "passed": total <= target_seconds,
+        },
+        "stage_runtime_seconds": stage_runtime,
+        "stage_attempts": stage_attempts,
+        "root_cause_runtime_seconds": root_cause_runtime,
+        "slowest_root_cause": slowest_root_cause,
+        "events": events,
+    }
+    benchmark = read_json_optional(project_root / "06-check/generation-benchmark.json")
+    cache = benchmark.get("cache") if isinstance(benchmark.get("cache"), dict) else None
+    if cache:
+        payload["cache"] = cache
+    write_json(timing_report_path(project_root), payload)
+    write_json(timing_receipt_path(project_root), payload)
+    return payload
+
+
+def read_generation_mode(project_root: Path) -> str:
+    plan_path = project_root / "02-plan/slide_plan.json"
+    if not plan_path.exists():
+        return DEFAULT_GENERATION_MODE
+    try:
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return DEFAULT_GENERATION_MODE
+    mode = plan.get("generation_mode")
+    return mode if isinstance(mode, str) and mode in GENERATION_MODES else DEFAULT_GENERATION_MODE
+
+
+def progress_milestones(project_root: Path) -> list[tuple[str, str]]:
+    return PROGRESS_STAGE_MILESTONES.get(read_generation_mode(project_root), PROGRESS_STAGE_MILESTONES[DEFAULT_GENERATION_MODE])
+
+
+def progress_mode_enabled(progress: str | None) -> bool:
+    return (progress or RUNNER_OPTIONS.get("progress") or "none") != "none"
+
+
+def progress_log_path(project_root: Path) -> Path:
+    return project_root / "logs/agent-progress.jsonl"
+
+
+def emit_agent_progress(project_root: Path, *, event: str, message: str, stage: str | None = None, completed: int | None = None, total: int | None = None) -> None:
+    payload: dict[str, Any] = {
+        "schema_version": "svglide-agent-progress/v1",
+        "event": event,
+        "message": message,
+        "emitted_at": now_iso(),
+    }
+    if stage:
+        payload["stage"] = stage
+    if completed is not None:
+        payload["completed"] = completed
+    if total is not None:
+        payload["total"] = total
+    append_jsonl(progress_log_path(project_root), payload)
+    print(message, file=sys.stderr)
+
+
+def emit_stage_progress(project_root: Path, stage: str, *, progress: str | None = None) -> None:
+    if not progress_mode_enabled(progress):
+        return
+    milestones = progress_milestones(project_root)
+    total = len(milestones)
+    for index, (milestone_stage, label) in enumerate(milestones, start=1):
+        if milestone_stage == stage:
+            emit_agent_progress(
+                project_root,
+                event="milestone_completed",
+                stage=stage,
+                completed=index,
+                total=total,
+                message=f"已完成 {index}/{total} 关键产物: {label}",
+            )
+            return
+
+
+def emit_start_progress(project_root: Path, *, progress: str | None = None) -> None:
+    if not progress_mode_enabled(progress):
+        return
+    emit_agent_progress(
+        project_root,
+        event="started",
+        message="正在生成主题 plan 和图片资产",
+        completed=0,
+        total=len(progress_milestones(project_root)),
+    )
+
+
+def emit_blocked_progress(project_root: Path, error: str, *, progress: str | None = None) -> None:
+    if not progress_mode_enabled(progress):
+        return
+    emit_agent_progress(
+        project_root,
+        event="blocked",
+        message=f"生成已阻断: {error}",
+    )
+
+
+def format_duration(seconds: float | int | None) -> str:
+    total = int(round(float(seconds or 0)))
+    minutes, secs = divmod(total, 60)
+    if minutes:
+        return f"{minutes}m{secs:02d}s"
+    return f"{secs}s"
+
+
+def asset_summary(project_root: Path) -> tuple[int | None, int | None]:
+    manifest = read_json_optional(project_root / "03-assets/asset-manifest.json")
+    summary = manifest.get("summary") if isinstance(manifest.get("summary"), dict) else {}
+    online = summary.get("asset_acquired_count") or summary.get("online_asset_count") or summary.get("real_asset_count")
+    fallback = summary.get("fallback_count") or summary.get("asset_fallback_count") or 0
+    if not isinstance(online, int):
+        contracts = manifest.get("contracts")
+        if isinstance(contracts, list):
+            online = sum(1 for item in contracts if isinstance(item, dict) and isinstance(item.get("source_url"), str) and item["source_url"].startswith(("http://", "https://")))
+    return (online if isinstance(online, int) else None, fallback if isinstance(fallback, int) else None)
+
+
+def page_count_summary(project_root: Path) -> int | None:
+    visual = read_json_optional(project_root / "06-check/visual-acceptance.json")
+    summary = visual.get("summary") if isinstance(visual.get("summary"), dict) else {}
+    count = summary.get("checked_page_count") or summary.get("page_count")
+    if isinstance(count, int):
+        return count
+    plan = read_json_optional(project_root / "02-plan/slide_plan.json")
+    slides = plan.get("slides")
+    return len(slides) if isinstance(slides, list) else None
+
+
+def emit_completion_summary(project_root: Path, state: dict[str, Any], *, progress: str | None = None) -> None:
+    if not progress_mode_enabled(progress):
+        return
+    timing = write_timing_report(project_root, state)
+    stage_runtime = timing.get("stage_runtime_seconds") if isinstance(timing.get("stage_runtime_seconds"), dict) else {}
+    stage_attempts = timing.get("stage_attempts") if isinstance(timing.get("stage_attempts"), dict) else {}
+    slowest_stage = max(stage_runtime.items(), key=lambda item: item[1])[0] if stage_runtime else "unknown"
+    max_attempt_stage = max(stage_attempts.items(), key=lambda item: item[1])[0] if stage_attempts else "none"
+    max_attempt_count = stage_attempts.get(max_attempt_stage, 0) if isinstance(stage_attempts.get(max_attempt_stage), int) else 0
+    sla = timing.get("sla") if isinstance(timing.get("sla"), dict) else {}
+    target = format_duration(sla.get("target_seconds") if isinstance(sla.get("target_seconds"), (int, float)) else SLA_TARGET_SECONDS.get(str(state.get("profile") or "local_real_preview"), 720))
+    sla_text = f"达到 {target} SLA" if sla.get("passed") is True else f"未达到 {target} SLA"
+    page_count = page_count_summary(project_root)
+    online_assets, fallback_count = asset_summary(project_root)
+    page_text = f"{page_count} 页" if page_count is not None else "页数未知"
+    asset_text = f"{online_assets} 个线上图片资产" if online_assets is not None else "线上图片资产数未知"
+    fallback_text = f"{fallback_count} 次 fallback" if fallback_count is not None else "fallback 次数未知"
+    message = (
+        f"生成完成：{page_text}，{asset_text}，{fallback_text}；"
+        f"总耗时：{format_duration(timing.get('total_wall_time_seconds'))}，{sla_text}；"
+        f"最慢阶段：{slowest_stage} {format_duration(stage_runtime.get(slowest_stage))}；"
+        f"最多重跑：{max_attempt_stage} {max_attempt_count} 次；"
+        f"最慢 root cause：{timing.get('slowest_root_cause') or 'none'}"
+    )
+    emit_agent_progress(project_root, event="completed", message=message)
 
 
 def repo_root() -> Path:
@@ -367,6 +892,7 @@ def build_receipt(
     error: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
+        "schema_version": "svglide-stage-receipt/v1",
         "stage": stage,
         "status": status,
         "started_at": started_at,
@@ -374,6 +900,9 @@ def build_receipt(
         "inputs": inputs or [],
         "outputs": outputs or [],
         "command": command or [],
+        "tool_versions": {
+            "python": sys.version.split()[0],
+        },
         "error": error,
     }
 
@@ -409,6 +938,7 @@ def complete_stage(
     outputs: list[str] | None = None,
     command: list[str] | None = None,
     error: dict[str, Any] | None = None,
+    wall_time_seconds: float | None = None,
 ) -> dict[str, Any]:
     receipt = build_receipt(
         stage,
@@ -419,10 +949,45 @@ def complete_stage(
         command=command,
         error=error,
     )
+    receipt["profile"] = state.get("profile")
+    receipt["input_hashes"] = build_stage_input_hashes(project_root, inputs)
+    receipt["script_hashes"] = build_script_hashes(command)
+    receipt["wall_time_seconds"] = round(wall_time_seconds if wall_time_seconds is not None else elapsed_seconds(receipt.get("started_at"), receipt.get("ended_at")), 3)
     path = receipt_path(project_root, stage)
     write_json(path, receipt)
     record_stage(state, stage, status, path)
+    if status in FAILURE_STATUSES:
+        root_cause = None
+        if error and isinstance(error.get("issues"), list) and error["issues"]:
+            root_cause = issue_root_cause(error["issues"][0])
+        record_timing_event(
+            state,
+            stage=stage,
+            status=status,
+            started_at=receipt["started_at"],
+            ended_at=receipt["ended_at"],
+            wall_time_seconds=receipt["wall_time_seconds"],
+            root_cause_group=root_cause,
+        )
+        write_failure_summary(
+            project_root,
+            blocking_stage=stage,
+            issues=error.get("issues") if error and isinstance(error.get("issues"), list) else [],
+            message=error.get("message") if error and isinstance(error.get("message"), str) else None,
+            rerun_from=stage,
+        )
+    else:
+        record_timing_event(
+            state,
+            stage=stage,
+            status=status,
+            started_at=receipt["started_at"],
+            ended_at=receipt["ended_at"],
+            wall_time_seconds=receipt["wall_time_seconds"],
+        )
+    svglide_stage_invalidation.update_state_input_hashes(project_root, state)
     write_state(project_root, state)
+    write_timing_report(project_root, state)
     return receipt
 
 
@@ -438,10 +1003,30 @@ def run_script_stage(
     command_runner=subprocess.run,
 ) -> dict[str, Any]:
     started_at = now_iso()
+    started_perf = time.perf_counter()
     completed = command_runner(command, cwd=repo_root(), check=False, capture_output=True, text=True)
+    repair_result: dict[str, Any] | None = None
+    if completed.returncode != 0 and RUNNER_OPTIONS.get("auto_repair") and stage in AUTO_REPAIR_STAGES:
+        repair_command = ["python3", (SCRIPT_DIR / "svglide_auto_repair.py").as_posix(), project_root.as_posix(), "--pretty"]
+        repair_completed = subprocess.run(repair_command, cwd=repo_root(), check=False, capture_output=True, text=True)
+        repair_payload = parse_json_or_none(repair_completed.stdout)
+        repair_result = repair_payload if isinstance(repair_payload, dict) else {"status": "unknown", "stdout": repair_completed.stdout, "stderr": repair_completed.stderr}
+        if repair_completed.returncode == 0 and repair_result.get("status") == "patched":
+            completed = command_runner(command, cwd=repo_root(), check=False, capture_output=True, text=True)
     if output_json is not None:
         write_text(output_json, completed.stdout if completed.stdout.endswith("\n") else completed.stdout + "\n")
     if completed.returncode != 0:
+        parsed_output = parse_json_or_none(completed.stdout)
+        parsed_issues = issues_from_payload(parsed_output)
+        error_payload: dict[str, Any] = {
+            "code": "stage_command_failed",
+            "returncode": completed.returncode,
+            "stderr": completed.stderr,
+        }
+        if parsed_issues:
+            error_payload["issues"] = parsed_issues
+        if repair_result is not None:
+            error_payload["auto_repair"] = repair_result
         complete_stage(
             project_root,
             state,
@@ -451,14 +1036,11 @@ def run_script_stage(
             inputs=inputs,
             outputs=outputs,
             command=command,
-            error={
-                "code": "stage_command_failed",
-                "returncode": completed.returncode,
-                "stderr": completed.stderr,
-            },
+            error=error_payload,
+            wall_time_seconds=time.perf_counter() - started_perf,
         )
         raise RunnerError(f"stage '{stage}' failed with exit code {completed.returncode}")
-    return complete_stage(
+    receipt = complete_stage(
         project_root,
         state,
         stage,
@@ -467,7 +1049,12 @@ def run_script_stage(
         inputs=inputs,
         outputs=outputs,
         command=command,
+        wall_time_seconds=time.perf_counter() - started_perf,
     )
+    if repair_result is not None:
+        receipt["auto_repair"] = repair_result
+        write_json(receipt_path(project_root, stage), receipt)
+    return receipt
 
 
 def init_project(
@@ -546,6 +1133,10 @@ def fail_if_existing_stage_failed(stage: str, record: dict[str, Any]) -> None:
     raise RunnerError(f"required stage '{stage}' has unsupported status '{status}'")
 
 
+def existing_stage_can_be_retried(record: dict[str, Any]) -> bool:
+    return record.get("status") in RERUNNABLE_STAGE_STATUSES
+
+
 def require_stage_passed(state: dict[str, Any], stage: str) -> None:
     status = state.get("stages", {}).get(stage, {}).get("status")
     if status != "passed":
@@ -579,6 +1170,126 @@ def block_unimplemented_stage(
 
 def plan_path(project_root: Path) -> Path:
     return project_root / "02-plan" / "slide_plan.json"
+
+
+def palette_selection_path(project_root: Path) -> Path:
+    return project_root / "02-plan" / "palette-selection.json"
+
+
+def theme_template_selection_path(project_root: Path) -> Path:
+    return project_root / "02-plan" / "theme-template-selection.json"
+
+
+def plan_declares_selection(project_root: Path) -> bool:
+    path = plan_path(project_root)
+    if not path.exists():
+        return False
+    try:
+        payload = read_json(path)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(payload, dict):
+        return False
+    return bool(
+        payload.get("selection_receipt")
+        or payload.get("palette_selection_receipt")
+        or isinstance(payload.get("project_palette"), dict)
+        or isinstance(payload.get("project_theme"), dict)
+    )
+
+
+def selection_gate_required(project_root: Path, state: dict[str, Any]) -> bool:
+    stages = state.get("stages") if isinstance(state.get("stages"), dict) else {}
+    return bool(
+        "select_style" in stages
+        or "palette_review" in stages
+        or "selection_review" in stages
+        or palette_selection_path(project_root).exists()
+        or theme_template_selection_path(project_root).exists()
+        or plan_declares_selection(project_root)
+    )
+
+
+def apply_selection_receipts_to_plan(project_root: Path, plan: dict[str, Any]) -> bool:
+    palette_path = palette_selection_path(project_root)
+    selection_path = theme_template_selection_path(project_root)
+    if not palette_path.exists() or not selection_path.exists():
+        return False
+    try:
+        palette_selection = read_json(palette_path)
+        selection = read_json(selection_path)
+    except (OSError, json.JSONDecodeError):
+        return False
+    changed = False
+    project_palette = palette_selection.get("project_palette")
+    if isinstance(project_palette, dict) and plan.get("project_palette") != project_palette:
+        plan["project_palette"] = project_palette
+        changed = True
+    if plan.get("palette_selection_receipt") != "02-plan/palette-selection.json":
+        plan["palette_selection_receipt"] = "02-plan/palette-selection.json"
+        changed = True
+    if plan.get("selection_receipt") != "02-plan/theme-template-selection.json":
+        plan["selection_receipt"] = "02-plan/theme-template-selection.json"
+        changed = True
+    if selection.get("confidence") == "low" and not plan.get("fallback_policy"):
+        plan["fallback_policy"] = "auto"
+        plan["selection_fallback_policy"] = {
+            "reason": "low_confidence_theme_template_selection",
+            "selection_fallback_policy": selection.get("fallback_policy") or "deterministic_ranked_fallback",
+            "palette_fallback_policy": palette_selection.get("fallback_policy") or "not_used",
+            "deterministic_seed": selection.get("deterministic_seed") or palette_selection.get("deterministic_seed"),
+        }
+        changed = True
+    if isinstance(project_palette, dict):
+        colors = project_palette.get("colors") if isinstance(project_palette.get("colors"), dict) else {}
+        token_overrides = {
+            f"color.{role}": colors[role]
+            for role in ("background", "surface", "text", "muted", "primary", "accent")
+            if isinstance(colors.get(role), str)
+        }
+        project_theme = plan.get("project_theme") if isinstance(plan.get("project_theme"), dict) else {}
+        desired_theme = {
+            **project_theme,
+            "base_theme_id": project_theme.get("base_theme_id") or selection.get("selected_theme_id"),
+            "palette_ref": "project_palette",
+            "token_overrides": token_overrides,
+            "fallback_seed": selection.get("deterministic_seed"),
+        }
+        if plan.get("project_theme") != desired_theme:
+            plan["project_theme"] = desired_theme
+            changed = True
+    slides = plan.get("slides")
+    if isinstance(slides, list):
+        template_ids = [item.get("template_id") for item in selection.get("template_candidates", []) if isinstance(item, dict)]
+        theme_ids = [item.get("theme_id") for item in selection.get("theme_candidates", []) if isinstance(item, dict)]
+        palette_ids = [item.get("palette_id") for item in palette_selection.get("palette_candidates", []) if isinstance(item, dict)]
+        for slide in slides:
+            if not isinstance(slide, dict):
+                continue
+            spec = slide.get("canvas_spec")
+            if not isinstance(spec, dict):
+                continue
+            if "template_id" not in spec and selection.get("selected_template_id"):
+                spec["template_id"] = selection.get("selected_template_id")
+                changed = True
+            if "theme_id" not in spec and selection.get("selected_theme_id"):
+                spec["theme_id"] = selection.get("selected_theme_id")
+                changed = True
+            if "palette_id" not in spec and palette_selection.get("selected_palette_id"):
+                spec["palette_id"] = palette_selection.get("selected_palette_id")
+                changed = True
+            if not isinstance(spec.get("selection_trace"), dict):
+                template_rank = template_ids.index(spec.get("template_id")) + 1 if spec.get("template_id") in template_ids else None
+                theme_rank = theme_ids.index(spec.get("theme_id")) + 1 if spec.get("theme_id") in theme_ids else None
+                palette_rank = palette_ids.index(spec.get("palette_id")) + 1 if spec.get("palette_id") in palette_ids else None
+                spec["selection_trace"] = {
+                    "palette_candidate_rank": palette_rank,
+                    "template_candidate_rank": template_rank,
+                    "theme_candidate_rank": theme_rank,
+                    "selection_reason": ["applied from select_style receipts"],
+                }
+                changed = True
+    return changed
 
 
 def infer_visual_archetype(text: str) -> str:
@@ -687,8 +1398,9 @@ def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
         raise RunnerError(f"missing required plan file: {plan}")
     try:
         payload = read_json(plan)
+        selection_applied = apply_selection_receipts_to_plan(project_root, payload)
         visual_identity_added = ensure_visual_identity(payload)
-        if visual_identity_added:
+        if visual_identity_added or selection_applied:
             write_json(plan, payload)
         schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-plan.schema.json"))
         schema_issues = svglide_schema.validate_json_schema(payload, schema)
@@ -708,11 +1420,62 @@ def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
     )
     receipt["plan_sha256"] = file_sha256(plan)
     receipt["visual_identity_added"] = bool(locals().get("visual_identity_added", False))
+    receipt["selection_receipts_applied"] = bool(locals().get("selection_applied", False))
     receipt["summary"] = {"error_count": len(schema_issues)}
     receipt["issues"] = schema_issues
     write_json(receipt_path(project_root, "plan"), receipt)
     if schema_issues:
         raise RunnerError("plan schema validation failed")
+    return receipt
+
+
+def run_select_style_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+    started_at = now_iso()
+    commands = [
+        ["python3", (SCRIPT_DIR / "svglide_palette_selector.py").as_posix(), project_root.as_posix(), "--pretty"],
+        ["python3", (SCRIPT_DIR / "svglide_theme_template_selector.py").as_posix(), project_root.as_posix(), "--pretty"],
+    ]
+    stdout_parts: list[str] = []
+    stderr_parts: list[str] = []
+    for command in commands:
+        completed = subprocess.run(command, cwd=repo_root(), check=False, capture_output=True, text=True)
+        stdout_parts.append(completed.stdout)
+        stderr_parts.append(completed.stderr)
+        if completed.returncode != 0:
+            complete_stage(
+                project_root,
+                state,
+                "select_style",
+                "failed",
+                started_at=started_at,
+                inputs=["00-input/instruction.json", "source/evidence.json"],
+                outputs=["02-plan/palette-selection.json", "02-plan/theme-template-selection.json"],
+                command=[" / ".join(shlex.join(item) for item in commands)],
+                error={
+                    "code": "stage_command_failed",
+                    "returncode": completed.returncode,
+                    "stderr": completed.stderr,
+                },
+            )
+            raise RunnerError(f"stage 'select_style' failed with exit code {completed.returncode}")
+    receipt = complete_stage(
+        project_root,
+        state,
+        "select_style",
+        "passed",
+        started_at=started_at,
+        inputs=["00-input/instruction.json", "source/evidence.json"],
+        outputs=[
+            "02-plan/palette-selection.json",
+            "02-plan/theme-template-selection.json",
+            "receipts/palette_selection.json",
+            "receipts/theme_template_selection.json",
+        ],
+        command=[" / ".join(shlex.join(item) for item in commands)],
+    )
+    receipt["stdout"] = "\n".join(part.strip() for part in stdout_parts if part.strip())
+    receipt["stderr"] = "\n".join(part.strip() for part in stderr_parts if part.strip())
+    write_json(receipt_path(project_root, "select_style"), receipt)
     return receipt
 
 
@@ -1269,6 +2032,11 @@ def require_generated_svg_current(project_root: Path) -> None:
 def require_existing_stage_current(project_root: Path, stage: str, *, profile: str = "production") -> None:
     if stage == "source":
         require_source_current(project_root)
+    elif stage == "theme_validate":
+        check = read_json(project_root / "06-check/theme-validate.json")
+        inputs = check.get("inputs")
+        if not isinstance(inputs, dict) or inputs.get("plan_sha256") != optional_project_file_hash(project_root, "02-plan/slide_plan.json"):
+            raise RunnerError("theme_validate plan hash is stale; rerun theme_validate")
     elif stage == "assets":
         require_source_current(project_root)
         require_assets_current(project_root)
@@ -1280,8 +2048,11 @@ def require_existing_stage_current(project_root: Path, stage: str, *, profile: s
         require_generated_svg_current(project_root)
     elif stage == "quality_gate":
         require_quality_gate_current(project_root)
+    elif stage == "generation_benchmark":
+        require_generation_benchmark_current(project_root, profile=profile)
     elif stage == "dry_run":
         require_quality_gate_current(project_root)
+        require_generation_benchmark_current(project_root, profile=profile)
     elif stage == "visual_acceptance":
         require_visual_acceptance_current(project_root)
     elif stage == "live_create":
@@ -1328,6 +2099,18 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
         raise RunnerError("quality gate is missing theme-validate check; rerun quality_gate")
     if "theme-adherence" not in check_names:
         raise RunnerError("quality gate is missing theme-adherence check; rerun quality_gate")
+    if plan_declares_selection(project_root):
+        for input_name, rel, check_name in [
+            ("palette_review", "06-check/palette-review.json", "palette-review"),
+            ("theme_template_selection_review", "06-check/theme-template-selection-review.json", "theme-template-selection-review"),
+            ("plan_bundle_review", "06-check/plan-bundle-review.json", "plan-bundle-review"),
+        ]:
+            if inputs.get(input_name) != rel:
+                raise RunnerError(f"quality gate is missing {input_name} input; rerun selection_review and quality_gate")
+            if check_name not in check_names:
+                raise RunnerError(f"quality gate is missing {check_name} check; rerun quality_gate")
+            if not (project_root / rel).exists():
+                raise RunnerError(f"{input_name} receipt is missing; rerun selection_review and quality_gate")
     if not (project_root / "06-check/visual-distinctness.json").exists():
         raise RunnerError("visual distinctness receipt is missing; rerun visual_distinctness_review and quality_gate")
     for input_name, rel in [
@@ -1348,6 +2131,14 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
     ]:
         if input_hashes.get(input_name) != optional_project_file_hash(project_root, rel):
             raise RunnerError(f"quality gate {input_name} hash is stale; rerun quality_gate")
+    if plan_declares_selection(project_root):
+        for input_name, rel in [
+            ("palette_review", "06-check/palette-review.json"),
+            ("theme_template_selection_review", "06-check/theme-template-selection-review.json"),
+            ("plan_bundle_review", "06-check/plan-bundle-review.json"),
+        ]:
+            if input_hashes.get(input_name) != optional_project_file_hash(project_root, rel):
+                raise RunnerError(f"quality gate {input_name} hash is stale; rerun quality_gate")
     if inputs.get("generation_mode") == "artboard_satori":
         if inputs.get("artboard_package_check") != "06-check/artboard-package-check.json":
             raise RunnerError("quality gate is missing artboard_package_check input; rerun package_check and quality_gate")
@@ -1356,6 +2147,27 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
         if input_hashes.get("artboard_package_check") != optional_project_file_hash(project_root, "06-check/artboard-package-check.json"):
             raise RunnerError("quality gate artboard_package_check hash is stale; rerun quality_gate")
     return gate
+
+
+def require_generation_benchmark_current(project_root: Path, *, profile: str) -> dict[str, Any]:
+    benchmark = read_json(project_root / "06-check" / "generation-benchmark.json")
+    if benchmark.get("status") != "passed":
+        raise RunnerError("generation_benchmark must pass before dry_run")
+    if benchmark.get("profile") != profile:
+        raise RunnerError("generation_benchmark profile is stale; rerun generation_benchmark")
+    quality = benchmark.get("quality")
+    if not isinstance(quality, list) or not quality:
+        raise RunnerError("generation_benchmark quality report is missing; rerun generation_benchmark")
+    if any(not isinstance(item, dict) or item.get("status") != "passed" for item in quality):
+        raise RunnerError("generation_benchmark quality report has failures; rerun generation_benchmark")
+    cache = benchmark.get("cache")
+    if not isinstance(cache, dict) or not isinstance(cache.get("hit_count"), int) or not isinstance(cache.get("miss_count"), int):
+        raise RunnerError("generation_benchmark cache telemetry is missing; rerun generation_benchmark")
+    timing = read_json_optional(project_root / "06-check" / "timing-report.json")
+    timing_cache = timing.get("cache") if isinstance(timing.get("cache"), dict) else None
+    if not timing_cache or not isinstance(timing_cache.get("hit_count"), int) or not isinstance(timing_cache.get("miss_count"), int):
+        raise RunnerError("timing report cache telemetry is missing; rerun generation_benchmark")
+    return benchmark
 
 
 def require_visual_acceptance_current(project_root: Path) -> dict[str, Any]:
@@ -1398,7 +2210,12 @@ def require_visual_acceptance_current(project_root: Path) -> dict[str, Any]:
             require_recorded_artifacts_current(project_root, check.get("artboard_artifacts"), stage="visual_acceptance")
             visual_evidence = check.get("visual_evidence")
             evidence_pages = visual_evidence.get("pages") if isinstance(visual_evidence, dict) else None
-            require_visual_evidence_pages_current(evidence_pages, stage="visual_acceptance")
+            require_visual_evidence_pages_current(
+                evidence_pages,
+                stage="visual_acceptance",
+                preview_sha256=expected.get("preview_sha256"),
+                preview_manifest_sha256=expected.get("preview_manifest_sha256"),
+            )
             deck_rhythm = check.get("deck_rhythm")
             if not isinstance(deck_rhythm, dict) or deck_rhythm.get("schema_version") != "svglide-deck-rhythm/v1":
                 raise RunnerError("visual_acceptance deck_rhythm is missing; rerun visual_acceptance")
@@ -1437,7 +2254,13 @@ def require_recorded_artifacts_current(project_root: Path, artifacts: Any, *, st
             raise RunnerError(f"{stage} artifact hash is stale: {rel}; rerun {stage}")
 
 
-def require_visual_evidence_pages_current(pages: Any, *, stage: str) -> None:
+def require_visual_evidence_pages_current(
+    pages: Any,
+    *,
+    stage: str,
+    preview_sha256: str | None = None,
+    preview_manifest_sha256: str | None = None,
+) -> None:
     if not isinstance(pages, list) or not pages:
         raise RunnerError(f"{stage} visual_evidence.pages is missing; rerun {stage}")
     for item in pages:
@@ -1446,11 +2269,21 @@ def require_visual_evidence_pages_current(pages: Any, *, stage: str) -> None:
         page = item.get("page")
         evidence_path = item.get("evidence_path")
         preview_anchor = item.get("preview_anchor")
+        page_preview_sha256 = item.get("preview_sha256")
+        page_preview_manifest_sha256 = item.get("preview_manifest_sha256")
         contact_sheet_tile = item.get("contact_sheet_tile")
         if not isinstance(page, int) or not isinstance(evidence_path, str) or not evidence_path:
             raise RunnerError(f"{stage} visual_evidence.pages entries must include page and evidence_path; rerun {stage}")
         if not isinstance(preview_anchor, str) or not preview_anchor:
             raise RunnerError(f"{stage} visual_evidence.pages entries must include preview_anchor; rerun {stage}")
+        if not isinstance(page_preview_sha256, str) or not page_preview_sha256:
+            raise RunnerError(f"{stage} visual_evidence.pages entries must include preview_sha256; rerun {stage}")
+        if not isinstance(page_preview_manifest_sha256, str) or not page_preview_manifest_sha256:
+            raise RunnerError(f"{stage} visual_evidence.pages entries must include preview_manifest_sha256; rerun {stage}")
+        if preview_sha256 is not None and page_preview_sha256 != preview_sha256:
+            raise RunnerError(f"{stage} visual_evidence.pages preview_sha256 is stale; rerun {stage}")
+        if preview_manifest_sha256 is not None and page_preview_manifest_sha256 != preview_manifest_sha256:
+            raise RunnerError(f"{stage} visual_evidence.pages preview_manifest_sha256 is stale; rerun {stage}")
         if not isinstance(contact_sheet_tile, dict):
             raise RunnerError(f"{stage} visual_evidence.pages entries must include contact_sheet_tile; rerun {stage}")
 
@@ -1629,6 +2462,7 @@ def run_theme_productization_stage(project_root: Path, state: dict[str, Any]) ->
 
 def run_visual_acceptance_stage(project_root: Path, state: dict[str, Any], *, profile: str) -> dict[str, Any]:
     started_at = now_iso()
+    started_perf = time.perf_counter()
     command = [
         "python3",
         (SCRIPT_DIR / "svglide_visual_acceptance.py").as_posix(),
@@ -1641,11 +2475,13 @@ def run_visual_acceptance_stage(project_root: Path, state: dict[str, Any], *, pr
     check_path = project_root / "06-check" / "visual-acceptance.json"
     receipt = project_root / "receipts" / "visual_acceptance.json"
     status = "failed"
+    result: dict[str, Any]
     if check_path.exists():
         result = read_json(check_path)
+        ended_at = now_iso()
         result["command"] = command
         result["runner_started_at"] = started_at
-        result["runner_ended_at"] = now_iso()
+        result["runner_ended_at"] = ended_at
         result["stdout"] = completed.stdout
         result["stderr"] = completed.stderr
         write_json(check_path, result)
@@ -1653,10 +2489,12 @@ def run_visual_acceptance_stage(project_root: Path, state: dict[str, Any], *, pr
         if completed.returncode == 0 and result.get("status") in {"passed", "skipped"}:
             status = "passed"
     else:
+        ended_at = now_iso()
         result = build_receipt(
             "visual_acceptance",
             "failed",
             started_at=started_at,
+            ended_at=ended_at,
             command=command,
             error={
                 "code": "visual_acceptance_missing_output",
@@ -1666,7 +2504,26 @@ def run_visual_acceptance_stage(project_root: Path, state: dict[str, Any], *, pr
         )
         write_json(receipt, result)
     record_stage(state, "visual_acceptance", status, receipt)
+    issues = issues_from_payload(result)
+    record_timing_event(
+        state,
+        stage="visual_acceptance",
+        status=status,
+        started_at=started_at,
+        ended_at=result.get("runner_ended_at") or result.get("ended_at") or now_iso(),
+        wall_time_seconds=time.perf_counter() - started_perf,
+        root_cause_group=issue_root_cause(issues[0]) if status != "passed" and issues else None,
+    )
+    if status != "passed":
+        write_failure_summary(
+            project_root,
+            blocking_stage="visual_acceptance",
+            issues=issues,
+            message=issues[0].get("message") if issues and isinstance(issues[0].get("message"), str) else "visual_acceptance failed",
+            rerun_from="visual_acceptance",
+        )
     write_state(project_root, state)
+    write_timing_report(project_root, state)
     if status != "passed":
         raise RunnerError(f"stage 'visual_acceptance' failed with exit code {completed.returncode}")
     return {"stage": "visual_acceptance", "status": status, "receipt": project_relpath(receipt, project_root)}
@@ -1685,6 +2542,13 @@ def lark_cli_command_prefix() -> list[str]:
 def cli_arg_path(path: Path) -> str:
     try:
         return path.resolve().relative_to(repo_root()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def project_cli_arg_path(project_root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(project_root.resolve()).as_posix()
     except ValueError:
         return path.as_posix()
 
@@ -1715,12 +2579,12 @@ def create_command(project_root: Path, *, dry_run: bool) -> list[str]:
     command = lark_cli_command_prefix() + ["slides", "+create-svg", "--as", "user", "--title", project_title(project_root)]
     assets = project_root / "03-assets" / "assets.json"
     if assets.exists():
-        command.extend(["--assets", cli_arg_path(assets)])
+        command.extend(["--assets", project_cli_arg_path(project_root, assets)])
     if not dry_run:
         for header in ppe_live_request_headers(project_root):
             command.extend(["--request-header", header])
     for path in prepared_svg_files(project_root):
-        command.extend(["--file", cli_arg_path(path)])
+        command.extend(["--file", project_cli_arg_path(project_root, path)])
     if dry_run:
         command.append("--dry-run")
     return command
@@ -1771,7 +2635,7 @@ def run_create_stage(
 
     command = create_command(project_root, dry_run=dry_run)
     write_command_trace(project_root, command)
-    completed = command_runner(command, cwd=repo_root(), check=False, capture_output=True, text=True)
+    completed = command_runner(command, cwd=project_root, check=False, capture_output=True, text=True)
     record = {
         "version": "svglide-create-stage/v1",
         "stage": stage,
@@ -1824,12 +2688,14 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["source/source-notes.md", "source/evidence.json"],
             outputs=[
                 "source/evidence.json",
-                "source/research.md",
                 "source/research_queries.json",
                 "source/source-receipt.json",
                 "receipts/source.json",
             ],
         )
+    if stage == "select_style":
+        require_stage_passed(state, "source")
+        return run_select_style_stage(project_root, state)
     if stage == "plan":
         return run_plan_stage(project_root, state)
     if stage == "strategy_review":
@@ -1856,7 +2722,51 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["02-plan/slide_plan.json"],
             outputs=["06-check/theme-validate.json", "receipts/theme-validate.json"],
         )
+    if stage == "palette_review":
+        require_stage_passed(state, "theme_validate")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_palette_review.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "06-check" / "palette-review.json",
+            inputs=["02-plan/palette-selection.json", "02-plan/slide_plan.json"],
+            outputs=["06-check/palette-review.json", "receipts/palette_review.json"],
+        )
+    if stage == "selection_review":
+        require_stage_passed(state, "palette_review")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_selection_review.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "06-check" / "theme-template-selection-review.json",
+            inputs=["02-plan/theme-template-selection.json", "02-plan/palette-selection.json", "02-plan/slide_plan.json"],
+            outputs=["06-check/theme-template-selection-review.json", "receipts/theme_template_selection_review.json"],
+        )
+    if stage == "plan_bundle_review":
+        require_stage_passed(state, "plan")
+        require_stage_passed(state, "palette_review")
+        require_stage_passed(state, "selection_review")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_plan_bundle_review.py").as_posix(), project_root.as_posix(), "--profile", profile, "--pretty"],
+            output_json=project_root / "06-check" / "plan-bundle-review.json",
+            inputs=[
+                "00-input/instruction.json",
+                "02-plan/slide_plan.json",
+                "02-plan/palette-selection.json",
+                "02-plan/theme-template-selection.json",
+                "source/evidence.json",
+            ],
+            outputs=["06-check/plan-bundle-review.json", "receipts/plan_bundle_review.json"],
+        )
     if stage == "confirm_plan":
+        if selection_gate_required(project_root, state):
+            require_stage_passed(state, "selection_review")
+            require_stage_passed(state, "plan_bundle_review")
         return run_confirm_plan_stage(project_root, state)
     if stage == "package_check":
         return run_package_check_stage(project_root, state)
@@ -1869,7 +2779,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             project_root,
             state,
             stage,
-            ["python3", (SCRIPT_DIR / "svglide_assets.py").as_posix(), project_root.as_posix(), *asset_option_args()],
+            ["python3", (SCRIPT_DIR / "svglide_assets.py").as_posix(), project_root.as_posix(), *asset_option_args(profile=profile)],
             inputs=["02-plan/slide_plan.json", "02-plan/svglide.lock.json"],
             outputs=["03-assets/assets.json", "03-assets/asset-manifest.json", "03-assets/image-jobs.json", "receipts/assets.json"],
         )
@@ -1994,6 +2904,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             outputs=["06-check/theme-adherence.json", "receipts/theme-adherence.json"],
         )
     if stage == "quality_gate":
+        if selection_gate_required(project_root, state):
+            require_stage_passed(state, "palette_review")
+            require_stage_passed(state, "selection_review")
         require_stage_passed(state, "preflight")
         require_stage_passed(state, "preview_lint")
         require_stage_passed(state, "aesthetic_review")
@@ -2017,11 +2930,32 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
                 "06-check/visual-distinctness.json",
                 "06-check/theme-validate.json",
                 "06-check/theme-adherence.json",
+                "06-check/palette-review.json",
+                "06-check/theme-template-selection-review.json",
+                "06-check/plan-bundle-review.json",
                 "receipts/generate_svg.json",
             ],
             outputs=["06-check/quality-gate.json"],
         )
+    if stage == "generation_benchmark":
+        require_stage_passed(state, "quality_gate")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_generation_benchmark.py").as_posix(), project_root.as_posix(), "--profile", profile, "--pretty"],
+            output_json=project_root / "06-check" / "generation-benchmark.json",
+            inputs=[
+                "02-plan/slide_plan.json",
+                "03-assets/asset-manifest.json",
+                "06-check/quality-gate.json",
+                "06-check/timing-report.json",
+            ],
+            outputs=["06-check/generation-benchmark.json"],
+        )
     if stage == "dry_run":
+        require_stage_passed(state, "generation_benchmark")
+        require_generation_benchmark_current(project_root, profile=profile)
         return run_create_stage(project_root, state, stage, dry_run=True, profile=profile)
     if stage == "visual_acceptance":
         require_stage_passed(state, "dry_run")
@@ -2113,10 +3047,19 @@ def run_stage(project_root: Path, stage: str, *, command: list[str] | None = Non
     if profile not in QUALITY_GATE_PROFILES:
         raise RunnerError(f"unknown profile '{profile}'", exit_code=2)
     state = load_state(project_root)
+    state["profile"] = profile
+    stale = svglide_stage_invalidation.detect_stale_stages(project_root, state, target_stage=normalized, stage_order=STAGES, profile=profile)
+    if stale:
+        svglide_stage_invalidation.prune_stale_stage_records(state, stale)
+        write_state(project_root, state)
     record = state.get("stages", {}).get(normalized)
+    if record and repair_existing_failed_stage(project_root, state, normalized):
+        state = load_state(project_root)
+        record = state.get("stages", {}).get(normalized)
     if record:
         fail_if_existing_stage_failed(normalized, record)
         require_existing_stage_current(project_root, normalized, profile=profile)
+        write_timing_report(project_root, state)
         return {"stage": normalized, "status": "passed", "state": state}
 
     if normalized not in IMPLEMENTED_STAGES:
@@ -2131,19 +3074,81 @@ def run_stage(project_root: Path, stage: str, *, command: list[str] | None = Non
     return {"stage": normalized, "status": receipt["status"], "state": load_state(project_root)}
 
 
-def run_until(project_root: Path, until: str, *, profile: str = "production") -> dict[str, Any]:
+def collected_failure_from_stage(project_root: Path, stage: str, err: RunnerError) -> dict[str, Any]:
+    candidates = [
+        project_root / "06-check" / f"{stage.replace('_', '-')}.json",
+        receipt_path(project_root, stage),
+    ]
+    if stage == "selection_review":
+        candidates.insert(0, project_root / "06-check/theme-template-selection-review.json")
+    if stage == "plan_bundle_review":
+        candidates.insert(0, project_root / "06-check/plan-bundle-review.json")
+    payload: dict[str, Any] = {}
+    for candidate in candidates:
+        payload = read_json_optional(candidate)
+        if payload:
+            break
+    issues = issues_from_payload(payload)
+    if not issues:
+        issues = [{"code": "stage_failed", "message": str(err), "stage": stage, "root_cause_group": "unknown"}]
+    return {"stage": stage, "status": "failed", "issues": issues}
+
+
+def run_until(
+    project_root: Path,
+    until: str,
+    *,
+    profile: str = "production",
+    progress: str | None = None,
+    collect_errors: bool | None = None,
+) -> dict[str, Any]:
     if profile not in QUALITY_GATE_PROFILES:
         raise RunnerError(f"unknown profile '{profile}'", exit_code=2)
     target = normalize_stage(until)
     state = load_state(project_root)
+    state["profile"] = profile
+    stale = svglide_stage_invalidation.detect_stale_stages(project_root, state, target_stage=target, stage_order=STAGES, profile=profile)
+    if stale:
+        svglide_stage_invalidation.prune_stale_stage_records(state, stale)
+        write_state(project_root, state)
+    emit_start_progress(project_root, progress=progress)
+    collected_failures: list[dict[str, Any]] = []
+    should_collect = bool(collect_errors if collect_errors is not None else RUNNER_OPTIONS.get("collect_errors"))
     for stage in stages_until(target):
         if not stage_required_for_profile(stage, profile):
             continue
+        if collected_failures and stage not in COLLECTABLE_VALIDATION_STAGES:
+            write_collected_errors(project_root, state, collected_failures)
+            raise RunnerError("pre-render validation errors collected; render stages were not executed")
         record = state.get("stages", {}).get(stage)
+        if record and repair_existing_failed_stage(project_root, state, stage):
+            state = load_state(project_root)
+            record = state.get("stages", {}).get(stage)
         if record:
-            fail_if_existing_stage_failed(stage, record)
-            require_existing_stage_current(project_root, stage, profile=profile)
-            continue
+            if existing_stage_can_be_retried(record):
+                prune_stage_and_descendants(state, stage, target)
+                write_state(project_root, state)
+                state = load_state(project_root)
+                record = None
+            else:
+                try:
+                    fail_if_existing_stage_failed(stage, record)
+                    require_existing_stage_current(project_root, stage, profile=profile)
+                except RunnerError as err:
+                    if should_collect and stage in COLLECTABLE_VALIDATION_STAGES:
+                        collected_failures.append(collected_failure_from_stage(project_root, stage, err))
+                        continue
+                    if is_rerun_required_error(err, stage):
+                        prune_stage_and_descendants(state, stage, target)
+                        write_state(project_root, state)
+                        state = load_state(project_root)
+                        record = None
+                    else:
+                        raise
+            if record is None:
+                pass
+            else:
+                continue
 
         if stage not in IMPLEMENTED_STAGES:
             block_unimplemented_stage(
@@ -2152,9 +3157,41 @@ def run_until(project_root: Path, until: str, *, profile: str = "production") ->
                 state,
                 command=["run", project_root.as_posix(), "--until", target],
             )
-        run_implemented_stage(project_root, stage, state, profile=profile)
+        try:
+            run_implemented_stage(project_root, stage, state, profile=profile)
+        except RunnerError as err:
+            if should_collect and stage in COLLECTABLE_VALIDATION_STAGES:
+                if "required stage" in str(err):
+                    upstream_stage = str(err).split("'")[1] if "'" in str(err) else None
+                    collected_failures.append(
+                        {
+                            "stage": stage,
+                            "status": "skipped",
+                            "skip_reason": "upstream_required_output_invalid",
+                            "upstream_stage": upstream_stage,
+                            "issues": [
+                                {
+                                    "code": "upstream_required_output_invalid",
+                                    "message": str(err),
+                                    "stage": stage,
+                                    "root_cause_group": "upstream_validation",
+                                }
+                            ],
+                        }
+                    )
+                else:
+                    collected_failures.append(collected_failure_from_stage(project_root, stage, err))
+                state = load_state(project_root)
+                continue
+            raise
         state = load_state(project_root)
+        emit_stage_progress(project_root, stage, progress=progress)
 
+    if collected_failures:
+        write_collected_errors(project_root, state, collected_failures)
+        raise RunnerError("pre-render validation errors collected; render stages were not executed")
+    write_timing_report(project_root, state)
+    emit_completion_summary(project_root, state, progress=progress)
     return {"project_root": project_root.as_posix(), "until": target, "state": state}
 
 
@@ -2172,23 +3209,29 @@ def build_parser() -> argparse.ArgumentParser:
     stage.add_argument("project_root", type=Path)
     stage.add_argument("stage")
     stage.add_argument("--profile", default="production", choices=sorted(QUALITY_GATE_PROFILES))
+    stage.add_argument("--collect-errors", action="store_true")
+    stage.add_argument("--auto-repair", action="store_true")
     add_network_args(stage)
 
     run = subcommands.add_parser("run", help="run until a stage")
     run.add_argument("project_root", type=Path)
     run.add_argument("--until")
     run.add_argument("--profile", choices=sorted(PROFILE_TARGETS))
+    run.add_argument("--progress", default="none", choices=sorted(PROGRESS_MODES))
+    run.add_argument("--collect-errors", action="store_true")
+    run.add_argument("--auto-repair", action="store_true")
     add_network_args(run)
 
     for command_name in ["prompt-plan", "model-plan"]:
         prompt_plan = subcommands.add_parser(command_name, help="generate source and plan artifacts from a raw prompt")
         prompt_plan.add_argument("project_root", type=Path)
         prompt_plan.add_argument("--prompt", required=True)
-        prompt_plan.add_argument("--target-slide-count", type=int, default=8)
+        prompt_plan.add_argument("--target-slide-count", type=int, default=10)
         prompt_plan.add_argument("--language", default="zh-CN")
         prompt_plan.add_argument("--audience", default="投资/战略分析读者")
         prompt_plan.add_argument("--provider", default="codex", choices=["codex", "claude", "command"])
         prompt_plan.add_argument("--planner-command")
+        prompt_plan.add_argument("--trusted-provider-id")
         prompt_plan.add_argument("--no-search", action="store_true")
         prompt_plan.add_argument("--timeout", type=int, default=300)
         prompt_plan.add_argument("--force", action="store_true")
@@ -2226,6 +3269,7 @@ def apply_cli_runner_options(args: argparse.Namespace) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    saved_runner_options = dict(RUNNER_OPTIONS)
     try:
         apply_cli_runner_options(args)
         if args.command == "init":
@@ -2241,6 +3285,7 @@ def main(argv: list[str] | None = None) -> int:
                 audience=args.audience,
                 provider=args.provider,
                 planner_command=args.planner_command,
+                trusted_provider_id=args.trusted_provider_id,
                 search=not args.no_search,
                 timeout=args.timeout,
                 force=args.force,
@@ -2267,14 +3312,28 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "stage":
             result = run_stage(args.project_root, args.stage, profile=args.profile)
         elif args.command == "run":
-            result = run_until(args.project_root, resolve_run_target(args.until, args.profile), profile=args.profile or "production")
+            result = run_until(
+                args.project_root,
+                resolve_run_target(args.until, args.profile),
+                profile=args.profile or "production",
+                progress=args.progress,
+                collect_errors=args.collect_errors,
+            )
         else:
             parser.error(f"unsupported command: {args.command}")
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
     except RunnerError as err:
-        print(str(err), file=sys.stderr)
+        progress = getattr(args, "progress", "none") if "args" in locals() else "none"
+        emitted_progress_block = False
+        if "args" in locals() and getattr(args, "command", None) == "run" and hasattr(args, "project_root"):
+            emit_blocked_progress(args.project_root, str(err), progress=progress)
+            emitted_progress_block = progress_mode_enabled(progress)
+        if not emitted_progress_block:
+            print(str(err), file=sys.stderr)
         return err.exit_code
+    finally:
+        RUNNER_OPTIONS.update(saved_runner_options)
 
 
 if __name__ == "__main__":

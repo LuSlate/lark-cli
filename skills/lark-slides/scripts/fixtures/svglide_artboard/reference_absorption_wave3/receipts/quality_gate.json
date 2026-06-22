@@ -1,0 +1,30 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_quality_gate.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+    "--profile",
+    "production_live",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:01:50+08:00",
+  "error": null,
+  "inputs": [
+    "06-check/preflight.json",
+    "06-check/preview-lint.json",
+    "06-check/aesthetic-review.json",
+    "06-check/chart-verify.json",
+    "06-check/semantic-review.json",
+    "06-check/runtime-review.json",
+    "06-check/visual-distinctness.json",
+    "06-check/theme-validate.json",
+    "06-check/theme-adherence.json",
+    "receipts/generate_svg.json"
+  ],
+  "outputs": [
+    "06-check/quality-gate.json"
+  ],
+  "stage": "quality_gate",
+  "started_at": "2026-06-22T04:01:50+08:00",
+  "status": "passed"
+}

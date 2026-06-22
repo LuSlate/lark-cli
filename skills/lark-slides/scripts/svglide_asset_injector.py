@@ -233,7 +233,7 @@ def cover_or_closing_layer(asset: dict[str, Any], *, href: str, width: float, he
     role = str(asset.get("placement_role") or "")
     asset_id = html.escape(str(asset.get("asset_id")), quote=True)
     safe = safe_id(asset.get("asset_id"))
-    scrim_opacity = "0.40" if role == "cover" else "0.30"
+    scrim_opacity = "0.26" if role == "cover" else "0.20"
     return f"""
   <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(role, quote=True)}">
     <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="0" y="0" width="{width:g}" height="{height:g}" preserveAspectRatio="xMidYMid slice" />
@@ -271,13 +271,18 @@ def ambient_layer(asset: dict[str, Any], *, href: str, width: float, height: flo
     asset_id = html.escape(str(asset.get("asset_id")), quote=True)
     safe = safe_id(asset.get("asset_id"))
     return f"""
-  <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(str(asset.get("placement_role") or ""), quote=True)}" data-svglide-slot-strategy="ambient_fallback">
-    <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="0" y="0" width="{width:g}" height="{height:g}" preserveAspectRatio="xMidYMid slice" opacity="0.22" />
-    <rect slide:role="shape" id="svglide-asset-ambient-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="{html.escape(scrim_fill, quote=True)}" opacity="0.52" />
+  <g id="svglide-asset-{safe}" data-svglide-asset-layer="true" data-svglide-asset-id="{asset_id}" data-svglide-placement-role="{html.escape(str(asset.get("placement_role") or ""), quote=True)}" data-svglide-slot-strategy="ambient_overlay_fallback">
+    <image slide:role="image" id="svglide-asset-image-{safe}" href="{html.escape(href, quote=True)}" x="0" y="0" width="{width:g}" height="{height:g}" preserveAspectRatio="xMidYMid slice" opacity="0.34" />
+    <rect slide:role="shape" id="svglide-asset-ambient-scrim-{safe}" x="0" y="0" width="{width:g}" height="{height:g}" fill="{html.escape(scrim_fill, quote=True)}" opacity="0.08" />
   </g>"""
 
 
-def inject_layer(svg_text: str, layer: str, *, after_body_slot: bool = False) -> str:
+def inject_layer(svg_text: str, layer: str, *, after_body_slot: bool = False, append_at_end: bool = False) -> str:
+    if append_at_end:
+        close_at = svg_text.rfind("</svg>")
+        if close_at < 0:
+            raise AssetInjectionError("source SVG has no closing </svg>")
+        return svg_text[:close_at] + layer + "\n" + svg_text[close_at:]
     match = SVG_OPEN_RE.search(svg_text)
     if not match:
         raise AssetInjectionError("source SVG has no <svg> root")
@@ -352,9 +357,14 @@ def injection_for_asset(project: Path, svg_text: str, asset: dict[str, Any], *, 
             renderer_id = "figure_panel_asset"
         else:
             layer = ambient_layer(asset, href=href, width=width, height=height, scrim_fill=theme_fill)
-            renderer_id = "ambient_asset_background"
-            slot_strategy = "ambient_fallback"
-    injected = inject_layer(svg_text, layer, after_body_slot=role in {"body_visual", "inline_figure"} and slot_strategy == "declared_slot")
+            renderer_id = "ambient_asset_overlay"
+            slot_strategy = "ambient_overlay_fallback"
+    injected = inject_layer(
+        svg_text,
+        layer,
+        after_body_slot=role in {"body_visual", "inline_figure"} and slot_strategy == "declared_slot",
+        append_at_end=role in {"body_visual", "inline_figure"} and slot_strategy == "ambient_overlay_fallback",
+    )
     result.update(
         {
             "status": "injected",

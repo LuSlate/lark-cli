@@ -68,6 +68,12 @@ def file_sha256(path: Path) -> str | None:
     return h.hexdigest()
 
 
+def text_sha256(value: str | None) -> str | None:
+    if not value:
+        return None
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def read_json(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
@@ -147,6 +153,13 @@ def assert_real_mode(args: argparse.Namespace) -> list[dict[str, Any]]:
         issues.append({"code": "asset_network_not_real", "message": "real VF5 runs must use auto or online network policy"})
     if not isinstance(args.asset_provider, str) or not args.asset_provider.startswith("trusted:"):
         issues.append({"code": "asset_provider_not_trusted_internal", "message": "real VF5 runs must set --asset-provider trusted:<provider-id>"})
+    elif isinstance(trusted_provider_id, str) and trusted_provider_id.strip() and args.asset_provider != f"trusted:{trusted_provider_id.strip()}":
+        issues.append(
+            {
+                "code": "asset_provider_trusted_id_mismatch",
+                "message": "real VF5 runs must use the same provider id in --trusted-provider-id and --asset-provider trusted:<provider-id>",
+            }
+        )
     if args.no_image_search:
         issues.append({"code": "image_search_disabled", "message": "real VF5 runs must not disable image search"})
     if args.no_ai_image:
@@ -180,6 +193,8 @@ def planner_command_args(args: argparse.Namespace) -> list[str]:
     ]
     if args.planner_command:
         values.extend(["--planner-command", args.planner_command])
+    if getattr(args, "trusted_provider_id", None):
+        values.extend(["--trusted-provider-id", args.trusted_provider_id])
     if args.no_search:
         values.append("--no-search")
     return values
@@ -203,6 +218,19 @@ def run_args(args: argparse.Namespace) -> list[str]:
     if args.refresh_online:
         values.append("--refresh-online")
     return values
+
+
+def trusted_provider_evidence(args: argparse.Namespace) -> dict[str, Any]:
+    image_stage_command = os.environ.get("SVGLIDE_IMAGE_STAGE_COMMAND")
+    return {
+        "trusted_provider_id": getattr(args, "trusted_provider_id", None),
+        "planner_provider": args.planner_provider,
+        "planner_command_sha256": text_sha256(args.planner_command),
+        "asset_provider": args.asset_provider,
+        "image_backend": args.image_backend,
+        "image_stage_command_sha256": text_sha256(image_stage_command),
+        "image_stage_command_present": bool(image_stage_command),
+    }
 
 
 def asset_summary(project_root: Path) -> dict[str, Any]:
@@ -473,6 +501,7 @@ def run_benchmark(
             "no_ai_image": bool(args.no_ai_image),
             "target_stage": "visual_acceptance",
             "stopped_before_live_create": True,
+            "trusted_provider_evidence": trusted_provider_evidence(args),
             "mode_issues": mode_issues,
             "cases": [],
             "summary": {
@@ -493,6 +522,7 @@ def run_benchmark(
             "check_sha256": file_sha256(run_root / "06-check/vf5-benchmark.json"),
             "case_project_roots": [],
             "summary": payload["summary"],
+            "trusted_provider_evidence": payload["trusted_provider_evidence"],
             "mode_issues": mode_issues,
         }
         write_json(run_root / "receipts/vf5-benchmark.json", receipt)
@@ -538,6 +568,7 @@ def run_benchmark(
         "no_ai_image": bool(args.no_ai_image),
         "target_stage": "visual_acceptance",
         "stopped_before_live_create": all(item.get("live_submission_blocked") for item in case_results),
+        "trusted_provider_evidence": trusted_provider_evidence(args),
         "mode_issues": mode_issues,
         "summary": {
             "case_count": len(case_results),
@@ -558,6 +589,7 @@ def run_benchmark(
         "check_sha256": file_sha256(run_root / "06-check/vf5-benchmark.json"),
         "case_project_roots": [item["project_root"] for item in case_results],
         "summary": payload["summary"],
+        "trusted_provider_evidence": payload["trusted_provider_evidence"],
         "mode_issues": mode_issues,
     }
     write_json(run_root / "receipts/vf5-benchmark.json", receipt)

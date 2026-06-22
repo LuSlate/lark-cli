@@ -1,0 +1,21 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_aesthetic_review.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:01:50+08:00",
+  "error": null,
+  "inputs": [
+    "05-preview/preview.html",
+    "05-preview/preview-manifest.json",
+    "06-check/preview-lint.json"
+  ],
+  "outputs": [
+    "06-check/aesthetic-review.json"
+  ],
+  "stage": "aesthetic_review",
+  "started_at": "2026-06-22T04:01:50+08:00",
+  "status": "passed"
+}

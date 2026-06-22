@@ -1,0 +1,20 @@
+{
+  "command": [],
+  "ended_at": "2026-06-22T04:01:47+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json"
+  ],
+  "issues": [],
+  "outputs": [
+    "receipts/plan.json"
+  ],
+  "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+  "stage": "plan",
+  "started_at": "2026-06-22T04:01:47+08:00",
+  "status": "passed",
+  "summary": {
+    "error_count": 0
+  },
+  "visual_identity_added": false
+}

@@ -1,0 +1,456 @@
+{
+  "artboard_additional_receipts": [
+    "receipts/canvas-spec-validate.json",
+    "receipts/artboard-render.json",
+    "receipts/satori-bridge.json"
+  ],
+  "artboard_receipts": [
+    "04-svg/artboard/page-001.receipt.json",
+    "04-svg/artboard/page-002.receipt.json",
+    "04-svg/artboard/page-003.receipt.json",
+    "04-svg/artboard/page-004.receipt.json",
+    "04-svg/artboard/page-005.receipt.json",
+    "04-svg/artboard/page-006.receipt.json",
+    "04-svg/artboard/page-007.receipt.json",
+    "04-svg/artboard/page-008.receipt.json"
+  ],
+  "artboard_render_receipt": "receipts/artboard-render.json",
+  "asset_injection_summary": {
+    "already_present_count": 0,
+    "by_page": [],
+    "generated_at": "2026-06-21T20:03:09.773028+00:00",
+    "injected_count": 0,
+    "manifest_path": "03-assets/asset-manifest.json",
+    "skipped_count": 0,
+    "status": "passed",
+    "used_count": 0,
+    "version": "svglide-asset-injection/v1"
+  },
+  "asset_manifest_sha256": "116070bd1d176fbab6ee8c0f31f325801f04241c8fbdd95eb0b8592f04835dab",
+  "canvas_spec_validate": "06-check/canvas-spec-validate.json",
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_artboard_renderer.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2",
+    "--pretty"
+  ],
+  "contact_sheet": {
+    "grid": {
+      "cols": 3,
+      "gap": 16,
+      "rows": 3,
+      "tile_height": 180,
+      "tile_width": 320
+    },
+    "pages": [
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 1,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-001.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 2,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-002.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 3,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-003.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 4,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-004.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 212
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 5,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-005.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 212
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 212
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 6,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-006.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 212
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 408
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 7,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-007.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 408
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 408
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 8,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-008.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 408
+        }
+      }
+    ],
+    "path": "05-preview/contact-sheet.png",
+    "sha256": "3df5ca329ac2574c6ebca45a1ad6cf57820200a3c7bab7a479898f784bcf7c05",
+    "source_pngs": [
+      "04-svg/artboard/page-001.png",
+      "04-svg/artboard/page-002.png",
+      "04-svg/artboard/page-003.png",
+      "04-svg/artboard/page-004.png",
+      "04-svg/artboard/page-005.png",
+      "04-svg/artboard/page-006.png",
+      "04-svg/artboard/page-007.png",
+      "04-svg/artboard/page-008.png"
+    ]
+  },
+  "ended_at": "2026-06-22T04:03:09+08:00",
+  "error": null,
+  "evidence_sha256": "c1210552043ac78503cef04277e66ff2b58ab605c119c075e0506a7aff779db7",
+  "fallback_skeleton_used": false,
+  "generated_files": [
+    {
+      "path": "04-svg/page-001.svg",
+      "sha256": "9934c0e613972e72f7c39656501f88b7a399860b1cb986fd21fdcfc4a0439ce0"
+    },
+    {
+      "path": "04-svg/page-002.svg",
+      "sha256": "935753359e75ac6a5d25458a254ff3d06a84a0a0360a0fcaa77593737e78c56b"
+    },
+    {
+      "path": "04-svg/page-003.svg",
+      "sha256": "9099243fa376e04edc65515467e6b229db089769edd12c6c1b078a37966ef667"
+    },
+    {
+      "path": "04-svg/page-004.svg",
+      "sha256": "95ac7d9cdc5e91fe250b30e22702534585a4c6fb645e044a55e442f32687a44d"
+    },
+    {
+      "path": "04-svg/page-005.svg",
+      "sha256": "cd1750229533360bd4914298ea87b91883df67801588f217177291cb29bf942c"
+    },
+    {
+      "path": "04-svg/page-006.svg",
+      "sha256": "3696e2d9ebccf40834e1c0bf6e88c64de96f6739b14e6e947f616f288bd54bc6"
+    },
+    {
+      "path": "04-svg/page-007.svg",
+      "sha256": "8ca2ceab8dafcc934226157ab26f5085dd0e984d2309060b7f9e47868e049713"
+    },
+    {
+      "path": "04-svg/page-008.svg",
+      "sha256": "6325e2ad723055111b0ff29258a660e11d25ed3032a2259cd3ad27b9c3291930"
+    }
+  ],
+  "generation_mode": "artboard_satori",
+  "generator_mode": "script",
+  "generator_script_sha256": "97eb7b1a0c0c13014dae918d50938d02d4fe18b5e1d13a114c6d3bf08eb26ddb",
+  "inputs": [
+    "02-plan/slide_plan.json",
+    "03-assets/assets.json"
+  ],
+  "lock_sha256": null,
+  "outputs": [
+    "04-svg/page-001.svg",
+    "04-svg/page-002.svg",
+    "04-svg/page-003.svg",
+    "04-svg/page-004.svg",
+    "04-svg/page-005.svg",
+    "04-svg/page-006.svg",
+    "04-svg/page-007.svg",
+    "04-svg/page-008.svg",
+    "04-svg/page-001.receipt.json",
+    "04-svg/page-002.receipt.json",
+    "04-svg/page-003.receipt.json",
+    "04-svg/page-004.receipt.json",
+    "04-svg/page-005.receipt.json",
+    "04-svg/page-006.receipt.json",
+    "04-svg/page-007.receipt.json",
+    "04-svg/page-008.receipt.json",
+    "04-svg/artboard/page-001.receipt.json",
+    "04-svg/artboard/page-002.receipt.json",
+    "04-svg/artboard/page-003.receipt.json",
+    "04-svg/artboard/page-004.receipt.json",
+    "04-svg/artboard/page-005.receipt.json",
+    "04-svg/artboard/page-006.receipt.json",
+    "04-svg/artboard/page-007.receipt.json",
+    "04-svg/artboard/page-008.receipt.json",
+    "receipts/canvas-spec-validate.json",
+    "receipts/artboard-render.json",
+    "receipts/satori-bridge.json",
+    "06-check/canvas-spec-validate.json",
+    "receipts/artboard-render.json",
+    "receipts/satori-bridge.json",
+    "05-preview/contact-sheet.png",
+    "06-check/template-fit.json"
+  ],
+  "page_identity_summary": [
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 1,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 2,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 3,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 4,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 5,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 6,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 7,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    },
+    {
+      "fallback_skeleton_used": false,
+      "identity_fit_reason": "renderer and visual recipe are expected to fit theme_archetype=reference_absorption",
+      "page": 8,
+      "reuse_risk_score": 0,
+      "theme_archetype": "reference_absorption"
+    }
+  ],
+  "page_receipts": [
+    "04-svg/page-001.receipt.json",
+    "04-svg/page-002.receipt.json",
+    "04-svg/page-003.receipt.json",
+    "04-svg/page-004.receipt.json",
+    "04-svg/page-005.receipt.json",
+    "04-svg/page-006.receipt.json",
+    "04-svg/page-007.receipt.json",
+    "04-svg/page-008.receipt.json"
+  ],
+  "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+  "satori_bridge_receipt": "receipts/satori-bridge.json",
+  "source_receipt_sha256": "46f0a08827a0267136c48c447ad2f672ef1a5f85b01c2b38c5adf7c084e7073d",
+  "stage": "generate_svg",
+  "started_at": "2026-06-22T04:03:07+08:00",
+  "status": "passed",
+  "template_fit_check": "06-check/template-fit.json",
+  "visible_text_policy": "visible SVG text must be traceable to slide_plan.json or source/evidence.json"
+}

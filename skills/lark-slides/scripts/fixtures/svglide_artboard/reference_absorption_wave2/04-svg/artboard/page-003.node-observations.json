@@ -1,0 +1,170 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 58,
+      "top": 50,
+      "width": 844,
+      "height": 438,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 84,
+      "top": 80,
+      "width": 93,
+      "height": 23,
+      "type": "div",
+      "textContent": "EDITION 04",
+      "props": {}
+    },
+    {
+      "left": 82,
+      "top": 120,
+      "width": 514,
+      "height": 50,
+      "type": "div",
+      "textContent": "团队晚餐式议程",
+      "props": {}
+    },
+    {
+      "left": 86,
+      "top": 288,
+      "width": 430,
+      "height": 54,
+      "type": "div",
+      "textContent": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 88,
+      "width": 292,
+      "height": 264,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 88,
+      "width": 292,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 98,
+      "width": 42,
+      "height": 45,
+      "type": "div",
+      "textContent": "01",
+      "props": {}
+    },
+    {
+      "left": 628,
+      "top": 98,
+      "width": 250,
+      "height": 45,
+      "type": "div",
+      "textContent": "开场观察",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 154,
+      "width": 292,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 164,
+      "width": 42,
+      "height": 45,
+      "type": "div",
+      "textContent": "02",
+      "props": {}
+    },
+    {
+      "left": 628,
+      "top": 164,
+      "width": 250,
+      "height": 45,
+      "type": "div",
+      "textContent": "主议题讨论",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 220,
+      "width": 292,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 230,
+      "width": 42,
+      "height": 45,
+      "type": "div",
+      "textContent": "03",
+      "props": {}
+    },
+    {
+      "left": 628,
+      "top": 230,
+      "width": 250,
+      "height": 45,
+      "type": "div",
+      "textContent": "行动项确认",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 286,
+      "width": 292,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 586,
+      "top": 296,
+      "width": 42,
+      "height": 45,
+      "type": "div",
+      "textContent": "04",
+      "props": {}
+    },
+    {
+      "left": 628,
+      "top": 296,
+      "width": 250,
+      "height": 45,
+      "type": "div",
+      "textContent": "复盘收束",
+      "props": {}
+    },
+    {
+      "left": 86,
+      "top": 443,
+      "width": 130,
+      "height": 21,
+      "type": "div",
+      "textContent": "Internal Workshop",
+      "props": {}
+    }
+  ]
+}

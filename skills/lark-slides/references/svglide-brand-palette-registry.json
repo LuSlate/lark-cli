@@ -1,0 +1,154 @@
+{
+  "schema_version": "svglide-brand-palette-registry/v1",
+  "updated_at": "2026-06-22",
+  "confidence_policy": "manual_seed records are never high confidence; official_lookup or verified internal docs are required before confidence=high.",
+  "brands": [
+    {
+      "brand_id": "nvidia",
+      "display_name": "NVIDIA",
+      "aliases": [
+        "nvidia",
+        "NVIDIA"
+      ],
+      "palette": {
+        "primary": "#76B900",
+        "accent": "#111111",
+        "background": "#000000",
+        "text": "#FFFFFF"
+      },
+      "source_trace": [
+        {
+          "type": "manual_seed",
+          "source": "svglide-brand-palette-registry.seed; pending official verification before confidence=high",
+          "checked_at": "2026-06-22"
+        }
+      ],
+      "confidence": "medium",
+      "updated_at": "2026-06-22"
+    },
+    {
+      "brand_id": "amd",
+      "display_name": "AMD",
+      "aliases": [
+        "amd",
+        "AMD"
+      ],
+      "palette": {
+        "primary": "#ED1C24",
+        "accent": "#111111",
+        "background": "#000000",
+        "text": "#FFFFFF"
+      },
+      "source_trace": [
+        {
+          "type": "manual_seed",
+          "source": "svglide-brand-palette-registry.seed; pending official verification before confidence=high",
+          "checked_at": "2026-06-22"
+        }
+      ],
+      "confidence": "medium",
+      "updated_at": "2026-06-22"
+    },
+    {
+      "brand_id": "apple",
+      "display_name": "Apple",
+      "aliases": [
+        "apple",
+        "Apple",
+        "苹果"
+      ],
+      "palette": {
+        "primary": "#A2AAAD",
+        "accent": "#111111",
+        "background": "#FFFFFF",
+        "text": "#111111"
+      },
+      "source_trace": [
+        {
+          "type": "manual_seed",
+          "source": "svglide-brand-palette-registry.seed; pending official verification before confidence=high",
+          "checked_at": "2026-06-22"
+        }
+      ],
+      "confidence": "medium",
+      "updated_at": "2026-06-22"
+    },
+    {
+      "brand_id": "openai",
+      "display_name": "OpenAI",
+      "aliases": [
+        "openai",
+        "OpenAI",
+        "ChatGPT"
+      ],
+      "palette": {
+        "primary": "#10A37F",
+        "accent": "#111111",
+        "background": "#FFFFFF",
+        "text": "#111111"
+      },
+      "source_trace": [
+        {
+          "type": "manual_seed",
+          "source": "svglide-brand-palette-registry.seed; pending official verification before confidence=high",
+          "checked_at": "2026-06-22"
+        }
+      ],
+      "confidence": "medium",
+      "updated_at": "2026-06-22"
+    },
+    {
+      "brand_id": "zhipu",
+      "display_name": "智谱",
+      "aliases": [
+        "zhipu",
+        "Zhipu",
+        "智谱",
+        "智谱 AI",
+        "智谱AI",
+        "GLM"
+      ],
+      "palette": {
+        "primary": "#315CFF",
+        "accent": "#7C3AED",
+        "background": "#08122D",
+        "text": "#EEF6FF"
+      },
+      "source_trace": [
+        {
+          "type": "manual_seed",
+          "source": "svglide-brand-palette-registry.seed; pending official verification before confidence=high",
+          "checked_at": "2026-06-22"
+        }
+      ],
+      "confidence": "low",
+      "updated_at": "2026-06-22"
+    },
+    {
+      "brand_id": "minimax",
+      "display_name": "MiniMax",
+      "aliases": [
+        "minimax",
+        "MiniMax",
+        "Mini Max",
+        "海螺",
+        "abab"
+      ],
+      "palette": {
+        "primary": "#4F46E5",
+        "accent": "#06B6D4",
+        "background": "#08122D",
+        "text": "#EEF6FF"
+      },
+      "source_trace": [
+        {
+          "type": "manual_seed",
+          "source": "svglide-brand-palette-registry.seed; pending official verification before confidence=high",
+          "checked_at": "2026-06-22"
+        }
+      ],
+      "confidence": "low",
+      "updated_at": "2026-06-22"
+    }
+  ]
+}

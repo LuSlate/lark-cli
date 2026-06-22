@@ -67,6 +67,10 @@
     "semantic_map_sha256": {"type": "string", "minLength": 1},
     "node_layout_map": {"type": "string", "minLength": 1},
     "node_layout_map_sha256": {"type": "string", "minLength": 1},
+    "decorative_trace_summary": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "svglide_svg": {"type": "string", "minLength": 1},
     "svglide_svg_sha256": {"type": "string", "minLength": 1}
   }

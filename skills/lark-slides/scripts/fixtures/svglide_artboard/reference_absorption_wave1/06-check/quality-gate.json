@@ -1,0 +1,191 @@
+{
+  "version": "svglide-quality-gate/v1",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1",
+  "profile": "production_live",
+  "status": "passed",
+  "inputs": {
+    "preflight": "06-check/preflight.json",
+    "preview_lint": "06-check/preview-lint.json",
+    "aesthetic_review": "06-check/aesthetic-review.json",
+    "runtime_review": "06-check/runtime-review.json",
+    "semantic_review": "06-check/semantic-review.json",
+    "visual_distinctness": "06-check/visual-distinctness.json",
+    "theme_validate": "06-check/theme-validate.json",
+    "theme_adherence": "06-check/theme-adherence.json",
+    "artboard_package_check": "06-check/artboard-package-check.json",
+    "generator_receipt": "receipts/generate_svg.json",
+    "generation_mode": "artboard_satori"
+  },
+  "input_hashes": {
+    "preflight": "5e54a1f0b662339075e31871138b35eef2892ae4fa334983d4d7b119d9dbbec9",
+    "preview_lint": "d6acc63f76cfc93b1f7617886c64a3bb89e989219b66b6479689454a0a83a3ec",
+    "aesthetic_review": "0f0e52169dd34a8ca1e4226a8e61ec1e90da82e00735892d448d11b783522ce4",
+    "runtime_review": "4c09a95278a7bd46ad5f4426b507b6252bc7dc794813589e13fa9219a20632e6",
+    "semantic_review": "7a3e757bd6e7fd58bbfdb2814cbe401807d11234e27705f065982486cb5c829b",
+    "visual_distinctness": "d6f7bcdef4670649d5963919f7bec5377b81243af53eadfdb274f566d829d615",
+    "theme_validate": "c47d806f3f4363509e1f4c7469e4263a78eabe0493bde16900cac0c8c9be118a",
+    "theme_adherence": "dc5e55f4f40552c01ffa628e9753ce3a05f9385a487d3c36c9f1c1353dec4de2",
+    "artboard_package_check": "22367289422baab1a2e1a97073e1bd6fcc2eb386f4ae1795c98d87eac864a955",
+    "generator_receipt": "7b7fc05448a9bc2e4e4a9b8ca6f46f94193c0d44b47748776e0ba9b7114c6ed2"
+  },
+  "prepared_files": [
+    {
+      "path": "04-svg/prepared/page-001.svg",
+      "sha256": "30213109be74d62e87224f8f061f050ff7ce8b1e29fe5b63c5dabec36052b7e5"
+    },
+    {
+      "path": "04-svg/prepared/page-002.svg",
+      "sha256": "00bc0bdeff43a9cbe43249fab4a7b1325f5bfa371ebafecefd42841bbd8c332f"
+    },
+    {
+      "path": "04-svg/prepared/page-003.svg",
+      "sha256": "a4f2204d3b8b46bec65ed16656b8c4fdf8e3e3d01b09254306af14001e6a764c"
+    }
+  ],
+  "waivers": [],
+  "summary": {
+    "check_count": 12,
+    "failed_check_count": 0,
+    "waiver_check_count": 0,
+    "source_error_count": 0,
+    "research_status": "fixture_local_reference_absorption",
+    "asset_status": "passed",
+    "asset_real_coverage": 0,
+    "asset_acquired_count": 0,
+    "asset_local_file_count": 0,
+    "asset_mapped_token_count": 0,
+    "asset_fallback_count": 0,
+    "image_job_count": 0
+  },
+  "checks": [
+    {
+      "name": "generator-receipt",
+      "path": "receipts/generate_svg.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": null,
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "online-readiness",
+      "path": "source/source-receipt.json + 03-assets/asset-manifest.json",
+      "required": false,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": [],
+      "research_status": "fixture_local_reference_absorption",
+      "asset_status": "passed",
+      "asset_real_coverage": 0,
+      "asset_acquired_count": 0,
+      "asset_local_file_count": 0,
+      "asset_mapped_token_count": 0,
+      "asset_fallback_count": 0,
+      "image_job_count": 0
+    },
+    {
+      "name": "preflight",
+      "path": "06-check/preflight.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": null,
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "preview-lint",
+      "path": "06-check/preview-lint.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "aesthetic-review",
+      "path": "06-check/aesthetic-review.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "runtime-review",
+      "path": "06-check/runtime-review.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "semantic-review",
+      "path": "06-check/semantic-review.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "visual-distinctness",
+      "path": "06-check/visual-distinctness.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "continue_pipeline",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "theme-validate",
+      "path": "06-check/theme-validate.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "theme-adherence",
+      "path": "06-check/theme-adherence.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "artboard-package-check",
+      "path": "06-check/artboard-package-check.json",
+      "required": true,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    },
+    {
+      "name": "chart-verify",
+      "path": "06-check/chart-verify.json",
+      "required": false,
+      "status": "passed",
+      "error_count": 0,
+      "action": "create_live",
+      "waivers": [],
+      "issues": []
+    }
+  ],
+  "output_path": "06-check/quality-gate.json"
+}

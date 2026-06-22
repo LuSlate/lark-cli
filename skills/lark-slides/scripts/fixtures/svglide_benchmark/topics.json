@@ -1,0 +1,43 @@
+[
+  {
+    "expected_page_count_range": [
+      8,
+      12
+    ],
+    "expected_theme_families": [
+      "blue-professional",
+      "executive-dashboard",
+      "ledger-briefing"
+    ],
+    "id": "internal_business_review",
+    "prompt": "内部业务复盘报告",
+    "requires_online_images": true
+  },
+  {
+    "expected_page_count_range": [
+      8,
+      12
+    ],
+    "id": "zhipu_minimax_competitive_analysis",
+    "prompt": "智谱和 MiniMax",
+    "requires_online_images": true
+  },
+  {
+    "expected_page_count_range": [
+      8,
+      14
+    ],
+    "id": "technical_review",
+    "prompt": "技术方案评审",
+    "requires_online_images": false
+  },
+  {
+    "expected_page_count_range": [
+      8,
+      12
+    ],
+    "id": "growth_weekly_report",
+    "prompt": "增长数据周报",
+    "requires_chart_rich_pages": true
+  }
+]

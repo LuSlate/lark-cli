@@ -394,7 +394,7 @@ def research_quality_issues(project: Path, evidence: dict[str, Any] | None, *, p
     sources = research.get("sources") if isinstance(research, dict) and isinstance(research.get("sources"), list) else []
     if status in {"blocked_by_network", "skipped_by_user"}:
         issues.append(issue("research_missing_for_current_topic", f"source research status is {status}"))
-    if profile in {"production", "production_live"} and status == "partial":
+    if profile in {"production", "production_live", "local_real_preview"} and status == "partial":
         issues.append(issue("research_partial_for_production", "production profiles require ready/researched source status"))
     if status == "researched" and not sources:
         issues.append(issue("source_credibility_missing", "researched source receipt must include sources"))
@@ -544,7 +544,7 @@ def run_semantic_review(project: Path, *, profile: str = "preview_only") -> dict
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run deterministic semantic and content checks for a SVGlide project.")
     parser.add_argument("project", help="SVGlide project directory under .lark-slides/plan/<deck-id>")
-    parser.add_argument("--profile", default="preview_only", choices=["preview_only", "production_live", "production", "debug"])
+    parser.add_argument("--profile", default="preview_only", choices=["preview_only", "local_real_preview", "production_live", "production", "debug"])
     parser.add_argument("--pretty", action="store_true", help="pretty-print JSON output")
     return parser
 

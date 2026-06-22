@@ -1,0 +1,401 @@
+{
+  "drift": {
+    "canonical_fallback_count": 0,
+    "max_px": 0.0,
+    "missing_count": 0,
+    "renderer_max_px": 527.0,
+    "status": "passed",
+    "threshold_px": 8.0
+  },
+  "nodes": [
+    {
+      "drift_px": 0.0,
+      "expected_bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "height": 540.0,
+      "id": "background",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 540.0,
+        "width": 960.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 0.0,
+      "text": null,
+      "width": 960.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "drift_px": 323.0,
+      "expected_bbox": {
+        "height": 344.0,
+        "width": 8.0,
+        "x": 64.0,
+        "y": 72.0
+      },
+      "height": 344.0,
+      "id": "accent-rule",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 21.0,
+        "width": 95.0,
+        "x": 86.0,
+        "y": 84.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 323.0,
+      "text": null,
+      "width": 8.0,
+      "x": 64.0,
+      "y": 72.0
+    },
+    {
+      "drift_px": 100.0,
+      "expected_bbox": {
+        "height": 30.0,
+        "width": 420.0,
+        "x": 92.0,
+        "y": 64.0
+      },
+      "height": 30.0,
+      "id": "eyebrow",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 49.0,
+        "width": 520.0,
+        "x": 86.0,
+        "y": 116.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 100.0,
+      "text": "FIELD NOTE",
+      "width": 420.0,
+      "x": 92.0,
+      "y": 64.0
+    },
+    {
+      "drift_px": 332.0,
+      "expected_bbox": {
+        "height": 96.0,
+        "width": 700.0,
+        "x": 92.0,
+        "y": 108.0
+      },
+      "height": 96.0,
+      "id": "title",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 428.0,
+        "width": 836.0,
+        "x": 62.0,
+        "y": 56.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 332.0,
+      "text": "用户访谈证据墙",
+      "width": 700.0,
+      "x": 92.0,
+      "y": 108.0
+    },
+    {
+      "drift_px": 230.0,
+      "expected_bbox": {
+        "height": 54.0,
+        "width": 660.0,
+        "x": 94.0,
+        "y": 212.0
+      },
+      "height": 54.0,
+      "id": "subtitle",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 52.0,
+        "width": 430.0,
+        "x": 88.0,
+        "y": 228.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 230.0,
+      "text": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+      "width": 660.0,
+      "x": 94.0,
+      "y": 212.0
+    },
+    {
+      "drift_px": 306.0,
+      "expected_bbox": {
+        "height": 116.0,
+        "width": 736.0,
+        "x": 92.0,
+        "y": 362.0
+      },
+      "height": 116.0,
+      "id": "reference-flow-path",
+      "kind": "path",
+      "measured_bbox": {
+        "height": 35.0,
+        "width": 430.0,
+        "x": 86.0,
+        "y": 423.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 306.0,
+      "text": null,
+      "width": 736.0,
+      "x": 92.0,
+      "y": 362.0
+    },
+    {
+      "drift_px": 72.0,
+      "expected_bbox": {
+        "height": 86.0,
+        "width": 230.0,
+        "x": 612.0,
+        "y": 178.0
+      },
+      "height": 86.0,
+      "id": "reference-annotation-line",
+      "kind": "line",
+      "measured_bbox": {
+        "height": 66.0,
+        "width": 302.0,
+        "x": 572.0,
+        "y": 160.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 72.0,
+      "text": null,
+      "width": 230.0,
+      "x": 612.0,
+      "y": 178.0
+    },
+    {
+      "drift_px": 167.0,
+      "expected_bbox": {
+        "height": 26.0,
+        "width": 14.0,
+        "x": 760.0,
+        "y": 350.0
+      },
+      "height": 26.0,
+      "id": "dashboard-metric-bar-1",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 34.0,
+        "width": 181.0,
+        "x": 635.0,
+        "y": 336.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 167.0,
+      "text": null,
+      "width": 14.0,
+      "x": 760.0,
+      "y": 350.0
+    },
+    {
+      "drift_px": 288.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 14.0,
+        "x": 784.0,
+        "y": 332.0
+      },
+      "height": 44.0,
+      "id": "dashboard-metric-bar-2",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 66.0,
+        "width": 302.0,
+        "x": 572.0,
+        "y": 320.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 288.0,
+      "text": null,
+      "width": 14.0,
+      "x": 784.0,
+      "y": 332.0
+    },
+    {
+      "drift_px": 288.0,
+      "expected_bbox": {
+        "height": 62.0,
+        "width": 14.0,
+        "x": 808.0,
+        "y": 314.0
+      },
+      "height": 62.0,
+      "id": "dashboard-metric-bar-3",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 226.0,
+        "width": 302.0,
+        "x": 572.0,
+        "y": 160.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 288.0,
+      "text": null,
+      "width": 14.0,
+      "x": 808.0,
+      "y": 314.0
+    },
+    {
+      "drift_px": 148.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 92.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-1",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 35.0,
+        "width": 96.0,
+        "x": 161.0,
+        "y": 423.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 148.0,
+      "text": null,
+      "width": 244.0,
+      "x": 92.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 527.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 108.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-1",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 34.0,
+        "width": 144.0,
+        "x": 635.0,
+        "y": 176.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 527.0,
+      "text": "用户绕过默认流程",
+      "width": 212.0,
+      "x": 108.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 228.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 360.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-2",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 26.0,
+        "width": 47.0,
+        "x": 588.0,
+        "y": 336.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 228.0,
+      "text": null,
+      "width": 244.0,
+      "x": 360.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 259.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 376.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-2",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 34.0,
+        "width": 144.0,
+        "x": 635.0,
+        "y": 256.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 259.0,
+      "text": "关键证据需要回访",
+      "width": 212.0,
+      "x": 376.0,
+      "y": 321.0
+    },
+    {
+      "drift_px": 66.0,
+      "expected_bbox": {
+        "height": 72.0,
+        "width": 244.0,
+        "x": 628.0,
+        "y": 306.0
+      },
+      "height": 72.0,
+      "id": "item-card-3",
+      "kind": "rect",
+      "measured_bbox": {
+        "height": 66.0,
+        "width": 302.0,
+        "x": 572.0,
+        "y": 240.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 66.0,
+      "text": null,
+      "width": 244.0,
+      "x": 628.0,
+      "y": 306.0
+    },
+    {
+      "drift_px": 165.0,
+      "expected_bbox": {
+        "height": 44.0,
+        "width": 212.0,
+        "x": 644.0,
+        "y": 321.0
+      },
+      "height": 44.0,
+      "id": "item-3",
+      "kind": "text",
+      "measured_bbox": {
+        "height": 26.0,
+        "width": 47.0,
+        "x": 588.0,
+        "y": 256.0
+      },
+      "observation_source": "satori_on_node_detected",
+      "renderer_drift_px": 165.0,
+      "text": "下一步由体验组 owner",
+      "width": 212.0,
+      "x": 644.0,
+      "y": 321.0
+    }
+  ],
+  "observation_source": "satori_on_node_detected",
+  "page": 8,
+  "source": "measured-layout-observation",
+  "threshold_px": 8.0,
+  "version": "svglide-node-layout-map/v1"
+}

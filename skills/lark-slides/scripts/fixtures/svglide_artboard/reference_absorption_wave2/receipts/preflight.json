@@ -1,0 +1,36 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svg_preflight.py",
+    "--plan",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-001.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-002.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-003.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-004.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-005.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-006.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-007.svg",
+    "--input",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/04-svg/prepared/page-008.svg"
+  ],
+  "ended_at": "2026-06-22T04:03:09+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json",
+    "04-svg/prepared"
+  ],
+  "outputs": [
+    "06-check/preflight.json"
+  ],
+  "stage": "preflight",
+  "started_at": "2026-06-22T04:03:09+08:00",
+  "status": "passed"
+}

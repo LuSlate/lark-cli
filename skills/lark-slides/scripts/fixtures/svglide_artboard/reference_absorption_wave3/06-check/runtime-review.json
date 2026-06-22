@@ -1,0 +1,80 @@
+{
+  "schema_version": "svglide-runtime-review/v1",
+  "status": "passed",
+  "action": "create_live",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+  "started_at": "2026-06-21T20:01:50.449934+00:00",
+  "ended_at": "2026-06-21T20:01:50.450969+00:00",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "style_preset": "neo_grid_bold"
+  },
+  "registry": {
+    "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-renderer-registry.json",
+    "sha256": "a36c93480b3d94b86f15c8d8b3a3087a0f31b3a6a6c2413c7673a6f0ac2ec7ec"
+  },
+  "pages": [
+    {
+      "page": 1,
+      "renderer_id": "artboard_satori.architectural-spec",
+      "registry_status": "active",
+      "layout_family": "architectural-spec",
+      "registry_family": "architectural-spec",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 2,
+      "renderer_id": "artboard_satori.trend-grid-report",
+      "registry_status": "active",
+      "layout_family": "trend-grid-report",
+      "registry_family": "trend-grid-report",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 3,
+      "renderer_id": "artboard_satori.serif-stat-editorial",
+      "registry_status": "active",
+      "layout_family": "serif-stat-editorial",
+      "registry_family": "serif-stat-editorial",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 4,
+      "renderer_id": "artboard_satori.poster-stat-punch",
+      "registry_status": "active",
+      "layout_family": "poster-stat-punch",
+      "registry_family": "poster-stat-punch",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    }
+  ],
+  "renderers": [
+    "artboard_satori.architectural-spec",
+    "artboard_satori.poster-stat-punch",
+    "artboard_satori.serif-stat-editorial",
+    "artboard_satori.trend-grid-report"
+  ],
+  "layout_families": [
+    "architectural-spec",
+    "poster-stat-punch",
+    "serif-stat-editorial",
+    "trend-grid-report"
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "slide_count": 4,
+    "renderer_count": 4,
+    "layout_family_count": 4,
+    "asset_page_count": 0
+  },
+  "issues": []
+}

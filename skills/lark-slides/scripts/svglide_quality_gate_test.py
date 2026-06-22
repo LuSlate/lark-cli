@@ -239,7 +239,7 @@ def attach_passing_artboard_receipt(project: Path) -> None:
             "page": 1,
             "template_id": "cover-hero",
             "theme_id": "dark-clarity",
-            "semantic_source": "CanvasSpec",
+            "semantic_source": "SatoriSVG",
             "content_keys": ["title"],
             "elements": [
                 {
@@ -281,6 +281,7 @@ def attach_passing_artboard_receipt(project: Path) -> None:
     )
     (project / "05-preview/contact-sheet.png").write_bytes(b"contact")
     source_hash = svglide_quality_gate.file_sha256(project / "04-svg/page-001.svg")
+    satori_hash = svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg")
     template_registry_sha256 = "template-registry-hash"
     theme_registry_sha256 = "theme-registry-hash"
     font_hashes = [{"path": "/tmp/font.ttf", "sha256": "font-hash"}]
@@ -314,16 +315,16 @@ def attach_passing_artboard_receipt(project: Path) -> None:
             "render_metadata_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.render-metadata.json"),
             "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
             "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-            "compiler_input": "04-svg/artboard/page-001.semantic-map.json",
-            "compiler_input_sha256": semantic_map_sha256,
-            "input_semantic_hash": semantic_map_sha256,
+            "compiler_input": "04-svg/artboard/raw/page-001.satori.svg",
+            "compiler_input_sha256": satori_hash,
+            "input_semantic_hash": satori_hash,
             "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
             "semantic_map_sha256": semantic_map_sha256,
             "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
             "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
             "svglide_svg": "04-svg/page-001.svg",
             "svglide_svg_sha256": source_hash,
-            "compiler": {"semantic_source": "CanvasSpec", "compiler_input": "SemanticMapIR", "satori_svg_usage": "preview_only", "input_semantic_hash": semantic_map_sha256},
+            "compiler": {"semantic_source": "SatoriSVG", "compiler_input": "RawSatoriSVG", "satori_svg_usage": "compiler_input", "input_semantic_hash": satori_hash},
         },
     )
     receipt = json.loads((project / "receipts/generate_svg.json").read_text(encoding="utf-8"))
@@ -427,20 +428,20 @@ def attach_passing_artboard_receipt(project: Path) -> None:
             "pages": [
                 {
                     "page": 1,
-                    "semantic_source": "CanvasSpec",
+                    "semantic_source": "SatoriSVG",
                     "semantic_map": "04-svg/artboard/page-001.semantic-map.json",
                     "semantic_map_sha256": semantic_map_sha256,
-                    "input_semantic_hash": semantic_map_sha256,
+                    "input_semantic_hash": satori_hash,
                     "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
                     "node_layout_map_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.node-layout-map.json"),
                     "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
                     "canvas_template_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.canvas-template.svg"),
-                    "compiler_input": "04-svg/artboard/page-001.semantic-map.json",
-                    "compiler_input_sha256": semantic_map_sha256,
-                    "compiler_input_type": "SemanticMapIR",
-                    "satori_svg_usage": "preview_only",
+                    "compiler_input": "04-svg/artboard/raw/page-001.satori.svg",
+                    "compiler_input_sha256": satori_hash,
+                    "compiler_input_type": "RawSatoriSVG",
+                    "satori_svg_usage": "compiler_input",
                     "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
-                    "satori_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/artboard/raw/page-001.satori.svg"),
+                    "satori_svg_sha256": satori_hash,
                     "svglide_svg": "04-svg/page-001.svg",
                     "svglide_svg_sha256": source_hash,
                 }
@@ -494,6 +495,12 @@ def refresh_artboard_node_layout_hashes(project: Path) -> None:
 
 
 class SVGlideQualityGateTest(unittest.TestCase):
+    def write_minimal_passing_project(self, project: Path) -> None:
+        write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 0}})
+        write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+        write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+        write_passing_semantic_review(project)
+
     def test_quality_gate_passes_when_required_checks_have_zero_errors(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
@@ -621,7 +628,266 @@ class SVGlideQualityGateTest(unittest.TestCase):
             self.assertEqual(result["inputs"]["generation_mode"], "artboard_satori")
             self.assertIn("artboard_package_check", result["inputs"])
 
-    def test_online_readiness_counts_local_file_assets_as_real_coverage(self) -> None:
+    def test_user_visible_profiles_reject_local_preview_asset_metadata(self) -> None:
+        for profile in ["preview_only", "local_real_preview", "production_live", "production"]:
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as tmpdir:
+                project = Path(tmpdir)
+                write_json(
+                    project / "02-plan/slide_plan.json",
+                    {
+                        "language": "zh-CN",
+                        "theme_id": "dark-clarity",
+                        "slides": [{"page": 1, "title": "测试"}],
+                        "asset_contracts": [
+                            {
+                                "id": "hero",
+                                "href": "https://example.com/hero.png",
+                                "required": True,
+                                "usage_page": 1,
+                                "placement_role": "cover",
+                                "source_type": "local_preview",
+                                "source_ref": "local-generated-preview-asset",
+                                "source_url": "https://example.com/hero",
+                                "license": "owned",
+                            }
+                        ],
+                    },
+                )
+                self.write_minimal_passing_project(project)
+
+                result = svglide_quality_gate.run_quality_gate(project, profile=profile)
+
+                self.assertEqual(result["status"], "failed")
+                failed_codes = {
+                    issue["code"]
+                    for check in result["checks"]
+                    for issue in check["issues"]
+                }
+                self.assertIn("asset_source_type_blocked", failed_codes)
+                self.assertIn("asset_source_ref_blocked", failed_codes)
+
+    def test_quality_gate_rejects_preview_unverified_license_for_user_visible_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(
+                project / "02-plan/slide_plan.json",
+                {
+                    "language": "zh-CN",
+                    "theme_id": "dark-clarity",
+                    "slides": [{"page": 1, "title": "测试"}],
+                    "asset_contracts": [
+                        {
+                            "id": "hero",
+                            "href": "https://example.com/hero.png",
+                            "required": True,
+                            "usage_page": 1,
+                            "placement_role": "cover",
+                            "source_type": "web",
+                            "source_url": "https://example.com/hero",
+                            "license": "preview_unverified",
+                        }
+                    ],
+                },
+            )
+            self.write_minimal_passing_project(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("asset_license_blocked", failed_codes)
+
+    def test_quality_gate_rejects_generated_asset_kind_for_user_visible_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            self.write_minimal_passing_project(project)
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "summary": {
+                        "contract_count": 1,
+                        "acquired_count": 1,
+                        "mapped_token_count": 0,
+                        "image_job_count": 0,
+                        "fallback_count": 0,
+                        "local_file_count": 0,
+                    },
+                    "contracts": [
+                        {
+                            "id": "hero",
+                            "status": "acquired",
+                            "asset_kind": "generated_image",
+                            "source_url": "internal://image/hero",
+                            "license": "internal_test",
+                        }
+                    ],
+                },
+            )
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="preview_only")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("asset_kind_blocked", failed_codes)
+
+    def test_quality_gate_rejects_relative_source_url_for_user_visible_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(
+                project / "02-plan/slide_plan.json",
+                {
+                    "language": "zh-CN",
+                    "theme_id": "dark-clarity",
+                    "slides": [{"page": 1, "title": "测试"}],
+                    "asset_contracts": [
+                        {
+                            "id": "hero",
+                            "href": "https://example.com/hero.png",
+                            "required": True,
+                            "usage_page": 1,
+                            "placement_role": "cover",
+                            "source_type": "web",
+                            "source_url": "03-assets/source/hero.png",
+                            "license": "owned",
+                        }
+                    ],
+                },
+            )
+            self.write_minimal_passing_project(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="preview_only")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("asset_source_url_not_http", failed_codes)
+
+    def test_quality_gate_rejects_local_manifest_source_urls(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "network_policy": "auto",
+                    "image_backend": "auto",
+                    "contracts": [
+                        {
+                            "id": "local-hero",
+                            "href": "@./03-assets/source/hero.png",
+                            "status": "local_file",
+                            "source_url": "@./03-assets/source/hero.png",
+                            "license": "owned",
+                        }
+                    ],
+                    "acquired_assets": [],
+                    "summary": {
+                        "contract_count": 2,
+                        "error_count": 0,
+                        "mapped_token_count": 0,
+                        "local_file_count": 1,
+                        "acquired_count": 0,
+                        "fallback_count": 0,
+                        "image_job_count": 0,
+                    },
+                },
+            )
+            self.write_minimal_passing_project(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production_live")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("asset_source_url_not_http", failed_codes)
+
+    def test_quality_gate_allows_internal_asset_service_source_url(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "network_policy": "auto",
+                    "image_backend": "auto",
+                    "contracts": [],
+                    "acquired_assets": [
+                        {
+                            "asset_id": "internal-hero",
+                            "asset_kind": "web_image",
+                            "status": "acquired",
+                            "file": "03-assets/raw/internal-hero.png",
+                            "source_url": "internal://image/internal-hero",
+                            "license": "owned",
+                        }
+                    ],
+                    "summary": {
+                        "contract_count": 0,
+                        "error_count": 0,
+                        "mapped_token_count": 0,
+                        "local_file_count": 0,
+                        "acquired_count": 1,
+                        "fallback_count": 0,
+                        "image_job_count": 0,
+                    },
+                },
+            )
+            self.write_minimal_passing_project(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production_live")
+
+            self.assertEqual(result["status"], "passed")
+
+    def test_debug_and_fixture_profiles_allow_local_preview_asset_metadata(self) -> None:
+        for profile in ["debug", "fixture"]:
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as tmpdir:
+                project = Path(tmpdir)
+                write_json(
+                    project / "02-plan/slide_plan.json",
+                    {
+                        "language": "zh-CN",
+                        "theme_id": "dark-clarity",
+                        "slides": [{"page": 1, "title": "测试"}],
+                        "asset_contracts": [
+                            {
+                                "id": "hero",
+                                "href": "@./03-assets/source/hero.png",
+                                "required": True,
+                                "usage_page": 1,
+                                "placement_role": "cover",
+                                "source_type": "local_preview",
+                                "source_ref": "local-generated-preview-asset",
+                                "source_url": "@./03-assets/source/hero.png",
+                                "license": "preview_unverified",
+                            }
+                        ],
+                    },
+                )
+                self.write_minimal_passing_project(project)
+
+                result = svglide_quality_gate.run_quality_gate(project, profile=profile)
+
+                self.assertEqual(result["status"], "passed")
+
+    def test_online_readiness_does_not_count_local_file_assets_as_real_coverage(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
             write_json(
@@ -639,7 +905,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
 
             result = svglide_quality_gate.load_online_readiness(project, profile="production")
 
-            self.assertEqual(result["asset_real_coverage"], 6)
+            self.assertEqual(result["asset_real_coverage"], 3)
             self.assertEqual(result["asset_acquired_count"], 1)
             self.assertEqual(result["asset_local_file_count"], 3)
             self.assertEqual(result["asset_mapped_token_count"], 2)
@@ -926,7 +1192,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             }
             self.assertIn("generator_artboard_artifact_stale", failed_codes)
 
-    def test_quality_gate_rejects_raw_satori_as_artboard_compiler_input(self) -> None:
+    def test_quality_gate_rejects_semantic_map_ir_as_artboard_compiler_input(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
             write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
@@ -936,8 +1202,14 @@ class SVGlideQualityGateTest(unittest.TestCase):
             attach_passing_artboard_receipt(project)
             receipt_path = project / "04-svg/artboard/page-001.receipt.json"
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-            receipt["compiler"]["compiler_input"] = "RawSatoriSVG"
-            receipt["compiler"]["satori_svg_usage"] = "compiler_input"
+            semantic_map_hash = svglide_quality_gate.file_sha256(project / "04-svg/artboard/page-001.semantic-map.json")
+            receipt["compiler"]["semantic_source"] = "CanvasSpec"
+            receipt["compiler"]["compiler_input"] = "SemanticMapIR"
+            receipt["compiler"]["satori_svg_usage"] = "preview_only"
+            receipt["compiler"]["input_semantic_hash"] = semantic_map_hash
+            receipt["compiler_input"] = "04-svg/artboard/page-001.semantic-map.json"
+            receipt["compiler_input_sha256"] = semantic_map_hash
+            receipt["input_semantic_hash"] = semantic_map_hash
             write_json(receipt_path, receipt)
 
             result = svglide_quality_gate.run_quality_gate(project)
@@ -948,8 +1220,10 @@ class SVGlideQualityGateTest(unittest.TestCase):
                 for check in result["checks"]
                 for issue in check["issues"]
             }
+            self.assertIn("generator_artboard_compiler_semantic_source_invalid", failed_codes)
             self.assertIn("generator_artboard_compiler_input_invalid", failed_codes)
             self.assertIn("generator_artboard_compiler_satori_usage_invalid", failed_codes)
+            self.assertIn("generator_artboard_compiler_input_path_invalid", failed_codes)
 
     def test_quality_gate_fails_when_artboard_compiler_input_is_stale(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -959,9 +1233,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
             attach_passing_artboard_receipt(project)
-            semantic_map = json.loads((project / "04-svg/artboard/page-001.semantic-map.json").read_text(encoding="utf-8"))
-            semantic_map["elements"][0]["text"] = "Changed semantic input"
-            write_json(project / "04-svg/artboard/page-001.semantic-map.json", semantic_map)
+            (project / "04-svg/artboard/raw/page-001.satori.svg").write_text("<svg changed='compiler-input'/>", encoding="utf-8")
 
             result = svglide_quality_gate.run_quality_gate(project)
 
@@ -1121,7 +1393,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             }
             self.assertIn("visual_asset_contracts_unfulfilled", failed_codes)
 
-    def test_quality_gate_allows_unfulfilled_image_jobs_in_preview_only_profile(self) -> None:
+    def test_quality_gate_blocks_unfulfilled_image_jobs_in_preview_only_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
             write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
@@ -1146,6 +1418,40 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_passing_semantic_review(project)
 
             result = svglide_quality_gate.run_quality_gate(project, profile="preview_only")
+
+            self.assertEqual(result["status"], "failed")
+            failed_codes = {
+                issue["code"]
+                for check in result["checks"]
+                for issue in check["issues"]
+            }
+            self.assertIn("visual_asset_contracts_unfulfilled", failed_codes)
+
+    def test_quality_gate_allows_unfulfilled_image_jobs_in_debug_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0}, "action": "create_live"})
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "version": "svglide-assets/v1",
+                    "status": "passed",
+                    "summary": {
+                        "contract_count": 1,
+                        "error_count": 0,
+                        "mapped_token_count": 0,
+                        "local_file_count": 0,
+                        "acquired_count": 0,
+                        "fallback_count": 0,
+                        "image_job_count": 1,
+                    },
+                },
+            )
+            write_passing_semantic_review(project)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="debug")
 
             self.assertEqual(result["status"], "passed")
 

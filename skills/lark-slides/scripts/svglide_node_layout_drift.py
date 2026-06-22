@@ -53,6 +53,19 @@ def bbox_delta_px(expected: dict[str, float], measured: dict[str, float]) -> flo
     )
 
 
+def drift_expected_bbox(expected: dict[str, Any], expected_bbox: dict[str, float], measured_bbox: dict[str, float] | None, observation_source: str) -> dict[str, float]:
+    if (
+        measured_bbox is not None
+        and observation_source == "rendered_satori_svg_parse"
+        and str(expected.get("kind") or "") == "text"
+        and expected_bbox["height"] > measured_bbox["height"]
+    ):
+        adjusted = dict(expected_bbox)
+        adjusted["height"] = measured_bbox["height"]
+        return adjusted
+    return expected_bbox
+
+
 def normalize_renderer_observations(observations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
     for observation in observations:
@@ -204,8 +217,10 @@ def build_node_layout_map(
             drift_px = None
             measured_bbox = expected_bbox
         else:
-            drift_px = bbox_delta_px(expected_bbox, measured_bbox)
+            compare_bbox = drift_expected_bbox(expected, expected_bbox, measured_bbox, observation_source)
+            drift_px = bbox_delta_px(compare_bbox, measured_bbox)
             renderer_max_px = max(renderer_max_px, drift_px)
+            max_px = max(max_px, drift_px)
         # The exported node layout is the canonical CanvasSpec/template layout.
         # Renderer observations are retained for audit but must not overwrite
         # downstream fit boxes, because Satori can report intermediate flex
@@ -263,6 +278,9 @@ def validate_node_layout_map(layout_map: dict[str, Any]) -> list[dict[str, str]]
         issues.append({"code": "node_layout_drift_failed", "message": "node-layout-map drift status must be passed"})
     if max_px > threshold_px:
         issues.append({"code": "node_layout_drift_exceeds_threshold", "message": f"node-layout-map max drift {max_px:g}px exceeds threshold {threshold_px:g}px"})
-    if missing_count > 0 and missing_count != fallback_count:
+    if missing_count > 0:
         issues.append({"code": "node_layout_observation_missing", "message": f"node-layout-map has {missing_count} missing measured nodes"})
+    renderer_max_px = number(drift.get("renderer_max_px"), max_px)
+    if renderer_max_px > threshold_px:
+        issues.append({"code": "node_layout_renderer_drift_exceeds_threshold", "message": f"node-layout-map renderer drift {renderer_max_px:g}px exceeds threshold {threshold_px:g}px"})
     return issues

@@ -67,7 +67,7 @@ def make_project(root: Path, *, generation_mode: str = "artboard_satori", overla
     write(project / "04-svg/page-001.svg", '<svg width="960" height="540"></svg>')
     write(project / "04-svg/artboard/page-001.png", b"page-png")
     write(project / "05-preview/contact-sheet.png", b"contact-sheet")
-    write(project / "05-preview/preview.html", "<html><body>preview</body></html>")
+    write(project / "05-preview/preview.html", '<html><body><section id="page-1">preview</section></body></html>')
     write_json(
         project / "05-preview/preview-manifest.json",
         {
@@ -195,6 +195,34 @@ class VisualAcceptanceTest(unittest.TestCase):
                 json.loads((project / "receipts/visual_acceptance.json").read_text(encoding="utf-8")),
             )
 
+    def test_visual_evidence_pages_include_hash_bound_preview(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+
+            result = visual_acceptance.run_visual_acceptance(project)
+
+            preview = result["visual_evidence"]["preview"]
+            preview_manifest = result["visual_evidence"]["preview_manifest"]
+            evidence_page = result["visual_evidence"]["pages"][0]
+            self.assertEqual(preview["path"], "05-preview/preview.html")
+            self.assertEqual(preview["sha256"], sha(project / "05-preview/preview.html"))
+            self.assertEqual(preview_manifest["path"], "05-preview/preview-manifest.json")
+            self.assertEqual(preview_manifest["sha256"], sha(project / "05-preview/preview-manifest.json"))
+            self.assertEqual(evidence_page["preview"], "05-preview/preview.html")
+            self.assertEqual(evidence_page["preview_anchor"], "05-preview/preview.html#page-1")
+            self.assertEqual(evidence_page["preview_sha256"], preview["sha256"])
+            self.assertEqual(evidence_page["preview_manifest_sha256"], preview_manifest["sha256"])
+
+    def test_missing_preview_anchor_fails_user_visible_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            write(project / "05-preview/preview.html", "<html><body>preview without page anchor</body></html>")
+
+            result = visual_acceptance.run_visual_acceptance(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("preview_anchor_missing", issue_codes(result))
+
     def test_missing_contact_sheet_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = make_project(Path(tmp))
@@ -293,6 +321,76 @@ class VisualAcceptanceTest(unittest.TestCase):
             result = visual_acceptance.run_visual_acceptance(project)
 
             self.assertEqual(result["status"], "passed", result["issues"])
+
+    def test_template_origin_decorative_motif_passes_template_guardrail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            semantic = json.loads((project / "04-svg/artboard/page-001.semantic-map.json").read_text(encoding="utf-8"))
+            semantic["elements"].append(
+                {
+                    "element_id": "satori-rect-1",
+                    "kind": "rect",
+                    "role": "decorative",
+                    "origin": {"type": "template", "id": "cover-hero", "reason": "template visual structure"},
+                    "bbox": {"x": 0, "y": 0, "width": 960, "height": 540},
+                }
+            )
+            rewrite_semantic_map(project, semantic)
+
+            result = visual_acceptance.run_visual_acceptance(project)
+
+            self.assertEqual(result["status"], "passed", result["issues"])
+
+    def test_satori_fragmented_text_counts_as_logical_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            semantic = json.loads((project / "04-svg/artboard/page-001.semantic-map.json").read_text(encoding="utf-8"))
+            semantic["elements"] = [
+                {
+                    "element_id": f"satori-text-{index}",
+                    "kind": "text",
+                    "role": f"satori-text-{index}",
+                    "text": "测",
+                    "bbox": {"x": 80 + index * 8, "y": 120, "width": 16, "height": 24},
+                }
+                for index in range(40)
+            ]
+            semantic["elements"].extend(
+                {
+                    "element_id": f"satori-rect-{index}",
+                    "kind": "rect",
+                    "role": "decorative",
+                    "origin": {"type": "template", "id": "cover-hero", "reason": "template visual structure"},
+                    "bbox": {"x": 0, "y": 0, "width": 960, "height": 540},
+                }
+                for index in range(30)
+            )
+            rewrite_semantic_map(project, semantic)
+
+            result = visual_acceptance.run_visual_acceptance(project)
+
+            self.assertEqual(result["status"], "passed", result["issues"])
+
+    def test_non_template_decorative_density_still_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            semantic = json.loads((project / "04-svg/artboard/page-001.semantic-map.json").read_text(encoding="utf-8"))
+            semantic["elements"].extend(
+                {
+                    "element_id": f"accent-orbit-{index}",
+                    "kind": "circle",
+                    "role": "decorative",
+                    "motif_id": "orbit",
+                    "bbox": {"x": 60 + index * 8, "y": 240, "width": 8, "height": 8},
+                }
+                for index in range(12)
+            )
+            rewrite_semantic_map(project, semantic)
+
+            result = visual_acceptance.run_visual_acceptance(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("decorative_density_too_high", issue_codes(result))
 
     def test_chart_like_mark_requires_chart_contract(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

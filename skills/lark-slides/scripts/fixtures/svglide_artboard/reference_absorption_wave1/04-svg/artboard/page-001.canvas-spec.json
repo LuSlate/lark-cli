@@ -1,0 +1,80 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "OPERATING GRID",
+    "metrics": [
+      "转化 +12%",
+      "履约 94%",
+      "成本 -8%",
+      "风险 L2",
+      "样本 42k",
+      "NPS 48"
+    ],
+    "notes": [
+      "北区增长稳定",
+      "瓶颈转向交付",
+      "Owner 需要清晰"
+    ],
+    "subtitle": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+    "title": "渠道健康度复盘"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 18,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 92,
+        "width": 620,
+        "x": 226,
+        "y": 66
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "dense-panel-grid",
+  "theme": {
+    "colors": {
+      "accent": "#FDE047",
+      "background": "#081C4A",
+      "muted": "#B7C8E8",
+      "panel": "#102C6B",
+      "primary": "#60A5FA",
+      "text": "#EEF6FF"
+    },
+    "spacing": {
+      "card": 28,
+      "gap": 20,
+      "page": 64
+    },
+    "theme_id": "cobalt-grid",
+    "typography": {
+      "body": 20,
+      "label": 18,
+      "subtitle": 24,
+      "title": 56
+    }
+  },
+  "theme_id": "cobalt-grid",
+  "version": "svglide-canvas-spec/v1"
+}

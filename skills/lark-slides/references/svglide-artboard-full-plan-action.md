@@ -1,6 +1,6 @@
 # SVGlide Artboard/Satori Full Plan Action And Supervision Guide
 
-Last updated: 2026-06-21
+Last updated: 2026-06-22
 
 ## 0. Strict Full-Plan Mandate
 
@@ -24,9 +24,9 @@ The current execution cursor is:
 
 ```text
 Visual Acceptance Repair Follow-Up: VF5 Real-Run Benchmark Suite
-Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_REAL_ROUTE_POLICY_BLOCKED
-Current issue: Gate 12b/P0-P1 engineering milestone is PASS, but real prompt-to-preview runs can still pass quality_gate/dry_run while producing visually unacceptable decks.
-Next allowed executor task: configure and run an actual trusted internal planner/image provider instance before any real-model quality or upper-bound claim.
+Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_CURRENT_AGENT_PROMPT_PREVIEW_PASS_REAL_ROUTE_POLICY_BLOCKED
+Current issue: Gate 12b/P0-P1 engineering milestone is PASS, and a current-executor-as-planner/provider prompt-to-preview run passed visual_acceptance; however, unattended CLI model/provider automation and real external/internal provider upper-bound quality are still not proven.
+Next allowed executor task: productize the current-agent planner/provider boundary or configure an actual trusted internal planner/image provider instance before any unattended real-model quality or upper-bound claim.
 Next forbidden executor task: claiming high-quality, upper-bound, final visual, or production-quality generated output without fresh visual_acceptance evidence.
 ```
 
@@ -37,6 +37,16 @@ Supervisor rule:
 - The reviewer subagent must reject fake dry-run, handwritten `.tmp` state, system screenshots, or direct Satori SVG as completion evidence.
 - The executor must update this file after every gate status change.
 - The executor must send this file, the relevant evidence file, changed file list, and validation commands to the reviewer before claiming a gate is done.
+
+Planner ownership rule:
+
+- The current executor owns Deck Planner, Slide Planner, and Canvas Planner decisions.
+- The executor must not call another agent, subagent, `codex exec`, `claude`, Tika, AIME, BitsAI, or any external planner/provider to generate `deck-plan.json`, `slide-plan.json`, `slide_plan.json`, CanvasSpec, or asset contracts for the current request.
+- This rule does not choose a fixed executor. It applies to whoever is currently executing the user's request.
+- Ordinary tools may still be used for file reads, deterministic transforms, fact lookup, image or asset acquisition, rendering, validation, dry-run, and readback. Those tools must not make deck/slide/canvas planning decisions.
+- A reviewer may inspect evidence only when review is explicitly requested; reviewer output cannot replace planner artifacts.
+- The only exception is an explicit current-turn user request to validate productized, unattended CLI model/provider automation. Do not infer that exception from phrases like "真实生成上限", "从 prompt 走全链路", or "planner/LLM 链路".
+- Current-agent planner/provider evidence must explicitly record `provider_type=current_agent`, planner raw outputs, planner receipts, local asset provenance, `quality_gate`, `dry_run`, and `visual_acceptance`. It must not be described as fully automatic CLI LLM/provider behavior.
 
 ## 1. Goal
 
@@ -78,7 +88,7 @@ Gate 12a: complete with reviewer PASS
 Gate 12b: complete with reviewer PASS
 P1: asset system scale-out, prompt/planning, and packaging decision complete with reviewer PASS
 P2: not started
-Visual Acceptance Repair Follow-Up: VF0 DONE/PASS, VF1 DONE/PASS, VF2 DONE/PASS, VF3 DONE/PASS, VF4 DONE/PASS, VF5 FIXTURE_DISTINCTNESS_PASS/REVIEWER_PASS/REAL_ROUTE_POLICY_BLOCKED
+Visual Acceptance Repair Follow-Up: VF0 DONE/PASS, VF1 DONE/PASS, VF2 DONE/PASS, VF3 DONE/PASS, VF4 DONE/PASS, VF5 FIXTURE_DISTINCTNESS_PASS/REVIEWER_PASS/CURRENT_AGENT_PROMPT_PREVIEW_PASS/REAL_ROUTE_POLICY_BLOCKED
 ```
 
 Current active cursor:
@@ -205,6 +215,7 @@ relaxed production gate replacing correct receipts
 Satori SVG copied directly to live SVG
 unregistered template or theme treated as valid
 external HTML/CSS library directly used as runtime renderer
+delegated planner output from another agent/provider replacing current-executor planning
 quality_gate checking only file existence without hash/freshness
 quality_gate or dry_run treated as visual quality acceptance
 fake lark-cli dry_run treated as live_create/readback evidence
@@ -452,8 +463,8 @@ Required actions:
 - Record the actual compiler input artifact and hash, for example:
   - `04-svg/artboard/page-###.semantic-map.json`
   - `semantic_map_sha256`
-  - `compiler_input=SemanticMapIR`
-  - `satori_svg_usage=preview_only`
+  - `compiler_input=RawSatoriSVG`
+  - `satori_svg_usage=compiler_input`
 - Output current SVGlide protocol:
   - `xmlns:slide="https://slides.bytedance.com/ns"`
   - valid `slide:role`
@@ -795,7 +806,7 @@ Update this board after each meaningful implementation chunk.
 | 1 Contract layer completion | DONE | executor | PASS | Plan schema now rejects `artboard_satori` slides without `canvas_spec`; semantic map now emits `elements[]`; PLAN/contract receipt wording aligned to per-page `artboard_receipts` + aggregate `artboard_additional_receipts`; reviewer PASS recorded in `svglide-artboard-gate0-gate1-evidence.md` |
 | 2 Template/theme/component/input quality | DONE | executor | PASS | 3 templates + 3 registered themes + component module + `templates/p0-templates.mjs` exist; registry text budgets, golden CanvasSpec fixtures, and safe-area/semantic bbox admission checks added; P0b `/private/tmp/svglide-p0b-gate2-safe-YVT67C` passed template-fit/quality-gate/dry-run; evidence recorded in `svglide-artboard-gate2-evidence.md` |
 | 3 Satori renderer and resvg preview | DONE | executor | PASS | `node render.mjs --check-runtime` and `node dist/render.mjs --check-runtime` passed with Satori 0.26.0 / resvg 2.6.2; P0b raw SVG/PNG/contact sheet and receipts verified; evidence recorded in `svglide-artboard-gate3-evidence.md` |
-| 4 SatoriToSVGlide compiler | DONE | executor | PASS | Main artboard path writes template SVG as preview/layout evidence and now compiles final SVGlide SVG from `semantic-map/v1` as `SemanticMapIR`; raw Satori SVG is `preview_only`; quality gate rejects RawSatori compiler metadata; original P0b evidence remains recorded in `svglide-artboard-gate4-evidence.md` |
+| 4 SatoriToSVGlide compiler | DONE | executor | PASS | Main artboard path now compiles final SVGlide SVG from raw Satori output as `RawSatoriSVG`; `satori_svg_usage=compiler_input`; semantic map remains audit evidence; quality gate rejects stale `CanvasSpec/SemanticMapIR/preview_only` metadata; original P0b historical evidence remains recorded in `svglide-artboard-gate4-evidence.md` |
 | 5 Runner and quality gate integration | DONE | executor | PASS | Page jobs now run with bounded `max_workers=min(4,page_count)` and stable sorted receipts; full test suite passed 254 tests; direct_svg `/private/tmp/svglide-direct-gate5-iYPBBA` passed quality_gate; artboard P0b `/private/tmp/svglide-p0b-gate5-qg7PC6` passed dry_run; evidence recorded in `svglide-artboard-gate5-evidence.md` |
 | 6 P0a/P0b local E2E | DONE | executor | PASS | P0a `/private/tmp/svglide-p0a-gate6-zNSbw5` ran to dry_run; P0b `/private/tmp/svglide-p0b-gate5-qg7PC6` ran to dry_run; P0b hits `cover-hero/dark-clarity`, `comparison-cards/forest-signal`, `summary-final/warm-editorial`; evidence recorded in `svglide-artboard-gate6-evidence.md` |
 | 7 P0c live closure | DONE | executor | PASS | Reviewer PASS: strengthened PPE proof validates Whistle capture/proxy/rule hash/injected headers; fresh P0c `.tmp/svglide-p0c-gate7-live6` ran `dry_run -> ppe_proof -> live_create -> readback`; live deck `MPcnsjAH5l5r2edcpWYcNhFVnVd` created 3 slides `["pbb","pbu","pbe"]`; readback passed page count, slide order, nonblank, text-fit/bounds marker scan, and 22 CanvasSpec visible text fragments; evidence recorded in `svglide-artboard-gate7-evidence.md` |
@@ -842,13 +853,20 @@ Current follow-up cursor:
   - receipt hash `351402b7316786b1248cca267878376989feabe0a20b528b51ecd751bcc76597`
 - Real codex planner + online asset probe was attempted but blocked before execution by environment policy because it would transmit private repo prompt/schema/template/theme context to external model/image services.
 - Non-fixture VF5 mode now requires an explicit trusted provider id, trusted planner command, trusted asset provider id, and `SVGLIDE_IMAGE_STAGE_COMMAND` with `--image-backend stage_command`; external/default planners are not accepted as trusted real-route evidence.
-- Reviewer verdict: Feynman PASS for fixture benchmark completion.
-- Remaining required action: configure and run an actual trusted internal planner/image provider instance before claiming real-model quality or upper-bound output.
+- Current-agent planner/provider run for `spacex IPO 分析` passed through `quality_gate`, `dry_run`, and `visual_acceptance`:
+  - `.tmp/current-agent-chain/current-agent-spacex-ipo-20260622/receipts/prompt-planner.json`
+  - `.tmp/current-agent-chain/current-agent-spacex-ipo-20260622/06-check/quality-gate.json`
+  - `.tmp/current-agent-chain/current-agent-spacex-ipo-20260622/07-create/dry-run.json`
+  - `.tmp/current-agent-chain/current-agent-spacex-ipo-20260622/06-check/visual-acceptance.json`
+- Reviewer verdicts:
+  - Feynman PASS for fixture benchmark completion.
+  - Dewey PASS for current-agent planner/provider prompt-to-preview evidence and boundary adherence.
+- Remaining required action: productize the current-agent planner/provider boundary or configure an actual trusted internal planner/image provider instance before claiming unattended real-model quality or upper-bound output.
 
 Next required action:
-- Reviewer audit for `skills/lark-slides/references/svglide-visual-acceptance-vf5-evidence.md`.
+- Clean up non-blocking reviewer risks: richer planner raw-output provenance and generated receipt wording where sub-check `action=create_live` can be misread even though live_create was not run.
 - Do not claim real external-model benchmark PASS.
-- Do not claim high-quality visual output unless visual_acceptance evidence exists and passes.
+- Do not claim high-quality visual output unless visual_acceptance evidence exists and passes and the visual claim is scoped to the actual planner/provider boundary used.
 - Do not claim P2/future scope as complete.
 ```
 

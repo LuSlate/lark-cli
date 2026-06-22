@@ -1,0 +1,128 @@
+{
+  "schema_version": "svglide-runtime-review/v1",
+  "status": "passed",
+  "action": "create_live",
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2",
+  "started_at": "2026-06-21T20:03:10.244787+00:00",
+  "ended_at": "2026-06-21T20:03:10.247400+00:00",
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38",
+    "style_preset": "neo_grid_bold"
+  },
+  "registry": {
+    "path": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/svglide-renderer-registry.json",
+    "sha256": "a36c93480b3d94b86f15c8d8b3a3087a0f31b3a6a6c2413c7673a6f0ac2ec7ec"
+  },
+  "pages": [
+    {
+      "page": 1,
+      "renderer_id": "artboard_satori.ledger-briefing",
+      "registry_status": "active",
+      "layout_family": "ledger-briefing",
+      "registry_family": "ledger-briefing",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 2,
+      "renderer_id": "artboard_satori.intelligence-brief",
+      "registry_status": "active",
+      "layout_family": "intelligence-brief",
+      "registry_family": "intelligence-brief",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 3,
+      "renderer_id": "artboard_satori.printed-program",
+      "registry_status": "active",
+      "layout_family": "printed-program",
+      "registry_family": "printed-program",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 4,
+      "renderer_id": "artboard_satori.retro-ui-dashboard",
+      "registry_status": "active",
+      "layout_family": "retro-ui-dashboard",
+      "registry_family": "retro-ui-dashboard",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 5,
+      "renderer_id": "artboard_satori.product-ribbon",
+      "registry_status": "active",
+      "layout_family": "product-ribbon",
+      "registry_family": "product-ribbon",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 6,
+      "renderer_id": "artboard_satori.type-mass-poster",
+      "registry_status": "active",
+      "layout_family": "type-mass-poster",
+      "registry_family": "type-mass-poster",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 7,
+      "renderer_id": "artboard_satori.brutalist-matrix",
+      "registry_status": "active",
+      "layout_family": "brutalist-matrix",
+      "registry_family": "brutalist-matrix",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    },
+    {
+      "page": 8,
+      "renderer_id": "artboard_satori.annotated-field-board",
+      "registry_status": "active",
+      "layout_family": "annotated-field-board",
+      "registry_family": "annotated-field-board",
+      "asset_count": 0,
+      "asset_roles": [],
+      "status": "passed"
+    }
+  ],
+  "renderers": [
+    "artboard_satori.annotated-field-board",
+    "artboard_satori.brutalist-matrix",
+    "artboard_satori.intelligence-brief",
+    "artboard_satori.ledger-briefing",
+    "artboard_satori.printed-program",
+    "artboard_satori.product-ribbon",
+    "artboard_satori.retro-ui-dashboard",
+    "artboard_satori.type-mass-poster"
+  ],
+  "layout_families": [
+    "annotated-field-board",
+    "brutalist-matrix",
+    "intelligence-brief",
+    "ledger-briefing",
+    "printed-program",
+    "product-ribbon",
+    "retro-ui-dashboard",
+    "type-mass-poster"
+  ],
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "slide_count": 8,
+    "renderer_count": 8,
+    "layout_family_count": 8,
+    "asset_page_count": 0
+  },
+  "issues": []
+}

@@ -1,0 +1,29 @@
+{
+  "source_item_id": "svglide-baseline.image_strategies",
+  "absorbed_as": [
+    "owned_baseline_runtime_asset",
+    "image_strategy"
+  ],
+  "svglide_asset_ids": [
+    "image_strategy.bounded-figure-placeholder",
+    "image_strategy.captioned-evidence-frame",
+    "image_strategy.research-key-visual-slot"
+  ],
+  "non_copying_transform": "Existing SVGlide strategy catalog entries are recorded as owned baseline strategy abstractions with fixture-only claim scope.",
+  "forbidden_usage": [
+    "do_not_relabel_baseline_assets_as_external_reference_absorption",
+    "do_not_import_raw_external_runtime_artifacts",
+    "do_not_claim_backend_readback_without_receipt"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-image-strategies.json"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/image-feature.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/research-poster.canvas-spec.json"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/references/svglide-reference-absorption-report.md"
+  ],
+  "review_notes": "Baseline strategy records do not claim trusted image provider or backend chart readback evidence."
+}

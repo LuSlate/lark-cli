@@ -1,0 +1,216 @@
+{
+  "contact_sheet": {
+    "grid": {
+      "cols": 3,
+      "gap": 16,
+      "rows": 1,
+      "tile_height": 180,
+      "tile_width": 320
+    },
+    "pages": [
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 1,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-001.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 16,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 2,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-002.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 352,
+          "y": 16
+        }
+      },
+      {
+        "image_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        },
+        "image_in_tile": {
+          "height": 180,
+          "width": 320,
+          "x": 0,
+          "y": 0
+        },
+        "label_in_tile": {
+          "height": 22,
+          "width": 38,
+          "x": 8,
+          "y": 8
+        },
+        "page": 3,
+        "source_height": 540,
+        "source_png": "04-svg/artboard/page-003.png",
+        "source_width": 960,
+        "tile_bbox": {
+          "height": 180,
+          "width": 320,
+          "x": 688,
+          "y": 16
+        }
+      }
+    ],
+    "path": "05-preview/contact-sheet.png",
+    "sha256": "c9a98a96f36887b9964a7fdd925d7875615d70e2d1a8eac85eee96e56a66c2da",
+    "source_pngs": [
+      "04-svg/artboard/page-001.png",
+      "04-svg/artboard/page-002.png",
+      "04-svg/artboard/page-003.png"
+    ]
+  },
+  "created_at": "2026-06-22T04:04:40+08:00",
+  "inputs": {
+    "canvas_spec_validate": "receipts/canvas-spec-validate.json",
+    "canvas_spec_validate_sha256": "4fec1f8cffb71f96add51a664e95473246685fd0b86e637984deafaa3a749b21",
+    "plan_sha256": "8badb7d1e36e7a5a519f548c1f7b8627272808e617def86e13d4e267f9f17298",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "30e07fbf0dd59605cf81fc93f6ddf9e56fe1e142c142bf36de7766a276d7bc9f"
+  },
+  "pages": [
+    {
+      "canvas_spec_sha256": "e451b8902a0b7f9b0b359909716c00fb638c83057363379101f48ea64124ecc1",
+      "canvas_template_svg": "04-svg/artboard/page-001.canvas-template.svg",
+      "canvas_template_svg_sha256": "dc5b5d7530b860421cf6de0bcd37208d2e1b28221906d9ce0f030b4f49771c16",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-001.node-layout-map.json",
+      "node_layout_map_sha256": "c9a5199daf2e3e0241e6fa7dece694643993186b81dc7e4cc7395deea3ee9ba7",
+      "node_observations": "04-svg/artboard/page-001.node-observations.json",
+      "node_observations_sha256": "0303da0b05cd67064b8e3b8f925bfe2787388bd48fab5b31fd31fcd2b05fddf8",
+      "node_version": "v20.18.1",
+      "page": 1,
+      "png": "04-svg/artboard/page-001.png",
+      "png_sha256": "5bc054001ab7ddbcbf2e32a2cf09443f4c48b49eed26530fae6cec9ebdfee726",
+      "render_metadata": "04-svg/artboard/page-001.render-metadata.json",
+      "render_metadata_sha256": "d4cc98fe4b25d482ca0e3db9f14c2fe5f24b07cd6308ca4b07e08793e0dd9625",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-001.satori.svg",
+      "satori_svg_sha256": "bae361bc7302247caa866f7dbb0f63bd4a2213c00c9ea9b27b3b096cb9f9e028",
+      "satori_version": "0.26.0",
+      "template_id": "dense-panel-grid",
+      "theme_id": "cobalt-grid"
+    },
+    {
+      "canvas_spec_sha256": "6628ffa3a0b50735be2a8e45a362208f8d6bf4b575dd920cb3fbef1bc7e4af07",
+      "canvas_template_svg": "04-svg/artboard/page-002.canvas-template.svg",
+      "canvas_template_svg_sha256": "d3fb43907f3307ae202b9ca97d5ca34ca3668f38808d806b40343b68c37f041c",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-002.node-layout-map.json",
+      "node_layout_map_sha256": "391070b4b7560d1c9b5af4bc8b51d3828f86f5de9d4a00080dfae6bb9bac9962",
+      "node_observations": "04-svg/artboard/page-002.node-observations.json",
+      "node_observations_sha256": "bd2a1dfeb9f79b173d5f06eaee84f0b72459d39d8b5d86a419a451e857a56133",
+      "node_version": "v20.18.1",
+      "page": 2,
+      "png": "04-svg/artboard/page-002.png",
+      "png_sha256": "1f92ee1a69c30391e2f9b78cc42de74ea6eaa24221b59730852431711e3b196b",
+      "render_metadata": "04-svg/artboard/page-002.render-metadata.json",
+      "render_metadata_sha256": "becd057fdbefb06eec1940193bc542bf43903de18b5aea59be77a65c20cda446",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-002.satori.svg",
+      "satori_svg_sha256": "77238e0ed8d15cb4473cf01594e1d16d989bf515145063bdd3c583babdba0c1a",
+      "satori_version": "0.26.0",
+      "template_id": "executive-dashboard",
+      "theme_id": "paper-research"
+    },
+    {
+      "canvas_spec_sha256": "79a37ed6e45c3e36ca1dd7c01f2b54f6fdc8133c0028c9157239fa9506236228",
+      "canvas_template_svg": "04-svg/artboard/page-003.canvas-template.svg",
+      "canvas_template_svg_sha256": "979a71a41aa6702ad2c46c2cdc8bf5436369f1b1d0468231d464de6e5d537597",
+      "font_hashes": [
+        {
+          "path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+        }
+      ],
+      "node_layout_map": "04-svg/artboard/page-003.node-layout-map.json",
+      "node_layout_map_sha256": "4b539b07a5d3203b6c685f2bdfd5c66b6805341cabbc3792ea3d5f9ff78ec2ee",
+      "node_observations": "04-svg/artboard/page-003.node-observations.json",
+      "node_observations_sha256": "ecb4f0569ef153f7d612f3f5398f0476963f77b5f2a4a0df8893c6462a00df3b",
+      "node_version": "v20.18.1",
+      "page": 3,
+      "png": "04-svg/artboard/page-003.png",
+      "png_sha256": "7b8290cb04124a410e406159abae1b2f60f00d4691a514f2f3145f4b7a0fd40b",
+      "render_metadata": "04-svg/artboard/page-003.render-metadata.json",
+      "render_metadata_sha256": "49f8b775d9c6fa991f22e2cac2bf46b215976dc988fdf350f0ccb5dfaf6950e0",
+      "resvg_version": "2.6.2",
+      "satori_svg": "04-svg/artboard/raw/page-003.satori.svg",
+      "satori_svg_sha256": "e9334e48750dbcfc3dc2124f75bb7cc2a32fea49709c55d98207109a8b250a4a",
+      "satori_version": "0.26.0",
+      "template_id": "editorial-quote-chart",
+      "theme_id": "warm-editorial"
+    }
+  ],
+  "stage": "artboard-render",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "max_workers": 3,
+    "page_count": 3,
+    "warning_count": 0
+  },
+  "version": "svglide-artboard-render/v1"
+}

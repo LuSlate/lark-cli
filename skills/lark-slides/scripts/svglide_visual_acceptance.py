@@ -9,6 +9,7 @@ import hashlib
 import json
 import sys
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,17 @@ CONTACT_SHEET_MAX_COLS = 3
 
 class VisualAcceptanceError(Exception):
     pass
+
+
+class IdCollector(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.ids: set[str] = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        for key, value in attrs:
+            if key.lower() == "id" and value:
+                self.ids.add(value)
 
 
 def now_iso() -> str:
@@ -120,6 +132,33 @@ def contact_sheet_tile_bbox(page: int, page_count: int) -> dict[str, int] | None
         "width": CONTACT_SHEET_TILE_WIDTH,
         "height": CONTACT_SHEET_TILE_HEIGHT,
     }
+
+
+def html_ids(path: Path) -> set[str]:
+    parser = IdCollector()
+    parser.feed(path.read_text(encoding="utf-8"))
+    return parser.ids
+
+
+def check_preview_anchor_targets(project: Path, page_results: list[dict[str, Any]], issues: list[dict[str, Any]]) -> None:
+    preview_path = project / PREVIEW_PATH
+    if not preview_path.exists() or not preview_path.is_file():
+        return
+    ids = html_ids(preview_path)
+    for page_result in page_results:
+        page = page_result.get("page")
+        if not isinstance(page, int):
+            continue
+        anchor = f"page-{page}"
+        if anchor not in ids:
+            issues.append(
+                issue(
+                    "preview_anchor_missing",
+                    f"preview.html must include id=\"{anchor}\" for page {page}",
+                    page=page,
+                    path=PREVIEW_PATH.as_posix(),
+                )
+            )
 
 
 def expected_page_count(instruction: dict[str, Any], plan: dict[str, Any]) -> int | None:
@@ -245,13 +284,68 @@ def template_guardrail(template_id: str, guardrails: dict[str, Any]) -> dict[str
     return merged
 
 
-def motif_registered(element_id: str, element: dict[str, Any], decorative_rules: dict[str, Any]) -> bool:
+def template_origin_matches(element: dict[str, Any], template_id: str) -> bool:
+    origin = element.get("origin")
+    if not isinstance(origin, dict):
+        return False
+    return origin.get("type") == "template" and origin.get("id") == template_id
+
+
+def motif_registered(element_id: str, element: dict[str, Any], decorative_rules: dict[str, Any], *, template_id: str = "") -> bool:
+    if template_id and template_origin_matches(element, template_id):
+        return True
     motifs = decorative_rules.get("admitted_motifs")
     motif_tokens = [str(item).lower() for item in motifs] if isinstance(motifs, list) else []
     explicit = element.get("motif_id") or element.get("template_motif")
     if isinstance(explicit, str) and explicit.lower() in motif_tokens:
         return True
     return any(token and token in element_id for token in motif_tokens)
+
+
+def text_line_group_count(elements: list[dict[str, Any]]) -> int:
+    rows: list[dict[str, float]] = []
+    for element in sorted(elements, key=lambda item: ((bbox_from(item.get("bbox")) or {}).get("y", 0), (bbox_from(item.get("bbox")) or {}).get("x", 0))):
+        bbox = bbox_from(element.get("bbox"))
+        if bbox is None:
+            continue
+        matched = False
+        for row in rows:
+            tolerance = max(3.0, min(row["height"], bbox["height"]) * 0.35)
+            if abs(row["y"] - bbox["y"]) <= tolerance:
+                row["height"] = max(row["height"], bbox["height"])
+                matched = True
+                break
+        if not matched:
+            rows.append({"y": bbox["y"], "height": bbox["height"]})
+    return len(rows)
+
+
+def logical_density_counts(elements: list[dict[str, Any]], *, template_id: str) -> dict[str, int]:
+    text_elements = [element for element in elements if isinstance(element, dict) and str(element.get("kind") or "") == "text"]
+    text_count = text_line_group_count(text_elements)
+    non_template_decorative = 0
+    template_decorative_present = False
+    other_nodes = 0
+    for element in elements:
+        if not isinstance(element, dict):
+            continue
+        kind = str(element.get("kind") or "")
+        role = str(element.get("role") or "")
+        if kind == "text":
+            continue
+        if role == "decorative":
+            if template_origin_matches(element, template_id):
+                template_decorative_present = True
+            else:
+                non_template_decorative += 1
+        else:
+            other_nodes += 1
+    total = text_count + non_template_decorative + other_nodes + (1 if template_decorative_present else 0)
+    return {
+        "total_nodes": total,
+        "text_nodes": text_count,
+        "decorative_nodes": non_template_decorative,
+    }
 
 
 def slide_declares_image_slot(slide: dict[str, Any], image_rules: dict[str, Any]) -> bool:
@@ -360,8 +454,8 @@ def check_page_layout(project: Path, plan: dict[str, Any], receipt_path: str, is
     safe_area = safe_area_from_slide(slide, canvas)
 
     text_elements: list[dict[str, Any]] = []
-    decorative_count = 0
-    for element in semantic_map.get("elements", []) if isinstance(semantic_map.get("elements"), list) else []:
+    semantic_elements = semantic_map.get("elements") if isinstance(semantic_map.get("elements"), list) else []
+    for element in semantic_elements:
         if not isinstance(element, dict):
             continue
         role = str(element.get("role") or "")
@@ -378,14 +472,14 @@ def check_page_layout(project: Path, plan: dict[str, Any], receipt_path: str, is
             if role in HIGH_PRIORITY_TEXT_ROLES and not bbox_inside(bbox, safe_area):
                 page_issues.append(issue("text_outside_safe_area", f"text element {element.get('element_id')} is outside safe area", page=page, path=receipt.get("semantic_map"), bbox=bbox))
         if role == "decorative":
-            decorative_count += 1
             allowed_kinds = decorative_rules.get("allowed_kinds")
             allowed = {str(item) for item in allowed_kinds} if isinstance(allowed_kinds, list) else set()
             if allowed and kind not in allowed:
                 page_issues.append(issue("decorative_kind_not_allowed", f"template {template_id} does not allow decorative {kind}", page=page, path=receipt.get("semantic_map"), bbox=bbox))
-            if not motif_registered(element_id, element, decorative_rules):
+            registered_motif = motif_registered(element_id, element, decorative_rules, template_id=template_id)
+            if not registered_motif:
                 page_issues.append(issue("unregistered_template_motif", f"decorative element {element.get('element_id')} is not an admitted template motif", page=page, path=receipt.get("semantic_map"), bbox=bbox))
-            if kind in SHARP_DECORATION_KINDS and (kind not in allowed or not motif_registered(element_id, element, decorative_rules)):
+            if kind in SHARP_DECORATION_KINDS and (kind not in allowed or not registered_motif):
                 page_issues.append(issue("unregistered_sharp_decoration", f"decorative {kind} requires an admitted template motif", page=page, path=receipt.get("semantic_map"), bbox=bbox))
         if ("chart" in element_id or role in {"chart", "data_chart"}) and not isinstance(slide.get("chart_contract"), dict):
             page_issues.append(issue("chart_like_mark_without_contract", f"chart-like element {element.get('element_id')} requires chart_contract", page=page, path=receipt.get("semantic_map"), bbox=bbox))
@@ -415,16 +509,16 @@ def check_page_layout(project: Path, plan: dict[str, Any], receipt_path: str, is
                 )
 
     nodes = node_map.get("nodes") if isinstance(node_map.get("nodes"), list) else []
-    text_node_count = sum(1 for node in nodes if isinstance(node, dict) and node.get("kind") == "text")
+    density_counts = logical_density_counts([element for element in semantic_elements if isinstance(element, dict)], template_id=template_id)
     max_nodes = density_rules.get("max_nodes") if isinstance(density_rules.get("max_nodes"), int) else 90
     max_text_nodes = density_rules.get("max_text_nodes") if isinstance(density_rules.get("max_text_nodes"), int) else 34
     max_decorative = decorative_rules.get("max_count") if isinstance(decorative_rules.get("max_count"), int) else 8
-    if len(nodes) > max_nodes:
-        page_issues.append(issue("page_density_too_high", f"page has {len(nodes)} layout nodes; template limit is {max_nodes}", page=page, path=receipt.get("node_layout_map")))
-    if text_node_count > max_text_nodes:
-        page_issues.append(issue("text_density_too_high", f"page has {text_node_count} text nodes; template limit is {max_text_nodes}", page=page, path=receipt.get("node_layout_map")))
-    if decorative_count > max_decorative:
-        page_issues.append(issue("decorative_density_too_high", f"page has {decorative_count} decorative elements; template limit is {max_decorative}", page=page, path=receipt.get("semantic_map")))
+    if density_counts["total_nodes"] > max_nodes:
+        page_issues.append(issue("page_density_too_high", f"page has {density_counts['total_nodes']} logical layout nodes; template limit is {max_nodes}", page=page, path=receipt.get("node_layout_map")))
+    if density_counts["text_nodes"] > max_text_nodes:
+        page_issues.append(issue("text_density_too_high", f"page has {density_counts['text_nodes']} logical text nodes; template limit is {max_text_nodes}", page=page, path=receipt.get("node_layout_map")))
+    if density_counts["decorative_nodes"] > max_decorative:
+        page_issues.append(issue("decorative_density_too_high", f"page has {density_counts['decorative_nodes']} non-template decorative elements; template limit is {max_decorative}", page=page, path=receipt.get("semantic_map")))
 
     issues.extend(page_issues)
     return {
@@ -532,6 +626,8 @@ def build_visual_evidence(
     contact_sheet: dict[str, str] | None,
 ) -> dict[str, Any]:
     page_count = len(page_results) or (preview_manifest.get("page_count") if isinstance(preview_manifest.get("page_count"), int) else 0)
+    preview_record = path_record(project / PREVIEW_PATH, project)
+    preview_manifest_record = path_record(project / PREVIEW_MANIFEST_PATH, project)
     manifest_pages = {
         item.get("page"): item
         for item in preview_manifest.get("pages", [])
@@ -552,7 +648,9 @@ def build_visual_evidence(
             "contact_sheet_tile": contact_sheet_tile_bbox(page, page_count),
             "contact_sheet_crop_source": "artboard_renderer_fixed_grid_v1",
             "preview": PREVIEW_PATH.as_posix() if (project / PREVIEW_PATH).exists() else None,
+            "preview_sha256": preview_record.get("sha256") if isinstance(preview_record, dict) else None,
             "preview_anchor": f"{PREVIEW_PATH.as_posix()}#page-{page}",
+            "preview_manifest_sha256": preview_manifest_record.get("sha256") if isinstance(preview_manifest_record, dict) else None,
             "preview_source_path": manifest_page.get("source_path") if isinstance(manifest_page, dict) else None,
             "page_png": page_png,
             "page_png_sha256": optional_sha256(project / page_png) if isinstance(page_png, str) else None,
@@ -571,8 +669,8 @@ def build_visual_evidence(
             "max_cols": CONTACT_SHEET_MAX_COLS,
             "page_count": page_count,
         },
-        "preview": path_record(project / PREVIEW_PATH, project),
-        "preview_manifest": path_record(project / PREVIEW_MANIFEST_PATH, project),
+        "preview": preview_record,
+        "preview_manifest": preview_manifest_record,
         "pages": evidence_pages,
     }
 
@@ -669,6 +767,7 @@ def run_visual_acceptance(project: Path, *, profile: str = "production") -> dict
         if isinstance(artifact, dict)
     ]
     visual_evidence = build_visual_evidence(project, preview_manifest=preview_manifest, page_results=page_results, contact_sheet=contact_sheet)
+    check_preview_anchor_targets(project, page_results, issues)
     attach_issue_evidence(issues, visual_evidence)
     deck_rhythm = build_deck_rhythm(plan, page_results, issues)
 
@@ -742,7 +841,7 @@ def run_visual_acceptance(project: Path, *, profile: str = "production") -> dict
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate rendered SVGlide preview before visual delivery claims.")
     parser.add_argument("project", type=Path)
-    parser.add_argument("--profile", default="production", choices=["production", "production_live", "preview_only", "debug"])
+    parser.add_argument("--profile", default="production", choices=["production", "production_live", "preview_only", "local_real_preview", "debug"])
     parser.add_argument("--pretty", action="store_true")
     return parser
 

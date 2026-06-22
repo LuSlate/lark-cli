@@ -1,0 +1,405 @@
+{
+  "schema_version": "svglide-image-strategies/v1",
+  "strategies": [
+    {
+      "id": "bounded-figure-placeholder",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "image-feature"
+      ],
+      "description": "image-led explainer placeholder",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/image-feature.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "svglide-baseline.image_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/image-strategies.json"
+    },
+    {
+      "id": "captioned-evidence-frame",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "image-feature"
+      ],
+      "description": "captioned evidence surface",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/image-feature.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "svglide-baseline.image_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/image-strategies.json"
+    },
+    {
+      "id": "research-key-visual-slot",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "research-poster"
+      ],
+      "description": "research method/result visual slot",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/research-poster.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "svglide-baseline.image_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/image-strategies.json"
+    },
+    {
+      "id": "geometry-placeholder",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "architectural-spec"
+      ],
+      "description": "diagrammatic geometry placeholder",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/architectural-spec.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cartesian.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json"
+    },
+    {
+      "id": "pixel-grid-patch",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "trend-grid-report"
+      ],
+      "description": "pixel/grid visual texture",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/trend-grid-report.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+    },
+    {
+      "id": "product-catalog-card",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "product-ribbon"
+      ],
+      "description": "catalog/spec card as visual asset",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+    },
+    {
+      "id": "rosette-seal-badge",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "product-ribbon"
+      ],
+      "description": "seal or launch badge",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+    },
+    {
+      "id": "window-panel-visual",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "retro-ui-dashboard"
+      ],
+      "description": "software panel as visual metaphor",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/retro-ui-dashboard.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+    },
+    {
+      "id": "annotation-note-card",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "annotated-field-board"
+      ],
+      "description": "field-note evidence card",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    },
+    {
+      "id": "stamp-status-mark",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "annotated-field-board"
+      ],
+      "description": "review stamp visual mark",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    },
+    {
+      "id": "poster-type-mass",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "type-mass-poster"
+      ],
+      "description": "typographic mass as visual anchor",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/type-mass-poster.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json"
+    },
+    {
+      "id": "serif-stat-figure",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "serif-stat-editorial"
+      ],
+      "description": "large stat as visual figure",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/serif-stat-editorial.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+    },
+    {
+      "id": "matrix-callout-block",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "brutalist-matrix"
+      ],
+      "description": "matrix callout visual block",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/brutalist-matrix.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json"
+    },
+    {
+      "id": "ledger-hairline-field",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "ledger-briefing"
+      ],
+      "description": "hairline stat field",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/ledger-briefing.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+    },
+    {
+      "id": "program-menu-frame",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "printed-program"
+      ],
+      "description": "single-ink program frame",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/printed-program.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.long-table.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json"
+    },
+    {
+      "id": "intelligence-rule-chrome",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "intelligence-brief"
+      ],
+      "description": "briefing chrome and rule",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.signal.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json"
+    },
+    {
+      "id": "dense-panel-mosaic",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "dense-panel-grid"
+      ],
+      "description": "dense panel mosaic",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/dense-panel-grid.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.neo-grid-bold.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json"
+    },
+    {
+      "id": "editorial-quote-mark",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "editorial-quote-chart"
+      ],
+      "description": "quote mark and ranked evidence",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/editorial-quote-chart.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.broadside.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json"
+    },
+    {
+      "id": "poster-stat-figure",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "poster-stat-punch"
+      ],
+      "description": "poster stat figure",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/poster-stat-punch.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+    },
+    {
+      "id": "cobalt-trend-index",
+      "status": "active",
+      "claim_scope": "fixture_only_no_real_image_claim",
+      "template_ids": [
+        "trend-grid-report"
+      ],
+      "description": "trend index visual list",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/trend-grid-report.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_real_image_provider_evidence_without_stage_command",
+        "do_not_count_placeholder_as_real_image"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+    }
+  ]
+}

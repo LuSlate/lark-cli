@@ -19,9 +19,22 @@ PLAN_PATH = Path("02-plan/slide_plan.json")
 PROJECT_REGISTRY_PATH = Path("02-plan/renderer-registry.json")
 DEFAULT_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "references" / "svglide-renderer-registry.json"
 ASSET_MANIFEST_PATH = Path("03-assets/asset-manifest.json")
+ARTBOARD_DIR = Path("04-svg/artboard")
 OUTPUT_PATH = Path("06-check/runtime-review.json")
 PASS_ACTION = "create_live"
 FAIL_ACTION = "repair_and_rerun"
+FAMILY_ALIASES = {
+    "annotation_board": {"annotated-field-board"},
+    "architectural_spec": {"architectural-spec", "architecture"},
+    "briefing": {"intelligence-brief", "cover"},
+    "catalog": {"product-ribbon"},
+    "dashboard": {"executive-dashboard", "metric-dashboard"},
+    "ledger": {"ledger-briefing"},
+    "matrix": {"brutalist-matrix", "comparison"},
+    "poster_stat": {"poster-stat-punch", "closing"},
+    "serif_stat": {"serif-stat-editorial"},
+    "trend_grid": {"trend-grid-report"},
+}
 
 
 class RuntimeReviewError(Exception):
@@ -78,6 +91,60 @@ def assets_by_page(project: Path) -> dict[int, list[dict[str, Any]]]:
     return by_page
 
 
+def decorative_trace_issues(project: Path) -> list[dict[str, Any]]:
+    artboard_dir = project / ARTBOARD_DIR
+    if not artboard_dir.exists():
+        return []
+    issues: list[dict[str, Any]] = []
+    for path in sorted(artboard_dir.glob("page-*.semantic-map.json")):
+        try:
+            payload = read_json_object(path)
+        except RuntimeReviewError as err:
+            issues.append(issue("semantic_map_invalid", str(err)))
+            continue
+        page = payload.get("page") if isinstance(payload.get("page"), int) else None
+        elements = payload.get("elements")
+        if not isinstance(elements, list):
+            continue
+        for element in elements:
+            if not isinstance(element, dict):
+                continue
+            role = element.get("role")
+            if role not in {"background", "container", "decorative"}:
+                continue
+            origin = element.get("origin")
+            if not isinstance(origin, dict):
+                issues.append(
+                    issue(
+                        "decorative_origin_missing",
+                        f"semantic element {element.get('element_id')!r} requires machine-readable origin",
+                        page=page,
+                    )
+                )
+                continue
+            if origin.get("type") not in {"template", "theme", "canvas_spec", "semantic_map", "guardrail"}:
+                issues.append(
+                    issue(
+                        "decorative_origin_type_invalid",
+                        f"semantic element {element.get('element_id')!r} has invalid origin.type",
+                        page=page,
+                    )
+                )
+            element_type = str(element.get("element_type") or "")
+            kind = str(element.get("kind") or "")
+            if role == "decorative" and (element_type in {"decorative_line", "decorative_path"} or kind in {"line", "path"}):
+                purpose = element.get("semantic_purpose") or element.get("purpose")
+                if not isinstance(purpose, str) or not purpose.strip():
+                    issues.append(
+                        issue(
+                            "decorative_semantic_purpose_missing",
+                            f"decorative {kind or element_type} {element.get('element_id')!r} requires semantic_purpose",
+                            page=page,
+                        )
+                    )
+    return issues
+
+
 def registry_path_for(project: Path) -> Path:
     project_registry = project / PROJECT_REGISTRY_PATH
     return project_registry if project_registry.exists() else DEFAULT_REGISTRY_PATH
@@ -111,6 +178,43 @@ def style_preset_allowed(style_preset: Any, renderer: dict[str, Any]) -> bool:
     return style_preset in allowed
 
 
+def normalize_family(value: str) -> str:
+    return value.strip().lower().replace("-", "_")
+
+
+def renderer_suffix(renderer_id: Any) -> str | None:
+    if not isinstance(renderer_id, str) or not renderer_id:
+        return None
+    return renderer_id.rsplit(".", 1)[-1]
+
+
+def family_matches(plan_family: str, registry_family: str, renderer_id: Any) -> bool:
+    plan_norm = normalize_family(plan_family)
+    registry_norm = normalize_family(registry_family)
+    if plan_norm == registry_norm:
+        return True
+    aliases = {normalize_family(item) for item in FAMILY_ALIASES.get(plan_norm, set())}
+    suffix = renderer_suffix(renderer_id)
+    suffix_norm = normalize_family(suffix) if suffix else None
+    return registry_norm in aliases or (suffix_norm is not None and suffix_norm in aliases)
+
+
+def accepts_cover_asset(slide: dict[str, Any], renderer: Any, family: Any) -> bool:
+    if slide.get("page_type") == "cover":
+        return True
+    if isinstance(family, str) and family_matches(family, "cover", renderer):
+        return True
+    return isinstance(renderer, str) and "cover" in renderer
+
+
+def accepts_closing_asset(slide: dict[str, Any], renderer: Any, family: Any) -> bool:
+    if slide.get("page_type") == "closing":
+        return True
+    if isinstance(family, str) and family_matches(family, "closing", renderer):
+        return True
+    return isinstance(renderer, str) and "closing" in renderer
+
+
 def run_runtime_review(project: Path) -> dict[str, Any]:
     project = project.resolve()
     started_at = now_iso()
@@ -120,6 +224,7 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
     plan = read_json_object(plan_file)
     registry_path, _registry, registry, issues = load_registry(project)
     page_assets = assets_by_page(project)
+    issues.extend(decorative_trace_issues(project))
     slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
     renderers: list[str] = []
     families: list[str] = []
@@ -155,16 +260,20 @@ def run_runtime_review(project: Path) -> dict[str, Any]:
             page_status = "failed"
         else:
             families.append(family)
-            if isinstance(renderer_record, dict) and isinstance(renderer_record.get("family"), str) and family != renderer_record.get("family"):
+            if (
+                isinstance(renderer_record, dict)
+                and isinstance(renderer_record.get("family"), str)
+                and not family_matches(family, renderer_record["family"], renderer)
+            ):
                 issues.append(issue("renderer_family_mismatch", f"layout_family {family} does not match registry family {renderer_record.get('family')}", page=page))
                 page_status = "failed"
         for asset in current_assets:
             role = asset.get("placement_role")
             status = asset.get("status")
-            if role == "cover" and status in {"acquired", "planned"} and isinstance(renderer, str) and "cover" not in renderer:
+            if role == "cover" and status in {"acquired", "planned"} and not accepts_cover_asset(raw_slide, renderer, family):
                 issues.append(issue("asset_renderer_mismatch", "cover asset should use a cover renderer", page=page))
                 page_status = "failed"
-            if role == "closing" and status in {"acquired", "planned"} and isinstance(family, str) and family != "closing":
+            if role == "closing" and status in {"acquired", "planned"} and not accepts_closing_asset(raw_slide, renderer, family):
                 issues.append(issue("asset_renderer_mismatch", "closing asset should use a closing layout family", page=page))
                 page_status = "failed"
         pages.append(

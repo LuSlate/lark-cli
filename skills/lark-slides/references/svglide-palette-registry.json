@@ -1,0 +1,2149 @@
+{
+  "schema_version": "svglide-palette-registry/v1",
+  "generated_at": "2026-06-22",
+  "source_policy": "style-presets are normalized into first-class palette records; brand palettes remain confidence-scored resolver inputs.",
+  "palettes": [
+    {
+      "palette_id": "style.avocado_press",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#0055A4",
+        "text": "#1F2329",
+        "muted": "#0055A4",
+        "primary": "#0055A4",
+        "accent": "#DCF4A2",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#0055A4",
+        "#DCF4A2",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "agenda structured",
+          "process flow",
+          "quote insight"
+        ],
+        "avoid_for": [
+          "cover hero"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "editorial",
+          "fresh",
+          "structured"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:avocado_press",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.grove",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#E8E4D6",
+        "surface": "#DEDAD0",
+        "text": "#192B1B",
+        "muted": "#D4CFBF",
+        "primary": "#D4CFBF",
+        "accent": "#C8524A",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#D4CFBF",
+        "#C8524A",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "architecture layered",
+          "section divider",
+          "process flow"
+        ],
+        "avoid_for": [
+          "brand_system"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "institutional",
+          "organic",
+          "calm"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:grove",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.jade_lens",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F5F1EE",
+        "surface": "#FFFFFF",
+        "text": "#0E5A3C",
+        "muted": "#2BA483",
+        "primary": "#2BA483",
+        "accent": "#2CAE8C",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#2BA483",
+        "#2CAE8C",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "timeline roadmap",
+          "architecture layered",
+          "agenda structured"
+        ],
+        "avoid_for": [
+          "cover hero"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "research",
+          "technology"
+        ],
+        "tone_tags": [
+          "research",
+          "clean",
+          "knowledge"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:jade_lens",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.long_table",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FAF1E2",
+        "surface": "#FFFFFF",
+        "text": "#1F2329",
+        "muted": "#F2E5CF",
+        "primary": "#F2E5CF",
+        "accent": "#B53D2A",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#F2E5CF",
+        "#B53D2A",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "table visual-summary",
+          "process flow",
+          "timeline roadmap"
+        ],
+        "avoid_for": [
+          "cover hero"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "procedural",
+          "responsibility",
+          "planning"
+        ],
+        "density": "high",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:long_table",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.macchiato",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#EDE7DD",
+        "surface": "#FFFFFF",
+        "text": "#25211B",
+        "muted": "#9A917F",
+        "primary": "#9A917F",
+        "accent": "#6E6558",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#9A917F",
+        "#6E6558",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "quote insight",
+          "section divider",
+          "comparison two-column"
+        ],
+        "avoid_for": [
+          "dashboard kpi-grid"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "quiet",
+          "editorial",
+          "warm"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:macchiato",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.monochrome",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FAFADF",
+        "surface": "#FFFFFF",
+        "text": "#1A1A16",
+        "muted": "#8A8A80",
+        "primary": "#8A8A80",
+        "accent": "#5E5E54",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#8A8A80",
+        "#5E5E54",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "architecture layered",
+          "quote insight",
+          "agenda structured"
+        ],
+        "avoid_for": [
+          "brand_system"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "serious",
+          "technical",
+          "minimal"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:monochrome",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.papier_bleu",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FAF3EB",
+        "surface": "#FFFFFF",
+        "text": "#1A3C8F",
+        "muted": "#4FB8D8",
+        "primary": "#4FB8D8",
+        "accent": "#72D0E9",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#4FB8D8",
+        "#72D0E9",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "process flow",
+          "timeline roadmap",
+          "image story"
+        ],
+        "avoid_for": [
+          "brand_system"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "blueprint",
+          "clear",
+          "knowledge"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:papier_bleu",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.reading_room",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F6EBD8",
+        "surface": "#D6C7CC",
+        "text": "#0B0A09",
+        "muted": "#F1DAB1",
+        "primary": "#F1DAB1",
+        "accent": "#DE916A",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#F1DAB1",
+        "#DE916A",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "quote insight",
+          "section divider",
+          "paper explainer"
+        ],
+        "avoid_for": [
+          "fake_ui_dashboard"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "research",
+          "technology"
+        ],
+        "tone_tags": [
+          "paper",
+          "training",
+          "reading"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:reading_room",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.salmon_stamp",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#F0AE9E",
+        "text": "#000000",
+        "muted": "#F0AE9E",
+        "primary": "#F0AE9E",
+        "accent": "#049550",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#F0AE9E",
+        "#049550",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "section divider",
+          "kpi big-number",
+          "agenda structured"
+        ],
+        "avoid_for": [
+          "technical_texture"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "stamp",
+          "training",
+          "emphasis"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:salmon_stamp",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.apricot_arc",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFF8EE",
+        "surface": "#F69834",
+        "text": "#7A4A33",
+        "muted": "#F9C2BD",
+        "primary": "#F9C2BD",
+        "accent": "#C7561E",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#F9C2BD",
+        "#C7561E",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "timeline roadmap",
+          "process flow",
+          "cover hero"
+        ],
+        "avoid_for": [
+          "monochrome audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "warm",
+          "motion",
+          "roadmap"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:apricot_arc",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.berry_pop",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#EDF0FA",
+        "surface": "#9DB0E8",
+        "text": "#6E1E3A",
+        "muted": "#C7D2F0",
+        "primary": "#C7D2F0",
+        "accent": "#9E2B50",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#C7D2F0",
+        "#9E2B50",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "comparison two-column",
+          "image story",
+          "dashboard kpi-grid"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "business",
+          "soft",
+          "case"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:berry_pop",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.bold_poster",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F5F2EF",
+        "surface": "#1C1410",
+        "text": "#1C1410",
+        "muted": "#FFFFFF",
+        "primary": "#FFFFFF",
+        "accent": "#D8000F",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#FFFFFF",
+        "#D8000F",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "cover hero",
+          "quote insight",
+          "section divider"
+        ],
+        "avoid_for": [
+          "dense table"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "tone_tags": [
+          "poster",
+          "direct",
+          "high-contrast"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:bold_poster",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.checker_bloom",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#E8F1DD",
+        "surface": "#FFFFFF",
+        "text": "#151515",
+        "muted": "#5E9E4A",
+        "primary": "#5E9E4A",
+        "accent": "#2C6EE0",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#5E9E4A",
+        "#2C6EE0",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "dashboard kpi-grid",
+          "icon_capability_map",
+          "table visual-summary"
+        ],
+        "avoid_for": [
+          "quote insight"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "grid",
+          "capability",
+          "modular"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:checker_bloom",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.cobalt_bloom",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F4EFE9",
+        "surface": "#CE968F",
+        "text": "#171717",
+        "muted": "#DDA8A2",
+        "primary": "#DDA8A2",
+        "accent": "#4746C6",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#DDA8A2",
+        "#4746C6",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "architecture layered",
+          "fake_ui_dashboard",
+          "cover hero"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "modern",
+          "tech",
+          "status"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:cobalt_bloom",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.coral",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F5F0E8",
+        "surface": "#D44A4A",
+        "text": "#1A1A1A",
+        "muted": "#6B6B6B",
+        "primary": "#6B6B6B",
+        "accent": "#E85D5D",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#6B6B6B",
+        "#E85D5D",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "agenda structured",
+          "comparison two-column",
+          "kpi big-number"
+        ],
+        "avoid_for": [
+          "monochrome audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "report",
+          "warm",
+          "clear"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:coral",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.cut_bloom",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#FFFFFF",
+        "text": "#2E3566",
+        "muted": "#535D9E",
+        "primary": "#535D9E",
+        "accent": "#F0CB65",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#535D9E",
+        "#F0CB65",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "geometric_composition",
+          "architecture layered",
+          "section divider"
+        ],
+        "avoid_for": [
+          "dense table"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "geometric",
+          "sectioned",
+          "structured"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:cut_bloom",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.editorial_forest",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#EFE7D4",
+        "surface": "#2E4A2A",
+        "text": "#1A1A17",
+        "muted": "#243A21",
+        "primary": "#243A21",
+        "accent": "#E89CB1",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#243A21",
+        "#E89CB1",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "quote insight",
+          "comparison two-column",
+          "paper explainer"
+        ],
+        "avoid_for": [
+          "brand_system"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "research",
+          "technology"
+        ],
+        "tone_tags": [
+          "research",
+          "editorial",
+          "ecosystem"
+        ],
+        "density": "medium",
+        "formality": "high"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:editorial_forest",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.lime_slab",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFF2",
+        "surface": "#FFFFFF",
+        "text": "#0A0A05",
+        "muted": "#2F2E25",
+        "primary": "#2F2E25",
+        "accent": "#EEFA79",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#2F2E25",
+        "#EEFA79",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "cover hero",
+          "architecture layered",
+          "process flow"
+        ],
+        "avoid_for": [
+          "quiet executive"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "energetic",
+          "technical",
+          "slab"
+        ],
+        "density": "high",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:lime_slab",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.linen_cut",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#E4D2C4",
+        "surface": "#04B24F",
+        "text": "#1F1A14",
+        "muted": "#044D99",
+        "primary": "#044D99",
+        "accent": "#F61B27",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#044D99",
+        "#F61B27",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "agenda structured",
+          "table visual-summary",
+          "comparison two-column"
+        ],
+        "avoid_for": [
+          "cover hero"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "business",
+          "linen",
+          "structured"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:linen_cut",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.pin_paper",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#FFFFFF",
+        "text": "#1F2329",
+        "muted": "#2A3C99",
+        "primary": "#2A3C99",
+        "accent": "#F1E84E",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#2A3C99",
+        "#F1E84E",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "agenda structured",
+          "process flow",
+          "quote insight"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "research"
+        ],
+        "tone_tags": [
+          "workshop",
+          "action",
+          "paper"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:pin_paper",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.raw_grid",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F5F5F5",
+        "surface": "#FFFFFF",
+        "text": "#0A0A0A",
+        "muted": "#333333",
+        "primary": "#333333",
+        "accent": "#F2D4CF",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#333333",
+        "#F2D4CF",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "dashboard kpi-grid",
+          "table visual-summary",
+          "architecture layered"
+        ],
+        "avoid_for": [
+          "cover hero"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "technical",
+          "dense",
+          "grid"
+        ],
+        "density": "high",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:raw_grid",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.riptide_cobalt",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FDF0E0",
+        "surface": "#FFFFFF",
+        "text": "#1A2240",
+        "muted": "#2741C0",
+        "primary": "#2741C0",
+        "accent": "#375DFE",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#2741C0",
+        "#375DFE",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "path_flow",
+          "architecture layered",
+          "fake_ui_dashboard"
+        ],
+        "avoid_for": [
+          "quiet executive"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "technology",
+          "flow",
+          "cobalt"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:riptide_cobalt",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.soft_editorial",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#ECE9DC",
+        "surface": "#C9DA4F",
+        "text": "#1C1A17",
+        "muted": "#E7C6AD",
+        "primary": "#E7C6AD",
+        "accent": "#E2A8CE",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#E7C6AD",
+        "#E2A8CE",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "quote insight",
+          "agenda structured",
+          "comparison two-column"
+        ],
+        "avoid_for": [
+          "technical_texture"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "soft",
+          "editorial",
+          "summary"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:soft_editorial",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.violet_marker",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#CFEE30",
+        "text": "#000000",
+        "muted": "#666463",
+        "primary": "#666463",
+        "accent": "#C5A1FF",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#666463",
+        "#C5A1FF",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "section divider",
+          "process flow",
+          "icon_capability_map"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "marker",
+          "training",
+          "concept"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:violet_marker",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.blockframe",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#FE90E8",
+        "text": "#000000",
+        "muted": "#C0F7FE",
+        "primary": "#C0F7FE",
+        "accent": "#F7CB46",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#C0F7FE",
+        "#F7CB46",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "cover hero",
+          "brand_system",
+          "image story"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "tone_tags": [
+          "showcase",
+          "blocky",
+          "colorful"
+        ],
+        "density": "medium",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:blockframe",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.burst_panel",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFAF0",
+        "surface": "#CFACE8",
+        "text": "#1E1E1E",
+        "muted": "#FBD65A",
+        "primary": "#FBD65A",
+        "accent": "#FFA76D",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#FBD65A",
+        "#FFA76D",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "cover hero",
+          "dashboard kpi-grid",
+          "brand_system"
+        ],
+        "avoid_for": [
+          "quiet executive"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "tone_tags": [
+          "poster",
+          "burst",
+          "dense"
+        ],
+        "density": "high",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:burst_panel",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.confetti_wedge",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F4F8FB",
+        "surface": "#F8BED4",
+        "text": "#000000",
+        "muted": "#3A3C3E",
+        "primary": "#3A3C3E",
+        "accent": "#62C0A5",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#3A3C3E",
+        "#62C0A5",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "section divider",
+          "image story",
+          "quote insight"
+        ],
+        "avoid_for": [
+          "dense table"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "playful",
+          "light",
+          "wedge"
+        ],
+        "density": "medium",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:confetti_wedge",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.court_press",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F2EFE6",
+        "surface": "#FFFFFF",
+        "text": "#2F4224",
+        "muted": "#66914C",
+        "primary": "#66914C",
+        "accent": "#DA9EB7",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#66914C",
+        "#DA9EB7",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "process flow",
+          "timeline roadmap",
+          "metaphor_loop"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "sports",
+          "team",
+          "operations"
+        ],
+        "density": "medium",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:court_press",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.crayon_stack",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#D3FE79",
+        "text": "#222222",
+        "muted": "#8A2E43",
+        "primary": "#8A2E43",
+        "accent": "#FF472B",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#8A2E43",
+        "#FF472B",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "cover hero",
+          "icon_capability_map",
+          "brand_system"
+        ],
+        "avoid_for": [
+          "executive audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "tone_tags": [
+          "creative",
+          "playful",
+          "stacked"
+        ],
+        "density": "medium",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:crayon_stack",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.grove_block",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FCF6F1",
+        "surface": "#F7F1EC",
+        "text": "#01623F",
+        "muted": "#008248",
+        "primary": "#008248",
+        "accent": "#FCC715",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#008248",
+        "#FCC715",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "kpi big-number",
+          "metaphor_loop",
+          "process flow"
+        ],
+        "avoid_for": [
+          "quiet editorial"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "ecosystem",
+          "bold",
+          "result"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:grove_block",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.mint_brut",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFBF3",
+        "surface": "#F888C8",
+        "text": "#000000",
+        "muted": "#D0FDE4",
+        "primary": "#D0FDE4",
+        "accent": "#70F0A8",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#D0FDE4",
+        "#70F0A8",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "architecture layered",
+          "process flow",
+          "cover hero"
+        ],
+        "avoid_for": [
+          "quiet training"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "brutalist",
+          "technical",
+          "mint"
+        ],
+        "density": "medium",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:mint_brut",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.neo_grid_bold",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F5F4EF",
+        "surface": "#0A0A0A",
+        "text": "#0A0A0A",
+        "muted": "#8A8A85",
+        "primary": "#8A8A85",
+        "accent": "#E6FF3D",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#8A8A85",
+        "#E6FF3D",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "technical_texture",
+          "architecture layered",
+          "fake_ui_dashboard"
+        ],
+        "avoid_for": [
+          "paper explainer"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business",
+          "technology"
+        ],
+        "tone_tags": [
+          "neo-grid",
+          "technical",
+          "high-contrast"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:neo_grid_bold",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.riso_brut",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#EFE9D9",
+        "surface": "#1F8A4C",
+        "text": "#0F0F0F",
+        "muted": "#136636",
+        "primary": "#136636",
+        "accent": "#F5C518",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#136636",
+        "#F5C518",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "brand_system",
+          "cover hero",
+          "image story"
+        ],
+        "avoid_for": [
+          "legal audit"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "brand",
+          "business"
+        ],
+        "tone_tags": [
+          "riso",
+          "poster",
+          "multicolor"
+        ],
+        "density": "medium",
+        "formality": "low"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:riso_brut",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.specimen_bold",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F3F3F3",
+        "surface": "#FFFFFF",
+        "text": "#2E302E",
+        "muted": "#30A1E5",
+        "primary": "#30A1E5",
+        "accent": "#3EC06A",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#30A1E5",
+        "#3EC06A",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "icon_capability_map",
+          "comparison two-column",
+          "section divider"
+        ],
+        "avoid_for": [
+          "paper explainer"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "specimen",
+          "concept",
+          "modular"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:specimen_bold",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "style.stencil_tablet",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#F4EFE0",
+        "surface": "#EE7A2E",
+        "text": "#0A0A0A",
+        "muted": "#E2DCC9",
+        "primary": "#E2DCC9",
+        "accent": "#D8A93B",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#E2DCC9",
+        "#D8A93B",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "quote insight",
+          "process flow",
+          "agenda structured"
+        ],
+        "avoid_for": [
+          "quiet editorial"
+        ],
+        "brand_affinity": [],
+        "industry_tags": [
+          "business"
+        ],
+        "tone_tags": [
+          "stencil",
+          "method",
+          "action"
+        ],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "source_trace": [
+        {
+          "type": "style_preset",
+          "source": "style-presets.json:stencil_tablet",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "brand.nvidia",
+      "status": "active",
+      "mode": "dark",
+      "colors": {
+        "background": "#000000",
+        "surface": "#111B3D",
+        "text": "#FFFFFF",
+        "muted": "#9DB4D8",
+        "primary": "#76B900",
+        "accent": "#111111",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#76B900",
+        "#111111",
+        "#9DB4D8",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "brand analysis",
+          "technical comparison",
+          "business review"
+        ],
+        "avoid_for": [
+          "warm editorial",
+          "playful retro"
+        ],
+        "brand_affinity": [
+          "nvidia"
+        ],
+        "industry_tags": [
+          "technology",
+          "AI"
+        ],
+        "tone_tags": [
+          "technical",
+          "sharp",
+          "modern"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "source_trace": [
+        {
+          "type": "brand_palette_registry",
+          "source": "svglide-brand-palette-registry.json:nvidia",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "brand.amd",
+      "status": "active",
+      "mode": "dark",
+      "colors": {
+        "background": "#000000",
+        "surface": "#111B3D",
+        "text": "#FFFFFF",
+        "muted": "#9DB4D8",
+        "primary": "#ED1C24",
+        "accent": "#111111",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#ED1C24",
+        "#111111",
+        "#9DB4D8",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "brand analysis",
+          "technical comparison",
+          "business review"
+        ],
+        "avoid_for": [
+          "warm editorial",
+          "playful retro"
+        ],
+        "brand_affinity": [
+          "amd"
+        ],
+        "industry_tags": [
+          "technology",
+          "AI"
+        ],
+        "tone_tags": [
+          "technical",
+          "sharp",
+          "modern"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "source_trace": [
+        {
+          "type": "brand_palette_registry",
+          "source": "svglide-brand-palette-registry.json:amd",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "brand.apple",
+      "status": "active",
+      "mode": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#F8FAFC",
+        "text": "#111111",
+        "muted": "#64748B",
+        "primary": "#A2AAAD",
+        "accent": "#111111",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#A2AAAD",
+        "#111111",
+        "#64748B",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "brand analysis",
+          "technical comparison",
+          "business review"
+        ],
+        "avoid_for": [
+          "dark cyber poster"
+        ],
+        "brand_affinity": [
+          "apple"
+        ],
+        "industry_tags": [
+          "consumer technology"
+        ],
+        "tone_tags": [
+          "technical",
+          "sharp",
+          "modern"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "source_trace": [
+        {
+          "type": "brand_palette_registry",
+          "source": "svglide-brand-palette-registry.json:apple",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "brand.openai",
+      "status": "active",
+      "mode": "mixed",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#F8FAFC",
+        "text": "#111111",
+        "muted": "#64748B",
+        "primary": "#10A37F",
+        "accent": "#111111",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#10A37F",
+        "#111111",
+        "#64748B",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "AI product analysis",
+          "technical comparison",
+          "business review"
+        ],
+        "avoid_for": [
+          "dark cyber poster"
+        ],
+        "brand_affinity": [
+          "openai"
+        ],
+        "industry_tags": [
+          "technology",
+          "AI"
+        ],
+        "tone_tags": [
+          "technical",
+          "sharp",
+          "modern"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "source_trace": [
+        {
+          "type": "brand_palette_registry",
+          "source": "svglide-brand-palette-registry.json:openai",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "brand.zhipu",
+      "status": "active",
+      "mode": "dark",
+      "colors": {
+        "background": "#08122D",
+        "surface": "#111B3D",
+        "text": "#EEF6FF",
+        "muted": "#9DB4D8",
+        "primary": "#315CFF",
+        "accent": "#7C3AED",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#315CFF",
+        "#7C3AED",
+        "#9DB4D8",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "AI product analysis",
+          "technical comparison",
+          "business review"
+        ],
+        "avoid_for": [
+          "warm editorial",
+          "playful retro"
+        ],
+        "brand_affinity": [
+          "zhipu"
+        ],
+        "industry_tags": [
+          "technology",
+          "AI"
+        ],
+        "tone_tags": [
+          "technical",
+          "sharp",
+          "modern"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "source_trace": [
+        {
+          "type": "brand_palette_registry",
+          "source": "svglide-brand-palette-registry.json:zhipu",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "palette_id": "brand.minimax",
+      "status": "active",
+      "mode": "dark",
+      "colors": {
+        "background": "#08122D",
+        "surface": "#111B3D",
+        "text": "#EEF6FF",
+        "muted": "#9DB4D8",
+        "primary": "#4F46E5",
+        "accent": "#06B6D4",
+        "success": "#22C55E",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+      },
+      "data_series": [
+        "#4F46E5",
+        "#06B6D4",
+        "#9DB4D8",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444"
+      ],
+      "selection_metadata": {
+        "best_for": [
+          "AI product analysis",
+          "technical comparison",
+          "business review"
+        ],
+        "avoid_for": [
+          "warm editorial",
+          "playful retro"
+        ],
+        "brand_affinity": [
+          "minimax"
+        ],
+        "industry_tags": [
+          "technology",
+          "AI"
+        ],
+        "tone_tags": [
+          "technical",
+          "sharp",
+          "modern"
+        ],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "source_trace": [
+        {
+          "type": "brand_palette_registry",
+          "source": "svglide-brand-palette-registry.json:minimax",
+          "checked_at": "2026-06-22"
+        }
+      ]
+    }
+  ]
+}

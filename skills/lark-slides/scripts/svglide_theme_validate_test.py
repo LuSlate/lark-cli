@@ -42,6 +42,37 @@ def write_plan(project: Path, *, theme_id: str = "dark-clarity", template_id: st
     )
 
 
+def write_multi_theme_plan(project: Path, *, allow_multi_theme: bool | None = None, scope: str = "deck") -> None:
+    plan: dict[str, object] = {
+        "generation_mode": "artboard_satori",
+        "slides": [
+            {
+                "page": 1,
+                "title": "第一页",
+                "canvas_spec": {
+                    "version": "svglide-canvas-spec/v1",
+                    "template_id": "cover-hero",
+                    "theme_id": "dark-clarity",
+                    "theme": {"colors": {"background": "#0F172A"}},
+                },
+            },
+            {
+                "page": 2,
+                "title": "第二页",
+                "canvas_spec": {
+                    "version": "svglide-canvas-spec/v1",
+                    "template_id": "data-story",
+                    "theme_id": "forest-signal",
+                    "theme": {"colors": {"background": "#102A1B"}},
+                },
+            },
+        ],
+    }
+    if allow_multi_theme is not None:
+        plan["theme_policy"] = {"allow_multi_theme": allow_multi_theme, "scope": scope}
+    write_json(project / "02-plan/slide_plan.json", plan)
+
+
 def write_project_theme(project: Path, *, theme_id: str = "project-theme", primary: str = "#123456") -> None:
     write_json(
         project / "02-plan/theme-registry.json",
@@ -149,6 +180,27 @@ class SVGlideThemeValidateTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(payload["status"], "failed")
         self.assertIn("theme_id_missing", {item["code"] for item in payload["issues"]})
+
+    def test_validate_project_fails_multiple_themes_without_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_multi_theme_plan(project)
+
+            result = svglide_theme_validate.validate_project(project)
+
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["summary"]["theme_count"], 2)
+        self.assertIn("deck_theme_not_unified", {item["code"] for item in result["issues"]})
+
+    def test_validate_project_allows_intentional_multiple_themes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_multi_theme_plan(project, allow_multi_theme=True, scope="page")
+
+            result = svglide_theme_validate.validate_project(project)
+
+        self.assertEqual(result["status"], "passed", result["issues"])
+        self.assertEqual(result["summary"]["theme_count"], 2)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,32 @@
+{"completed": 0, "emitted_at": "2026-06-22T03:47:48+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"emitted_at": "2026-06-22T03:47:49+08:00", "event": "blocked", "message": "生成已阻断: plan schema validation failed", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:51:23+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"emitted_at": "2026-06-22T03:51:23+08:00", "event": "blocked", "message": "生成已阻断: required stage 'plan' is failed; refusing to continue", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:52:03+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"emitted_at": "2026-06-22T03:52:03+08:00", "event": "blocked", "message": "生成已阻断: stage 'strategy_review' failed with exit code 1", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:53:01+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"completed": 1, "emitted_at": "2026-06-22T03:53:02+08:00", "event": "milestone_completed", "message": "已完成 1/4 关键产物: 主题 plan + 图片资产", "schema_version": "svglide-agent-progress/v1", "stage": "assets", "total": 4}
+{"completed": 2, "emitted_at": "2026-06-22T03:53:03+08:00", "event": "milestone_completed", "message": "已完成 2/4 关键产物: Satori-compatible HTML/CSS", "schema_version": "svglide-agent-progress/v1", "stage": "generate_svg", "total": 4}
+{"emitted_at": "2026-06-22T03:53:03+08:00", "event": "blocked", "message": "生成已阻断: stage 'preflight' failed with exit code 1", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:56:38+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"emitted_at": "2026-06-22T03:56:38+08:00", "event": "blocked", "message": "生成已阻断: plan schema validation failed", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:56:59+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"completed": 1, "emitted_at": "2026-06-22T03:57:01+08:00", "event": "milestone_completed", "message": "已完成 1/4 关键产物: 主题 plan + 图片资产", "schema_version": "svglide-agent-progress/v1", "stage": "assets", "total": 4}
+{"completed": 2, "emitted_at": "2026-06-22T03:57:02+08:00", "event": "milestone_completed", "message": "已完成 2/4 关键产物: Satori-compatible HTML/CSS", "schema_version": "svglide-agent-progress/v1", "stage": "generate_svg", "total": 4}
+{"emitted_at": "2026-06-22T03:57:02+08:00", "event": "blocked", "message": "生成已阻断: stage 'semantic_review' failed with exit code 1", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:58:13+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"completed": 1, "emitted_at": "2026-06-22T03:58:14+08:00", "event": "milestone_completed", "message": "已完成 1/4 关键产物: 主题 plan + 图片资产", "schema_version": "svglide-agent-progress/v1", "stage": "assets", "total": 4}
+{"completed": 2, "emitted_at": "2026-06-22T03:58:16+08:00", "event": "milestone_completed", "message": "已完成 2/4 关键产物: Satori-compatible HTML/CSS", "schema_version": "svglide-agent-progress/v1", "stage": "generate_svg", "total": 4}
+{"emitted_at": "2026-06-22T03:58:16+08:00", "event": "blocked", "message": "生成已阻断: stage 'runtime_review' failed with exit code 1", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:59:05+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"emitted_at": "2026-06-22T03:59:05+08:00", "event": "blocked", "message": "生成已阻断: stage 'dry_run' failed with exit code 2", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T03:59:50+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"emitted_at": "2026-06-22T04:00:00+08:00", "event": "blocked", "message": "生成已阻断: stage 'visual_acceptance' failed with exit code 1", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T04:01:05+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"completed": 1, "emitted_at": "2026-06-22T04:01:06+08:00", "event": "milestone_completed", "message": "已完成 1/4 关键产物: 主题 plan + 图片资产", "schema_version": "svglide-agent-progress/v1", "stage": "assets", "total": 4}
+{"completed": 2, "emitted_at": "2026-06-22T04:01:08+08:00", "event": "milestone_completed", "message": "已完成 2/4 关键产物: Satori-compatible HTML/CSS", "schema_version": "svglide-agent-progress/v1", "stage": "generate_svg", "total": 4}
+{"emitted_at": "2026-06-22T04:01:13+08:00", "event": "blocked", "message": "生成已阻断: stage 'visual_acceptance' failed with exit code 1", "schema_version": "svglide-agent-progress/v1"}
+{"completed": 0, "emitted_at": "2026-06-22T04:01:47+08:00", "event": "started", "message": "正在生成主题 plan 和图片资产", "schema_version": "svglide-agent-progress/v1", "total": 4}
+{"completed": 1, "emitted_at": "2026-06-22T04:01:48+08:00", "event": "milestone_completed", "message": "已完成 1/4 关键产物: 主题 plan + 图片资产", "schema_version": "svglide-agent-progress/v1", "stage": "assets", "total": 4}
+{"completed": 2, "emitted_at": "2026-06-22T04:01:50+08:00", "event": "milestone_completed", "message": "已完成 2/4 关键产物: Satori-compatible HTML/CSS", "schema_version": "svglide-agent-progress/v1", "stage": "generate_svg", "total": 4}
+{"completed": 3, "emitted_at": "2026-06-22T04:01:51+08:00", "event": "milestone_completed", "message": "已完成 3/4 关键产物: Satori preview SVG / visual acceptance evidence", "schema_version": "svglide-agent-progress/v1", "stage": "visual_acceptance", "total": 4}

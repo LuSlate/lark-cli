@@ -1,0 +1,78 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "edition": "EDITION 04",
+    "eyebrow": "PROGRAM",
+    "footer": "Internal Workshop",
+    "items": [
+      "开场观察",
+      "主议题讨论",
+      "行动项确认",
+      "复盘收束"
+    ],
+    "subtitle": "单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。",
+    "title": "团队晚餐式议程"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "printed-program",
+  "theme": {
+    "colors": {
+      "accent": "#8E2D1F",
+      "background": "#FAF1E2",
+      "muted": "#8E2D1F",
+      "panel": "#F2E5CF",
+      "primary": "#B53D2A",
+      "text": "#3A2516"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.long-table.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "terracotta-program",
+    "typography": {
+      "body": 20,
+      "label": 17,
+      "subtitle": 20,
+      "title": 54
+    }
+  },
+  "theme_id": "terracotta-program",
+  "version": "svglide-canvas-spec/v1"
+}

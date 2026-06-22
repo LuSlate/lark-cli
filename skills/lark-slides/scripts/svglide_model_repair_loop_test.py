@@ -38,6 +38,7 @@ class SVGlideModelRepairLoopTest(unittest.TestCase):
             audience=str(topic["audience"]),
             provider="command",
             planner_command=self.fixture_provider_command(),
+            trusted_provider_id="fixture-model-provider",
         )
         return project
 

@@ -1,0 +1,26 @@
+{
+  "theme_id": "sakura-catalog",
+  "colors": {
+    "background": "#F1E6CB",
+    "panel": "#E54489",
+    "primary": "#E5392A",
+    "accent": "#F09131",
+    "text": "#3A2516",
+    "muted": "#3F8BC4"
+  },
+  "typography": {
+    "title": 58,
+    "subtitle": 20,
+    "body": 18,
+    "label": 16
+  },
+  "spacing": {
+    "page": 56,
+    "card": 18,
+    "gap": 16
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.sakura-chroma.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+}

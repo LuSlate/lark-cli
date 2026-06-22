@@ -1,0 +1,244 @@
+{
+  "schema_version": "svglide-palette-schema/v1",
+  "definitions": {
+    "hex_color": {
+      "type": "string",
+      "minLength": 4
+    },
+    "source_trace": {
+      "type": "object",
+      "required": [
+        "type",
+        "source",
+        "checked_at"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checked_at": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "required": [
+        "palette_id",
+        "status",
+        "mode",
+        "colors",
+        "data_series",
+        "selection_metadata",
+        "source_trace"
+      ],
+      "properties": {
+        "palette_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "active",
+            "deprecated"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "light",
+            "dark",
+            "mixed"
+          ]
+        },
+        "colors": {
+          "type": "object",
+          "required": [
+            "background",
+            "surface",
+            "text",
+            "muted",
+            "primary",
+            "accent",
+            "success",
+            "warning",
+            "danger"
+          ],
+          "properties": {
+            "background": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "surface": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "text": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "muted": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "primary": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "accent": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "success": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "warning": {
+              "$ref": "#/definitions/hex_color"
+            },
+            "danger": {
+              "$ref": "#/definitions/hex_color"
+            }
+          }
+        },
+        "data_series": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/definitions/hex_color"
+          }
+        },
+        "selection_metadata": {
+          "type": "object",
+          "required": [
+            "best_for",
+            "avoid_for",
+            "brand_affinity",
+            "industry_tags",
+            "tone_tags",
+            "density",
+            "formality"
+          ],
+          "properties": {
+            "best_for": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "avoid_for": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "brand_affinity": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "industry_tags": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "tone_tags": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "density": {
+              "enum": [
+                "low",
+                "medium",
+                "medium-high",
+                "high"
+              ]
+            },
+            "formality": {
+              "enum": [
+                "low",
+                "medium",
+                "medium-high",
+                "high"
+              ]
+            }
+          }
+        },
+        "source_trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/source_trace"
+          }
+        }
+      }
+    },
+    "brand_palette": {
+      "type": "object",
+      "required": [
+        "brand_id",
+        "display_name",
+        "aliases",
+        "palette",
+        "source_trace",
+        "confidence",
+        "updated_at"
+      ],
+      "properties": {
+        "brand_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "palette": {
+          "type": "object",
+          "required": [
+            "primary",
+            "accent",
+            "background",
+            "text"
+          ]
+        },
+        "source_trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/source_trace"
+          }
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "updated_at": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    }
+  }
+}

@@ -4,52 +4,1255 @@
     {
       "id": "dark-clarity",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/dark-clarity.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/dark-clarity.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "dark",
+        "mood_tags": [
+          "professional",
+          "serious",
+          "technical"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "blue",
+          "slate"
+        ],
+        "contrast_profile": "high contrast dark",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "forest-signal",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/forest-signal.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/forest-signal.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "dark",
+        "mood_tags": [
+          "calm",
+          "trustworthy",
+          "organic"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "green",
+          "forest"
+        ],
+        "contrast_profile": "high contrast dark",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "warm-editorial",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/warm-editorial.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/warm-editorial.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "warm",
+          "editorial",
+          "calm"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "orange",
+          "cream"
+        ],
+        "contrast_profile": "warm readable",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
     },
     {
       "id": "blueprint-technical",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/blueprint-technical.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/blueprint-technical.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "technical",
+          "structured",
+          "clean"
+        ],
+        "brand_affinity": [
+          "zhipu",
+          "minimax"
+        ],
+        "primary_color_bias": [
+          "blue",
+          "cyan"
+        ],
+        "contrast_profile": "technical high readability",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "editorial-tritone",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/editorial-tritone.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/editorial-tritone.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "editorial",
+          "polished",
+          "serious"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "red",
+          "black"
+        ],
+        "contrast_profile": "editorial contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
     },
     {
       "id": "cobalt-grid",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/cobalt-grid.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "dark",
+        "mood_tags": [
+          "technical",
+          "modern",
+          "analytical"
+        ],
+        "brand_affinity": [
+          "zhipu",
+          "minimax"
+        ],
+        "primary_color_bias": [
+          "blue",
+          "cobalt"
+        ],
+        "contrast_profile": "high contrast grid",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "finance-dark",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/finance-dark.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/finance-dark.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "dark",
+        "mood_tags": [
+          "professional",
+          "sharp",
+          "financial"
+        ],
+        "brand_affinity": [
+          "nvidia",
+          "amd"
+        ],
+        "primary_color_bias": [
+          "green",
+          "red"
+        ],
+        "contrast_profile": "dark financial contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "swiss-red",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/swiss-red.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/swiss-red.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "bold",
+          "structured",
+          "minimal"
+        ],
+        "brand_affinity": [
+          "amd"
+        ],
+        "primary_color_bias": [
+          "red",
+          "black"
+        ],
+        "contrast_profile": "swiss high contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "glass-neon",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/glass-neon.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/glass-neon.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "dark",
+        "mood_tags": [
+          "modern",
+          "technical",
+          "vivid"
+        ],
+        "brand_affinity": [
+          "zhipu",
+          "minimax",
+          "openai"
+        ],
+        "primary_color_bias": [
+          "violet",
+          "cyan",
+          "blue"
+        ],
+        "contrast_profile": "neon dark contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     },
     {
       "id": "paper-research",
       "status": "active",
-      "path": "skills/lark-slides/scripts/artboard_renderer/themes/paper-research.json"
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/paper-research.json",
+      "source_trace": [
+        "svglide-baseline.themes"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/themes.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "scholarly",
+          "serious",
+          "paper"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "black",
+          "paper"
+        ],
+        "contrast_profile": "paper readable",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "ivory-ledger",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/ivory-ledger.json",
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "serious",
+          "ledger",
+          "controlled"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "ivory",
+          "black"
+        ],
+        "contrast_profile": "quiet ledger contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "signal-navy",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/signal-navy.json",
+      "source_trace": [
+        "beautiful-html-templates.template.signal.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json",
+      "selection_metadata": {
+        "scheme": "dark",
+        "mood_tags": [
+          "serious",
+          "briefing",
+          "controlled"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "navy",
+          "gold"
+        ],
+        "contrast_profile": "navy briefing contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "terracotta-program",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/terracotta-program.json",
+      "source_trace": [
+        "beautiful-html-templates.template.long-table.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "procedural",
+          "warm",
+          "structured"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "terracotta",
+          "cream"
+        ],
+        "contrast_profile": "warm table contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "retro-desktop",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/retro-desktop.json",
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "retro",
+          "playful",
+          "graphic"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "gray",
+          "blue"
+        ],
+        "contrast_profile": "retro ui contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "sakura-catalog",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/sakura-catalog.json",
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "playful",
+          "catalog",
+          "polished"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "pink",
+          "red"
+        ],
+        "contrast_profile": "catalog contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "acid-studio",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/acid-studio.json",
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "bold",
+          "studio",
+          "graphic"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "acid",
+          "black"
+        ],
+        "contrast_profile": "poster contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "raw-grid-mono",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/raw-grid-mono.json",
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "technical",
+          "brutalist",
+          "dense"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "black",
+          "gray"
+        ],
+        "contrast_profile": "mono grid contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
+    },
+    {
+      "id": "field-notebook",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/field-notebook.json",
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "annotated",
+          "practical",
+          "paper"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "yellow",
+          "blue"
+        ],
+        "contrast_profile": "notebook contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "stone-architect",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/stone-architect.json",
+      "source_trace": [
+        "beautiful-html-templates.template.cartesian.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "technical",
+          "precise",
+          "architectural"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "stone",
+          "black"
+        ],
+        "contrast_profile": "architectural line contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "magazine-cobalt",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/magazine-cobalt.json",
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "modern",
+          "analytical",
+          "editorial"
+        ],
+        "brand_affinity": [
+          "zhipu",
+          "minimax"
+        ],
+        "primary_color_bias": [
+          "cobalt",
+          "blue"
+        ],
+        "contrast_profile": "magazine grid contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
+    },
+    {
+      "id": "forest-editorial",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/forest-editorial.json",
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "editorial",
+          "serious",
+          "organic"
+        ],
+        "brand_affinity": [],
+        "primary_color_bias": [
+          "green",
+          "pink"
+        ],
+        "contrast_profile": "editorial stat contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "restricted"
+      }
+    },
+    {
+      "id": "tomato-poster",
+      "status": "active",
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/tomato-poster.json",
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json",
+      "selection_metadata": {
+        "scheme": "light",
+        "mood_tags": [
+          "bold",
+          "direct",
+          "poster"
+        ],
+        "brand_affinity": [
+          "amd"
+        ],
+        "primary_color_bias": [
+          "red",
+          "black"
+        ],
+        "contrast_profile": "poster contrast",
+        "supported_template_ids": [
+          "cover-hero",
+          "comparison-cards",
+          "summary-final",
+          "section-title",
+          "agenda-list",
+          "timeline-steps",
+          "process-flow",
+          "metric-dashboard",
+          "quote-focus",
+          "image-feature",
+          "research-poster",
+          "data-story",
+          "risk-alert",
+          "roadmap-lanes",
+          "architecture-blueprint",
+          "dense-panel-grid",
+          "executive-dashboard",
+          "editorial-quote-chart",
+          "ledger-briefing",
+          "intelligence-brief",
+          "printed-program",
+          "retro-ui-dashboard",
+          "product-ribbon",
+          "type-mass-poster",
+          "brutalist-matrix",
+          "annotated-field-board",
+          "architectural-spec",
+          "trend-grid-report",
+          "serif-stat-editorial",
+          "poster-stat-punch"
+        ],
+        "token_override_policy": "allowed"
+      }
     }
   ]
 }

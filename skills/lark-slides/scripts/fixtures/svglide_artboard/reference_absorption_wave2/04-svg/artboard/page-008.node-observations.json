@@ -1,0 +1,179 @@
+{
+  "version": "svglide-node-observations/v1",
+  "observation_source": "satori_on_node_detected",
+  "nodes": [
+    {
+      "left": 0,
+      "top": 0,
+      "width": 960,
+      "height": 540,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 62,
+      "top": 56,
+      "width": 836,
+      "height": 428,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 86,
+      "top": 84,
+      "width": 95,
+      "height": 21,
+      "type": "div",
+      "textContent": "FIELD NOTE",
+      "props": {}
+    },
+    {
+      "left": 86,
+      "top": 116,
+      "width": 520,
+      "height": 49,
+      "type": "div",
+      "textContent": "用户访谈证据墙",
+      "props": {}
+    },
+    {
+      "left": 88,
+      "top": 228,
+      "width": 430,
+      "height": 52,
+      "type": "div",
+      "textContent": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+      "props": {}
+    },
+    {
+      "left": 718,
+      "top": 86,
+      "width": 152,
+      "height": 55,
+      "type": "div",
+      "textContent": "REVIEWED",
+      "props": {}
+    },
+    {
+      "left": 572,
+      "top": 160,
+      "width": 302,
+      "height": 226,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 572,
+      "top": 160,
+      "width": 302,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 588,
+      "top": 176,
+      "width": 47,
+      "height": 26,
+      "type": "div",
+      "textContent": "NOTE 1",
+      "props": {}
+    },
+    {
+      "left": 635,
+      "top": 176,
+      "width": 144,
+      "height": 34,
+      "type": "div",
+      "textContent": "用户绕过默认流程",
+      "props": {}
+    },
+    {
+      "left": 572,
+      "top": 240,
+      "width": 302,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 588,
+      "top": 256,
+      "width": 47,
+      "height": 26,
+      "type": "div",
+      "textContent": "NOTE 2",
+      "props": {}
+    },
+    {
+      "left": 635,
+      "top": 256,
+      "width": 144,
+      "height": 34,
+      "type": "div",
+      "textContent": "关键证据需要回访",
+      "props": {}
+    },
+    {
+      "left": 572,
+      "top": 320,
+      "width": 302,
+      "height": 66,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 588,
+      "top": 336,
+      "width": 47,
+      "height": 26,
+      "type": "div",
+      "textContent": "NOTE 3",
+      "props": {}
+    },
+    {
+      "left": 635,
+      "top": 336,
+      "width": 181,
+      "height": 34,
+      "type": "div",
+      "textContent": "下一步由体验组 owner",
+      "props": {}
+    },
+    {
+      "left": 86,
+      "top": 423,
+      "width": 430,
+      "height": 35,
+      "type": "div",
+      "props": {}
+    },
+    {
+      "left": 86,
+      "top": 423,
+      "width": 63,
+      "height": 35,
+      "type": "div",
+      "textContent": "USER",
+      "props": {}
+    },
+    {
+      "left": 161,
+      "top": 423,
+      "width": 96,
+      "height": 35,
+      "type": "div",
+      "textContent": "EVIDENCE",
+      "props": {}
+    },
+    {
+      "left": 269,
+      "top": 423,
+      "width": 62,
+      "height": 35,
+      "type": "div",
+      "textContent": "NEXT",
+      "props": {}
+    }
+  ]
+}

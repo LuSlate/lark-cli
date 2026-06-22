@@ -1,0 +1,52 @@
+{
+  "source_item_id": "svglide-baseline.layouts",
+  "absorbed_as": [
+    "owned_baseline_runtime_asset",
+    "layout_archetype"
+  ],
+  "svglide_asset_ids": [
+    "layout.agenda-list",
+    "layout.architecture-blueprint",
+    "layout.data-story-bars",
+    "layout.full-bleed-image-story",
+    "layout.hero-cover",
+    "layout.image-text-split",
+    "layout.metric-dashboard",
+    "layout.process-flow",
+    "layout.quote-claim",
+    "layout.research-poster-3col",
+    "layout.section-divider",
+    "layout.timeline-horizontal",
+    "layout.two-column-comparison"
+  ],
+  "non_copying_transform": "Existing SVGlide layout archetypes are recorded as owned planner/layout abstractions with positive golden fixture coverage.",
+  "forbidden_usage": [
+    "do_not_relabel_baseline_assets_as_external_reference_absorption",
+    "do_not_import_raw_external_runtime_artifacts",
+    "do_not_claim_backend_readback_without_receipt"
+  ],
+  "template_guardrail_records": [
+    "skills/lark-slides/references/svglide-layout-archetypes.json"
+  ],
+  "canvas_spec_fixtures": [
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/cover-hero.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/section-title.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/agenda-list.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/comparison-cards.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/timeline-steps.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/process-flow.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/metric-dashboard.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/data-story.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/image-feature.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/research-poster.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/architecture-blueprint.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/roadmap-lanes.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/risk-alert.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/quote-focus.canvas-spec.json",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/summary-final.canvas-spec.json"
+  ],
+  "quality_receipts": [
+    "skills/lark-slides/references/svglide-reference-absorption-report.md"
+  ],
+  "review_notes": "Baseline layouts keep existing template-to-layout mapping and are not attributed to external repositories."
+}

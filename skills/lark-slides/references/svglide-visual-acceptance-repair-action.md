@@ -1,14 +1,14 @@
 # SVGlide Visual Acceptance Repair Action Plan
 
-Last updated: 2026-06-21
+Last updated: 2026-06-22
 
 ## 0. Current Cursor
 
 ```text
 Follow-up: Visual Acceptance Repair
 Cursor: VF5 Real-Run Benchmark Suite
-Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_REAL_ROUTE_POLICY_BLOCKED
-Trigger: a real prompt-to-preview run can pass quality_gate and dry_run while the rendered deck is visually unacceptable.
+Status: VF5_FIXTURE_DISTINCTNESS_PASS_REVIEWER_PASS_CURRENT_AGENT_PROMPT_PREVIEW_PASS_REAL_ROUTE_POLICY_BLOCKED
+Trigger: a real prompt-to-preview run can pass quality_gate and dry_run while the rendered deck is visually unacceptable; a current-agent planner/provider run now passes visual_acceptance but unattended CLI provider automation is still not proven.
 Previous gate: VF4 Theme And Deck Rhythm Lock DONE/PASS
 ```
 
@@ -336,10 +336,21 @@ Real probe status:
 - After this blocker, the benchmark was tightened so external/default planners are not accepted as trusted internal real-route evidence.
 - No real benchmark PASS is claimed.
 
+Current-agent prompt-to-preview status:
+
+- User clarified that the current agent should act as planner and provider.
+- Current agent supplied planner outputs, CanvasSpec, asset contracts, and local PNG assets for `spacex IPO 分析`.
+- The runner reached `quality_gate=passed`, `dry_run=passed`, and `visual_acceptance=passed`.
+- Project root: `.tmp/current-agent-chain/current-agent-spacex-ipo-20260622`.
+- Evidence file: `skills/lark-slides/references/svglide-visual-acceptance-vf5-evidence.md`.
+- This is not unattended CLI LLM/provider automation and must not be claimed as real external-model or trusted-provider upper-bound quality.
+
 Reviewer status:
 
 - Reviewer `Feynman`: PASS for VF5 fixture benchmark completion.
-- Remaining scope: an actual trusted internal planner/image provider instance still has not been configured and run; no real external-model benchmark PASS is claimed.
+- Reviewer `Dewey`: PASS for current-agent planner/provider prompt-to-preview evidence and boundary adherence.
+- Remaining scope: productized unattended CLI planner/provider automation or an actual trusted internal planner/image provider instance still has not been configured and run; no real external-model benchmark PASS or upper-bound quality is claimed.
+- Non-blocking cleanup: richer planner raw-output provenance and generated `quality_gate` sub-check action wording to avoid `create_live` misread.
 
 ## 8. Reviewer Protocol
 

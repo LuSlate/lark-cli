@@ -1,0 +1,81 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "OPERATING LEDGER",
+    "items": [
+      "增长口径已统一",
+      "风险归因待复核",
+      "Owner 已明确",
+      "下周完成验证"
+    ],
+    "metrics": [
+      "Q2",
+      "18%",
+      "04"
+    ],
+    "subtitle": "把结论、证据和 owner 放进克制的黑白账本结构。",
+    "title": "复盘事项账本"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "ledger-briefing",
+  "theme": {
+    "colors": {
+      "accent": "#5E5E54",
+      "background": "#FAFADF",
+      "muted": "#5E5E54",
+      "panel": "#F5F0E4",
+      "primary": "#1A1A16",
+      "text": "#1A1A16"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.monochrome.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "ivory-ledger",
+    "typography": {
+      "body": 18,
+      "label": 15,
+      "subtitle": 20,
+      "title": 54
+    }
+  },
+  "theme_id": "ivory-ledger",
+  "version": "svglide-canvas-spec/v1"
+}

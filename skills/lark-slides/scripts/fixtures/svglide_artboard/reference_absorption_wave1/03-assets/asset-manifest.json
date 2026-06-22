@@ -1,0 +1,30 @@
+{
+  "version": "svglide-assets/v1",
+  "status": "passed",
+  "network_policy": "offline",
+  "asset_provider": "auto",
+  "image_backend": "none",
+  "plan_path": "02-plan/slide_plan.json",
+  "plan_sha256": "8badb7d1e36e7a5a519f548c1f7b8627272808e617def86e13d4e267f9f17298",
+  "lock_path": null,
+  "lock_sha256": null,
+  "source_receipt_path": "source/source-receipt.json",
+  "source_receipt_sha256": "687831643f01eba0c9b8c6757afd6ff3dbc7c857c12434acab28df2fd2924fae",
+  "assets_json": "03-assets/assets.json",
+  "assets_json_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+  "image_jobs": "03-assets/image-jobs.json",
+  "image_jobs_sha256": "22c9dbc418be15f99fec55b3934b8712d72fbe55bca09129c5be4db96ba2a0f3",
+  "contracts": [],
+  "acquired_assets": [],
+  "visual_identity_palette_candidates": [],
+  "summary": {
+    "contract_count": 0,
+    "error_count": 0,
+    "mapped_token_count": 0,
+    "local_file_count": 0,
+    "acquired_count": 0,
+    "fallback_count": 0,
+    "image_job_count": 0
+  },
+  "issues": []
+}

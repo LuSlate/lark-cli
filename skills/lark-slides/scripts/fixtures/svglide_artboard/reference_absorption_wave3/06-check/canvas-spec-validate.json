@@ -1,0 +1,62 @@
+{
+  "action": "create_live",
+  "inputs": {
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_files": [
+      "skills/lark-slides/scripts/artboard_renderer/themes/stone-architect.json"
+    ],
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "fb65d4355df08b29cb8dac4a6442c71b79528e6ac24b67dd9bac03ab9226fae2"
+  },
+  "issues": [],
+  "output_path": "06-check/canvas-spec-validate.json",
+  "pages": [
+    {
+      "canvas_spec_sha256": "c5abbb1462bbb75d44fab7ba32bf7484c222a2171a39d66dcd2f9260d003abf8",
+      "error_count": 0,
+      "page": 1,
+      "template_id": "architectural-spec",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "stone-architect",
+      "theme_registry_sha256": "fb65d4355df08b29cb8dac4a6442c71b79528e6ac24b67dd9bac03ab9226fae2"
+    },
+    {
+      "canvas_spec_sha256": "18b16ed70e6c54ba08841d34b9b1eac6ac2352e11355aa2e875400f80f936329",
+      "error_count": 0,
+      "page": 2,
+      "template_id": "trend-grid-report",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "magazine-cobalt",
+      "theme_registry_sha256": "68bbadc91330d76c9a8e1cc9a34ad11692ffab01d392600b611e62eb3d4aa9cf"
+    },
+    {
+      "canvas_spec_sha256": "2ebbfed1e44525a417666acbc84e5718c4034c3f7dc5195238396b72fba651e5",
+      "error_count": 0,
+      "page": 3,
+      "template_id": "serif-stat-editorial",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "forest-editorial",
+      "theme_registry_sha256": "51cb84c40d9e973e8137f4c7ca189049afca6e0b9a8a05860016f5b2bcd4fd23"
+    },
+    {
+      "canvas_spec_sha256": "28c660b510759710a84df7e8bbc447458482c02dcd39f36748ecf376a65bbadb",
+      "error_count": 0,
+      "page": 4,
+      "template_id": "poster-stat-punch",
+      "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+      "theme_id": "tomato-poster",
+      "theme_registry_sha256": "08652eb11cc5f5a64777d164f5e7f5a2ef884e77a8ed30754f5601ec7b84daaa"
+    }
+  ],
+  "schema_version": "svglide-canvas-spec-validate/v1",
+  "stage": "canvas-spec-validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 4,
+    "warning_count": 0
+  }
+}

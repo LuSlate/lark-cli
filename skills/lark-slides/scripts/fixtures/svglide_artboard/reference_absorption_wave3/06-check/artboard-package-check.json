@@ -1,0 +1,105 @@
+{
+  "action": "create_live",
+  "blockers": [],
+  "checked_at": "2026-06-22T04:01:48+08:00",
+  "dependency_policy": {
+    "dependencies": {
+      "@resvg/resvg-js": "2.6.2",
+      "satori": "0.26.0"
+    },
+    "install_command": "pnpm --dir skills/lark-slides/scripts/artboard_renderer install --frozen-lockfile",
+    "manual_satori_source_checkout_required": false,
+    "native_dependency": "@resvg/resvg-js",
+    "node": ">=18",
+    "node_modules_embedded_in_go_binary": false,
+    "package_manager": "pnpm",
+    "runtime_check_commands": [
+      "node skills/lark-slides/scripts/artboard_renderer/render.mjs --check-runtime",
+      "node skills/lark-slides/scripts/artboard_renderer/dist/render.mjs --check-runtime"
+    ]
+  },
+  "distribution_decision": {
+    "go_binary_embeds": [
+      "agent-readable skill docs",
+      "prompts",
+      "flat Python scripts",
+      "artboard_renderer source/dist/templates/themes/components/package lock"
+    ],
+    "go_binary_excludes": [
+      "node_modules",
+      "fixture outputs",
+      "runtime project artifacts"
+    ],
+    "runtime_requires_disk_skill_resources": true,
+    "runtime_requires_native_resvg_install": true,
+    "shape": "skill_subpackage_with_whitelisted_go_embed"
+  },
+  "fallback_policy": {
+    "missing_node_or_resvg": "fail_fast_before_live_create",
+    "no_network": "do not auto-fetch; use CI/preinstalled pnpm store or a packaged platform dependency layer",
+    "operator_action": "run pnpm --dir skills/lark-slides/scripts/artboard_renderer install --frozen-lockfile, then node skills/lark-slides/scripts/artboard_renderer/dist/render.mjs --check-runtime"
+  },
+  "host": {
+    "machine": "arm64",
+    "normalized_arch": "arm64",
+    "python": "3.9.6",
+    "system": "Darwin"
+  },
+  "host_requirements": {
+    "blockers": [],
+    "required_arch": null,
+    "required_system": null,
+    "status": "passed"
+  },
+  "issues": [],
+  "renderer": {
+    "dir": "skills/lark-slides/scripts/artboard_renderer",
+    "dist_entry": "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+    "lockfile": "skills/lark-slides/scripts/artboard_renderer/pnpm-lock.yaml",
+    "package_json": "skills/lark-slides/scripts/artboard_renderer/package.json",
+    "source_entry": "skills/lark-slides/scripts/artboard_renderer/render.mjs"
+  },
+  "runtime_checks": [
+    {
+      "command": "node /Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/artboard_renderer/render.mjs --check-runtime",
+      "cwd": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/artboard_renderer",
+      "entry": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/artboard_renderer/render.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "payload": {
+        "font_path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "ok": true,
+        "renderer": "satori-resvg",
+        "resvg_version": "2.6.2",
+        "satori_version": "0.26.0"
+      },
+      "stderr": "",
+      "stdout": "{\"ok\":true,\"renderer\":\"satori-resvg\",\"satori_version\":\"0.26.0\",\"resvg_version\":\"2.6.2\",\"font_path\":\"/System/Library/Fonts/Supplemental/Arial Unicode.ttf\"}"
+    },
+    {
+      "command": "node /Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/artboard_renderer/dist/render.mjs --check-runtime",
+      "cwd": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/artboard_renderer",
+      "entry": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "payload": {
+        "font_path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "ok": true,
+        "renderer": "satori-resvg",
+        "resvg_version": "2.6.2",
+        "satori_version": "0.26.0"
+      },
+      "stderr": "",
+      "stdout": "{\"ok\":true,\"renderer\":\"satori-resvg\",\"satori_version\":\"0.26.0\",\"resvg_version\":\"2.6.2\",\"font_path\":\"/System/Library/Fonts/Supplemental/Arial Unicode.ttf\"}"
+    }
+  ],
+  "stage": "package_check",
+  "status": "passed",
+  "summary": {
+    "blocked_count": 0,
+    "error_count": 0,
+    "runtime_check_count": 2,
+    "warning_count": 0
+  },
+  "version": "svglide-artboard-package-check/v1"
+}

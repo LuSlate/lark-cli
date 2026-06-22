@@ -506,6 +506,372 @@ function architectureBlueprint(spec) {
   ])
 }
 
+function densePanelGrid(spec) {
+  const theme = colors(spec)
+  const metrics = firstList(spec, ['metrics', 'items'], ['Coverage 92', 'Latency -18%', 'Risk L2', 'Quality 4.6']).slice(0, 6)
+  const notes = firstList(spec, ['notes', 'sections'], ['Signal held across cohorts', 'Bottleneck moved to onboarding', 'Next wave needs owner clarity']).slice(0, 3)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 56, top: 48, width: 848, height: 444, borderWidth: 3, borderColor: theme.text }),
+    box({ position: 'absolute', left: 70, top: 62, width: 132, height: 88, backgroundColor: theme.panel, borderWidth: 2, borderColor: theme.primary }),
+    TextBlock(text(spec, 'eyebrow', 'GRID REPORT').toUpperCase(), {
+      position: 'absolute',
+      left: 84,
+      top: 88,
+      width: 104,
+      color: theme.text,
+      fontSize: 17,
+      fontWeight: 900,
+      lineHeight: 1.1
+    }),
+    Title(text(spec, 'title', 'Dense Signal Grid'), {
+      position: 'absolute',
+      left: 226,
+      top: 66,
+      width: 620,
+      color: theme.text,
+      fontSize: 42,
+      fontWeight: 900,
+      lineHeight: 1.02
+    }),
+    TextBlock(text(spec, 'subtitle', ''), {
+      position: 'absolute',
+      left: 226,
+      top: 158,
+      width: 560,
+      color: theme.muted,
+      fontSize: 19,
+      fontWeight: 700,
+      lineHeight: 1.22
+    }),
+    box(
+      { position: 'absolute', left: 70, top: 228, width: 548, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+      metrics.map((metric, index) =>
+        box({ width: 170, height: 82, flexDirection: 'column', backgroundColor: theme.panel, borderWidth: index % 3 === 0 ? 2 : 0, borderColor: theme.primary, padding: 14 }, [
+          TextBlock(String(index + 1).padStart(2, '0'), { color: theme.primary, fontSize: 14, fontWeight: 850, marginBottom: 8 }),
+          TextBlock(metric, { color: theme.text, fontSize: 19, fontWeight: 900, lineHeight: 1.08 })
+        ])
+      )
+    ),
+    box(
+      { position: 'absolute', right: 70, top: 230, width: 252, flexDirection: 'column', gap: 12 },
+      notes.map((note) =>
+        box({ minHeight: 76, backgroundColor: theme.panel, borderWidth: 2, borderColor: theme.primary, padding: 14 }, [
+          TextBlock(note, { color: theme.text, fontSize: 18, fontWeight: 900, lineHeight: 1.12 })
+        ])
+      )
+    )
+  ])
+}
+
+function executiveDashboard(spec) {
+  const theme = colors(spec)
+  const metrics = firstList(spec, ['metrics', 'items'], ['Revenue +14%', 'NDR 118%', 'Churn 2.1%', 'Pipeline 3.4x', 'QoQ +9%', 'NPS 48']).slice(0, 6)
+  const bars = firstList(spec, ['bars', 'rankings'], ['Enterprise 82', 'Mid-market 64', 'SMB 48', 'Partner 36']).slice(0, 4)
+  const barWidths = [236, 194, 154, 112]
+  return pageShell(spec, [
+    pageHeader(spec, { titleWidth: 710, titleSize: 40 }),
+    box(
+      { position: 'absolute', left: 68, top: 214, width: 548, flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+      metrics.map((metric, index) =>
+        box({ width: 170, height: 96, flexDirection: 'column', backgroundColor: theme.panel, borderWidth: 1, borderColor: theme.primary, padding: 16 }, [
+          TextBlock(metric.split(' ').slice(-1)[0] || metric, { color: theme.primary, fontSize: 28, fontWeight: 900, lineHeight: 0.95, marginBottom: 12 }),
+          TextBlock(metric, { color: theme.text, fontSize: 15, fontWeight: 750, lineHeight: 1.18 })
+        ])
+      )
+    ),
+    box({ position: 'absolute', right: 70, top: 214, width: 258, height: 290, flexDirection: 'column', backgroundColor: theme.panel, padding: 22 }, [
+      TextBlock(text(spec, 'chart_title', 'Channel health'), { color: theme.text, fontSize: 22, fontWeight: 850, marginBottom: 20 }),
+      ...bars.map((bar, index) =>
+        box({ flexDirection: 'column', marginBottom: 16 }, [
+          TextBlock(bar, { color: theme.muted, fontSize: 15, fontWeight: 700, marginBottom: 8 }),
+          box({ width: 214, height: 12, backgroundColor: theme.background }, [
+            box({ width: barWidths[index], height: 12, backgroundColor: theme.primary })
+          ])
+        ])
+      )
+    ])
+  ])
+}
+
+function editorialQuoteChart(spec) {
+  const theme = colors(spec)
+  const points = firstList(spec, ['points', 'items'], ['Signal was visible before the metric moved', 'The constraint is organizational, not technical', 'Next action must be explicit']).slice(0, 3)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 54, top: 48, width: 852, height: 72, borderBottomWidth: 2, borderBottomColor: theme.primary }),
+    TextBlock(text(spec, 'eyebrow', 'EDITORIAL').toUpperCase(), { position: 'absolute', left: 60, top: 72, color: theme.primary, fontSize: 16, fontWeight: 850 }),
+    TextBlock(text(spec, 'section', 'FIELD NOTE'), { position: 'absolute', right: 62, top: 72, color: theme.muted, fontSize: 16, fontWeight: 750 }),
+    TextBlock('“', { position: 'absolute', left: 58, top: 142, color: theme.primary, fontSize: 108, fontWeight: 900, lineHeight: 0.8 }),
+    Title(text(spec, 'quote', text(spec, 'title', 'The operating model changed before the dashboard caught up.')), {
+      position: 'absolute',
+      left: 132,
+      top: 148,
+      width: 518,
+      color: theme.text,
+      fontSize: 43,
+      fontWeight: 900,
+      lineHeight: 1.04
+    }),
+    TextBlock(text(spec, 'attribution', ''), { position: 'absolute', left: 138, top: 352, width: 420, color: theme.muted, fontSize: 18, fontWeight: 750 }),
+    box(
+      { position: 'absolute', right: 70, top: 154, width: 212, flexDirection: 'column', gap: 14 },
+      points.map((point, index) =>
+        box({ minHeight: 78, flexDirection: 'row', backgroundColor: theme.panel, borderWidth: index === 0 ? 2 : 0, borderColor: theme.primary, padding: 14 }, [
+          TextBlock(String(index + 1), { width: 32, color: theme.primary, fontSize: 26, fontWeight: 900 }),
+          TextBlock(point, { flex: 1, color: theme.text, fontSize: 17, fontWeight: 760, lineHeight: 1.12 })
+        ])
+      )
+    )
+  ])
+}
+
+function ledgerBriefing(spec) {
+  const theme = colors(spec)
+  const items = firstList(spec, ['items', 'takeaways'], ['Scope closed', 'Evidence reviewed', 'Decision pending', 'Owner named']).slice(0, 5)
+  const metrics = firstList(spec, ['metrics', 'stats'], ['Q2', '18%', '04']).slice(0, 3)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 56, top: 46, width: 848, height: 1, backgroundColor: theme.text }),
+    box({ position: 'absolute', left: 56, bottom: 46, width: 848, height: 1, backgroundColor: theme.text }),
+    TextBlock(text(spec, 'eyebrow', 'LEDGER').toUpperCase(), { position: 'absolute', left: 58, top: 70, color: theme.muted, fontSize: 15, fontWeight: 800 }),
+    Title(text(spec, 'title', 'Operating Ledger'), {
+      position: 'absolute',
+      left: 56,
+      top: 104,
+      width: 520,
+      color: theme.text,
+      fontSize: 54,
+      fontWeight: 300,
+      lineHeight: 1.02
+    }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 58, top: 230, width: 492, color: theme.muted, fontSize: 20, lineHeight: 1.35 }),
+    box({ position: 'absolute', right: 62, top: 84, width: 250, flexDirection: 'row', gap: 18 }, metrics.map((metric) =>
+      box({ width: 70, flexDirection: 'column', borderTopWidth: 1, borderTopColor: theme.text, paddingTop: 12 }, [
+        TextBlock(metric, { color: theme.text, fontSize: 34, fontWeight: 300, lineHeight: 1 }),
+        TextBlock('FIELD', { color: theme.muted, fontSize: 11, fontWeight: 800, marginTop: 8 })
+      ])
+    )),
+    box({ position: 'absolute', right: 64, top: 222, width: 326, flexDirection: 'column' }, items.map((item, index) =>
+      box({ height: 48, flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.muted }, [
+        TextBlock(String(index + 1).padStart(2, '0'), { width: 48, color: theme.muted, fontSize: 15, fontWeight: 800 }),
+        TextBlock(item, { flex: 1, color: theme.text, fontSize: 18, fontWeight: 450, lineHeight: 1.18 })
+      ])
+    ))
+  ])
+}
+
+function intelligenceBrief(spec) {
+  const theme = colors(spec)
+  const points = firstList(spec, ['points', 'signals', 'items'], ['Early signal', 'Structural constraint', 'Recommended action']).slice(0, 4)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 56, top: 56, width: 848, height: 52, borderBottomWidth: 1, borderBottomColor: theme.accent }),
+    TextBlock(text(spec, 'eyebrow', 'PRIVATE BRIEF').toUpperCase(), { position: 'absolute', left: 62, top: 72, color: theme.accent, fontSize: 15, fontWeight: 850 }),
+    TextBlock(text(spec, 'date', 'CONFIDENTIAL'), { position: 'absolute', right: 62, top: 72, color: theme.muted, fontSize: 15, fontWeight: 750 }),
+    Title(text(spec, 'title', 'Signal Briefing'), { position: 'absolute', left: 70, top: 148, width: 602, color: theme.text, fontSize: 52, fontWeight: 700, lineHeight: 1.02 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 72, top: 282, width: 536, color: theme.muted, fontSize: 20, lineHeight: 1.32 }),
+    box({ position: 'absolute', right: 72, top: 150, width: 238, flexDirection: 'column', gap: 14 }, points.map((point, index) =>
+      box({ minHeight: 66, flexDirection: 'column', borderLeftWidth: 3, borderLeftColor: index === 0 ? theme.accent : theme.panel, paddingLeft: 14 }, [
+        TextBlock(`S${index + 1}`, { color: theme.accent, fontSize: 14, fontWeight: 850, marginBottom: 8 }),
+        TextBlock(point, { color: theme.text, fontSize: 18, fontWeight: 650, lineHeight: 1.14 })
+      ])
+    )),
+    box({ position: 'absolute', left: 72, bottom: 70, width: 720, height: 1, backgroundColor: theme.accent, opacity: 0.7 })
+  ])
+}
+
+function printedProgram(spec) {
+  const theme = colors(spec)
+  const items = firstList(spec, ['items', 'courses', 'agenda'], ['Opening note', 'Main course', 'Decision round', 'Closing']).slice(0, 5)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 58, top: 50, width: 844, height: 438, borderWidth: 2, borderColor: theme.primary }),
+    TextBlock(text(spec, 'edition', 'EDITION 01'), { position: 'absolute', left: 84, top: 80, color: theme.primary, fontSize: 17, fontWeight: 900 }),
+    Title(text(spec, 'title', 'Long Table Review').toUpperCase(), { position: 'absolute', left: 82, top: 120, width: 514, color: theme.primary, fontSize: 54, fontWeight: 900, lineHeight: 0.92 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 86, top: 288, width: 430, color: theme.text, fontSize: 20, lineHeight: 1.35 }),
+    box({ position: 'absolute', right: 82, top: 88, width: 292, flexDirection: 'column' }, items.map((item, index) =>
+      box({ minHeight: 66, borderBottomWidth: 1, borderBottomColor: theme.primary, padding: '10px 0', flexDirection: 'row' }, [
+        TextBlock(String(index + 1).padStart(2, '0'), { width: 42, color: theme.primary, fontSize: 24, fontWeight: 800 }),
+        TextBlock(item.toUpperCase(), { flex: 1, color: theme.primary, fontSize: 20, fontWeight: 850, lineHeight: 1.05 })
+      ])
+    )),
+    TextBlock(text(spec, 'footer', 'SVGlide program note'), { position: 'absolute', left: 86, bottom: 76, color: theme.muted, fontSize: 16, fontWeight: 700 })
+  ])
+}
+
+function retroUiDashboard(spec) {
+  const theme = colors(spec)
+  const panels = firstList(spec, ['panels', 'items'], ['Build status: OK', 'Open issues: 12', 'Owner: Platform']).slice(0, 4)
+  return box({ width: CANVAS.width, height: CANVAS.height, position: 'relative', flexDirection: 'column', backgroundColor: theme.background, color: theme.text, fontFamily: DEFAULT_FONT_FAMILY, padding: 48 }, [
+    box({ position: 'absolute', left: 70, top: 62, width: 820, height: 416, backgroundColor: theme.panel, borderWidth: 3, borderColor: theme.text }),
+    box({ position: 'absolute', left: 76, top: 68, width: 808, height: 38, backgroundColor: theme.primary, flexDirection: 'row', alignItems: 'center', padding: '0 12px' }, [
+      TextBlock(text(spec, 'window_title', 'SVGLIDE.EXE'), { color: theme.accent, fontSize: 18, fontWeight: 850 })
+    ]),
+    Title(text(spec, 'title', 'Release Control Panel'), { position: 'absolute', left: 96, top: 132, width: 500, color: theme.text, fontSize: 38, fontWeight: 800, lineHeight: 1.08 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 98, top: 228, width: 428, color: theme.muted, fontSize: 19, lineHeight: 1.28 }),
+    box({ position: 'absolute', right: 98, top: 132, width: 292, flexDirection: 'column', gap: 12 }, panels.map((panel) =>
+      box({ height: 62, backgroundColor: theme.background, borderWidth: 2, borderColor: theme.text, padding: 14 }, [
+        TextBlock(panel, { color: theme.text, fontSize: 18, fontWeight: 750 })
+      ])
+    )),
+    box({ position: 'absolute', left: 96, bottom: 88, width: 768, height: 28, backgroundColor: theme.background, borderWidth: 2, borderColor: theme.text }, [
+      TextBlock(text(spec, 'status', 'READY'), { color: theme.primary, fontSize: 15, fontWeight: 900, padding: '5px 10px' })
+    ])
+  ])
+}
+
+function productRibbon(spec) {
+  const theme = colors(spec)
+  const cards = firstList(spec, ['cards', 'items'], ['Feature A', 'Feature B', 'Feature C']).slice(0, 4)
+  const stripeColors = [theme.primary, theme.accent, theme.panel, theme.muted]
+  const labelColors = [theme.primary, theme.accent, theme.text, theme.primary]
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 0, top: 0, width: CANVAS.width, height: 28, flexDirection: 'row' }, stripeColors.map((color) =>
+      box({ width: 240, height: 28, backgroundColor: color })
+    )),
+    TextBlock(text(spec, 'eyebrow', 'CATALOG').toUpperCase(), { position: 'absolute', left: 64, top: 70, color: theme.primary, fontSize: 16, fontWeight: 900 }),
+    Title(text(spec, 'title', 'Product Catalog'), { position: 'absolute', left: 62, top: 102, width: 610, color: theme.text, fontSize: 58, fontWeight: 900, lineHeight: 0.92 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 66, top: 238, width: 470, color: theme.muted, fontSize: 20, lineHeight: 1.28 }),
+    box({ position: 'absolute', left: 64, bottom: 62, flexDirection: 'row', gap: 16 }, cards.map((card, index) =>
+      box({ width: 194, height: 118, backgroundColor: index % 2 ? theme.panel : theme.background, borderWidth: 2, borderColor: theme.text, padding: 14 }, [
+        TextBlock(String(index + 1).padStart(2, '0'), { color: labelColors[index % labelColors.length], fontSize: 24, fontWeight: 900, marginBottom: 12 }),
+        TextBlock(card, { color: theme.text, fontSize: 18, fontWeight: 850, lineHeight: 1.08 })
+      ])
+    )),
+    box({ position: 'absolute', right: 78, top: 94, width: 112, height: 112, borderRadius: 56, backgroundColor: theme.panel, borderWidth: 2, borderColor: theme.accent, alignItems: 'center', justifyContent: 'center' }, [
+      TextBlock(text(spec, 'seal', 'NEW'), { color: theme.text, fontSize: 25, fontWeight: 900 })
+    ])
+  ])
+}
+
+function typeMassPoster(spec) {
+  const theme = colors(spec)
+  const notes = firstList(spec, ['notes', 'items'], ['One message', 'No decoration', 'High contrast']).slice(0, 3)
+  return box({ width: CANVAS.width, height: CANVAS.height, position: 'relative', flexDirection: 'column', backgroundColor: theme.background, color: theme.text, fontFamily: DEFAULT_FONT_FAMILY, padding: 52 }, [
+    box({ position: 'absolute', left: 52, top: 48, width: 856, height: 1, backgroundColor: theme.primary, opacity: 0.62 }),
+    TextBlock(text(spec, 'eyebrow', 'STUDIO').toUpperCase(), { position: 'absolute', left: 58, top: 66, color: theme.primary, fontSize: 15, fontWeight: 850 }),
+    TextBlock(text(spec, 'counter', '01/06'), { position: 'absolute', right: 58, top: 66, color: theme.primary, fontSize: 15, fontWeight: 850 }),
+    Title(text(spec, 'title', 'MAKE IT LOUD').toUpperCase(), { position: 'absolute', left: 58, top: 118, width: 800, color: theme.primary, fontSize: 82, fontWeight: 900, lineHeight: 0.88 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 62, bottom: 120, width: 520, color: theme.muted, fontSize: 21, lineHeight: 1.25 }),
+    box({ position: 'absolute', right: 70, bottom: 78, width: 248, flexDirection: 'column' }, notes.map((note) =>
+      box({ borderTopWidth: 2, borderTopColor: theme.primary, padding: '12px 0' }, [
+        TextBlock(note.toUpperCase(), { color: theme.primary, fontSize: 18, fontWeight: 900, lineHeight: 1.05 })
+      ])
+    ))
+  ])
+}
+
+function brutalistMatrix(spec) {
+  const theme = colors(spec)
+  const cells = firstList(spec, ['cells', 'items'], ['Price clarity', 'Time to value', 'Risk level', 'Owner fit', 'Migration cost', 'Evidence depth']).slice(0, 6)
+  return box({ width: CANVAS.width, height: CANVAS.height, position: 'relative', flexDirection: 'column', backgroundColor: theme.background, color: theme.text, fontFamily: DEFAULT_FONT_FAMILY, padding: 50 }, [
+    box({ position: 'absolute', left: 50, top: 50, width: 860, height: 440, borderWidth: 3, borderColor: theme.text }),
+    TextBlock(text(spec, 'eyebrow', 'MATRIX').toUpperCase(), { position: 'absolute', left: 70, top: 74, color: theme.text, fontSize: 15, fontWeight: 900 }),
+    Title(text(spec, 'title', 'Decision Matrix').toUpperCase(), { position: 'absolute', left: 70, top: 104, width: 492, color: theme.text, fontSize: 50, fontWeight: 900, lineHeight: 0.96 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 70, top: 222, width: 426, color: theme.muted, fontSize: 19, lineHeight: 1.22 }),
+    box({ position: 'absolute', right: 72, top: 76, width: 314, height: 92, backgroundColor: theme.panel, borderWidth: 3, borderColor: theme.primary, padding: 14 }, [
+      TextBlock(text(spec, 'callout', 'BEST OPTION').toUpperCase(), { color: theme.text, fontSize: 24, fontWeight: 900, lineHeight: 1 })
+    ]),
+    box({ position: 'absolute', left: 70, bottom: 76, width: 820, flexDirection: 'row', flexWrap: 'wrap' }, cells.map((cell, index) =>
+      box({ width: 273, height: 74, borderWidth: 2, borderColor: theme.text, backgroundColor: index % 2 ? theme.panel : theme.background, padding: 12, flexDirection: 'row' }, [
+        TextBlock(String(index + 1), { width: 34, color: theme.primary, fontSize: 28, fontWeight: 900 }),
+        TextBlock(cell, { flex: 1, color: theme.text, fontSize: 18, fontWeight: 850, lineHeight: 1.08 })
+      ])
+    ))
+  ])
+}
+
+function annotatedFieldBoard(spec) {
+  const theme = colors(spec)
+  const notes = firstList(spec, ['notes', 'items'], ['Interview signal', 'Evidence needs follow-up', 'Decision owner named']).slice(0, 4)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 62, top: 56, width: 836, height: 428, borderWidth: 2, borderColor: theme.muted, backgroundColor: theme.panel }),
+    TextBlock(text(spec, 'eyebrow', 'FIELD BOARD').toUpperCase(), { position: 'absolute', left: 86, top: 84, color: theme.primary, fontSize: 16, fontWeight: 900 }),
+    Title(text(spec, 'title', 'Annotated Evidence'), { position: 'absolute', left: 86, top: 116, width: 520, color: theme.text, fontSize: 48, fontWeight: 850, lineHeight: 1.02 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 88, top: 228, width: 430, color: theme.muted, fontSize: 20, lineHeight: 1.28 }),
+    TextBlock(text(spec, 'stamp', 'REVIEWED').toUpperCase(), { position: 'absolute', right: 90, top: 86, color: theme.primary, borderWidth: 3, borderColor: theme.primary, fontSize: 22, fontWeight: 900, padding: '10px 14px' }),
+    box({ position: 'absolute', right: 86, top: 160, width: 302, flexDirection: 'column', gap: 14 }, notes.map((note, index) =>
+      box({ minHeight: 66, backgroundColor: theme.background, borderWidth: 2, borderColor: theme.text, padding: 14 }, [
+        TextBlock(`NOTE ${index + 1}`, { color: theme.primary, fontSize: 13, fontWeight: 900, marginBottom: 8 }),
+        TextBlock(note, { color: theme.text, fontSize: 18, fontWeight: 750, lineHeight: 1.12 })
+      ])
+    )),
+    box({ position: 'absolute', left: 86, bottom: 82, width: 430, flexDirection: 'row', gap: 12 }, firstList(spec, ['tags'], ['USER', 'EVIDENCE', 'NEXT']).slice(0, 3).map((tag) =>
+      TextBlock(tag.toUpperCase(), { color: theme.text, backgroundColor: theme.panel, fontSize: 14, fontWeight: 900, padding: '8px 12px' })
+    ))
+  ])
+}
+
+function architecturalSpec(spec) {
+  const theme = colors(spec)
+  const rows = firstList(spec, ['rows', 'items'], ['Foundation', 'Structure', 'Interface', 'Handoff']).slice(0, 4)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 70, top: 62, width: 820, height: 414, borderWidth: 1, borderColor: theme.muted }),
+    box({ position: 'absolute', left: 92, top: 86, width: 258, height: 258, borderWidth: 2, borderColor: theme.primary }),
+    box({ position: 'absolute', left: 142, top: 136, width: 158, height: 158, borderRadius: 79, borderWidth: 2, borderColor: theme.accent }),
+    TextBlock(text(spec, 'eyebrow', 'SPEC').toUpperCase(), { position: 'absolute', left: 392, top: 90, color: theme.muted, fontSize: 15, fontWeight: 850 }),
+    Title(text(spec, 'title', 'Architecture Spec'), { position: 'absolute', left: 390, top: 124, width: 430, color: theme.text, fontSize: 46, fontWeight: 650, lineHeight: 1.03 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 392, top: 238, width: 396, color: theme.muted, fontSize: 20, lineHeight: 1.32 }),
+    box({ position: 'absolute', left: 92, bottom: 84, width: 746, flexDirection: 'row', gap: 14 }, rows.map((row, index) =>
+      box({ width: 176, height: 70, borderTopWidth: 1, borderTopColor: theme.primary, paddingTop: 12 }, [
+        TextBlock(String(index + 1).padStart(2, '0'), { color: theme.primary, fontSize: 16, fontWeight: 850, marginBottom: 8 }),
+        TextBlock(row, { color: theme.text, fontSize: 18, fontWeight: 700, lineHeight: 1.1 })
+      ])
+    ))
+  ])
+}
+
+function trendGridReport(spec) {
+  const theme = colors(spec)
+  const trends = firstList(spec, ['trends', 'items'], ['Model cost pressure', 'Agent workflows', 'Design ops maturity', 'Governance gaps']).slice(0, 4)
+  return pageShell(spec, [
+    box({ position: 'absolute', left: 52, top: 52, width: 856, height: 436, borderWidth: 2, borderColor: theme.primary, opacity: 0.9 }),
+    TextBlock(text(spec, 'eyebrow', 'TREND INDEX').toUpperCase(), { position: 'absolute', left: 72, top: 74, color: theme.primary, fontSize: 15, fontWeight: 900 }),
+    Title(text(spec, 'title', 'Cobalt Trend Report'), { position: 'absolute', left: 70, top: 112, width: 570, color: theme.primary, fontSize: 58, fontWeight: 500, lineHeight: 0.94 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 72, top: 250, width: 500, color: theme.muted, fontSize: 19, lineHeight: 1.3 }),
+    box({ position: 'absolute', right: 74, top: 92, width: 170, height: 170, flexDirection: 'row', flexWrap: 'wrap' }, Array.from({ length: 16 }).map((_, index) =>
+      box({ width: 34, height: 34, backgroundColor: index % 3 === 0 ? theme.primary : theme.panel, marginRight: 4, marginBottom: 4, opacity: index % 3 === 0 ? 1 : 0.42 })
+    )),
+    box({ position: 'absolute', left: 72, bottom: 74, width: 810, flexDirection: 'column' }, trends.map((trend, index) =>
+      box({ height: 42, flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: theme.primary }, [
+        TextBlock(`0${index + 1}`, { width: 54, color: theme.primary, fontSize: 16, fontWeight: 850 }),
+        TextBlock(trend, { flex: 1, color: theme.text, fontSize: 19, fontWeight: 650 }),
+        TextBlock(index % 2 ? 'RISING' : 'WATCH', { width: 94, color: theme.primary, fontSize: 13, fontWeight: 900, textAlign: 'right' })
+      ])
+    ))
+  ])
+}
+
+function serifStatEditorial(spec) {
+  const theme = colors(spec)
+  const cards = firstList(spec, ['cards', 'items'], ['Quality held', 'Narrative simplified', 'Next evidence needed']).slice(0, 3)
+  return pageShell(spec, [
+    TextBlock(text(spec, 'eyebrow', 'EDITORIAL').toUpperCase(), { position: 'absolute', left: 70, top: 72, color: theme.primary, fontSize: 16, fontWeight: 900 }),
+    Title(text(spec, 'stat', '73%'), { position: 'absolute', left: 68, top: 104, width: 360, color: theme.primary, fontSize: 118, fontWeight: 500, lineHeight: 0.9 }),
+    Title(text(spec, 'title', 'Evidence moved the decision'), { position: 'absolute', left: 442, top: 104, width: 380, color: theme.text, fontSize: 44, fontWeight: 600, lineHeight: 1.02 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 444, top: 238, width: 360, color: theme.muted, fontSize: 20, lineHeight: 1.32 }),
+    box({ position: 'absolute', left: 70, bottom: 70, flexDirection: 'row', gap: 18 }, cards.map((card, index) =>
+      box({ width: 252, minHeight: 112, borderTopWidth: 3, borderTopColor: index === 0 ? theme.accent : theme.primary, backgroundColor: theme.panel, padding: 16 }, [
+        TextBlock(card, { color: theme.text, fontSize: 22, fontWeight: 650, lineHeight: 1.12 })
+      ])
+    ))
+  ])
+}
+
+function posterStatPunch(spec) {
+  const theme = colors(spec)
+  const pillars = firstList(spec, ['pillars', 'items'], ['Bold claim', 'Evidence block', 'Next move']).slice(0, 3)
+  return box({ width: CANVAS.width, height: CANVAS.height, position: 'relative', flexDirection: 'column', backgroundColor: theme.background, color: theme.text, fontFamily: DEFAULT_FONT_FAMILY, padding: 52 }, [
+    box({ position: 'absolute', left: 48, top: 48, width: 864, height: 444, borderWidth: 3, borderColor: theme.text }),
+    TextBlock(text(spec, 'eyebrow', 'POSTER').toUpperCase(), { position: 'absolute', left: 72, top: 72, color: theme.text, fontSize: 16, fontWeight: 900 }),
+    Title(text(spec, 'title', 'Make the call').toUpperCase(), { position: 'absolute', left: 70, top: 104, width: 610, color: theme.text, fontSize: 66, fontWeight: 900, lineHeight: 0.9 }),
+    Title(text(spec, 'stat', '3X'), { position: 'absolute', right: 82, top: 96, width: 184, color: theme.primary, fontSize: 118, fontWeight: 900, lineHeight: 0.86 }),
+    TextBlock(text(spec, 'subtitle', ''), { position: 'absolute', left: 74, top: 272, width: 470, color: theme.muted, fontSize: 20, lineHeight: 1.28 }),
+    box({ position: 'absolute', left: 74, bottom: 76, flexDirection: 'row', gap: 16 }, pillars.map((pillar, index) =>
+      box({ width: 250, minHeight: 86, borderTopWidth: 3, borderTopColor: theme.primary, paddingTop: 12 }, [
+        TextBlock(`0${index + 1}`, { color: theme.primary, fontSize: 28, fontWeight: 900, marginBottom: 6 }),
+        TextBlock(pillar, { color: theme.text, fontSize: 20, fontWeight: 850, lineHeight: 1.08 })
+      ])
+    ))
+  ])
+}
+
 export function renderTree(spec) {
   if (spec.template_id === 'cover-hero') return coverHero(spec)
   if (spec.template_id === 'comparison-cards') return comparisonCards(spec)
@@ -522,5 +888,20 @@ export function renderTree(spec) {
   if (spec.template_id === 'risk-alert') return riskAlert(spec)
   if (spec.template_id === 'roadmap-lanes') return roadmapLanes(spec)
   if (spec.template_id === 'architecture-blueprint') return architectureBlueprint(spec)
+  if (spec.template_id === 'dense-panel-grid') return densePanelGrid(spec)
+  if (spec.template_id === 'executive-dashboard') return executiveDashboard(spec)
+  if (spec.template_id === 'editorial-quote-chart') return editorialQuoteChart(spec)
+  if (spec.template_id === 'ledger-briefing') return ledgerBriefing(spec)
+  if (spec.template_id === 'intelligence-brief') return intelligenceBrief(spec)
+  if (spec.template_id === 'printed-program') return printedProgram(spec)
+  if (spec.template_id === 'retro-ui-dashboard') return retroUiDashboard(spec)
+  if (spec.template_id === 'product-ribbon') return productRibbon(spec)
+  if (spec.template_id === 'type-mass-poster') return typeMassPoster(spec)
+  if (spec.template_id === 'brutalist-matrix') return brutalistMatrix(spec)
+  if (spec.template_id === 'annotated-field-board') return annotatedFieldBoard(spec)
+  if (spec.template_id === 'architectural-spec') return architecturalSpec(spec)
+  if (spec.template_id === 'trend-grid-report') return trendGridReport(spec)
+  if (spec.template_id === 'serif-stat-editorial') return serifStatEditorial(spec)
+  if (spec.template_id === 'poster-stat-punch') return posterStatPunch(spec)
   throw new Error(`unsupported template_id for Satori adapter: ${spec.template_id}`)
 }

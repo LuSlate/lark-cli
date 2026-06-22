@@ -1,0 +1,537 @@
+{
+  "generation_mode": "artboard_satori",
+  "slides": [
+    {
+      "page": 1,
+      "title": "渠道健康度复盘",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "dense-panel-grid",
+        "theme_id": "cobalt-grid",
+        "theme": {
+          "colors": {
+            "background": "#081C4A",
+            "panel": "#102C6B",
+            "primary": "#60A5FA",
+            "accent": "#FDE047",
+            "text": "#EEF6FF",
+            "muted": "#B7C8E8"
+          }
+        },
+        "content": {
+          "eyebrow": "OPERATING GRID",
+          "title": "渠道健康度复盘",
+          "subtitle": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+          "metrics": [
+            "转化 +12%",
+            "履约 94%",
+            "成本 -8%",
+            "风险 L2",
+            "样本 42k",
+            "NPS 48"
+          ],
+          "notes": [
+            "北区增长稳定",
+            "瓶颈转向交付",
+            "Owner 需要清晰"
+          ]
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 226,
+              "y": 66,
+              "width": 620,
+              "height": 92
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 2,
+          "min_font_size": 18,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+      "renderer_id": "artboard_satori.dense-panel-grid",
+      "layout_family": "dense-panel-grid",
+      "visual_recipe": "hero_typography",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "渠道健康度复盘",
+      "visual_signature": "dense-panel-grid layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "thesis",
+      "page_type": "cover",
+      "section": "OPERATING GRID",
+      "body_points": [
+        "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+        "北区增长稳定",
+        "瓶颈转向交付",
+        "Owner 需要清晰"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:dense-panel-grid",
+        "svglide-theme:cobalt-grid"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 2,
+      "title": "内部业务复盘",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "executive-dashboard",
+        "theme_id": "paper-research",
+        "theme": {
+          "colors": {
+            "background": "#F7F3E8",
+            "panel": "#FFFDF6",
+            "primary": "#1E3A8A",
+            "accent": "#B45309",
+            "text": "#1F2937",
+            "muted": "#4B5563"
+          }
+        },
+        "content": {
+          "eyebrow": "BUSINESS REVIEW",
+          "title": "内部业务复盘",
+          "subtitle": "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+          "metrics": [
+            "收入 +14%",
+            "留存 118%",
+            "流失 2.1%",
+            "管线 3.4x",
+            "季度 +9%",
+            "NPS 48"
+          ],
+          "bars": [
+            "企业客户 82",
+            "中型客户 64",
+            "SMB 48",
+            "伙伴 36"
+          ],
+          "chart_title": "渠道健康度"
+        },
+        "semantic_elements": [
+          {
+            "element_id": "title",
+            "kind": "text",
+            "role": "title",
+            "source_ref": "canvas_spec.content.title",
+            "bbox": {
+              "x": 56,
+              "y": 96,
+              "width": 710,
+              "height": 88
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 2,
+          "min_font_size": 18,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+      "renderer_id": "artboard_satori.executive-dashboard",
+      "layout_family": "executive-dashboard",
+      "visual_recipe": "infographic_scorecard",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "内部业务复盘",
+      "visual_signature": "executive-dashboard layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "chart_geometry",
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "micro_chart"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "content",
+      "section": "BUSINESS REVIEW",
+      "body_points": [
+        "单一强调色组织关键指标、渠道排序和管理层行动口径。",
+        "收入 +14%",
+        "留存 118%",
+        "流失 2.1%"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:executive-dashboard",
+        "svglide-theme:paper-research"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    },
+    {
+      "page": 3,
+      "title": "组织信号复盘",
+      "canvas_spec": {
+        "version": "svglide-canvas-spec/v1",
+        "canvas": {
+          "width": 960,
+          "height": 540,
+          "viewBox": "0 0 960 540"
+        },
+        "safe_area": {
+          "x": 48,
+          "y": 40,
+          "width": 864,
+          "height": 460
+        },
+        "template_id": "editorial-quote-chart",
+        "theme_id": "warm-editorial",
+        "theme": {
+          "colors": {
+            "background": "#27130F",
+            "panel": "#3A211B",
+            "primary": "#F97316",
+            "accent": "#22D3EE",
+            "text": "#FFF7ED",
+            "muted": "#F4C9A8"
+          }
+        },
+        "content": {
+          "eyebrow": "FIELD NOTE",
+          "section": "POSTMORTEM",
+          "title": "组织信号复盘",
+          "quote": "仪表盘变化之前，组织协作方式已经先变了。",
+          "attribution": "复盘访谈节选 / 2026 Q2",
+          "points": [
+            "信号早于指标移动",
+            "约束来自协作边界",
+            "行动项需要 owner"
+          ]
+        },
+        "semantic_elements": [
+          {
+            "element_id": "quote",
+            "kind": "text",
+            "role": "quote",
+            "source_ref": "canvas_spec.content.quote",
+            "bbox": {
+              "x": 132,
+              "y": 148,
+              "width": 518,
+              "height": 190
+            }
+          }
+        ],
+        "quality_constraints": {
+          "max_title_lines": 3,
+          "min_font_size": 18,
+          "safe_area": {
+            "x": 48,
+            "y": 40,
+            "width": 864,
+            "height": 460
+          }
+        }
+      },
+      "key_message": "组织信号复盘",
+      "renderer_id": "artboard_satori.editorial-quote-chart",
+      "layout_family": "editorial-quote-chart",
+      "visual_recipe": "brand_system",
+      "visual_intent": "将参考模板信号抽象为可提交的 SVGlide SVG 原语，而不是复制参考 HTML/CSS。",
+      "visual_focal_point": "组织信号复盘",
+      "visual_signature": "editorial-quote-chart layout with path, micro-chart, texture, and typography primitives",
+      "svg_effects": [
+        "typography"
+      ],
+      "required_primitives": [
+        "typography",
+        "geometric_shape"
+      ],
+      "svg_primitives": [
+        "annotation",
+        "dashboard",
+        "geometric_shape",
+        "micro_chart",
+        "path",
+        "typography"
+      ],
+      "xml_like_risk": "low",
+      "content_density_contract": "medium reference abstraction; no high-density quantitative gate",
+      "risk_flags": [],
+      "source_policy": "fixture-backed reference abstraction; visible numeric/business claims require explicit business_claims records",
+      "role": "evidence",
+      "page_type": "closing",
+      "section": "FIELD NOTE",
+      "body_points": [
+        "仪表盘变化之前，组织协作方式已经先变了。",
+        "信号早于指标移动",
+        "约束来自协作边界",
+        "行动项需要 owner"
+      ],
+      "source_refs": [
+        "beautiful-html-templates:editorial-quote-chart",
+        "svglide-theme:warm-editorial"
+      ],
+      "asset_contract": "fixture_only_reference_abstraction"
+    }
+  ],
+  "route": "svglide-svg",
+  "title": "Reference Absorption Wave 1",
+  "audience": "SVGlide engineers",
+  "language": "zh-CN",
+  "deck_structure": [
+    "cover",
+    "content",
+    "closing"
+  ],
+  "style_preset": "neo_grid_bold",
+  "style_selection_reason": "参考模板吸收 fixture 需要高对比网格、清晰层级和可审计的 SVG-native 原语。",
+  "style_system": {
+    "background_strategy": "registry token background with explicit SVG primitive layer",
+    "motif": "reference absorption proof deck",
+    "palette": "high-contrast registry tokens with accent bars and paths",
+    "typography": "Satori-compatible system typography",
+    "style_preset": "neo_grid_bold"
+  },
+  "loaded_rule_set": [
+    "skills/lark-slides/references/lark-slides-create-svg.md",
+    "skills/lark-slides/references/style-presets.md",
+    "skills/lark-slides/references/svg-aesthetic-review.md",
+    "skills/lark-slides/references/svg-protocol.md",
+    "skills/lark-slides/references/svg-visual-recipes.md",
+    "skills/lark-slides/references/svglide-artifacts.spec.md",
+    "skills/lark-slides/references/svglide-assets.contract.md",
+    "skills/lark-slides/references/svglide-checks.checklist.md",
+    "skills/lark-slides/references/svglide-create-svg.contract.md",
+    "skills/lark-slides/references/svglide-generate-svg.contract.md",
+    "skills/lark-slides/references/svglide-lock.contract.md",
+    "skills/lark-slides/references/svglide-plan.contract.md",
+    "skills/lark-slides/references/svglide-planning-layer.md",
+    "skills/lark-slides/references/svglide-reference-absorption-execution-plan.md",
+    "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+    "skills/lark-slides/references/svglide-reference-absorption-report.md",
+    "skills/lark-slides/references/svglide-preview.spec.md",
+    "skills/lark-slides/references/svglide-readback.contract.md",
+    "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-svg-private.rules.json",
+    "skills/lark-slides/references/svglide-validation-checklist.md",
+    "skills/lark-slides/references/svglide-visual-planning.md",
+    "skills/lark-slides/references/svglide-workflow.spec.md"
+  ],
+  "plan_path": "02-plan/slide_plan.json",
+  "quality_gates": {
+    "no_debug_guides": true,
+    "no_text_overflow": true,
+    "no_xml_like_pages": true,
+    "no_runtime_reference_dependency": true
+  },
+  "art_direction": {
+    "cover_treatment": "reference-derived but non-copying template abstractions",
+    "deck_motif": "asset registry expansion with evidence-backed fixtures",
+    "section_divider_treatment": "each slide proves one absorbed template/theme pair",
+    "closing_treatment": "fixture chain feeds runner and visual acceptance evidence",
+    "svg_native_moments": [
+      "Satori-compatible HTML/CSS",
+      "template/theme registry tokens",
+      "SVGlide protocol SVG"
+    ]
+  },
+  "visual_identity": {
+    "theme_archetype": "company_ecosystem",
+    "design_dna": {
+      "palette": "template/theme registry tokens",
+      "layout_motif": "absorbed reference templates converted to SVGlide assets",
+      "shape_language": "rectilinear panels, structured typography, chart-like primitives",
+      "image_treatment": "fixture-only asset strategy; no backend image readback promise",
+      "component_bias": "registry-backed components and layout archetypes",
+      "theme_visual_anchors": [
+        "beautiful-html-templates",
+        "Satori subset",
+        "SVGlide visual acceptance"
+      ]
+    },
+    "forbidden_reuse": {
+      "copy_source_html": true,
+      "runtime_reference_dependency": true
+    },
+    "distinctness_target": {
+      "palette_overlap_max": 0.67,
+      "renderer_sequence_similarity_max": 0.75
+    }
+  },
+  "output_mode": "svglide-svg",
+  "theme_policy": {
+    "allow_multi_theme": true,
+    "reason": "reference absorption coverage fixture intentionally exercises multiple absorbed theme tokens in one proof deck"
+  },
+  "business_claims": [
+    {
+      "claim": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "转化 +12%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "履约 94%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "成本 -8%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "风险 L2",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "样本 42k",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "NPS 48",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 1
+    },
+    {
+      "claim": "收入 +14%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "留存 118%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "流失 2.1%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "管线 3.4x",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "季度 +9%",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "NPS 48",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "企业客户 82",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "中型客户 64",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "SMB 48",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "伙伴 36",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 2
+    },
+    {
+      "claim": "复盘访谈节选 / 2026 Q2",
+      "source_type": "derived",
+      "derivation": "reference_absorption_wave1 本地 CanvasSpec fixture 中用于视觉验收的示例指标，不作为真实业务事实。",
+      "page": 3
+    }
+  ]
+}

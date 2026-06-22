@@ -1,0 +1,28 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_assets.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave1",
+    "--network-policy",
+    "offline",
+    "--asset-provider",
+    "auto",
+    "--image-backend",
+    "none"
+  ],
+  "ended_at": "2026-06-22T04:04:39+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json",
+    "02-plan/svglide.lock.json"
+  ],
+  "outputs": [
+    "03-assets/assets.json",
+    "03-assets/asset-manifest.json",
+    "03-assets/image-jobs.json",
+    "receipts/assets.json"
+  ],
+  "stage": "assets",
+  "started_at": "2026-06-22T04:04:39+08:00",
+  "status": "passed"
+}

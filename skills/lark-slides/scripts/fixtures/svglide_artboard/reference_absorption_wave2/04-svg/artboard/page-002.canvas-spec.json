@@ -1,0 +1,76 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "date": "2026 Q2",
+    "eyebrow": "PRIVATE BRIEF",
+    "points": [
+      "指标移动前的协作信号",
+      "约束来自跨团队边界",
+      "下轮验证需要单 owner"
+    ],
+    "subtitle": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+    "title": "组织信号简报"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "intelligence-brief",
+  "theme": {
+    "colors": {
+      "accent": "#C8A870",
+      "background": "#1C2644",
+      "muted": "#8A96A8",
+      "panel": "#232F55",
+      "primary": "#C8A870",
+      "text": "#E2DCD0"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.signal.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "signal-navy",
+    "typography": {
+      "body": 18,
+      "label": 15,
+      "subtitle": 20,
+      "title": 52
+    }
+  },
+  "theme_id": "signal-navy",
+  "version": "svglide-canvas-spec/v1"
+}

@@ -417,6 +417,46 @@ class PreSubmitReviewTest(unittest.TestCase):
             self.assertEqual(result["status"], "failed")
             self.assertIn("visual_acceptance_visual_evidence_missing", issue_codes(result))
 
+    def test_visual_acceptance_artboard_requires_visual_evidence_preview_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = make_project(Path(tmp))
+            artifact = project / "04-svg/artboard/page-001.png"
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_bytes(b"page-png")
+            check = json.loads((project / "06-check/visual-acceptance.json").read_text(encoding="utf-8"))
+            check["status"] = "passed"
+            check["action"] = "deliverable_pass"
+            check["generation_mode"] = "artboard_satori"
+            check["deliverable_pass"] = True
+            check["artboard_artifacts"] = [
+                {
+                    "kind": "page_png",
+                    "path": "04-svg/artboard/page-001.png",
+                    "sha256": pre_submit_review.file_sha256(artifact),
+                }
+            ]
+            check["visual_evidence"] = {
+                "schema_version": "svglide-visual-evidence/v1",
+                "pages": [
+                    {
+                        "page": 1,
+                        "evidence_path": "05-preview/contact-sheet.png",
+                        "preview_anchor": "05-preview/preview.html#page-1",
+                        "contact_sheet_tile": {"x": 16, "y": 16, "width": 320, "height": 180},
+                    }
+                ],
+            }
+            check["deck_rhythm"] = minimal_deck_rhythm()
+            check["inputs"]["template_guardrails_sha256"] = pre_submit_review.file_sha256(pre_submit_review.TEMPLATE_GUARDRAILS_PATH)
+            write_json(project / "06-check/visual-acceptance.json", check)
+            write_json(project / "receipts/visual_acceptance.json", check)
+            write_human_review(project, human_review_payload(project))
+
+            result = pre_submit_review.run_pre_submit_review(project, project / "06-check/pre-submit-human-review.json")
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("visual_acceptance_visual_evidence_preview_hash_missing", issue_codes(result))
+
     def test_visual_acceptance_artboard_requires_template_guardrails_hash(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = make_project(Path(tmp))

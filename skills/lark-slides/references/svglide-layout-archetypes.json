@@ -1,15 +1,385 @@
 {
   "schema_version": "svglide-layout-archetypes/v1",
   "archetypes": [
-    {"id": "hero-cover", "status": "active", "templates": ["cover-hero"], "purpose": "deck opening page with one dominant message and controlled chips"},
-    {"id": "section-divider", "status": "active", "templates": ["section-title"], "purpose": "chapter transition and narrative pacing"},
-    {"id": "agenda-list", "status": "active", "templates": ["agenda-list"], "purpose": "ordered content map for multi-page decks"},
-    {"id": "two-column-comparison", "status": "active", "templates": ["comparison-cards"], "purpose": "before-after or option comparison"},
-    {"id": "timeline-horizontal", "status": "active", "templates": ["timeline-steps"], "purpose": "time or milestone sequence"},
-    {"id": "process-flow", "status": "active", "templates": ["process-flow"], "purpose": "pipeline and dependency explanation"},
-    {"id": "metric-dashboard", "status": "active", "templates": ["metric-dashboard", "data-story"], "purpose": "small set of quantitative highlights"},
-    {"id": "image-text-split", "status": "active", "templates": ["image-feature"], "purpose": "one visual anchor with supporting interpretation"},
-    {"id": "research-poster-3col", "status": "active", "templates": ["research-poster"], "purpose": "dense research summary with balanced sections"},
-    {"id": "architecture-blueprint", "status": "active", "templates": ["architecture-blueprint", "roadmap-lanes", "risk-alert", "quote-focus", "summary-final"], "purpose": "systems, plans, risks, quotes, and closing pages"}
+    {
+      "id": "hero-cover",
+      "status": "active",
+      "templates": [
+        "cover-hero"
+      ],
+      "purpose": "deck opening page with one dominant message and controlled chips",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "section-divider",
+      "status": "active",
+      "templates": [
+        "section-title"
+      ],
+      "purpose": "chapter transition and narrative pacing",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "agenda-list",
+      "status": "active",
+      "templates": [
+        "agenda-list"
+      ],
+      "purpose": "ordered content map for multi-page decks",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "two-column-comparison",
+      "status": "active",
+      "templates": [
+        "comparison-cards"
+      ],
+      "purpose": "before-after or option comparison",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "timeline-horizontal",
+      "status": "active",
+      "templates": [
+        "timeline-steps"
+      ],
+      "purpose": "time or milestone sequence",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "process-flow",
+      "status": "active",
+      "templates": [
+        "process-flow"
+      ],
+      "purpose": "pipeline and dependency explanation",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "metric-dashboard",
+      "status": "active",
+      "templates": [
+        "metric-dashboard",
+        "data-story"
+      ],
+      "purpose": "small set of quantitative highlights",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "image-text-split",
+      "status": "active",
+      "templates": [
+        "image-feature"
+      ],
+      "purpose": "one visual anchor with supporting interpretation",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "research-poster-3col",
+      "status": "active",
+      "templates": [
+        "research-poster"
+      ],
+      "purpose": "dense research summary with balanced sections",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "architecture-blueprint",
+      "status": "active",
+      "templates": [
+        "architecture-blueprint",
+        "roadmap-lanes",
+        "risk-alert",
+        "quote-focus",
+        "summary-final"
+      ],
+      "purpose": "systems, plans, risks, quotes, and closing pages",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "dense-dashboard",
+      "status": "active",
+      "templates": [
+        "dense-panel-grid"
+      ],
+      "purpose": "dense dashboard and information grid",
+      "source_trace": [
+        "beautiful-html-templates.template.neo-grid-bold.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/dense-panel-grid.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json"
+    },
+    {
+      "id": "editorial-story",
+      "status": "active",
+      "templates": [
+        "editorial-quote-chart"
+      ],
+      "purpose": "editorial claim with evidence stack",
+      "source_trace": [
+        "beautiful-html-templates.template.broadside.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/editorial-quote-chart.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json"
+    },
+    {
+      "id": "data-story-bars",
+      "status": "active",
+      "templates": [
+        "data-story"
+      ],
+      "purpose": "bar-driven data story",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/data-story.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "quote-claim",
+      "status": "active",
+      "templates": [
+        "quote-focus"
+      ],
+      "purpose": "single quote or claim page",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/quote-focus.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "zine-poster",
+      "status": "active",
+      "templates": [
+        "type-mass-poster"
+      ],
+      "purpose": "high-contrast zine or poster statement",
+      "source_trace": [
+        "beautiful-html-templates.template.studio.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/type-mass-poster.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json"
+    },
+    {
+      "id": "grid-system",
+      "status": "active",
+      "templates": [
+        "brutalist-matrix"
+      ],
+      "purpose": "hard-edged matrix and grid system",
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/brutalist-matrix.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json"
+    },
+    {
+      "id": "full-bleed-image-story",
+      "status": "active",
+      "templates": [
+        "image-feature"
+      ],
+      "purpose": "image-led explainer with caption discipline",
+      "source_trace": [
+        "svglide-baseline.layouts"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/image-feature.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/layouts.json"
+    },
+    {
+      "id": "ledger-briefing",
+      "status": "active",
+      "templates": [
+        "ledger-briefing"
+      ],
+      "purpose": "quiet ledger and decision rows",
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/ledger-briefing.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+    },
+    {
+      "id": "intelligence-brief",
+      "status": "active",
+      "templates": [
+        "intelligence-brief"
+      ],
+      "purpose": "formal signal or compliance briefing",
+      "source_trace": [
+        "beautiful-html-templates.template.signal.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json"
+    },
+    {
+      "id": "printed-program",
+      "status": "active",
+      "templates": [
+        "printed-program"
+      ],
+      "purpose": "agenda or program with metadata",
+      "source_trace": [
+        "beautiful-html-templates.template.long-table.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/printed-program.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json"
+    },
+    {
+      "id": "retro-ui-control-room",
+      "status": "active",
+      "templates": [
+        "retro-ui-dashboard"
+      ],
+      "purpose": "software window status dashboard",
+      "source_trace": [
+        "beautiful-html-templates.template.retro-windows.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/retro-ui-dashboard.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+    },
+    {
+      "id": "product-catalog-ribbon",
+      "status": "active",
+      "templates": [
+        "product-ribbon"
+      ],
+      "purpose": "product catalog and spec cards",
+      "source_trace": [
+        "beautiful-html-templates.template.sakura-chroma.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/product-ribbon.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+    },
+    {
+      "id": "annotation-board",
+      "status": "active",
+      "templates": [
+        "annotated-field-board"
+      ],
+      "purpose": "evidence board with notes and stamps",
+      "source_trace": [
+        "beautiful-html-templates.template.pin-and-paper.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    },
+    {
+      "id": "architectural-spec",
+      "status": "active",
+      "templates": [
+        "architectural-spec"
+      ],
+      "purpose": "low-density architecture/specification page",
+      "source_trace": [
+        "beautiful-html-templates.template.cartesian.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/architectural-spec.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json"
+    },
+    {
+      "id": "trend-index-grid",
+      "status": "active",
+      "templates": [
+        "trend-grid-report"
+      ],
+      "purpose": "trend index and magazine grid report",
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/trend-grid-report.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+    },
+    {
+      "id": "serif-stat-editorial",
+      "status": "active",
+      "templates": [
+        "serif-stat-editorial"
+      ],
+      "purpose": "editorial stat with evidence cards",
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/serif-stat-editorial.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+    },
+    {
+      "id": "poster-stat-punch",
+      "status": "active",
+      "templates": [
+        "poster-stat-punch"
+      ],
+      "purpose": "poster stat and action pillars",
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/poster-stat-punch.canvas-spec.json"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+    }
   ]
 }

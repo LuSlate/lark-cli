@@ -1,0 +1,20 @@
+{
+  "command": [
+    "python3",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/svglide_chart_verify.py",
+    "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2",
+    "--pretty"
+  ],
+  "ended_at": "2026-06-22T04:03:10+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json",
+    "04-svg/prepared"
+  ],
+  "outputs": [
+    "06-check/chart-verify.json"
+  ],
+  "stage": "chart_verify",
+  "started_at": "2026-06-22T04:03:10+08:00",
+  "status": "passed"
+}

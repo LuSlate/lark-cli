@@ -2,214 +2,409 @@
   "schema_version": "svglide-renderer-registry/v1",
   "renderers": [
     {
-      "id": "cover",
+      "id": "artboard_comparison",
       "status": "active",
-      "family": "cover",
-      "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "cover_full_bleed",
-      "status": "active",
-      "family": "cover",
-      "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "family": "comparison",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "artboard_cover_hero",
       "status": "active",
       "family": "cover",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_comparison",
-      "status": "active",
-      "family": "comparison",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_section_title",
-      "status": "active",
-      "family": "closing",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_satori.cover-hero",
-      "status": "active",
-      "family": "cover",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_satori.comparison-cards",
-      "status": "active",
-      "family": "comparison",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_satori.image-feature",
-      "status": "active",
-      "family": "image_text",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_satori.data-story",
-      "status": "active",
-      "family": "data_story",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "artboard_satori.summary-final",
-      "status": "active",
-      "family": "closing",
-      "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "artboard_satori.agenda-list",
       "status": "active",
       "family": "agenda",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
-      "id": "artboard_satori.timeline-steps",
+      "id": "artboard_satori.annotated-field-board",
       "status": "active",
-      "family": "timeline",
+      "family": "annotated-field-board",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.architectural-spec",
+      "status": "active",
+      "family": "architectural-spec",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "artboard_satori.architecture-blueprint",
       "status": "active",
       "family": "architecture",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
-      "id": "artboard_satori.process-flow",
+      "id": "artboard_satori.brutalist-matrix",
       "status": "active",
-      "family": "process",
+      "family": "brutalist-matrix",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.comparison-cards",
+      "status": "active",
+      "family": "comparison",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.cover-hero",
+      "status": "active",
+      "family": "cover",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.data-story",
+      "status": "active",
+      "family": "data_story",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.dense-panel-grid",
+      "status": "active",
+      "family": "dense-panel-grid",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.editorial-quote-chart",
+      "status": "active",
+      "family": "editorial-quote-chart",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.executive-dashboard",
+      "status": "active",
+      "family": "executive-dashboard",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.image-feature",
+      "status": "active",
+      "family": "image_text",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.intelligence-brief",
+      "status": "active",
+      "family": "intelligence-brief",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.ledger-briefing",
+      "status": "active",
+      "family": "ledger-briefing",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "artboard_satori.metric-dashboard",
       "status": "active",
       "family": "dashboard",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.poster-stat-punch",
+      "status": "active",
+      "family": "poster-stat-punch",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.printed-program",
+      "status": "active",
+      "family": "printed-program",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.process-flow",
+      "status": "active",
+      "family": "process",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.product-ribbon",
+      "status": "active",
+      "family": "product-ribbon",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.retro-ui-dashboard",
+      "status": "active",
+      "family": "retro-ui-dashboard",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "artboard_satori.risk-alert",
       "status": "active",
       "family": "risk",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "artboard_satori.roadmap-lanes",
       "status": "active",
       "family": "roadmap",
       "runtime_module": "svglide_artboard_renderer.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.serif-stat-editorial",
+      "status": "active",
+      "family": "serif-stat-editorial",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.summary-final",
+      "status": "active",
+      "family": "closing",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.timeline-steps",
+      "status": "active",
+      "family": "timeline",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.trend-grid-report",
+      "status": "active",
+      "family": "trend-grid-report",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_satori.type-mass-poster",
+      "status": "active",
+      "family": "type-mass-poster",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "artboard_section_title",
+      "status": "active",
+      "family": "closing",
+      "runtime_module": "svglide_artboard_renderer.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "chart",
       "status": "active",
       "family": "chart",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "dashboard_scorecard",
-      "status": "active",
-      "family": "chart",
-      "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "timeline",
-      "status": "active",
-      "family": "timeline",
-      "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
-    },
-    {
-      "id": "timeline_rail",
-      "status": "active",
-      "family": "timeline",
-      "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "closing",
       "status": "active",
       "family": "closing",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "closing_cta",
       "status": "active",
       "family": "closing",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
-      "id": "ecosystem_wall",
+      "id": "cover",
       "status": "active",
-      "family": "ecosystem",
+      "family": "cover",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
-      "id": "org_network",
+      "id": "cover_full_bleed",
       "status": "active",
-      "family": "network",
+      "family": "cover",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
-      "id": "editorial_profile",
+      "id": "dashboard_scorecard",
       "status": "active",
-      "family": "profile",
+      "family": "chart",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "destination_atlas",
       "status": "active",
       "family": "atlas",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
-      "id": "research_deep_dive",
+      "id": "ecosystem_wall",
       "status": "active",
-      "family": "research",
+      "family": "ecosystem",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "editorial_profile",
+      "status": "active",
+      "family": "profile",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "market_signal",
       "status": "active",
       "family": "market",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "org_network",
+      "status": "active",
+      "family": "network",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "research_deep_dive",
+      "status": "active",
+      "family": "research",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     },
     {
       "id": "test-renderer",
       "status": "active",
       "family": "test",
       "runtime_module": "svglide_gen_runtime.py",
-      "allowed_style_presets": ["*"]
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "timeline",
+      "status": "active",
+      "family": "timeline",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": [
+        "*"
+      ]
+    },
+    {
+      "id": "timeline_rail",
+      "status": "active",
+      "family": "timeline",
+      "runtime_module": "svglide_gen_runtime.py",
+      "allowed_style_presets": [
+        "*"
+      ]
     }
   ]
 }

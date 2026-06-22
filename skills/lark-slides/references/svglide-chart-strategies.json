@@ -1,0 +1,245 @@
+{
+  "schema_version": "svglide-chart-strategies/v1",
+  "strategies": [
+    {
+      "id": "executive-ranking-bars",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "executive-dashboard"
+      ],
+      "description": "ranked horizontal bars",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.blue-professional.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/blue-professional.executive-dashboard.json"
+    },
+    {
+      "id": "data-story-bar-series",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "data-story"
+      ],
+      "description": "simple bar series",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/data-story.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "svglide-baseline.chart_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/chart-strategies.json"
+    },
+    {
+      "id": "dense-metric-grid",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "dense-panel-grid"
+      ],
+      "description": "metric grid as chart substitute",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/dense-panel-grid.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.neo-grid-bold.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json"
+    },
+    {
+      "id": "trend-index-table",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "trend-grid-report"
+      ],
+      "description": "trend table with status",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/trend-grid-report.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.cobalt-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+    },
+    {
+      "id": "brutalist-decision-matrix",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "brutalist-matrix"
+      ],
+      "description": "comparison matrix",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/brutalist-matrix.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.raw-grid.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json"
+    },
+    {
+      "id": "ledger-metric-fields",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "ledger-briefing"
+      ],
+      "description": "small metric fields",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/ledger-briefing.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.monochrome.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+    },
+    {
+      "id": "serif-stat-callout",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "serif-stat-editorial"
+      ],
+      "description": "large stat and evidence cards",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/serif-stat-editorial.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.editorial-forest.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+    },
+    {
+      "id": "poster-stat-punch",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "poster-stat-punch"
+      ],
+      "description": "poster stat",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/poster-stat-punch.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.bold-poster.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+    },
+    {
+      "id": "roadmap-lane-progress",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "roadmap-lanes"
+      ],
+      "description": "roadmap progress lanes",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/roadmap-lanes.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "svglide-baseline.chart_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/chart-strategies.json"
+    },
+    {
+      "id": "timeline-step-sequence",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "timeline-steps"
+      ],
+      "description": "timeline sequence",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/timeline-steps.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "svglide-baseline.chart_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/chart-strategies.json"
+    },
+    {
+      "id": "risk-row-stack",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "risk-alert"
+      ],
+      "description": "risk rows",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/risk-alert.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "svglide-baseline.chart_strategys"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/svglide-baseline/chart-strategies.json"
+    },
+    {
+      "id": "quote-ranked-points",
+      "status": "active",
+      "claim_scope": "fixture_only_no_backend_readback_claim",
+      "template_ids": [
+        "editorial-quote-chart"
+      ],
+      "description": "ranked qualitative evidence points",
+      "fixture_refs": [
+        "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/editorial-quote-chart.canvas-spec.json"
+      ],
+      "forbidden_claims": [
+        "do_not_claim_backend_chart_readback_without_dry_run_or_readback",
+        "do_not_embed_reference_chart_svg"
+      ],
+      "source_trace": [
+        "beautiful-html-templates.template.broadside.design.md"
+      ],
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json"
+    }
+  ]
+}

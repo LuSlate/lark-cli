@@ -1,0 +1,103 @@
+{
+  "schema_version": "svglide-evidence/v1",
+  "source_status": "ready",
+  "research_status": "fixture_local_reference_absorption",
+  "items": [
+    {
+      "id": "local-reference-inventory",
+      "text": "reference_absorption_wave2 使用本地 beautiful-html-templates 抽象记录、SVGlide 主题 registry、组件 registry、layout registry 和 CanvasSpec fixture 作为证据来源。",
+      "source": "skills/lark-slides/references/svglide-reference-source-inventory.json"
+    },
+    {
+      "id": "non-copying-transform",
+      "text": "参考仓库中的 HTML、CSS、截图和外部 renderer 代码不作为 SVGlide 运行时依赖；这里只吸收设计意图、布局信号、主题 token 和组件抽象。",
+      "source": "skills/lark-slides/references/absorptions/beautiful-html-templates"
+    },
+    {
+      "id": "fixture-proof-chain",
+      "text": "reference_absorption_wave2 在本地生成 CanvasSpec、Satori 预览、SVGlide protocol SVG、PNG preview、contact sheet 和 runner receipts，用于证明吸收资产可执行。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2"
+    },
+    {
+      "id": "beautiful-html-templates:ledger-briefing",
+      "text": "beautiful-html-templates:ledger-briefing 是 reference_absorption_wave2 第 1 页《复盘事项账本》的本地参考吸收证据。该页的结论是：把结论、证据和 owner 放进克制的黑白账本结构。。页面使用中文 body_points：把结论、证据和 owner 放进克制的黑白账本结构。；增长口径已统一；风险归因待复核；Owner 已明确。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:ivory-ledger",
+      "text": "svglide-theme:ivory-ledger 是 reference_absorption_wave2 第 1 页《复盘事项账本》的本地参考吸收证据。该页的结论是：把结论、证据和 owner 放进克制的黑白账本结构。。页面使用中文 body_points：把结论、证据和 owner 放进克制的黑白账本结构。；增长口径已统一；风险归因待复核；Owner 已明确。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:intelligence-brief",
+      "text": "beautiful-html-templates:intelligence-brief 是 reference_absorption_wave2 第 2 页《组织信号简报》的本地参考吸收证据。该页的结论是：用深色情报简报结构承载高层判断、早期信号和建议行动。。页面使用中文 body_points：用深色情报简报结构承载高层判断、早期信号和建议行动。；指标移动前的协作信号；约束来自跨团队边界；下轮验证需要单 owner。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:signal-navy",
+      "text": "svglide-theme:signal-navy 是 reference_absorption_wave2 第 2 页《组织信号简报》的本地参考吸收证据。该页的结论是：用深色情报简报结构承载高层判断、早期信号和建议行动。。页面使用中文 body_points：用深色情报简报结构承载高层判断、早期信号和建议行动。；指标移动前的协作信号；约束来自跨团队边界；下轮验证需要单 owner。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:printed-program",
+      "text": "beautiful-html-templates:printed-program 是 reference_absorption_wave2 第 3 页《团队晚餐式议程》的本地参考吸收证据。该页的结论是：单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。。页面使用中文 body_points：单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。；开场观察；主议题讨论；行动项确认。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:terracotta-program",
+      "text": "svglide-theme:terracotta-program 是 reference_absorption_wave2 第 3 页《团队晚餐式议程》的本地参考吸收证据。该页的结论是：单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。。页面使用中文 body_points：单色印刷感适合活动日程、工作坊 agenda 和轻量社群报告。；开场观察；主议题讨论；行动项确认。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:retro-ui-dashboard",
+      "text": "beautiful-html-templates:retro-ui-dashboard 是 reference_absorption_wave2 第 4 页《发布控制面板》的本地参考吸收证据。该页的结论是：把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。。页面使用中文 body_points：把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。；发布控制面板 的模板资产化验证；发布控制面板 的证据链验证。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:retro-desktop",
+      "text": "svglide-theme:retro-desktop 是 reference_absorption_wave2 第 4 页《发布控制面板》的本地参考吸收证据。该页的结论是：把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。。页面使用中文 body_points：把产品发布状态做成复古桌面窗口，适合技术团队同步和版本复盘。；发布控制面板 的模板资产化验证；发布控制面板 的证据链验证。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:product-ribbon",
+      "text": "beautiful-html-templates:product-ribbon 是 reference_absorption_wave2 第 5 页《功能货架更新》的本地参考吸收证据。该页的结论是：多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。。页面使用中文 body_points：多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。；智能推荐；批量导入；权限看板。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:sakura-catalog",
+      "text": "svglide-theme:sakura-catalog 是 reference_absorption_wave2 第 5 页《功能货架更新》的本地参考吸收证据。该页的结论是：多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。。页面使用中文 body_points：多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。；智能推荐；批量导入；权限看板。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:type-mass-poster",
+      "text": "beautiful-html-templates:type-mass-poster 是 reference_absorption_wave2 第 6 页《重点只说一遍》的本地参考吸收证据。该页的结论是：用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。。页面使用中文 body_points：用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。；一个核心信息；三条支撑理由；不需要装饰。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:acid-studio",
+      "text": "svglide-theme:acid-studio 是 reference_absorption_wave2 第 6 页《重点只说一遍》的本地参考吸收证据。该页的结论是：用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。。页面使用中文 body_points：用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。；一个核心信息；三条支撑理由；不需要装饰。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:brutalist-matrix",
+      "text": "beautiful-html-templates:brutalist-matrix 是 reference_absorption_wave2 第 7 页《方案评分矩阵》的本地参考吸收证据。该页的结论是：硬边框矩阵用于竞品对比、方案评分和关键约束排序。。页面使用中文 body_points：硬边框矩阵用于竞品对比、方案评分和关键约束排序。；优先方案 B；成本可控；接入最快。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:raw-grid-mono",
+      "text": "svglide-theme:raw-grid-mono 是 reference_absorption_wave2 第 7 页《方案评分矩阵》的本地参考吸收证据。该页的结论是：硬边框矩阵用于竞品对比、方案评分和关键约束排序。。页面使用中文 body_points：硬边框矩阵用于竞品对比、方案评分和关键约束排序。；优先方案 B；成本可控；接入最快。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "beautiful-html-templates:annotated-field-board",
+      "text": "beautiful-html-templates:annotated-field-board 是 reference_absorption_wave2 第 8 页《用户访谈证据墙》的本地参考吸收证据。该页的结论是：把访谈洞察、证据和下一步贴在同一张标注板上。。页面使用中文 body_points：把访谈洞察、证据和下一步贴在同一张标注板上。；用户绕过默认流程；关键证据需要回访；下一步由体验组 owner。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    },
+    {
+      "id": "svglide-theme:field-notebook",
+      "text": "svglide-theme:field-notebook 是 reference_absorption_wave2 第 8 页《用户访谈证据墙》的本地参考吸收证据。该页的结论是：把访谈洞察、证据和下一步贴在同一张标注板上。。页面使用中文 body_points：把访谈洞察、证据和下一步贴在同一张标注板上。；用户绕过默认流程；关键证据需要回访；下一步由体验组 owner。这些信息来自 SVGlide 自有 CanvasSpec fixture 和 absorption record，不依赖参考仓库运行时代码。",
+      "source": "skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave2/02-plan/slide_plan.json"
+    }
+  ],
+  "generated_at": "2026-06-21T19:58:09+00:00"
+}

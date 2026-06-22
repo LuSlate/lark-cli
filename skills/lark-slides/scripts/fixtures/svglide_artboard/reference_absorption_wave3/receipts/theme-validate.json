@@ -1,0 +1,75 @@
+{
+  "action": "create_live",
+  "checked_at": "2026-06-22T04:01:48+08:00",
+  "inputs": {
+    "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b",
+    "slide_plan": "02-plan/slide_plan.json",
+    "template_registry": "skills/lark-slides/references/svglide-template-registry.json",
+    "template_registry_sha256": "35c048c286466420986ff2ae1d6587c3bda2ec067a65b6242b4535bdb5e409dc",
+    "theme_registry": "skills/lark-slides/scripts/artboard_renderer/themes/registry.json",
+    "theme_registry_sha256": "9fca2cd8e406fd89cceeaf1bf3e67b710d6824713b0a95ac11f3a66fb6572959"
+  },
+  "issues": [],
+  "output_path": "06-check/theme-validate.json",
+  "pages": [
+    {
+      "issues": [],
+      "page": 1,
+      "status": "passed",
+      "template_id": "architectural-spec",
+      "theme_id": "stone-architect",
+      "theme_sha256": "c705a2779a93718e7c0921bdfa0a367133e87d310d9674f69a61286ba0bb6ef6"
+    },
+    {
+      "issues": [],
+      "page": 2,
+      "status": "passed",
+      "template_id": "trend-grid-report",
+      "theme_id": "magazine-cobalt",
+      "theme_sha256": "1cbe65d4c553555c97ef6bf925c680a4ea5c2a1d55f944334f77eca88bb4762d"
+    },
+    {
+      "issues": [],
+      "page": 3,
+      "status": "passed",
+      "template_id": "serif-stat-editorial",
+      "theme_id": "forest-editorial",
+      "theme_sha256": "bdf130c0c5da1295116749728fb0be8895e15e14042e4e1c367d1c1d0c0d80a7"
+    },
+    {
+      "issues": [],
+      "page": 4,
+      "status": "passed",
+      "template_id": "poster-stat-punch",
+      "theme_id": "tomato-poster",
+      "theme_sha256": "21613f0a23f91ffeda6fbca825517522e03aa834cdf6968bab7080bf48a5787c"
+    }
+  ],
+  "schema_version": "svglide-theme-validate/v1",
+  "stage": "theme_validate",
+  "status": "passed",
+  "summary": {
+    "error_count": 0,
+    "page_count": 4,
+    "theme_count": 4,
+    "warning_count": 0
+  },
+  "theme_files": [
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/stone-architect.json",
+      "sha256": "92916591b8a97672648fb7377e3115d488286dd17d66912f8597e02c3d1ec324"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/magazine-cobalt.json",
+      "sha256": "5134052d6ecfa1e18c5df35fb3e7c6881e1a6509fa8e0b35e1aa763ce6686e1a"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/forest-editorial.json",
+      "sha256": "85105285e3562543bb162d2c8d1a78337668e321fe5d9b4b10a085456b259867"
+    },
+    {
+      "path": "skills/lark-slides/scripts/artboard_renderer/themes/tomato-poster.json",
+      "sha256": "b9a6e8ff335b297bbded67453eeeea48a42696f613b91a55481e391a1b1b6465"
+    }
+  ]
+}

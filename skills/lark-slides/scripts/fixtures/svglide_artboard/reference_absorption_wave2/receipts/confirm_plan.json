@@ -1,0 +1,21 @@
+{
+  "command": [],
+  "confirmation": {
+    "confirmed_at": "2026-06-21T20:02:58+00:00",
+    "confirmed_by": "user",
+    "lock_sha256": null,
+    "plan_sha256": "b5a678c568a2f7c3122b87492eb587c5588b3eb096b615e069b98a5819faca38"
+  },
+  "ended_at": "2026-06-22T04:03:06+08:00",
+  "error": null,
+  "inputs": [
+    "02-plan/slide_plan.json",
+    "02-plan/plan-confirmation.json"
+  ],
+  "outputs": [
+    "receipts/confirm_plan.json"
+  ],
+  "stage": "confirm_plan",
+  "started_at": "2026-06-22T04:03:06+08:00",
+  "status": "passed"
+}

@@ -1,0 +1,76 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "TREND INDEX",
+    "subtitle": "用杂志式 grid、索引行和像素块表达趋势报告与市场观察。",
+    "title": "AI 应用趋势索引",
+    "trends": [
+      "模型成本压力",
+      "Agent 工作流成形",
+      "设计运营成熟",
+      "治理缺口扩大"
+    ]
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 132,
+        "width": 760,
+        "x": 56,
+        "y": 70
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "trend-grid-report",
+  "theme": {
+    "colors": {
+      "accent": "#5560E5",
+      "background": "#F0EBDE",
+      "muted": "#4F5AB8",
+      "panel": "#E6E0CE",
+      "primary": "#1F2BE0",
+      "text": "#171B2F"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.cobalt-grid.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "magazine-cobalt",
+    "typography": {
+      "body": 19,
+      "label": 15,
+      "subtitle": 19,
+      "title": 58
+    }
+  },
+  "theme_id": "magazine-cobalt",
+  "version": "svglide-canvas-spec/v1"
+}

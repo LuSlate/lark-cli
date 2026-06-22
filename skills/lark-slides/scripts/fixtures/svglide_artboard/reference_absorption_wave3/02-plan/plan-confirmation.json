@@ -1,0 +1,8 @@
+{
+  "version": "svglide-plan-confirmation/v1",
+  "status": "confirmed",
+  "confirmed_by": "user",
+  "confirmed_at": "2026-06-21T20:01:41+00:00",
+  "plan_path": "02-plan/slide_plan.json",
+  "plan_sha256": "f7ee5aa17ec525303568bccc7db1c25a0ebd7d8fc894fc6a1c6738de306b666b"
+}

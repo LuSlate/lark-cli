@@ -1,0 +1,76 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "counter": "06/06",
+    "eyebrow": "STUDIO NOTE",
+    "notes": [
+      "一个核心信息",
+      "三条支撑理由",
+      "不需要装饰"
+    ],
+    "subtitle": "用极高对比大字块表达单一判断，适合 campaign、宣言和强观点页。",
+    "title": "重点只说一遍"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "type-mass-poster",
+  "theme": {
+    "colors": {
+      "accent": "#F0CC00",
+      "background": "#1C1C1C",
+      "muted": "#9A860C",
+      "panel": "#242422",
+      "primary": "#F5D200",
+      "text": "#F5D200"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.studio.design.md"
+    ],
+    "spacing": {
+      "card": 18,
+      "gap": 16,
+      "page": 56
+    },
+    "theme_id": "acid-studio",
+    "typography": {
+      "body": 18,
+      "label": 15,
+      "subtitle": 21,
+      "title": 82
+    }
+  },
+  "theme_id": "acid-studio",
+  "version": "svglide-canvas-spec/v1"
+}

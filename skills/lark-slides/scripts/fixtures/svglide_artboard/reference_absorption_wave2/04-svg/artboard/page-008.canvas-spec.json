@@ -1,0 +1,81 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "FIELD NOTE",
+    "notes": [
+      "用户绕过默认流程",
+      "关键证据需要回访",
+      "下一步由体验组 owner"
+    ],
+    "stamp": "REVIEWED",
+    "subtitle": "把访谈洞察、证据和下一步贴在同一张标注板上。",
+    "tags": [
+      "USER",
+      "EVIDENCE",
+      "NEXT"
+    ],
+    "title": "用户访谈证据墙"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 132,
+        "width": 760,
+        "x": 56,
+        "y": 70
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "annotated-field-board",
+  "theme": {
+    "colors": {
+      "accent": "#1D4ED8",
+      "background": "#F8E8B8",
+      "muted": "#6B5B45",
+      "panel": "#FFF7D6",
+      "primary": "#C2410C",
+      "text": "#3B2F22"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.pin-and-paper.design.md"
+    ],
+    "spacing": {
+      "card": 16,
+      "gap": 14,
+      "page": 56
+    },
+    "theme_id": "field-notebook",
+    "typography": {
+      "body": 18,
+      "label": 16,
+      "subtitle": 20,
+      "title": 48
+    }
+  },
+  "theme_id": "field-notebook",
+  "version": "svglide-canvas-spec/v1"
+}

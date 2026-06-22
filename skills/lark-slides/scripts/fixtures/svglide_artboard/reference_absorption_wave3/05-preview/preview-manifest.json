@@ -1,0 +1,30 @@
+{
+  "project": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/reference_absorption_wave3",
+  "source_dir": "04-svg/prepared",
+  "html_path": "05-preview/preview.html",
+  "manifest_path": "05-preview/preview-manifest.json",
+  "page_count": 4,
+  "asset_href_rewrites": [],
+  "pages": [
+    {
+      "page": 1,
+      "source_path": "04-svg/prepared/page-001.svg",
+      "source_bytes": 4197
+    },
+    {
+      "page": 2,
+      "source_path": "04-svg/prepared/page-002.svg",
+      "source_bytes": 4208
+    },
+    {
+      "page": 3,
+      "source_path": "04-svg/prepared/page-003.svg",
+      "source_bytes": 3754
+    },
+    {
+      "page": 4,
+      "source_path": "04-svg/prepared/page-004.svg",
+      "source_bytes": 3737
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "callout": "优先方案 B",
+    "cells": [
+      "成本可控",
+      "接入最快",
+      "风险最低",
+      "Owner 清晰",
+      "迁移成本",
+      "证据充分"
+    ],
+    "eyebrow": "BATTLECARD",
+    "subtitle": "硬边框矩阵用于竞品对比、方案评分和关键约束排序。",
+    "title": "方案评分矩阵"
+  },
+  "quality_constraints": {
+    "max_title_lines": 3,
+    "min_font_size": 15,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 132,
+        "width": 760,
+        "x": 56,
+        "y": 70
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "brutalist-matrix",
+  "theme": {
+    "colors": {
+      "accent": "#22C55E",
+      "background": "#F7F2E8",
+      "muted": "#44403C",
+      "panel": "#FDE68A",
+      "primary": "#111111",
+      "text": "#111111"
+    },
+    "source_trace": [
+      "beautiful-html-templates.template.raw-grid.design.md"
+    ],
+    "spacing": {
+      "card": 16,
+      "gap": 14,
+      "page": 56
+    },
+    "theme_id": "raw-grid-mono",
+    "typography": {
+      "body": 18,
+      "label": 15,
+      "subtitle": 19,
+      "title": 50
+    }
+  },
+  "theme_id": "raw-grid-mono",
+  "version": "svglide-canvas-spec/v1"
+}

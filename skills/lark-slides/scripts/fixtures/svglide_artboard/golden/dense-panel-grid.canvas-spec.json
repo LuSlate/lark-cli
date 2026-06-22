@@ -1,0 +1,17 @@
+{
+  "version": "svglide-canvas-spec/v1",
+  "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
+  "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+  "template_id": "dense-panel-grid",
+  "theme_id": "cobalt-grid",
+  "theme": {"colors": {"background": "#081C4A", "panel": "#102C6B", "primary": "#60A5FA", "accent": "#FDE047", "text": "#EEF6FF", "muted": "#B7C8E8"}},
+  "content": {
+    "eyebrow": "OPERATING GRID",
+    "title": "渠道健康度复盘",
+    "subtitle": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
+    "metrics": ["转化 +12%", "履约 94%", "成本 -8%", "风险 L2", "样本 42k", "NPS 48"],
+    "notes": ["北区增长稳定", "瓶颈转向交付", "Owner 需要清晰"]
+  },
+  "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 226, "y": 66, "width": 620, "height": 92}}],
+  "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+}

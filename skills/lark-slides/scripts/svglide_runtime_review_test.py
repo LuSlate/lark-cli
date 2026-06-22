@@ -118,6 +118,134 @@ class SVGlideRuntimeReviewTest(unittest.TestCase):
             codes = {item["code"] for item in result["issues"]}
             self.assertIn("asset_renderer_mismatch", codes)
 
+    def test_runtime_review_accepts_artboard_family_aliases_and_page_type_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(
+                project / "02-plan/slide_plan.json",
+                {
+                    "slides": [
+                        {
+                            "page": 1,
+                            "page_type": "cover",
+                            "renderer_id": "artboard_satori.intelligence-brief",
+                            "layout_family": "briefing",
+                        },
+                        {
+                            "page": 2,
+                            "page_type": "content",
+                            "renderer_id": "artboard_satori.executive-dashboard",
+                            "layout_family": "dashboard",
+                        },
+                        {
+                            "page": 3,
+                            "page_type": "closing",
+                            "renderer_id": "artboard_satori.poster-stat-punch",
+                            "layout_family": "poster_stat",
+                        },
+                    ]
+                },
+            )
+            write_json(
+                project / "03-assets/asset-manifest.json",
+                {
+                    "status": "passed",
+                    "acquired_assets": [
+                        {"asset_id": "hero", "page": 1, "placement_role": "cover", "status": "acquired"},
+                        {"asset_id": "closing", "page": 3, "placement_role": "closing", "status": "acquired"},
+                    ],
+                },
+            )
+
+            result = svglide_runtime_review.run_runtime_review(project)
+
+        self.assertEqual(result["status"], "passed", result["issues"])
+
+    def test_runtime_review_blocks_decorative_semantic_element_without_origin(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "02-plan/slide_plan.json", {"slides": [{"page": 1, "renderer_id": "cover", "layout_family": "cover"}]})
+            write_json(
+                project / "04-svg/artboard/page-001.semantic-map.json",
+                {
+                    "version": "svglide-semantic-map/v1",
+                    "page": 1,
+                    "template_id": "cover-hero",
+                    "semantic_source": "CanvasSpec",
+                    "elements": [
+                        {
+                            "element_id": "decorative-line-01",
+                            "kind": "line",
+                            "role": "decorative",
+                            "bbox": {"x": 64, "y": 80, "width": 400, "height": 1},
+                        }
+                    ],
+                },
+            )
+
+            result = svglide_runtime_review.run_runtime_review(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("decorative_origin_missing", {item["code"] for item in result["issues"]})
+
+    def test_runtime_review_blocks_unbound_decorative_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "02-plan/slide_plan.json", {"slides": [{"page": 1, "renderer_id": "cover", "layout_family": "cover"}]})
+            write_json(
+                project / "04-svg/artboard/page-001.semantic-map.json",
+                {
+                    "version": "svglide-semantic-map/v1",
+                    "page": 1,
+                    "template_id": "cover-hero",
+                    "semantic_source": "CanvasSpec",
+                    "elements": [
+                        {
+                            "element_id": "random-line-01",
+                            "kind": "line",
+                            "role": "decorative",
+                            "element_type": "decorative_line",
+                            "origin": {"type": "template", "id": "cover-hero", "reason": "template decorative rule"},
+                            "bbox": {"x": 64, "y": 80, "width": 400, "height": 1},
+                        }
+                    ],
+                },
+            )
+
+            result = svglide_runtime_review.run_runtime_review(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("decorative_semantic_purpose_missing", {item["code"] for item in result["issues"]})
+
+    def test_runtime_review_accepts_semantic_connector_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "02-plan/slide_plan.json", {"slides": [{"page": 1, "renderer_id": "cover", "layout_family": "cover"}]})
+            write_json(
+                project / "04-svg/artboard/page-001.semantic-map.json",
+                {
+                    "version": "svglide-semantic-map/v1",
+                    "page": 1,
+                    "template_id": "timeline-steps",
+                    "semantic_source": "CanvasSpec",
+                    "elements": [
+                        {
+                            "element_id": "timeline-connector-01",
+                            "kind": "line",
+                            "role": "decorative",
+                            "element_type": "decorative_line",
+                            "semantic_purpose": "timeline connector",
+                            "origin": {"type": "template", "id": "timeline-steps", "reason": "template timeline connector"},
+                            "bbox": {"x": 120, "y": 260, "width": 620, "height": 1},
+                        }
+                    ],
+                },
+            )
+
+            result = svglide_runtime_review.run_runtime_review(project)
+
+            self.assertEqual(result["status"], "passed", result["issues"])
+
 
 if __name__ == "__main__":
     unittest.main()

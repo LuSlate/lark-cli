@@ -1,0 +1,26 @@
+{
+  "theme_id": "field-notebook",
+  "colors": {
+    "background": "#F8E8B8",
+    "panel": "#FFF7D6",
+    "primary": "#C2410C",
+    "accent": "#1D4ED8",
+    "text": "#3B2F22",
+    "muted": "#6B5B45"
+  },
+  "typography": {
+    "title": 48,
+    "subtitle": 20,
+    "body": 18,
+    "label": 16
+  },
+  "spacing": {
+    "page": 56,
+    "card": 16,
+    "gap": 14
+  },
+  "source_trace": [
+    "beautiful-html-templates.template.pin-and-paper.design.md"
+  ],
+  "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+}

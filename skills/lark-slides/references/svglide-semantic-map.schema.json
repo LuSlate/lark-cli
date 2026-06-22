@@ -12,6 +12,10 @@
     "theme_id": {"type": ["string", "null"]},
     "semantic_source": {"type": "string", "minLength": 1},
     "content_keys": {"type": "array", "items": {"type": "string"}},
+    "trace_summary": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "elements": {
       "type": "array",
       "minItems": 1,
@@ -23,6 +27,16 @@
           "element_id": {"type": "string", "minLength": 1},
           "kind": {"type": "string", "minLength": 1},
           "role": {"type": "string", "minLength": 1},
+          "element_type": {"type": "string", "minLength": 1},
+          "origin": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "type": {"enum": ["template", "theme", "canvas_spec", "semantic_map", "guardrail"]},
+              "id": {"type": "string", "minLength": 1},
+              "reason": {"type": "string", "minLength": 1}
+            }
+          },
           "source_ref": {"type": ["string", "null"]},
           "text": {"type": ["string", "null"]},
           "bbox": {
