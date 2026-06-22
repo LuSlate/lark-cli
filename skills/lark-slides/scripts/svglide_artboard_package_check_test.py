@@ -43,6 +43,22 @@ class ArtboardPackageCheckTest(unittest.TestCase):
         self.assertIn("package_local_dependency", codes)
         self.assertIn("lockfile_local_dependency", codes)
 
+    def test_package_check_rejects_bundled_satori_dist(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            renderer_dir = Path(tmp)
+            for rel in package_check.SCAN_PATHS:
+                path = renderer_dir / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("", encoding="utf-8")
+            (renderer_dir / "dist" / "render.mjs").write_text(
+                '// node_modules/.pnpm/satori@0.26.0/node_modules/satori/dist/index.js\n',
+                encoding="utf-8",
+            )
+
+            issues = package_check.scan_bundled_satori(renderer_dir)
+
+        self.assertEqual({issue["code"] for issue in issues}, {"package_bundled_satori"})
+
     def test_embed_policy_rejects_broad_scripts_directory(self) -> None:
         embed_text = """
 //go:embed skills/*/SKILL.md skills/*/references

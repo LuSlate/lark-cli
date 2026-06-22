@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "render": "node render.mjs",
-    "build": "esbuild render.mjs --bundle --platform=node --format=esm --target=node18 --external:@resvg/resvg-js --outfile=dist/render.mjs",
+    "build": "esbuild render.mjs --bundle --platform=node --format=esm --target=node18 --external:satori --external:@resvg/resvg-js --outfile=dist/render.mjs",
     "check": "node render.mjs --check-runtime"
   },
   "engines": {

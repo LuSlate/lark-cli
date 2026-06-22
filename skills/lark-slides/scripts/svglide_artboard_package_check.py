@@ -56,6 +56,10 @@ LOCAL_SOURCE_MARKERS = (
     "SVGlide/satori",
     "../satori",
 )
+BUNDLED_SATORI_MARKERS = (
+    "node_modules/.pnpm/satori@",
+    "node_modules/satori/dist/index.js",
+)
 
 
 class PackageCheckError(Exception):
@@ -163,6 +167,18 @@ def scan_local_source_references(renderer_dir: Path) -> list[dict[str, str]]:
     return issues
 
 
+def scan_bundled_satori(renderer_dir: Path) -> list[dict[str, str]]:
+    dist_path = renderer_dir / "dist" / "render.mjs"
+    if not dist_path.exists():
+        return []
+    dist_text = dist_path.read_text(encoding="utf-8", errors="replace")
+    issues: list[dict[str, str]] = []
+    for marker in BUNDLED_SATORI_MARKERS:
+        if marker in dist_text:
+            issues.append({"code": "package_bundled_satori", "message": f"dist/render.mjs contains bundled Satori marker {marker!r}; keep satori external"})
+    return issues
+
+
 def run_node_runtime_check(renderer_dir: Path, entry: Path, *, timeout_seconds: int = 30) -> dict[str, Any]:
     command = ["node", entry.as_posix(), "--check-runtime"]
     result = subprocess.run(
@@ -229,6 +245,7 @@ def inspect_artboard_package(
             issues.append({"code": "renderer_entry_missing", "message": f"missing {repo_rel(path, repo_root)}"})
     issues.extend(validate_dependency_policy(package_payload, lockfile_text))
     issues.extend(scan_local_source_references(renderer_dir))
+    issues.extend(scan_bundled_satori(renderer_dir))
 
     embed_text = embed_path.read_text(encoding="utf-8") if embed_path.exists() else ""
     if not embed_path.exists():
@@ -304,6 +321,7 @@ def inspect_artboard_package(
             ],
             "dependencies": REQUIRED_DEPENDENCIES,
             "native_dependency": "@resvg/resvg-js",
+            "satori_distribution": "external_runtime_dependency_not_bundled",
             "manual_satori_source_checkout_required": False,
             "node_modules_embedded_in_go_binary": False,
         },

@@ -52,7 +52,7 @@ async function loadSatori() {
   } catch (error) {
     console.error('satori dependency is not available in this adapter runtime')
     console.error('development fix: run pnpm install --frozen-lockfile in skills/lark-slides/scripts/artboard_renderer')
-    console.error('release fix: publish dist/render.mjs built by pnpm run build, not the unbundled source entry')
+    console.error('release fix: install satori as an external runtime dependency before running dist/render.mjs --check-runtime')
     console.error(String(error?.message || error))
     process.exit(3)
   }

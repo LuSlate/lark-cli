@@ -1,0 +1,105 @@
+{
+  "generated_at": "2026-06-22",
+  "policy": {
+    "copied_or_adapted_code": "Keep upstream copyright and license notice with the SVGlide artifact that contains the copied or substantially adapted portion.",
+    "reference_absorption": "Record provenance and keep implementation SVGlide-owned; do not embed upstream HTML, CSS, JS, screenshots, or renderer source unless separately recorded.",
+    "satori": "Satori is an MPL-2.0 runtime dependency and must remain external to the artboard renderer bundle."
+  },
+  "sources": [
+    {
+      "head": "e5e204fb1f3b06290846e7dcd7aceddabeceec8c",
+      "license": "MIT",
+      "license_notice": "Copyright (c) 2026 Zara Zhang",
+      "local_path": "/Users/bytedance/bd-projects/beautiful-html-templates",
+      "name": "beautiful-html-templates",
+      "repo_url": "https://github.com/zarazhangrui/beautiful-html-templates.git",
+      "risk_level": "low",
+      "svglide_artifacts": [
+        "skills/lark-slides/references/absorptions/beautiful-html-templates/",
+        "skills/lark-slides/references/beautiful-html-template-families.json",
+        "skills/lark-slides/references/beautiful-html-template-cleanup-map.json"
+      ],
+      "usage": "Template family, layout, component, visual DNA, and planner selection signal extraction.",
+      "usage_type": "reference_absorption"
+    },
+    {
+      "head": "45d9a79874d8700583feb60ddfbca46df437864b",
+      "license": "MIT",
+      "license_notice": "Copyright (c) 2025-2026 Hugo He",
+      "local_path": "/Users/bytedance/bd-projects/ppt-master",
+      "name": "ppt-master",
+      "repo_url": "https://github.com/hugohe3/ppt-master.git",
+      "risk_level": "low",
+      "svglide_artifacts": [
+        "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
+        "skills/lark-slides/references/svglide-reference-source-inventory.json",
+        "skills/lark-slides/references/svglide-reference-absorption-report.md"
+      ],
+      "usage": "Reference for slide generation workflow, planning stages, visual QA, and artifact discipline.",
+      "usage_type": "reference_absorption"
+    },
+    {
+      "head": "8a54325f871ee10fa6545de3b3a9b771aa12620c",
+      "license": "MIT",
+      "license_notice": "Copyright (c) 2025 Y-Research @SBU",
+      "local_path": "/Users/bytedance/bd-projects/workspaces/SVGlide/PosterGen",
+      "name": "PosterGen",
+      "repo_url": "https://github.com/Y-Research-SBU/PosterGen.git",
+      "risk_level": "low",
+      "svglide_artifacts": [
+        "skills/lark-slides/references/svglide-reference-source-inventory.json",
+        "skills/lark-slides/references/svglide-reference-absorption-report.md"
+      ],
+      "usage": "Reference for poster-like composition, asset roles, and visual hierarchy patterns.",
+      "usage_type": "reference_absorption"
+    },
+    {
+      "head": "c5f465d40b5cedabbdf902b0b0c86bcc6bfa1943",
+      "license": "ISC",
+      "license_notice": "Copyright (c) 2024 Julian Cataldo - https://www.juliancataldo.com",
+      "local_path": "/Users/bytedance/bd-projects/og-images-generator",
+      "name": "og-images-generator",
+      "repo_url": "https://github.com/gracile-web/og-images-generator.git",
+      "risk_level": "low",
+      "svglide_artifacts": [
+        "skills/lark-slides/references/svglide-reference-source-inventory.json",
+        "skills/lark-slides/references/svglide-reference-absorption-report.md"
+      ],
+      "usage": "Reference for HTML/CSS-to-image generation pipeline shape and renderer operation boundaries.",
+      "usage_type": "reference_absorption"
+    },
+    {
+      "head": "2aadac07c93bc31eb3ce303e361461e944f25c6d",
+      "license": "Apache-2.0",
+      "license_notice": "Apache License Version 2.0",
+      "local_path": "/Users/bytedance/bd-projects/open-design",
+      "name": "open-design",
+      "repo_url": "https://github.com/nexu-io/open-design.git",
+      "risk_level": "low",
+      "svglide_artifacts": [
+        "skills/lark-slides/references/svglide-reference-source-inventory.json",
+        "skills/lark-slides/references/svglide-reference-absorption-report.md"
+      ],
+      "usage": "Reference for design-generation concepts, abstraction vocabulary, and planning structure.",
+      "usage_type": "reference_absorption"
+    },
+    {
+      "head": "ab49fafbdfa04bd59e70db8988c139af09a59c6f",
+      "license": "MPL-2.0",
+      "license_notice": "Mozilla Public License Version 2.0; package author Shu Ding <g@shud.in>",
+      "local_path": "/Users/bytedance/bd-projects/workspaces/SVGlide/satori",
+      "name": "satori",
+      "repo_url": "https://github.com/vercel/satori.git",
+      "risk_level": "medium",
+      "svglide_artifacts": [
+        "skills/lark-slides/scripts/artboard_renderer/package.json",
+        "skills/lark-slides/scripts/artboard_renderer/pnpm-lock.yaml",
+        "skills/lark-slides/scripts/artboard_renderer/dist/render.mjs",
+        "skills/lark-slides/scripts/svglide_artboard_package_check.py"
+      ],
+      "usage": "Runtime HTML/CSS-like tree to SVG renderer used by the SVGlide artboard renderer.",
+      "usage_type": "external_runtime_dependency"
+    }
+  ],
+  "version": "svglide-oss-source-manifest/v1"
+}
