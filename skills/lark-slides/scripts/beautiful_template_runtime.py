@@ -121,6 +121,62 @@ def normalized_formality(value: Any) -> str:
     return raw if raw in FORMALITY_VALUES else "medium"
 
 
+def policy_summary(value: Any, keys: list[str]) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {key: value.get(key) for key in keys if value.get(key) not in (None, "", [])}
+
+
+def family_usage_policy_summary(family: dict[str, Any]) -> dict[str, Any]:
+    return policy_summary(
+        family.get("family_usage_policy"),
+        ["closed_visual_system", "cross_family_layout_mix_allowed", "recolor_allowed", "font_substitution_allowed", "decorative_elements_policy"],
+    )
+
+
+def cjk_policy_summary(family: dict[str, Any]) -> dict[str, Any]:
+    return policy_summary(
+        family.get("cjk_policy"),
+        ["strategy", "display_font_cn", "body_font_cn", "runtime_font_policy", "italic_policy", "letter_spacing_policy", "mixed_run_spacing"],
+    )
+
+
+def extension_grammar_summary(family: dict[str, Any]) -> dict[str, Any]:
+    grammar = family.get("extension_grammar") if isinstance(family.get("extension_grammar"), dict) else {}
+    return {
+        "layout_rhythm": grammar.get("layout_rhythm"),
+        "component_grammar": grammar.get("component_grammar", [])[:6] if isinstance(grammar.get("component_grammar"), list) else grammar.get("component_grammar"),
+        "decorative_vocabulary": grammar.get("decorative_vocabulary", [])[:6] if isinstance(grammar.get("decorative_vocabulary"), list) else grammar.get("decorative_vocabulary"),
+        "forbidden_mutations": grammar.get("forbidden_mutations", [])[:6] if isinstance(grammar.get("forbidden_mutations"), list) else grammar.get("forbidden_mutations"),
+    }
+
+
+def benchmark_roles(family: dict[str, Any]) -> list[str]:
+    visual_dna = family.get("visual_dna") if isinstance(family.get("visual_dna"), dict) else {}
+    benchmarks = visual_dna.get("screenshot_benchmarks") if isinstance(visual_dna.get("screenshot_benchmarks"), list) else []
+    return [str(item.get("role")) for item in benchmarks if isinstance(item, dict) and item.get("role")]
+
+
+def family_policy_context(limit: int | None = None) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for family in families()[: limit or None]:
+        template_id = family.get("template_id")
+        if not isinstance(template_id, str) or not template_id:
+            continue
+        records.append(
+            {
+                "source_template_id": template_id,
+                "status": family.get("status"),
+                "claim_level": family.get("claim_level"),
+                "family_usage_policy_summary": family_usage_policy_summary(family),
+                "cjk_policy_summary": cjk_policy_summary(family),
+                "extension_grammar_summary": extension_grammar_summary(family),
+                "benchmark_roles": benchmark_roles(family),
+            }
+        )
+    return records
+
+
 def template_registry() -> dict[str, Any]:
     theme_ids = all_theme_ids()
     records: list[dict[str, Any]] = []
@@ -163,6 +219,17 @@ def template_registry() -> dict[str, Any]:
                 "decorative_elements": visual_dna.get("decorative_motifs") or visual_dna.get("motifs") or [],
             },
         }
+        if family:
+            record.update(
+                {
+                    "source_template_id": family.get("template_id"),
+                    "claim_level": family.get("claim_level"),
+                    "family_usage_policy_summary": family_usage_policy_summary(family),
+                    "cjk_policy_summary": cjk_policy_summary(family),
+                    "extension_grammar_summary": extension_grammar_summary(family),
+                    "benchmark_roles": benchmark_roles(family),
+                }
+            )
         record.update(TEMPLATE_OVERRIDES.get(template_id, {}))
         records.append(record)
     return {"version": "svglide-template-registry/generated-from-beautiful-family-v1", "templates": records}

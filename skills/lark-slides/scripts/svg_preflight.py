@@ -38,9 +38,13 @@ PATH_NUMBER_RE = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
 BASE64URL_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 SHA256_HASH_RE = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
 FONT_SHORTHAND_RE = re.compile(r"(^|;)\s*font\s*:", re.IGNORECASE)
+FONT_STYLE_ITALIC_RE = re.compile(r"font-style\s*:\s*(italic|oblique)\b", re.IGNORECASE)
+LETTER_SPACING_RE = re.compile(r"letter-spacing\s*:\s*([^;]+)", re.IGNORECASE)
+REMOTE_FONT_DEPENDENCY_RE = re.compile(r"(@font-face|fonts\.googleapis\.com|fonts\.gstatic\.com|https?://)", re.IGNORECASE)
 STYLE_IMAGE_OPACITY_RE = re.compile(r"(^|;)\s*opacity\s*:", re.IGNORECASE)
 STYLE_STROKE_WIDTH_RE = re.compile(r"(^|;)\s*stroke-width\s*:", re.IGNORECASE)
 STYLE_STROKE_DASHARRAY_RE = re.compile(r"(^|;)\s*stroke-dasharray\s*:", re.IGNORECASE)
+CJK_TEXT_RE = re.compile(r"[\u3400-\u9fff]")
 RGB_RE = re.compile(r"rgba?\(([^)]+)\)", re.IGNORECASE)
 FONT_SIZE_RE = re.compile(r"font-size\s*:\s*([0-9.]+)px?", re.IGNORECASE)
 KEY_PATH_RE = re.compile(r"(critical|flow|journey|loop|main|path|rail|route|spine|timeline)", re.IGNORECASE)
@@ -1437,6 +1441,18 @@ def validate_styles(root: ET.Element) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     for element in root.iter():
         style = get_attr(element, "style") or ""
+        text = "".join(element.itertext())
+        has_cjk = bool(CJK_TEXT_RE.search(text))
+        if style and REMOTE_FONT_DEPENDENCY_RE.search(style):
+            issues.append(
+                issue(
+                    "error",
+                    "remote_font_dependency",
+                    "SVG style must not depend on remote font loading",
+                    element,
+                    "Use SVGlide system font roles; keep Google/webfont names only as design intent metadata.",
+                )
+            )
         if FONT_SHORTHAND_RE.search(style):
             issues.append(
                 issue(
@@ -1447,6 +1463,33 @@ def validate_styles(root: ET.Element) -> list[dict[str, Any]]:
                     "Use explicit font-size, font-weight, font-family, color, line-height, and text-align properties.",
                 )
             )
+        font_style = textify(get_attr(element, "font-style") or "")
+        if has_cjk and (FONT_STYLE_ITALIC_RE.search(style) or normalize_name(font_style) in {"italic", "oblique"}):
+            issues.append(
+                issue(
+                    "error",
+                    "cjk_fake_italic",
+                    "CJK text must not use fake italic or oblique styling",
+                    element,
+                    "Use color, weight, underline, or a family-specific emphasis treatment instead of synthetic CJK italic.",
+                )
+            )
+        letter_spacing = get_attr(element, "letter-spacing")
+        match = LETTER_SPACING_RE.search(style)
+        if match:
+            letter_spacing = match.group(1)
+        if has_cjk and letter_spacing and normalize_name(letter_spacing) not in {"0", "0px", "normal", "unset", "initial"}:
+            parsed = parse_number(letter_spacing)
+            if parsed is None or abs(parsed) > 0.01:
+                issues.append(
+                    issue(
+                        "error",
+                        "cjk_letter_spacing_inherited",
+                        "CJK text must reset inherited Latin tracking/letter-spacing",
+                        element,
+                        "Set letter-spacing:0 for CJK runs; keep tracking only on Latin labels when explicitly needed.",
+                    )
+                )
         name = local_name(element.tag)
         if name in {"circle", "ellipse"} and (get_attr(element, "stroke-width") is not None or STYLE_STROKE_WIDTH_RE.search(style)):
             issues.append(
@@ -1749,6 +1792,180 @@ def is_svg_route_plan(plan: dict[str, Any]) -> bool:
 def is_template_family_route_plan(plan: dict[str, Any]) -> bool:
     selection = plan.get("template_family_selection")
     return isinstance(selection, dict) and boolish(selection.get("enabled"), default=False)
+
+
+def beautiful_family_by_id() -> dict[str, dict[str, Any]]:
+    return {textify(family.get("template_id")).strip(): family for family in beautiful_template_runtime.families() if textify(family.get("template_id")).strip()}
+
+
+def selected_template_family_id(plan: dict[str, Any]) -> str:
+    selection = nested_dict(plan.get("template_family_selection"))
+    return textify(selection.get("selected_template_id") or selection.get("template_id") or selection.get("family_id")).strip()
+
+
+def selected_template_family(plan: dict[str, Any]) -> dict[str, Any] | None:
+    selected = selected_template_family_id(plan)
+    if not selected:
+        return None
+    families_by_id = beautiful_family_by_id()
+    family = families_by_id.get(selected)
+    if family:
+        return family
+    normalized = normalize_name(selected)
+    for template_id, candidate in families_by_id.items():
+        if normalize_name(template_id) == normalized:
+            return candidate
+    return None
+
+
+def slide_template_family_id(slide: dict[str, Any]) -> str:
+    for key in ["template_family_id", "family_id", "template_source_id", "source_template_id"]:
+        value = textify(slide.get(key)).strip()
+        if value:
+            return value
+    selection = nested_dict(slide.get("template_family_selection"))
+    return textify(selection.get("selected_template_id") or selection.get("template_id") or selection.get("family_id")).strip()
+
+
+def family_variant_ids(family: dict[str, Any]) -> set[str]:
+    variants = family.get("variants") if isinstance(family.get("variants"), list) else []
+    return {textify(item.get("variant_id")).strip() for item in variants if isinstance(item, dict) and textify(item.get("variant_id")).strip()}
+
+
+def slide_requires_extension_grammar(slide: dict[str, Any], family: dict[str, Any]) -> bool:
+    variant = textify(slide.get("template_variant")).strip()
+    variant_source = normalize_name(slide.get("variant_source") or slide.get("layout_source"))
+    if variant_source in {"generated_extension", "custom", "from_scratch", "manual_extension", "derived_extension"}:
+        return True
+    return variant.startswith("custom_")
+
+
+def slide_has_extension_grammar_ref(slide: dict[str, Any]) -> bool:
+    for key in ["extension_grammar_ref", "extension_grammar_applied", "extension_grammar", "template_extension_grammar"]:
+        value = slide.get(key)
+        if isinstance(value, bool):
+            if value:
+                return True
+        elif textify(value).strip():
+            return True
+    return False
+
+
+def selection_requests_recolor(plan: dict[str, Any]) -> bool:
+    selection = nested_dict(plan.get("template_family_selection"))
+    for key in ["palette_override", "recolor_override", "color_override", "theme_override"]:
+        value = selection.get(key) or plan.get(key)
+        if value not in (None, "", {}, []):
+            return True
+    return False
+
+
+def selection_allows_recolor(plan: dict[str, Any]) -> bool:
+    selection = nested_dict(plan.get("template_family_selection"))
+    for source in [selection, plan]:
+        if boolish(source.get("allow_family_recolor") or source.get("brand_palette_override") or source.get("brand_override"), default=False):
+            return True
+        reason = textify(source.get("brand_override_reason") or source.get("recolor_reason")).strip()
+        if reason:
+            return True
+    return False
+
+
+def validate_template_family_policy(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    family = selected_template_family(plan)
+    selection = nested_dict(plan.get("template_family_selection"))
+    selected = selected_template_family_id(plan)
+    if not family:
+        return issues
+
+    if family.get("claim_level") == "source_inventory_only" and selection.get("claim_level") == "svglide_absorbed":
+        issues.append(
+            plan_issue(
+                "error",
+                "source_inventoried_claim_escalation",
+                f'template family "{selected}" is source_inventory_only but planner claims svglide_absorbed',
+                None,
+                "Keep claim_level=source_inventory_only until the family has real SVGlide absorption provenance.",
+            )
+        )
+
+    usage = family.get("family_usage_policy") if isinstance(family.get("family_usage_policy"), dict) else {}
+    if selection_requests_recolor(plan) and not selection_allows_recolor(plan) and usage.get("recolor_allowed") is False:
+        issues.append(
+            plan_issue(
+                "error",
+                "family_recolor_without_override",
+                f'template family "{selected}" forbids default recolor without explicit brand override',
+                None,
+                "Remove the palette/recolor override or mark an explicit brand override with a reason.",
+            )
+        )
+
+    cjk_policy = family.get("cjk_policy") if isinstance(family.get("cjk_policy"), dict) else {}
+    if not cjk_policy.get("mixed_run_spacing"):
+        issues.append(
+            plan_issue(
+                "error",
+                "cjk_mixed_run_spacing_missing",
+                f'template family "{selected}" does not declare mixed-run CJK/Latin spacing policy',
+                None,
+                "Extract mixed_run_spacing from design.md before using the family.",
+            )
+        )
+    if cjk_policy.get("runtime_font_policy") not in {"system_font_only_no_remote_dependency", None}:
+        issues.append(
+            plan_issue(
+                "error",
+                "remote_font_dependency",
+                f'template family "{selected}" declares a runtime font dependency that SVGlide cannot rely on',
+                None,
+                "Use system CJK font roles in SVGlide runtime; keep webfont names as design intent only.",
+            )
+        )
+
+    visual_dna = family.get("visual_dna") if isinstance(family.get("visual_dna"), dict) else {}
+    benchmarks = visual_dna.get("screenshot_benchmarks") if isinstance(visual_dna.get("screenshot_benchmarks"), list) else []
+    roles = {textify(item.get("role")) for item in benchmarks if isinstance(item, dict)}
+    required_roles = {"cover_reference", "mid_deck_reference", "late_deck_reference"}
+    if roles != required_roles:
+        issues.append(
+            plan_issue(
+                "error",
+                "missing_screenshot_benchmark_role",
+                f'template family "{selected}" screenshot_benchmarks must include cover/mid/late roles',
+                None,
+                "Use README gallery order and real screenshot paths; do not invent benchmark roles.",
+            )
+        )
+
+    slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
+    for slide in slides:
+        if not isinstance(slide, dict):
+            continue
+        visual_plan = slide_visual_plan(slide)
+        slide_family_id = slide_template_family_id(visual_plan)
+        if slide_family_id and slide_family_id != selected and normalize_name(slide_family_id) != normalize_name(selected):
+            issues.append(
+                plan_issue(
+                    "error",
+                    "cross_family_layout_mix",
+                    f'slide uses template family "{slide_family_id}" while deck selected "{selected}"',
+                    slide,
+                    "Keep one template family per deck unless the user explicitly starts a new deck.",
+                )
+            )
+        if slide_requires_extension_grammar(visual_plan, family) and not slide_has_extension_grammar_ref(visual_plan):
+            issues.append(
+                plan_issue(
+                    "error",
+                    "missing_extension_grammar",
+                    "generated or custom template_family slide must cite the selected family's extension_grammar",
+                    slide,
+                    "Attach extension_grammar_ref/extension_grammar_applied when extending missing layouts.",
+                )
+            )
+    return issues
 
 
 def slide_visual_plan(slide: dict[str, Any]) -> dict[str, Any]:
@@ -2460,6 +2677,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                     "Use one of: " + ", ".join(sorted(family_ids)),
                 )
             )
+        issues.extend(validate_template_family_policy(plan))
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
     asset_contract_lookup = asset_contracts_by_id(plan)

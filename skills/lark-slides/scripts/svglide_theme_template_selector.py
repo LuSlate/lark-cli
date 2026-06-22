@@ -282,6 +282,16 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
         scored["rejection_reasons"].append("template_mismatch:summary_not_process")
     scored["score"] = score
     scored["template_id"] = template_id
+    for key in [
+        "source_template_id",
+        "claim_level",
+        "family_usage_policy_summary",
+        "cjk_policy_summary",
+        "extension_grammar_summary",
+        "benchmark_roles",
+    ]:
+        if template.get(key) not in (None, "", [], {}):
+            scored[key] = template.get(key)
     scored["selection_reason"] = list(scored.get("matched_signals", []))[:6]
     return scored
 

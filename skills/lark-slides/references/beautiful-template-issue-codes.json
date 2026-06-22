@@ -11,5 +11,16 @@
     "live_submit_missing_file_token",
     "unowned_decorative_primitive",
     "decorative_motif_overuse"
+  ],
+  "phase_1_knowledge_absorption": [
+    "cross_family_layout_mix",
+    "missing_extension_grammar",
+    "remote_font_dependency",
+    "cjk_fake_italic",
+    "cjk_letter_spacing_inherited",
+    "cjk_mixed_run_spacing_missing",
+    "family_recolor_without_override",
+    "source_inventoried_claim_escalation",
+    "missing_screenshot_benchmark_role"
   ]
 }

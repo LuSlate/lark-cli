@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from html import escape
 from pathlib import Path
@@ -27,6 +28,28 @@ RECIPES = [
     ("spotlight_annotation", "annotation", ["spotlight", "annotation"], ["typography"]),
     ("brand_system", "brand", ["typography", "geometric_shape"], ["typography"]),
 ]
+M15_POLICY_CODES = [
+    "cross_family_layout_mix",
+    "missing_extension_grammar",
+    "remote_font_dependency",
+    "cjk_fake_italic",
+    "cjk_letter_spacing_inherited",
+    "cjk_mixed_run_spacing_missing",
+    "family_recolor_without_override",
+    "source_inventoried_claim_escalation",
+    "missing_screenshot_benchmark_role",
+]
+
+
+def sha256_payload(value: Any) -> str:
+    blob = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(blob).hexdigest()
+
+
+def benchmark_roles(family: dict[str, Any]) -> list[str]:
+    visual_dna = family.get("visual_dna") if isinstance(family.get("visual_dna"), dict) else {}
+    benchmarks = visual_dna.get("screenshot_benchmarks") if isinstance(visual_dna.get("screenshot_benchmarks"), list) else []
+    return [str(item.get("role")) for item in benchmarks if isinstance(item, dict) and item.get("role")]
 
 
 def style_plan_fields(case_id: str) -> dict[str, Any]:
@@ -158,12 +181,15 @@ def run_case(case_id: str, query: str, out_dir: Path, include_images: bool) -> d
     case_dir = out_dir / case_id
     case_dir.mkdir(parents=True, exist_ok=True)
     matched_plan = beautiful_template_matcher.plan_with_template_family(query, page_count=10)
+    selected_family_id = matched_plan["template_family_selection"]["selected_template_id"]
+    selected_family = beautiful_template_matcher.load_family(selected_family_id)
     slides: list[dict[str, Any]] = []
     svg_paths: list[str] = []
     for raw_slide in matched_plan["slides"]:
         page = int(raw_slide["page"])
         include_image = include_images and page in {1, 7}
         slide, svg = make_slide(page, raw_slide["template_variant"], raw_slide.get("semantic_blocks", []), raw_slide["component_selection"], include_image)
+        slide["template_family_id"] = selected_family_id
         svg_path = case_dir / f"page-{page:03d}.svg"
         svg_path.write_text(svg, encoding="utf-8")
         svg_paths.append(str(svg_path))
@@ -183,11 +209,19 @@ def run_case(case_id: str, query: str, out_dir: Path, include_images: bool) -> d
     required_slots = sum(len(svg_preflight.required_image_slots(slide)) for slide in slides)
     rendered_images = sum(file.get("visual_primitives", {}).get("counts", {}).get("image", 0) for file in preflight["files"])
     issues = preflight.get("plan", {}).get("issues", []) + [issue for file in preflight["files"] for issue in file.get("issues", [])]
+    issue_codes = {issue.get("code") for issue in issues if isinstance(issue, dict)}
     receipt = {
         "version": "beautiful-template-e2e-dry-run/v1",
         "case_id": case_id,
         "query": query,
         "selected_template_id": matched_plan["template_family_selection"]["selected_template_id"],
+        "selected_template_family": selected_family_id,
+        "claim_level": selected_family.get("claim_level"),
+        "cjk_policy_hash": sha256_payload(selected_family.get("cjk_policy")),
+        "family_usage_policy_hash": sha256_payload(selected_family.get("family_usage_policy")),
+        "extension_grammar_hash": sha256_payload(selected_family.get("extension_grammar")),
+        "benchmark_roles": benchmark_roles(selected_family),
+        "preflight_policy_checks": {code: ("failed" if code in issue_codes else "passed") for code in M15_POLICY_CODES},
         "candidate_template_ids": matched_plan["template_family_selection"]["candidate_template_ids"],
         "slide_count": len(slides),
         "template_variant_count": len({slide["template_variant"] for slide in slides}),
@@ -227,8 +261,23 @@ def run_all(out_dir: Path = DEFAULT_OUT_DIR) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run beautiful template matcher-to-preflight dry-run fixtures.")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
+    parser.add_argument("--query", default=None)
+    parser.add_argument("--case-id", default="ad-hoc")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--include-images", action="store_true")
     args = parser.parse_args()
-    summary = run_all(Path(args.out_dir))
+    if args.query:
+        receipt = run_case(args.case_id, args.query, Path(args.out_dir), include_images=args.include_images)
+        summary = {
+            "version": "beautiful-template-e2e-dry-run-summary/v1",
+            "status": receipt["status"],
+            "receipt_count": 1,
+            "receipts": [receipt],
+        }
+        Path(args.out_dir).mkdir(parents=True, exist_ok=True)
+        (Path(args.out_dir) / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    else:
+        summary = run_all(Path(args.out_dir))
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0 if summary["status"] == "passed" else 1
 

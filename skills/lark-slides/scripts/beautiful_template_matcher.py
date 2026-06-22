@@ -19,7 +19,7 @@ COMPONENT_REGISTRY_PATH = REFERENCES_DIR / "component-registry.json"
 ASSET_STRATEGY_PATH = REFERENCES_DIR / "asset-strategy-registry.json"
 
 
-INTERNAL_REVIEW_RE = re.compile(r"复盘|经营|季度|管理层|指标|问题|原因|后续|review|business", re.IGNORECASE)
+INTERNAL_REVIEW_RE = re.compile(r"复盘|经营|管理层|指标|问题|原因|后续|review|business", re.IGNORECASE)
 CULTURE_EVENT_RE = re.compile(r"艺术|展|活动|海报|文化|青年|poster|exhibition|biennale", re.IGNORECASE)
 COMPANY_PRODUCT_RE = re.compile(r"公司|产品|竞品|MiniMax|智谱|brand|company|product|logo|screenshot", re.IGNORECASE)
 QUANTIFIED_RE = re.compile(r"\d+|同比|环比|增长|下降|占比|排名|trend|share|%|KPI", re.IGNORECASE)
@@ -78,6 +78,42 @@ def normalize_text(value: Any) -> str:
     if isinstance(value, list):
         return " ".join(normalize_text(item) for item in value)
     return str(value or "")
+
+
+def policy_summary(value: Any, keys: list[str]) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    return {key: value.get(key) for key in keys if value.get(key) not in (None, "", [])}
+
+
+def cjk_policy_summary(family: dict[str, Any]) -> dict[str, Any]:
+    return policy_summary(
+        family.get("cjk_policy"),
+        ["strategy", "display_font_cn", "body_font_cn", "runtime_font_policy", "italic_policy", "letter_spacing_policy", "mixed_run_spacing"],
+    )
+
+
+def family_usage_policy_summary(family: dict[str, Any]) -> dict[str, Any]:
+    return policy_summary(
+        family.get("family_usage_policy"),
+        ["closed_visual_system", "cross_family_layout_mix_allowed", "recolor_allowed", "font_substitution_allowed", "decorative_elements_policy"],
+    )
+
+
+def extension_grammar_summary(family: dict[str, Any]) -> dict[str, Any]:
+    grammar = family.get("extension_grammar") if isinstance(family.get("extension_grammar"), dict) else {}
+    return {
+        "layout_rhythm": grammar.get("layout_rhythm"),
+        "component_grammar": grammar.get("component_grammar", [])[:6] if isinstance(grammar.get("component_grammar"), list) else grammar.get("component_grammar"),
+        "decorative_vocabulary": grammar.get("decorative_vocabulary", [])[:6] if isinstance(grammar.get("decorative_vocabulary"), list) else grammar.get("decorative_vocabulary"),
+        "forbidden_mutations": grammar.get("forbidden_mutations", [])[:6] if isinstance(grammar.get("forbidden_mutations"), list) else grammar.get("forbidden_mutations"),
+    }
+
+
+def benchmark_roles(family: dict[str, Any]) -> list[str]:
+    visual_dna = family.get("visual_dna") if isinstance(family.get("visual_dna"), dict) else {}
+    benchmarks = visual_dna.get("screenshot_benchmarks") if isinstance(visual_dna.get("screenshot_benchmarks"), list) else []
+    return [str(item.get("role")) for item in benchmarks if isinstance(item, dict) and item.get("role")]
 
 
 def query_signals(query: str) -> dict[str, Any]:
@@ -148,6 +184,9 @@ def family_score(query: str, signals: dict[str, Any], family: dict[str, Any]) ->
         if pattern.search(query) and template_id in boosts:
             score += boosts[template_id]
             reasons.append(reason)
+    if family.get("claim_level") == "source_inventory_only":
+        score -= 0.03
+        reasons.append("source inventory only; requires contract compile before absorbed claim")
     avoid_text = normalize_text(semantic_fit.get("avoid_when"))
     if avoid_text and token_overlap_score(query, avoid_text) > 0:
         score -= 0.3
@@ -297,11 +336,17 @@ def match_templates(query: str, limit: int = 3, page_count: int | None = None, r
         matches.append(
             {
                 "template_id": family.get("template_id"),
+                "status": family.get("status"),
+                "claim_level": family.get("claim_level"),
                 "score": round(score, 4),
                 "reasons": reasons,
                 "recommended_variants": variants,
                 "component_hints": family.get("component_candidates", [])[:6],
                 "asset_strategy_hints": ["chart_when_quantified", "real_image_required", "structured_fallback"],
+                "family_usage_policy_summary": family_usage_policy_summary(family),
+                "cjk_policy_summary": cjk_policy_summary(family),
+                "extension_grammar_summary": extension_grammar_summary(family),
+                "benchmark_roles": benchmark_roles(family),
             }
         )
     return {"query_signals": signals, "matches": matches}
@@ -309,8 +354,9 @@ def match_templates(query: str, limit: int = 3, page_count: int | None = None, r
 
 def plan_with_template_family(query: str, page_count: int = 10) -> dict[str, Any]:
     result = match_templates(query, limit=3, page_count=page_count)
-    selected = result["matches"][0]["template_id"]
-    variants = result["matches"][0]["recommended_variants"]
+    selected_match = result["matches"][0]
+    selected = selected_match["template_id"]
+    variants = selected_match["recommended_variants"]
     if not variants:
         variants = ["cover", "agenda", "context_overview", "comparison", "action_plan", "closing"]
     slides = []
@@ -320,6 +366,7 @@ def plan_with_template_family(query: str, page_count: int = 10) -> dict[str, Any
         slides.append(
             {
                 "page": index + 1,
+                "template_family_id": selected,
                 "template_variant": variant,
                 "semantic_blocks": blocks,
                 "component_selection": select_components(blocks),
@@ -334,7 +381,12 @@ def plan_with_template_family(query: str, page_count: int = 10) -> dict[str, Any
             "source": "beautiful-html-template-families",
             "selected_template_id": selected,
             "candidate_template_ids": [item["template_id"] for item in result["matches"]],
-            "selection_reason": "; ".join(result["matches"][0]["reasons"]),
+            "selection_reason": "; ".join(selected_match["reasons"]),
+            "claim_level": selected_match.get("claim_level"),
+            "family_usage_policy_summary": selected_match.get("family_usage_policy_summary"),
+            "cjk_policy_summary": selected_match.get("cjk_policy_summary"),
+            "extension_grammar_summary": selected_match.get("extension_grammar_summary"),
+            "benchmark_roles": selected_match.get("benchmark_roles"),
         },
         "slides": slides,
     }

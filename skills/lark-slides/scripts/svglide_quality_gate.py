@@ -66,6 +66,17 @@ BLOCKED_ASSET_SOURCE_REFS = {"local-generated-preview-asset"}
 BLOCKED_ASSET_KINDS = {"generated_image", "ai_image"}
 BLOCKED_ASSET_LICENSES = {"preview_unverified"}
 INTERNAL_ASSET_SCHEMES = {"internal"}
+M15_POLICY_CODES = {
+    "cross_family_layout_mix",
+    "missing_extension_grammar",
+    "remote_font_dependency",
+    "cjk_fake_italic",
+    "cjk_letter_spacing_inherited",
+    "cjk_mixed_run_spacing_missing",
+    "family_recolor_without_override",
+    "source_inventoried_claim_escalation",
+    "missing_screenshot_benchmark_role",
+}
 ASSET_METADATA_KEYS = {
     "asset_id",
     "asset_kind",
@@ -270,6 +281,20 @@ def error_count_from_payload(payload: Any) -> int | None:
     if isinstance(raw, bool) or not isinstance(raw, int):
         return None
     return raw
+
+
+def collect_issue_codes(payload: Any) -> set[str]:
+    codes: set[str] = set()
+    if isinstance(payload, dict):
+        code = payload.get("code")
+        if isinstance(code, str):
+            codes.add(code)
+        for value in payload.values():
+            codes.update(collect_issue_codes(value))
+    elif isinstance(payload, list):
+        for item in payload:
+            codes.update(collect_issue_codes(item))
+    return codes
 
 
 def list_waivers(payload: Any) -> list[Any]:
@@ -900,6 +925,11 @@ def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: 
     check["error_count"] = error_count
     check["action"] = action
     check["waivers"] = waivers
+    if name == "preflight":
+        m15_codes = sorted(M15_POLICY_CODES & collect_issue_codes(payload))
+        if m15_codes:
+            check["issues"].append(issue("m15_policy_gate_failed", "preflight contains M15 policy blocker(s): " + ", ".join(m15_codes)))
+            return check
     if error_count > 0:
         check["issues"].append(issue("check_has_errors", f"summary.error_count is {error_count}"))
         return check

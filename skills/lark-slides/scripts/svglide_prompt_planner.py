@@ -178,9 +178,19 @@ def template_registry_bundle() -> list[dict[str, Any]]:
                 "max_items": item.get("max_items"),
                 "text_budget": item.get("text_budget"),
                 "supported_theme_ids": item.get("supported_theme_ids"),
+                "source_template_id": item.get("source_template_id"),
+                "claim_level": item.get("claim_level"),
+                "family_usage_policy_summary": item.get("family_usage_policy_summary"),
+                "cjk_policy_summary": item.get("cjk_policy_summary"),
+                "extension_grammar_summary": item.get("extension_grammar_summary"),
+                "benchmark_roles": item.get("benchmark_roles"),
             }
         )
     return result
+
+
+def template_family_policy_context_bundle() -> list[dict[str, Any]]:
+    return beautiful_template_runtime.family_policy_context()
 
 
 def load_selection_context(project: Path | None = None) -> dict[str, Any]:
@@ -204,6 +214,7 @@ def load_selection_context(project: Path | None = None) -> dict[str, Any]:
 def load_context(project: Path | None = None) -> dict[str, Any]:
     context = {
         "templates": template_registry_bundle(),
+        "template_family_policy_context": template_family_policy_context_bundle(),
         "themes": theme_registry_bundle(),
         "layout_archetypes": read_json(repo_path("skills/lark-slides/references/svglide-layout-archetypes.json")),
         "component_registry": beautiful_template_runtime.component_registry(),

@@ -337,6 +337,235 @@ def screenshot_paths(source_root: Path, slug: str) -> list[str]:
     return [f"beautiful-html-templates/screenshots/{path.name}" for path in matches[:3]]
 
 
+def readme_gallery_by_slug(source_root: Path) -> dict[str, list[str]]:
+    readme = source_root / "README.md"
+    if not readme.exists():
+        return {}
+    by_slug: dict[str, list[str]] = {}
+    for match in re.finditer(r"\./screenshots/([a-z0-9-]+-\d+\.png)", readme.read_text(encoding="utf-8")):
+        name = match.group(1)
+        slug = re.sub(r"-\d+\.png$", "", name)
+        by_slug.setdefault(slug, []).append(f"beautiful-html-templates/screenshots/{name}")
+    return {slug: paths[:3] for slug, paths in by_slug.items() if paths}
+
+
+def screenshot_slide_number(path: str) -> int:
+    match = re.search(r"-(\d+)\.png$", path)
+    return int(match.group(1)) if match else 0
+
+
+def screenshot_benchmarks(source_root: Path, slug: str, template_json: dict[str, Any], visual_targets: list[str], gallery_by_slug: dict[str, list[str]]) -> list[dict[str, Any]]:
+    paths = gallery_by_slug.get(slug) or screenshot_paths(source_root, slug)
+    roles = ["cover_reference", "mid_deck_reference", "late_deck_reference"]
+    tagline = str(template_json.get("tagline") or template_json.get("description") or template_json.get("best_for") or slug)
+    out: list[dict[str, Any]] = []
+    for index, path in enumerate(paths[:3]):
+        role = roles[index] if index < len(roles) else "reference"
+        out.append(
+            {
+                "path": path,
+                "role": role,
+                "slide_number": screenshot_slide_number(path),
+                "why_selected": f"README gallery {role.replace('_', ' ')} for {slug}: {tagline[:180]}",
+                "visual_targets": visual_targets[:6] or ["palette", "type_scale", "chrome", "density", "layout_balance"],
+                "acceptance_use": ["matcher_thumbnail", "visual_qa", "few_shot_reference"],
+            }
+        )
+    return out
+
+
+def markdown_section(markdown: str, heading: str) -> str:
+    lines = markdown.splitlines()
+    start: int | None = None
+    start_level = 0
+    for index, line in enumerate(lines):
+        match = re.match(r"^(#{2,6})\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        if match.group(2).strip().lower() == heading.lower():
+            start = index
+            start_level = len(match.group(1))
+            break
+    if start is None:
+        return ""
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        match = re.match(r"^(#{2,6})\s+", lines[index])
+        if match and len(match.group(1)) <= start_level:
+            end = index
+            break
+    return "\n".join(lines[start:end]).strip()
+
+
+def first_section_paragraph(section: str, heading: str) -> str:
+    subsection = markdown_section(section, heading)
+    if not subsection:
+        return ""
+    chunks = []
+    for raw in subsection.splitlines()[1:]:
+        line = raw.strip()
+        if not line or line.startswith("#") or line.startswith("|") or line.startswith("```"):
+            continue
+        if line.startswith("- "):
+            line = line[2:].strip()
+        chunks.append(line)
+        if len(" ".join(chunks)) > 240:
+            break
+    return " ".join(chunks)[:360]
+
+
+CJK_FONT_PATTERNS = [
+    r"Noto\s+(?:Sans|Serif)\s+(?:SC|TC|JP|CJK)",
+    r"Source\s+Han\s+(?:Sans|Serif)",
+    r"LXGW\s+[A-Za-z ]+",
+    r"ZCOOL\s+[A-Za-z]+",
+    r"PingFang\s+SC",
+    r"Microsoft\s+YaHei",
+    r"SimHei",
+    r"SimSun",
+    r"Yozai",
+    r"悠哉字体\s*Yozai",
+    r"霞鹜[^|,，。)）`*]+",
+    r"站酷[^|,，。)）`*]+",
+]
+
+
+def clean_font_name(value: str) -> str:
+    cleaned = re.sub(r"[`*_\"'()（）\[\]]", "", value).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned[:80]
+
+
+def cjk_font_candidates(cjk_section: str) -> list[str]:
+    candidates: list[str] = []
+    for pattern in CJK_FONT_PATTERNS:
+        for match in re.finditer(pattern, cjk_section, flags=re.IGNORECASE):
+            name = clean_font_name(match.group(0))
+            if name and name.lower() not in {item.lower() for item in candidates}:
+                candidates.append(name)
+    return candidates
+
+
+def classify_italic_policy(cjk_section: str, full_design: str) -> str:
+    text = f"{cjk_section}\n{full_design}".lower()
+    if re.search(r"never italic|no italic|drop italic|italic does not exist|fake italic|oblique", text):
+        return "drop_italic"
+    if re.search(r"color shift|color-only|color only|emphasis.*color", text):
+        return "color_only_emphasis"
+    if re.search(r"weight|bold", text):
+        return "weight_only_emphasis"
+    return "latin_only"
+
+
+def classify_letter_spacing_policy(cjk_section: str) -> str:
+    text = cjk_section.lower()
+    if re.search(r"letter-spacing|tracking|tracked|uppercase|text-transform", text):
+        return "reset_letter_spacing_for_cjk_keep_latin_labels"
+    return "reset_letter_spacing_for_cjk"
+
+
+def extract_cjk_policy(design_md: str, template_json: dict[str, Any]) -> dict[str, Any]:
+    cjk_section = markdown_section(design_md, "CJK & International Content")
+    fonts = cjk_font_candidates(cjk_section)
+    display_font = fonts[0] if fonts else "Noto Sans SC"
+    body_font = fonts[1] if len(fonts) > 1 else display_font
+    known_gap = first_section_paragraph(cjk_section, "Known CJK Gap") or first_section_paragraph(cjk_section, "Aesthetic Notes")
+    if not known_gap:
+        known_gap = "Preserve the family rhythm while replacing unsafe remote CJK font loading with SVGlide system font roles."
+    italic_policy = classify_italic_policy(cjk_section, design_md)
+    emphasis_policy = "color_or_weight_only" if italic_policy != "latin_only" else "latin_only_emphasis"
+    return {
+        "strategy": "replace_family_whole_element" if fonts else "single_cjk_family_all_roles",
+        "display_font_cn": display_font,
+        "body_font_cn": body_font,
+        "mono_font_policy": "latin_only_or_system_mono",
+        "runtime_font_policy": "system_font_only_no_remote_dependency",
+        "runtime_font_stack": ["system-sans-cjk", "system-sans-cjk-heavy", "system-sans-cjk-regular", "system-mono"],
+        "emphasis_policy": emphasis_policy,
+        "italic_policy": italic_policy,
+        "letter_spacing_policy": classify_letter_spacing_policy(cjk_section),
+        "mixed_run_spacing": "pangu_spacing" if re.search(r"Pangu|盘古", cjk_section, re.IGNORECASE) else "none_required",
+        "latin_accent_policy": "latin_only_allowed_when_semantic_annotation",
+        "known_degradation": known_gap,
+        "design_intent_font_pairing": fonts[:6],
+        "source_section_heading": "CJK & International Content",
+        "source_section_sha256": hashlib.sha256(cjk_section.encode("utf-8")).hexdigest(),
+    }
+
+
+def extract_family_usage_policy(agents_md: str) -> dict[str, Any]:
+    return {
+        "closed_visual_system": True,
+        "cross_family_layout_mix_allowed": False,
+        "recolor_allowed": False,
+        "font_substitution_allowed": False,
+        "decorative_elements_policy": "identity_element_not_noise",
+        "extend_missing_layout_policy": {
+            "same_fonts": True,
+            "same_palette": True,
+            "same_spacing_rhythm": True,
+            "same_component_grammar": True,
+            "same_decorative_vocabulary": True,
+            "same_chrome": True,
+        },
+        "soft_matching_policy": {
+            "tone_first": True,
+            "occasion_is_soft_signal": True,
+            "avoid_for_is_soft_warning": True,
+            "taste_can_override_industry": True,
+            "formality_density_as_sanity_check": True,
+        },
+        "hard_rules": [
+            "preserve_fonts_palette_grid_slide_classes_decorative_elements",
+            "do_not_recolor_without_explicit_brand_override",
+            "do_not_mix_template_families",
+            "extend_missing_layout_inside_same_family",
+            "do_not_strip_identity_decorations",
+        ],
+        "source": "beautiful-html-templates/AGENTS.md",
+        "source_sha256": hashlib.sha256(agents_md.encode("utf-8")).hexdigest(),
+    }
+
+
+def extract_extension_grammar(
+    slug: str,
+    template_json: dict[str, Any],
+    design_blocks: dict[str, dict[str, str]],
+    class_names: list[str],
+    combined_text: str,
+) -> dict[str, Any]:
+    density = str(template_json.get("density") or "medium")
+    formality = str(template_json.get("formality") or "medium")
+    tagline = str(template_json.get("tagline") or template_json.get("description") or template_json.get("best_for") or slug)
+    component_tokens = sorted(
+        {
+            token
+            for token in (
+                list(design_blocks.get("components", {}).keys())
+                + [name.removeprefix("layout-") for name in class_names if name.startswith(("layout-", "s-", "card", "panel", "stat"))]
+            )
+            if token
+        }
+    )
+    chrome = [name for name in class_names if re.search(r"footer|page|number|chrome|label|eyebrow|nav|badge|stamp", name)]
+    motifs = classify_decorative_motifs(combined_text)
+    return {
+        "layout_rhythm": f"{slug}: {density} density, {formality} formality. {tagline[:180]}",
+        "spacing_rhythm": "Reuse source spacing tokens and grid gaps: " + json.dumps(design_blocks.get("spacing", {}), ensure_ascii=False)[:220],
+        "component_grammar": component_tokens[:10] or DEFAULT_COMPONENTS[:6],
+        "chrome_rules": chrome[:8] or ["preserve family header/footer labels", "preserve page-number rhythm", "no unrelated chrome"],
+        "decorative_vocabulary": motifs,
+        "allowed_new_layouts": ["comparison", "risk", "timeline", "action_plan", "case_evidence", "metric_dashboard"],
+        "forbidden_mutations": ["new_palette", "cross_family_components", "fake_italic", "new_decorative_motif", "remote_font_dependency"],
+        "density_limits": density,
+        "source_basis": {
+            "template_id": slug,
+            "design_signal_sha256": hashlib.sha256(combined_text[:12000].encode("utf-8")).hexdigest(),
+            "class_name_count": len(class_names),
+        },
+    }
+
+
 def variant_record(variant_id: str) -> dict[str, Any]:
     role_map = {
         "cover": ["cover"],
@@ -378,6 +607,8 @@ def extract_family(
     slug: str,
     inventory_by_slug: dict[str, list[dict[str, Any]]] | None = None,
     absorptions_by_slug: dict[str, list[dict[str, Any]]] | None = None,
+    agents_md: str = "",
+    gallery_by_slug: dict[str, list[str]] | None = None,
 ) -> dict[str, Any]:
     template_dir = source_root / "templates" / slug
     template_json = load_json(template_dir / "template.json")
@@ -417,8 +648,9 @@ def extract_family(
     css_tokens = css_variables(template_html)
     class_names = css_class_names(template_html)
     layout_variants = html_layout_variants(template_html)
-    screenshots = screenshot_paths(source_root, slug)
+    screenshots = (gallery_by_slug or {}).get(slug) or screenshot_paths(source_root, slug)
     palette_roles = palette_roles_from_tokens(palette, design_blocks.get("colors", {}), css_tokens)
+    visual_targets = ["palette", "type_scale", "chrome", "density", "layout_balance"] + classify_decorative_motifs(combined)[:2]
     return {
         "template_id": slug,
         "source": {
@@ -456,6 +688,9 @@ def extract_family(
                 "mono": "system-mono",
             },
         },
+        "cjk_policy": extract_cjk_policy(design_md, template_json),
+        "family_usage_policy": extract_family_usage_policy(agents_md),
+        "extension_grammar": extract_extension_grammar(slug, template_json, design_blocks, class_names, combined),
         "semantic_fit": {
             "best_for": words(template_json.get("best_for")) or words(template_json.get("occasion")),
             "industries": classify_industries(combined),
@@ -485,7 +720,7 @@ def extract_family(
             },
             "decorative_motifs": classify_decorative_motifs(combined),
             "visual_effects": classify_visual_effects(combined),
-            "screenshot_benchmarks": [{"path": path, "role": "reference"} for path in screenshots],
+            "screenshot_benchmarks": screenshot_benchmarks(source_root, slug, template_json, visual_targets, gallery_by_slug or {}),
             "density": str(template_json.get("density") or "medium"),
         },
         "svglide_mapping": {
@@ -509,6 +744,8 @@ def extract_registry(source_root: str | None = None) -> dict[str, Any]:
     slugs = sorted(str(item.get("slug")) for item in templates if item.get("slug"))
     inventory_by_slug = load_inventory_by_slug()
     absorptions_by_slug = load_absorptions_by_slug()
+    agents_md = (root / "AGENTS.md").read_text(encoding="utf-8") if (root / "AGENTS.md").exists() else ""
+    gallery_by_slug = readme_gallery_by_slug(root)
     return {
         "version": "beautiful-html-template-families/v1",
         "source": {
@@ -518,7 +755,7 @@ def extract_registry(source_root: str | None = None) -> dict[str, Any]:
             "inventory_item_count": sum(len(items) for items in inventory_by_slug.values()),
             "absorbed_family_count": len(absorptions_by_slug),
         },
-        "families": [extract_family(root, slug, inventory_by_slug, absorptions_by_slug) for slug in slugs],
+        "families": [extract_family(root, slug, inventory_by_slug, absorptions_by_slug, agents_md, gallery_by_slug) for slug in slugs],
     }
 
 
