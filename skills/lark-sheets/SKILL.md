@@ -113,7 +113,7 @@ metadata:
 2. **sheet 定位（公共四件套 shortcut 必填）**：`--sheet-id` 与 `--sheet-name` 二选一，**必须给其中之一**。两个都不给 → 校验报错 `specify at least one of --sheet-id or --sheet-name`。
    - ⚠️ **不确定 sheet 名时禁止直接猜 `Sheet1`**：除非用户对话明确说出 sheet 名 / id，或上下文（之前的工具调用 / URL 锚点 `?sheet=xxx`）已经出现过具体值，否则**第一步先调 `+workbook-info --url "..."`**（或 `--spreadsheet-token`）拿 `sheets[].sheet_id` / `sheets[].title` 列表再选。中文环境下子表常叫"数据" / "Sheet"（无数字）/ "工作表 1" / 业务名，猜 `Sheet1` 大概率撞 `sheet not found`，比先查多耗一次失败调用 + 重试。
    - ⚠️ **`--range` 里的 `Sheet1!` 前缀不能替代 sheet 定位**：即使写了 `--range 'Sheet1!A1:B2'`，仍**必须**额外传 `--sheet-id` 或 `--sheet-name`，否则照样报上面的错。
-   - ⚠️ **A1 reference 含 `!`**（`--source` / `--range` / `--ranges`）**：整段用单引号包裹**，如 `--range 'Sheet1!A1:B2'`——单引号能挡住 bash 的 history expansion（`!` 被拦成 `event not found`；双引号挡不住）。**不要起手 `set +H` 去关 history expansion**：调用方的 shell 可能是 `sh` / `dash`，那里 `set +H` 是非法选项（`set: Illegal option -H`）、会让整条命令直接失败；单引号包裹对 bash 与 `sh` / `dash` 一致安全，无需 `set +H`。sheet 名含特殊字符（`-` / 空格 / 非 ASCII）需在内部按 A1 标准再包一层单引号时，用 `'\''` 转义保持外层单引号，如 `--source ''\''Sales-2025'\''!A1:D100'`。
+   - ⚠️ **A1 reference 含 `!`**（`--source` / `--range` / `--ranges`）**：整段用单引号包裹**，如 `--range 'Sheet1!A1:B2'`——单引号能挡住 bash 的 history expansion（`!` 被拦成 `event not found`；双引号挡不住；别改用 `set +H`，原因见下方「复合 JSON / 大入参」）。sheet 名含特殊字符（`-` / 空格 / 非 ASCII）需在内部按 A1 标准再包一层单引号时，用 `'\''` 转义保持外层单引号，如 `--source ''\''Sales-2025'\''!A1:D100'`。
    - **例外**：徽章标为 `_公共：URL/token（无 sheet 定位）…_` 的 shortcut（如 `+workbook-info` / `+workbook-export` / `+batch-update` / `+dropdown-update|delete` / `+cells-batch-set-style` / `+cells-batch-clear` / `+sheet-create`）**不接受也不需要** sheet 定位，只给一组 spreadsheet 定位即可。`+pivot-create` 用 `--target-sheet-id` / `--target-sheet-name`（XOR，可都不传，落点细节见 `lark-sheets-pivot-table`）。
 
 | Flag | Type | 必填 | 说明 |
@@ -159,5 +159,7 @@ flag 帮助里标注支持 **Stdin** 的入参，当 payload 较大、含换行 
 # TMPFILE 指向系统临时目录下的 payload 文件（脚本里用 tempfile.gettempdir() / os.tmpdir() 等取临时目录）
 lark-cli sheets +cells-set --url "..." --sheet-name "Sheet1" --range "A1:B2" --cells - < "$TMPFILE"
 ```
+
+**参数含特殊字符（`!` / 引号 / 空格 / 非 ASCII）时，用单引号包裹该参数即可，不要起手 `set +H` 之类的 shell 开关来防转义。** `set +H`（关 bash history expansion）在 `sh` / `dash` 下是非法选项（`set: Illegal option -H`）、会让整条命令直接失败；而单引号挡得住 `!` 的 history expansion（否则报 `event not found`），对 bash 与 `sh` / `dash` 一致安全。参数本身含单引号、或 payload 较大时，按上文走 stdin。
 
 **`@file` 接绝对路径会被拒，且被拒后不要照报错提示做。** `@file` 出于安全只接受 cwd 下的相对路径，传 cwd 之外的绝对路径会被拒。此时报错会建议"先 cd 到目标目录，或改用相对路径"——**两条都不要照做**：cd 过去、或把临时文件写进用户项目目录，都会污染工作目录。正解是改用 stdin（`--<flag> - < 文件`）。
