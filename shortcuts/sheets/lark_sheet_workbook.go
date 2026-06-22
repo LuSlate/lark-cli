@@ -1192,6 +1192,9 @@ func normalizeWorkbookCreateStyleObject(in map[string]interface{}, path string) 
 	if len(in) == 0 {
 		return nil, nil
 	}
+	if err := normalizeCellStyleAliases(in, path); err != nil {
+		return nil, err
+	}
 	out := map[string]interface{}{}
 	cellStyle := map[string]interface{}{}
 	for k, v := range in {

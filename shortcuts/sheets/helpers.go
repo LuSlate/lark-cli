@@ -10,6 +10,7 @@ package sheets
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/larksuite/cli/errs"
@@ -333,6 +334,72 @@ func buildCellStyleFromFlags(runtime flagView) map[string]interface{} {
 		style["number_format"] = v
 	}
 	return style
+}
+
+// cellStyleAliases maps shorthand cell_styles field names that models commonly
+// hallucinate (Excel / openpyxl / CSS conventions) onto the canonical field
+// names the backend expects. Only the unambiguous alignment shorthands are
+// aliased — they are the high-frequency miss; ambiguous guesses (e.g. "color",
+// "bg_color", "text_align") are intentionally left out so a wrong guess still
+// surfaces as an error rather than being silently reinterpreted.
+var cellStyleAliases = []struct{ alias, canonical string }{
+	{"horizontal_align", "horizontal_alignment"},
+	{"halign", "horizontal_alignment"},
+	{"vertical_align", "vertical_alignment"},
+	{"valign", "vertical_alignment"},
+}
+
+// normalizeCellStyleAliases renames known shorthand keys in a single
+// cell_styles map to their canonical equivalents, in place, so a model that
+// writes e.g. "horizontal_align" instead of "horizontal_alignment" still
+// applies the style instead of hitting an "unsupported field" error (--styles)
+// or having the field silently dropped by the backend (typed --cells). If both
+// the shorthand and its canonical key are present it returns a validation error
+// rather than picking one. path labels the map for the error message.
+func normalizeCellStyleAliases(style map[string]interface{}, path string) error {
+	if len(style) == 0 {
+		return nil
+	}
+	for _, a := range cellStyleAliases {
+		v, ok := style[a.alias]
+		if !ok {
+			continue
+		}
+		if _, exists := style[a.canonical]; exists {
+			return common.ValidationErrorf("%s.%s conflicts with %s; pass only %s", path, a.alias, a.canonical, a.canonical)
+		}
+		style[a.canonical] = v
+		delete(style, a.alias)
+	}
+	return nil
+}
+
+// normalizeTypedCellsStyleAliases walks a typed --cells 2D array and applies
+// normalizeCellStyleAliases to every cell's inline cell_styles object, so the
+// alignment shorthands are accepted on +cells-set the same as on --styles.
+// Structure is checked leniently to match the pass-through contract: any
+// element that isn't the expected shape is skipped, not rejected.
+func normalizeTypedCellsStyleAliases(cells []interface{}, path string) error {
+	for r, rowRaw := range cells {
+		row, ok := rowRaw.([]interface{})
+		if !ok {
+			continue
+		}
+		for c, cellRaw := range row {
+			cell, ok := cellRaw.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			st, ok := cell["cell_styles"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+			if err := normalizeCellStyleAliases(st, fmt.Sprintf("%s[%d][%d].cell_styles", path, r, c)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // borderStylesFromFlag parses --border-styles as a JSON object (top/bottom/

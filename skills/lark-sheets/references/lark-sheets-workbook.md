@@ -140,7 +140,7 @@ _系统：`--dry-run`_
 | `--folder-token` | string | optional | 目标文件夹 token；省略时放在云空间根目录 |
 | `--values` | string + File + Stdin（简单 JSON） | optional | untyped 初始数据，一个 JSON 二维数组（表头并入第一行）：`[["列A","列B"],["alice",95]]`；值原样写入、类型由飞书自动识别，走与 --sheets 相同的分批 `+cells-set`；配 --styles 控制格式/颜色/合并/行列尺寸 |
 | `--sheets` | string + File + Stdin（复合 JSON） | optional | 建表后写入的 typed 表格协议 JSON（同 +table-put）：顶层 sheets 数组，每项 `{name, start_cell?, mode?, header?, allow_overwrite?, columns:["colA","colB",...], data:[[...]], dtypes?:{colA:pandasDtype, ...}, formats?:{colA:numberFormat, ...}}`。Agents 通常用 `{**json.loads(df.to_json(orient="split")), "dtypes": df.dtypes.astype(str).to_dict()}` 一行构造。与 --values、--dataframe 互斥；新表默认子表复用为第一个子表，日期/数字类型保真。 |
-| `--styles` | string + File + Stdin（复合 JSON） | optional | 建表时同时写入的视觉处理操作 JSON：顶层 `{styles:[...]}`，每项对应一个目标子表、含 `name`，并至少给 `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges` 之一。`cell_styles` 用 A1 单元格 range + 扁平样式字段（字段同 +cells-set-style，含 number_format / 颜色 / 对齐 / border_styles）；row/col sizes 用行/列范围 + type/size；merges 用单元格 range + 可选 merge_type。与 --sheets 搭配时 styles 数组长度/顺序/name 必须与 --sheets.sheets 对应；与 --values 搭配时只给一个 styles 项（其 name 忽略）。 |
+| `--styles` | string + File + Stdin（复合 JSON） | optional | 建表时同时写入的视觉处理操作 JSON：顶层 `{styles:[...]}`，每项对应一个目标子表、含 `name`，并至少给 `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges` 之一。`cell_styles` 用 A1 单元格 range + 扁平样式字段（字段同 +cells-set-style，含 number_format / 颜色 / 对齐 / border_styles）；row/col sizes 用行/列范围 + type/size；merges 用单元格 range + 可选 merge_type。与 --sheets 搭配时 styles 数组长度/顺序/name 必须与 --sheets.sheets 对应；与 --values 搭配时只给一个 styles 项（其 name 忽略）。完整 cell_styles 字段结构跑 `+workbook-create --print-schema --flag-name styles`。 |
 | `--dataframe` | string | optional | 单 sheet 类型保真表格的二进制入口，从一个 Arrow IPC 文件（Feather v2，pandas `df.to_feather()` 直接写出）读入，与 --values / --sheets 互斥。用 `@<path>` 传文件或 `-` 读二进制 stdin（同其他输入 flag 的约定）。Arrow 字节按原样读 —— 不做 TrimSpace / BOM strip，IPC magic 字节完整保留（区别于文本类输入 flag）。列类型从 Arrow schema 推导；每列的 `number_format` 可写在 Arrow Field metadata 里。建表后写入默认子表（`Sheet1` —— 直接复用，不残留空 Sheet1）。要多子表或换落点，请改用 `--sheets`。 |
 
 ### `+workbook-export`
@@ -231,7 +231,7 @@ python prepare.py | lark-cli sheets +workbook-create --title "交易" --datafram
 
 `--styles` 可在建表写入时同时写视觉处理。它和 `--sheets` 一样只有一种外层写法：顶层对象里放 `styles` 数组；数组每项对应一个子表，含 `name`，并按能力拆成四类可选数组：
 
-- `cell_styles`：像 `+cells-set-style`，用 A1 单元格 `range` 加扁平样式字段（`font_weight` / `background_color` / `number_format` 等）和可选 `border_styles`；这些样式会随内容在同一次写入里一并应用。
+- `cell_styles`：像 `+cells-set-style`，用 A1 单元格 `range` 加扁平样式字段（`font_weight` / `background_color` / `horizontal_alignment` / `vertical_alignment` / `number_format` 等）和可选 `border_styles`；这些样式会随内容在同一次写入里一并应用。完整字段跑 `+workbook-create --print-schema --flag-name styles`。
 - `cell_merges`：用 A1 单元格 `range` 设置合并，`merge_type` 默认为 `all`，可选 `rows` / `columns`。
 - `row_sizes`：用行范围（如 `1:3`）设置行高，`type` 为 `pixel` / `standard` / `auto`；`pixel` 需要 `size`。
 - `col_sizes`：用列范围（如 `A:C`）设置列宽，`type` 为 `pixel` / `standard`；`pixel` 需要 `size`。
@@ -245,7 +245,7 @@ lark-cli sheets +workbook-create --title "销售" \
   --styles '{
     "styles":[
       {"name":"Sheet1","cell_styles":[
-        {"range":"A1:B1","font_weight":"bold","background_color":"#f5f5f5"},
+        {"range":"A1:B1","font_weight":"bold","background_color":"#f5f5f5","horizontal_alignment":"center","vertical_alignment":"middle"},
         {"range":"B2:B3","number_format":"#,##0"}
       ]}
     ]

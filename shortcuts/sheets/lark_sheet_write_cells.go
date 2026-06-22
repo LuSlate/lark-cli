@@ -88,6 +88,9 @@ func cellsSetInput(runtime flagView, token, sheetID, sheetName string) (map[stri
 	if err != nil {
 		return nil, err
 	}
+	if err := normalizeTypedCellsStyleAliases(cells, "--cells"); err != nil {
+		return nil, err
+	}
 	input := map[string]interface{}{
 		"excel_id": token,
 		"range":    strings.TrimSpace(runtime.Str("range")),

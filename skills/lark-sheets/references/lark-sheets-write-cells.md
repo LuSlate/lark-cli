@@ -317,7 +317,7 @@ _公共：URL/token（无 sheet 定位） · 系统：`--dry-run`_
 | --- | --- | --- | --- |
 | `--sheets` | string + File + Stdin（复合 JSON） | xor | Typed 表格协议（pandas-DataFrame-shaped）JSON，与 `--dataframe` 互斥：顶层 sheets 数组，每项 `{name, start_cell?, mode?, header?, allow_overwrite?, columns:["colA","colB",...], data:[[...]], dtypes?:{colA:pandasDtype, ...}, formats?:{colA:numberFormat, ...}}`。Agents 通常用 `{**json.loads(df.to_json(orient="split")), "dtypes": df.dtypes.astype(str).to_dict()}` 一行构造。`dtypes` 值是 pandas dtype 字符串（`int64`、`float64`、`Int64`、`bool`、`boolean`、`datetime64[ns]`、`object`、...），CLI 端映射成内部 string/number/date/bool —— 省略 `dtypes` 时该列按文本写入（适合原始 CSV-shaped 数据）。`formats[col]` 是 Excel number_format 字符串（如 `#,##0.00`、`0.0%`、`yyyy-mm`）；缺省时 date 列用 `yyyy-mm-dd`，string 列用文本格式 `@`。 |
 | `--dataframe` | string | xor | 单 sheet 类型保真表格的二进制入口，从一个 Arrow IPC 文件（即 Feather v2，pandas `df.to_feather()` 直接写出）读入，与 `--sheets` 互斥。用 `@<path>` 传文件或 `-` 读二进制 stdin（同其他输入 flag 的约定）。Arrow 字节按原样读 —— 不做 TrimSpace / BOM strip，IPC magic 字节完整保留（区别于文本类输入 flag）。列类型从 Arrow schema 推导（int*/uint*/float* → number，date32/date64/timestamp → date，utf8/large_utf8 → string，bool → bool）；每列的 `number_format` 可写在 Arrow Field metadata 里（`pa.field("price", pa.float64(), metadata={b"number_format": b"$#,##0.00"})`）。子表走默认落点：名为 `Sheet1`（缺则新建），从 A1 起覆盖写并带表头。要换子表名 / 起始位置 / 写入方式，或要写多子表，请改用 `--sheets`。 |
-| `--styles` | string + File + Stdin（复合 JSON） | optional | 类型保真写入后再应用的视觉处理操作 JSON：顶层 `{styles:[...]}`，每项对应一个被写入的子表、含 `name`，并至少给 `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges` 之一。`cell_styles` 用 A1 单元格 range + 扁平样式字段（字段同 +cells-set-style，含 number_format / 颜色 / 对齐 / border_styles）；row/col sizes 用行/列范围 + type/size；merges 用单元格 range + 可选 merge_type。styles 数组的长度/顺序/name 必须与被写入的子表对应：配 --sheets 时与 --sheets.sheets 对应；配 --dataframe（单子表，名为 Sheet1）时只给一个 name 为 `Sheet1` 的 styles 项。 |
+| `--styles` | string + File + Stdin（复合 JSON） | optional | 类型保真写入后再应用的视觉处理操作 JSON：顶层 `{styles:[...]}`，每项对应一个被写入的子表、含 `name`，并至少给 `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges` 之一。`cell_styles` 用 A1 单元格 range + 扁平样式字段（字段同 +cells-set-style，含 number_format / 颜色 / 对齐 / border_styles）；row/col sizes 用行/列范围 + type/size；merges 用单元格 range + 可选 merge_type。styles 数组的长度/顺序/name 必须与被写入的子表对应：配 --sheets 时与 --sheets.sheets 对应；配 --dataframe（单子表，名为 Sheet1）时只给一个 name 为 `Sheet1` 的 styles 项。完整 cell_styles 字段结构跑 `+table-put --print-schema --flag-name styles`。 |
 
 ## Schemas
 
@@ -592,7 +592,7 @@ subprocess.run(["lark-cli","sheets","+table-put","--url",URL,"--dataframe","-"],
 lark-cli sheets +table-put --url "<表URL>" \
   --sheets '{"sheets":[{"name":"明细","columns":["日期","金额"],"dtypes":{"日期":"datetime64[ns]","金额":"float64"},"formats":{"金额":"#,##0.00"},"data":[["2024-01-15",1234.5]]}]}' \
   --styles '{"styles":[{"name":"明细",
-    "cell_styles":[{"range":"A1:B1","font_weight":"bold","background_color":"#f5f5f5"}],
+    "cell_styles":[{"range":"A1:B1","font_weight":"bold","background_color":"#f5f5f5","horizontal_alignment":"center"}],
     "cell_merges":[{"range":"A1:B1"}],
     "col_sizes":[{"range":"A:B","type":"pixel","size":120}]}]}'
 ```
