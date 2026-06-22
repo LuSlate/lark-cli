@@ -24,9 +24,9 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 	t.Cleanup(cancel)
 
 	tests := []struct {
-		name    string
-		args    []string
-		wantURL string
+		name         string
+		args         []string
+		wantContains []string
 	}{
 		{
 			name: "create",
@@ -35,7 +35,7 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 				"--content", "<title>Dry Run</title><p>hello</p>",
 				"--dry-run",
 			},
-			wantURL: "/open-apis/docs_ai/v1/documents",
+			wantContains: []string{"/open-apis/docs_ai/v1/documents"},
 		},
 		{
 			name: "create api-version v1 compatibility",
@@ -45,7 +45,7 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 				"--content", "<title>Dry Run</title><p>hello</p>",
 				"--dry-run",
 			},
-			wantURL: "/open-apis/docs_ai/v1/documents",
+			wantContains: []string{"/open-apis/docs_ai/v1/documents"},
 		},
 		{
 			name: "fetch",
@@ -54,7 +54,7 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 				"--doc", "doxcnDryRunE2E",
 				"--dry-run",
 			},
-			wantURL: "/open-apis/docs_ai/v1/documents/doxcnDryRunE2E/fetch",
+			wantContains: []string{"/open-apis/docs_ai/v1/documents/doxcnDryRunE2E/fetch"},
 		},
 		{
 			name: "update",
@@ -65,7 +65,7 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 				"--content", "<p>hello</p>",
 				"--dry-run",
 			},
-			wantURL: "/open-apis/docs_ai/v1/documents/doxcnDryRunE2E",
+			wantContains: []string{"/open-apis/docs_ai/v1/documents/doxcnDryRunE2E"},
 		},
 		{
 			name: "block_delete batch",
@@ -76,7 +76,50 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 				"--block-id", "blkA,blkB,blkC",
 				"--dry-run",
 			},
-			wantURL: "/open-apis/docs_ai/v1/documents/doxcnDryRunE2E",
+			wantContains: []string{"/open-apis/docs_ai/v1/documents/doxcnDryRunE2E"},
+		},
+		{
+			name: "history list",
+			args: []string{
+				"docs", "+history-list",
+				"--doc", "doxcnDryRunE2E",
+				"--page-size", "5",
+				"--page-token", "page_token_1",
+				"--dry-run",
+			},
+			wantContains: []string{
+				"/open-apis/docs_ai/v1/documents/doxcnDryRunE2E/histories",
+				`"page_size": 5`,
+				`"page_token": "page_token_1"`,
+			},
+		},
+		{
+			name: "history revert",
+			args: []string{
+				"docs", "+history-revert",
+				"--doc", "doxcnDryRunE2E",
+				"--history-version-id", "42",
+				"--wait-timeout-ms", "0",
+				"--dry-run",
+			},
+			wantContains: []string{
+				"/open-apis/docs_ai/v1/documents/doxcnDryRunE2E/history/revert",
+				`"history_version_id": "42"`,
+				`"wait_timeout_ms": 0`,
+			},
+		},
+		{
+			name: "history revert status",
+			args: []string{
+				"docs", "+history-revert-status",
+				"--doc", "doxcnDryRunE2E",
+				"--task-id", "task_1",
+				"--dry-run",
+			},
+			wantContains: []string{
+				"/open-apis/docs_ai/v1/documents/doxcnDryRunE2E/history/revert_status",
+				`"task_id": "task_1"`,
+			},
 		},
 	}
 
@@ -90,10 +133,7 @@ func TestDocs_DryRunDefaultsToV2OpenAPI(t *testing.T) {
 			result.AssertExitCode(t, 0)
 
 			combined := result.Stdout + "\n" + result.Stderr
-			for _, want := range []string{
-				tt.wantURL,
-				"docs_ai/v1",
-			} {
+			for _, want := range append(tt.wantContains, "docs_ai/v1") {
 				if !strings.Contains(combined, want) {
 					t.Fatalf("dry-run output missing %q\nstdout:\n%s\nstderr:\n%s", want, result.Stdout, result.Stderr)
 				}
