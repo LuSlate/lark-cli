@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.56] - 2026-06-18
+
+### Features
+
+- **apps**: Add `+session-messages-list` for session turn reply messages (#1402)
+
+### Bug Fixes
+
+- **api**: Align API success envelopes (#1489)
+- **base**: Reject out-of-range pagination flags (#1495)
+
+### Refactor
+
+- Retire legacy error envelopes and enforce typed contract (#1449)
+
+### Documentation
+
+- **skills**: Soften lark-doc style guidance (#1463)
+
+### Build
+
+- Add CI quality gate with semantic review
+
+## [v1.0.55] - 2026-06-16
+
+### Features
+
+- **vc**: Support agent meeting event workflows (#1483)
+- **drive**: Support exporting Base structure snapshots (#1481)
+- **doc**: Add docx cover resource commands (#1468)
+- **doc**: Support `lang` for docx fetch v2 (#1459)
+- **event**: Optimize subscription precheck, links, and consumer guard (#1447)
+
+### Bug Fixes
+
+- **drive**: Validate drive import folder target (#1485)
+
 ## [v1.0.54] - 2026-06-15
 
 ### Features
@@ -1175,6 +1212,8 @@ Bundled AI agent skills for intelligent assistance:
 - Bilingual documentation (English & Chinese).
 - CI/CD pipelines: linting, testing, coverage reporting, and automated releases.
 
+[v1.0.56]: https://github.com/larksuite/cli/releases/tag/v1.0.56
+[v1.0.55]: https://github.com/larksuite/cli/releases/tag/v1.0.55
 [v1.0.54]: https://github.com/larksuite/cli/releases/tag/v1.0.54
 [v1.0.53]: https://github.com/larksuite/cli/releases/tag/v1.0.53
 [v1.0.52]: https://github.com/larksuite/cli/releases/tag/v1.0.52

@@ -918,7 +918,7 @@ func uploadFloatImageIfLocal(runtime *common.RuntimeContext, spreadsheetToken st
 	if err != nil {
 		return "", sheetsInputStatError("image", err)
 	}
-	return common.UploadDriveMediaAll(runtime, common.DriveMediaUploadAllConfig{
+	return common.UploadDriveMediaAllTyped(runtime, common.DriveMediaUploadAllConfig{
 		FilePath:   img,
 		FileName:   floatImageName(runtime),
 		FileSize:   info.Size(),
