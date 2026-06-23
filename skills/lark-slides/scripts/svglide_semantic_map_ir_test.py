@@ -37,6 +37,47 @@ class SVGlideSemanticMapIRTest(unittest.TestCase):
 
         self.assertIn("semantic_map_visible_text_mismatch", {item["code"] for item in issues})
 
+    def test_semantic_map_accepts_satori_split_text_without_node_ids(self) -> None:
+        semantic_map = {
+            "elements": [
+                {"element_id": "eyebrow", "kind": "text", "text": "CONSUMER AI", "source_ref": "canvas_spec.content.eyebrow"},
+                {"element_id": "title", "kind": "text", "text": "豆包 App：AI 入口", "source_ref": "canvas_spec.content.title"},
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            svg_path = Path(tmpdir) / "satori.svg"
+            svg_path.write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg">'
+                "<text>CONSUMER</text><text> </text><text>AI</text>"
+                "<text>豆</text><text>包</text><text> </text><text>App</text><text>：</text>"
+                "<text>AI</text><text> </text><text>入</text><text>口</text>"
+                "</svg>",
+                encoding="utf-8",
+            )
+
+            issues = svglide_semantic_map_ir.validate_semantic_map_against_svg(semantic_map, svg_path)
+
+        self.assertEqual(issues, [])
+
+    def test_semantic_map_accepts_field_label_prefix_for_visible_value(self) -> None:
+        semantic_map = {
+            "elements": [
+                {"element_id": "callout", "kind": "text", "text": "conclusion: 入口越短，频次越高"},
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            svg_path = Path(tmpdir) / "satori.svg"
+            svg_path.write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg">'
+                "<text>入口</text><text>越短</text><text>，</text><text>频次越高</text>"
+                "</svg>",
+                encoding="utf-8",
+            )
+
+            issues = svglide_semantic_map_ir.validate_semantic_map_against_svg(semantic_map, svg_path)
+
+        self.assertEqual(issues, [])
+
     def test_node_layout_map_accepts_measured_observation(self) -> None:
         layout_map = json.loads((FIXTURE_DIR / "page-001.node-layout-map.json").read_text(encoding="utf-8"))
 

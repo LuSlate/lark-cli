@@ -22,6 +22,8 @@ QUALITY_GATE_NAME = "quality-gate.json"
 PREPARED_SVG_DIR = Path("04-svg/prepared")
 SOURCE_SVG_DIR = Path("04-svg")
 PLAN_PATH = Path("02-plan/slide_plan.json")
+PROJECT_TEMPLATE_REGISTRY = Path("02-plan/template-registry.json")
+PROJECT_THEME_REGISTRY = Path("02-plan/theme-registry.json")
 EVIDENCE_PATH = Path("source/evidence.json")
 SOURCE_RECEIPT_PATH = Path("source/source-receipt.json")
 ASSET_MANIFEST_PATH = Path("03-assets/asset-manifest.json")
@@ -34,6 +36,9 @@ CANVAS_SPEC_VALIDATE_RECEIPT = Path("receipts/canvas-spec-validate.json")
 TEMPLATE_FIT_RECEIPT = Path("receipts/template-fit-check.json")
 ARTBOARD_RENDER_RECEIPT = Path("receipts/artboard-render.json")
 SATORI_BRIDGE_RECEIPT = Path("receipts/satori-bridge.json")
+SELECTION_RECEIPT_PATH = Path("receipts/theme_template_selection.json")
+SELECTION_PATH = Path("02-plan/theme-template-selection.json")
+PALETTE_SELECTION_PATH = Path("02-plan/palette-selection.json")
 CONTACT_SHEET = Path("05-preview/contact-sheet.png")
 REQUIRED_CHECKS = [
     ("preflight", CHECK_DIR / "preflight.json"),
@@ -61,6 +66,7 @@ PRODUCTION_PROFILE = "production"
 REAL_PREVIEW_PROFILE = "local_real_preview"
 STRICT_PROFILES = {PRODUCTION_PROFILE, "production_live", REAL_PREVIEW_PROFILE}
 USER_VISIBLE_ASSET_PROFILES = STRICT_PROFILES | {"preview_only"}
+LEGACY_BLOCK_PROFILES = USER_VISIBLE_ASSET_PROFILES
 BLOCKED_ASSET_SOURCE_TYPES = {"local_preview"}
 BLOCKED_ASSET_SOURCE_REFS = {"local-generated-preview-asset"}
 BLOCKED_ASSET_KINDS = {"generated_image", "ai_image"}
@@ -295,6 +301,74 @@ def collect_issue_codes(payload: Any) -> set[str]:
         for item in payload:
             codes.update(collect_issue_codes(item))
     return codes
+
+
+def iter_legacy_markers(value: Any, path: str = "$") -> list[dict[str, str]]:
+    markers: list[dict[str, str]] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = f"{path}.{key}"
+            if key == "legacy_asset_used" and child is True:
+                markers.append(issue("legacy_asset_used", f"{child_path} is true"))
+            elif key == "include_legacy_debug" and child is True:
+                markers.append(issue("legacy_debug_registry_enabled", f"{child_path} is true"))
+            elif key in {"status", "asset_status"} and child == "legacy_debug":
+                markers.append(issue("legacy_asset_status", f"{child_path} is legacy_debug"))
+            elif key == "quality_tier" and child == "fixture_only":
+                markers.append(issue("fixture_only_asset_used", f"{child_path} is fixture_only"))
+            elif key == "quality_gate_fallback" and child is True:
+                markers.append(issue("quality_gate_fallback_used", f"{child_path} is true"))
+            elif key == "fallback_skeleton_used" and child is True:
+                markers.append(issue("fallback_skeleton_used", f"{child_path} is true"))
+            if isinstance(child, (dict, list)):
+                markers.extend(iter_legacy_markers(child, child_path))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            if isinstance(child, (dict, list)):
+                markers.extend(iter_legacy_markers(child, f"{path}[{index}]"))
+    return markers
+
+
+def legacy_fallback_review(project: Path, *, profile: str) -> dict[str, Any]:
+    rels = [
+        GENERATOR_RECEIPT_PATH,
+        SELECTION_RECEIPT_PATH,
+        SELECTION_PATH,
+        PALETTE_SELECTION_PATH,
+        PROJECT_TEMPLATE_REGISTRY,
+        PROJECT_THEME_REGISTRY,
+        TEMPLATE_FIT_PATH,
+        ARTBOARD_RENDER_RECEIPT,
+        SATORI_BRIDGE_RECEIPT,
+    ]
+    if profile not in LEGACY_BLOCK_PROFILES:
+        return {
+            "name": "legacy-fallback-review",
+            "path": "receipts + 02-plan + 06-check",
+            "required": False,
+            "status": "skipped",
+            "error_count": 0,
+            "action": "skipped",
+            "waivers": [],
+            "issues": [],
+        }
+    issues: list[dict[str, str]] = []
+    for rel in rels:
+        payload = read_json_optional(project, rel)
+        if not payload:
+            continue
+        for marker in iter_legacy_markers(payload, rel.as_posix()):
+            issues.append(marker)
+    return {
+        "name": "legacy-fallback-review",
+        "path": "receipts + 02-plan + 06-check",
+        "required": True,
+        "status": "failed" if issues else "passed",
+        "error_count": len(issues),
+        "action": PASS_ACTION if not issues else "repair_and_rerun",
+        "waivers": [],
+        "issues": issues,
+    }
 
 
 def list_waivers(payload: Any) -> list[Any]:
@@ -1007,6 +1081,7 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     project = project.resolve()
     checks = [load_generator_receipt(project, profile=profile)]
     checks.append(load_online_readiness(project, profile=profile))
+    checks.append(legacy_fallback_review(project, profile=profile))
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in REQUIRED_CHECKS)
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in THEME_REQUIRED_CHECKS)
     selection_checks_required = plan_declares_selection(project) or any((project / rel).exists() for _, rel in SELECTION_CHECKS)

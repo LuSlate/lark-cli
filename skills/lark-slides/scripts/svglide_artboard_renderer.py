@@ -239,11 +239,11 @@ def validate_registry_bindings(project: Path, spec: dict[str, Any], *, page: int
     theme_payload_for_id: dict[str, Any] = {}
     if template_record is None:
         issues.append({"code": "canvas_spec_template_unknown", "message": f"page {page} template_id {template_id!r} is not present in Template Registry"})
-    elif template_record.get("status") != "active":
+    elif not beautiful_template_runtime.is_runtime_selectable(template_record, include_legacy_debug=template_payload.get("include_legacy_debug") is True):
         issues.append({"code": "canvas_spec_template_inactive", "message": f"page {page} template_id {template_id!r} is not active"})
     if theme_record is None:
         issues.append({"code": "canvas_spec_theme_unknown", "message": f"page {page} theme_id {theme_id!r} is not present in Theme Registry"})
-    elif theme_record.get("status") != "active":
+    elif not beautiful_template_runtime.is_runtime_selectable(theme_record, include_legacy_debug=theme_payload.get("include_legacy_debug") is True):
         issues.append({"code": "canvas_spec_theme_inactive", "message": f"page {page} theme_id {theme_id!r} is not active"})
     else:
         theme_file, theme_payload_for_id = resolve_theme_payload(project, theme_path, theme_record)
@@ -545,7 +545,7 @@ def compiler_nodes_from_canvas_spec(spec: dict[str, Any]) -> list[dict[str, Any]
     add_compiler_text_node(
         nodes,
         "eyebrow",
-        content_text(spec, "eyebrow", template_id.replace("-", " ").upper()).upper(),
+        content_text(spec, "eyebrow", "").upper(),
         x=64,
         y=58,
         width=360,

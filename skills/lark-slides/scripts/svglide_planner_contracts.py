@@ -181,8 +181,10 @@ def validate_canvas_plan(project: Path, payload: dict[str, Any]) -> list[dict[st
 
 def validate_slide_plan(project: Path, payload: dict[str, Any]) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
-    _, _, templates = artboard.load_template_registry(project)
-    _, _, themes = artboard.load_theme_registry(project)
+    _, template_registry, templates = artboard.load_template_registry(project)
+    _, theme_registry, themes = artboard.load_theme_registry(project)
+    include_legacy_templates = template_registry.get("include_legacy_debug") is True
+    include_legacy_themes = theme_registry.get("include_legacy_debug") is True
     slides = payload.get("slides")
     if not isinstance(slides, list):
         return issues
@@ -196,11 +198,11 @@ def validate_slide_plan(project: Path, payload: dict[str, Any]) -> list[dict[str
         path = f"$.slides[{index}]"
         if template is None:
             issues.append(issue("slide_plan_template_unknown", f"template_id is not registered: {template_id!r}", path=f"{path}.template_id"))
-        elif template.get("status") != "active":
+        elif not artboard.beautiful_template_runtime.is_runtime_selectable(template, include_legacy_debug=include_legacy_templates):
             issues.append(issue("slide_plan_template_inactive", f"template_id is not active: {template_id!r}", path=f"{path}.template_id"))
         if theme is None:
             issues.append(issue("slide_plan_theme_unknown", f"theme_id is not registered: {theme_id!r}", path=f"{path}.theme_id"))
-        elif theme.get("status") != "active":
+        elif not artboard.beautiful_template_runtime.is_runtime_selectable(theme, include_legacy_debug=include_legacy_themes):
             issues.append(issue("slide_plan_theme_inactive", f"theme_id is not active: {theme_id!r}", path=f"{path}.theme_id"))
         allowed = template.get("supported_theme_ids") if isinstance(template, dict) else None
         if isinstance(allowed, list) and isinstance(theme_id, str) and theme_id not in allowed:

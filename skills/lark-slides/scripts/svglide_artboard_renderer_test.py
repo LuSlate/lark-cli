@@ -21,6 +21,11 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def write_legacy_fixture_registries(project: Path) -> None:
+    write_json(project / "02-plan/theme-registry.json", beautiful_template_runtime.theme_registry(include_legacy=True))
+    write_json(project / "02-plan/template-registry.json", beautiful_template_runtime.template_registry(include_legacy=True))
+
+
 def canvas_spec() -> dict[str, object]:
     return {
         "version": "svglide-canvas-spec/v1",
@@ -62,6 +67,19 @@ def canvas_spec() -> dict[str, object]:
 
 
 class SVGlideArtboardRendererTest(unittest.TestCase):
+    def test_compiler_nodes_do_not_synthesize_template_eyebrow(self) -> None:
+        spec = canvas_spec()
+        spec["template_id"] = "comparison-cards"
+        content = dict(spec["content"])
+        content.pop("eyebrow", None)
+        spec["content"] = content
+
+        nodes = artboard.compiler_nodes_from_canvas_spec(spec)
+
+        text_by_id = {str(node.get("id")): str(node.get("text") or "") for node in nodes if node.get("kind") == "text"}
+        self.assertNotIn("eyebrow", text_by_id)
+        self.assertNotIn("COMPARISON CARDS", "".join(text_by_id.values()))
+
     def test_semantic_elements_attach_origin_for_decorative_nodes(self) -> None:
         elements = artboard.semantic_elements_from_nodes(
             [
@@ -83,8 +101,8 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
     def test_p0_theme_registry_components_and_fixtures_are_registered(self) -> None:
         scripts_dir = Path(__file__).resolve().parent
         renderer_dir = scripts_dir / "artboard_renderer"
-        theme_registry = beautiful_template_runtime.theme_registry()
-        theme_ids = [item["id"] for item in theme_registry["themes"] if item.get("status") == "active"]
+        theme_registry = beautiful_template_runtime.theme_registry(include_legacy=True)
+        theme_ids = [item["id"] for item in theme_registry["themes"]]
         required_theme_ids = {
             "dark-clarity",
             "forest-signal",
@@ -102,8 +120,12 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
         for record in theme_registry["themes"]:
             self.assertTrue({"background", "surface", "panel", "primary", "accent", "text", "muted"}.issubset(record["colors"]))
 
-        template_registry = beautiful_template_runtime.template_registry()
-        active_templates = {item["id"]: item for item in template_registry["templates"] if item.get("status") == "active"}
+        template_registry = beautiful_template_runtime.template_registry(include_legacy=True)
+        active_templates = {
+            item["id"]: item
+            for item in template_registry["templates"]
+            if beautiful_template_runtime.is_runtime_selectable(item, include_legacy_debug=True)
+        }
         required_template_ids = {
             "cover-hero",
             "comparison-cards",
@@ -134,8 +156,10 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
         active_components = [item for item in component_registry["components"] if isinstance(item, dict)]
         self.assertGreaterEqual(len(active_components), 15)
         layout_registry = json.loads((scripts_dir.parent / "references/svglide-layout-archetypes.json").read_text(encoding="utf-8"))
-        active_layouts = [item for item in layout_registry["archetypes"] if item.get("status") == "active"]
-        self.assertGreaterEqual(len(active_layouts), 8)
+        layout_records = [item for item in layout_registry["archetypes"] if isinstance(item, dict)]
+        legacy_layouts = [item for item in layout_records if item.get("status") == "legacy_debug"]
+        self.assertGreaterEqual(len(layout_records), 8)
+        self.assertTrue(legacy_layouts)
         source_intake = json.loads((scripts_dir.parent / "references/svglide-p1-source-intake.json").read_text(encoding="utf-8"))
         self.assertEqual("forbidden", source_intake["policy"]["runtime_import"])
         self.assertGreaterEqual(source_intake["p1_abstractions"]["template_count"], 15)
@@ -175,20 +199,24 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
             self.assertEqual(golden["template_id"], template_id)
             self.assertIn(golden["theme_id"], theme_ids)
             issues = artboard.validate_canvas_spec(golden, page=1)
-            registry_issues, _ = artboard.validate_registry_bindings(Path(tempfile.gettempdir()), golden, page=1)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                project = Path(tmpdir)
+                write_legacy_fixture_registries(project)
+                registry_issues, _ = artboard.validate_registry_bindings(project, golden, page=1)
             self.assertEqual([], issues + registry_issues)
 
     def test_p1_active_template_golden_fixtures_render(self) -> None:
         scripts_dir = Path(__file__).resolve().parent
         golden_dir = scripts_dir / "fixtures/svglide_artboard/golden"
-        template_registry = beautiful_template_runtime.template_registry()
-        active_template_ids = sorted(item["id"] for item in template_registry["templates"] if item.get("status") == "active")
+        template_registry = beautiful_template_runtime.template_registry(include_legacy=True)
+        active_template_ids = sorted(item["id"] for item in template_registry["templates"] if beautiful_template_runtime.is_runtime_selectable(item))
         slides = []
         for page, template_id in enumerate(active_template_ids, 1):
             golden = json.loads((golden_dir / f"{template_id}.canvas-spec.json").read_text(encoding="utf-8"))
             slides.append({"page": page, "title": golden["content"]["title"], "canvas_spec": golden})
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
             write_json(project / "02-plan/slide_plan.json", {"generation_mode": "artboard_satori", "slides": slides})
 
             result = artboard.render_project(project)
@@ -222,6 +250,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
             write_json(project / "02-plan/slide_plan.json", {"generation_mode": "artboard_satori", "slides": [{"page": 1, "canvas_spec": spec}]})
 
             result = artboard.render_project(project)
@@ -258,6 +287,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
                 project = Path(tmpdir)
+                write_legacy_fixture_registries(project)
                 write_json(project / "02-plan/slide_plan.json", {"generation_mode": "artboard_satori", "slides": [{"page": 1, "canvas_spec": spec}]})
 
                 with self.assertRaisesRegex(artboard.ArtboardError, "Python generic fallback is not allowed"):
@@ -283,6 +313,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
     def test_render_project_writes_artboard_and_svglide_receipts(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
             write_json(
                 project / "02-plan/slide_plan.json",
                 {
@@ -376,6 +407,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
+            write_legacy_fixture_registries(project)
             write_json(project / "02-plan/slide_plan.json", fixture_plan)
 
             result = artboard.render_project(project)
@@ -419,6 +451,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
     def test_render_project_rejects_missing_required_content_and_card_overflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
             spec = {
                 "version": "svglide-canvas-spec/v1",
                 "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
@@ -445,6 +478,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
     def test_render_project_rejects_overlong_title_text_budget(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
             spec = canvas_spec()
             spec["content"]["title"] = "这是一段明显超过封面模板标题预算的超长标题，用来证明输入质量门禁会在渲染前阻断"
             write_json(project / "02-plan/slide_plan.json", {"slides": [{"page": 1, "canvas_spec": spec}]})

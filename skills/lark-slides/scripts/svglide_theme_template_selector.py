@@ -23,6 +23,7 @@ PALETTE_SELECTION_PATH = Path("02-plan/palette-selection.json")
 PLAN_PATH = Path("02-plan/slide_plan.json")
 SELECTION_PATH = Path("02-plan/theme-template-selection.json")
 SELECTION_RECEIPT_PATH = Path("receipts/theme_template_selection.json")
+PRODUCTION_ARCHITECTURE_TEMPLATE_IDS = {"architectural-spec"}
 
 
 def now_iso() -> str:
@@ -148,6 +149,9 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     content_shapes = set(list_value(signals.get("content_shape")))
     occasions = set(list_value(signals.get("occasion")))
     prompt_norm = normalize_brief(brief)
+    architecture_intent = bool(
+        {"technical architecture", "system design"}.intersection(occasions) or {"architecture", "nodes"}.intersection(content_shapes)
+    )
     if template_id in {"executive-dashboard", "metric-dashboard", "trend-grid-report"} and "dashboard" in content_shapes:
         score += 6
         scored["matched_signals"].append("template_capability:dashboard")
@@ -165,7 +169,7 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     score += boost_template(
         scored,
         template_id,
-        {"timeline-steps", "risk-alert", "process-flow"},
+        {"intelligence-brief", "ledger-briefing", "serif-stat-editorial"},
         weight=34,
         signal="scenario:postmortem",
         penalty_ids={"executive-dashboard", "metric-dashboard", "trend-grid-report"},
@@ -180,9 +184,7 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
         penalty_ids={"executive-dashboard", "metric-dashboard"},
         penalty=24,
     ) if "competitive analysis" in occasions or {"comparison matrix", "feature matrix", "versus"}.intersection(content_shapes) else 0
-    if template_id in {"architectural-spec", "architecture-blueprint"} and (
-        {"technical architecture", "system design"}.intersection(occasions) or {"architecture", "dependency map", "nodes"}.intersection(content_shapes)
-    ):
+    if template_id in PRODUCTION_ARCHITECTURE_TEMPLATE_IDS and architecture_intent:
         score += 14
         scored["matched_signals"].append("template_capability:architecture")
     if template_id == "risk-alert" and {"technical architecture", "system design"}.intersection(occasions):
@@ -191,12 +193,12 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     score += boost_template(
         scored,
         template_id,
-        {"architectural-spec", "architecture-blueprint"},
+        PRODUCTION_ARCHITECTURE_TEMPLATE_IDS,
         weight=34,
         signal="scenario:architecture",
         penalty_ids={"executive-dashboard", "metric-dashboard"},
         penalty=28,
-    ) if {"technical architecture", "system design"}.intersection(occasions) or {"architecture", "dependency map", "nodes"}.intersection(content_shapes) else 0
+    ) if architecture_intent else 0
     score += boost_template(
         scored,
         template_id,
@@ -223,7 +225,7 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     score += boost_template(
         scored,
         template_id,
-        {"roadmap-lanes", "timeline-steps", "process-flow"},
+        {"dense-panel-grid", "ledger-briefing", "trend-grid-report"},
         weight=34,
         signal="scenario:roadmap",
         penalty_ids={"architecture-blueprint", "architectural-spec", "executive-dashboard"},
@@ -237,7 +239,7 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
         signal="scenario:risk_security",
         penalty_ids={"executive-dashboard", "metric-dashboard"},
         penalty=24,
-    ) if "security review" in occasions or "风险" in prompt_norm or "合规" in prompt_norm or "审计" in prompt_norm else 0
+    ) if not architecture_intent and ("security review" in occasions or "风险" in prompt_norm or "合规" in prompt_norm or "审计" in prompt_norm) else 0
     if template_id in {"trend-grid-report", "dense-panel-grid", "intelligence-brief"} and (
         "market analysis" in occasions or {"market map", "trend", "bar ranking"}.intersection(content_shapes)
     ):
@@ -272,7 +274,7 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     if template_id == "quote-focus" and any(token in prompt_norm for token in ("大图", "图片", "配图", "image report")):
         score -= 8
         scored["rejection_reasons"].append("template_mismatch:image_report_not_quote_only")
-    if template_id == "summary-final" and (
+    if template_id in {"ledger-briefing", "intelligence-brief", "serif-stat-editorial"} and (
         {"summary", "decision review"}.intersection(occasions) or "takeaways" in content_shapes or any(token in prompt_norm for token in ("最后一页", "总结页", "closing", "takeaways"))
     ):
         score += 18
@@ -423,8 +425,8 @@ def select_theme_template(project_root: Path, brief: str, *, top_k: int = 5, evi
     palette_selection = load_palette_selection(project_root)
     plan = load_plan_if_present(project_root)
     signals = infer_brief_signals(brief, evidence)
-    templates = [item for item in load_template_registry().get("templates", []) if isinstance(item, dict) and item.get("status") == "active"]
-    themes = [item for item in load_theme_registry().get("themes", []) if isinstance(item, dict) and item.get("status") == "active"]
+    templates = [item for item in load_template_registry().get("templates", []) if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)]
+    themes = [item for item in load_theme_registry().get("themes", []) if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)]
 
     template_candidates = [score_template(signals, item, brief=brief) for item in templates]
     template_candidates.sort(key=lambda item: (-int(item.get("score") or 0), str(item.get("template_id") or item.get("id"))))

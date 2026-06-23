@@ -963,6 +963,28 @@ class SVGlideSemanticAssetMatcherTest(unittest.TestCase):
             self.assertEqual(case.expected_baseline_top, baseline["selected_template_id"])
             self.assertNotEqual(baseline["selected_template_id"], result["selected_template_id"])
 
+    def test_business_generation_and_user_chains_do_not_trigger_architecture_signals(self) -> None:
+        prompts = (
+            "真实生成链路复盘：从用户输入到本地预览，说明业务链路、用户链路和交付结果",
+            "业务链路分析：渠道触达、转化节点、用户链路和增长链路",
+            "用户链路梳理：注册、激活、留存和复访路径",
+        )
+        forbidden_occasions = {"technical architecture", "system design"}
+        forbidden_shapes = {"architecture", "dependency map", "nodes"}
+
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                signals = matcher.infer_brief_signals(prompt)
+                self.assertFalse(forbidden_occasions.intersection(set(signals.get("occasion", []))), signals)
+                self.assertFalse(forbidden_shapes.intersection(set(signals.get("content_shape", []))), signals)
+
+    def test_microservice_call_chain_architecture_still_triggers_architecture_signals(self) -> None:
+        signals = matcher.infer_brief_signals("微服务调用链路架构图：展示系统调用链路架构、服务模块、节点和依赖关系")
+
+        self.assertIn("technical architecture", signals.get("occasion", []))
+        self.assertIn("system design", signals.get("occasion", []))
+        self.assertIn("architecture", signals.get("content_shape", []))
+
 
 def make_case_test(case: SemanticCase):
     def test(self: SVGlideSemanticAssetMatcherTest) -> None:

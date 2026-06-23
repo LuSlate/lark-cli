@@ -18,6 +18,7 @@ import beautiful_template_runtime
 SCHEMA_VERSION = "svglide-theme-validate/v1"
 STAGE = "theme_validate"
 PLAN_PATH = Path("02-plan/slide_plan.json")
+PROJECT_TEMPLATE_REGISTRY = Path("02-plan/template-registry.json")
 CHECK_PATH = Path("06-check/theme-validate.json")
 RECEIPT_PATH = Path("receipts/theme-validate.json")
 
@@ -61,10 +62,17 @@ def display_path(path: Path, project_root: Path) -> str:
         return relpath(path, svglide_theme.REPO_ROOT)
 
 
-def template_records() -> dict[str, dict[str, Any]]:
-    payload = beautiful_template_runtime.template_registry()
+def template_registry_payload(project_root: Path) -> tuple[Path, dict[str, Any]]:
+    project_registry = project_root / PROJECT_TEMPLATE_REGISTRY
+    if project_registry.exists():
+        return project_registry, read_json(project_registry)
+    return beautiful_template_runtime.FAMILIES_PATH, beautiful_template_runtime.template_registry()
+
+
+def template_records(project_root: Path) -> tuple[Path, dict[str, dict[str, Any]]]:
+    path, payload = template_registry_payload(project_root)
     templates = payload.get("templates") if isinstance(payload.get("templates"), list) else []
-    return {item["id"]: item for item in templates if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    return path, {item["id"]: item for item in templates if isinstance(item, dict) and isinstance(item.get("id"), str)}
 
 
 def theme_record_paths(registry: dict[str, Any]) -> dict[str, str]:
@@ -169,8 +177,9 @@ def validate_project(project_root: Path) -> dict[str, Any]:
         issues.append(issue("theme_registry_invalid", str(err), path=svglide_theme.GLOBAL_THEME_REGISTRY.as_posix()))
 
     try:
-        templates = template_records()
+        template_registry_path, templates = template_records(project_root)
     except (OSError, json.JSONDecodeError, ValueError) as err:
+        template_registry_path = beautiful_template_runtime.FAMILIES_PATH
         issues.append(issue("template_registry_invalid", str(err), path=beautiful_template_runtime.FAMILIES_PATH.as_posix()))
 
     slides = plan.get("slides") if isinstance(plan.get("slides"), list) else []
@@ -253,8 +262,8 @@ def validate_project(project_root: Path) -> dict[str, Any]:
             "theme_registry_sha256": svglide_theme.file_sha256(registry_path)
             if registry_path.exists()
             else None,
-            "template_registry": relpath(beautiful_template_runtime.FAMILIES_PATH, svglide_theme.REPO_ROOT),
-            "template_registry_sha256": svglide_theme.file_sha256(beautiful_template_runtime.FAMILIES_PATH) if beautiful_template_runtime.FAMILIES_PATH.exists() else None,
+            "template_registry": display_path(template_registry_path, project_root),
+            "template_registry_sha256": svglide_theme.file_sha256(template_registry_path) if template_registry_path.exists() else None,
         },
         "theme_files": theme_files,
         "pages": pages,

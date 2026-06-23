@@ -39,15 +39,15 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def active_templates(registry: dict[str, Any]) -> list[dict[str, Any]]:
-    return [item for item in registry.get("templates", []) if isinstance(item, dict) and item.get("status") == "active"]
+    return [item for item in registry.get("templates", []) if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)]
 
 
 def active_themes(registry: dict[str, Any]) -> list[dict[str, Any]]:
-    return [item for item in registry.get("themes", []) if isinstance(item, dict) and item.get("status") == "active"]
+    return [item for item in registry.get("themes", []) if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)]
 
 
 def active_palettes(registry: dict[str, Any]) -> list[dict[str, Any]]:
-    return [item for item in registry.get("palettes", []) if isinstance(item, dict) and item.get("status") == "active"]
+    return [item for item in registry.get("palettes", []) if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)]
 
 
 def brand_records(registry: dict[str, Any]) -> list[dict[str, Any]]:

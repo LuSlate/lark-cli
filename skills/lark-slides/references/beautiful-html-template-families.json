@@ -3337,7 +3337,8 @@
               "template_candidate",
               "layout_archetype",
               "component_variant",
-              "planner_selection_signal"
+              "planner_selection_signal",
+              "theme_candidate"
             ],
             "svglide_asset_ids": [
               "chart_strategy.executive-ranking-bars",
@@ -3345,7 +3346,8 @@
               "component.SingleAccentMetricCard",
               "component.single_accent_metric_card",
               "layout.executive_dashboard",
-              "template.executive-dashboard"
+              "template.executive-dashboard",
+              "theme.blue-professional"
             ],
             "source_context_refs": [
               "beautiful-html-templates.template.blue-professional.template.json",
@@ -3664,6 +3666,101 @@
           "timeline-track"
         ]
       },
+      "theme_token": {
+        "theme_id": "blue-professional",
+        "status": "production",
+        "quality_tier": "trusted",
+        "default_selectable": true,
+        "selection_scope": "production",
+        "source_family": "blue-professional",
+        "mode": "light",
+        "colors": {
+          "background": "#FDFAE7",
+          "surface": "#F5F7FF",
+          "panel": "#FFFFFF",
+          "primary": "#1E2BFA",
+          "accent": "#1E2BFA",
+          "text": "#111111",
+          "muted": "#6B6B6B",
+          "border": "#D4D8FE",
+          "success": "#059669",
+          "warning": "#D97706",
+          "danger": "#DC2626"
+        },
+        "semantic_colors": {
+          "canvas.background": "#FDFAE7",
+          "surface.default": "#F5F7FF",
+          "surface.panel": "#FFFFFF",
+          "text.default": "#111111",
+          "text.muted": "#6B6B6B",
+          "brand.primary": "#1E2BFA",
+          "brand.accent": "#1E2BFA",
+          "status.success": "#059669",
+          "status.warning": "#D97706",
+          "status.danger": "#DC2626"
+        },
+        "typography": {
+          "display": "system-sans-cjk-heavy",
+          "body": "system-sans-cjk-regular",
+          "metric": "system-sans-cjk-heavy",
+          "label": "system-sans-cjk-medium"
+        },
+        "spacing": {
+          "pad_slide_x": "4vw",
+          "pad_slide_y_top": "3.5vw",
+          "pad_slide_y_bottom": "8.5vh",
+          "pad_card_lg": "1.5rem 1.6rem",
+          "gap_grid_lg": "3.5rem",
+          "gap_cards": "1.2rem"
+        },
+        "motif_budget": {
+          "density": "low",
+          "allowed": [
+            "grid",
+            "accent line",
+            "card panels",
+            "paper texture"
+          ],
+          "forbidden": [
+            "random decorative lines",
+            "cyber glow",
+            "blueprint node maze"
+          ]
+        },
+        "template_bindings": [
+          "executive-dashboard",
+          "trend-grid-report",
+          "ledger-briefing",
+          "dense-panel-grid"
+        ],
+        "best_for": [
+          "internal reviews",
+          "business review",
+          "executive dashboard",
+          "operating review",
+          "investor reports"
+        ],
+        "avoid_when": [
+          "playful poster",
+          "cyberpunk",
+          "technical blueprint",
+          "food/travel lifestyle"
+        ],
+        "source_trace": [
+          {
+            "source": "beautiful-html-templates/templates/blue-professional/design.md",
+            "evidence": "design_tokens.colors"
+          },
+          {
+            "source": "beautiful-html-templates/screenshots/blue-professional-1.png",
+            "evidence": "cover_reference"
+          },
+          {
+            "source": "skills/lark-slides/references/absorptions/beautiful-html-templates/blue-professional.executive-dashboard.json",
+            "evidence": "template.executive-dashboard absorption"
+          }
+        ]
+      },
       "visual_dna": {
         "palette_roles": {
           "background": "#FDFAE7",
@@ -3790,7 +3887,8 @@
           "component_variant",
           "layout_archetype",
           "planner_selection_signal",
-          "template_candidate"
+          "template_candidate",
+          "theme_candidate"
         ],
         "svglide_asset_ids": [
           "chart_strategy.executive-ranking-bars",
@@ -3798,7 +3896,8 @@
           "component.SingleAccentMetricCard",
           "component.single_accent_metric_card",
           "layout.executive_dashboard",
-          "template.executive-dashboard"
+          "template.executive-dashboard",
+          "theme.blue-professional"
         ],
         "source_context_refs": [
           "beautiful-html-templates.screenshot.blue-professional-1",

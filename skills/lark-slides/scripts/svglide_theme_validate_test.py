@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_theme_validate
+import beautiful_template_runtime
 
 
 def write_json(path: Path, payload: dict[str, object]) -> None:
@@ -22,6 +23,8 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
 
 
 def write_plan(project: Path, *, theme_id: str = "dark-clarity", template_id: str = "cover-hero") -> None:
+    if theme_id in beautiful_template_runtime.LEGACY_THEME_COLORS:
+        write_legacy_fixture_registries(project)
     write_json(
         project / "02-plan/slide_plan.json",
         {
@@ -43,6 +46,7 @@ def write_plan(project: Path, *, theme_id: str = "dark-clarity", template_id: st
 
 
 def write_multi_theme_plan(project: Path, *, allow_multi_theme: bool | None = None, scope: str = "deck") -> None:
+    write_legacy_fixture_registries(project)
     plan: dict[str, object] = {
         "generation_mode": "artboard_satori",
         "slides": [
@@ -83,7 +87,7 @@ def write_project_theme(project: Path, *, theme_id: str = "project-theme", prima
                     "id": theme_id,
                     "status": "active",
                     "path": "themes/project-theme.json",
-                    "template_bindings": {"supported_template_ids": ["cover-hero"]},
+                    "template_bindings": {"supported_template_ids": ["executive-dashboard"]},
                 }
             ],
         },
@@ -107,6 +111,11 @@ def write_project_theme(project: Path, *, theme_id: str = "project-theme", prima
             },
         },
     )
+
+
+def write_legacy_fixture_registries(project: Path) -> None:
+    write_json(project / "02-plan/theme-registry.json", beautiful_template_runtime.theme_registry(include_legacy=True))
+    write_json(project / "02-plan/template-registry.json", beautiful_template_runtime.template_registry(include_legacy=True))
 
 
 class SVGlideThemeValidateTest(unittest.TestCase):
@@ -141,12 +150,12 @@ class SVGlideThemeValidateTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
             write_project_theme(project)
-            write_plan(project, theme_id="project-theme", template_id="cover-hero")
+            write_plan(project, theme_id="project-theme", template_id="executive-dashboard")
 
             result = svglide_theme_validate.validate_project(project)
 
         self.assertEqual(result["status"], "passed", result["issues"])
-        self.assertEqual(result["pages"][0]["template_id"], "cover-hero")
+        self.assertEqual(result["pages"][0]["template_id"], "executive-dashboard")
 
     def test_validate_project_fails_unknown_theme(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

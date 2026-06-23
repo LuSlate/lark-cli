@@ -96,6 +96,51 @@ class SelectionReviewTest(unittest.TestCase):
         self.assertEqual(result["status"], "failed")
         self.assertIn("template_not_allowed", {item["code"] for item in result["issues"]})
 
+    def test_selection_review_fails_selected_legacy_template_theme_or_palette(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            palette, selection = make_project(root)
+            palette["selected_palette_id"] = "family.blueprint-technical"
+            palette["palette_candidates"] = [
+                {
+                    "palette_id": "family.blueprint-technical",
+                    "status": "legacy_debug",
+                    "asset_status": "legacy_debug",
+                    "quality_tier": "fixture_only",
+                    "default_selectable": False,
+                }
+            ]
+            selection["selected_template_id"] = "architecture-blueprint"
+            selection["selected_theme_id"] = "blueprint-technical"
+            selection["template_candidates"] = [
+                {
+                    "template_id": "architecture-blueprint",
+                    "status": "legacy_debug",
+                    "asset_status": "legacy_debug",
+                    "quality_tier": "fixture_only",
+                    "default_selectable": False,
+                }
+            ]
+            selection["theme_candidates"] = [
+                {
+                    "theme_id": "blueprint-technical",
+                    "status": "legacy_debug",
+                    "asset_status": "legacy_debug",
+                    "quality_tier": "fixture_only",
+                    "default_selectable": False,
+                }
+            ]
+            write_json(root / "02-plan/palette-selection.json", palette)
+            write_json(root / "02-plan/theme-template-selection.json", selection)
+
+            result = review.run_review(root)
+
+        self.assertEqual(result["status"], "failed")
+        codes = {item["code"] for item in result["issues"]}
+        self.assertIn("selected_legacy_template", codes)
+        self.assertIn("selected_legacy_theme", codes)
+        self.assertIn("selected_legacy_palette", codes)
+
     def test_selection_review_passes_plan_declared_multi_template_deck(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -106,8 +151,8 @@ class SelectionReviewTest(unittest.TestCase):
                 root / "02-plan/slide_plan.json",
                 {
                     "slides": [
-                        {"page": 1, "canvas_spec": {"template_id": "intelligence-brief", "theme_id": "signal-navy"}},
-                        {"page": 2, "canvas_spec": {"template_id": "poster-stat-punch", "theme_id": "signal-navy"}},
+                        {"page": 1, "canvas_spec": {"template_id": "intelligence-brief", "theme_id": "stone-architect"}},
+                        {"page": 2, "canvas_spec": {"template_id": "poster-stat-punch", "theme_id": "stone-architect"}},
                     ]
                 },
             )
@@ -142,7 +187,7 @@ class SelectionReviewTest(unittest.TestCase):
                             "page": 1,
                             "canvas_spec": {
                                 "template_id": "intelligence-brief",
-                                "theme_id": "signal-navy",
+                                "theme_id": "stone-architect",
                                 "palette_id": project_palette["palette_id"],
                                 "selection_trace": {"selection_reason": ["plan_declared"]},
                             },
@@ -151,7 +196,7 @@ class SelectionReviewTest(unittest.TestCase):
                             "page": 2,
                             "canvas_spec": {
                                 "template_id": "poster-stat-punch",
-                                "theme_id": "signal-navy",
+                                "theme_id": "stone-architect",
                                 "palette_id": project_palette["palette_id"],
                                 "selection_trace": {"selection_reason": ["plan_declared"]},
                             },

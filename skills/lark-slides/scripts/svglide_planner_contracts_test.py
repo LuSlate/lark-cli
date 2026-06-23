@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_planner_contracts as planner
+import beautiful_template_runtime
 
 
 def read_json(path: Path) -> dict[str, object]:
@@ -29,6 +30,8 @@ class SVGlidePlannerContractsTest(unittest.TestCase):
         source = Path(__file__).resolve().parent / "fixtures/svglide_artboard/gate10_planner"
         target = Path(tmpdir) / "gate10_planner"
         shutil.copytree(source, target)
+        write_json(target / "02-plan/theme-registry.json", beautiful_template_runtime.theme_registry(include_legacy=True))
+        write_json(target / "02-plan/template-registry.json", beautiful_template_runtime.template_registry(include_legacy=True))
         return target
 
     def test_gate10_planner_fixture_passes_contracts_and_canvas_admission(self) -> None:

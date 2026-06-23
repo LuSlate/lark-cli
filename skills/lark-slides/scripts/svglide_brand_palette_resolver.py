@@ -154,7 +154,7 @@ def resolve_asset_extracted_palette(project_root: Path, evidence: dict[str, Any]
 
 
 def stable_palette_fallback(signals: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
-    active = [item for item in registry.get("palettes", []) if isinstance(item, dict) and item.get("status") == "active"]
+    active = [item for item in registry.get("palettes", []) if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)]
     if not active:
         raise ValueError("palette registry has no active palettes")
     seed = stable_seed({"signals": signals, "registry_version": registry.get("schema_version"), "strategy": "stable_palette_fallback"})
@@ -165,6 +165,7 @@ def stable_palette_fallback(signals: dict[str, Any], registry: dict[str, Any]) -
         "source": "stable_fallback",
         "palette_source": "stable_fallback",
         "confidence": "low",
+        "quality_gate_fallback": True,
         "palette_id": selected.get("palette_id"),
         "fallback_seed": seed,
         "colors": {

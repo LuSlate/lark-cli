@@ -13,6 +13,7 @@ from typing import Any
 
 
 TEXT_RE = re.compile(r"\s+")
+FIELD_LABEL_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 _-]{0,32}:\s*(.+)$")
 
 
 def json_sha256(payload: Any) -> str:
@@ -26,6 +27,17 @@ def normalize_text(value: str) -> str:
 
 def normalized_match(value: str) -> str:
     return "".join(normalize_text(value).split()).lower()
+
+
+def normalized_text_candidates(value: str) -> list[str]:
+    normalized = normalized_match(value)
+    candidates = [normalized] if normalized else []
+    label_match = FIELD_LABEL_RE.match(normalize_text(value))
+    if label_match:
+        visible_value = normalized_match(label_match.group(1))
+        if visible_value and visible_value not in candidates:
+            candidates.append(visible_value)
+    return candidates
 
 
 def _attr(element: ET.Element, name: str) -> str | None:
@@ -65,6 +77,7 @@ def validate_semantic_map_against_svg(semantic_map: dict[str, Any], svg_path: Pa
         for node in visible_nodes
         if isinstance(node.get("element_id"), str) and str(node.get("element_id"))
     }
+    visible_text_stream = "".join(normalized_match(str(node.get("text") or "")) for node in visible_nodes)
     issues: list[dict[str, str]] = []
     elements = semantic_map.get("elements") if isinstance(semantic_map.get("elements"), list) else []
     for element in elements:
@@ -78,9 +91,11 @@ def validate_semantic_map_against_svg(semantic_map: dict[str, Any], svg_path: Pa
             continue
         observed = visible_by_id.get(element_id)
         if observed is None:
-            issues.append({"code": "semantic_map_visible_text_missing", "message": f"visible SVG text is missing semantic element {element_id}"})
+            matches = normalized_text_candidates(expected_text)
+            if not any(match and match in visible_text_stream for match in matches):
+                issues.append({"code": "semantic_map_visible_text_missing", "message": f"visible SVG text is missing semantic element {element_id}"})
             continue
-        if normalized_match(str(observed.get("text") or "")) != normalized_match(expected_text):
+        if normalized_match(str(observed.get("text") or "")) not in normalized_text_candidates(expected_text):
             issues.append({"code": "semantic_map_visible_text_mismatch", "message": f"visible SVG text does not match semantic map element {element_id}"})
         expected_ref = element.get("source_ref")
         if isinstance(expected_ref, str) and expected_ref:

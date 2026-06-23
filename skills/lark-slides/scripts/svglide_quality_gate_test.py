@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_quality_gate
+import beautiful_template_runtime
 
 
 def write_json(path: Path, payload: dict[str, object]) -> None:
@@ -673,6 +674,38 @@ class SVGlideQualityGateTest(unittest.TestCase):
             missing = [check for check in result["checks"] if check["name"] == "theme-adherence"][0]
             self.assertEqual(missing["status"], "missing")
             self.assertIn("theme_adherence", result["inputs"])
+
+    def test_quality_gate_fails_when_production_receipt_uses_legacy_asset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            self.write_minimal_passing_project(project)
+            receipt_path = project / "receipts/generate_svg.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["legacy_asset_used"] = True
+            receipt["legacy_assets"] = [{"kind": "template", "id": "architecture-blueprint"}]
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        legacy_check = [check for check in result["checks"] if check["name"] == "legacy-fallback-review"][0]
+        self.assertEqual(legacy_check["status"], "failed")
+        self.assertIn("legacy_asset_used", {item["code"] for item in legacy_check["issues"]})
+
+    def test_quality_gate_fails_when_production_project_enables_legacy_debug_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            self.write_minimal_passing_project(project)
+            write_json(project / "02-plan/template-registry.json", beautiful_template_runtime.template_registry(include_legacy=True))
+            write_json(project / "02-plan/theme-registry.json", beautiful_template_runtime.theme_registry(include_legacy=True))
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        legacy_check = [check for check in result["checks"] if check["name"] == "legacy-fallback-review"][0]
+        codes = {item["code"] for item in legacy_check["issues"]}
+        self.assertIn("legacy_debug_registry_enabled", codes)
+        self.assertIn("legacy_asset_status", codes)
 
     def test_quality_gate_fails_when_theme_adherence_theme_validate_is_stale(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

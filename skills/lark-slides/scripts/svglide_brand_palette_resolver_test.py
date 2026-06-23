@@ -13,6 +13,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import svglide_brand_palette_resolver as resolver
 
 
+LEGACY_DEBUG_FAMILY_PALETTE_IDS = {
+    "family.blueprint-technical",
+    "family.cobalt-grid",
+    "family.glass-neon",
+    "family.retro-desktop",
+    "family.warm-editorial",
+}
+
+
 class BrandPaletteResolverTest(unittest.TestCase):
     def test_user_provided_hex_takes_precedence(self) -> None:
         result = resolver.resolve_user_provided_palette("用 #76B900 和 #111111 做一份 NVIDIA 复盘")
@@ -43,6 +52,13 @@ class BrandPaletteResolverTest(unittest.TestCase):
 
         self.assertEqual("stable_fallback", first["source"])
         self.assertEqual(first["fallback_seed"], second["fallback_seed"])
+        self.assertNotIn(first["palette_id"], LEGACY_DEBUG_FAMILY_PALETTE_IDS)
+
+    def test_unknown_brand_fallback_does_not_select_legacy_palette(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = resolver.resolve_brand_palette(Path(tmpdir), "未知品牌 AlphaOmega 内部复盘")
+
+        self.assertNotIn(result.get("palette_id"), LEGACY_DEBUG_FAMILY_PALETTE_IDS)
 
 
 if __name__ == "__main__":

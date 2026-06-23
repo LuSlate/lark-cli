@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import beautiful_template_runtime
+
 
 SCHEMA_VERSION = "svglide-selection-review/v1"
 STAGE = "theme_template_selection_review"
@@ -82,6 +84,48 @@ def allowed_palette_ids(selection: dict[str, Any], palette_selection: dict[str, 
         if isinstance(item, dict) and item.get("palette_id"):
             values.add(str(item["palette_id"]))
     return values
+
+
+def legacy_status(record: dict[str, Any] | None) -> bool:
+    if not isinstance(record, dict):
+        return False
+    return record.get("status") == "legacy_debug" or record.get("asset_status") == "legacy_debug" or record.get("quality_tier") == "fixture_only"
+
+
+def candidate_by_id(records: Any, id_key: str) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    if not isinstance(records, list):
+        return result
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        raw = item.get(id_key) or item.get("id") or item.get("palette_id")
+        if isinstance(raw, str) and raw:
+            result[raw] = item
+    return result
+
+
+def selected_legacy_issues(selection: dict[str, Any], palette_selection: dict[str, Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    template_id = selection.get("selected_template_id")
+    theme_id = selection.get("selected_theme_id")
+    palette_id = palette_selection.get("selected_palette_id") or selection.get("selected_palette_id")
+    templates = candidate_by_id(selection.get("template_candidates"), "template_id")
+    themes = candidate_by_id(selection.get("theme_candidates"), "theme_id")
+    palettes = candidate_by_id(palette_selection.get("palette_candidates"), "palette_id")
+    if isinstance(template_id, str) and (
+        legacy_status(templates.get(template_id)) or template_id in beautiful_template_runtime.LEGACY_TEMPLATE_IDS
+    ):
+        issues.append(issue("selected_legacy_template", f"selected_template_id {template_id!r} is legacy_debug/fixture_only", path="selected_template_id"))
+    if isinstance(theme_id, str) and (
+        legacy_status(themes.get(theme_id)) or theme_id in beautiful_template_runtime.LEGACY_THEME_IDS
+    ):
+        issues.append(issue("selected_legacy_theme", f"selected_theme_id {theme_id!r} is legacy_debug/fixture_only", path="selected_theme_id"))
+    if isinstance(palette_id, str):
+        legacy_palette_id = palette_id.startswith("family.") and palette_id.removeprefix("family.") in beautiful_template_runtime.LEGACY_THEME_IDS
+        if legacy_status(palettes.get(palette_id)) or legacy_palette_id:
+            issues.append(issue("selected_legacy_palette", f"selected_palette_id {palette_id!r} is legacy_debug/fixture_only", path="selected_palette_id"))
+    return issues
 
 
 def slide_canvas_spec(slide: dict[str, Any]) -> dict[str, Any]:
@@ -158,6 +202,7 @@ def run_review(project_root: Path) -> dict[str, Any]:
         plan = {}
         issues.append(issue("plan_missing", f"could not read {PLAN_PATH}: {err}", path=PLAN_PATH.as_posix()))
     if selection and palette_selection and plan:
+        issues.extend(selected_legacy_issues(selection, palette_selection))
         issues.extend(validate_project_theme(plan, selection))
         issues.extend(validate_plan_against_selection(plan, selection, palette_selection))
     return {

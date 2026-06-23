@@ -154,7 +154,7 @@ def theme_registry_bundle() -> list[dict[str, Any]]:
     registry = beautiful_template_runtime.theme_registry()
     result: list[dict[str, Any]] = []
     for item in registry.get("themes", []) if isinstance(registry, dict) else []:
-        if not isinstance(item, dict) or item.get("status") != "active":
+        if not isinstance(item, dict) or not beautiful_template_runtime.is_runtime_selectable(item):
             continue
         record = {"id": item.get("id"), "status": item.get("status")}
         record["colors"] = item.get("colors")
@@ -166,7 +166,7 @@ def template_registry_bundle() -> list[dict[str, Any]]:
     registry = beautiful_template_runtime.template_registry()
     result: list[dict[str, Any]] = []
     for item in registry.get("templates", []) if isinstance(registry, dict) else []:
-        if not isinstance(item, dict) or item.get("status") != "active":
+        if not isinstance(item, dict) or not beautiful_template_runtime.is_runtime_selectable(item):
             continue
         result.append(
             {
@@ -187,6 +187,18 @@ def template_registry_bundle() -> list[dict[str, Any]]:
             }
         )
     return result
+
+
+def production_registry_payload(payload: dict[str, Any], key: str) -> dict[str, Any]:
+    records = payload.get(key) if isinstance(payload.get(key), list) else []
+    return {
+        **payload,
+        key: [
+            item
+            for item in records
+            if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)
+        ],
+    }
 
 
 def template_family_policy_context_bundle() -> list[dict[str, Any]]:
@@ -212,11 +224,15 @@ def load_selection_context(project: Path | None = None) -> dict[str, Any]:
 
 
 def load_context(project: Path | None = None) -> dict[str, Any]:
+    layout_archetypes = production_registry_payload(
+        read_json(repo_path("skills/lark-slides/references/svglide-layout-archetypes.json")),
+        "archetypes",
+    )
     context = {
         "templates": template_registry_bundle(),
         "template_family_policy_context": template_family_policy_context_bundle(),
         "themes": theme_registry_bundle(),
-        "layout_archetypes": read_json(repo_path("skills/lark-slides/references/svglide-layout-archetypes.json")),
+        "layout_archetypes": layout_archetypes,
         "component_registry": beautiful_template_runtime.component_registry(),
         "canvas_spec_schema": read_json(repo_path("skills/lark-slides/references/svglide-canvas-spec.schema.json")),
         "planner_prompt_contracts": read_json(repo_path("skills/lark-slides/references/svglide-planner-prompt-contracts.json")),

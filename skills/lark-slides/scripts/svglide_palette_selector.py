@@ -171,7 +171,7 @@ def project_palette_from_selection(palette: dict[str, Any], brand_resolution: di
         value = brand_colors.get(key)
         if isinstance(value, str) and value:
             colors[key] = value
-    return {
+    result = {
         "palette_id": palette.get("palette_id"),
         "source": brand_resolution.get("source"),
         "confidence": confidence,
@@ -179,6 +179,9 @@ def project_palette_from_selection(palette: dict[str, Any], brand_resolution: di
         "colors": colors,
         "data_series": palette.get("data_series") if isinstance(palette.get("data_series"), list) else [],
     }
+    if brand_resolution.get("quality_gate_fallback") is True:
+        result["quality_gate_fallback"] = True
+    return result
 
 
 def select_palette(project_root: Path, brief: str, *, top_k: int = 5, evidence: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -188,7 +191,7 @@ def select_palette(project_root: Path, brief: str, *, top_k: int = 5, evidence: 
     scored = [
         score_palette(signals, palette, brand_resolution)
         for palette in registry.get("palettes", [])
-        if isinstance(palette, dict) and palette.get("status") == "active"
+        if isinstance(palette, dict) and beautiful_template_runtime.is_runtime_selectable(palette)
     ]
     scored.sort(key=lambda item: (-int(item["score"]), str(item["palette_id"])))
     confidence = confidence_from_candidates(scored)
@@ -198,7 +201,7 @@ def select_palette(project_root: Path, brief: str, *, top_k: int = 5, evidence: 
         scored = [
             score_palette(signals, palette, brand_resolution)
             for palette in registry.get("palettes", [])
-            if isinstance(palette, dict) and palette.get("status") == "active"
+            if isinstance(palette, dict) and beautiful_template_runtime.is_runtime_selectable(palette)
         ]
         scored.sort(key=lambda item: (-int(item["score"]), str(item["palette_id"])))
         confidence = confidence_from_candidates(scored)

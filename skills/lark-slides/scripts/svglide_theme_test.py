@@ -12,6 +12,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_theme
+import beautiful_template_runtime
+
+
+LEGACY_DEBUG_THEME_IDS = {
+    "blueprint-technical",
+    "cobalt-grid",
+    "glass-neon",
+    "retro-desktop",
+    "warm-editorial",
+}
 
 
 def write_text(path: Path, text: str) -> None:
@@ -53,6 +63,49 @@ def issue_codes(issues: list[dict[str, str]]) -> set[str]:
 
 
 class SVGlideThemeTest(unittest.TestCase):
+    def test_default_theme_registry_excludes_legacy_themes(self) -> None:
+        registry = beautiful_template_runtime.theme_registry()
+        themes = {item["id"]: item for item in registry["themes"]}
+
+        for legacy_id in ["blueprint-technical", "cobalt-grid", "glass-neon", "retro-desktop"]:
+            self.assertNotIn(legacy_id, themes)
+        self.assertIn("blue-professional", themes)
+        self.assertEqual("production", themes["blue-professional"]["asset_status"])
+        self.assertEqual("trusted", themes["blue-professional"]["quality_tier"])
+        self.assertTrue(themes["blue-professional"]["default_selectable"])
+        self.assertIn("executive-dashboard", themes["blue-professional"]["template_bindings"]["supported_template_ids"])
+
+    def test_include_legacy_theme_registry_marks_legacy_debug(self) -> None:
+        registry = beautiful_template_runtime.theme_registry(include_legacy=True)
+        themes = {item["id"]: item for item in registry["themes"]}
+
+        self.assertIn("blueprint-technical", themes)
+        self.assertEqual("legacy_debug", themes["blueprint-technical"]["status"])
+        self.assertEqual("fixture_only", themes["blueprint-technical"]["quality_tier"])
+        self.assertFalse(themes["blueprint-technical"]["default_selectable"])
+
+    def test_default_template_registry_excludes_legacy_p0_templates(self) -> None:
+        registry = beautiful_template_runtime.template_registry()
+        templates = {item["id"]: item for item in registry["templates"]}
+
+        for legacy_id in beautiful_template_runtime.LEGACY_TEMPLATE_IDS:
+            self.assertNotIn(legacy_id, templates)
+        self.assertIn("executive-dashboard", templates)
+        self.assertIn("architectural-spec", templates)
+        for template in templates.values():
+            self.assertEqual("production", template.get("asset_status"))
+            self.assertEqual("trusted", template.get("quality_tier"))
+            self.assertTrue(template.get("default_selectable"))
+
+    def test_include_legacy_template_registry_marks_p0_as_debug_only(self) -> None:
+        registry = beautiful_template_runtime.template_registry(include_legacy=True)
+        templates = {item["id"]: item for item in registry["templates"]}
+
+        self.assertIn("architecture-blueprint", templates)
+        self.assertEqual("legacy_debug", templates["architecture-blueprint"].get("asset_status"))
+        self.assertEqual("fixture_only", templates["architecture-blueprint"].get("quality_tier"))
+        self.assertFalse(templates["architecture-blueprint"].get("default_selectable"))
+
     def test_theme_schema_requires_p0_fields(self) -> None:
         schema_path = Path(__file__).resolve().parent.parent / "references" / "svglide-theme-spec.schema.json"
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
@@ -149,6 +202,44 @@ class SVGlideThemeTest(unittest.TestCase):
         self.assertEqual("swiss-red", theme["theme_id"])
         self.assertEqual("#FFFFFF", theme["colors"]["surface"])
         self.assertEqual([], svglide_theme.validate_theme_spec(theme))
+
+    def test_runtime_theme_registry_default_excludes_legacy_debug_themes(self) -> None:
+        registry = beautiful_template_runtime.theme_registry()
+        themes = {item["id"]: item for item in registry["themes"]}
+
+        self.assertTrue(LEGACY_DEBUG_THEME_IDS.isdisjoint(themes))
+        self.assertIn("swiss-red", themes)
+        for theme in themes.values():
+            self.assertEqual("production", theme.get("asset_status"))
+            self.assertEqual("trusted", theme.get("quality_tier"))
+            self.assertTrue(theme.get("default_selectable"))
+            self.assertEqual("production", theme.get("selection_scope"))
+
+    def test_runtime_theme_registry_include_legacy_is_debug_only(self) -> None:
+        registry = beautiful_template_runtime.theme_registry(include_legacy=True)
+        themes = {item["id"]: item for item in registry["themes"]}
+
+        self.assertIn("blueprint-technical", themes)
+        self.assertEqual("legacy_debug", themes["blueprint-technical"].get("asset_status"))
+        self.assertEqual("fixture_only", themes["blueprint-technical"].get("quality_tier"))
+        self.assertFalse(themes["blueprint-technical"].get("default_selectable"))
+        self.assertEqual("debug", themes["blueprint-technical"].get("selection_scope"))
+
+    def test_blue_professional_promoted_to_production_theme(self) -> None:
+        registry = beautiful_template_runtime.theme_registry()
+        themes = {item["id"]: item for item in registry["themes"]}
+
+        self.assertIn("blue-professional", themes)
+        theme = themes["blue-professional"]
+        self.assertEqual("production", theme.get("asset_status"))
+        self.assertEqual("trusted", theme.get("quality_tier"))
+        self.assertTrue(theme.get("default_selectable"))
+        self.assertEqual("production", theme.get("selection_scope"))
+        self.assertEqual("blue-professional", theme.get("theme_token", {}).get("theme_id"))
+        self.assertIn("executive-dashboard", theme.get("template_bindings", {}).get("supported_template_ids", []))
+        self.assertTrue(theme.get("source_trace"))
+        self.assertEqual("passed", theme.get("promotion_gate", {}).get("status"))
+        self.assertNotIn("blueprint-technical", themes)
 
     def test_prepared_svg_hashes_are_stable_and_repo_relative(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

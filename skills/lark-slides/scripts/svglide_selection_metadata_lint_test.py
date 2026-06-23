@@ -73,6 +73,26 @@ def palette_record() -> dict[str, object]:
     }
 
 
+def reference_json(name: str) -> dict[str, object]:
+    path = Path(__file__).resolve().parent.parent / "references" / name
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def baseline_source(record: dict[str, object]) -> bool:
+    source_trace = record.get("source_trace")
+    if isinstance(source_trace, list) and any(str(item).startswith("svglide-baseline.") for item in source_trace):
+        return True
+    abstraction_record = record.get("abstraction_record")
+    return isinstance(abstraction_record, str) and "/svglide-baseline/" in abstraction_record
+
+
+def assert_baseline_record_is_fixture_only(test_case: unittest.TestCase, record: dict[str, object]) -> None:
+    test_case.assertEqual("legacy_debug", record.get("status"), record)
+    test_case.assertEqual("fixture_only", record.get("quality_tier"), record)
+    test_case.assertFalse(record.get("default_selectable", True), record)
+    test_case.assertIn(record.get("selection_scope"), {"debug", "fixture"}, record)
+
+
 class SelectionMetadataLintTest(unittest.TestCase):
     def test_template_requires_selection_metadata(self) -> None:
         issues = lint.validate_template_metadata({"id": "missing", "status": "active"})
@@ -107,6 +127,41 @@ class SelectionMetadataLintTest(unittest.TestCase):
         codes = {item["code"] for item in issues}
         self.assertIn("brand_source_trace_missing", codes)
         self.assertIn("brand_confidence_invalid", codes)
+
+    def test_baseline_layout_archetypes_are_legacy_fixture_only(self) -> None:
+        registry = reference_json("svglide-layout-archetypes.json")
+        records = [item for item in registry["archetypes"] if isinstance(item, dict) and baseline_source(item)]
+
+        self.assertTrue(records)
+        for record in records:
+            with self.subTest(record_id=record.get("id")):
+                assert_baseline_record_is_fixture_only(self, record)
+
+    def test_architecture_blueprint_layout_is_not_a_catch_all(self) -> None:
+        registry = reference_json("svglide-layout-archetypes.json")
+        record = next(item for item in registry["archetypes"] if isinstance(item, dict) and item.get("id") == "architecture-blueprint")
+
+        self.assertEqual(["architecture-blueprint"], record.get("templates"))
+
+    def test_baseline_image_strategies_are_legacy_fixture_only(self) -> None:
+        registry = reference_json("svglide-image-strategies.json")
+        records = [item for item in registry["strategies"] if isinstance(item, dict) and baseline_source(item)]
+
+        self.assertTrue(records)
+        for record in records:
+            with self.subTest(record_id=record.get("id")):
+                assert_baseline_record_is_fixture_only(self, record)
+                self.assertIn("do_not_count_placeholder_as_real_image", record.get("forbidden_claims", []))
+
+    def test_baseline_chart_strategies_are_legacy_fixture_only(self) -> None:
+        registry = reference_json("svglide-chart-strategies.json")
+        records = [item for item in registry["strategies"] if isinstance(item, dict) and baseline_source(item)]
+
+        self.assertTrue(records)
+        for record in records:
+            with self.subTest(record_id=record.get("id")):
+                assert_baseline_record_is_fixture_only(self, record)
+                self.assertIn("do_not_claim_backend_chart_readback_without_dry_run_or_readback", record.get("forbidden_claims", []))
 
     def test_run_lint_uses_real_fixture_registries(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

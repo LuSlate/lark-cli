@@ -3,7 +3,11 @@
   "strategies": [
     {
       "id": "bounded-figure-placeholder",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "image-feature"
@@ -23,7 +27,11 @@
     },
     {
       "id": "captioned-evidence-frame",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "image-feature"
@@ -43,7 +51,11 @@
     },
     {
       "id": "research-key-visual-slot",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "research-poster"
@@ -63,7 +75,7 @@
     },
     {
       "id": "geometry-placeholder",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "architectural-spec"
@@ -79,11 +91,15 @@
       "source_trace": [
         "beautiful-html-templates.template.cartesian.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cartesian.architectural-spec.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "pixel-grid-patch",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "trend-grid-report"
@@ -99,11 +115,15 @@
       "source_trace": [
         "beautiful-html-templates.template.cobalt-grid.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "product-catalog-card",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "product-ribbon"
@@ -119,11 +139,15 @@
       "source_trace": [
         "beautiful-html-templates.template.sakura-chroma.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "rosette-seal-badge",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "product-ribbon"
@@ -139,11 +163,15 @@
       "source_trace": [
         "beautiful-html-templates.template.sakura-chroma.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/sakura-chroma.product-ribbon.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "window-panel-visual",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "retro-ui-dashboard"
@@ -159,11 +187,15 @@
       "source_trace": [
         "beautiful-html-templates.template.retro-windows.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/retro-windows.retro-ui-dashboard.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "annotation-note-card",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "annotated-field-board"
@@ -179,11 +211,15 @@
       "source_trace": [
         "beautiful-html-templates.template.pin-and-paper.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "stamp-status-mark",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "annotated-field-board"
@@ -199,11 +235,15 @@
       "source_trace": [
         "beautiful-html-templates.template.pin-and-paper.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "poster-type-mass",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "type-mass-poster"
@@ -219,11 +259,15 @@
       "source_trace": [
         "beautiful-html-templates.template.studio.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/studio.type-mass-poster.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "serif-stat-figure",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "serif-stat-editorial"
@@ -239,11 +283,15 @@
       "source_trace": [
         "beautiful-html-templates.template.editorial-forest.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "matrix-callout-block",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "brutalist-matrix"
@@ -259,11 +307,15 @@
       "source_trace": [
         "beautiful-html-templates.template.raw-grid.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/raw-grid.brutalist-matrix.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "ledger-hairline-field",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "ledger-briefing"
@@ -279,11 +331,15 @@
       "source_trace": [
         "beautiful-html-templates.template.monochrome.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/monochrome.ledger-briefing.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "program-menu-frame",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "printed-program"
@@ -299,11 +355,15 @@
       "source_trace": [
         "beautiful-html-templates.template.long-table.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/long-table.printed-program.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "intelligence-rule-chrome",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "intelligence-brief"
@@ -319,11 +379,15 @@
       "source_trace": [
         "beautiful-html-templates.template.signal.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/signal.intelligence-brief.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "dense-panel-mosaic",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "dense-panel-grid"
@@ -339,11 +403,15 @@
       "source_trace": [
         "beautiful-html-templates.template.neo-grid-bold.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/neo-grid-bold.dense-panel-grid.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "editorial-quote-mark",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "editorial-quote-chart"
@@ -359,11 +427,15 @@
       "source_trace": [
         "beautiful-html-templates.template.broadside.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/broadside.editorial-quote-chart.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "poster-stat-figure",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "poster-stat-punch"
@@ -379,11 +451,15 @@
       "source_trace": [
         "beautiful-html-templates.template.bold-poster.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/bold-poster.poster-stat-punch.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     },
     {
       "id": "cobalt-trend-index",
-      "status": "active",
+      "status": "legacy_debug",
       "claim_scope": "fixture_only_no_real_image_claim",
       "template_ids": [
         "trend-grid-report"
@@ -399,7 +475,11 @@
       "source_trace": [
         "beautiful-html-templates.template.cobalt-grid.design.md"
       ],
-      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json"
+      "abstraction_record": "skills/lark-slides/references/absorptions/beautiful-html-templates/cobalt-grid.trend-grid-report.json",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy image strategy retained only for fixture/debug compatibility; it must not be claimed as real image evidence"
     }
   ]
 }

@@ -67,6 +67,13 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
         self.assertIn("selection_context", prompts[3])
         self.assertIn("template_id/theme_id/palette_id must come from its candidates", prompts[3])
 
+    def test_load_context_filters_legacy_layout_archetypes_from_production_prompt(self) -> None:
+        context = prompt_planner.load_context()
+        layout_records = context["layout_archetypes"]["archetypes"]
+
+        self.assertEqual([], [item for item in layout_records if item.get("status") == "legacy_debug"])
+        self.assertNotIn("architecture-blueprint", {item.get("id") for item in layout_records})
+
     def fake_provider(self, tmpdir: str) -> Path:
         provider = Path(tmpdir) / "fake_provider.py"
         provider.write_text(
@@ -103,7 +110,7 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                         "target_slide_count": 1,
                         "narrative_arc": ["提出问题", "建立框架", "收束判断"],
                         "theme_direction": {
-                            "preferred_theme_ids": ["finance-dark"],
+                            "preferred_theme_ids": ["swiss-red"],
                             "visual_identity": "深色航天资本市场信号",
                             "tone": "审慎、分析型、可追溯",
                         },
@@ -120,7 +127,7 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                                 "key_message": "IPO 价值判断取决于 Starlink、发射业务与风险折价。",
                                 "content_goal": "建立分析框架。",
                                 "visual_goal": "使用深色金融航天封面。",
-                                "allowed_template_ids": ["cover-hero"],
+                                "allowed_template_ids": ["executive-dashboard"],
                             }
                         ],
                     }
@@ -135,8 +142,8 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                                 "page": 1,
                                 "title": "SpaceX IPO 分析框架",
                                 "key_message": "IPO 价值判断取决于 Starlink、发射业务与风险折价。",
-                                "template_id": "cover-hero",
-                                "theme_id": "finance-dark",
+                                "template_id": "executive-dashboard",
+                                "theme_id": "swiss-red",
                                 "content_requirements": {
                                     "eyebrow": "SPACE CAPITAL MARKET",
                                     "subtitle": "把未确认 IPO 传闻转成可审查的投资分析框架。",
@@ -153,9 +160,9 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                         "version": "svglide-canvas-spec/v1",
                         "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
                         "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
-                        "template_id": "cover-hero",
-                        "theme_id": "finance-dark",
-                        "theme": {"colors": {"background": "#07110E", "panel": "#10201A", "primary": "#22C55E", "accent": "#F59E0B", "text": "#ECFDF5", "muted": "#A7C4B7"}},
+                        "template_id": "executive-dashboard",
+                        "theme_id": "swiss-red",
+                        "theme": {"colors": {"background": "#F8F8F4", "panel": "#FFFFFF", "primary": "#BE123C", "accent": "#111111", "text": "#111111", "muted": "#666666"}},
                         "content": {"eyebrow": "SPACE CAPITAL MARKET", "title": "SpaceX IPO 分析框架", "subtitle": "把未确认 IPO 传闻转成可审查的投资分析框架。", "chips": ["Starlink", "Launch", "Risk"]},
                         "semantic_elements": [
                             {"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 84, "y": 142, "width": 628, "height": 142}}
@@ -198,7 +205,7 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                                 "page": 1,
                                 "title": "SpaceX IPO 分析框架",
                                 "key_message": "IPO 价值判断取决于 Starlink、发射业务与风险折价。",
-                                "renderer_id": "artboard_satori.cover-hero",
+                                "renderer_id": "artboard_satori.executive-dashboard",
                                 "layout_family": "cover",
                                 "template_variant": "cover",
                                 "semantic_blocks": [{"block_id": "title", "type": "title", "content": "SpaceX IPO 分析框架"}],

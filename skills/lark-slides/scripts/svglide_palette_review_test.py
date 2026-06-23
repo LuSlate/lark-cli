@@ -97,6 +97,15 @@ class PaletteReviewTest(unittest.TestCase):
         self.assertEqual(result["status"], "failed")
         self.assertIn("palette_data_series_insufficient", {item["code"] for item in result["issues"]})
 
+    def test_stable_fallback_selection_is_marked_for_quality_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            selection = svglide_palette_selector.select_palette(root, "一个不存在的抽象主题：量子陶瓷供应链", top_k=5)
+
+        self.assertEqual("stable_fallback", selection["brand_resolution"]["source"])
+        self.assertTrue(selection["brand_resolution"]["quality_gate_fallback"])
+        self.assertTrue(selection["project_palette"]["quality_gate_fallback"])
+
 
 if __name__ == "__main__":
     unittest.main()

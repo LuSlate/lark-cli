@@ -3,7 +3,11 @@
   "archetypes": [
     {
       "id": "hero-cover",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "cover-hero"
       ],
@@ -15,7 +19,11 @@
     },
     {
       "id": "section-divider",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "section-title"
       ],
@@ -27,7 +35,11 @@
     },
     {
       "id": "agenda-list",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "agenda-list"
       ],
@@ -39,7 +51,11 @@
     },
     {
       "id": "two-column-comparison",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "comparison-cards"
       ],
@@ -51,7 +67,11 @@
     },
     {
       "id": "timeline-horizontal",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "timeline-steps"
       ],
@@ -63,7 +83,11 @@
     },
     {
       "id": "process-flow",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "process-flow"
       ],
@@ -75,7 +99,11 @@
     },
     {
       "id": "metric-dashboard",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "metric-dashboard",
         "data-story"
@@ -88,7 +116,11 @@
     },
     {
       "id": "image-text-split",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "image-feature"
       ],
@@ -100,7 +132,11 @@
     },
     {
       "id": "research-poster-3col",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "research-poster"
       ],
@@ -112,15 +148,15 @@
     },
     {
       "id": "architecture-blueprint",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
-        "architecture-blueprint",
-        "roadmap-lanes",
-        "risk-alert",
-        "quote-focus",
-        "summary-final"
+        "architecture-blueprint"
       ],
-      "purpose": "systems, plans, risks, quotes, and closing pages",
+      "purpose": "legacy baseline architecture blueprint fixture",
       "source_trace": [
         "svglide-baseline.layouts"
       ],
@@ -158,7 +194,11 @@
     },
     {
       "id": "data-story-bars",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "data-story"
       ],
@@ -173,7 +213,11 @@
     },
     {
       "id": "quote-claim",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "quote-focus"
       ],
@@ -218,7 +262,11 @@
     },
     {
       "id": "full-bleed-image-story",
-      "status": "active",
+      "status": "legacy_debug",
+      "quality_tier": "fixture_only",
+      "default_selectable": false,
+      "selection_scope": "fixture",
+      "legacy_reason": "legacy baseline layout retained only for fixture/debug compatibility",
       "templates": [
         "image-feature"
       ],

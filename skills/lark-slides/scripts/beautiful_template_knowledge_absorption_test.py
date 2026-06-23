@@ -13,10 +13,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import beautiful_template_asset_extractor
 import beautiful_template_e2e_dry_run
 import beautiful_template_matcher
+import beautiful_template_runtime
 import svglide_prompt_planner
 import svglide_quality_gate
 import svglide_theme_template_selector
 import svg_preflight
+import beautiful_template_runtime
 
 
 REFERENCES_DIR = Path(__file__).resolve().parent.parent / "references"
@@ -71,6 +73,27 @@ def issue_codes(result: dict) -> set[str]:
 
 
 class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
+    def test_blue_professional_promotes_to_production_theme_through_gate(self) -> None:
+        registry = load_json("beautiful-html-template-families.json")
+        family = family_by_id(registry)["blue-professional"]
+
+        candidate = beautiful_template_runtime.theme_promotion_candidate(family)
+        promoted = {item["id"]: item for item in beautiful_template_runtime.promoted_theme_records()}
+
+        self.assertEqual("blue-professional", candidate["source_family"])
+        self.assertEqual("has_theme_mapping", candidate["promotion_status"])
+        self.assertIn("theme.blue-professional", family["svglide_mapping"]["svglide_asset_ids"])
+        self.assertIn("blue-professional", promoted)
+        self.assertEqual("production", promoted["blue-professional"]["status"])
+        self.assertEqual("trusted", promoted["blue-professional"]["quality_tier"])
+
+    def test_source_inventory_only_family_cannot_promote_theme(self) -> None:
+        records = beautiful_template_runtime.promoted_theme_records()
+        source_families = {item["source_family"] for item in records}
+
+        for family_id in ["8-bit-orbit", "block-frame", "capsule"]:
+            self.assertNotIn(family_id, source_families)
+
     def test_issue_codes_freeze_m15_contract(self) -> None:
         codes = all_issue_codes(load_json("beautiful-template-issue-codes.json"))
         self.assertTrue(REQUIRED_M15_CODES <= codes, REQUIRED_M15_CODES - codes)
@@ -161,6 +184,33 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
             if family["status"] == "source_inventoried":
                 self.assertEqual(family["claim_level"], "source_inventory_only", family["template_id"])
                 self.assertFalse(family.get("svglide_mapping", {}).get("svglide_asset_ids"), family["template_id"])
+
+    def test_blue_professional_has_passed_theme_promotion_gate(self) -> None:
+        registry = load_json("beautiful-html-template-families.json")
+        family = family_by_id(registry)["blue-professional"]
+
+        candidate = beautiful_template_runtime.theme_promotion_candidate(family)
+
+        self.assertEqual("blue-professional", candidate["source_family"])
+        self.assertEqual("passed", candidate["promotion_gate"]["status"])
+        self.assertEqual("blue-professional", candidate["theme_token"]["theme_id"])
+        self.assertIn("theme.blue-professional", family["svglide_mapping"]["svglide_asset_ids"])
+        for key in ("source_trace", "semantic_fit", "visual_dna", "cjk_policy", "family_usage_policy"):
+            self.assertTrue(candidate[key], key)
+
+    def test_all_source_inventory_only_families_cannot_promote_theme(self) -> None:
+        records = beautiful_template_runtime.promoted_theme_records()
+        promoted_sources = {item["source_family"] for item in records}
+        registry = load_json("beautiful-html-template-families.json")
+
+        source_inventory_only = {
+            family["template_id"]
+            for family in registry["families"]
+            if family["claim_level"] == "source_inventory_only"
+        }
+
+        self.assertTrue(source_inventory_only)
+        self.assertTrue(promoted_sources.isdisjoint(source_inventory_only))
 
     def test_extractor_reads_cjk_sections_from_all_design_md(self) -> None:
         registry = beautiful_template_asset_extractor.extract_registry()

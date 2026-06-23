@@ -122,7 +122,7 @@ def load_theme(theme_id: str, root: Path | str | None = None) -> dict[str, Any]:
     record = _theme_record(registry, theme_id)
     if record is None:
         raise ThemeError(f"theme {theme_id!r} is not present in registry {registry_path}")
-    if record.get("status") not in (None, "active"):
+    if record.get("status") is not None and not beautiful_template_runtime.is_runtime_selectable(record, include_legacy_debug=registry.get("include_legacy_debug") is True):
         raise ThemeError(f"theme {theme_id!r} is not active")
     theme = _resolve_theme_payload(registry_path, record)
     adapted = _adapt_theme_spec(theme)

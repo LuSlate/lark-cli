@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import svglide_theme
 import svglide_theme_adherence
 import svglide_theme_validate
+import beautiful_template_runtime
 
 
 def write_json(path: Path, payload: dict[str, object]) -> None:
@@ -23,6 +24,7 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
 
 def make_project(tmpdir: str) -> Path:
     project = Path(tmpdir)
+    write_legacy_fixture_registries(project)
     write_json(
         project / "02-plan/slide_plan.json",
         {
@@ -81,6 +83,11 @@ def write_project_theme_override(project: Path) -> None:
     )
 
 
+def write_legacy_fixture_registries(project: Path) -> None:
+    write_json(project / "02-plan/theme-registry.json", beautiful_template_runtime.theme_registry(include_legacy=True))
+    write_json(project / "02-plan/template-registry.json", beautiful_template_runtime.template_registry(include_legacy=True))
+
+
 class SVGlideThemeAdherenceTest(unittest.TestCase):
     def test_adherence_passes_for_theme_colors_and_direct_contrast(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -122,6 +129,7 @@ class SVGlideThemeAdherenceTest(unittest.TestCase):
     def test_adherence_accepts_project_theme_token_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
             write_json(
                 project / "02-plan/slide_plan.json",
                 {

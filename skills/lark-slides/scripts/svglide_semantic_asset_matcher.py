@@ -144,7 +144,21 @@ PROMPT_RULES: list[tuple[tuple[str, ...], list[WeightedSignal]]] = [
         ],
     ),
     (
-        ("技术架构", "系统架构", "架构方案", "系统设计", "模块", "链路", "architecture", "system design"),
+        (
+            "技术架构",
+            "系统架构",
+            "架构方案",
+            "架构图",
+            "系统设计",
+            "模块",
+            "技术链路",
+            "调用链路",
+            "服务链路",
+            "系统链路",
+            "架构链路",
+            "architecture",
+            "system design",
+        ),
         [
             WeightedSignal("occasion", "technical architecture", 10),
             WeightedSignal("occasion", "system design", 8),
