@@ -14,7 +14,8 @@ metadata:
 
 | 用户需求 | 优先动作 | 关键文档 / 命令 |
 |----------|----------|-----------------|
-| 新建 PPT | 先解析并盘点用户附件，规划 `slide_plan.json`，再按复杂度选择一步或两步创建 | `planning-layer.md`、`visual-planning.md`、`asset-planning.md`、`slides +create` |
+| 用户提供 PDF/PPTX/slides 材料并要求生成或改写 PPT | 必须先导入/回读材料，并以导入后的 presentation 作为目标底稿二次创作；即使材料“只作为模板/视觉线索”，也要在导入后的 presentation 内替换内容模块 | `drive +import --type slides`、`planning-layer.md`、`asset-planning.md` |
+| 新建 PPT | 仅在没有用户提供可导入材料、用户明确要求另建，或导入失败/回读失败时，先解析并盘点用户附件，规划 `slide_plan.json`，再按复杂度创建 | `planning-layer.md`、`visual-planning.md`、`asset-planning.md`、`slides +create` |
 | 大幅改写页面 | 先回读现有 XML，写入新 plan，再替换或重建相关页面 | `xml_presentations.get`、`+replace-slide`、`lark-slides-edit-workflows.md` |
 | 编辑单个标题、文本块、图片或局部元素 | 优先块级替换/插入，不改页序 | `slides +replace-slide`、`lark-slides-replace-slide.md` |
 | 读取或分析已有 PPT | 解析 slides/wiki token，回读全文或单页 XML，保存 `xml_presentation_id`、`slide_id`、`revision_id` | `xml_presentations.get`、`xml_presentation.slide.get` |
@@ -23,7 +24,7 @@ metadata:
 | 在 slide 中绘制柱/条/折线/面积/雷达/饼等有数据序列的图表 | 使用原生 `<chart>` 元素 | `xml-schema-quick-ref.md` |
 | 在 slide 中绘制流程图、时序图、架构图、散点图、漏斗图或装饰图案 | 必须先用 Read 工具读取参考文档，再生成 `<whiteboard>` 元素 | [`lark-slides-whiteboard.md`](references/lark-slides-whiteboard.md) |
 | 使用语义图标 | 先检索 IconPark，再写 `<icon iconType="...">` | `iconpark_tool.py search → resolve`、`iconpark.md` |
-| 用户提到模板、主题、版式 | 先检索模板，再摘要，必要时裁切骨架 | `template_tool.py search → summarize → extract` |
+| 用户提到模板、主题、版式但没有提供本地/在线模板材料 | 先检索内置模板，再摘要，必要时裁切骨架 | `template_tool.py search → summarize → extract` |
 | 创建失败、空白页、3350001、布局异常 | 先回读状态，再按排障清单修复，不假设原操作原子成功 | `troubleshooting.md`、`validation-checklist.md` |
 
 **CRITICAL — 开始前 MUST 先用 Read 工具读取 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)，认证、权限和全局参数均以 lark-shared 为准。**
@@ -37,7 +38,7 @@ metadata:
 > [!NOTE]
 > `scripts/template_tool.py` 需要 Python 3。`references/template-index.json` 是脚本缓存/轻量路由索引，不是默认给 agent 阅读的文档；`assets/templates/*.xml` 是机器资源，只应通过脚本摘要或裁切，不要全文读取。
 
-使用模板生成或改写页面时，先 `summarize` 目标页型；只有需要具体布局骨架时才 `extract`。
+使用内置模板生成或改写页面时，先 `summarize` 目标页型；只有需要具体布局骨架时才 `extract`。如果用户已经提供本地/在线模板材料，优先按用户材料导入二创，不走内置模板检索。
 
 **编辑已有幻灯片页面**：优先用 [`+replace-slide`](references/lark-slides-replace-slide.md)（块级替换/插入，不动页序）；选择 action 和完整读-改-写流程见 [`lark-slides-edit-workflows.md`](references/lark-slides-edit-workflows.md)。
 
@@ -123,7 +124,9 @@ lark-cli auth login --domain slides
 - 不要把素材缺失表现为空白图片框；必须按 `fallback_if_missing` 生成 XML-native 视觉。
 - 不要留下模板占位文案、示例公司名、示例日期或与用户主题无关的原模板内容。
 
-### 创建方式选择
+### 无用户导入材料时的创建方式
+
+以下创建方式仅适用于没有用户提供可导入材料、用户明确要求另建 deck，或导入失败/`xml_presentations.get` 无法回读的异常场景。
 
 | 场景 | 推荐方式 |
 |------|----------|
@@ -139,7 +142,7 @@ lark-cli auth login --domain slides
 
 ### 模板与脚本优先流程
 
-模板细则见 [template-catalog.md](references/template-catalog.md)。主流程只记住：先 `search`，锁定后 `summarize`，需要骨架时才 `extract`；不要直接读取完整模板 XML 或照搬占位文案。
+模板细则见 [template-catalog.md](references/template-catalog.md)。仅在用户没有提供本地/在线模板材料时使用内置模板流程：先 `search`，锁定后 `summarize`，需要骨架时才 `extract`；不要直接读取完整模板 XML 或照搬占位文案。
 
 ```bash
 python3 skills/lark-slides/scripts/template_tool.py search --query "<用户需求原文>" --limit 3
@@ -149,19 +152,19 @@ python3 skills/lark-slides/scripts/template_tool.py extract --template <template
 
 ```text
 Step 1: 需求澄清 & 读取知识
-  - 澄清主题、受众、页数、风格；模板需求按“模板与脚本优先流程”处理
+  - 澄清主题、受众、页数、风格；没有用户提供模板材料时，模板需求按“模板与脚本优先流程”处理
   - 读取 xml-schema-quick-ref.md；新建 / 大幅改写时还要读取 planning-layer.md、visual-planning.md、asset-planning.md
   - 如果用户提供附件、文件路径、素材目录或类似“附件文件路径：...”的文本，先按 asset-planning.md 解析路径、枚举文件、读取/导入/上传可用素材；不要直接跳到大纲或 XML
 
 Step 2: 生成大纲 → 用户确认 → 写入 slide_plan.json
-  - 生成结构化大纲供用户确认；如使用用户附件、导入后的参考 slides 或模板，标明每类素材如何参与二次创作
+  - 生成结构化大纲供用户确认；如使用用户附件、导入后的 slides 或模板材料，标明每类素材如何参与二次创作
   - 新建 / 大幅改写必须先创建目录并写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`
   - plan 字段、路径命名、模板边界和 `asset_need` 结构按 planning-layer.md / asset-planning.md 执行
 
 Step 3: 按 slide_plan.json 生成 XML → 创建
   - 逐页消费 plan：key_message 定主结论，layout_type 定几何，visual_focus 定主视觉，text_density 定文本量
   - 缺少真实素材时必须用 `fallback_if_missing` 生成 XML-native 兜底视觉；不要留空
-  - 创建方式按“创建方式选择”判断；图片、复杂 XML、转义和 3350001 排查按 lark-slides-create.md、media-upload.md、troubleshooting.md 执行
+  - 如果 plan 有 `target_xml_presentation_id`，默认在该 presentation 内创建、替换或删除页面；只有无导入材料、用户明确要求另建，或导入失败/回读失败时，才按“无用户导入材料时的创建方式”新建 deck
 
 Step 4: 审查 & 交付
   - 创建完成后，必须用 xml_presentations.get 读取全文 XML，并按 validation-checklist.md 做显式验证记录，包括 XML 文本重叠检查
@@ -171,7 +174,7 @@ Step 4: 审查 & 交付
 
 ### jq 命令模板（编辑已有 PPT 时使用）
 
-新建 PPT 推荐用 `+create --slides`。以下 jq 模板适用于向已有演示文稿追加页面的场景，可以避免手动转义双引号：
+无用户导入材料的新建 PPT 可用 `+create --slides`。以下 jq 模板适用于向已有演示文稿追加页面的场景，可以避免手动转义双引号：
 
 ```bash
 # 追加到末尾
@@ -271,13 +274,14 @@ lark-cli slides <resource> <method> [flags] # 调用 API
 
 ## 核心规则
 
-1. **先规划再写 XML**：新建演示文稿或大幅改写页面时，必须先写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`；模板、风格和大纲只能作为规划输入，不能绕过规划层
-2. **创建流程**：简单短 XML（1-3 页、结构简单、特殊字符少）可用 `slides +create --slides '[...]'` 一步创建；复杂内容、含图片/中文大段文本/嵌套引号/较多特殊字符，或超过 10 页时，默认先 `slides +create` 创建空白 PPT，再用 `xml_presentation.slide.create` 逐页添加
-3. **`<slide>` 直接子元素只有 `<style>`、`<data>`、`<note>`**：文本和图形必须放在 `<data>` 内
-4. **文本通过 `<content>` 表达**：必须用 `<content><p>...</p></content>`，不能把文字直接写在 shape 内
-5. **保存关键 ID**：后续操作需要 `xml_presentation_id`、`slide_id`、`revision_id`
-6. **删除谨慎**：删除操作不可逆，且至少保留一页幻灯片
-7. **编辑已有页面优先块级替换**：修改单个 shape/img 用 `+replace-slide`（`block_replace` / `block_insert`），不要整页重建；只有需要替换整页结构时才用 `slide.delete` + `slide.create`
-8. **`<img src>` 只能用上传到飞书 drive 的 `file_token`，禁止使用 http(s) 外链 URL**：飞书 slides 渲染端不会代理外链图片，外链 src 在 PPT 里通常不显示或显示破图。流程必须是「先把图存到本地 → 用 `slides +media-upload` 上传或 `+create --slides` 的 `@./path` 占位符自动上传 → 拿 `file_token` 写进 `<img src>`」。如果用户给了网图链接，先 `curl`/下载到 CWD 内再走上传流程，不要直接把外链 URL 塞进 `src`。**图片最大 20 MB**（slides upload API 不支持分片上传）。
+1. **用户材料默认作为二创底稿**：用户提供 PDF/PPTX/slides 材料并要求生成、改写、二创、压缩页数或保留材料风格/资产时，必须先导入或回读为 slides；默认 `target_xml_presentation_id` 等于导入或已有材料的 `xml_presentation_id`，在该 presentation 内继续创作。“只作为模板/视觉线索”只表示不复制原文案，不表示可以跳过导入或新建脱离材料的 deck
+2. **先规划再写 XML**：新建演示文稿或大幅改写页面时，必须先写入 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`；模板、风格和大纲只能作为规划输入，不能绕过规划层
+3. **创建流程**：仅在没有用户提供可导入材料、用户明确要求新建 deck，或导入失败/`xml_presentations.get` 无法回读时，才使用 `slides +create` 新建目标 deck；页数多、内容不可用、只参考风格、布局复杂或 PDF 是正文资料都不是新建理由
+4. **`<slide>` 直接子元素只有 `<style>`、`<data>`、`<note>`**：文本和图形必须放在 `<data>` 内
+5. **文本通过 `<content>` 表达**：必须用 `<content><p>...</p></content>`，不能把文字直接写在 shape 内
+6. **保存关键 ID**：后续操作需要 `xml_presentation_id`、`slide_id`、`revision_id`
+7. **删除谨慎**：删除操作不可逆，且至少保留一页幻灯片
+8. **编辑已有页面优先块级替换**：修改单个 shape/img 用 `+replace-slide`（`block_replace` / `block_insert`），不要整页重建；只有需要替换整页结构时才用 `slide.delete` + `slide.create`
+9. **`<img src>` 只能用上传到飞书 drive 的 `file_token`，禁止使用 http(s) 外链 URL**：飞书 slides 渲染端不会代理外链图片，外链 src 在 PPT 里通常不显示或显示破图。流程必须是「先把图存到本地 → 用 `slides +media-upload` 上传或 `+create --slides` 的 `@./path` 占位符自动上传 → 拿 `file_token` 写进 `<img src>`」。如果用户给了网图链接，先 `curl`/下载到 CWD 内再走上传流程，不要直接把外链 URL 塞进 `src`。**图片最大 20 MB**（slides upload API 不支持分片上传）。
 
 > **注意**：如果 md 内容与 `slides_xml_schema_definition.xml` 或 `lark-cli schema slides.<resource>.<method>` 输出不一致，以后两者为准。

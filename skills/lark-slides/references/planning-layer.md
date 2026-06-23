@@ -15,11 +15,13 @@
 7. 按规划文件、视觉规划和素材规划规则逐页生成 XML，把 `layout_type`、`visual_focus`、`text_density` 转成具体页面几何和文本量约束，并把缺失素材转成可执行兜底视觉。
 8. 创建或大幅改写后，按 `validation-checklist.md` 做显式验证；本文件只要求验证记录能说明规划到 XML 的对应关系。
 
-素材和模板不能代替规划文件。素材处理层只能影响背景理解、`theme_style`、`visual_system`、页面流、文案输入、布局选择和局部视觉骨架；最终仍必须有 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`。
+素材和模板不能代替规划文件，但素材处理层可以决定材料角色、目标 presentation、改写方式和资产复用策略；最终仍必须有 `.lark-slides/plan/<deck-or-task-id>/slide_plan.json`。
 
-如果用户提供 `.pptx` 或 `.pdf`，并称其为 PPT 模板、幻灯片模板、版式/风格参考，先按 `lark-drive` 的 `drive +import --type slides` 导入为在线幻灯片，并把回读 XML 作为 `style_reference`。模板/风格参考不等于一定重建新页：如果模板含需要复用的背景图、装饰图、品牌图片或复杂图片版式，优先把导入后的在线幻灯片作为工作底稿，保留图片令牌并局部编辑；如果只需要风格和布局骨架，再新建 XML 原生页面。导入是写操作；用户已经明确要求“根据该附件生成/改写 PPT”时可视为已有意图，否则先确认。
+可导入为 slides 的用户材料（`.pptx`、`.pdf` 或已有 online slides）参与制作/改写 PPT 时，默认是 `rewrite_source`：先导入或回读为 slides，`target_xml_presentation_id` 默认等于导入/已有 presentation，并在该 presentation 内继续创作。
 
-如果用户提供 `.pptx`，并要求“在此基础上修改 / 调整布局 / 美化 / 精简 / 增加目录 / 内容不用改 / 不要随便修改内容 / 保留框架 / 已有一版 PPT”，该文件是 `rewrite_source`，不是普通模板。导入并回读 XML 后，`slide_plan.json` 必须逐页记录原稿内容的保留、精简、新增和重排策略；优先保留导入页上的既有图片资产并局部编辑，整页结构变化、换模板或导入页块级编辑不可靠时，才按源页重建 XML 原生页面，再替换或删除旧页。不得直接新生成一套脱离原稿的页面。
+“内容不可用”“只作为背景模板”“不要使用模板文字”“只参考风格”只排除 `copy_source`，不排除 `rewrite_source`。这类材料仍要导入/回读，并在导入后的 presentation 内替换、插入或删除页面内容。只有用户明确要求另建，或导入失败/`xml_presentations.get` 无法回读时，才新建演示文稿，并在 plan 中写明原因。
+
+如果大 PDF 模板只用于二次创作的视觉底稿，可先按 `asset-planning.md` 选择关键模板页生成压缩版 PDF，再导入这个小 PDF。纯导入、归档、格式转换或用户要求保留完整 PDF 页序的任务，不做切割。
 
 不要把附件路径只当作提示词文本。像 `附件文件路径：path/to/report.docx` 这样的路径必须解析到真实文件；相对路径按当前工作目录和用户明确给出的素材根目录解析，不能硬编码某个固定附件目录。
 
@@ -70,9 +72,12 @@
       {
         "source": "./reference.pdf",
         "resolved_path": "./reference.pdf",
-        "kind": "style_reference",
-        "usage": "导入为在线幻灯片后，提取页面流、配色、字体层级和可复用视觉母题。",
-        "status": "available"
+        "kind": "rewrite_source",
+        "usage": "导入为在线幻灯片后，在导入 presentation 内二次创作。",
+        "status": "imported",
+        "imported_xml_presentation_id": "SOURCE_PRESENTATION_ID",
+        "target_xml_presentation_id": "SOURCE_PRESENTATION_ID",
+        "template_asset_strategy": "rebuild_in_imported_presentation"
       }
     ],
     "missing": [
@@ -207,12 +212,11 @@
 
 本地素材优先于远程搜索。常见素材角色：
 
-- `background_reference`：用于理解主题、事实、受众或约束的文件或链接。
-- `style_reference`：用于配色、字体、布局、母题和页面流的 PDF、PPTX、在线幻灯片或模板。
+- `background_reference`：用于理解主题、事实、受众或约束的非模板文档或链接。
 - `visual_asset`：可能出现在页面中的图片、截图、标志、图标、图表、示意图或论文图。
 - `copy_source`：作为内容输入的正文、提纲、笔记、PRD、报告或转写稿。
 - `data_source`：用于图表或表格的数据表、CSV/XLSX、指标或结构化数值。
-- `rewrite_source`：需要保留、优化、精简、扩展或重组的已有 PPT/PDF/在线幻灯片，不应只当作宽泛风格参考。
+- `rewrite_source`：导入后承载二次创作的目标底稿，可提供背景、版式、图片资产和页面结构；即使其文案不可用，也不应只当作宽泛视觉线索。
 
 规划页面前，先解析所有附件路径，并写入 `material_inventory.inputs`。每个可用本地输入应包含：
 
@@ -223,13 +227,13 @@
 - `status`：`available`、`imported`、`uploaded`、`read`、`skipped` 或 `missing`。
 - `notes`：可选映射细节，例如“用户提供的相对路径已按指定素材目录解析”。
 
-如果附件是模板/风格演示文稿或 PDF，并已导入为在线幻灯片，在已知时还要记录 `imported_xml_presentation_id` 或 `import_ticket`，然后把导入 XML 作为 `style_reference`。
+如果附件是可导入为 slides 的用户材料，并已导入为在线幻灯片，在已知时记录 `imported_xml_presentation_id` 或 `import_ticket`。按 `asset-planning.md` 判断角色；默认把可作为视觉底稿的导入 XML 作为 `rewrite_source` 使用，并记录 `target_xml_presentation_id`。
 
-对导入的模板/风格演示文稿，还要按 `asset-planning.md` 记录 `template_asset_strategy`：`preserve_imported_page`、`rebuild_in_imported_presentation`、`rebuild_new_presentation` 或 `mixed`。在同一个已导入演示文稿内创建或替换页面时，可以复用导入页的图片令牌；不要把 `<img src>` 令牌直接复制到另一个新演示文稿，除非已经把图片下载并重新上传到目标演示文稿。如果导入的在线幻灯片文件会成为编辑后的最终交付物，记录 `target_title`，并在编辑完成后重命名在线文件，避免仍保留源模板或附件标题。
+对导入的用户材料，还要按 `asset-planning.md` 记录 `template_asset_strategy`：`preserve_imported_page`、`rebuild_in_imported_presentation` 或 `mixed`。在同一个已导入演示文稿内创建或替换页面时，可以复用导入页的图片令牌；不要把 `<img src>` 令牌直接复制到另一个新演示文稿。如果导入的在线幻灯片文件会成为编辑后的最终交付物，记录 `target_title`，并在编辑完成后重命名在线文件，避免仍保留源材料或附件标题。异常新建只能由用户明确要求另建，或导入失败/回读失败触发，并必须记录原因和图片资产迁移方式。
 
-如果附件是 `rewrite_source`，每个受影响页面计划都应说明来源页或来源章节，以及预期操作：`preserve`、`condense`、`expand`、`reorder`、`restyle` 或 `replace_visual_only`。对于“内容不用改”类请求，默认使用 `replace_visual_only` 或 `restyle`，并保持原始论断、数字、名称和页面意图不变。
+如果附件是 `rewrite_source`，每个受影响页面计划都应说明来源页或来源章节，以及预期操作：`preserve`、`condense`、`expand`、`reorder`、`restyle`、`replace_visual_only` 或 `delete`。对于“内容不用改”类请求，默认使用 `replace_visual_only` 或 `restyle`，并保持原始论断、数字、名称和页面意图不变。对于“材料页数多于目标页数”的任务，先规划要保留或改写的来源页，再删除无关页；不要因为需要压缩页数就另建脱离材料的新 deck。
 
-如果本地 `.pdf` / `.pptx` 是风格参考，使用 `lark-drive` 将其导入为在线幻灯片，再用 `xml_presentations.get` 读取 XML 后规划。这是写操作，需要用户意图。默认只提取设计语言；除非用户要求，否则不要复制源文本。
+用户提供的 PDF/PPTX/slides 即使只参考风格，也不能脱离导入后的 presentation 新建；除非用户明确要求另建，或导入失败/回读失败。
 
 单个计划素材使用对象，多个真实需求使用数组；没有有用素材时使用 `asset_type: "none"`。每个计划素材必须包含：
 
@@ -251,7 +255,7 @@
 写每页页面 XML 前，把规划字段映射成具体决策：
 
 - `key_message` 决定标题、主导论断或主要结论。
-- `material_inventory` 决定哪些本地素材、导入风格参考、远程搜索结果或兜底方案允许影响页面。
+- `material_inventory` 决定哪些本地素材、导入材料、文案来源、远程搜索结果或兜底方案允许影响页面。
 - `layout_type` 决定坐标结构和元素类型。具体布局规则见 `visual-planning.md`。
 - `visual_focus` 决定最大视觉区域或被强调对象。
 - `text_density` 限制可见文字量。

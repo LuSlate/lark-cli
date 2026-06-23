@@ -10,11 +10,11 @@
 ## Core Rules
 
 - 本地素材优先。用户给了文件、目录、截图、PDF、PPTX、文案、数据表、链接或已有 slides 时，先按 Attachment Resolution 解析并盘点用途；禁止忽略附件直接生成大纲或 XML。
-- 没有合适本地素材时，才考虑联网搜索、内置模板、IconPark 或 XML-native 兜底。联网搜索只用于确实需要外部事实、图片、logo、公开截图或背景补充的场景。
+- 没有合适本地素材时，才考虑联网搜索、内置模板、IconPark 或 XML-native 兜底。用户已提供模板材料时，这些能力只能补缺，不能替代导入后的目标 presentation 或主视觉系统。
 - 素材进入 plan 前必须分类并写清用途；不要把“有文件”直接等同于“应出现在页面上”。
 - 页面不能依赖不可获得素材才能完成。每个 `asset_need` 都必须有 `fallback_if_missing`。
 - 真实图片进入 slides 前必须走支持的上传路径：`slides +media-upload` 或 `+create --slides` 的 `@./path` 占位符。禁止把 http(s) 外链直接写进 `<img src>`。
-- `.pptx` / `.pdf` 被用户称为模板、风格参考、参考 PPT、教案 PPT、品牌手册、研究报告或含有页面截图/图表时，按 Local Material Handling 判断是否导入回读，用作二次创作素材。导入是写操作；如果用户已经明确要求“根据附件制作 PPT”，可视为已有意图，否则先确认。
+- `.pptx` / `.pdf` / online slides 参与制作或改写 PPT 时，按 Local Material Handling 先判断 `rewrite_source` / `copy_source`；可作为视觉底稿的材料必须导入或回读为 slides。
 
 ## Attachment Resolution
 
@@ -34,7 +34,7 @@
 
 - 文档/表格/图片/PPT/PDF 至少要记录 `source`、`resolved_path`、`kind`、`usage`、`status`。
 - 如果素材会进入页面，`asset_need.candidate_sources` 必须使用解析后的可用路径，而不是原始不可用的路径文本。
-- 如果素材只用于理解或风格参考，也必须在 `material_inventory.inputs` 中出现，避免后续 XML 生成阶段遗忘。
+- 如果素材只用于理解或提供视觉线索，也必须在 `material_inventory.inputs` 中出现，避免后续 XML 生成阶段遗忘。
 
 ## Material Roles
 
@@ -42,13 +42,14 @@
 
 | Role | 用途 | 常见来源 | 默认处理 |
 |------|------|----------|----------|
-| `background_reference` | 补充主题背景、事实、约束、术语、受众信息 | PDF、文档、网页、PRD、报告、会议纪要 | 读取/摘要后影响叙事和页面重点 |
-| `style_reference` | 参考 PPT 风格、配色、版式、字体层级、页面流 | PDF、PPTX、已有 slides、内置模板 | 提取设计语言，不默认复制正文 |
+| `background_reference` | 补充主题背景、事实、约束、术语、受众信息 | 文档、网页、PRD、报告、会议纪要 | 读取/摘要后影响叙事和页面重点 |
 | `visual_asset` | 可直接进入页面的视觉素材 | 图片、截图、logo、图表、论文 figure | 上传后放入计划区域；不合适则重绘或兜底 |
 | `copy_source` | 文案、标题、大纲、讲稿、卖点、结论来源 | Markdown、TXT、Docx、用户 prompt、会议纪要 | 改写成低密度 slide 文案 |
 | `data_source` | 生成表格、指标卡、图表的数据来源 | CSV、XLSX、表格截图、结构化数据 | 转成 chart/table/数字卡 |
 | `brand_asset` | 品牌识别和视觉约束 | logo、VI 色板、品牌手册 | 影响 `theme_style` / `visual_system` |
-| `rewrite_source` | 需要在原内容、页序或框架基础上二次创作的原稿 | 用户已有 PPTX/PDF/slides、旧版汇报、待美化稿 | 导入/回读后逐页规划保留、精简、新增和重排 |
+| `rewrite_source` | 导入后承载二次创作的目标底稿 | 用户已有 PPTX/PDF/slides、背景模板、旧版汇报、待美化稿 | 导入/回读后作为 target presentation，规划保留、替换、删除和重排 |
+
+PDF/PPTX/slides 的主角色只能是 `rewrite_source` 或 `copy_source`。如需表达背景、视觉或品牌信息，只写进 `usage`，不能改变目标 presentation。
 
 ## Source Priority
 
@@ -63,14 +64,38 @@
 
 ## Local Material Handling
 
-- `.pptx`：如果是模板或风格参考，先用 `lark-cli drive +import --type slides` 导入为 online slides，再用 `slides xml_presentations.get` 回读 XML，提取页面流、配色、背景、字体层级、布局骨架和 motif。先判断模板是否包含需要复用的背景图、装饰图、品牌图片或复杂图片版式：如果需要复用，优先把导入后的 slides 作为工作底稿做局部编辑，保留原有图片 token；如果只需要风格和布局骨架，再新建 XML-native 页面。默认不复制模板原文案；如果用户要求“结合模板内容”，再按页角色提取可复用结构。
-- `.pptx` 作为待改写原稿：当用户说“在此基础上”“调整布局”“美化”“精简”“增加目录”“内容不用改”“不要随便修改内容”“保留框架”“已有一版 PPT”“根据这份 PPT 生成/丰富/修改”时，该 PPTX 不只是 `style_reference`，必须同时作为 `rewrite_source`。导入并回读全文 XML 后，规划时逐页说明原内容哪些保留、哪些精简、哪些新增、哪些重排。用户明确要求“内容不用改”或“不要随便修改内容”时，默认只改布局、视觉层次、图片/图表表达和页间组织，不改事实、数值和主要文案。优先保留导入页上的既有图片资产并做局部编辑；整页结构变化、换模板或导入页块级编辑不可靠时，才按源页重建 XML-native 页面，再替换或删除旧页。
-- `.pdf`：如果是模板、品牌手册或包含可复用页面视觉，先用 `lark-cli drive +import --type slides` 导入并回读 XML，提取视觉系统或页面骨架；如果是论文、报告、PRD 或正文资料，先按内容角色读取/摘要。含可复用 figure/logo/品牌色时，优先作为 `visual_asset` 或 `brand_asset`，不能只用作普通背景文字。
-- 已有 online slides：直接回读 XML，把它作为 `style_reference` 或 `rewrite_source`；不要再走导入。
+- `.pptx` / `.pdf` / online slides 若承担模板、背景模板、旧稿、待美化稿、品牌视觉或页面结构角色，默认是 `rewrite_source`：先导入或回读为 slides，`target_xml_presentation_id` 默认等于导入/已有 presentation，并在同一个 presentation 内创建、替换、删除或重排页面。
+- “内容不可用”“只作为背景模板”“不要使用模板文字”“只参考风格”只表示该材料不是 `copy_source`；它仍默认是 `rewrite_source`，用于保留或重绘背景、版式、图片资产和页面结构。
+- `.pdf` 若只是论文、报告、PRD、教案正文等内容资料，可以作为 `copy_source` 读取/摘要；但 `copy_source` 不得替代已有 `rewrite_source`，也不得成为新建 deck 的理由。
+- 用户明确说“只参考风格”时，不新增单独角色；仍把 PDF/PPTX/slides 作为 `rewrite_source` 导入/回读，只在 `usage` 中说明“不复制模板文案，仅沿用或重绘风格、版式和页面结构”。
+- 已有 online slides：直接回读 XML，默认把它作为 `rewrite_source`；不要再走导入。
 - `.png` / `.jpg` / `.jpeg` 等图片：判断是可直接展示、需要裁切/缩放、还是只用于理解。进入 XML 前必须上传或使用 `@./path` 占位符。
 - `.md` / `.txt` / 文档类内容：作为 `copy_source` 或 `background_reference`，提炼为低密度页面文案，不要整段搬进 slide。
 - `.docx` / `.doc`：通常是 `copy_source` 和 `background_reference`。先读取或转换提取正文、标题层级、表格和内嵌图片线索，再改写为 slide 叙事。用户要求“不要杜撰数据”时，数值和图表只能来自这类源文件或表格源；缺数据则在 plan 中标注缺口。
 - `.xlsx` / `.xls` / `.csv`：通常是 `data_source`。先识别工作表、列名、时间范围、指标和关键数值，再规划 `<chart>` / 表格 / 数字卡。用户明确要求精准图表时，必须让图表数据来自表格，不要手工编造。
+
+## PDF Template Pre-slicing
+
+大 PDF 模板用于二次创作时，可以先切出关键模板页生成小 PDF，再用 `drive +import --type slides` 导入小 PDF。这样减少导入和回读成本，同时仍保留在导入后的 presentation 内二创的主路径。
+
+仅在同时满足这些条件时才切割：
+
+- 任务是制作、改写、二创、压缩页数或替换内容模块，而不是单纯导入 PDF。
+- PDF 是 `rewrite_source`，只需要其中的视觉骨架、背景、版式、图片资产或页面结构。
+- 已能明确选择关键页，例如封面、目录、章节页、图谱/流程页、表格页、结尾页，通常保留 6-10 页或用户指定页。
+
+禁止切割的场景：
+
+- 用户只要求“导入 PDF 为 slides”“转换格式”“保留完整 PDF”“检查导入效果”。
+- 用户要求保留全部页序、全部页面内容或逐页迁移。
+- 无法判断关键页，且切割会丢失用户可能需要的视觉结构。
+
+切割后在 `material_inventory.inputs[]` 中记录原 PDF 和压缩 PDF 的关系：
+
+- 原 PDF 仍记录为 `source`，`usage` 说明只取关键视觉页。
+- 压缩 PDF 记录为实际导入对象，`status: "preprocessed"` 或 `"imported"`。
+- 记录 `selected_pages`、`preprocessed_path`、选择理由，以及后续导入得到的 `imported_xml_presentation_id` / `target_xml_presentation_id`。
+- 生成新页并回读成功后，再按计划删除或替换导入模板中的旧内容页。
 
 ## Image Asset Migration
 
@@ -80,29 +105,27 @@
 
 - `preserve_imported_page`：模板页含需要复用的背景图、装饰图、品牌图或复杂图片版式。优先在导入页上用 `+replace-slide` / `block_insert` / `block_replace` 做局部编辑，保留现有 `<img>` token。
 - `rebuild_in_imported_presentation`：需要重做 XML-native 页面，但仍在同一个导入后的 presentation 内创建/替换页面。可以复用该 presentation 内已有图片 token，无需下载再上传；删除旧页前先确认新页已创建成功。
-- `rebuild_new_presentation`：需要另建一个新 presentation。若要复用导入页图片，必须先把图片下载到本地，再上传到目标演示文稿，或在 `+create --slides` 中使用 `@./relative/path` 占位符让 CLI 为新文稿上传并替换 token。
 - `mixed`：同一 deck 中部分页面保留导入页图片资产，部分页面重建。每页在 plan 里说明来源页、目标 presentation、是否复用同一 presentation 的图片 token、是否需要重新上传。
 
-首次运行时先判断目标页是否仍在导入后的同一个 presentation 内。只要同一 presentation，就可以复用回读 XML 里的图片 token；跨 presentation 时才需要下载/重新上传。若不能确认目标 presentation，写入 `open_issues`，不要静默复制图片 token 到新文稿。
+首次运行时先判断目标页是否仍在导入后的同一个 presentation 内。只要同一 presentation，就可以复用回读 XML 里的图片 token；不要静默复制图片 token 到新文稿。异常新建只能由用户明确要求另建，或导入失败/回读失败触发；若需要复用导入页图片，必须记录下载/重新上传方案。
 
 如果选择 `preserve_imported_page`、`rebuild_in_imported_presentation` 或 `mixed`，且导入后的 slides 会作为最终交付物继续编辑，完成后必须把在线文件标题改成用户任务对应的新标题，避免仍保留导入时的模板/原附件名称。标题修改走 `lark-drive` 的 `drive files patch`，使用 `new_title` 字段；不要为了改标题重建整份 PPT。
 
-## Secondary Creation From Attachments
+## Imported Material As Draft
 
-用户要求“根据附件制作/改写/生成 PPT”时，附件不是可选参考，而是主要创作输入。默认执行以下策略：
+当用户提供 PDF/PPTX/slides 材料并要求制作或改写 PPT 时，先在 plan 中定两类来源：
 
-- 先用文档类附件建立叙事和事实边界：标题层级、关键结论、数据、案例、限制条件。
-- 再按 Local Material Handling 使用 PPTX/PDF/slides 类附件：作为 `rewrite_source` 时保留并重排原页内容；作为 `style_reference` 时提取页流、配色、版式、字体层级和图形 motif；作为内容资料时提取事实、结构和可复用图表。
-- 再用图片/截图/logo/figure 建立页面视觉重点：可直接用的图片走上传；不适合直接用的图像改绘成 XML-native 图表、流程图或信息图。
-- 表格数据优先生成真实 `<chart>`、表格或数字卡；禁止为了好看而杜撰趋势、比例或数值。
-- 如果附件里有素材但 plan 没有使用，必须在 `material_inventory.inputs[].usage` 说明“不使用”的原因，例如低清晰度、与主题无关、重复、版权不明或数据不可解析。
+- `rewrite_source`：导入/回读后的目标视觉底稿，记录 `imported_xml_presentation_id`、`target_xml_presentation_id`、`template_asset_strategy` 和 `target_title`；默认策略是 `preserve_imported_page`、`rebuild_in_imported_presentation` 或 `mixed`。
+- `copy_source`：真正提供文案、事实、标题层级、数据或案例的材料。
+
+只有用户明确要求新建，或导入失败/`xml_presentations.get` 无法回读时，才允许新建 deck，并说明原因和图片资产迁移策略。“页数不超过 N 页”、内容不可用、只参考风格、PDF 是正文资料或布局复杂，都不是新建 deck 的理由。如果附件里有素材但 plan 没有使用，必须在 `material_inventory.inputs[].usage` 说明原因。
 
 ## Search Policy
 
 联网搜索不是默认动作。只有出现以下情况才搜索：
 
 - 用户要求查找公开事实、行业背景、竞品、logo、截图、图片或最新资料。
-- plan 中存在关键视觉缺口，本地素材和内置模板都不能满足。
+- plan 中存在关键视觉缺口，且用户模板材料无法满足；搜索结果只能补缺，不能替代用户模板的主视觉系统。
 - 用户给出的主题需要真实世界背景才能避免空泛表达。
 
 搜索结果使用规则：
@@ -124,9 +147,15 @@ Deck 级 `material_inventory` 片段示例：
       {
         "source": "./template.pdf",
         "resolved_path": "./template.pdf",
-        "kind": "style_reference",
-        "usage": "Import as slides and extract palette, page flow, typography hierarchy, and motif.",
-        "status": "available"
+        "kind": "rewrite_source",
+        "usage": "Import key visual pages as slides and use as the target visual draft; do not copy placeholder text.",
+        "preprocessed_path": "./template_key_pages.pdf",
+        "selected_pages": [1, 2, 5, 8, 12, 20],
+        "status": "imported",
+        "imported_xml_presentation_id": "SOURCE_PRESENTATION_ID",
+        "target_xml_presentation_id": "SOURCE_PRESENTATION_ID",
+        "template_asset_strategy": "rebuild_in_imported_presentation",
+        "target_title": "New deck title"
       },
       {
         "source": "./notes.md",
@@ -138,8 +167,8 @@ Deck 级 `material_inventory` 片段示例：
       {
         "source": "./draft.pptx",
         "resolved_path": "./draft.pptx",
-        "kind": ["style_reference", "rewrite_source"],
-        "usage": "Import and read back XML; preserve source claims and restyle each page.",
+        "kind": "rewrite_source",
+        "usage": "Import and read back XML; preserve visual structure and restyle each page.",
         "status": "available"
       }
     ],
@@ -213,7 +242,7 @@ Match source type to slide role. Detailed geometry belongs in `visual-planning.m
 - `comparison` layout often works with `icon`, `chart`, or `infographic`.
 - `timeline` layout often works with `icon`, `chart`, or shape-based milestone markers.
 - `big-number` layout often works with `chart`, `data_source`, or `infographic`.
-- `image-left-text-right` and `image-right-text-left` can use `screenshot`, `paper_figure`, `logo`, `infographic`, or a style reference layout.
+- `image-left-text-right` and `image-right-text-left` can use `screenshot`, `paper_figure`, `logo`, `infographic`, or a layout derived from imported material.
 
 `suggested_query` is a future lookup hint. Execute the search only when the search policy says remote material is needed and local sources are insufficient.
 
@@ -235,9 +264,10 @@ Weak fallbacks to avoid:
 
 When generating XML:
 
-1. Apply `material_inventory` first: local style references, copy sources, data sources, and visual assets decide what each page can use.
-2. If a real visual asset exists and the workflow supports it, place it in the planned visual region.
-3. If no asset exists, immediately render `fallback_if_missing` with XML-native shapes, text, lines, arrows, tables, whiteboard diagrams, or chart-like elements.
-4. Size the fallback to satisfy `visual_focus`; it should be a real page element, not a tiny decoration.
-5. Keep text-density limits. Do not compensate for missing assets by adding long bullet text.
-6. After creation, fetch the presentation and verify asset pages are not blank and that each planned fallback is visible when no real asset was used.
+1. Apply `material_inventory` first: imported target material, copy sources, data sources, and visual assets decide what each page can use.
+2. If `target_xml_presentation_id` points to imported user material, create, replace, reorder, or delete pages in that presentation; do not call `slides +create` for a detached new deck unless the plan records an explicit user request to create a new deck or an import/readback failure.
+3. If a real visual asset exists and the workflow supports it, place it in the planned visual region.
+4. If no asset exists, immediately render `fallback_if_missing` with XML-native shapes, text, lines, arrows, tables, whiteboard diagrams, or chart-like elements.
+5. Size the fallback to satisfy `visual_focus`; it should be a real page element, not a tiny decoration.
+6. Keep text-density limits. Do not compensate for missing assets by adding long bullet text.
+7. After creation, fetch the presentation and verify asset pages are not blank and that each planned fallback is visible when no real asset was used.

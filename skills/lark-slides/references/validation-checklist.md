@@ -9,12 +9,15 @@
 1. 记录创建或编辑返回的 `xml_presentation_id`，以及已知的 `slide_id` / `revision_id`。
 2. 用 `xml_presentations.get` 回读全文 XML。
 3. 检查实际页数是否符合计划或用户要求。
-4. 检查每页 `<data>` 内是否有预期主要元素。
-5. 检查没有明显空白页、破损页、缺失标题或缺失主视觉。
-6. 检查页面不是全部退化为标题加 bullet list。
-7. 检查视觉层级：标题、主视觉、支撑信息三者可区分。
-8. 检查明显溢出和布局风险：重叠、越界、底部拥挤、长文本框。
-9. 在最终回复中给出简短验证记录。
+4. 如果计划基于导入 PDF/PPTX/slides 材料二次创作，检查最终 `xml_presentation_id` 是否等于 `target_xml_presentation_id`；如果另建了 presentation，必须在验证记录中说明用户明确要求另建或导入/回读失败原因。
+5. 如果用户材料只用于模板风格或视觉线索，检查它是否仍作为 `rewrite_source` 导入/回读，并确认最终没有交付脱离该材料的新 deck。
+6. 检查每页 `<data>` 内是否有预期主要元素。
+7. 检查没有明显空白页、破损页、缺失标题或缺失主视觉。
+8. 检查页面不是全部退化为标题加 bullet list。
+9. 检查视觉层级：标题、主视觉、支撑信息三者可区分。
+10. 检查没有遗留模板占位文案、示例公司名、示例日期或与用户主题无关的源模板文字。
+11. 检查明显溢出和布局风险：重叠、越界、底部拥挤、长文本框。
+12. 在最终回复中给出简短验证记录。
 
 回读命令：
 
@@ -65,6 +68,8 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 - `visual_focus` 是页面中最醒目或最大的信息区域之一。
 - `text_density` 影响了文本量，没有用长 bullet 框替代规划。
 - `asset_need` 有真实素材时已放入正确区域；没有真实素材时，`fallback_if_missing` 已用 XML 形状、线条、标签、表格或图表兜底。
+- `template_asset_strategy` 为 `preserve_imported_page`、`rebuild_in_imported_presentation` 或 `mixed` 时，不能交付一份脱离导入材料的新 deck。
+- 如果计划声明保留材料背景、装饰图、品牌图或复杂图片版式，回读 XML 中应仍存在对应的 `<img src>`、背景图片或等效重绘结构；如果未保留，验证记录必须说明原因。
 
 如果用户指定了关键页，例如“架构解释”“Self-Attention 机制解释”“对比或演进视角”“总结页”，最终验证记录必须逐项说明这些页已存在。
 
@@ -106,9 +111,13 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 ```text
 验证记录：
 - 回读：已执行 xml_presentations.get，实际页数 N / 预期 N。
+- 导入底稿：如使用导入材料二次创作，最终 presentation 与 target_xml_presentation_id 一致；如不一致，已说明用户明确要求另建或导入/回读失败原因。
+- 视觉底稿：如用户材料只提供模板风格或视觉线索，已确认它仍作为 rewrite_source 导入/回读并承载最终二创。
+- 内容来源：如模板材料内容不可用，已确认未复制其占位文案；正文来自计划中的 copy_source 或用户输入。
 - 截图：截图能力可用时，已用截图辅助判断最终效果。
 - 关键页：架构解释 / Self-Attention / 对比或演进 / 总结页均存在。
 - 结构：检查了主要 shape/img/table/chart 元素，无明显空白页或破损页。
+- 模板清理：未发现模板占位文案、示例公司名、示例日期或无关模板文字。
 - 布局：检查了标题层级、主视觉、重叠/越界/文本溢出风险。
 ```
 
