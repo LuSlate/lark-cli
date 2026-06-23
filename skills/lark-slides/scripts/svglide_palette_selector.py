@@ -21,6 +21,57 @@ REPO_ROOT = SCRIPT_DIR.parents[2]
 INSTRUCTION_PATH = Path("00-input/instruction.json")
 PALETTE_SELECTION_PATH = Path("02-plan/palette-selection.json")
 PALETTE_RECEIPT_PATH = Path("receipts/palette_selection.json")
+DESIGN_SELECTION_PATH = Path("02-plan/selection-metadata.json")
+STYLE_PACK_PALETTE_TOKENS = {
+    "corporate_blue_data": {
+        "colors": {"background": "#F8FAFF", "surface": "#EEF3FF", "panel": "#FFFFFF", "primary": "#1E3A8A", "accent": "#2563EB", "text": "#111827", "muted": "#64748B", "border": "#CBD5E1", "success": "#059669", "warning": "#D97706", "danger": "#DC2626"},
+        "data_series": ["#2563EB", "#1D4ED8", "#059669", "#D97706", "#DC2626"],
+    },
+    "product_ai_indigo_cyan": {
+        "colors": {"background": "#F5F7FF", "surface": "#EAF2FF", "panel": "#FFFFFF", "primary": "#3730A3", "accent": "#0891B2", "text": "#101828", "muted": "#526175", "border": "#C7D2FE", "success": "#0F766E", "warning": "#B45309", "danger": "#BE123C"},
+        "data_series": ["#3730A3", "#0891B2", "#7C3AED", "#0F766E", "#B45309"],
+    },
+    "teal_amber_growth": {
+        "colors": {"background": "#F3FAF8", "surface": "#E3F6F2", "panel": "#FFFFFF", "primary": "#0F766E", "accent": "#D97706", "text": "#10201D", "muted": "#5B6F6B", "border": "#B7DED8", "success": "#059669", "warning": "#D97706", "danger": "#DC2626"},
+        "data_series": ["#0F766E", "#14B8A6", "#D97706", "#F59E0B", "#2563EB"],
+    },
+    "graphite_red_risk": {
+        "colors": {"background": "#F6F7F8", "surface": "#ECEFF1", "panel": "#FFFFFF", "primary": "#374151", "accent": "#DC2626", "text": "#111827", "muted": "#6B7280", "border": "#D1D5DB", "success": "#059669", "warning": "#D97706", "danger": "#DC2626"},
+        "data_series": ["#374151", "#DC2626", "#991B1B", "#D97706", "#6B7280"],
+    },
+    "food_culture_warm_editorial": {
+        "colors": {"background": "#FFF7ED", "surface": "#FFEAD5", "panel": "#FFFFFF", "primary": "#B45309", "accent": "#0F766E", "text": "#3B2416", "muted": "#7C5C46", "border": "#FED7AA", "success": "#15803D", "warning": "#D97706", "danger": "#B91C1C"},
+        "data_series": ["#B45309", "#EA580C", "#0F766E", "#DB2777", "#7C2D12"],
+    },
+    "culture_editorial_jade_magenta": {
+        "colors": {"background": "#F8F4EF", "surface": "#EFE7DD", "panel": "#FFFFFF", "primary": "#0F766E", "accent": "#BE185D", "text": "#211A17", "muted": "#6F5E56", "border": "#DECFC2", "success": "#15803D", "warning": "#B45309", "danger": "#BE123C"},
+        "data_series": ["#0F766E", "#BE185D", "#2563EB", "#B45309", "#6D28D9"],
+    },
+    "investor_navy_gold": {
+        "colors": {"background": "#F7F6F1", "surface": "#ECE8DC", "panel": "#FFFFFF", "primary": "#14213D", "accent": "#B0892F", "text": "#151515", "muted": "#667085", "border": "#D8D0BA", "success": "#047857", "warning": "#B0892F", "danger": "#B91C1C"},
+        "data_series": ["#14213D", "#B0892F", "#2563EB", "#047857", "#B91C1C"],
+    },
+    "education_sky_green": {
+        "colors": {"background": "#F4FAFF", "surface": "#E4F2FF", "panel": "#FFFFFF", "primary": "#0369A1", "accent": "#16A34A", "text": "#102033", "muted": "#5F7186", "border": "#BAE6FD", "success": "#16A34A", "warning": "#D97706", "danger": "#DC2626"},
+        "data_series": ["#0369A1", "#16A34A", "#0EA5E9", "#D97706", "#7C3AED"],
+    },
+    "event_neon_cyan_magenta": {
+        "colors": {"background": "#111827", "surface": "#1F2937", "panel": "#172033", "primary": "#22D3EE", "accent": "#EC4899", "text": "#F8FAFC", "muted": "#CBD5E1", "border": "#334155", "success": "#34D399", "warning": "#F59E0B", "danger": "#FB7185"},
+        "data_series": ["#22D3EE", "#EC4899", "#8B5CF6", "#F59E0B", "#34D399"],
+    },
+    "scholarly_vellum_ink": {
+        "colors": {"background": "#F8F4E8", "surface": "#EFE8D6", "panel": "#FFFDF6", "primary": "#1F2937", "accent": "#1D4ED8", "text": "#111827", "muted": "#6B6258", "border": "#D8CCB3", "success": "#047857", "warning": "#B45309", "danger": "#B91C1C"},
+        "data_series": ["#1F2937", "#1D4ED8", "#64748B", "#B45309", "#047857"],
+    },
+    "workshop_playful_paper": {
+        "colors": {"background": "#FFF7E6", "surface": "#FDECC8", "panel": "#FFFFFF", "primary": "#2563EB", "accent": "#F97316", "text": "#1F2937", "muted": "#6B7280", "border": "#F3D9A4", "success": "#16A34A", "warning": "#F97316", "danger": "#DC2626"},
+        "data_series": ["#2563EB", "#F97316", "#16A34A", "#DB2777", "#7C3AED"],
+    },
+    "architecture_mono_cyan": {
+        "colors": {"background": "#F3F7FA", "surface": "#E6EEF3", "panel": "#FFFFFF", "primary": "#111827", "accent": "#0891B2", "text": "#0F172A", "muted": "#5B6B7C", "border": "#CBD5E1", "success": "#0F766E", "warning": "#B45309", "danger": "#B91C1C"},
+        "data_series": ["#111827", "#0891B2", "#475569", "#0F766E", "#B45309"],
+    },
+}
 
 
 def now_iso() -> str:
@@ -46,6 +97,88 @@ def stable_seed(payload: Any) -> str:
 
 def load_palette_registry() -> dict[str, Any]:
     return beautiful_template_runtime.palette_registry()
+
+
+def load_design_selection(project_root: Path) -> dict[str, Any]:
+    path = project_root / DESIGN_SELECTION_PATH
+    if not path.exists():
+        return {}
+    try:
+        return read_json(path)
+    except (OSError, json.JSONDecodeError, ValueError):
+        return {}
+
+
+def selected_style_pack(design_selection: dict[str, Any]) -> dict[str, Any]:
+    if design_selection.get("status") != "passed":
+        return {}
+    selection = design_selection.get("style_pack_selection")
+    lock = design_selection.get("style_lock")
+    if not isinstance(selection, dict) or not isinstance(lock, dict):
+        return {}
+    selected_id = selection.get("selected_style_pack_id")
+    if not isinstance(selected_id, str) or not selected_id:
+        return {}
+    if lock.get("style_pack_id") not in (None, selected_id):
+        return {}
+    return selection
+
+
+def style_pack_palette_result(
+    project_root: Path,
+    brief: str,
+    signals: dict[str, Any],
+    style_pack: dict[str, Any],
+    *,
+    top_k: int,
+) -> dict[str, Any] | None:
+    style_pack_id = str(style_pack.get("selected_style_pack_id") or "")
+    tokens = STYLE_PACK_PALETTE_TOKENS.get(style_pack_id)
+    if not tokens:
+        return None
+    palette_id = f"style_pack.{style_pack_id}"
+    colors = dict(tokens.get("colors") if isinstance(tokens.get("colors"), dict) else {})
+    data_series = list(tokens.get("data_series") if isinstance(tokens.get("data_series"), list) else [])
+    brand_resolution = {
+        "source": "style_pack_registry",
+        "confidence": "high",
+        "style_pack_id": style_pack_id,
+        "palette_id": style_pack.get("palette_id"),
+        "colors": colors,
+        "reason": "selected by deck recipe/style_pack metadata",
+        "evidence": [DESIGN_SELECTION_PATH.as_posix()],
+    }
+    candidate = {
+        "palette_id": palette_id,
+        "score": 100,
+        "matched_signals": ["style_pack:selected", f"style_pack:{style_pack_id}"],
+        "missed_signals": [],
+        "selection_reason": ["style_pack:selected", f"style_pack:{style_pack_id}"],
+        "rejection_reasons": [],
+    }
+    project_palette = {
+        "palette_id": palette_id,
+        "source": "style_pack_registry",
+        "confidence": "high",
+        "selection_receipt": PALETTE_SELECTION_PATH.as_posix(),
+        "colors": colors,
+        "data_series": data_series,
+        "style_pack_id": style_pack_id,
+    }
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "stage": "palette_selection",
+        "created_at": now_iso(),
+        "brief_signals": signals,
+        "selected_palette_id": palette_id,
+        "confidence": "high",
+        "fallback_policy": "not_used",
+        "deterministic_seed": stable_seed({"brief": brief, "signals": signals, "style_pack_id": style_pack_id}),
+        "brand_resolution": brand_resolution,
+        "palette_candidates": [candidate][:top_k],
+        "candidate_palette_ids_considered": [palette_id],
+        "project_palette": project_palette,
+    }
 
 
 def project_brief(project_root: Path, explicit_brief: str | None = None) -> str:
@@ -188,6 +321,16 @@ def select_palette(project_root: Path, brief: str, *, top_k: int = 5, evidence: 
     registry = load_palette_registry()
     signals = semantic_matcher.infer_brief_signals(brief)
     brand_resolution = brand_resolver.resolve_brand_palette(project_root, brief, evidence)
+    if brand_resolution.get("source") not in {"brand_registry", "user_provided"}:
+        style_pack_result = style_pack_palette_result(
+            project_root,
+            brief,
+            signals,
+            selected_style_pack(load_design_selection(project_root)),
+            top_k=top_k,
+        )
+        if style_pack_result is not None:
+            return style_pack_result
     scored = [
         score_palette(signals, palette, brand_resolution)
         for palette in registry.get("palettes", [])

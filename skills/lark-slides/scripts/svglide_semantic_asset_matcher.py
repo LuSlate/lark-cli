@@ -733,3 +733,9 @@ def rank_assets(prompt: str, assets: list[dict[str, Any]], *, top_k: int = 3) ->
         "candidate_rejection_reasons": rejection_reasons,
         "candidates": scored[:top_k],
     }
+
+
+def select_design_asset_metadata(prompt: str) -> dict[str, Any]:
+    import svglide_recipe_selector
+
+    return svglide_recipe_selector.select_design_assets(prompt)

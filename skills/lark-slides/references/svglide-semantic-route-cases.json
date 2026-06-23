@@ -1,0 +1,11 @@
+{
+  "version": "svglide-semantic-route-cases/v1",
+  "golden_cases": "skills/lark-slides/scripts/fixtures/svglide_recipe_matching/cases_42.json",
+  "out_of_sample_cases": "skills/lark-slides/scripts/fixtures/svglide_recipe_matching/out_of_sample.json",
+  "policy": {
+    "case_count_is_regression_surface": true,
+    "case_id_hardcoding_allowed": false,
+    "prompt_substring_hardcoding_allowed": false,
+    "l4_policy": "fail_closed"
+  }
+}

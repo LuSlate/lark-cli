@@ -56,7 +56,7 @@ def validate_brand_resolution(selection: dict[str, Any]) -> list[dict[str, Any]]
     if not isinstance(resolution, dict):
         return [issue("brand_resolution_missing", "palette selection must include brand_resolution", path="brand_resolution")]
     issues: list[dict[str, Any]] = []
-    if resolution.get("source") not in {"user_provided", "brand_registry", "source_asset_extract", "official_lookup", "stable_fallback"}:
+    if resolution.get("source") not in {"user_provided", "brand_registry", "source_asset_extract", "official_lookup", "stable_fallback", "style_pack_registry"}:
         issues.append(issue("brand_resolution_source_invalid", "brand_resolution.source is invalid", path="brand_resolution.source"))
     if resolution.get("confidence") not in {"high", "medium", "low"}:
         issues.append(issue("brand_resolution_confidence_invalid", "brand_resolution.confidence is invalid", path="brand_resolution.confidence"))

@@ -675,6 +675,22 @@ class SVGlideQualityGateTest(unittest.TestCase):
             self.assertEqual(missing["status"], "missing")
             self.assertIn("theme_adherence", result["inputs"])
 
+    def test_quality_gate_requires_selection_reviews_for_svg_route(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            self.write_minimal_passing_project(project)
+            plan_path = project / "02-plan/slide_plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["route"] = "svglide-svg"
+            write_json(plan_path, plan)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        self.assertEqual(checks["theme-template-selection-review"]["status"], "missing")
+        self.assertIn("theme_template_selection_review", result["inputs"])
+
     def test_quality_gate_fails_when_production_receipt_uses_legacy_asset(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)

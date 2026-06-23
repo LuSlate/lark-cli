@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-style-pack-registry.schema.json",
+  "title": "SVGlide style pack registry",
+  "type": "object",
+  "required": ["version", "style_packs"],
+  "properties": {
+    "version": {"const": "svglide-style-pack-registry/v1"},
+    "style_packs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "style_pack_id",
+          "display_name",
+          "palette_id",
+          "typography_id",
+          "background_system_id",
+          "chart_palette_id",
+          "image_treatment_id",
+          "decoration_policy_id",
+          "component_variant_bias",
+          "metadata"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

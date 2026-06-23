@@ -54,6 +54,37 @@ class PaletteSelectorTest(unittest.TestCase):
         self.assertEqual("#123456", result["project_palette"]["colors"]["primary"])
         self.assertEqual("#ABCDEF", result["project_palette"]["colors"]["accent"])
 
+    def test_style_pack_palette_wins_over_stable_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "02-plan").mkdir(parents=True, exist_ok=True)
+            (root / "02-plan/selection-metadata.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "svglide-design-asset-selection/v1",
+                        "status": "passed",
+                        "style_pack_selection": {
+                            "selected_style_pack_id": "corporate_blue_data",
+                            "palette_id": "corporate_blue",
+                        },
+                        "style_lock": {
+                            "style_pack_id": "corporate_blue_data",
+                            "palette_id": "corporate_blue",
+                            "deck_level": True,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = selector.select_palette(root, "生成一份内部业务复盘，高管经营看板", top_k=3)
+
+        self.assertEqual("style_pack_registry", result["brand_resolution"]["source"])
+        self.assertEqual("style_pack.corporate_blue_data", result["selected_palette_id"])
+        self.assertEqual("style_pack_registry", result["project_palette"]["source"])
+        self.assertNotIn("quality_gate_fallback", result["brand_resolution"])
+        self.assertNotIn("quality_gate_fallback", result["project_palette"])
+
     def test_unknown_topic_is_stable(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

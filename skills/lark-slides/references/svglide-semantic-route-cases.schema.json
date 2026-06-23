@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-semantic-route-cases.schema.json",
+  "title": "SVGlide semantic route cases",
+  "type": "object",
+  "required": ["version", "golden_cases", "out_of_sample_cases"],
+  "properties": {
+    "version": {"const": "svglide-semantic-route-cases/v1"},
+    "golden_cases": {"type": "string", "minLength": 1},
+    "out_of_sample_cases": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": true
+}

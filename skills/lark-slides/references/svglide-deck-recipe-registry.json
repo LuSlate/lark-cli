@@ -1,0 +1,291 @@
+{
+  "version": "svglide-deck-recipe-registry/v1",
+  "recipes": [
+    {
+      "recipe_id": "internal_business_review",
+      "display_name": "内部业务复盘",
+      "keywords": ["内部", "复盘", "经营", "业务", "年度", "季度", "管理层", "指标", "KPI", "看板", "数据", "趋势", "问题", "原因", "行动", "owner", "增长", "渠道", "留存", "转化"],
+      "intent_tags": ["复盘", "经营分析", "业务汇报"],
+      "content_shape": ["数据-洞察-决策", "问题-原因-动作", "KPI 看板"],
+      "audience": ["内部管理层", "业务团队", "经营负责人"],
+      "metadata": {
+        "mood": ["professional", "trustworthy"],
+        "tone": ["analytical", "controlled"],
+        "best_for": ["内部复盘", "经营分析", "业务汇报"],
+        "avoid_for": ["儿童教育", "纯文化叙事"],
+        "density": "medium-high",
+        "formality": "high"
+      },
+      "template_family_candidates": ["blue-professional", "signal", "emerald-editorial", "raw-grid"],
+      "style_pack_candidates": ["corporate_blue_data", "teal_amber_growth"],
+      "density_modes": ["data-heavy", "executive-summary"],
+      "component_slots": ["kpi_strip", "metric_cards", "comparison_matrix", "timeline", "risk_matrix", "action_list"],
+      "image_treatment_candidates": ["chart_first", "online_evidence_image"],
+      "avoid_when": ["小吃", "旅行", "儿童故事"]
+    },
+    {
+      "recipe_id": "consumer_ai_product_analysis",
+      "display_name": "AI 产品与 App 分析",
+      "keywords": ["AI", "App", "应用", "豆包", "Doubao", "智谱", "MiniMax", "Kimi", "通义", "产品", "竞品", "对比", "能力", "用户场景", "截图", "模型", "智能体"],
+      "intent_tags": ["产品分析", "竞品分析", "AI 产品"],
+      "content_shape": ["能力矩阵", "场景拆解", "产品截图证据"],
+      "audience": ["产品团队", "业务团队", "管理层"],
+      "metadata": {
+        "mood": ["technical", "modern"],
+        "tone": ["comparative", "analytical"],
+        "best_for": ["AI 产品", "App 竞品", "公司对比"],
+        "avoid_for": ["传统美食", "儿童课程"],
+        "density": "medium-high",
+        "formality": "medium-high"
+      },
+      "template_family_candidates": ["blue-professional", "raw-grid", "neo-grid-bold", "signal"],
+      "style_pack_candidates": ["product_ai_indigo_cyan", "teal_amber_growth"],
+      "density_modes": ["product-showcase", "data-heavy"],
+      "component_slots": ["product_screenshot_panel", "comparison_matrix", "metric_cards", "timeline", "positioning_map"],
+      "image_treatment_candidates": ["real_product_screenshot", "online_evidence_image"],
+      "avoid_when": ["纯学术论文", "小吃菜单"]
+    },
+    {
+      "recipe_id": "food_culture_guide",
+      "display_name": "城市小吃与餐饮文化介绍",
+      "keywords": ["小吃", "美食", "餐饮", "茶餐厅", "早茶", "香港", "粤菜", "点心", "街头", "菜单", "指南", "品类", "旅行", "推荐", "味道", "城市烟火"],
+      "intent_tags": ["文化介绍", "美食指南", "城市旅行"],
+      "content_shape": ["品类地图", "图文故事", "推荐路线"],
+      "audience": ["普通读者", "游客", "文化爱好者"],
+      "metadata": {
+        "mood": ["warm", "editorial"],
+        "tone": ["narrative", "inviting"],
+        "best_for": ["香港小吃", "城市美食", "餐饮文化"],
+        "avoid_for": ["经营看板", "风险审计"],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "template_family_candidates": ["long-table", "playful", "coral", "grove"],
+      "style_pack_candidates": ["food_culture_warm_editorial", "culture_editorial_jade_magenta"],
+      "density_modes": ["editorial-guide", "image-led"],
+      "component_slots": ["image_story", "menu_grid", "place_cards", "timeline", "quote_panel"],
+      "image_treatment_candidates": ["online_evidence_image", "editorial_photo"],
+      "avoid_when": ["董事会", "KPI", "融资"]
+    },
+    {
+      "recipe_id": "culture_heritage_intro",
+      "display_name": "地域文化与语言文化介绍",
+      "keywords": ["文化", "粤语", "岭南", "香港", "广东", "语言", "历史", "传统", "流行文化", "影视", "音乐", "城市", "非遗"],
+      "intent_tags": ["文化科普", "地域介绍", "语言文化"],
+      "content_shape": ["历史脉络", "文化符号", "当代表达"],
+      "audience": ["普通读者", "学生", "文化爱好者"],
+      "metadata": {
+        "mood": ["cultural", "reflective"],
+        "tone": ["narrative", "magazine"],
+        "best_for": ["粤语文化", "地域文化", "城市文化"],
+        "avoid_for": ["经营复盘", "技术架构"],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "template_family_candidates": ["editorial-tri-tone", "soft-editorial", "biennale-yellow", "stencil-tablet"],
+      "style_pack_candidates": ["culture_editorial_jade_magenta", "food_culture_warm_editorial"],
+      "density_modes": ["editorial-story", "culture-brief"],
+      "component_slots": ["timeline", "quote_panel", "image_story", "comparison_cards", "fact_cards"],
+      "image_treatment_candidates": ["editorial_photo", "online_evidence_image"],
+      "avoid_when": ["KPI", "投委会", "事故"]
+    },
+    {
+      "recipe_id": "event_expo_report",
+      "display_name": "展会与活动报告",
+      "keywords": ["ChinaJoy", "CJ", "展会", "活动", "游戏展", "发布会", "大会", "现场", "展台", "观众", "厂商", "趋势", "cosplay", "电竞", "互动体验"],
+      "intent_tags": ["活动介绍", "展会复盘", "行业观察"],
+      "content_shape": ["现场图景", "参展方地图", "趋势洞察"],
+      "audience": ["市场团队", "行业读者", "管理层"],
+      "metadata": {
+        "mood": ["energetic", "modern"],
+        "tone": ["editorial", "reporting"],
+        "best_for": ["ChinaJoy", "展会报告", "活动复盘"],
+        "avoid_for": ["审计汇报", "学术论文"],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "template_family_candidates": ["neo-grid-bold", "block-frame", "creative-mode", "studio"],
+      "style_pack_candidates": ["event_neon_cyan_magenta", "product_ai_indigo_cyan"],
+      "density_modes": ["media-showcase", "event-report"],
+      "component_slots": ["hero_photo", "event_map", "trend_cards", "timeline", "quote_panel"],
+      "image_treatment_candidates": ["online_event_photo_first", "online_evidence_image"],
+      "avoid_when": ["董事会", "合规", "事故"]
+    },
+    {
+      "recipe_id": "market_investment_analysis",
+      "display_name": "市场与投资分析",
+      "keywords": ["市场", "投资", "行业", "机会", "格局", "供应链", "新能源", "投委会", "玩家", "规模", "竞争", "风险", "趋势", "数据趋势", "城市治理", "政策", "公共治理", "商业化"],
+      "intent_tags": ["市场分析", "投资分析", "行业研究"],
+      "content_shape": ["市场地图", "玩家分层", "机会风险"],
+      "audience": ["投资人", "投委会", "管理层"],
+      "metadata": {
+        "mood": ["professional", "sharp"],
+        "tone": ["analytical", "crisp"],
+        "best_for": ["投资分析", "市场格局", "行业研究"],
+        "avoid_for": ["美食文化", "儿童培训"],
+        "density": "medium-high",
+        "formality": "high"
+      },
+      "template_family_candidates": ["signal", "cartesian", "blue-professional", "raw-grid"],
+      "style_pack_candidates": ["investor_navy_gold", "corporate_blue_data"],
+      "density_modes": ["data-heavy", "executive-summary"],
+      "component_slots": ["market_map", "metric_cards", "comparison_matrix", "risk_matrix", "timeline"],
+      "image_treatment_candidates": ["chart_first", "online_evidence_image"],
+      "avoid_when": ["小吃", "儿童", "活动海报"]
+    },
+    {
+      "recipe_id": "fundraising_pitch",
+      "display_name": "融资 BP 与路演",
+      "keywords": ["融资", "BP", "路演", "投资人", "pitch", "商业模式", "收入", "增长", "市场规模", "traction", "团队", "估值", "轮次"],
+      "intent_tags": ["融资路演", "商业计划", "投资人材料"],
+      "content_shape": ["问题-方案", "市场-产品-商业化", "里程碑"],
+      "audience": ["投资人", "创始人", "董事会"],
+      "metadata": {
+        "mood": ["confident", "professional"],
+        "tone": ["crisp", "polished"],
+        "best_for": ["融资 BP", "投资人路演", "商业计划"],
+        "avoid_for": ["文化科普", "小吃介绍"],
+        "density": "medium-high",
+        "formality": "high"
+      },
+      "template_family_candidates": ["block-frame", "signal", "blue-professional", "neo-grid-bold"],
+      "style_pack_candidates": ["investor_navy_gold", "teal_amber_growth"],
+      "density_modes": ["executive-summary", "pitch-story"],
+      "component_slots": ["market_map", "metric_cards", "traction_chart", "timeline", "team_cards"],
+      "image_treatment_candidates": ["chart_first", "online_evidence_image"],
+      "avoid_when": ["小吃", "传统文化"]
+    },
+    {
+      "recipe_id": "training_courseware",
+      "display_name": "培训课件与课程讲解",
+      "keywords": ["培训", "课件", "课程", "教学", "医疗", "新人", "onboarding", "步骤", "练习", "案例", "学习", "知识点", "考核"],
+      "intent_tags": ["培训课件", "课程讲解", "学习材料"],
+      "content_shape": ["目标-步骤-练习", "案例-知识点-总结"],
+      "audience": ["学员", "新人", "一线团队"],
+      "metadata": {
+        "mood": ["approachable", "practical"],
+        "tone": ["instructional", "clear"],
+        "best_for": ["培训课件", "医疗培训", "新人 onboarding"],
+        "avoid_for": ["融资 BP", "投委会"],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "template_family_candidates": ["daisy-days", "playful", "scatterbrain", "vellum"],
+      "style_pack_candidates": ["education_sky_green", "workshop_playful_paper"],
+      "density_modes": ["lesson", "workshop"],
+      "component_slots": ["lesson_steps", "checklist", "exercise_cards", "case_cards", "summary_cards"],
+      "image_treatment_candidates": ["online_evidence_image", "structured_fallback"],
+      "avoid_when": ["投资人", "董事会", "事故"]
+    },
+    {
+      "recipe_id": "technical_architecture_review",
+      "display_name": "技术架构与系统方案",
+      "keywords": ["技术", "架构", "系统", "链路", "模块", "服务", "调用", "依赖", "SLA", "性能", "稳定性", "方案", "设计", "数据流"],
+      "intent_tags": ["技术方案", "系统架构", "工程说明"],
+      "content_shape": ["模块关系", "流程链路", "风险与演进"],
+      "audience": ["研发团队", "技术负责人", "架构委员会"],
+      "metadata": {
+        "mood": ["technical", "focused"],
+        "tone": ["structured", "precise"],
+        "best_for": ["技术架构", "系统设计", "工程方案"],
+        "avoid_for": ["美食指南", "文化故事"],
+        "density": "medium-high",
+        "formality": "high"
+      },
+      "template_family_candidates": ["raw-grid", "cartesian", "signal", "blue-professional"],
+      "style_pack_candidates": ["architecture_mono_cyan", "corporate_blue_data"],
+      "density_modes": ["diagram-heavy", "data-heavy"],
+      "component_slots": ["architecture_diagram", "dependency_map", "sequence_flow", "risk_matrix", "timeline"],
+      "image_treatment_candidates": ["diagram_first", "chart_first"],
+      "avoid_when": ["小吃", "儿童", "文化旅游"]
+    },
+    {
+      "recipe_id": "security_risk_diagnostic",
+      "display_name": "安全风险与事故诊断",
+      "keywords": ["安全", "风险", "事故", "故障", "合规", "审计", "根因", "影响范围", "整改", "治理", "漏洞", "控制项", "复盘"],
+      "intent_tags": ["风险诊断", "事故复盘", "安全治理"],
+      "content_shape": ["风险矩阵", "时间线", "整改动作"],
+      "audience": ["安全团队", "管理层", "审计团队"],
+      "metadata": {
+        "mood": ["serious", "controlled"],
+        "tone": ["diagnostic", "analytical"],
+        "best_for": ["安全方案", "事故复盘", "合规审计"],
+        "avoid_for": ["品牌发布", "美食介绍"],
+        "density": "medium-high",
+        "formality": "high"
+      },
+      "template_family_candidates": ["cartesian", "signal", "blue-professional", "raw-grid"],
+      "style_pack_candidates": ["graphite_red_risk", "corporate_blue_data"],
+      "density_modes": ["risk-diagnostic", "data-heavy"],
+      "component_slots": ["risk_matrix", "timeline", "control_table", "action_list", "impact_map"],
+      "image_treatment_candidates": ["diagram_first", "chart_first"],
+      "avoid_when": ["小吃", "儿童课程", "艺术展"]
+    },
+    {
+      "recipe_id": "research_policy_brief",
+      "display_name": "研究报告与政策简报",
+      "keywords": ["研究", "报告", "政策", "白皮书", "学术", "论文", "方法", "样本", "发现", "结论", "证据", "实验", "引用"],
+      "intent_tags": ["研究报告", "政策简报", "学术汇报"],
+      "content_shape": ["背景-方法-发现", "证据-结论-建议"],
+      "audience": ["研究团队", "政策团队", "专业读者"],
+      "metadata": {
+        "mood": ["scholarly", "trustworthy"],
+        "tone": ["structured", "analytical"],
+        "best_for": ["研究报告", "政策简报", "学术汇报"],
+        "avoid_for": ["潮流发布", "活动海报"],
+        "density": "high",
+        "formality": "high"
+      },
+      "template_family_candidates": ["vellum", "cartesian", "signal", "monochrome"],
+      "style_pack_candidates": ["scholarly_vellum_ink", "corporate_blue_data"],
+      "density_modes": ["report", "data-heavy"],
+      "component_slots": ["evidence_table", "method_cards", "findings_grid", "quote_panel", "chart_panel"],
+      "image_treatment_candidates": ["chart_first", "online_evidence_image"],
+      "avoid_when": ["小吃", "夜店", "游戏展"]
+    },
+    {
+      "recipe_id": "brand_campaign_launch",
+      "display_name": "品牌发布与营销方案",
+      "keywords": ["品牌", "发布", "营销", "campaign", "传播", "主张", "新品", "人群", "渠道", "创意", "海报", "视觉", "故事"],
+      "intent_tags": ["品牌发布", "营销方案", "传播策略"],
+      "content_shape": ["人群洞察", "核心主张", "传播节奏"],
+      "audience": ["市场团队", "品牌团队", "管理层"],
+      "metadata": {
+        "mood": ["confident", "modern"],
+        "tone": ["bold", "editorial"],
+        "best_for": ["品牌发布", "营销方案", "新品上市"],
+        "avoid_for": ["安全审计", "学术报告"],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "template_family_candidates": ["neo-grid-bold", "bold-poster", "coral", "block-frame"],
+      "style_pack_candidates": ["event_neon_cyan_magenta", "teal_amber_growth"],
+      "density_modes": ["campaign", "media-showcase"],
+      "component_slots": ["hero_visual", "audience_cards", "timeline", "channel_map", "metric_cards"],
+      "image_treatment_candidates": ["online_evidence_image", "editorial_photo"],
+      "avoid_when": ["董事会", "合规", "事故"]
+    },
+    {
+      "recipe_id": "workshop_playbook",
+      "display_name": "工作坊与共创手册",
+      "keywords": ["工作坊", "workshop", "共创", "头脑风暴", "议程", "练习", "分组", "产出", "下一步", "复盘", "协作"],
+      "intent_tags": ["工作坊", "共创", "行动手册"],
+      "content_shape": ["议程-练习-产出", "问题-共创-行动"],
+      "audience": ["参与者", "项目团队", "培训师"],
+      "metadata": {
+        "mood": ["approachable", "collaborative"],
+        "tone": ["facilitative", "clear"],
+        "best_for": ["工作坊", "共创", "培训演练"],
+        "avoid_for": ["融资 BP", "审计汇报"],
+        "density": "medium",
+        "formality": "medium"
+      },
+      "template_family_candidates": ["scatterbrain", "daisy-days", "pin-and-paper", "playful"],
+      "style_pack_candidates": ["workshop_playful_paper", "education_sky_green"],
+      "density_modes": ["workshop", "lesson"],
+      "component_slots": ["agenda", "sticky_notes", "exercise_cards", "action_list", "reflection_cards"],
+      "image_treatment_candidates": ["structured_fallback", "online_evidence_image"],
+      "avoid_when": ["投委会", "安全事故"]
+    }
+  ]
+}

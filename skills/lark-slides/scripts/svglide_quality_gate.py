@@ -56,6 +56,7 @@ SELECTION_CHECKS = [
     ("palette-review", CHECK_DIR / "palette-review.json"),
     ("theme-template-selection-review", CHECK_DIR / "theme-template-selection-review.json"),
     ("plan-bundle-review", CHECK_DIR / "plan-bundle-review.json"),
+    ("diversity-gate", CHECK_DIR / "diversity-gate.json"),
 ]
 ARTBOARD_PACKAGE_CHECK = ("artboard-package-check", CHECK_DIR / "artboard-package-check.json")
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
@@ -631,7 +632,11 @@ def plan_declares_selection(project: Path) -> bool:
         return False
     if not isinstance(payload, dict):
         return False
+    if payload.get("route") == "svglide-svg" or payload.get("output_mode") == "svglide-svg":
+        return True
     if payload.get("selection_receipt") or payload.get("palette_selection_receipt"):
+        return True
+    if payload.get("selection_metadata_receipt") or payload.get("recipe_routing_receipt"):
         return True
     if isinstance(payload.get("project_palette"), dict) or isinstance(payload.get("project_theme"), dict):
         return True

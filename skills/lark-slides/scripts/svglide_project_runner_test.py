@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svg_preflight
+import beautiful_template_runtime
 import svglide_project_runner as runner
 
 
@@ -201,6 +202,14 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
 
     def write_artboard_plan(self, project_root: Path) -> None:
         self.write_plan(project_root)
+        (project_root / "02-plan/theme-registry.json").write_text(
+            json.dumps(beautiful_template_runtime.theme_registry(include_legacy=True)),
+            encoding="utf-8",
+        )
+        (project_root / "02-plan/template-registry.json").write_text(
+            json.dumps(beautiful_template_runtime.template_registry(include_legacy=True)),
+            encoding="utf-8",
+        )
         plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
         plan["generation_mode"] = "artboard_satori"
         first_slide = plan["slides"][0]
@@ -540,6 +549,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                         "semantic_review",
                         "runtime_review",
                         "visual_distinctness_review",
+                        "diversity_gate",
                         "theme_adherence",
                         "quality_gate",
                     ]:
@@ -656,6 +666,64 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
     def completed(self, command: list[str], payload: dict[str, object] | None = None, returncode: int = 0) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(command, returncode, stdout=json.dumps(payload or {"ok": True}), stderr="")
 
+    def test_run_script_stage_merges_contract_compile_receipt_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            state = runner.load_state(project_root)
+            payload = {
+                "stage": "contract_compile",
+                "status": "passed",
+                "contract_manifest": "04-svg/contract/manifest.json",
+                "raw_visual_manifest_sha256": "raw-hash",
+                "asset_injection_summary": {"status": "passed", "used_count": 1},
+            }
+
+            receipt = runner.run_script_stage(
+                project_root,
+                state,
+                "contract_compile",
+                ["fake-contract-compile"],
+                command_runner=lambda command, **_: self.completed(command, payload),
+            )
+
+            self.assertEqual(receipt["contract_manifest"], "04-svg/contract/manifest.json")
+            self.assertEqual(receipt["raw_visual_manifest_sha256"], "raw-hash")
+            self.assertEqual(receipt["asset_injection_summary"]["used_count"], 1)
+            saved = json.loads((project_root / "receipts/contract_compile.json").read_text(encoding="utf-8"))
+            self.assertEqual(saved["raw_visual_manifest_sha256"], "raw-hash")
+
+    def test_select_style_writes_recipe_selection_receipts_and_plan_applies_them(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_root = Path(tmpdir) / ".lark-slides/plan"
+            result = runner.init_project("smoke", "Smoke", plan_root=plan_root)
+            project_root = Path(result["project_root"])
+            brief = "豆包 App 竞品分析，关注产品能力、用户场景和真实产品截图"
+            self.write_instruction(project_root, brief)
+            self.run_source(project_root)
+            self.write_selection_ready_plan(project_root, brief)
+
+            select_result = runner.run_stage(project_root, "select_style")
+            self.assertEqual(select_result["status"], "passed")
+            selection_metadata = json.loads((project_root / "02-plan/selection-metadata.json").read_text(encoding="utf-8"))
+            routing_receipt = json.loads((project_root / "02-plan/recipe-routing-receipt.json").read_text(encoding="utf-8"))
+            select_receipt = json.loads((project_root / "receipts/select_style.json").read_text(encoding="utf-8"))
+            self.assertEqual(selection_metadata["deck_recipe_selection"]["recipe_id"], "consumer_ai_product_analysis")
+            self.assertEqual(routing_receipt["deck_recipe_selection"]["recipe_id"], "consumer_ai_product_analysis")
+            self.assertIn("02-plan/selection-metadata.json", select_receipt["outputs"])
+            self.assertIn("02-plan/recipe-routing-receipt.json", select_receipt["outputs"])
+
+            plan_result = runner.run_stage(project_root, "plan")
+            self.assertEqual(plan_result["status"], "passed")
+            plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(plan["selection_metadata_receipt"], "02-plan/selection-metadata.json")
+            self.assertEqual(plan["recipe_routing_receipt"], "02-plan/recipe-routing-receipt.json")
+            self.assertEqual(plan["deck_recipe_selection"], selection_metadata["deck_recipe_selection"])
+            self.assertEqual(plan["style_lock"], selection_metadata["style_lock"])
+            plan_receipt = json.loads((project_root / "receipts/plan.json").read_text(encoding="utf-8"))
+            self.assertTrue(plan_receipt["design_asset_selection_applied"])
+
     def write_ppe_input(self, project_root: Path) -> None:
         rule_file = "skills/lark-slides/references/ppe-pure-svg.whistle.js"
         rule_path = runner.repo_root() / rule_file
@@ -707,6 +775,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(runner.normalize_stage("runtime-review"), "runtime_review")
         self.assertEqual(runner.normalize_stage("visual-distinctness"), "visual_distinctness_review")
         self.assertEqual(runner.normalize_stage("visual-distinctness-review"), "visual_distinctness_review")
+        self.assertEqual(runner.normalize_stage("diversity-gate"), "diversity_gate")
+        self.assertEqual(runner.normalize_stage("diversity-review"), "diversity_gate")
         self.assertEqual(runner.normalize_stage("theme-adherence"), "theme_adherence")
         self.assertEqual(runner.normalize_stage("generate"), "generate_svg")
         self.assertEqual(runner.normalize_stage("generate-svg"), "generate_svg")
@@ -743,6 +813,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("semantic_review", dry_run)
         self.assertIn("runtime_review", dry_run)
         self.assertIn("visual_distinctness_review", dry_run)
+        self.assertIn("diversity_gate", dry_run)
         self.assertIn("theme_adherence", dry_run)
         self.assertIn("quality_gate", dry_run)
         self.assertIn("generation_benchmark", dry_run)
@@ -807,6 +878,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("semantic_review", called_stages)
             self.assertIn("runtime_review", called_stages)
             self.assertIn("visual_distinctness_review", called_stages)
+            self.assertIn("diversity_gate", called_stages)
             self.assertIn("theme_validate", called_stages)
             self.assertIn("package_check", called_stages)
             self.assertIn("theme_adherence", called_stages)
@@ -821,8 +893,10 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertLess(called_stages.index("chart_verify"), called_stages.index("semantic_review"))
             self.assertLess(called_stages.index("semantic_review"), called_stages.index("quality_gate"))
             self.assertLess(called_stages.index("runtime_review"), called_stages.index("visual_distinctness_review"))
+            self.assertLess(called_stages.index("visual_distinctness_review"), called_stages.index("diversity_gate"))
             self.assertLess(called_stages.index("visual_distinctness_review"), called_stages.index("theme_adherence"))
             self.assertLess(called_stages.index("theme_adherence"), called_stages.index("quality_gate"))
+            self.assertLess(called_stages.index("diversity_gate"), called_stages.index("quality_gate"))
             self.assertLess(called_stages.index("visual_distinctness_review"), called_stages.index("quality_gate"))
             self.assertNotIn("dry_run", called_stages)
             self.assertNotIn("ppe_proof", called_stages)
@@ -1586,6 +1660,11 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertTrue((project_root / "receipts/template-fit-check.json").exists())
             compile_result = runner.run_stage(project_root, "contract_compile")
             self.assertEqual(compile_result["status"], "passed")
+            self.assertEqual(compile_result["contract_manifest"], "04-svg/contract/manifest.json")
+            self.assertEqual(
+                compile_result["raw_visual_manifest_sha256"],
+                runner.file_sha256(project_root / "04-artboard/raw/manifest.json"),
+            )
             self.assertTrue((project_root / "04-svg/page-001.svg").exists())
             self.assertIn('slide:role="slide"', (project_root / "04-svg/page-001.svg").read_text(encoding="utf-8"))
             self.assertTrue((project_root / "04-artboard/raw/page-001.visual.png").exists())
@@ -1728,6 +1807,59 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             plan_path.write_text(json.dumps(plan), encoding="utf-8")
 
             with self.assertRaisesRegex(runner.RunnerError, "palette_review"):
+                runner.require_quality_gate_current(project_root)
+
+    def test_existing_quality_gate_with_stale_diversity_gate_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            plan_path = project_root / "02-plan/slide_plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["selection_metadata_receipt"] = "02-plan/selection-metadata.json"
+            plan["recipe_routing_receipt"] = "02-plan/recipe-routing-receipt.json"
+            plan["selection_receipt"] = "02-plan/theme-template-selection.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+            for rel, payload in {
+                "02-plan/selection-metadata.json": {"status": "passed"},
+                "02-plan/recipe-routing-receipt.json": {"status": "passed"},
+                "02-plan/theme-template-selection.json": {"status": "passed"},
+                "06-check/palette-review.json": {"status": "passed"},
+                "06-check/theme-template-selection-review.json": {"status": "passed"},
+                "06-check/plan-bundle-review.json": {"status": "passed"},
+                "06-check/diversity-gate.json": {"status": "passed", "version": 1},
+            }.items():
+                (project_root / rel).parent.mkdir(parents=True, exist_ok=True)
+                (project_root / rel).write_text(json.dumps(payload), encoding="utf-8")
+
+            gate_path = project_root / "06-check/quality-gate.json"
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            gate["inputs"].update(
+                {
+                    "palette_review": "06-check/palette-review.json",
+                    "theme_template_selection_review": "06-check/theme-template-selection-review.json",
+                    "plan_bundle_review": "06-check/plan-bundle-review.json",
+                    "diversity_gate": "06-check/diversity-gate.json",
+                }
+            )
+            gate["checks"].extend(
+                [
+                    {"name": "palette-review", "status": "passed"},
+                    {"name": "theme-template-selection-review", "status": "passed"},
+                    {"name": "plan-bundle-review", "status": "passed"},
+                    {"name": "diversity-gate", "status": "passed"},
+                ]
+            )
+            for input_name, rel in [
+                ("palette_review", "06-check/palette-review.json"),
+                ("theme_template_selection_review", "06-check/theme-template-selection-review.json"),
+                ("plan_bundle_review", "06-check/plan-bundle-review.json"),
+                ("diversity_gate", "06-check/diversity-gate.json"),
+            ]:
+                gate["input_hashes"][input_name] = runner.file_sha256(project_root / rel)
+            gate_path.write_text(json.dumps(gate), encoding="utf-8")
+            (project_root / "06-check/diversity-gate.json").write_text(json.dumps({"status": "passed", "version": 2}), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "diversity_gate hash is stale"):
                 runner.require_quality_gate_current(project_root)
 
     def test_dry_run_command_includes_assets_when_present(self) -> None:

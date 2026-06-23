@@ -1,0 +1,55 @@
+{
+  "version": "svglide-recipe-matching-out-of-sample/v1",
+  "cases": [
+    {
+      "case_id": "O01",
+      "prompt": "豆包 App 产品体验报告，讲核心功能、用户旅程和截图证据",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O02",
+      "prompt": "智谱与 MiniMax 公司介绍，既要产品对比，也要行业定位",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O03",
+      "prompt": "香港小吃文化介绍，重点讲茶餐厅、鱼蛋、点心和真实图片",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O04",
+      "prompt": "粤语文化介绍，讲语言、影视歌曲和香港城市记忆",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O05",
+      "prompt": "AI 教育产品融资 BP，讲市场规模、商业模式和投资亮点",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O06",
+      "prompt": "新能源供应链投资分析，讲市场格局、风险和机会",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O07",
+      "prompt": "城市治理年度复盘，讲数据趋势、政策动作和后续治理",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O08",
+      "prompt": "医疗培训课件，讲操作步骤、案例和考核",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O09",
+      "prompt": "ChinaJoy 趋势观察，包含现场图片、参展厂商和游戏行业方向",
+      "max_match_level": "L2"
+    },
+    {
+      "case_id": "O10",
+      "prompt": "一份关于未来生活方式的灵感合集，只说要高级感，没有受众和内容结构",
+      "max_match_level": "L4"
+    }
+  ]
+}

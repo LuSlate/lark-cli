@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://larksuite.local/svglide-diversity-gate.schema.json",
+  "title": "SVGlide diversity gate receipt",
+  "type": "object",
+  "required": ["schema_version", "stage", "status", "action", "inputs", "signature", "summary", "issues"],
+  "properties": {
+    "schema_version": {"const": "svglide-diversity-gate/v1"},
+    "stage": {"const": "diversity_gate"},
+    "status": {"enum": ["passed", "failed"]},
+    "action": {"enum": ["continue_pipeline", "repair_and_rerun"]},
+    "inputs": {
+      "type": "object",
+      "required": ["slide_plan", "history_limit"],
+      "additionalProperties": true
+    },
+    "signature": {
+      "type": "object",
+      "required": ["template_family_id", "style_pack_id", "palette_id", "combos", "combo_keys"],
+      "additionalProperties": true
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {"type": "object", "additionalProperties": true}
+    },
+    "summary": {
+      "type": "object",
+      "required": ["error_count", "comparison_count", "combo_count"],
+      "additionalProperties": true
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

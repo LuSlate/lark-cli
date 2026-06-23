@@ -17,8 +17,19 @@ STAGE = "theme_template_selection_review"
 SELECTION_PATH = Path("02-plan/theme-template-selection.json")
 PALETTE_SELECTION_PATH = Path("02-plan/palette-selection.json")
 PLAN_PATH = Path("02-plan/slide_plan.json")
+DESIGN_SELECTION_PATH = Path("02-plan/selection-metadata.json")
+RECIPE_ROUTING_RECEIPT_PATH = Path("02-plan/recipe-routing-receipt.json")
 CHECK_PATH = Path("06-check/theme-template-selection-review.json")
 RECEIPT_PATH = Path("receipts/theme_template_selection_review.json")
+REQUIRED_DESIGN_SELECTION_KEYS = [
+    "deck_recipe_selection",
+    "template_family_selection",
+    "style_pack_selection",
+    "density_mode_selection",
+    "component_variant_selection",
+    "image_treatment_selection",
+    "style_lock",
+]
 
 
 def now_iso() -> str:
@@ -56,6 +67,10 @@ def load_palette_selection(project_root: Path) -> dict[str, Any]:
 
 def load_plan(project_root: Path) -> dict[str, Any]:
     return read_json(project_root / PLAN_PATH)
+
+
+def load_design_selection(project_root: Path) -> dict[str, Any]:
+    return read_json(project_root / DESIGN_SELECTION_PATH)
 
 
 def allowed_template_ids(selection: dict[str, Any]) -> set[str]:
@@ -217,6 +232,42 @@ def validate_plan_against_selection(plan: dict[str, Any], selection: dict[str, A
     return issues
 
 
+def is_svg_route_plan(plan: dict[str, Any]) -> bool:
+    return plan.get("route") == "svglide-svg" or plan.get("output_mode") == "svglide-svg"
+
+
+def validate_design_asset_selection(plan: dict[str, Any], design_selection: dict[str, Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for key in REQUIRED_DESIGN_SELECTION_KEYS:
+        if not isinstance(design_selection.get(key), dict):
+            issues.append(issue("design_asset_selection_field_missing", f"selection-metadata.json must include {key}", path=key))
+    if issues:
+        return issues
+    if design_selection.get("status") != "passed":
+        issues.append(issue("design_asset_selection_not_passed", "design asset selection must be passed before SVG generation", path="status"))
+    recipe = design_selection["deck_recipe_selection"]
+    if recipe.get("match_level") == "L4":
+        issues.append(issue("design_asset_selection_l4", "L4 recipe selection must fail closed and cannot enter SVG generation", path="deck_recipe_selection.match_level"))
+    for key in ["recipe_id", "match_level", "confidence", "signals"]:
+        if key not in recipe:
+            issues.append(issue("design_asset_recipe_field_missing", f"deck_recipe_selection must include {key}", path=f"deck_recipe_selection.{key}"))
+    style_lock = design_selection["style_lock"]
+    style_pack = design_selection["style_pack_selection"]
+    image_treatment = design_selection["image_treatment_selection"]
+    if style_lock.get("deck_level") is not True:
+        issues.append(issue("style_lock_not_deck_level", "style_lock must be deck_level=true", path="style_lock.deck_level"))
+    if style_lock.get("style_pack_id") != style_pack.get("selected_style_pack_id"):
+        issues.append(issue("style_lock_style_pack_mismatch", "style_lock.style_pack_id must match selected_style_pack_id", path="style_lock.style_pack_id"))
+    if style_lock.get("image_treatment_id") != image_treatment.get("selected_image_treatment_id"):
+        issues.append(issue("style_lock_image_treatment_mismatch", "style_lock.image_treatment_id must match selected image treatment", path="style_lock.image_treatment_id"))
+    if style_lock.get("decoration_policy_id") in {"random_decorations", "decorative_noise"}:
+        issues.append(issue("style_lock_disallowed_decoration_policy", "random decoration policy is not allowed", path="style_lock.decoration_policy_id"))
+    for key in REQUIRED_DESIGN_SELECTION_KEYS:
+        if key in plan and plan.get(key) != design_selection.get(key):
+            issues.append(issue("design_asset_selection_plan_mismatch", f"slide_plan.{key} must match selection-metadata.json", path=key))
+    return issues
+
+
 def run_review(project_root: Path) -> dict[str, Any]:
     project_root = project_root.resolve()
     issues: list[dict[str, Any]] = []
@@ -235,10 +286,19 @@ def run_review(project_root: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError, ValueError) as err:
         plan = {}
         issues.append(issue("plan_missing", f"could not read {PLAN_PATH}: {err}", path=PLAN_PATH.as_posix()))
+    design_selection: dict[str, Any] = {}
+    design_selection_required = is_svg_route_plan(plan) or (project_root / DESIGN_SELECTION_PATH).exists()
+    if design_selection_required:
+        try:
+            design_selection = load_design_selection(project_root)
+        except (OSError, json.JSONDecodeError, ValueError) as err:
+            issues.append(issue("design_asset_selection_missing", f"could not read {DESIGN_SELECTION_PATH}: {err}", path=DESIGN_SELECTION_PATH.as_posix()))
     if selection and palette_selection and plan:
         issues.extend(selected_legacy_issues(selection, palette_selection))
         issues.extend(validate_project_theme(plan, selection))
         issues.extend(validate_plan_against_selection(plan, selection, palette_selection))
+        if design_selection:
+            issues.extend(validate_design_asset_selection(plan, design_selection))
     return {
         "schema_version": SCHEMA_VERSION,
         "stage": STAGE,
@@ -248,6 +308,8 @@ def run_review(project_root: Path) -> dict[str, Any]:
             "selection": SELECTION_PATH.as_posix(),
             "palette_selection": PALETTE_SELECTION_PATH.as_posix(),
             "plan": PLAN_PATH.as_posix(),
+            "design_selection": DESIGN_SELECTION_PATH.as_posix() if design_selection_required else None,
+            "recipe_routing_receipt": RECIPE_ROUTING_RECEIPT_PATH.as_posix() if design_selection_required else None,
         },
         "summary": {"error_count": len(issues)},
         "issues": issues,

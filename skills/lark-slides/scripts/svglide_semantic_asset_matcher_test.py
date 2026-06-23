@@ -985,6 +985,24 @@ class SVGlideSemanticAssetMatcherTest(unittest.TestCase):
         self.assertIn("system design", signals.get("occasion", []))
         self.assertIn("architecture", signals.get("content_shape", []))
 
+    def test_design_asset_metadata_selection_contains_total_plan_contract(self) -> None:
+        result = matcher.select_design_asset_metadata("智谱和 MiniMax 产品对比，关注真实产品截图和能力矩阵")
+
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["deck_recipe_selection"]["recipe_id"], "consumer_ai_product_analysis")
+        for key in [
+            "deck_recipe_selection",
+            "template_family_selection",
+            "style_pack_selection",
+            "density_mode_selection",
+            "component_variant_selection",
+            "image_treatment_selection",
+            "style_lock",
+        ]:
+            self.assertIn(key, result)
+        self.assertEqual(result["style_lock"]["style_pack_id"], result["style_pack_selection"]["selected_style_pack_id"])
+        self.assertEqual(result["image_treatment_selection"]["selected_image_treatment_id"], "real_product_screenshot")
+
 
 def make_case_test(case: SemanticCase):
     def test(self: SVGlideSemanticAssetMatcherTest) -> None:

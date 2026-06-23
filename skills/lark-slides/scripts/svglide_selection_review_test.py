@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_palette_selector
+import svglide_recipe_selector
 import svglide_selection_review as review
 import svglide_theme_template_selector
 
@@ -249,6 +250,46 @@ class SelectionReviewTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "failed")
         self.assertIn("selection_trace_missing", {item["code"] for item in result["issues"]})
+
+    def test_selection_review_requires_design_asset_metadata_for_svg_route(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            make_project(root)
+            plan = json.loads((root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+            plan["route"] = "svglide-svg"
+            write_json(root / "02-plan/slide_plan.json", plan)
+
+            result = review.run_review(root)
+
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("design_asset_selection_missing", {item["code"] for item in result["issues"]})
+
+    def test_selection_review_accepts_complete_design_asset_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            make_project(root)
+            metadata = svglide_recipe_selector.select_design_assets("内部业务复盘，管理层阅读，包含 KPI 和行动")
+            write_json(root / "02-plan/selection-metadata.json", metadata)
+            write_json(root / "02-plan/recipe-routing-receipt.json", metadata)
+            plan = json.loads((root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+            plan["route"] = "svglide-svg"
+            plan["selection_metadata_receipt"] = "02-plan/selection-metadata.json"
+            plan["recipe_routing_receipt"] = "02-plan/recipe-routing-receipt.json"
+            for key in [
+                "deck_recipe_selection",
+                "template_family_selection",
+                "style_pack_selection",
+                "density_mode_selection",
+                "component_variant_selection",
+                "image_treatment_selection",
+                "style_lock",
+            ]:
+                plan[key] = metadata[key]
+            write_json(root / "02-plan/slide_plan.json", plan)
+
+            result = review.run_review(root)
+
+        self.assertEqual(result["status"], "passed", result["issues"])
 
 
 if __name__ == "__main__":

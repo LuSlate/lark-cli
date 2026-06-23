@@ -10,6 +10,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import svglide_recipe_selector
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 LARK_SLIDES_DIR = SCRIPT_DIR.parent
@@ -354,7 +356,20 @@ def match_templates(query: str, limit: int = 3, page_count: int | None = None, r
 
 def plan_with_template_family(query: str, page_count: int = 10) -> dict[str, Any]:
     result = match_templates(query, limit=3, page_count=page_count)
+    design_selection = svglide_recipe_selector.select_design_assets(query)
+    preferred_template_id = None
+    if design_selection.get("status") == "passed":
+        preferred_template_id = (
+            design_selection.get("template_family_selection", {}).get("selected_template_id")
+            if isinstance(design_selection.get("template_family_selection"), dict)
+            else None
+        )
     selected_match = result["matches"][0]
+    if preferred_template_id:
+        selected_match = next(
+            (match for match in result["matches"] if match.get("template_id") == preferred_template_id),
+            selected_match,
+        )
     selected = selected_match["template_id"]
     variants = selected_match["recommended_variants"]
     if not variants:
@@ -373,7 +388,7 @@ def plan_with_template_family(query: str, page_count: int = 10) -> dict[str, Any
                 "asset_strategy": choose_asset_strategy(blocks[-1], data_available=False),
             }
         )
-    return {
+    plan = {
         "version": "beautiful-template-plan/v1",
         "target_slide_count": page_count,
         "template_family_selection": {
@@ -390,6 +405,20 @@ def plan_with_template_family(query: str, page_count: int = 10) -> dict[str, Any
         },
         "slides": slides,
     }
+    if design_selection.get("status") == "passed":
+        for key in [
+            "deck_recipe_selection",
+            "style_pack_selection",
+            "density_mode_selection",
+            "component_variant_selection",
+            "image_treatment_selection",
+            "style_lock",
+        ]:
+            plan[key] = design_selection[key]
+        plan["selection_metadata"] = design_selection
+        plan["style_lock"]["template_family_id"] = selected
+        plan["template_family_selection"]["recipe_selected_template_id"] = design_selection["template_family_selection"]["selected_template_id"]
+    return plan
 
 
 def main() -> int:

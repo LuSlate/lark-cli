@@ -61,6 +61,7 @@ STAGES = [
     "semantic_review",
     "runtime_review",
     "visual_distinctness_review",
+    "diversity_gate",
     "theme_adherence",
     "quality_gate",
     "generation_benchmark",
@@ -98,6 +99,8 @@ STAGE_ALIASES = {
     "runtime-review": "runtime_review",
     "visual-distinctness": "visual_distinctness_review",
     "visual-distinctness-review": "visual_distinctness_review",
+    "diversity-gate": "diversity_gate",
+    "diversity-review": "diversity_gate",
     "theme-adherence": "theme_adherence",
     "generate": "generate_svg",
     "generate-svg": "generate_svg",
@@ -159,6 +162,7 @@ IMPLEMENTED_STAGES = {
     "semantic_review",
     "runtime_review",
     "visual_distinctness_review",
+    "diversity_gate",
     "theme_adherence",
     "quality_gate",
     "generation_benchmark",
@@ -1095,6 +1099,17 @@ def run_script_stage(
         command=command,
         wall_time_seconds=time.perf_counter() - started_perf,
     )
+    parsed_success = parse_json_or_none(completed.stdout)
+    if stage == "contract_compile" and isinstance(parsed_success, dict):
+        receipt["contract_manifest"] = parsed_success.get("contract_manifest") or "04-svg/contract/manifest.json"
+        receipt["raw_visual_manifest_sha256"] = parsed_success.get("raw_visual_manifest_sha256") or optional_project_file_hash(
+            project_root, "04-artboard/raw/manifest.json"
+        )
+        if "asset_injection_summary" in parsed_success:
+            receipt["asset_injection_summary"] = parsed_success["asset_injection_summary"]
+        if "summary" in parsed_success:
+            receipt["contract_summary"] = parsed_success["summary"]
+        write_json(receipt_path(project_root, stage), receipt)
     if repair_result is not None:
         receipt["auto_repair"] = repair_result
         write_json(receipt_path(project_root, stage), receipt)
@@ -1224,6 +1239,32 @@ def theme_template_selection_path(project_root: Path) -> Path:
     return project_root / "02-plan" / "theme-template-selection.json"
 
 
+def design_selection_path(project_root: Path) -> Path:
+    return project_root / "02-plan" / "selection-metadata.json"
+
+
+def recipe_routing_receipt_path(project_root: Path) -> Path:
+    return project_root / "02-plan" / "recipe-routing-receipt.json"
+
+
+def project_prompt(project_root: Path) -> str:
+    instruction = read_json_optional(project_root / "00-input" / "instruction.json")
+    for key in ["raw_prompt", "prompt", "brief", "instruction"]:
+        value = instruction.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    plan = read_json_optional(plan_path(project_root))
+    text_parts = [str(plan.get(key) or "") for key in ["title", "topic", "scenario", "audience"]]
+    slides = plan.get("slides")
+    if isinstance(slides, list):
+        for slide in slides[:3]:
+            if isinstance(slide, dict):
+                text_parts.extend(str(slide.get(key) or "") for key in ["title", "key_message", "section", "role"])
+    manifest = read_json_optional(project_root / "01-project" / "project_manifest.json")
+    text_parts.append(str(manifest.get("title") or ""))
+    return " ".join(part.strip() for part in text_parts if part and part.strip())
+
+
 def plan_declares_selection(project_root: Path) -> bool:
     path = plan_path(project_root)
     if not path.exists():
@@ -1237,9 +1278,43 @@ def plan_declares_selection(project_root: Path) -> bool:
     return bool(
         payload.get("selection_receipt")
         or payload.get("palette_selection_receipt")
+        or payload.get("selection_metadata_receipt")
+        or payload.get("recipe_routing_receipt")
+        or payload.get("route") == ROUTE
+        or payload.get("output_mode") == ROUTE
         or isinstance(payload.get("project_palette"), dict)
         or isinstance(payload.get("project_theme"), dict)
     )
+
+
+def plan_has_selection_artifacts(project_root: Path) -> bool:
+    path = plan_path(project_root)
+    if not path.exists():
+        return False
+    try:
+        payload = read_json(path)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(payload, dict):
+        return False
+    if (
+        payload.get("selection_receipt")
+        or payload.get("palette_selection_receipt")
+        or payload.get("selection_metadata_receipt")
+        or payload.get("recipe_routing_receipt")
+        or isinstance(payload.get("project_palette"), dict)
+        or isinstance(payload.get("project_theme"), dict)
+    ):
+        return True
+    slides = payload.get("slides")
+    if isinstance(slides, list):
+        for slide in slides:
+            if not isinstance(slide, dict):
+                continue
+            spec = slide.get("canvas_spec")
+            if isinstance(spec, dict) and (spec.get("palette_id") or spec.get("selection_trace")):
+                return True
+    return False
 
 
 def selection_gate_required(project_root: Path, state: dict[str, Any]) -> bool:
@@ -1250,13 +1325,15 @@ def selection_gate_required(project_root: Path, state: dict[str, Any]) -> bool:
         or "selection_review" in stages
         or palette_selection_path(project_root).exists()
         or theme_template_selection_path(project_root).exists()
-        or plan_declares_selection(project_root)
+        or design_selection_path(project_root).exists()
+        or plan_has_selection_artifacts(project_root)
     )
 
 
 def apply_selection_receipts_to_plan(project_root: Path, plan: dict[str, Any]) -> bool:
     palette_path = palette_selection_path(project_root)
     selection_path = theme_template_selection_path(project_root)
+    design_path = design_selection_path(project_root)
     if not palette_path.exists() or not selection_path.exists():
         return False
     try:
@@ -1275,8 +1352,32 @@ def apply_selection_receipts_to_plan(project_root: Path, plan: dict[str, Any]) -
     if plan.get("selection_receipt") != "02-plan/theme-template-selection.json":
         plan["selection_receipt"] = "02-plan/theme-template-selection.json"
         changed = True
+    if design_path.exists():
+        try:
+            design_selection = read_json(design_path)
+        except (OSError, json.JSONDecodeError):
+            design_selection = {}
+        if isinstance(design_selection, dict) and design_selection.get("status") == "passed":
+            for key in [
+                "deck_recipe_selection",
+                "template_family_selection",
+                "style_pack_selection",
+                "density_mode_selection",
+                "component_variant_selection",
+                "image_treatment_selection",
+                "style_lock",
+            ]:
+                if isinstance(design_selection.get(key), dict) and plan.get(key) != design_selection[key]:
+                    plan[key] = design_selection[key]
+                    changed = True
+            if plan.get("selection_metadata_receipt") != "02-plan/selection-metadata.json":
+                plan["selection_metadata_receipt"] = "02-plan/selection-metadata.json"
+                changed = True
+            if plan.get("recipe_routing_receipt") != "02-plan/recipe-routing-receipt.json":
+                plan["recipe_routing_receipt"] = "02-plan/recipe-routing-receipt.json"
+                changed = True
     if selection.get("confidence") == "low" and not plan.get("fallback_policy"):
-        plan["fallback_policy"] = "auto"
+        plan["fallback_policy"] = "strict-native"
         plan["selection_fallback_policy"] = {
             "reason": "low_confidence_theme_template_selection",
             "selection_fallback_policy": selection.get("fallback_policy") or "deterministic_ranked_fallback",
@@ -1465,6 +1566,10 @@ def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
     receipt["plan_sha256"] = file_sha256(plan)
     receipt["visual_identity_added"] = bool(locals().get("visual_identity_added", False))
     receipt["selection_receipts_applied"] = bool(locals().get("selection_applied", False))
+    receipt["design_asset_selection_applied"] = bool(
+        payload.get("selection_metadata_receipt") == "02-plan/selection-metadata.json"
+        and isinstance(payload.get("style_lock"), dict)
+    )
     receipt["summary"] = {"error_count": len(schema_issues)}
     receipt["issues"] = schema_issues
     write_json(receipt_path(project_root, "plan"), receipt)
@@ -1475,9 +1580,24 @@ def run_plan_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
 
 def run_select_style_stage(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
     started_at = now_iso()
+    prompt = project_prompt(project_root)
     commands = [
+        [
+            "python3",
+            (SCRIPT_DIR / "svglide_recipe_selector.py").as_posix(),
+            "--prompt",
+            prompt,
+            "--out",
+            design_selection_path(project_root).as_posix(),
+        ],
         ["python3", (SCRIPT_DIR / "svglide_palette_selector.py").as_posix(), project_root.as_posix(), "--pretty"],
         ["python3", (SCRIPT_DIR / "svglide_theme_template_selector.py").as_posix(), project_root.as_posix(), "--pretty"],
+    ]
+    receipt_command = [
+        "select_style_pipeline",
+        (SCRIPT_DIR / "svglide_recipe_selector.py").as_posix(),
+        (SCRIPT_DIR / "svglide_palette_selector.py").as_posix(),
+        (SCRIPT_DIR / "svglide_theme_template_selector.py").as_posix(),
     ]
     stdout_parts: list[str] = []
     stderr_parts: list[str] = []
@@ -1493,8 +1613,8 @@ def run_select_style_stage(project_root: Path, state: dict[str, Any]) -> dict[st
                 "failed",
                 started_at=started_at,
                 inputs=["00-input/instruction.json", "source/evidence.json"],
-                outputs=["02-plan/palette-selection.json", "02-plan/theme-template-selection.json"],
-                command=[" / ".join(shlex.join(item) for item in commands)],
+                outputs=["02-plan/selection-metadata.json", "02-plan/recipe-routing-receipt.json", "02-plan/palette-selection.json", "02-plan/theme-template-selection.json"],
+                command=receipt_command,
                 error={
                     "code": "stage_command_failed",
                     "returncode": completed.returncode,
@@ -1510,13 +1630,25 @@ def run_select_style_stage(project_root: Path, state: dict[str, Any]) -> dict[st
         started_at=started_at,
         inputs=["00-input/instruction.json", "source/evidence.json"],
         outputs=[
+            "02-plan/selection-metadata.json",
+            "02-plan/recipe-routing-receipt.json",
             "02-plan/palette-selection.json",
             "02-plan/theme-template-selection.json",
+            "receipts/recipe_selection.json",
             "receipts/palette_selection.json",
             "receipts/theme_template_selection.json",
         ],
-        command=[" / ".join(shlex.join(item) for item in commands)],
+        command=receipt_command,
     )
+    design_selection = read_json(design_selection_path(project_root))
+    write_json(recipe_routing_receipt_path(project_root), design_selection)
+    write_json(project_root / "receipts" / "recipe_selection.json", design_selection)
+    receipt["recipe_selection"] = {
+        "recipe_id": design_selection.get("deck_recipe_selection", {}).get("recipe_id") if isinstance(design_selection.get("deck_recipe_selection"), dict) else None,
+        "match_level": design_selection.get("deck_recipe_selection", {}).get("match_level") if isinstance(design_selection.get("deck_recipe_selection"), dict) else None,
+        "style_pack_id": design_selection.get("style_pack_selection", {}).get("selected_style_pack_id") if isinstance(design_selection.get("style_pack_selection"), dict) else None,
+        "image_treatment_id": design_selection.get("image_treatment_selection", {}).get("selected_image_treatment_id") if isinstance(design_selection.get("image_treatment_selection"), dict) else None,
+    }
     receipt["stdout"] = "\n".join(part.strip() for part in stdout_parts if part.strip())
     receipt["stderr"] = "\n".join(part.strip() for part in stderr_parts if part.strip())
     write_json(receipt_path(project_root, "select_style"), receipt)
@@ -2138,11 +2270,12 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
         raise RunnerError("quality gate is missing theme-validate check; rerun quality_gate")
     if "theme-adherence" not in check_names:
         raise RunnerError("quality gate is missing theme-adherence check; rerun quality_gate")
-    if plan_declares_selection(project_root):
+    if plan_has_selection_artifacts(project_root):
         for input_name, rel, check_name in [
             ("palette_review", "06-check/palette-review.json", "palette-review"),
             ("theme_template_selection_review", "06-check/theme-template-selection-review.json", "theme-template-selection-review"),
             ("plan_bundle_review", "06-check/plan-bundle-review.json", "plan-bundle-review"),
+            ("diversity_gate", "06-check/diversity-gate.json", "diversity-gate"),
         ]:
             if inputs.get(input_name) != rel:
                 raise RunnerError(f"quality gate is missing {input_name} input; rerun selection_review and quality_gate")
@@ -2175,6 +2308,7 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
             ("palette_review", "06-check/palette-review.json"),
             ("theme_template_selection_review", "06-check/theme-template-selection-review.json"),
             ("plan_bundle_review", "06-check/plan-bundle-review.json"),
+            ("diversity_gate", "06-check/diversity-gate.json"),
         ]:
             if input_hashes.get(input_name) != optional_project_file_hash(project_root, rel):
                 raise RunnerError(f"quality gate {input_name} hash is stale; rerun quality_gate")
@@ -2999,6 +3133,17 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["02-plan/slide_plan.json"],
             outputs=["06-check/visual-distinctness.json"],
         )
+    if stage == "diversity_gate":
+        require_stage_passed(state, "visual_distinctness_review")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_diversity_gate.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "06-check" / "diversity-gate.json",
+            inputs=["02-plan/slide_plan.json", "02-plan/selection-metadata.json"],
+            outputs=["06-check/diversity-gate.json"],
+        )
     if stage == "theme_adherence":
         require_stage_passed(state, "visual_distinctness_review")
         require_stage_passed(state, "theme_validate")
@@ -3015,6 +3160,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         if selection_gate_required(project_root, state):
             require_stage_passed(state, "palette_review")
             require_stage_passed(state, "selection_review")
+            require_stage_passed(state, "diversity_gate")
         require_stage_passed(state, "preflight")
         require_stage_passed(state, "preview_lint")
         require_stage_passed(state, "aesthetic_review")
@@ -3041,6 +3187,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
                 "06-check/palette-review.json",
                 "06-check/theme-template-selection-review.json",
                 "06-check/plan-bundle-review.json",
+                "06-check/diversity-gate.json",
                 "receipts/generate_svg.json",
             ],
             outputs=["06-check/quality-gate.json"],
@@ -3073,6 +3220,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         if artboard_visual_acceptance_required(project_root):
             require_stage_passed(state, "visual_acceptance")
         require_visual_acceptance_current(project_root)
+        ppe_outputs = ["07-create/ppe-proof.json", "07-create/ppe-create-probe.json"]
+        if project_has_image_assets(project_root):
+            ppe_outputs.append("07-create/ppe-image-probe.json")
         return run_script_stage(
             project_root,
             state,
@@ -3080,7 +3230,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             ["python3", (SCRIPT_DIR / "svglide_ppe_proof.py").as_posix(), project_root.as_posix(), "--pretty"],
             output_json=project_root / "07-create" / "ppe-proof.json",
             inputs=["06-check/quality-gate.json", "07-create/dry-run.json", "07-create/ppe-proof.input.json", "03-assets/assets.json"],
-            outputs=["07-create/ppe-proof.json", "07-create/ppe-create-probe.json", "07-create/ppe-image-probe.json"],
+            outputs=ppe_outputs,
         )
     if stage == "pre_submit_review":
         require_stage_passed(state, "ppe_proof")
@@ -3168,7 +3318,9 @@ def run_stage(project_root: Path, stage: str, *, command: list[str] | None = Non
         fail_if_existing_stage_failed(normalized, record)
         require_existing_stage_current(project_root, normalized, profile=profile)
         write_timing_report(project_root, state)
-        return {"stage": normalized, "status": "passed", "state": state}
+        response = read_json_optional(receipt_path(project_root, normalized))
+        response.update({"stage": normalized, "status": "passed", "state": state})
+        return response
 
     if normalized not in IMPLEMENTED_STAGES:
         block_unimplemented_stage(
@@ -3179,7 +3331,9 @@ def run_stage(project_root: Path, stage: str, *, command: list[str] | None = Non
         )
 
     receipt = run_implemented_stage(project_root, normalized, state, profile=profile)
-    return {"stage": normalized, "status": receipt["status"], "state": load_state(project_root)}
+    response = dict(receipt)
+    response.update({"stage": normalized, "status": receipt["status"], "state": load_state(project_root)})
+    return response
 
 
 def collected_failure_from_stage(project_root: Path, stage: str, err: RunnerError) -> dict[str, Any]:

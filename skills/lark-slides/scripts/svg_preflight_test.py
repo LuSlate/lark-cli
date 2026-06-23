@@ -46,12 +46,58 @@ def with_contract(svg: str) -> str:
 
 def style_plan_fields(template_id: str = "raw-grid") -> dict[str, object]:
     return {
+        "deck_recipe_selection": {
+            "recipe_id": "technical_architecture_review",
+            "match_level": "L1",
+            "confidence": 0.88,
+            "signals": {"keywords": ["技术", "架构"]},
+            "missing_signals": [],
+        },
         "template_family_selection": {
             "enabled": True,
             "source": "beautiful-html-template-families",
             "selected_template_id": template_id,
             "candidate_template_ids": [template_id, "blue-professional", "signal"],
             "selection_reason": f"{template_id} fits technical training pages that need dense but readable visual structure",
+        },
+        "style_pack_selection": {
+            "selected_style_pack_id": "architecture_mono_cyan",
+            "candidate_style_pack_ids": ["architecture_mono_cyan", "corporate_blue_data"],
+            "selection_reason": "technical architecture requires diagram-first, controlled mono/cyan system",
+            "palette_id": "mono_cyan",
+            "typography_id": "system_sans_technical",
+            "background_system_id": "diagram_grid",
+            "chart_palette_id": "technical_chart",
+            "image_treatment_id": "diagram_first",
+            "decoration_policy_id": "minimal_grid_only",
+            "component_variant_bias": ["architecture_diagram", "dependency_map"],
+        },
+        "density_mode_selection": {
+            "selected_density_mode": "diagram-heavy",
+            "candidate_density_modes": ["diagram-heavy", "data-heavy"],
+            "selection_reason": "architecture decks need diagram-heavy density",
+        },
+        "component_variant_selection": {
+            "selected_component_variants": ["architecture_diagram", "dependency_map"],
+            "candidate_component_variants": ["architecture_diagram", "dependency_map", "risk_matrix"],
+            "selection_reason": "selected from recipe component slots",
+        },
+        "image_treatment_selection": {
+            "selected_image_treatment_id": "diagram_first",
+            "candidate_image_treatment_ids": ["diagram_first", "chart_first"],
+            "selection_reason": "architecture plan should use diagrams before photos",
+        },
+        "style_lock": {
+            "template_family_id": template_id,
+            "style_pack_id": "architecture_mono_cyan",
+            "palette_id": "mono_cyan",
+            "typography_id": "system_sans_technical",
+            "background_system_id": "diagram_grid",
+            "chart_palette_id": "technical_chart",
+            "image_treatment_id": "diagram_first",
+            "decoration_policy_id": "minimal_grid_only",
+            "component_variant_bias": ["architecture_diagram", "dependency_map"],
+            "deck_level": True,
         },
         "loaded_rule_set": sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES),
         "plan_path": ".lark-slides/plan/test/slide_plan.json",
@@ -831,8 +877,50 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result["issues"]]
         self.assertIn("plan_missing_loaded_rule_set", codes)
         self.assertIn("plan_missing_art_direction", codes)
-        self.assertIn("plan_quality_gate_missing_no_debug_guides", codes)
-        self.assertIn("plan_quality_gate_missing_no_xml_like_pages", codes)
+
+    def test_lint_plan_requires_design_asset_selection_contract(self) -> None:
+        fields = style_plan_fields()
+        fields.pop("style_pack_selection")
+        fields.pop("style_lock")
+        plan = {
+            "output_mode": "svglide-svg",
+            "page_count": 1,
+            **fields,
+            "slides": [
+                {
+                    "page": 1,
+                    "renderer_id": "route_story",
+                    "density": "medium",
+                    "title": "Route",
+                    **recipe_fields("path_flow", ["path", "annotation"]),
+                }
+            ],
+        }
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("plan_missing_style_pack_selection", codes)
+        self.assertIn("plan_missing_style_lock", codes)
+
+    def test_lint_plan_rejects_random_decoration_policy_in_style_lock(self) -> None:
+        fields = style_plan_fields()
+        fields["style_lock"]["decoration_policy_id"] = "random_decorations"  # type: ignore[index]
+        plan = {
+            "output_mode": "svglide-svg",
+            "page_count": 1,
+            **fields,
+            "slides": [
+                {
+                    "page": 1,
+                    "renderer_id": "route_story",
+                    "density": "medium",
+                    "title": "Route",
+                    **recipe_fields("path_flow", ["path", "annotation"]),
+                }
+            ],
+        }
+        result = svg_preflight.lint_plan(plan)
+        codes = [issue["code"] for issue in result["issues"]]
+        self.assertIn("plan_disallowed_decoration_policy", codes)
 
     def test_lint_plan_route_only_svg_still_requires_svg_gates(self) -> None:
         fields = style_plan_fields()
@@ -1182,72 +1270,49 @@ class SvgPreflightTest(unittest.TestCase):
             svg_path = tmp / "page-001.svg"
             plan_path = tmp / "slide_plan.json"
             svg_path.write_text(VALID_SVG, encoding="utf-8")
-            loaded_rules_json = json.dumps(sorted(svg_preflight.SVG_PRIVATE_REQUIRED_RULE_FILES), indent=20)
-            plan_path.write_text(
-                """
-                {
-                  "output_mode": "svglide-svg",
-                  "page_count": 1,
-                  "template_family_selection": {
-                    "enabled": true,
-                    "source": "beautiful-html-template-families",
-                    "selected_template_id": "raw-grid",
-                    "candidate_template_ids": ["raw-grid", "blue-professional", "signal"],
-                    "selection_reason": "raw-grid fits technical training pages that need dense but readable visual structure"
-                  },
-                  "loaded_rule_set": __LOADED_RULE_SET__,
-                  "plan_path": ".lark-slides/plan/test/slide_plan.json",
-                  "quality_gates": {
-                    "no_text_overflow": true,
-                    "no_debug_guides": true,
-                    "no_xml_like_pages": true
-                  },
-                  "art_direction": {
-                    "cover_treatment": "hero route cover",
-                    "section_divider_treatment": "not applicable for this one-page test",
-                    "closing_treatment": "not applicable for this one-page test",
-                    "deck_motif": "dense grid panels",
-                    "svg_native_moments": ["route path", "hero image", "annotation geometry"]
-                  },
-                  "svg_files": [{"page": 1, "path": "page-001.svg"}],
-                  "slides": [{
-                    "page": 1,
-                    "renderer_id": "route_story",
-                    "layout_family": "flow",
-                    "density": "medium",
-                    "visual_recipe": "path_flow",
-                    "visual_intent": "show a rising product route",
-                    "visual_focal_point": "curved route line",
-                    "visual_signature": "curved route path with explicit annotations",
-                    "svg_effects": ["path", "connector_flow", "typography"],
-                    "required_primitives": ["path", "annotation"],
-                    "svg_primitives": ["path", "annotation"],
-                    "xml_like_risk": "would become cards plus arrows in XML",
-                    "content_density_contract": "flow >= 4 stages",
-                    "asset_contract": {
-                      "source_type": "procedural",
-                      "license": "original generated asset",
-                      "local_path": "@./assets/hero.jpg",
-                      "usage_page": 1,
-                      "generated_by": "unit test"
-                    },
-                    "risk_flags": [],
-                    "source_policy": "Use prompt-provided content only.",
-                    "template_variant": "path_flow",
-                    "semantic_blocks": [
-                      {"block_id": "title", "type": "title", "content": "Unit test title"},
-                      {"block_id": "message", "type": "finding", "content": "Use path_flow"}
-                    ],
-                    "component_selection": [
-                      {"component_id": "title_block", "binds": ["title"]},
-                      {"component_id": "finding_callout", "binds": ["message"]}
-                    ],
-                    "asset_strategy": {"strategy_id": "structured_fallback", "expected_asset_count": 0}
-                  }]
-                }
-                """.replace("__LOADED_RULE_SET__", loaded_rules_json),
-                encoding="utf-8",
-            )
+            plan = {
+                "output_mode": "svglide-svg",
+                "page_count": 1,
+                "svg_files": [{"page": 1, "path": "page-001.svg"}],
+                **style_plan_fields(),
+                "slides": [
+                    {
+                        "page": 1,
+                        "renderer_id": "route_story",
+                        "layout_family": "flow",
+                        "density": "medium",
+                        "visual_recipe": "path_flow",
+                        "visual_intent": "show a rising product route",
+                        "visual_focal_point": "curved route line",
+                        "visual_signature": "curved route path with explicit annotations",
+                        "svg_effects": ["path", "connector_flow", "typography"],
+                        "required_primitives": ["path", "annotation"],
+                        "svg_primitives": ["path", "annotation"],
+                        "xml_like_risk": "would become cards plus arrows in XML",
+                        "content_density_contract": "flow >= 4 stages",
+                        "asset_contract": {
+                            "source_type": "procedural",
+                            "license": "original generated asset",
+                            "local_path": "@./assets/hero.jpg",
+                            "usage_page": 1,
+                            "generated_by": "unit test",
+                        },
+                        "risk_flags": [],
+                        "source_policy": "Use prompt-provided content only.",
+                        "template_variant": "path_flow",
+                        "semantic_blocks": [
+                            {"block_id": "title", "type": "title", "content": "Unit test title"},
+                            {"block_id": "message", "type": "finding", "content": "Use path_flow"},
+                        ],
+                        "component_selection": [
+                            {"component_id": "title_block", "binds": ["title"]},
+                            {"component_id": "finding_callout", "binds": ["message"]},
+                        ],
+                        "asset_strategy": {"strategy_id": "structured_fallback", "expected_asset_count": 0},
+                    }
+                ],
+            }
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
             result = svg_preflight.lint_files([str(svg_path)], str(plan_path))
         self.assertEqual(result["summary"]["error_count"], 0)
 

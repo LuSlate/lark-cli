@@ -1,0 +1,299 @@
+{
+  "version": "svglide-recipe-matching-cases/v1",
+  "cases": [
+    {
+      "case_id": "G01",
+      "prompt": "内部业务复盘，管理层阅读，包含指标、问题、原因和后续行动",
+      "expected_primary_type": "经营 / 业务 / 数据分析与复盘",
+      "expected_recipe_ids": ["internal_business_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G02",
+      "prompt": "季度经营 review，董事会阅读，正式克制，需要 KPI dashboard 和 owner action",
+      "expected_primary_type": "经营 / 业务 / 数据分析与复盘",
+      "expected_recipe_ids": ["internal_business_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G03",
+      "prompt": "渠道健康度复盘，展示指标、瓶颈排序、转化和下季度行动",
+      "expected_primary_type": "经营 / 业务 / 数据分析与复盘",
+      "expected_recipe_ids": ["internal_business_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G04",
+      "prompt": "用户增长业务汇报，包含留存、转化、问题诊断和路线图",
+      "expected_primary_type": "经营 / 业务 / 数据分析与复盘",
+      "expected_recipe_ids": ["internal_business_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G05",
+      "prompt": "年度业务总结，给经营负责人看，重点讲 KPI、趋势和下一步动作",
+      "expected_primary_type": "经营 / 业务 / 数据分析与复盘",
+      "expected_recipe_ids": ["internal_business_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G06",
+      "prompt": "豆包 App 竞品分析，关注产品能力、用户场景和真实产品截图",
+      "expected_primary_type": "AI / 产品 / App 分析",
+      "expected_recipe_ids": ["consumer_ai_product_analysis"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G07",
+      "prompt": "智谱和 MiniMax 对比，讲公司定位、模型能力、应用场景和产品截图",
+      "expected_primary_type": "AI / 产品 / App 分析",
+      "expected_recipe_ids": ["consumer_ai_product_analysis"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G08",
+      "prompt": "AI 智能体产品竞品分析，比较功能矩阵、场景和商业化方向",
+      "expected_primary_type": "AI / 产品 / App 分析",
+      "expected_recipe_ids": ["consumer_ai_product_analysis"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G09",
+      "prompt": "Kimi、通义和豆包 App 对比，展示能力矩阵和真实界面证据",
+      "expected_primary_type": "AI / 产品 / App 分析",
+      "expected_recipe_ids": ["consumer_ai_product_analysis"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G10",
+      "prompt": "生成式 AI 应用市场分析，重点讲产品定位、用户场景和竞争差异",
+      "expected_primary_type": "AI / 产品 / App 分析",
+      "expected_recipe_ids": ["consumer_ai_product_analysis"],
+      "min_match_level": "L2"
+    },
+    {
+      "case_id": "G11",
+      "prompt": "香港小吃介绍，讲茶餐厅、点心、街头美食和旅行推荐",
+      "expected_primary_type": "文化 / 美食 / 城市旅行",
+      "expected_recipe_ids": ["food_culture_guide"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G12",
+      "prompt": "广州早茶与粤式点心指南，包含菜单、品类和城市烟火",
+      "expected_primary_type": "文化 / 美食 / 城市旅行",
+      "expected_recipe_ids": ["food_culture_guide"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G13",
+      "prompt": "成都街头小吃旅行攻略，温暖图文风格，需要真实美食图片",
+      "expected_primary_type": "文化 / 美食 / 城市旅行",
+      "expected_recipe_ids": ["food_culture_guide"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G14",
+      "prompt": "城市夜市美食推荐，包含品类地图、餐饮文化和路线建议",
+      "expected_primary_type": "文化 / 美食 / 城市旅行",
+      "expected_recipe_ids": ["food_culture_guide"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G15",
+      "prompt": "粤语文化介绍，讲语言历史、影视音乐和当代表达",
+      "expected_primary_type": "文化 / 语言 / 地域介绍",
+      "expected_recipe_ids": ["culture_heritage_intro"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G16",
+      "prompt": "岭南文化科普，包含历史、传统、非遗和城市符号",
+      "expected_primary_type": "文化 / 语言 / 地域介绍",
+      "expected_recipe_ids": ["culture_heritage_intro"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G17",
+      "prompt": "香港流行文化介绍，讲影视、音乐、城市记忆和时代变化",
+      "expected_primary_type": "文化 / 语言 / 地域介绍",
+      "expected_recipe_ids": ["culture_heritage_intro"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G18",
+      "prompt": "ChinaJoy 展会报告，讲现场、展台、观众、厂商和行业趋势",
+      "expected_primary_type": "活动 / 展会 / 行业观察",
+      "expected_recipe_ids": ["event_expo_report"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G19",
+      "prompt": "游戏展活动复盘，包含参展方地图、观众画像和互动体验",
+      "expected_primary_type": "活动 / 展会 / 行业观察",
+      "expected_recipe_ids": ["event_expo_report"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G20",
+      "prompt": "品牌发布会现场总结，讲现场图片、发布节奏和传播趋势",
+      "expected_primary_type": "活动 / 展会 / 行业观察",
+      "expected_recipe_ids": ["event_expo_report", "brand_campaign_launch"],
+      "min_match_level": "L2"
+    },
+    {
+      "case_id": "G21",
+      "prompt": "新能源供应链投资分析，给投委会看，包含市场格局、玩家分层、机会和风险",
+      "expected_primary_type": "市场 / 投资 / 行业研究",
+      "expected_recipe_ids": ["market_investment_analysis"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G22",
+      "prompt": "城市治理年度复盘，包含数据趋势、问题诊断、政策动作和风险",
+      "expected_primary_type": "市场 / 投资 / 行业研究",
+      "expected_recipe_ids": ["internal_business_review", "market_investment_analysis"],
+      "min_match_level": "L2"
+    },
+    {
+      "case_id": "G23",
+      "prompt": "消费行业市场分析，讲市场规模、玩家分层、竞争格局和商业化",
+      "expected_primary_type": "市场 / 投资 / 行业研究",
+      "expected_recipe_ids": ["market_investment_analysis"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G24",
+      "prompt": "AI 教育产品融资 BP，面向投资人，讲市场规模、商业模式、收入增长和团队",
+      "expected_primary_type": "融资 / BP / 商业计划",
+      "expected_recipe_ids": ["fundraising_pitch"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G25",
+      "prompt": "SaaS 公司融资路演，包含 traction、unit economics、团队和下一轮计划",
+      "expected_primary_type": "融资 / BP / 商业计划",
+      "expected_recipe_ids": ["fundraising_pitch"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G26",
+      "prompt": "创业项目商业计划书，讲问题、方案、市场规模、商业模式和融资用途",
+      "expected_primary_type": "融资 / BP / 商业计划",
+      "expected_recipe_ids": ["fundraising_pitch"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G27",
+      "prompt": "医疗培训课件，面向一线团队，讲知识点、案例、操作步骤和考核",
+      "expected_primary_type": "培训 / 课程 / 学习材料",
+      "expected_recipe_ids": ["training_courseware"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G28",
+      "prompt": "新人 onboarding 培训材料，包含议程、步骤、练习和总结",
+      "expected_primary_type": "培训 / 课程 / 学习材料",
+      "expected_recipe_ids": ["training_courseware"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G29",
+      "prompt": "销售团队课程课件，讲客户案例、练习、考核和行动清单",
+      "expected_primary_type": "培训 / 课程 / 学习材料",
+      "expected_recipe_ids": ["training_courseware"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G30",
+      "prompt": "SVGlide 技术架构方案，讲系统链路、模块关系、服务调用和风险演进",
+      "expected_primary_type": "技术 / 架构 / 系统方案",
+      "expected_recipe_ids": ["technical_architecture_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G31",
+      "prompt": "推荐系统架构设计说明，包含数据流、依赖、性能和稳定性方案",
+      "expected_primary_type": "技术 / 架构 / 系统方案",
+      "expected_recipe_ids": ["technical_architecture_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G32",
+      "prompt": "工程链路优化方案，讲服务链路、调用依赖、SLA 和演进计划",
+      "expected_primary_type": "技术 / 架构 / 系统方案",
+      "expected_recipe_ids": ["technical_architecture_review"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G33",
+      "prompt": "安全风险诊断，包含风险矩阵、漏洞、控制项、整改动作和治理计划",
+      "expected_primary_type": "安全 / 风险 / 事故诊断",
+      "expected_recipe_ids": ["security_risk_diagnostic"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G34",
+      "prompt": "线上故障事故复盘，讲影响范围、时间线、根因、owner action 和整改",
+      "expected_primary_type": "安全 / 风险 / 事故诊断",
+      "expected_recipe_ids": ["security_risk_diagnostic"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G35",
+      "prompt": "合规审计汇报，给管理层看，包含控制项、风险和 remediation 计划",
+      "expected_primary_type": "安全 / 风险 / 事故诊断",
+      "expected_recipe_ids": ["security_risk_diagnostic"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G36",
+      "prompt": "研究报告简报，包含背景、方法、样本、发现、结论和引用",
+      "expected_primary_type": "研究 / 政策 / 白皮书",
+      "expected_recipe_ids": ["research_policy_brief"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G37",
+      "prompt": "政策白皮书汇报，严肃专业，包含证据、结论和建议",
+      "expected_primary_type": "研究 / 政策 / 白皮书",
+      "expected_recipe_ids": ["research_policy_brief"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G38",
+      "prompt": "学术论文 poster，包含研究方法、实验结果、发现和 affiliation",
+      "expected_primary_type": "研究 / 政策 / 白皮书",
+      "expected_recipe_ids": ["research_policy_brief"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G39",
+      "prompt": "新品品牌发布方案，讲人群洞察、核心主张、传播渠道和创意视觉",
+      "expected_primary_type": "品牌 / 营销 / 发布",
+      "expected_recipe_ids": ["brand_campaign_launch"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G40",
+      "prompt": "营销 campaign 方案，讲品牌故事、目标人群、传播节奏和效果指标",
+      "expected_primary_type": "品牌 / 营销 / 发布",
+      "expected_recipe_ids": ["brand_campaign_launch"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G41",
+      "prompt": "团队共创工作坊手册，包含议程、练习、分组产出和下一步行动",
+      "expected_primary_type": "工作坊 / 共创 / 行动手册",
+      "expected_recipe_ids": ["workshop_playbook"],
+      "min_match_level": "L1"
+    },
+    {
+      "case_id": "G42",
+      "prompt": "头脑风暴 workshop 总结，讲问题、共创过程、想法分组和行动清单",
+      "expected_primary_type": "工作坊 / 共创 / 行动手册",
+      "expected_recipe_ids": ["workshop_playbook"],
+      "min_match_level": "L1"
+    }
+  ]
+}

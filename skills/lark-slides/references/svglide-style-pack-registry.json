@@ -1,0 +1,233 @@
+{
+  "version": "svglide-style-pack-registry/v1",
+  "style_packs": [
+    {
+      "style_pack_id": "corporate_blue_data",
+      "display_name": "Corporate Blue Data",
+      "palette_id": "corporate_blue",
+      "typography_id": "system_sans_executive",
+      "background_system_id": "clean_panel_grid",
+      "chart_palette_id": "business_data_blue",
+      "image_treatment_id": "chart_first",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["kpi_strip", "metric_cards", "comparison_matrix", "risk_matrix"],
+      "metadata": {
+        "mood": ["professional", "trustworthy", "focused"],
+        "tone": ["analytical", "controlled", "clean"],
+        "best_for": ["内部复盘", "经营分析", "管理层汇报", "数据看板"],
+        "avoid_for": ["儿童教育", "潮流活动", "美食文化"],
+        "density": "medium-high",
+        "formality": "high"
+      }
+    },
+    {
+      "style_pack_id": "product_ai_indigo_cyan",
+      "display_name": "Product AI Indigo Cyan",
+      "palette_id": "indigo_cyan",
+      "typography_id": "tech_editorial",
+      "background_system_id": "clean_panel_grid",
+      "chart_palette_id": "ai_product_chart",
+      "image_treatment_id": "real_product_screenshot",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["product_screenshot_panel", "comparison_matrix", "metric_cards", "timeline"],
+      "metadata": {
+        "mood": ["technical", "confident", "modern"],
+        "tone": ["analytical", "comparative", "precise"],
+        "best_for": ["AI 产品", "App 分析", "公司对比", "竞品分析"],
+        "avoid_for": ["传统文化", "小吃菜单", "儿童课程"],
+        "density": "medium-high",
+        "formality": "medium-high"
+      }
+    },
+    {
+      "style_pack_id": "teal_amber_growth",
+      "display_name": "Teal Amber Growth",
+      "palette_id": "teal_amber",
+      "typography_id": "system_sans_product",
+      "background_system_id": "soft_metric_panels",
+      "chart_palette_id": "growth_teal_amber",
+      "image_treatment_id": "online_evidence_image",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["growth_funnel", "metric_cards", "roadmap", "case_cards"],
+      "metadata": {
+        "mood": ["optimistic", "focused", "professional"],
+        "tone": ["pragmatic", "analytical", "clear"],
+        "best_for": ["增长方案", "产品策略", "业务方案", "路线图"],
+        "avoid_for": ["事故复盘", "安全风险", "学术论文"],
+        "density": "medium",
+        "formality": "medium-high"
+      }
+    },
+    {
+      "style_pack_id": "graphite_red_risk",
+      "display_name": "Graphite Red Risk",
+      "palette_id": "graphite_red",
+      "typography_id": "system_sans_control",
+      "background_system_id": "risk_panel_grid",
+      "chart_palette_id": "risk_alert_chart",
+      "image_treatment_id": "diagram_first",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["risk_matrix", "timeline", "control_table", "action_list"],
+      "metadata": {
+        "mood": ["serious", "trustworthy", "controlled"],
+        "tone": ["diagnostic", "analytical", "structured"],
+        "best_for": ["风险诊断", "安全方案", "事故复盘", "合规审计"],
+        "avoid_for": ["品牌发布", "美食介绍", "节庆活动"],
+        "density": "medium-high",
+        "formality": "high"
+      }
+    },
+    {
+      "style_pack_id": "food_culture_warm_editorial",
+      "display_name": "Food Culture Warm Editorial",
+      "palette_id": "warm_coral_jade",
+      "typography_id": "editorial_sans_cjk",
+      "background_system_id": "editorial_photo_panels",
+      "chart_palette_id": "culture_soft_chart",
+      "image_treatment_id": "online_evidence_image",
+      "decoration_policy_id": "source_owned_motif_only",
+      "component_variant_bias": ["image_story", "menu_grid", "place_cards", "timeline"],
+      "metadata": {
+        "mood": ["warm", "editorial", "approachable"],
+        "tone": ["narrative", "cultural", "inviting"],
+        "best_for": ["小吃", "餐饮文化", "城市美食", "旅行介绍"],
+        "avoid_for": ["管理层经营复盘", "安全审计", "技术架构"],
+        "density": "medium",
+        "formality": "medium"
+      }
+    },
+    {
+      "style_pack_id": "culture_editorial_jade_magenta",
+      "display_name": "Culture Editorial Jade Magenta",
+      "palette_id": "jade_magenta_ink",
+      "typography_id": "editorial_sans_cjk",
+      "background_system_id": "image_caption_grid",
+      "chart_palette_id": "culture_soft_chart",
+      "image_treatment_id": "editorial_photo",
+      "decoration_policy_id": "source_owned_motif_only",
+      "component_variant_bias": ["quote_panel", "timeline", "image_story", "comparison_cards"],
+      "metadata": {
+        "mood": ["cultural", "editorial", "reflective"],
+        "tone": ["narrative", "magazine", "clear"],
+        "best_for": ["地域文化", "语言文化", "城市介绍", "文化科普"],
+        "avoid_for": ["高密度经营看板", "融资 BP", "事故复盘"],
+        "density": "medium",
+        "formality": "medium"
+      }
+    },
+    {
+      "style_pack_id": "investor_navy_gold",
+      "display_name": "Investor Navy Gold",
+      "palette_id": "navy_gold",
+      "typography_id": "system_sans_executive",
+      "background_system_id": "executive_panels",
+      "chart_palette_id": "investor_chart",
+      "image_treatment_id": "chart_first",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["market_map", "metric_cards", "traction_chart", "risk_matrix"],
+      "metadata": {
+        "mood": ["confident", "professional", "sharp"],
+        "tone": ["crisp", "analytical", "polished"],
+        "best_for": ["融资 BP", "投资分析", "市场规模", "商业模式"],
+        "avoid_for": ["儿童培训", "文化活动", "小吃介绍"],
+        "density": "medium-high",
+        "formality": "high"
+      }
+    },
+    {
+      "style_pack_id": "education_sky_green",
+      "display_name": "Education Sky Green",
+      "palette_id": "sky_green",
+      "typography_id": "system_sans_learning",
+      "background_system_id": "lesson_step_panels",
+      "chart_palette_id": "learning_chart",
+      "image_treatment_id": "online_evidence_image",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["lesson_steps", "checklist", "exercise_cards", "summary_cards"],
+      "metadata": {
+        "mood": ["approachable", "calm", "practical"],
+        "tone": ["instructional", "clear", "structured"],
+        "best_for": ["培训课件", "课程介绍", "新人 onboarding", "医疗培训"],
+        "avoid_for": ["融资路演", "事故复盘", "潮流发布"],
+        "density": "medium",
+        "formality": "medium"
+      }
+    },
+    {
+      "style_pack_id": "event_neon_cyan_magenta",
+      "display_name": "Event Neon Cyan Magenta",
+      "palette_id": "neon_cyan_magenta",
+      "typography_id": "display_sans_event",
+      "background_system_id": "media_showcase_grid",
+      "chart_palette_id": "event_signal_chart",
+      "image_treatment_id": "online_event_photo_first",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["hero_photo", "event_map", "trend_cards", "timeline"],
+      "metadata": {
+        "mood": ["energetic", "confident", "modern"],
+        "tone": ["editorial", "bold", "reporting"],
+        "best_for": ["展会", "ChinaJoy", "活动复盘", "发布会"],
+        "avoid_for": ["董事会经营复盘", "合规审计", "学术政策简报"],
+        "density": "medium",
+        "formality": "medium"
+      }
+    },
+    {
+      "style_pack_id": "scholarly_vellum_ink",
+      "display_name": "Scholarly Vellum Ink",
+      "palette_id": "vellum_ink_blue",
+      "typography_id": "system_sans_report",
+      "background_system_id": "paper_report_grid",
+      "chart_palette_id": "policy_chart",
+      "image_treatment_id": "chart_first",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["evidence_table", "method_cards", "findings_grid", "quote_panel"],
+      "metadata": {
+        "mood": ["scholarly", "serious", "trustworthy"],
+        "tone": ["structured", "analytical", "clear"],
+        "best_for": ["研究报告", "政策简报", "学术汇报", "白皮书"],
+        "avoid_for": ["品牌发布", "夜生活活动", "美食菜单"],
+        "density": "high",
+        "formality": "high"
+      }
+    },
+    {
+      "style_pack_id": "workshop_playful_paper",
+      "display_name": "Workshop Playful Paper",
+      "palette_id": "paper_blue_orange",
+      "typography_id": "system_sans_workshop",
+      "background_system_id": "workshop_board_grid",
+      "chart_palette_id": "workshop_chart",
+      "image_treatment_id": "structured_fallback",
+      "decoration_policy_id": "source_owned_motif_only",
+      "component_variant_bias": ["agenda", "sticky_notes", "exercise_cards", "action_list"],
+      "metadata": {
+        "mood": ["approachable", "warm", "collaborative"],
+        "tone": ["instructional", "facilitative", "clear"],
+        "best_for": ["工作坊", "头脑风暴", "共创", "培训演练"],
+        "avoid_for": ["董事会看板", "安全审计", "融资 BP"],
+        "density": "medium",
+        "formality": "medium"
+      }
+    },
+    {
+      "style_pack_id": "architecture_mono_cyan",
+      "display_name": "Architecture Mono Cyan",
+      "palette_id": "mono_cyan",
+      "typography_id": "system_sans_technical",
+      "background_system_id": "diagram_grid",
+      "chart_palette_id": "technical_chart",
+      "image_treatment_id": "diagram_first",
+      "decoration_policy_id": "minimal_grid_only",
+      "component_variant_bias": ["architecture_diagram", "dependency_map", "sequence_flow", "risk_matrix"],
+      "metadata": {
+        "mood": ["technical", "focused", "precise"],
+        "tone": ["structured", "analytical", "controlled"],
+        "best_for": ["技术架构", "系统设计", "链路说明", "工程方案"],
+        "avoid_for": ["美食文化", "活动海报", "儿童课程"],
+        "density": "medium-high",
+        "formality": "high"
+      }
+    }
+  ]
+}

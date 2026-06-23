@@ -44,6 +44,105 @@
       },
       "additionalProperties": true
     },
+    "deck_recipe_selection": {
+      "type": "object",
+      "required": ["recipe_id", "match_level", "confidence", "candidate_recipe_ids", "selection_reason"],
+      "properties": {
+        "recipe_id": {"type": "string", "minLength": 1},
+        "match_level": {"enum": ["L1", "L2", "L3", "L4"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "candidate_recipe_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "missing_signals": {"type": "array", "items": {"type": "string"}},
+        "selection_reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "style_pack_selection": {
+      "type": "object",
+      "required": [
+        "selected_style_pack_id",
+        "palette_id",
+        "typography_id",
+        "background_system_id",
+        "chart_palette_id",
+        "image_treatment_id",
+        "decoration_policy_id",
+        "component_variant_bias"
+      ],
+      "properties": {
+        "selected_style_pack_id": {"type": "string", "minLength": 1},
+        "candidate_style_pack_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "palette_id": {"type": "string", "minLength": 1},
+        "typography_id": {"type": "string", "minLength": 1},
+        "background_system_id": {"type": "string", "minLength": 1},
+        "chart_palette_id": {"type": "string", "minLength": 1},
+        "image_treatment_id": {"type": "string", "minLength": 1},
+        "decoration_policy_id": {"type": "string", "minLength": 1},
+        "component_variant_bias": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "selection_reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "density_mode_selection": {
+      "type": "object",
+      "required": ["selected_density_mode", "candidate_density_modes", "selection_reason"],
+      "properties": {
+        "selected_density_mode": {"type": "string", "minLength": 1},
+        "candidate_density_modes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "selection_reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "component_variant_selection": {
+      "type": "object",
+      "required": ["selected_component_variants", "candidate_component_variants", "selection_reason"],
+      "properties": {
+        "selected_component_variants": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "candidate_component_variants": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "selection_reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "image_treatment_selection": {
+      "type": "object",
+      "required": ["selected_image_treatment_id", "candidate_image_treatment_ids", "selection_reason"],
+      "properties": {
+        "selected_image_treatment_id": {"type": "string", "minLength": 1},
+        "candidate_image_treatment_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "selection_reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "style_lock": {
+      "type": "object",
+      "required": [
+        "deck_level",
+        "template_family_id",
+        "style_pack_id",
+        "palette_id",
+        "typography_id",
+        "background_system_id",
+        "chart_palette_id",
+        "image_treatment_id",
+        "decoration_policy_id",
+        "component_variant_bias"
+      ],
+      "properties": {
+        "deck_level": {"const": true},
+        "template_family_id": {"type": "string", "minLength": 1},
+        "style_pack_id": {"type": "string", "minLength": 1},
+        "palette_id": {"type": "string", "minLength": 1},
+        "typography_id": {"type": "string", "minLength": 1},
+        "background_system_id": {"type": "string", "minLength": 1},
+        "chart_palette_id": {"type": "string", "minLength": 1},
+        "image_treatment_id": {"type": "string", "minLength": 1},
+        "decoration_policy_id": {"type": "string", "minLength": 1},
+        "component_variant_bias": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": true
+    },
+    "selection_metadata_receipt": {"type": "string", "minLength": 1},
+    "recipe_routing_receipt": {"type": "string", "minLength": 1},
     "palette_selection_receipt": {"type": "string", "minLength": 1},
     "selection_receipt": {"type": "string", "minLength": 1},
     "project_palette": {

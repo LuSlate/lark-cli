@@ -93,6 +93,15 @@ ART_DIRECTION_REQUIRED_FIELDS = {
     "svg_native_moments",
 }
 BUSINESS_CLAIM_SOURCE_TYPES = {"prompt_provided", "user_provided", "attachment", "readback", "derived", "assumption", "pending_confirmation"}
+DESIGN_ASSET_SELECTION_REQUIRED_FIELDS = [
+    "deck_recipe_selection",
+    "template_family_selection",
+    "style_pack_selection",
+    "density_mode_selection",
+    "component_variant_selection",
+    "image_treatment_selection",
+    "style_lock",
+]
 
 SUPPORTED_SHAPES = {"rect", "ellipse", "circle", "line", "path", "foreignObject"}
 RENDERABLE_TAGS = SUPPORTED_SHAPES | {"image", "text", "polygon", "polyline"}
@@ -1968,6 +1977,95 @@ def validate_template_family_policy(plan: dict[str, Any]) -> list[dict[str, Any]
     return issues
 
 
+def validate_design_asset_selection_contract(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for field in DESIGN_ASSET_SELECTION_REQUIRED_FIELDS:
+        if not isinstance(plan.get(field), dict):
+            issues.append(
+                plan_issue(
+                    "error",
+                    f"plan_missing_{field}",
+                    f"SVGlide SVG plans must include deck-level {field}",
+                    None,
+                    "Run recipe selection before plan/SVG generation and carry the selection metadata into slide_plan.json.",
+                )
+            )
+    if issues:
+        return issues
+
+    recipe = nested_dict(plan.get("deck_recipe_selection"))
+    if recipe.get("match_level") == "L4":
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_recipe_selection_l4",
+                "L4 recipe selection must fail closed before SVG generation",
+                None,
+                "Ask for more content signals or create a reviewed new_recipe_proposal; do not continue with baseline fallback.",
+            )
+        )
+    for field in ["recipe_id", "match_level", "confidence", "signals"]:
+        if recipe.get(field) in (None, "", []):
+            issues.append(
+                plan_issue(
+                    "error",
+                    f"plan_recipe_selection_missing_{field}",
+                    f"deck_recipe_selection must include {field}",
+                )
+            )
+
+    style_pack = nested_dict(plan.get("style_pack_selection"))
+    image_treatment = nested_dict(plan.get("image_treatment_selection"))
+    style_lock_value = nested_dict(plan.get("style_lock"))
+    if style_lock_value.get("deck_level") is not True:
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_style_lock_not_deck_level",
+                "style_lock must be deck_level=true",
+                None,
+                "Lock style_pack, palette, typography, image treatment, and decoration policy at deck level.",
+            )
+        )
+    if style_lock_value.get("style_pack_id") != style_pack.get("selected_style_pack_id"):
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_style_lock_style_pack_mismatch",
+                "style_lock.style_pack_id must match style_pack_selection.selected_style_pack_id",
+            )
+        )
+    if style_lock_value.get("image_treatment_id") != image_treatment.get("selected_image_treatment_id"):
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_style_lock_image_treatment_mismatch",
+                "style_lock.image_treatment_id must match image_treatment_selection.selected_image_treatment_id",
+            )
+        )
+    if style_lock_value.get("decoration_policy_id") in {"random_decorations", "decorative_noise"}:
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_disallowed_decoration_policy",
+                "random decorative lines or geometric noise are not allowed",
+                None,
+                "Use minimal_grid_only or source-owned motifs with explicit semantic ownership.",
+            )
+        )
+    if normalize_name(textify(plan.get("fallback_policy"))) == "auto":
+        issues.append(
+            plan_issue(
+                "error",
+                "plan_baseline_fallback_policy_auto",
+                "fallback_policy=auto is not allowed for design asset composition plans",
+                None,
+                "Low-confidence routing must fail closed instead of continuing with a baseline theme.",
+            )
+        )
+    return issues
+
+
 def slide_visual_plan(slide: dict[str, Any]) -> dict[str, Any]:
     visual_plan = slide.get("visual_plan")
     if isinstance(visual_plan, dict):
@@ -2678,6 +2776,7 @@ def lint_plan(plan: dict[str, Any], path: str = "<plan>") -> dict[str, Any]:
                 )
             )
         issues.extend(validate_template_family_policy(plan))
+        issues.extend(validate_design_asset_selection_contract(plan))
     deck_preset_id = deck_style_preset_id(plan)
     deck_style_system = style_system(plan)
     asset_contract_lookup = asset_contracts_by_id(plan)

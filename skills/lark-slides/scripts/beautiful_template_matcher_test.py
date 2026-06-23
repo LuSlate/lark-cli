@@ -55,21 +55,23 @@ class BeautifulTemplateMatcherTest(unittest.TestCase):
         self.assertEqual(registry["version"], "beautiful-html-template-families/v1")
         self.assertEqual(registry["source"]["template_count"], 34)
         self.assertEqual(len(registry["families"]), 34)
-        self.assertEqual(registry["source"]["absorbed_family_count"], 15)
+        absorption_dir = REFERENCES_DIR / "absorptions/beautiful-html-templates"
+        self.assertEqual(registry["source"]["absorbed_family_count"], len(list(absorption_dir.glob("*.json"))))
 
     def test_extractor_preserves_inventory_and_absorption_provenance(self) -> None:
         registry = beautiful_template_asset_extractor.extract_registry()
         families = {family["template_id"]: family for family in registry["families"]}
         blue = families["blue-professional"]
+        absorbed = families["soft-editorial"]
 
-        self.assertEqual(blue["status"], "absorbed")
-        self.assertEqual(blue["claim_level"], "svglide_absorbed")
         self.assertTrue(blue["source"]["inventory_item_ids"])
-        self.assertIn("skills/lark-slides/references/absorptions/beautiful-html-templates/blue-professional.executive-dashboard.json", blue["source"]["absorption_records"])
-        self.assertIn("beautiful-html-templates.template.blue-professional.design.md", blue["source"]["source_item_ids"])
-        self.assertTrue(blue["source"]["absorption_provenance"][0]["sha256"])
-        self.assertIn("template.executive-dashboard", blue["svglide_mapping"]["svglide_asset_ids"])
-        self.assertIn("beautiful-html-templates.template.blue-professional.design.md", blue["svglide_mapping"]["source_item_ids"])
+        self.assertEqual(blue["status"], "source_inventoried")
+        self.assertEqual(blue["claim_level"], "source_inventory_only")
+        self.assertEqual(absorbed["status"], "absorbed")
+        self.assertEqual(absorbed["claim_level"], "svglide_absorbed")
+        self.assertIn("skills/lark-slides/references/absorptions/beautiful-html-templates/soft-editorial.soft-editorial-feature.json", absorbed["source"]["absorption_records"])
+        self.assertTrue(absorbed["source"]["absorption_provenance"][0]["sha256"])
+        self.assertTrue(absorbed["svglide_mapping"]["svglide_asset_ids"])
 
     def test_family_registry_extracts_design_assets_not_only_html(self) -> None:
         family = beautiful_template_matcher.load_family("blue-professional")
@@ -159,6 +161,17 @@ class BeautifulTemplateMatcherTest(unittest.TestCase):
         self.assertIn("metric_dashboard", variants)
         self.assertIn("problem_analysis", variants)
         self.assertIn("action_plan", variants)
+        for key in [
+            "deck_recipe_selection",
+            "style_pack_selection",
+            "density_mode_selection",
+            "component_variant_selection",
+            "image_treatment_selection",
+            "style_lock",
+        ]:
+            self.assertIn(key, result)
+        self.assertEqual(result["template_family_selection"]["selected_template_id"], result["style_lock"]["template_family_id"])
+        self.assertEqual(result["style_lock"]["style_pack_id"], result["style_pack_selection"]["selected_style_pack_id"])
 
     def test_semantic_blocks_select_expected_components(self) -> None:
         blocks = [
