@@ -2,7 +2,9 @@
 
 > **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md)（认证 / 全局参数 / 安全）。
 
-把妙搭应用的启动期环境变量拉取到本地项目根的 `.env.local`。身份固定 `--as user`；scope `spark:app:read`。`--app-id` 必填，目标项目根默认当前工作目录（`--project-path` 可指定）。
+把妙搭应用 dev 启动期环境变量拉取到本地项目根的 `.env.local`。身份固定 `--as user`；scope `spark:app:read`。`--app-id` 必填，目标项目根默认当前工作目录（`--project-path` 可指定）。
+
+这个命令是 dev-only 的本地恢复工具：内部固定调用 `env_vars`，参数为 `env=dev` 和 `include_values=true`。它没有 `--env` flag，也不管理线上环境变量。
 
 ## 何时别用（核心反模式）
 
@@ -21,7 +23,7 @@
 ## 示例
 
 ```bash
-lark-cli apps +env-pull --app-id app_xxx
+lark-cli apps +env-pull --app-id <app_id>
 ```
 
 ## 失败处理

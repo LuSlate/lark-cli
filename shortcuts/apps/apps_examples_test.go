@@ -50,3 +50,62 @@ func TestHighFreqCommandsHaveMultipleExamples(t *testing.T) {
 		}
 	}
 }
+
+func TestAppsEnvVarTipsCoverConfirmations(t *testing.T) {
+	envvarSet := requireShortcutForExamples(t, "+envvar-set")
+	if !tipsContainAll(envvarSet.Tips, "--env online", "--yes") {
+		t.Fatalf("+envvar-set tips must include an online write example with --env online --yes: %#v", envvarSet.Tips)
+	}
+
+	envvarDelete := requireShortcutForExamples(t, "+envvar-delete")
+	if !tipsContainAll(envvarDelete.Tips, "--yes") {
+		t.Fatalf("+envvar-delete tips must include --yes: %#v", envvarDelete.Tips)
+	}
+}
+
+func TestAppsObservabilityTipsMentionOnlineOnly(t *testing.T) {
+	for _, cmd := range []string{
+		"+log-list",
+		"+log-get",
+		"+trace-list",
+		"+trace-get",
+		"+metric-query",
+		"+analytics-query",
+	} {
+		shortcut := requireShortcutForExamples(t, cmd)
+		if !tipsContainAll(shortcut.Tips, "online-only", "--env online") {
+			t.Fatalf("%s tips should mention online-only env: %#v", cmd, shortcut.Tips)
+		}
+	}
+}
+
+func requireShortcutForExamples(t *testing.T, command string) shortcutForExamples {
+	t.Helper()
+	for _, sc := range Shortcuts() {
+		if sc.Command == command {
+			return shortcutForExamples{Tips: sc.Tips}
+		}
+	}
+	t.Fatalf("missing shortcut %s", command)
+	return shortcutForExamples{}
+}
+
+type shortcutForExamples struct {
+	Tips []string
+}
+
+func tipsContainAll(tips []string, needles ...string) bool {
+	for _, tip := range tips {
+		ok := true
+		for _, needle := range needles {
+			if !strings.Contains(tip, needle) {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			return true
+		}
+	}
+	return false
+}

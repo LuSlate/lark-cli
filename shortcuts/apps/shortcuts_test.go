@@ -10,12 +10,21 @@ import (
 )
 
 // 钉死域内 shortcut 数量。少一条（漏挂）或多一条（误加）都会被这个测试拦截。
-// 6 基础 + 1 init + 3 publish + 1 env-pull + 4 db（table-list/table-schema/sql/dev-init）
-// + 3 git-credential + 5 session（create/list/get/stop/chat）+ 1 session-messages-list = 24。
-func TestAppsShortcuts_Returns24(t *testing.T) {
+// 6 基础 + 1 init + 3 publish + 1 env-pull + 6 observability
+// + 3 envvar + 4 db（table-list/table-schema/sql/dev-init）
+// + 3 git-credential + 5 session（create/list/get/stop/chat）+ 1 session-messages-list = 33。
+func TestAppsShortcuts_Returns33(t *testing.T) {
 	got := Shortcuts()
-	if len(got) != 24 {
-		t.Fatalf("Shortcuts() returned %d entries, want 24", len(got))
+	if len(got) != 33 {
+		t.Fatalf("Shortcuts() returned %d entries, want 33", len(got))
+	}
+}
+
+func TestAppsShortcuts_DoesNotIncludeEnvVarGet(t *testing.T) {
+	for _, sc := range Shortcuts() {
+		if sc.Command == "+envvar-get" {
+			t.Fatalf("Shortcuts() must not register +envvar-get")
+		}
 	}
 }
 
