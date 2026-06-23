@@ -5,7 +5,9 @@ package slides
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -288,6 +290,46 @@ func TestSlidesCreateSVGFontFamilyDryRunReportsSelectedFamily(t *testing.T) {
 	}
 }
 
+func TestSlidesCreateSVGLocalImageDryRunUsesRealMetadata(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><image slide:role="image" href="@hero.png" x="0" y="0" width="320" height="180"/></svg>`
+	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+	png := testTwoByTwoPNG(t)
+	if err := os.WriteFile("hero.png", png, 0o644); err != nil {
+		t.Fatalf("write hero.png: %v", err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--title", "dry-run image meta",
+		"--dry-run",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	content := dryRunSlideContent(t, stdout)
+	for _, want := range []string{
+		`<metadata data-svglide-assets="svglide-assets/v1">`,
+		`src="&lt;uploaded_file_token:hero.png&gt;"`,
+		`name="hero.png"`,
+		`mimeType="image/png"`,
+		fmt.Sprintf(`size="%d"`, len(png)),
+		`width="2"`,
+		`height="2"`,
+	} {
+		if !strings.Contains(content, want) {
+			t.Fatalf("dry-run slide content missing %s:\n%s", want, content)
+		}
+	}
+}
+
 func TestSlidesCreateSVGRejectsCustomFontFamily(t *testing.T) {
 	dir := t.TempDir()
 	withSlidesTestWorkingDir(t, dir)
@@ -493,7 +535,7 @@ func TestSlidesCreateSVGAssetsReplaceImageAndInjectMetadata(t *testing.T) {
 	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
 		t.Fatalf("write page.svg: %v", err)
 	}
-	if err := os.WriteFile("assets.json", []byte(`{"@./hero.png":"boxcn_asset"}`), 0o644); err != nil {
+	if err := os.WriteFile("assets.json", []byte(`{"@./hero.png":{"token":"boxcn_asset","name":"hero.png","mimeType":"image/png","size":1234,"width":640,"height":360}}`), 0o644); err != nil {
 		t.Fatalf("write assets.json: %v", err)
 	}
 
@@ -530,13 +572,52 @@ func TestSlidesCreateSVGAssetsReplaceImageAndInjectMetadata(t *testing.T) {
 	if strings.Contains(content, "@./hero.png") || strings.Contains(content, "xlink:href") {
 		t.Fatalf("content should canonicalize asset placeholder: %s", content)
 	}
-	for _, want := range []string{`href="boxcn_asset"`, `<metadata data-svglide-assets="true">`, `<img src="boxcn_asset" />`} {
+	for _, want := range []string{
+		`href="boxcn_asset"`,
+		`<metadata data-svglide-assets="svglide-assets/v1">`,
+		`<img xmlns="" src="boxcn_asset" name="hero.png" mimeType="image/png" size="1234" width="640" height="360" />`,
+	} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("content missing %s: %s", want, content)
 		}
 	}
 	if _, ok := decodeSlidesCreateEnvelope(t, stdout)["images_uploaded"]; ok {
 		t.Fatalf("--assets token mapping should not upload local images")
+	}
+}
+
+func TestSlidesCreateSVGAssetsTokenOnlyRequiresMetadata(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><image slide:role="image" xlink:href='@./hero.png' x="0" y="0" width="320" height="180"/></svg>`
+	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+	if err := os.WriteFile("assets.json", []byte(`{"@./hero.png":"boxcn_asset"}`), 0o644); err != nil {
+		t.Fatalf("write assets.json: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"xml_presentation_id": "pres_asset_token_only", "revision_id": 1}},
+	})
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--assets", "assets.json",
+		"--title", "assets token only",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected token-only assets to fail before generating incomplete metadata")
+	}
+	for _, want := range []string{"incomplete SVG image asset metadata", "boxcn_asset", "name", "mimeType", "size", "width", "height"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("err = %v, want %q", err, want)
+		}
 	}
 }
 
@@ -547,7 +628,7 @@ func TestSlidesCreateSVGNestedImageAssetsReplaceAndInjectMetadata(t *testing.T) 
 	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
 		t.Fatalf("write page.svg: %v", err)
 	}
-	if err := os.WriteFile("assets.json", []byte(`{"@./hero.png":"boxcn_asset"}`), 0o644); err != nil {
+	if err := os.WriteFile("assets.json", []byte(`{"@./hero.png":{"token":"boxcn_asset","name":"hero.png","mimeType":"image/png","size":1234,"width":640,"height":360}}`), 0o644); err != nil {
 		t.Fatalf("write assets.json: %v", err)
 	}
 
@@ -583,8 +664,8 @@ func TestSlidesCreateSVGNestedImageAssetsReplaceAndInjectMetadata(t *testing.T) 
 	content := body["slide"].(map[string]interface{})["content"].(string)
 	for _, want := range []string{
 		`href="boxcn_asset"`,
-		`<metadata data-svglide-assets="true">`,
-		`<img src="boxcn_asset" />`,
+		`<metadata data-svglide-assets="svglide-assets/v1">`,
+		`<img xmlns="" src="boxcn_asset" name="hero.png" mimeType="image/png" size="1234" width="640" height="360" />`,
 		`<g transform="translate(10 20)">`,
 	} {
 		if !strings.Contains(content, want) {
@@ -608,7 +689,8 @@ func TestSlidesCreateSVGUploadsLocalImagesAndInjectsMetadata(t *testing.T) {
 	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
 		t.Fatalf("write page.svg: %v", err)
 	}
-	if err := os.WriteFile("hero.png", []byte("png"), 0o644); err != nil {
+	png := testOneByOnePNG(t)
+	if err := os.WriteFile("hero.png", png, 0o644); err != nil {
 		t.Fatalf("write hero.png: %v", err)
 	}
 
@@ -650,7 +732,16 @@ func TestSlidesCreateSVGUploadsLocalImagesAndInjectsMetadata(t *testing.T) {
 		t.Fatalf("decode slide body: %v", err)
 	}
 	content := body["slide"].(map[string]interface{})["content"].(string)
-	for _, want := range []string{`href="boxcn_uploaded"`, `<img src="boxcn_uploaded" />`} {
+	for _, want := range []string{
+		`href="boxcn_uploaded"`,
+		`<metadata data-svglide-assets="svglide-assets/v1">`,
+		`src="boxcn_uploaded"`,
+		`name="hero.png"`,
+		`mimeType="image/png"`,
+		fmt.Sprintf(`size="%d"`, len(png)),
+		`width="1"`,
+		`height="1"`,
+	} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("content missing %s: %s", want, content)
 		}
@@ -670,6 +761,26 @@ func runSlidesCreateSVGShortcut(t *testing.T, f *cmdutil.Factory, stdout *bytes.
 	return parent.Execute()
 }
 
+func dryRunSlideContent(t *testing.T, stdout *bytes.Buffer) string {
+	t.Helper()
+	var data map[string]interface{}
+	if err := json.Unmarshal(stdout.Bytes(), &data); err != nil {
+		t.Fatalf("decode dry-run output: %v\nraw=%s", err, stdout.String())
+	}
+	api, _ := data["api"].([]interface{})
+	if len(api) == 0 {
+		t.Fatalf("dry-run output missing api steps: %#v", data)
+	}
+	step, _ := api[len(api)-1].(map[string]interface{})
+	body, _ := step["body"].(map[string]interface{})
+	slide, _ := body["slide"].(map[string]interface{})
+	content, _ := slide["content"].(string)
+	if content == "" {
+		t.Fatalf("dry-run output missing slide content: %#v", step)
+	}
+	return content
+}
+
 func assertSlideCreateBodyContains(t *testing.T, stub *httpmock.Stub, want string) {
 	t.Helper()
 	var body map[string]interface{}
@@ -686,4 +797,22 @@ func assertSlideCreateBodyContains(t *testing.T, stub *httpmock.Stub, want strin
 func registerBatchQueryStub(_ *httpmock.Registry, _, _ string) {
 	// fillPresentationResult now builds presentation URLs locally, so SVG create
 	// tests keep this helper as a no-op compatibility shim for older assertions.
+}
+
+func testOneByOnePNG(t *testing.T) []byte {
+	t.Helper()
+	data, err := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=")
+	if err != nil {
+		t.Fatalf("decode test PNG: %v", err)
+	}
+	return data
+}
+
+func testTwoByTwoPNG(t *testing.T) []byte {
+	t.Helper()
+	data, err := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGNQT379/72Ly38GGAMAVT4J1YcAuVoAAAAASUVORK5CYII=")
+	if err != nil {
+		t.Fatalf("decode test PNG: %v", err)
+	}
+	return data
 }

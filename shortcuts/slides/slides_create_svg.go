@@ -70,7 +70,10 @@ var SlidesCreateSVG = common.Shortcut{
 		if err != nil {
 			return common.NewDryRunAPI().Set("error", err.Error())
 		}
-		pages, uploadPaths := dryRunRewriteSVGImagePlaceholders(svgs, assets)
+		pages, uploadPaths, err := dryRunRewriteSVGImagePlaceholders(runtime, svgs, assets)
+		if err != nil {
+			return common.NewDryRunAPI().Set("error", err.Error())
+		}
 
 		dry := common.NewDryRunAPI()
 		total := 1 + len(uploadPaths) + len(pages)
@@ -95,7 +98,7 @@ var SlidesCreateSVG = common.Shortcut{
 			if fontFamily != "" {
 				content = applySVGlideFontFamily(content, fontFamily)
 			}
-			content, injectErr := injectSVGTransportAssetMetadata(content, page.Tokens)
+			content, injectErr := injectSVGTransportAssetMetadata(content, page.Assets)
 			if injectErr != nil {
 				return common.NewDryRunAPI().Set("error", injectErr.Error())
 			}
@@ -173,7 +176,7 @@ var SlidesCreateSVG = common.Shortcut{
 			if fontFamily != "" {
 				content = applySVGlideFontFamily(content, fontFamily)
 			}
-			content, err := injectSVGTransportAssetMetadata(content, page.Tokens)
+			content, err := injectSVGTransportAssetMetadata(content, page.Assets)
 			if err != nil {
 				return output.Errorf(output.ExitValidation, "validation",
 					"page %d/%d failed before API call: %v (presentation %s was created; %d slide(s) added; slide_ids=%s)",

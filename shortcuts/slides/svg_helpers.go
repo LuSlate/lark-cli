@@ -10,6 +10,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"math"
 	"path/filepath"
 	"regexp"
@@ -29,6 +33,7 @@ const (
 	svglideChartSpecVersion             = "svglide-chart-spec/v1"
 	svglideChartEncoding                = "base64url-json"
 	svglideCustomFontFamilyPrefix       = "slide-font-"
+	svglideAssetsVersion                = "svglide-assets/v1"
 )
 
 type svglideChartSpecPayload struct {
@@ -49,24 +54,37 @@ type svglideChartSpecSeries struct {
 
 type RewrittenSVGPage struct {
 	Content string
-	Tokens  []string
+	Assets  []svgAssetMeta
 }
 
+type svgAssetMeta struct {
+	Token    string `json:"token"`
+	Name     string `json:"name"`
+	MimeType string `json:"mimeType"`
+	Size     int64  `json:"size"`
+	Width    int    `json:"width"`
+	Height   int    `json:"height"`
+}
+
+type svgAssetMap map[string]svgAssetMeta
+
 var (
-	svgRootOpenTagRegex = regexp.MustCompile(`(?s)\A(\s*(?:<\?[^?]*(?:\?[^>][^?]*)*\?>\s*)?(?:<!DOCTYPE[^>]*>\s*)?(?:<!--.*?-->\s*)*)<([A-Za-z_][\w.:-]*)((?:\s[^>]*?)?)(/?>)`)
-	svgImageTagRegex    = regexp.MustCompile(`(?is)<image\b[^>]*>`)
-	svgImageHrefRegex   = regexp.MustCompile(`(?is)(^|\s)(xlink:href|href)\s*=\s*(["'])([^"']*)(["'])`)
-	svgMetadataRegex    = regexp.MustCompile(`(?is)<metadata\b[^>]*\bdata-svglide-assets\s*=\s*(["'])true(["'])[^>]*>.*?</metadata>`)
-	svgMetadataEndRegex = regexp.MustCompile(`(?is)</metadata\s*>`)
-	svgMetadataImgRegex = regexp.MustCompile(`(?is)<img\b[^>]*\bsrc\s*=\s*(["'])([^"']+)(["'])`)
-	svgStyleAttrRegex   = regexp.MustCompile(`(?is)(^|\s)style\s*=\s*(["'])([^"']*)(["'])`)
-	svgFontAttrRegex    = regexp.MustCompile(`(?is)(^|\s)font-family\s*=\s*(["'])([^"']*)(["'])`)
-	svgNumberRegex      = regexp.MustCompile(`^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?:px)?$`)
-	svgPathNumberRegex  = regexp.MustCompile(`[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?`)
-	svgTransformRegex   = regexp.MustCompile(`(?is)([a-zA-Z]+)\(([^)]*)\)`)
-	svgBase64URLRegex   = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
-	svgSHA256HashRegex  = regexp.MustCompile(`^sha256:[0-9a-fA-F]{64}$`)
-	svgShapeTags        = map[string]bool{
+	svgRootOpenTagRegex        = regexp.MustCompile(`(?s)\A(\s*(?:<\?[^?]*(?:\?[^>][^?]*)*\?>\s*)?(?:<!DOCTYPE[^>]*>\s*)?(?:<!--.*?-->\s*)*)<([A-Za-z_][\w.:-]*)((?:\s[^>]*?)?)(/?>)`)
+	svgImageTagRegex           = regexp.MustCompile(`(?is)<image\b[^>]*>`)
+	svgImageHrefRegex          = regexp.MustCompile(`(?is)(^|\s)(xlink:href|href)\s*=\s*(["'])([^"']*)(["'])`)
+	svgMetadataRegex           = regexp.MustCompile(`(?is)<metadata\b[^>]*\bdata-svglide-assets\s*=\s*(["'])(?:true|svglide-assets/v1)(["'])[^>]*>.*?</metadata>`)
+	svgMetadataEndRegex        = regexp.MustCompile(`(?is)</metadata\s*>`)
+	svgMetadataImgRegex        = regexp.MustCompile(`(?is)<img\b[^>]*\bsrc\s*=\s*(["'])([^"']+)(["'])`)
+	svgMetadataImgTagRegex     = regexp.MustCompile(`(?is)<img\b[^>]*>`)
+	svgAssetsMetadataAttrRegex = regexp.MustCompile(`(?is)\bdata-svglide-assets\s*=\s*(["'])(?:true|svglide-assets/v1)(["'])`)
+	svgStyleAttrRegex          = regexp.MustCompile(`(?is)(^|\s)style\s*=\s*(["'])([^"']*)(["'])`)
+	svgFontAttrRegex           = regexp.MustCompile(`(?is)(^|\s)font-family\s*=\s*(["'])([^"']*)(["'])`)
+	svgNumberRegex             = regexp.MustCompile(`^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?:px)?$`)
+	svgPathNumberRegex         = regexp.MustCompile(`[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?`)
+	svgTransformRegex          = regexp.MustCompile(`(?is)([a-zA-Z]+)\(([^)]*)\)`)
+	svgBase64URLRegex          = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+	svgSHA256HashRegex         = regexp.MustCompile(`^sha256:[0-9a-fA-F]{64}$`)
+	svgShapeTags               = map[string]bool{
 		"circle":        true,
 		"ellipse":       true,
 		"foreignObject": true,
@@ -639,6 +657,11 @@ func isXMLSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n' || r == '\r'
 }
 
+func isSVGlideAssetsMetadata(attrs string) bool {
+	value := strings.TrimSpace(xmlAttrValue(attrs, "data-svglide-assets"))
+	return value == "true" || value == svglideAssetsVersion
+}
+
 func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, error) {
 	if svgIgnoredSubtreeTags[tagName] {
 		return svgValidationSkipSubtree, nil
@@ -646,7 +669,7 @@ func validateSVGlideElement(path, tagName, attrs string) (svgValidationMode, err
 	if tagName == "metadata" && strings.TrimSpace(xmlAttrValue(attrs, "data-svglide-whiteboard")) != "" {
 		return svgValidationStop, output.ErrValidation("--file %s: legacy SVGlide whiteboard marker metadata is not supported by slides +create-svg", path)
 	}
-	if tagName == "metadata" && hasXMLAttr(attrs, "data-svglide-assets", "true") {
+	if tagName == "metadata" && isSVGlideAssetsMetadata(attrs) {
 		return svgValidationSkipSubtree, nil
 	}
 	if err := validateSVGlideTransform(path, tagName, attrs); err != nil {
@@ -974,7 +997,7 @@ func isExternalSVGHref(value string) bool {
 		strings.HasPrefix(lower, "data:")
 }
 
-func parseSVGAssets(runtime *common.RuntimeContext, path string) (map[string]string, error) {
+func parseSVGAssets(runtime *common.RuntimeContext, path string) (svgAssetMap, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, nil
 	}
@@ -982,14 +1005,32 @@ func parseSVGAssets(runtime *common.RuntimeContext, path string) (map[string]str
 	if err != nil {
 		return nil, common.WrapInputStatError(err, fmt.Sprintf("--assets %s", path))
 	}
-	var assets map[string]string
-	if err := json.Unmarshal(data, &assets); err != nil {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, output.ErrValidation("--assets %s: invalid JSON object: %v", path, err)
 	}
-	for k, v := range assets {
-		if strings.TrimSpace(k) == "" || strings.TrimSpace(v) == "" {
-			return nil, output.ErrValidation("--assets %s: keys and file tokens must be non-empty strings", path)
+	assets := make(svgAssetMap, len(raw))
+	for k, v := range raw {
+		if strings.TrimSpace(k) == "" {
+			return nil, output.ErrValidation("--assets %s: keys must be non-empty strings", path)
 		}
+		var token string
+		if err := json.Unmarshal(v, &token); err == nil {
+			if strings.TrimSpace(token) == "" {
+				return nil, output.ErrValidation("--assets %s: file tokens must be non-empty strings", path)
+			}
+			assets[k] = svgAssetMeta{Token: strings.TrimSpace(token)}
+			continue
+		}
+		var meta svgAssetMeta
+		if err := json.Unmarshal(v, &meta); err != nil {
+			return nil, output.ErrValidation("--assets %s: values must be file token strings or metadata objects", path)
+		}
+		meta = normalizeSVGAssetMeta(meta)
+		if meta.Token == "" {
+			return nil, output.ErrValidation("--assets %s: metadata object for %s must include token", path, k)
+		}
+		assets[k] = meta
 	}
 	return assets, nil
 }
@@ -1011,55 +1052,139 @@ func validateSVGAssetsPath(runtime *common.RuntimeContext, path string) error {
 	return nil
 }
 
-func rewriteSVGImagePlaceholders(runtime *common.RuntimeContext, presentationID string, svgs []string, assets map[string]string) ([]RewrittenSVGPage, int, error) {
+func rewriteSVGImagePlaceholders(runtime *common.RuntimeContext, presentationID string, svgs []string, assets svgAssetMap) ([]RewrittenSVGPage, int, error) {
 	paths := extractSVGImagePlaceholderPaths(svgs, assets)
-	localTokens, uploaded, err := uploadSlidesPlaceholders(runtime, presentationID, paths)
+	localAssets, uploaded, err := uploadSVGImagePlaceholders(runtime, presentationID, paths)
 	if err != nil {
 		return nil, uploaded, err
 	}
-	tokens := mergedSVGAssetTokens(assets, localTokens)
+	allAssets := mergedSVGAssets(assets, localAssets)
 	pages := make([]RewrittenSVGPage, 0, len(svgs))
 	for _, svg := range svgs {
-		content, usedTokens := rewriteSVGImagePlaceholdersWithTokens(svg, tokens)
-		pages = append(pages, RewrittenSVGPage{Content: content, Tokens: usedTokens})
+		content, usedAssets := rewriteSVGImagePlaceholdersWithTokens(svg, allAssets)
+		pages = append(pages, RewrittenSVGPage{Content: content, Assets: usedAssets})
 	}
 	return pages, uploaded, nil
 }
 
-func dryRunRewriteSVGImagePlaceholders(svgs []string, assets map[string]string) ([]RewrittenSVGPage, []string) {
+func dryRunRewriteSVGImagePlaceholders(runtime *common.RuntimeContext, svgs []string, assets svgAssetMap) ([]RewrittenSVGPage, []string, error) {
 	paths := extractSVGImagePlaceholderPaths(svgs, assets)
-	localTokens := make(map[string]string, len(paths))
+	localAssets := make(svgAssetMap, len(paths))
 	for _, path := range paths {
-		localTokens[path] = "<uploaded_file_token:" + filepath.Base(path) + ">"
+		token := "<uploaded_file_token:" + filepath.Base(path) + ">"
+		meta, err := probeSVGAssetMeta(runtime, path, token)
+		if err != nil {
+			return nil, paths, err
+		}
+		localAssets[path] = meta
 	}
-	tokens := mergedSVGAssetTokens(assets, localTokens)
+	allAssets := mergedSVGAssets(assets, localAssets)
 	pages := make([]RewrittenSVGPage, 0, len(svgs))
 	for _, svg := range svgs {
-		content, usedTokens := rewriteSVGImagePlaceholdersWithTokens(svg, tokens)
-		pages = append(pages, RewrittenSVGPage{Content: content, Tokens: usedTokens})
+		content, usedAssets := rewriteSVGImagePlaceholdersWithTokens(svg, allAssets)
+		pages = append(pages, RewrittenSVGPage{Content: content, Assets: usedAssets})
 	}
-	return pages, paths
+	return pages, paths, nil
 }
 
-func mergedSVGAssetTokens(assets, localTokens map[string]string) map[string]string {
-	tokens := map[string]string{}
+func uploadSVGImagePlaceholders(runtime *common.RuntimeContext, presentationID string, paths []string) (svgAssetMap, int, error) {
+	assets := make(svgAssetMap, len(paths))
+	for i, path := range paths {
+		stat, err := runtime.FileIO().Stat(path)
+		if err != nil {
+			return assets, i, slidesInputStatError(err, "--slides", fmt.Sprintf("@%s: file not found", path))
+		}
+		if !stat.Mode().IsRegular() {
+			return assets, i, output.ErrValidation("@%s: must be a regular file", path)
+		}
+		fileName := filepath.Base(path)
+		fmt.Fprintf(runtime.IO().ErrOut, "Uploading image %d/%d: %s (%s)\n",
+			i+1, len(paths), fileName, common.FormatSize(stat.Size()))
+
+		token, err := uploadSlidesMedia(runtime, path, fileName, stat.Size(), presentationID)
+		if err != nil {
+			return assets, i, fmt.Errorf("@%s: %w", path, err) //nolint:forbidigo // preserves upload cause for caller progress context
+		}
+		meta, err := probeSVGAssetMeta(runtime, path, token)
+		if err != nil {
+			return assets, i + 1, err
+		}
+		assets[path] = meta
+	}
+	return assets, len(paths), nil
+}
+
+func probeSVGAssetMeta(runtime *common.RuntimeContext, path string, token string) (svgAssetMeta, error) {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return svgAssetMeta{}, output.ErrValidation("@%s: uploaded file token is empty", path)
+	}
+	stat, err := runtime.FileIO().Stat(path)
+	if err != nil {
+		return svgAssetMeta{}, slidesInputStatError(err, "--slides", fmt.Sprintf("@%s: file not found", path))
+	}
+	data, err := cmdutil.ReadInputFile(runtime.FileIO(), path)
+	if err != nil {
+		return svgAssetMeta{}, common.WrapInputStatError(err, fmt.Sprintf("@%s", path))
+	}
+	config, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return svgAssetMeta{}, output.ErrValidation("@%s: cannot decode image metadata: %v", path, err)
+	}
+	meta := svgAssetMeta{
+		Token:    token,
+		Name:     filepath.Base(path),
+		MimeType: mimeTypeForImageFormat(format),
+		Size:     stat.Size(),
+		Width:    config.Width,
+		Height:   config.Height,
+	}
+	if meta.MimeType == "" {
+		meta.MimeType = mimeTypeForImageFormat(strings.TrimPrefix(strings.ToLower(filepath.Ext(path)), "."))
+	}
+	if err := validateSVGAssetMeta(meta); err != nil {
+		return svgAssetMeta{}, output.ErrValidation("@%s: %v", path, err)
+	}
+	return meta, nil
+}
+
+func mimeTypeForImageFormat(format string) string {
+	switch strings.ToLower(strings.TrimSpace(format)) {
+	case "png":
+		return "image/png"
+	case "jpeg", "jpg":
+		return "image/jpeg"
+	case "gif":
+		return "image/gif"
+	case "webp":
+		return "image/webp"
+	default:
+		return ""
+	}
+}
+
+func mergedSVGAssets(assets, localAssets svgAssetMap) svgAssetMap {
+	merged := svgAssetMap{}
 	for k, v := range assets {
 		key := strings.TrimSpace(k)
-		token := strings.TrimSpace(v)
+		asset := normalizeSVGAssetMeta(v)
 		if strings.HasPrefix(key, "@") {
 			key = strings.TrimSpace(strings.TrimPrefix(key, "@"))
 		}
-		if key != "" && token != "" {
-			tokens[key] = token
+		if key != "" && asset.Token != "" {
+			merged[key] = asset
 		}
 	}
-	for k, v := range localTokens {
-		tokens[k] = v
+	for k, v := range localAssets {
+		asset := normalizeSVGAssetMeta(v)
+		if strings.TrimSpace(k) != "" && asset.Token != "" {
+			merged[k] = asset
+		}
 	}
-	return tokens
+	return merged
 }
 
-func extractSVGImagePlaceholderPaths(svgs []string, assets map[string]string) []string {
+func extractSVGImagePlaceholderPaths(svgs []string, assets svgAssetMap) []string {
 	var paths []string
 	seen := map[string]bool{}
 	for _, svg := range svgs {
@@ -1080,15 +1205,17 @@ func extractSVGImagePlaceholderPaths(svgs []string, assets map[string]string) []
 	return paths
 }
 
-func rewriteSVGImagePlaceholdersWithTokens(svg string, tokens map[string]string) (string, []string) {
-	var used []string
+func rewriteSVGImagePlaceholdersWithTokens(svg string, assets svgAssetMap) (string, []svgAssetMeta) {
+	var used []svgAssetMeta
 	seen := map[string]bool{}
-	remember := func(token string) {
+	remember := func(asset svgAssetMeta) {
+		token := strings.TrimSpace(asset.Token)
 		if token == "" || seen[token] {
 			return
 		}
 		seen[token] = true
-		used = append(used, token)
+		asset.Token = token
+		used = append(used, asset)
 	}
 
 	out := svgImageTagRegex.ReplaceAllStringFunc(svg, func(tag string) string {
@@ -1102,21 +1229,21 @@ func rewriteSVGImagePlaceholdersWithTokens(svg string, tokens map[string]string)
 			value := strings.TrimSpace(m[4])
 			if strings.HasPrefix(value, "@") {
 				path := strings.TrimSpace(strings.TrimPrefix(value, "@"))
-				token := tokens[path]
-				if token == "" {
+				asset := assets[path]
+				if asset.Token == "" {
 					return attr
 				}
-				remember(token)
-				return fmt.Sprintf(`%shref="%s"`, prefix, xmlEscape(token))
+				remember(asset)
+				return fmt.Sprintf(`%shref="%s"`, prefix, xmlEscape(asset.Token))
 			}
 			if strings.EqualFold(name, "xlink:href") {
 				if shouldTreatAsFileToken(value) {
-					remember(value)
+					remember(assetForToken(assets, value))
 				}
 				return fmt.Sprintf(`%shref="%s"`, prefix, xmlEscape(value))
 			}
 			if shouldTreatAsFileToken(value) {
-				remember(value)
+				remember(assetForToken(assets, value))
 			}
 			return attr
 		})
@@ -1124,14 +1251,24 @@ func rewriteSVGImagePlaceholdersWithTokens(svg string, tokens map[string]string)
 	return out, used
 }
 
-func svgAssetTokenForPath(assets map[string]string, path string) string {
+func assetForToken(assets svgAssetMap, token string) svgAssetMeta {
+	token = strings.TrimSpace(token)
+	for _, asset := range assets {
+		if strings.TrimSpace(asset.Token) == token {
+			return normalizeSVGAssetMeta(asset)
+		}
+	}
+	return svgAssetMeta{Token: token}
+}
+
+func svgAssetTokenForPath(assets svgAssetMap, path string) string {
 	if len(assets) == 0 {
 		return ""
 	}
-	if token := strings.TrimSpace(assets["@"+path]); token != "" {
-		return token
+	if asset := normalizeSVGAssetMeta(assets["@"+path]); asset.Token != "" {
+		return asset.Token
 	}
-	return strings.TrimSpace(assets[path])
+	return normalizeSVGAssetMeta(assets[path]).Token
 }
 
 func shouldTreatAsFileToken(value string) bool {
@@ -1143,10 +1280,15 @@ func shouldTreatAsFileToken(value string) bool {
 	return !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") && !strings.HasPrefix(lower, "data:")
 }
 
-func injectSVGTransportAssetMetadata(svg string, tokens []string) (string, error) {
-	tokens = dedupeStrings(tokens)
-	if len(tokens) == 0 {
+func injectSVGTransportAssetMetadata(svg string, assets []svgAssetMeta) (string, error) {
+	assets = dedupeSVGAssetMeta(assets)
+	if len(assets) == 0 {
 		return svg, nil
+	}
+	for _, asset := range assets {
+		if err := validateSVGAssetMeta(asset); err != nil {
+			return "", err
+		}
 	}
 	m := svgRootOpenTagRegex.FindStringSubmatchIndex(svg)
 	if m == nil {
@@ -1160,23 +1302,25 @@ func injectSVGTransportAssetMetadata(svg string, tokens []string) (string, error
 	if existing := svgMetadataRegex.FindStringIndex(svg); existing != nil {
 		block := svg[existing[0]:existing[1]]
 		existingTokens := metadataImgTokens(block)
-		var missing []string
-		for _, token := range tokens {
-			if !existingTokens[token] {
-				missing = append(missing, token)
+		var missing []svgAssetMeta
+		for _, asset := range assets {
+			if !existingTokens[asset.Token] {
+				missing = append(missing, asset)
 			}
 		}
+		upgraded := svgAssetsMetadataAttrRegex.ReplaceAllString(block, `data-svglide-assets="`+svglideAssetsVersion+`"`)
+		upgraded = rewriteExistingSVGTransportImgs(upgraded, assets)
 		if len(missing) == 0 {
-			return svg, nil
+			return svg[:existing[0]] + upgraded + svg[existing[1]:], nil
 		}
 		addition := renderSVGTransportImgs(missing)
-		rewritten := svgMetadataEndRegex.ReplaceAllStringFunc(block, func(end string) string {
+		rewritten := svgMetadataEndRegex.ReplaceAllStringFunc(upgraded, func(end string) string {
 			return addition + end
 		})
 		return svg[:existing[0]] + rewritten + svg[existing[1]:], nil
 	}
 
-	metadata := `<metadata data-svglide-assets="true">` + renderSVGTransportImgs(tokens) + `</metadata>`
+	metadata := `<metadata data-svglide-assets="` + svglideAssetsVersion + `">` + renderSVGTransportImgs(assets) + `</metadata>`
 	prefix := svg[:m[8]]
 	closer := svg[m[8]:m[9]]
 	after := svg[m[9]:]
@@ -1196,14 +1340,91 @@ func metadataImgTokens(metadata string) map[string]bool {
 	return out
 }
 
-func renderSVGTransportImgs(tokens []string) string {
+func rewriteExistingSVGTransportImgs(metadata string, assets []svgAssetMeta) string {
+	byToken := map[string]svgAssetMeta{}
+	for _, asset := range assets {
+		byToken[asset.Token] = asset
+	}
+	return svgMetadataImgTagRegex.ReplaceAllStringFunc(metadata, func(tag string) string {
+		for _, m := range svgMetadataImgRegex.FindAllStringSubmatch(tag, -1) {
+			if len(m) >= 4 && m[1] == m[3] {
+				if asset, ok := byToken[m[2]]; ok {
+					return renderSVGTransportImg(asset)
+				}
+			}
+		}
+		return tag
+	})
+}
+
+func renderSVGTransportImgs(assets []svgAssetMeta) string {
 	var b strings.Builder
-	for _, token := range tokens {
-		b.WriteString(`<img src="`)
-		b.WriteString(xmlEscape(token))
-		b.WriteString(`" />`)
+	for _, asset := range assets {
+		b.WriteString(renderSVGTransportImg(asset))
 	}
 	return b.String()
+}
+
+func renderSVGTransportImg(asset svgAssetMeta) string {
+	return `<img xmlns="" src="` + xmlEscape(asset.Token) +
+		`" name="` + xmlEscape(asset.Name) +
+		`" mimeType="` + xmlEscape(asset.MimeType) +
+		`" size="` + fmt.Sprintf("%d", asset.Size) +
+		`" width="` + fmt.Sprintf("%d", asset.Width) +
+		`" height="` + fmt.Sprintf("%d", asset.Height) +
+		`" />`
+}
+
+func normalizeSVGAssetMeta(asset svgAssetMeta) svgAssetMeta {
+	asset.Token = strings.TrimSpace(asset.Token)
+	asset.Name = strings.TrimSpace(asset.Name)
+	asset.MimeType = strings.TrimSpace(asset.MimeType)
+	return asset
+}
+
+func validateSVGAssetMeta(asset svgAssetMeta) error {
+	asset = normalizeSVGAssetMeta(asset)
+	var missing []string
+	if asset.Token == "" {
+		missing = append(missing, "token")
+	}
+	if asset.Name == "" {
+		missing = append(missing, "name")
+	}
+	if asset.MimeType == "" {
+		missing = append(missing, "mimeType")
+	}
+	if asset.Size <= 0 {
+		missing = append(missing, "size")
+	}
+	if asset.Width <= 0 {
+		missing = append(missing, "width")
+	}
+	if asset.Height <= 0 {
+		missing = append(missing, "height")
+	}
+	if len(missing) > 0 {
+		token := asset.Token
+		if token == "" {
+			token = "<empty>"
+		}
+		return output.ErrValidation("incomplete SVG image asset metadata for %s: missing %s", token, strings.Join(missing, ", "))
+	}
+	return nil
+}
+
+func dedupeSVGAssetMeta(in []svgAssetMeta) []svgAssetMeta {
+	var out []svgAssetMeta
+	seen := map[string]bool{}
+	for _, asset := range in {
+		asset = normalizeSVGAssetMeta(asset)
+		if asset.Token == "" || seen[asset.Token] {
+			continue
+		}
+		seen[asset.Token] = true
+		out = append(out, asset)
+	}
+	return out
 }
 
 func dedupeStrings(in []string) []string {

@@ -4,13 +4,21 @@
 package slides
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
+
+	"github.com/larksuite/cli/internal/cmdutil"
+	"github.com/larksuite/cli/internal/core"
+	"github.com/larksuite/cli/shortcuts/common"
 )
 
 func TestExtractSVGImagePlaceholderPaths(t *testing.T) {
@@ -20,7 +28,7 @@ func TestExtractSVGImagePlaceholderPaths(t *testing.T) {
 		`<svg><image slide:role="image" href="@./hero.png"/><a href="@./link.png"/></svg>`,
 		`<svg><image xlink:href='@./hero.png'/><image href = "@./other.png"/></svg>`,
 	}
-	got := extractSVGImagePlaceholderPaths(svgs, map[string]string{"@./other.png": "boxcn_other"})
+	got := extractSVGImagePlaceholderPaths(svgs, svgAssetMap{"@./other.png": {Token: "boxcn_other"}})
 	want := []string{"./hero.png"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("got %v, want %v", got, want)
@@ -31,9 +39,9 @@ func TestRewriteSVGImagePlaceholdersWithTokens(t *testing.T) {
 	t.Parallel()
 
 	in := `<svg><image slide:role="image" href="@./hero.png"/><image xlink:href='@./logo.png'/><image data-href="@./ignored.png"/><a href="@./link.png">link</a><image href="https://example.com/noop.png"/></svg>`
-	got, tokens := rewriteSVGImagePlaceholdersWithTokens(in, map[string]string{
-		"./hero.png": "boxcn_hero",
-		"./logo.png": "boxcn_logo",
+	got, assets := rewriteSVGImagePlaceholdersWithTokens(in, svgAssetMap{
+		"./hero.png": {Token: "boxcn_hero", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360},
+		"./logo.png": {Token: "boxcn_logo", Name: "logo.png", MimeType: "image/png", Size: 5678, Width: 320, Height: 180},
 	})
 	for _, want := range []string{`href="boxcn_hero"`, `href="boxcn_logo"`} {
 		if !strings.Contains(got, want) {
@@ -49,9 +57,12 @@ func TestRewriteSVGImagePlaceholdersWithTokens(t *testing.T) {
 	if !strings.Contains(got, `data-href="@./ignored.png"`) {
 		t.Fatalf("non-href image attribute should be untouched: %s", got)
 	}
-	wantTokens := []string{"boxcn_hero", "boxcn_logo"}
-	if !reflect.DeepEqual(tokens, wantTokens) {
-		t.Fatalf("tokens = %v, want %v", tokens, wantTokens)
+	wantAssets := []svgAssetMeta{
+		{Token: "boxcn_hero", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360},
+		{Token: "boxcn_logo", Name: "logo.png", MimeType: "image/png", Size: 5678, Width: 320, Height: 180},
+	}
+	if !reflect.DeepEqual(assets, wantAssets) {
+		t.Fatalf("assets = %v, want %v", assets, wantAssets)
 	}
 }
 
@@ -59,12 +70,16 @@ func TestInjectSVGTransportAssetMetadata(t *testing.T) {
 	t.Parallel()
 
 	in := `<?xml version="1.0"?><!DOCTYPE svg><!-- lead --><svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><rect/></svg>`
-	got, err := injectSVGTransportAssetMetadata(in, []string{"boxcn_a", "boxcn_b", "boxcn_a"})
+	got, err := injectSVGTransportAssetMetadata(in, []svgAssetMeta{
+		{Token: "boxcn_a", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360},
+		{Token: "boxcn_b", Name: "logo.jpg", MimeType: "image/jpeg", Size: 5678, Width: 320, Height: 180},
+		{Token: "boxcn_a", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360},
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	rootIdx := strings.Index(got, "<svg")
-	metaIdx := strings.Index(got, `<metadata data-svglide-assets="true">`)
+	metaIdx := strings.Index(got, `<metadata data-svglide-assets="svglide-assets/v1">`)
 	if rootIdx < 0 || metaIdx < rootIdx {
 		t.Fatalf("metadata should be injected inside root <svg>, got: %s", got)
 	}
@@ -74,25 +89,112 @@ func TestInjectSVGTransportAssetMetadata(t *testing.T) {
 	if !strings.Contains(got, `src="boxcn_b"`) {
 		t.Fatalf("boxcn_b missing, got: %s", got)
 	}
+	for _, want := range []string{
+		`<img xmlns="" src="boxcn_a" name="hero.png" mimeType="image/png" size="1234" width="640" height="360" />`,
+		`<img xmlns="" src="boxcn_b" name="logo.jpg" mimeType="image/jpeg" size="5678" width="320" height="180" />`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("metadata missing %s, got: %s", want, got)
+		}
+	}
 }
 
 func TestInjectSVGTransportAssetMetadataMergesExisting(t *testing.T) {
 	t.Parallel()
 
-	in := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><metadata data-svglide-assets="true"><img src="boxcn_a" /></metadata><image href="boxcn_a"/></svg>`
-	got, err := injectSVGTransportAssetMetadata(in, []string{"boxcn_a", "boxcn_b"})
+	in := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><metadata data-svglide-assets="svglide-assets/v1"><img xmlns="" src="boxcn_a" name="hero.png" mimeType="image/png" size="1234" width="640" height="360" /></metadata><image href="boxcn_a"/></svg>`
+	got, err := injectSVGTransportAssetMetadata(in, []svgAssetMeta{
+		{Token: "boxcn_a", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360},
+		{Token: "boxcn_b", Name: "logo.png", MimeType: "image/png", Size: 5678, Width: 320, Height: 180},
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if strings.Count(got, `<metadata data-svglide-assets="true">`) != 1 {
+	if strings.Count(got, `<metadata data-svglide-assets="svglide-assets/v1">`) != 1 {
 		t.Fatalf("should keep a single transport metadata block, got: %s", got)
 	}
 	if strings.Count(got, `src="boxcn_a"`) != 1 {
 		t.Fatalf("boxcn_a should remain deduped, got: %s", got)
 	}
-	if !strings.Contains(got, `src="boxcn_b"`) {
+	if !strings.Contains(got, `src="boxcn_b" name="logo.png" mimeType="image/png" size="5678" width="320" height="180"`) {
 		t.Fatalf("boxcn_b should be appended, got: %s", got)
 	}
+}
+
+func TestInjectSVGTransportAssetMetadataUpgradesLegacyBlock(t *testing.T) {
+	t.Parallel()
+
+	in := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide"><metadata data-svglide-assets="true"><img src="boxcn_a" /></metadata><image href="boxcn_a"/></svg>`
+	got, err := injectSVGTransportAssetMetadata(in, []svgAssetMeta{
+		{Token: "boxcn_a", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(got, `data-svglide-assets="true"`) {
+		t.Fatalf("legacy asset metadata marker should be upgraded, got: %s", got)
+	}
+	for _, want := range []string{
+		`<metadata data-svglide-assets="svglide-assets/v1">`,
+		`<img xmlns="" src="boxcn_a" name="hero.png" mimeType="image/png" size="1234" width="640" height="360" />`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("upgraded metadata missing %s, got: %s", want, got)
+		}
+	}
+}
+
+func TestParseSVGAssetsSupportsStringAndObjectValues(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("assets.json", []byte(`{
+		"@./token-only.png": "boxcn_token_only",
+		"@./hero.png": {
+			"token": "boxcn_hero",
+			"name": "hero.png",
+			"mimeType": "image/png",
+			"size": 1234,
+			"width": 640,
+			"height": 360
+		}
+	}`), 0o644); err != nil {
+		t.Fatalf("write assets.json: %v", err)
+	}
+
+	assets, err := parseSVGAssets(testSlidesRuntime(t), "assets.json")
+	if err != nil {
+		t.Fatalf("parse assets: %v", err)
+	}
+	if got := assets["@./token-only.png"]; got != (svgAssetMeta{Token: "boxcn_token_only"}) {
+		t.Fatalf("token-only asset = %#v", got)
+	}
+	want := svgAssetMeta{Token: "boxcn_hero", Name: "hero.png", MimeType: "image/png", Size: 1234, Width: 640, Height: 360}
+	if got := assets["@./hero.png"]; got != want {
+		t.Fatalf("object asset = %#v, want %#v", got, want)
+	}
+}
+
+func TestParseSVGAssetsRejectsObjectWithoutToken(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("assets.json", []byte(`{"@./hero.png":{"name":"hero.png","mimeType":"image/png","size":1234,"width":640,"height":360}}`), 0o644); err != nil {
+		t.Fatalf("write assets.json: %v", err)
+	}
+
+	_, err := parseSVGAssets(testSlidesRuntime(t), "assets.json")
+	if err == nil {
+		t.Fatal("expected missing token to fail")
+	}
+	if !strings.Contains(err.Error(), "must include token") {
+		t.Fatalf("err = %v, want token guidance", err)
+	}
+}
+
+func testSlidesRuntime(t *testing.T) *common.RuntimeContext {
+	t.Helper()
+	cfg := slidesTestConfig(t, "")
+	f, _, _, _ := cmdutil.TestFactory(t, cfg)
+	return common.TestNewRuntimeContextForAPI(context.Background(), &cobra.Command{Use: "slides"}, cfg, f, core.AsUser)
 }
 
 func TestEnsureSVGlideRootContractVersionInjectsMissingVersion(t *testing.T) {
