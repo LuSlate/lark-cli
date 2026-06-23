@@ -136,6 +136,57 @@ func TestAppsMetricQuery_FillsMissingRequestValuesWithZero(t *testing.T) {
 	}
 }
 
+func TestAppsMetricQuery_NamedSeriesDoesNotDependOnBackendOrder(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/query_metrics_data",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"series": []interface{}{
+					map[string]interface{}{
+						"name": "client_api_request_error_count",
+						"points": []interface{}{
+							map[string]interface{}{"timestamp": float64(1782208800), "value": float64(2)},
+						},
+					},
+					map[string]interface{}{
+						"name": "client_api_request_count",
+						"points": []interface{}{
+							map[string]interface{}{"timestamp": float64(1782208800), "value": float64(10)},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsMetricQuery, []string{
+		"+metric-query", "--app-id", "app_x", "--metric", "requests", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+
+	var env struct {
+		Data struct {
+			Items []struct {
+				Values map[string]interface{} `json:"values"`
+			} `json:"items"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, stdout.String())
+	}
+	if len(env.Data.Items) != 1 {
+		t.Fatalf("items len = %d", len(env.Data.Items))
+	}
+	values := env.Data.Items[0].Values
+	if values["total"] != float64(10) || values["error"] != float64(2) {
+		t.Fatalf("values = %#v, want total=10 error=2", values)
+	}
+}
+
 func TestAppsMetricQuery_EmptyResponseOutputsEmptyItemsArray(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -311,6 +362,63 @@ func TestAppsAnalyticsQuery_DesktopSeriesUsesDesktopValueLabel(t *testing.T) {
 	}
 	if _, ok := env.Data.Items[0].Values["page-view"]; ok {
 		t.Fatalf("values should not use page-view label: %#v", env.Data.Items[0].Values)
+	}
+}
+
+func TestAppsAnalyticsQuery_NamedSeriesDoesNotDependOnBackendOrder(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/query_analytics_data",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"series": []interface{}{
+					map[string]interface{}{
+						"metric_type": "TOTAL_USER",
+						"points": []interface{}{
+							map[string]interface{}{"timestamp_ns": float64(1782208800000000000), "value": float64(20)},
+						},
+					},
+					map[string]interface{}{
+						"metric_type": "ACTIVE_USER",
+						"points": []interface{}{
+							map[string]interface{}{"timestamp_ns": float64(1782208800000000000), "value": float64(7)},
+						},
+					},
+					map[string]interface{}{
+						"metric_type": "NEW_USER",
+						"points": []interface{}{
+							map[string]interface{}{"timestamp_ns": float64(1782208800000000000), "value": float64(3)},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsAnalyticsQuery, []string{
+		"+analytics-query", "--app-id", "app_x", "--analytics", "users", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+
+	var env struct {
+		Data struct {
+			Items []struct {
+				Values map[string]interface{} `json:"values"`
+			} `json:"items"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, stdout.String())
+	}
+	if len(env.Data.Items) != 1 {
+		t.Fatalf("items len = %d", len(env.Data.Items))
+	}
+	values := env.Data.Items[0].Values
+	if values["active-users"] != float64(7) || values["new-users"] != float64(3) || values["total-users"] != float64(20) {
+		t.Fatalf("values = %#v, want active-users=7 new-users=3 total-users=20", values)
 	}
 }
 
