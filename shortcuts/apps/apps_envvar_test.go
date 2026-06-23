@@ -268,6 +268,37 @@ func TestAppsEnvVarDelete_BuildsDeleteBodyWithKeys(t *testing.T) {
 	}
 }
 
+func TestAppsEnvVarDelete_OnlineDryRunDoesNotRequireYes(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsEnvVarDelete,
+		[]string{"+envvar-delete", "--app-id", "app_x", "--env", "online",
+			"--key", "SECRET_ONE", "--key", "SECRET_TWO", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("dry-run err=%v", err)
+	}
+
+	var dryRun struct {
+		API []struct {
+			Method string                 `json:"method"`
+			URL    string                 `json:"url"`
+			Body   map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	got := stdout.String()
+	if err := json.Unmarshal([]byte(got), &dryRun); err != nil {
+		t.Fatalf("decode dry-run: %v\n%s", err, got)
+	}
+	if len(dryRun.API) != 1 || dryRun.API[0].Method != "DELETE" || dryRun.API[0].URL != "/open-apis/spark/v1/apps/app_x/env_vars" {
+		t.Fatalf("dry-run api = %#v", dryRun.API)
+	}
+	if dryRun.API[0].Body["env"] != "online" {
+		t.Fatalf("dry-run body.env = %v, want online", dryRun.API[0].Body["env"])
+	}
+	keys, ok := dryRun.API[0].Body["keys"].([]interface{})
+	if !ok || len(keys) != 2 || keys[0] != "SECRET_ONE" || keys[1] != "SECRET_TWO" {
+		t.Fatalf("dry-run body.keys = %#v, want SECRET_ONE/SECRET_TWO", dryRun.API[0].Body["keys"])
+	}
+}
+
 func TestAppsEnvVarList_InvalidEnvTypedValidation(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsEnvVarList,
