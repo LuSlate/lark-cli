@@ -1,0 +1,59 @@
+{
+  "absorbed_as": [
+    "template_candidate",
+    "theme_candidate",
+    "layout_archetype",
+    "component_variant",
+    "planner_selection_signal"
+  ],
+  "created_at": "2026-06-23",
+  "runtime_contract": {
+    "external_html_css_js": "forbidden",
+    "forbidden_svg_features": [
+      "filter",
+      "pattern",
+      "foreignObject",
+      "image",
+      "use",
+      "linearGradient",
+      "radialGradient"
+    ],
+    "python_generic_fallback": "forbidden",
+    "runtime": "owned_satori_template"
+  },
+  "schema_version": "svglide-beautiful-template-absorption/v1",
+  "source_family": "scatterbrain",
+  "source_trace": [
+    {
+      "evidence": "source_design_md",
+      "source": "beautiful-html-templates/templates/scatterbrain/design.md"
+    },
+    {
+      "evidence": "source_template_json",
+      "source": "beautiful-html-templates/templates/scatterbrain/template.json"
+    },
+    {
+      "evidence": "source_screenshot",
+      "source": "beautiful-html-templates/screenshots/scatterbrain-1.png"
+    },
+    {
+      "evidence": "source_screenshot",
+      "source": "beautiful-html-templates/screenshots/scatterbrain-4.png"
+    },
+    {
+      "evidence": "source_screenshot",
+      "source": "beautiful-html-templates/screenshots/scatterbrain-8.png"
+    }
+  ],
+  "svglide_asset_ids": [
+    "template.sticky-workshop-board",
+    "theme.scatterbrain",
+    "layout.sticky_workshop_board",
+    "component.title_block",
+    "component.finding_callout",
+    "component.action_list",
+    "component.timeline"
+  ],
+  "template_id": "sticky-workshop-board",
+  "theme_id": "scatterbrain"
+}

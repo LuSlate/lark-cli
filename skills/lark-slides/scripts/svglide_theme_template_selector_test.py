@@ -16,6 +16,29 @@ import svglide_theme_template_selector as selector
 import beautiful_template_runtime
 
 
+PROMOTED_SELECTOR_CASES = [
+    ("pixel-orbit-console", "retro gaming hackathon demo deck with pixel stats, console dashboard, cyberpunk developer tools"),
+    ("biennale-programme-poster", "museum exhibition annual programme deck for young artists biennale with calendar ledger and curatorial notes"),
+    ("block-frame-grid", "indie SaaS launch deck with block cards, feature grid, activation metrics and confident pop graphic voice"),
+    ("capsule-card-system", "lifestyle creator product launch with modular steps, capsule cards, Y2K beauty wellness vibe"),
+    ("coral-magazine-feature", "beauty fashion brand story with magazine feature, stat callout, warm editorial voice"),
+    ("creative-mode-grid", "creative agency credentials deck with design-led portfolio evidence, multi accent review and studio method"),
+    ("daisy-workshop-playbook", "playful workshop playbook with learning notes, lessons, cheerful training activities"),
+    ("tritone-editorial-spread", "editorial spread with tri tone points, magazine article structure and opinion narrative"),
+    ("emerald-editorial-cover", "leadership editorial cover with premium brand story, stat proof and executive feature"),
+    ("grove-organic-brief", "organic sustainability brief with grove principles, nature inspired metrics and calm advisory tone"),
+    ("mat-midcentury-board", "mid-century interior concept board with tactile furniture, material palette and design board"),
+    ("people-platform-manifesto", "people platform manifesto for community launch, social actions and public movement narrative"),
+    ("pink-nocturne-feature", "nightlife fashion launch story with dark luxe editorial, nocturne mood and product reveal"),
+    ("playful-indie-launch", "playful indie product launch with maker steps, fun stats and approachable startup tone"),
+    ("retro-zine-spread", "risograph zine community notes with lo-fi printed collage, member quotes and local stories"),
+    ("sticky-workshop-board", "facilitated workshop board with sticky notes, postits, phases and group synthesis"),
+    ("soft-editorial-feature", "reflective founder essay with warm longform story, quiet evidence cards and slower argument"),
+    ("stencil-field-manual", "field manual for operations principles, stencil checklist rows and rugged procedure guide"),
+    ("vellum-scholar-brief", "scholarly research synthesis policy memo with evidence notes, white paper and advisory conclusions"),
+]
+
+
 def prepare_project(root: Path, brief: str) -> None:
     palette = svglide_palette_selector.select_palette(root, brief, top_k=5)
     svglide_palette_selector.write_palette_selection(root, palette)
@@ -134,6 +157,25 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
         self.assertIn("stone-architect", theme_ids)
         declared = [item for item in result["template_candidates"] if item["template_id"] == "poster-stat-punch"][0]
         self.assertIn("plan_declared", declared["matched_signals"])
+
+    def test_promoted_templates_match_clear_reference_scenarios(self) -> None:
+        for expected_template_id, brief in PROMOTED_SELECTOR_CASES:
+            with self.subTest(expected_template_id=expected_template_id):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    root = Path(tmpdir)
+                    prepare_project(root, brief)
+                    result = selector.select_theme_template(root, brief, top_k=8)
+
+                self.assertEqual(result["selected_template_id"], expected_template_id)
+                candidate = next(
+                    item for item in result["template_candidates"] if item["template_id"] == expected_template_id
+                )
+                self.assertEqual(candidate["promotion_gate"]["status"], "passed")
+                self.assertIn("source_trace", candidate)
+                self.assertTrue(
+                    any(str(signal).startswith("promoted_template_semantic:") for signal in candidate["matched_signals"]),
+                    candidate["matched_signals"],
+                )
 
     def test_write_selection_writes_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

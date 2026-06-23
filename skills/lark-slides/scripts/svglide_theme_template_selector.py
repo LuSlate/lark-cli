@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,50 @@ PLAN_PATH = Path("02-plan/slide_plan.json")
 SELECTION_PATH = Path("02-plan/theme-template-selection.json")
 SELECTION_RECEIPT_PATH = Path("receipts/theme_template_selection.json")
 PRODUCTION_ARCHITECTURE_TEMPLATE_IDS = {"architectural-spec"}
+PROMOTED_TEMPLATE_REQUIRED_EVIDENCE = "template_token"
+PROMOTED_TEMPLATE_FIELD_WEIGHTS = {
+    "asset_id": 32,
+    "content_shapes": 30,
+    "audience_tags": 16,
+    "tone_tags": 12,
+    "industry_tags": 5,
+    "visual_signature": 4,
+    "best_for": 8,
+}
+PROMOTED_TEMPLATE_BOOST_CAP = 96
+KEYWORD_TOKEN_RE = re.compile(r"[a-z0-9]+")
+PROMOTED_TEMPLATE_STOPWORDS = {
+    "about",
+    "across",
+    "also",
+    "and",
+    "anything",
+    "brand",
+    "business",
+    "choice",
+    "content",
+    "deck",
+    "decks",
+    "feel",
+    "for",
+    "from",
+    "good",
+    "including",
+    "instead",
+    "moment",
+    "rather",
+    "review",
+    "slide",
+    "slides",
+    "should",
+    "that",
+    "the",
+    "this",
+    "to",
+    "wants",
+    "with",
+    "work",
+}
 
 
 def now_iso() -> str:
@@ -87,6 +132,61 @@ def list_value(value: Any) -> list[str]:
     if isinstance(value, str) and value.strip():
         return [value]
     return []
+
+
+def keyword_tokens(value: Any) -> list[str]:
+    return [
+        token
+        for token in KEYWORD_TOKEN_RE.findall(normalize_brief(str(value)))
+        if len(token) >= 3 and token not in PROMOTED_TEMPLATE_STOPWORDS
+    ]
+
+
+def prompt_matches_metadata_term(prompt_norm: str, prompt_tokens: set[str], term: Any) -> bool:
+    term_norm = normalize_brief(str(term))
+    if not term_norm:
+        return False
+    if len(term_norm) >= 4 and term_norm in prompt_norm:
+        return True
+    tokens = keyword_tokens(term_norm)
+    if not tokens:
+        return False
+    if len(tokens) == 1:
+        return tokens[0] in prompt_tokens
+    if len(tokens) <= 4 and all(token in prompt_tokens for token in tokens):
+        return True
+    return False
+
+
+def is_promoted_template_record(template: dict[str, Any]) -> bool:
+    gate = template.get("promotion_gate") if isinstance(template.get("promotion_gate"), dict) else {}
+    evidence = gate.get("required_evidence") if isinstance(gate.get("required_evidence"), list) else []
+    return PROMOTED_TEMPLATE_REQUIRED_EVIDENCE in {str(item) for item in evidence}
+
+
+def promoted_template_semantic_boost(prompt_norm: str, template: dict[str, Any]) -> tuple[int, list[str]]:
+    if not is_promoted_template_record(template):
+        return 0, []
+    metadata = template.get("selection_metadata") if isinstance(template.get("selection_metadata"), dict) else {}
+    prompt_tokens = set(keyword_tokens(prompt_norm))
+    matches: list[str] = []
+    score = 0
+    term_groups: list[tuple[str, list[str]]] = [
+        ("asset_id", [str(template.get("id") or ""), str(template.get("source_template_id") or "")]),
+    ]
+    for field in ["content_shapes", "audience_tags", "tone_tags", "industry_tags", "visual_signature", "best_for"]:
+        term_groups.append((field, list_value(metadata.get(field))))
+    for field, terms in term_groups:
+        weight = PROMOTED_TEMPLATE_FIELD_WEIGHTS[field]
+        for term in terms:
+            if not prompt_matches_metadata_term(prompt_norm, prompt_tokens, term):
+                continue
+            normalized = normalize_brief(term).replace(" ", "_")
+            score += weight
+            matches.append(f"promoted_template_semantic:{field}:{normalized}")
+    if not matches:
+        return 0, []
+    return min(score, PROMOTED_TEMPLATE_BOOST_CAP), matches[:8]
 
 
 def template_asset(template: dict[str, Any]) -> dict[str, Any]:
@@ -282,11 +382,21 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     if template_id in {"process-flow", "roadmap-lanes"} and "summary" in occasions:
         score -= 8
         scored["rejection_reasons"].append("template_mismatch:summary_not_process")
+    promoted_boost, promoted_matches = promoted_template_semantic_boost(prompt_norm, template)
+    if promoted_boost:
+        score += promoted_boost
+        scored["matched_signals"].extend(promoted_matches)
     scored["score"] = score
     scored["template_id"] = template_id
     for key in [
+        "asset_status",
         "source_template_id",
         "claim_level",
+        "quality_tier",
+        "default_selectable",
+        "selection_scope",
+        "promotion_gate",
+        "source_trace",
         "family_usage_policy_summary",
         "cjk_policy_summary",
         "extension_grammar_summary",
@@ -304,9 +414,10 @@ def selected_palette_mode(palette_selection: dict[str, Any]) -> str | None:
     background = str(colors.get("background") or "")
     if background.startswith("#00") or background.upper() in {"#000000", "#08122D", "#0F172A", "#111111"}:
         return "dark"
+    if background.startswith("#"):
+        return "light"
     selected = palette_selection.get("selected_palette_id")
-    registry = svglide_palette_selector.load_palette_registry()
-    for palette in registry.get("palettes", []):
+    for palette in palette_selection.get("palette_candidates", []):
         if isinstance(palette, dict) and palette.get("palette_id") == selected:
             raw = palette.get("mode")
             return raw if isinstance(raw, str) else None

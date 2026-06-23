@@ -707,6 +707,33 @@ class SVGlideQualityGateTest(unittest.TestCase):
         self.assertIn("legacy_debug_registry_enabled", codes)
         self.assertIn("legacy_asset_status", codes)
 
+    def test_quality_gate_blocks_source_inventory_only_template_in_production_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            self.write_minimal_passing_project(project)
+            registry = beautiful_template_runtime.template_registry()
+            registry["templates"].append(
+                {
+                    "id": "fake-source-template",
+                    "status": "active",
+                    "asset_status": "production",
+                    "quality_tier": "trusted",
+                    "default_selectable": True,
+                    "selection_scope": "production",
+                    "claim_level": "source_inventory_only",
+                    "promotion_gate": {"status": "blocked", "issues": [{"code": "source_inventory_only_family"}]},
+                }
+            )
+            write_json(project / "02-plan/template-registry.json", registry)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        legacy_check = [check for check in result["checks"] if check["name"] == "legacy-fallback-review"][0]
+        codes = {item["code"] for item in legacy_check["issues"]}
+        self.assertIn("source_inventory_only_production_template", codes)
+        self.assertIn("template_promotion_gate_not_passed", codes)
+
     def test_quality_gate_fails_when_theme_adherence_theme_validate_is_stale(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)

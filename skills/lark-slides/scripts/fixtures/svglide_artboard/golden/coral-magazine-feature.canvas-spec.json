@@ -6,19 +6,19 @@
   },
   "content": {
     "cards": [
-      "智能推荐",
-      "批量导入",
-      "权限看板",
-      "异常提醒"
+      "Creator fit",
+      "Retail story",
+      "Ingredient proof"
     ],
-    "eyebrow": "CATALOG DROP",
-    "seal": "NEW",
-    "subtitle": "多色包装带和卡片适合产品功能目录、活动物料和轻量发布说明。",
-    "title": "功能货架更新"
+    "eyebrow": "EDITORIAL FEATURE",
+    "quote": "Warmth with authority.",
+    "stat": "3.6x share",
+    "subtitle": "Warm feature page with editorial rhythm, proof cards, and one sharp quote.",
+    "title": "Beauty Brand Proof"
   },
   "quality_constraints": {
-    "max_title_lines": 3,
-    "min_font_size": 15,
+    "max_title_lines": 2,
+    "min_font_size": 16,
     "safe_area": {
       "height": 460,
       "width": 864,
@@ -35,10 +35,10 @@
   "semantic_elements": [
     {
       "bbox": {
-        "height": 120,
-        "width": 760,
+        "height": 88,
+        "width": 710,
         "x": 56,
-        "y": 80
+        "y": 96
       },
       "element_id": "title",
       "kind": "text",
@@ -46,18 +46,18 @@
       "source_ref": "canvas_spec.content.title"
     }
   ],
-  "template_id": "product-ribbon",
+  "template_id": "coral-magazine-feature",
   "theme": {
     "colors": {
       "accent": "#111111",
-      "background": "#F8F8F4",
-      "muted": "#666666",
-      "panel": "#FFFFFF",
-      "primary": "#BE123C",
+      "background": "#FFF1E8",
+      "muted": "#76554A",
+      "panel": "#FFE0D2",
+      "primary": "#E85D3F",
       "surface": "#FFFFFF",
-      "text": "#111111"
+      "text": "#16110F"
     }
   },
-  "theme_id": "swiss-red",
+  "theme_id": "coral",
   "version": "svglide-canvas-spec/v1"
 }

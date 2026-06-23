@@ -1,0 +1,68 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "BRAINSTORM BOARD",
+    "phases": [
+      "Diverge",
+      "Cluster",
+      "Commit"
+    ],
+    "postits": [
+      "User pain",
+      "Fast prototype",
+      "Ops owner",
+      "Risk list",
+      "Launch test"
+    ],
+    "subtitle": "Sticky-note board for ideation, grouping, and next-wave planning.",
+    "title": "Workshop Idea Clusters"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "sticky-workshop-board",
+  "theme": {
+    "colors": {
+      "accent": "#F05A28",
+      "background": "#F7E7C6",
+      "muted": "#716657",
+      "panel": "#FFEE88",
+      "primary": "#2E4057",
+      "surface": "#FFF8E6",
+      "text": "#2A241E"
+    }
+  },
+  "theme_id": "scatterbrain",
+  "version": "svglide-canvas-spec/v1"
+}

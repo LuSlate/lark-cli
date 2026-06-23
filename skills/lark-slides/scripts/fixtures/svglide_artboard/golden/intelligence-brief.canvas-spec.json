@@ -1,61 +1,62 @@
 {
-  "version": "svglide-canvas-spec/v1",
   "canvas": {
-    "width": 960,
     "height": 540,
-    "viewBox": "0 0 960 540"
-  },
-  "safe_area": {
-    "x": 48,
-    "y": 40,
-    "width": 864,
-    "height": 460
-  },
-  "template_id": "intelligence-brief",
-  "theme_id": "signal-navy",
-  "theme": {
-    "colors": {
-      "background": "#1C2644",
-      "panel": "#232F55",
-      "primary": "#C8A870",
-      "accent": "#C8A870",
-      "text": "#E2DCD0",
-      "muted": "#8A96A8"
-    }
+    "viewBox": "0 0 960 540",
+    "width": 960
   },
   "content": {
+    "date": "2026 Q2",
     "eyebrow": "PRIVATE BRIEF",
-    "title": "组织信号简报",
-    "subtitle": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
     "points": [
       "指标移动前的协作信号",
       "约束来自跨团队边界",
       "下轮验证需要单 owner"
     ],
-    "date": "2026 Q2"
+    "subtitle": "用深色情报简报结构承载高层判断、早期信号和建议行动。",
+    "title": "组织信号简报"
   },
-  "semantic_elements": [
-    {
-      "element_id": "title",
-      "kind": "text",
-      "role": "title",
-      "source_ref": "canvas_spec.content.title",
-      "bbox": {
-        "x": 56,
-        "y": 80,
-        "width": 760,
-        "height": 120
-      }
-    }
-  ],
   "quality_constraints": {
     "max_title_lines": 3,
     "min_font_size": 15,
     "safe_area": {
-      "x": 48,
-      "y": 40,
+      "height": 460,
       "width": 864,
-      "height": 460
+      "x": 48,
+      "y": 40
     }
-  }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 120,
+        "width": 760,
+        "x": 56,
+        "y": 80
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "intelligence-brief",
+  "theme": {
+    "colors": {
+      "accent": "#A28A6A",
+      "background": "#EFE9DC",
+      "muted": "#756B60",
+      "panel": "#F8F4EA",
+      "primary": "#5F5549",
+      "surface": "#F8F4EA",
+      "text": "#27221D"
+    }
+  },
+  "theme_id": "stone-architect",
+  "version": "svglide-canvas-spec/v1"
 }

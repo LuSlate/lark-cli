@@ -1,0 +1,70 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "actions": [
+      "Stabilize beta",
+      "Open community"
+    ],
+    "badges": [
+      "NEON",
+      "PIXEL",
+      "BUILD"
+    ],
+    "eyebrow": "ORBIT CONSOLE",
+    "stats": [
+      "DAU +38%",
+      "Latency -22%",
+      "Stars 4.8k"
+    ],
+    "subtitle": "CRT-night console for hackathon momentum, launch stats, and next actions.",
+    "title": "Retro Dev Growth Loop"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "pixel-orbit-console",
+  "theme": {
+    "colors": {
+      "accent": "#F0A6CA",
+      "background": "#0A0E27",
+      "muted": "#E2D5F2",
+      "panel": "#14224A",
+      "primary": "#5EDCF4",
+      "surface": "#0F1B3D",
+      "text": "#FFFFFF"
+    }
+  },
+  "theme_id": "8-bit-orbit",
+  "version": "svglide-canvas-spec/v1"
+}

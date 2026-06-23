@@ -1,0 +1,66 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "ORGANIC BRIEF",
+    "metrics": [
+      "Repeat +22%",
+      "Waste -14%",
+      "NPS 61"
+    ],
+    "principles": [
+      "Grow with trust",
+      "Localize rituals",
+      "Measure retention"
+    ],
+    "subtitle": "Patient forest palette for lifestyle strategy, sustainability notes, and calm metrics.",
+    "title": "Wellness Growth Principles"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "grove-organic-brief",
+  "theme": {
+    "colors": {
+      "accent": "#B98548",
+      "background": "#F4EBDD",
+      "muted": "#657062",
+      "panel": "#DDE4C8",
+      "primary": "#31533B",
+      "surface": "#FFF9EE",
+      "text": "#243327"
+    }
+  },
+  "theme_id": "grove",
+  "version": "svglide-canvas-spec/v1"
+}

@@ -1,0 +1,67 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "actions": [
+      "Open forum",
+      "Publish pledge",
+      "Track delivery"
+    ],
+    "eyebrow": "COMMUNITY CAMPAIGN",
+    "platforms": [
+      "Access first",
+      "Build locally",
+      "Show receipts"
+    ],
+    "stamp": "PUBLIC",
+    "subtitle": "Poster-like platform for civic principles, direct asks, and community action.",
+    "title": "People Platform Manifesto"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "people-platform-manifesto",
+  "theme": {
+    "colors": {
+      "accent": "#D9291C",
+      "background": "#F9E7C8",
+      "muted": "#5F4B36",
+      "panel": "#D9291C",
+      "primary": "#111111",
+      "surface": "#FFF3DA",
+      "text": "#111111"
+    }
+  },
+  "theme_id": "peoples-platform",
+  "version": "svglide-canvas-spec/v1"
+}

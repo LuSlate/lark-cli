@@ -1,0 +1,69 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "ARCHIVE MANUAL",
+    "footer": "Ref. 2026",
+    "principles": [
+      "Preserve source",
+      "Name uncertainty",
+      "Show lineage",
+      "Use restraint"
+    ],
+    "rows": [
+      "Archive",
+      "Method",
+      "Reading",
+      "Next visit"
+    ],
+    "subtitle": "Earth-tone stencil board for archival research, heritage narratives, and rules.",
+    "title": "Field Manual Principles"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "stencil-field-manual",
+  "theme": {
+    "colors": {
+      "accent": "#7A4E2D",
+      "background": "#E8D8B9",
+      "muted": "#65594B",
+      "panel": "#D2B48C",
+      "primary": "#3B3329",
+      "surface": "#F2E4C8",
+      "text": "#252019"
+    }
+  },
+  "theme_id": "stencil-tablet",
+  "version": "svglide-canvas-spec/v1"
+}

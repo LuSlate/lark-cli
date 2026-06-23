@@ -1,0 +1,59 @@
+{
+  "absorbed_as": [
+    "template_candidate",
+    "theme_candidate",
+    "layout_archetype",
+    "component_variant",
+    "planner_selection_signal"
+  ],
+  "created_at": "2026-06-23",
+  "runtime_contract": {
+    "external_html_css_js": "forbidden",
+    "forbidden_svg_features": [
+      "filter",
+      "pattern",
+      "foreignObject",
+      "image",
+      "use",
+      "linearGradient",
+      "radialGradient"
+    ],
+    "python_generic_fallback": "forbidden",
+    "runtime": "owned_satori_template"
+  },
+  "schema_version": "svglide-beautiful-template-absorption/v1",
+  "source_family": "biennale-yellow",
+  "source_trace": [
+    {
+      "evidence": "source_design_md",
+      "source": "beautiful-html-templates/templates/biennale-yellow/design.md"
+    },
+    {
+      "evidence": "source_template_json",
+      "source": "beautiful-html-templates/templates/biennale-yellow/template.json"
+    },
+    {
+      "evidence": "source_screenshot",
+      "source": "beautiful-html-templates/screenshots/biennale-yellow-1.png"
+    },
+    {
+      "evidence": "source_screenshot",
+      "source": "beautiful-html-templates/screenshots/biennale-yellow-5.png"
+    },
+    {
+      "evidence": "source_screenshot",
+      "source": "beautiful-html-templates/screenshots/biennale-yellow-8.png"
+    }
+  ],
+  "svglide_asset_ids": [
+    "template.biennale-programme-poster",
+    "theme.biennale-yellow",
+    "layout.biennale_programme_poster",
+    "component.title_block",
+    "component.section_label",
+    "component.timeline",
+    "component.action_list"
+  ],
+  "template_id": "biennale-programme-poster",
+  "theme_id": "biennale-yellow"
+}

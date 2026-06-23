@@ -306,6 +306,18 @@ def collect_issue_codes(payload: Any) -> set[str]:
 def iter_legacy_markers(value: Any, path: str = "$") -> list[dict[str, str]]:
     markers: list[dict[str, str]] = []
     if isinstance(value, dict):
+        is_production_template = (
+            value.get("asset_status") == "production"
+            and value.get("quality_tier") == "trusted"
+            and value.get("default_selectable") is True
+            and value.get("selection_scope") == "production"
+            and ("template_id" in value or value.get("renderer_id") or ".templates[" in path)
+        )
+        if is_production_template and value.get("claim_level") == "source_inventory_only":
+            markers.append(issue("source_inventory_only_production_template", f"{path}.claim_level is source_inventory_only for production template"))
+        gate = value.get("promotion_gate")
+        if is_production_template and (not isinstance(gate, dict) or gate.get("status") != "passed"):
+            markers.append(issue("template_promotion_gate_not_passed", f"{path}.promotion_gate.status is not passed for production template"))
         for key, child in value.items():
             child_path = f"{path}.{key}"
             if key == "legacy_asset_used" and child is True:

@@ -35,6 +35,27 @@ REQUIRED_M15_CODES = {
     "missing_screenshot_benchmark_role",
 }
 REQUIRED_BENCHMARK_ROLES = {"cover_reference", "mid_deck_reference", "late_deck_reference"}
+PROMOTED_TEMPLATE_FAMILY_TO_ID = {
+    "8-bit-orbit": "pixel-orbit-console",
+    "biennale-yellow": "biennale-programme-poster",
+    "block-frame": "block-frame-grid",
+    "capsule": "capsule-card-system",
+    "coral": "coral-magazine-feature",
+    "creative-mode": "creative-mode-grid",
+    "daisy-days": "daisy-workshop-playbook",
+    "editorial-tri-tone": "tritone-editorial-spread",
+    "emerald-editorial": "emerald-editorial-cover",
+    "grove": "grove-organic-brief",
+    "mat": "mat-midcentury-board",
+    "peoples-platform": "people-platform-manifesto",
+    "pink-script": "pink-nocturne-feature",
+    "playful": "playful-indie-launch",
+    "retro-zine": "retro-zine-spread",
+    "scatterbrain": "sticky-workshop-board",
+    "soft-editorial": "soft-editorial-feature",
+    "stencil-tablet": "stencil-field-manual",
+    "vellum": "vellum-scholar-brief",
+}
 
 
 def load_json(name: str) -> dict:
@@ -91,8 +112,96 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
         records = beautiful_template_runtime.promoted_theme_records()
         source_families = {item["source_family"] for item in records}
 
-        for family_id in ["8-bit-orbit", "block-frame", "capsule"]:
+        synthetic_source_only = {
+            "template_id": "synthetic-source-only",
+            "status": "source_inventoried",
+            "claim_level": "source_inventory_only",
+            "svglide_mapping": {"svglide_asset_ids": ["theme.synthetic-source-only"]},
+            "theme_token": {"theme_id": "synthetic-source-only"},
+        }
+        candidate = beautiful_template_runtime.theme_promotion_candidate(synthetic_source_only)
+
+        self.assertEqual("blocked", candidate["promotion_gate"]["status"])
+        self.assertIn("source_inventory_only_family", {issue["code"] for issue in candidate["promotion_gate"]["issues"]})
+        for family_id in ["synthetic-source-only"]:
             self.assertNotIn(family_id, source_families)
+
+    def test_promoted_template_families_pass_template_gate(self) -> None:
+        registry = load_json("beautiful-html-template-families.json")
+        families_by_id = family_by_id(registry)
+        records = {item["source_family"]: item for item in beautiful_template_runtime.promoted_template_records()}
+
+        for family_id, template_id in PROMOTED_TEMPLATE_FAMILY_TO_ID.items():
+            with self.subTest(family=family_id):
+                family = families_by_id[family_id]
+                candidate = beautiful_template_runtime.template_promotion_candidate(family)
+                self.assertEqual("passed", candidate["promotion_gate"]["status"], candidate["promotion_gate"]["issues"])
+                self.assertEqual(template_id, candidate["template_id"])
+                self.assertEqual("production", candidate["status"])
+                self.assertEqual("trusted", candidate["quality_tier"])
+                self.assertTrue(candidate["default_selectable"])
+                self.assertIn(f"template.{template_id}", family["svglide_mapping"]["svglide_asset_ids"])
+                self.assertIn(family_id, records)
+
+    def test_promoted_templates_enter_default_registry_with_family_theme_binding(self) -> None:
+        registry = beautiful_template_runtime.template_registry()
+        templates = {item["id"]: item for item in registry["templates"]}
+
+        for family_id, template_id in PROMOTED_TEMPLATE_FAMILY_TO_ID.items():
+            with self.subTest(template=template_id):
+                self.assertIn(template_id, templates)
+                template = templates[template_id]
+                self.assertEqual("production", template["asset_status"])
+                self.assertEqual("trusted", template["quality_tier"])
+                self.assertTrue(template["default_selectable"])
+                self.assertEqual(family_id, template["source_template_id"])
+                self.assertEqual("svglide_absorbed", template["claim_level"])
+                self.assertEqual([family_id], template["supported_theme_ids"])
+                self.assertTrue(template.get("source_trace"))
+                self.assertEqual(f"artboard_satori.{template_id}", template["renderer_id"])
+                self.assertTrue(template["selection_metadata"]["best_for"])
+                self.assertTrue(template["selection_metadata"]["avoid_for"])
+                self.assertTrue(template["selection_metadata"]["visual_signature"])
+
+    def test_source_inventory_only_without_template_token_cannot_promote_template(self) -> None:
+        family = {
+            "template_id": "synthetic-source-only",
+            "status": "source_inventoried",
+            "claim_level": "source_inventory_only",
+            "svglide_mapping": {"svglide_asset_ids": ["template.synthetic-source-only"]},
+        }
+
+        candidate = beautiful_template_runtime.template_promotion_candidate(family)
+
+        self.assertEqual("blocked", candidate["promotion_gate"]["status"])
+        codes = {issue["code"] for issue in candidate["promotion_gate"]["issues"]}
+        self.assertIn("source_inventory_only_family", codes)
+        self.assertIn("missing_template_token", codes)
+
+    def test_runtime_selectable_requires_full_production_contract_not_status_only(self) -> None:
+        self.assertFalse(beautiful_template_runtime.is_runtime_selectable({"status": "production"}))
+        self.assertFalse(
+            beautiful_template_runtime.is_runtime_selectable(
+                {
+                    "status": "production",
+                    "asset_status": "production",
+                    "quality_tier": "fixture_only",
+                    "default_selectable": True,
+                    "selection_scope": "production",
+                }
+            )
+        )
+        self.assertTrue(
+            beautiful_template_runtime.is_runtime_selectable(
+                {
+                    "status": "active",
+                    "asset_status": "production",
+                    "quality_tier": "trusted",
+                    "default_selectable": True,
+                    "selection_scope": "production",
+                }
+            )
+        )
 
     def test_issue_codes_freeze_m15_contract(self) -> None:
         codes = all_issue_codes(load_json("beautiful-template-issue-codes.json"))
@@ -179,7 +288,7 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
                 self.assertNotIn("http://", runtime_blob)
                 self.assertNotIn("https://", runtime_blob)
 
-    def test_source_inventoried_families_do_not_claim_absorbed(self) -> None:
+    def test_unpromoted_source_inventoried_families_do_not_claim_absorbed(self) -> None:
         for family in load_json("beautiful-html-template-families.json")["families"]:
             if family["status"] == "source_inventoried":
                 self.assertEqual(family["claim_level"], "source_inventory_only", family["template_id"])
@@ -198,7 +307,7 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
         for key in ("source_trace", "semantic_fit", "visual_dna", "cjk_policy", "family_usage_policy"):
             self.assertTrue(candidate[key], key)
 
-    def test_all_source_inventory_only_families_cannot_promote_theme(self) -> None:
+    def test_all_remaining_source_inventory_only_families_cannot_promote_theme(self) -> None:
         records = beautiful_template_runtime.promoted_theme_records()
         promoted_sources = {item["source_family"] for item in records}
         registry = load_json("beautiful-html-template-families.json")
@@ -209,7 +318,6 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
             if family["claim_level"] == "source_inventory_only"
         }
 
-        self.assertTrue(source_inventory_only)
         self.assertTrue(promoted_sources.isdisjoint(source_inventory_only))
 
     def test_extractor_reads_cjk_sections_from_all_design_md(self) -> None:
@@ -332,13 +440,22 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
         self.assertIn("family_recolor_without_override", codes)
 
     def test_preflight_rejects_source_inventoried_claim_escalation(self) -> None:
+        original_families = beautiful_template_runtime.families
+        synthetic_family = {
+            "template_id": "synthetic-source-only",
+            "status": "source_inventoried",
+            "claim_level": "source_inventory_only",
+            "family_usage_policy": {"recolor_allowed": False},
+            "cjk_policy": {"mixed_run_spacing": "pangu_spacing"},
+            "extension_grammar": {"layout_rhythm": "synthetic"},
+        }
         plan = {
             "output_mode": "svglide-svg",
             "page_count": 1,
             "template_family_selection": {
                 "enabled": True,
                 "source": "beautiful-html-template-families",
-                "selected_template_id": "8-bit-orbit",
+                "selected_template_id": "synthetic-source-only",
                 "claim_level": "svglide_absorbed",
             },
             "slides": [
@@ -356,7 +473,11 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
                 }
             ],
         }
-        self.assertIn("source_inventoried_claim_escalation", issue_codes(svg_preflight.lint_plan(plan)))
+        beautiful_template_runtime.families = lambda *args, **kwargs: original_families(*args, **kwargs) + [synthetic_family]
+        try:
+            self.assertIn("source_inventoried_claim_escalation", issue_codes(svg_preflight.lint_plan(plan)))
+        finally:
+            beautiful_template_runtime.families = original_families
 
     def test_preflight_rejects_cjk_fake_italic_and_letter_spacing(self) -> None:
         svg = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" slide:contract-version="svglide-authoring-contract/v1" width="960" height="540" viewBox="0 0 960 540">

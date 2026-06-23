@@ -93,7 +93,8 @@ function colors(spec) {
     primary: source.primary || "#38BDF8",
     accent: source.accent || "#A78BFA",
     text: source.text || "#F8FAFC",
-    muted: source.muted || "#CBD5E1"
+    muted: source.muted || "#CBD5E1",
+    surface: source.surface || source.panel || "#111827"
   };
 }
 function text(spec, key, fallback = "") {
@@ -914,6 +915,149 @@ function posterStatPunch(spec) {
     ))
   ]);
 }
+var BEAUTIFUL_TEMPLATE_CONFIGS = {
+  "pixel-orbit-console": { mode: "console", label: "ORBIT CONSOLE", listKeys: ["stats", "actions", "badges"] },
+  "biennale-programme-poster": { mode: "programme", label: "PROGRAMME", listKeys: ["programme"] },
+  "block-frame-grid": { mode: "block-grid", label: "BLOCK FRAME", listKeys: ["cards", "stats"] },
+  "capsule-card-system": { mode: "capsule", label: "CAPSULES", listKeys: ["capsules", "steps"] },
+  "coral-magazine-feature": { mode: "magazine", label: "FEATURE", listKeys: ["cards"] },
+  "creative-mode-grid": { mode: "creative-grid", label: "CREATIVE MODE", listKeys: ["sections", "metrics"] },
+  "daisy-workshop-playbook": { mode: "soft-workshop", label: "PLAYBOOK", listKeys: ["lessons", "notes"] },
+  "tritone-editorial-spread": { mode: "tritone", label: "TRITONE", listKeys: ["points"] },
+  "emerald-editorial-cover": { mode: "cover-editorial", label: "LEADERSHIP", listKeys: ["stats", "points"] },
+  "grove-organic-brief": { mode: "organic", label: "GROVE", listKeys: ["principles", "metrics"] },
+  "mat-midcentury-board": { mode: "midcentury", label: "MAT BOARD", listKeys: ["cards", "timeline"] },
+  "people-platform-manifesto": { mode: "manifesto", label: "PLATFORM", listKeys: ["platforms", "actions"] },
+  "pink-nocturne-feature": { mode: "nocturne", label: "NOCTURNE", listKeys: ["sections"] },
+  "playful-indie-launch": { mode: "playful", label: "INDIE LAUNCH", listKeys: ["stats", "steps"] },
+  "retro-zine-spread": { mode: "zine", label: "ZINE", listKeys: ["notes"] },
+  "sticky-workshop-board": { mode: "sticky", label: "WORKSHOP", listKeys: ["postits", "phases"] },
+  "soft-editorial-feature": { mode: "soft-editorial", label: "ESSAY", listKeys: ["cards"] },
+  "stencil-field-manual": { mode: "manual", label: "FIELD MANUAL", listKeys: ["principles", "rows"] },
+  "vellum-scholar-brief": { mode: "scholar", label: "SCHOLAR BRIEF", listKeys: ["notes", "stats"] }
+};
+function firstConfiguredItems(spec, cfg, fallback = ["Signal", "Evidence", "Next move"]) {
+  return firstList(spec, cfg.listKeys || ["items"], fallback);
+}
+function templateBadge(spec, cfg, style = {}) {
+  const theme = colors(spec);
+  return TextBlock(text(spec, "eyebrow", cfg.label).toUpperCase(), {
+    color: theme.primary,
+    fontSize: 15,
+    fontWeight: 900,
+    letterSpacing: 0,
+    ...style
+  });
+}
+function beautifulTemplate(spec, cfg) {
+  const theme = colors(spec);
+  const items = firstConfiguredItems(spec, cfg).slice(0, 6);
+  const title = text(spec, "title", "Untitled");
+  const subtitle = text(spec, "subtitle", "");
+  const quote = text(spec, "quote", text(spec, "lede", ""));
+  const stat = text(spec, "stat", items[0] || "");
+  if (cfg.mode === "console") {
+    return box({ width: CANVAS.width, height: CANVAS.height, position: "relative", backgroundColor: theme.background, color: theme.text, fontFamily: DEFAULT_FONT_FAMILY, padding: 48 }, [
+      box({ position: "absolute", left: 38, top: 34, width: 884, height: 472, borderWidth: 3, borderColor: theme.primary, backgroundColor: theme.panel }),
+      box({ position: "absolute", left: 70, top: 70, width: 820, height: 34, flexDirection: "row", gap: 10 }, Array.from({ length: 18 }).map(
+        (_, index) => box({ width: index % 4 === 0 ? 56 : 28, height: 10, backgroundColor: index % 3 === 0 ? theme.accent : theme.primary, opacity: index % 2 ? 0.42 : 0.78 })
+      )),
+      templateBadge(spec, cfg, { position: "absolute", left: 76, top: 122 }),
+      Title(title, { position: "absolute", left: 74, top: 154, width: 548, color: theme.text, fontSize: 52, fontWeight: 900, lineHeight: 0.96 }),
+      TextBlock(subtitle, { position: "absolute", left: 76, top: 278, width: 480, color: theme.muted, fontSize: 20, lineHeight: 1.24 }),
+      box({ position: "absolute", right: 76, top: 130, width: 236, flexDirection: "column", gap: 12 }, items.slice(0, 4).map(
+        (item, index) => box({ minHeight: 54, borderWidth: 2, borderColor: index % 2 ? theme.accent : theme.primary, backgroundColor: theme.background, padding: 12 }, [
+          TextBlock(item, { color: theme.text, fontSize: 18, fontWeight: 800, lineHeight: 1.1 })
+        ])
+      )),
+      TextBlock("PX", { position: "absolute", left: 76, bottom: 64, color: theme.accent, fontSize: 56, fontWeight: 900 })
+    ]);
+  }
+  if (cfg.mode === "programme" || cfg.mode === "manual") {
+    return pageShell(spec, [
+      box({ position: "absolute", left: 58, top: 52, width: 844, height: 438, borderWidth: cfg.mode === "manual" ? 3 : 2, borderColor: theme.primary }),
+      templateBadge(spec, cfg, { position: "absolute", left: 82, top: 78 }),
+      Title(title, { position: "absolute", left: 80, top: 112, width: cfg.mode === "manual" ? 382 : 500, color: theme.text, fontSize: cfg.mode === "manual" ? 46 : 58, fontWeight: 850, lineHeight: 0.96 }),
+      TextBlock(subtitle, { position: "absolute", left: 82, top: cfg.mode === "manual" ? 232 : 254, width: 390, color: theme.muted, fontSize: 19, lineHeight: 1.28 }),
+      box({ position: "absolute", right: 80, top: 84, width: 330, flexDirection: "column" }, items.slice(0, 5).map(
+        (item, index) => box({ minHeight: 58, flexDirection: "row", alignItems: "center", borderTopWidth: 2, borderTopColor: theme.primary, padding: "10px 0" }, [
+          TextBlock(String(index + 1).padStart(2, "0"), { width: 48, color: theme.accent, fontSize: 18, fontWeight: 900 }),
+          TextBlock(item, { flex: 1, color: theme.text, fontSize: 19, fontWeight: 750, lineHeight: 1.12 })
+        ])
+      )),
+      TextBlock(text(spec, "footer", text(spec, "venue", "")), { position: "absolute", left: 82, bottom: 78, width: 430, color: theme.primary, fontSize: 17, fontWeight: 850 })
+    ]);
+  }
+  if (cfg.mode === "block-grid" || cfg.mode === "creative-grid" || cfg.mode === "capsule" || cfg.mode === "sticky") {
+    const rounded = cfg.mode === "capsule" ? 999 : cfg.mode === "sticky" ? 2 : 0;
+    const roundedStyle = rounded ? { borderRadius: rounded } : {};
+    return pageShell(spec, [
+      templateBadge(spec, cfg, { position: "absolute", left: 70, top: 66 }),
+      Title(title, { position: "absolute", left: 68, top: 96, width: 520, color: theme.text, fontSize: 48, fontWeight: 900, lineHeight: 0.98 }),
+      TextBlock(subtitle, { position: "absolute", left: 70, top: 210, width: 480, color: theme.muted, fontSize: 19, lineHeight: 1.28 }),
+      box({ position: "absolute", right: 70, top: 70, width: 248, height: 138, backgroundColor: theme.accent, opacity: cfg.mode === "sticky" ? 0.36 : 0.92, ...roundedStyle }),
+      box({ position: "absolute", left: 70, bottom: 66, width: 820, flexDirection: "row", flexWrap: "wrap", gap: 14 }, items.slice(0, 6).map(
+        (item, index) => box({ width: cfg.mode === "sticky" ? 246 : 258, minHeight: cfg.mode === "capsule" ? 58 : 76, backgroundColor: index % 2 ? theme.surface : theme.panel, borderWidth: 2, borderColor: theme.primary, padding: 14, ...roundedStyle }, [
+          TextBlock(item, { color: theme.text, fontSize: 18, fontWeight: 800, lineHeight: 1.1 })
+        ])
+      ))
+    ]);
+  }
+  if (cfg.mode === "cover-editorial" || cfg.mode === "manifesto" || cfg.mode === "nocturne") {
+    return box({ width: CANVAS.width, height: CANVAS.height, position: "relative", backgroundColor: theme.background, color: theme.text, fontFamily: DEFAULT_FONT_FAMILY, padding: 54 }, [
+      templateBadge(spec, cfg, { position: "absolute", left: 76, top: 70, color: cfg.mode === "manifesto" ? theme.text : theme.primary }),
+      Title(title.toUpperCase(), { position: "absolute", left: 74, top: 108, width: cfg.mode === "manifesto" ? 720 : 620, color: theme.text, fontSize: cfg.mode === "manifesto" ? 64 : 58, fontWeight: 900, lineHeight: 0.9 }),
+      TextBlock(subtitle, { position: "absolute", left: 78, top: 276, width: 510, color: theme.muted, fontSize: 20, lineHeight: 1.25 }),
+      box({ position: "absolute", right: 78, top: 86, width: 210, height: 210, borderWidth: 3, borderColor: theme.primary, backgroundColor: cfg.mode === "manifesto" ? theme.accent : theme.panel }),
+      TextBlock(stat || cfg.label, { position: "absolute", right: 94, top: 142, width: 178, color: cfg.mode === "manifesto" ? theme.background : theme.primary, fontSize: 34, fontWeight: 900, lineHeight: 1, textAlign: "center" }),
+      box({ position: "absolute", left: 78, bottom: 70, flexDirection: "row", gap: 14 }, items.slice(0, 3).map(
+        (item, index) => box({ width: 250, minHeight: 82, borderTopWidth: 3, borderTopColor: index === 0 ? theme.accent : theme.primary, paddingTop: 12 }, [
+          TextBlock(item, { color: theme.text, fontSize: 20, fontWeight: 820, lineHeight: 1.08 })
+        ])
+      ))
+    ]);
+  }
+  if (cfg.mode === "organic" || cfg.mode === "midcentury" || cfg.mode === "playful") {
+    return pageShell(spec, [
+      box({ position: "absolute", left: 62, top: 58, width: 318, height: 424, backgroundColor: theme.panel }),
+      box({ position: "absolute", left: 96, top: 92, width: 248, height: 154, backgroundColor: theme.surface, borderWidth: 2, borderColor: theme.primary }),
+      templateBadge(spec, cfg, { position: "absolute", left: 418, top: 76 }),
+      Title(title, { position: "absolute", left: 416, top: 112, width: 430, color: theme.text, fontSize: 46, fontWeight: 760, lineHeight: 1 }),
+      TextBlock(subtitle, { position: "absolute", left: 418, top: 234, width: 386, color: theme.muted, fontSize: 19, lineHeight: 1.3 }),
+      box({ position: "absolute", left: 416, bottom: 70, width: 410, flexDirection: "column", gap: 12 }, items.slice(0, 3).map(
+        (item, index) => box({ minHeight: 52, flexDirection: "row", alignItems: "center" }, [
+          box({ width: 18, height: 18, borderRadius: cfg.mode === "midcentury" ? 0 : 9, backgroundColor: index % 2 ? theme.accent : theme.primary, marginRight: 14 }),
+          TextBlock(item, { flex: 1, color: theme.text, fontSize: 20, fontWeight: 750, lineHeight: 1.12 })
+        ])
+      ))
+    ]);
+  }
+  if (cfg.mode === "zine" || cfg.mode === "soft-workshop") {
+    return pageShell(spec, [
+      box({ position: "absolute", left: 70, top: 62, width: 364, height: 416, backgroundColor: theme.panel, borderWidth: 2, borderColor: theme.primary }),
+      box({ position: "absolute", left: 104, top: 94, width: 296, height: 120, backgroundColor: theme.surface }),
+      templateBadge(spec, cfg, { position: "absolute", left: 470, top: 76 }),
+      Title(title, { position: "absolute", left: 468, top: 112, width: 360, color: theme.text, fontSize: 44, fontWeight: 820, lineHeight: 1 }),
+      TextBlock(quote || subtitle, { position: "absolute", left: 470, top: 244, width: 342, color: theme.muted, fontSize: 21, fontWeight: 650, lineHeight: 1.22 }),
+      box({ position: "absolute", left: 470, bottom: 72, flexDirection: "row", gap: 12 }, items.slice(0, 3).map(
+        (item) => box({ width: 112, minHeight: 92, backgroundColor: theme.surface, borderWidth: 2, borderColor: theme.primary, padding: 10 }, [
+          TextBlock(item, { color: theme.text, fontSize: 16, fontWeight: 800, lineHeight: 1.1 })
+        ])
+      ))
+    ]);
+  }
+  return pageShell(spec, [
+    templateBadge(spec, cfg, { position: "absolute", left: 72, top: 70 }),
+    Title(title, { position: "absolute", left: 70, top: 108, width: 600, color: theme.text, fontSize: cfg.mode === "scholar" ? 50 : 46, fontWeight: 780, lineHeight: 1.02 }),
+    TextBlock(quote || subtitle, { position: "absolute", left: 72, top: 242, width: 560, color: theme.muted, fontSize: 21, lineHeight: 1.3 }),
+    box({ position: "absolute", right: 76, top: 78, width: 170, height: 330, borderWidth: 2, borderColor: theme.primary, backgroundColor: theme.panel }),
+    box({ position: "absolute", left: 72, bottom: 72, flexDirection: "row", gap: 16 }, items.slice(0, 3).map(
+      (item, index) => box({ width: 244, minHeight: 86, borderTopWidth: 3, borderTopColor: index === 0 ? theme.accent : theme.primary, paddingTop: 12 }, [
+        TextBlock(item, { color: theme.text, fontSize: 20, fontWeight: 740, lineHeight: 1.1 })
+      ])
+    ))
+  ]);
+}
 function renderTree(spec) {
   if (spec.template_id === "cover-hero") return coverHero(spec);
   if (spec.template_id === "comparison-cards") return comparisonCards(spec);
@@ -945,6 +1089,7 @@ function renderTree(spec) {
   if (spec.template_id === "trend-grid-report") return trendGridReport(spec);
   if (spec.template_id === "serif-stat-editorial") return serifStatEditorial(spec);
   if (spec.template_id === "poster-stat-punch") return posterStatPunch(spec);
+  if (BEAUTIFUL_TEMPLATE_CONFIGS[spec.template_id]) return beautifulTemplate(spec, BEAUTIFUL_TEMPLATE_CONFIGS[spec.template_id]);
   throw new Error(`unsupported template_id for Satori adapter: ${spec.template_id}`);
 }
 

@@ -78,9 +78,36 @@ def valid_hex(value: Any) -> bool:
 def validate_template_metadata(template: dict[str, Any]) -> list[dict[str, Any]]:
     template_id = str(template.get("id") or "<unknown-template>")
     metadata = template.get("selection_metadata")
-    if not isinstance(metadata, dict):
-        return [issue("selection_metadata_missing", "active template requires selection_metadata", item_id=template_id)]
     issues: list[dict[str, Any]] = []
+    is_production_runtime = (
+        template.get("asset_status") == beautiful_template_runtime.ASSET_STATUS_PRODUCTION
+        and template.get("quality_tier") == beautiful_template_runtime.QUALITY_TIER_TRUSTED
+        and template.get("default_selectable") is True
+        and template.get("selection_scope") == "production"
+    )
+    if is_production_runtime:
+        if template.get("claim_level") == "source_inventory_only":
+            issues.append(
+                issue(
+                    "source_inventory_only_production_template",
+                    "production/default-selectable template cannot claim source_inventory_only",
+                    item_id=template_id,
+                    path="claim_level",
+                )
+            )
+        gate = template.get("promotion_gate")
+        if not isinstance(gate, dict) or gate.get("status") != "passed":
+            issues.append(
+                issue(
+                    "template_promotion_gate_not_passed",
+                    "production/default-selectable template requires promotion_gate.status=passed",
+                    item_id=template_id,
+                    path="promotion_gate.status",
+                )
+            )
+    if not isinstance(metadata, dict):
+        issues.append(issue("selection_metadata_missing", "active template requires selection_metadata", item_id=template_id))
+        return issues
     list_required = (
         "best_for",
         "industry_tags",

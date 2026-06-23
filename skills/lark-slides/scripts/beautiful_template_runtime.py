@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -146,6 +147,7 @@ CORE_COLOR_ROLES = (
 )
 
 
+@lru_cache(maxsize=8)
 def read_json(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -199,6 +201,10 @@ def promoted_theme_ids() -> list[str]:
     return [record["theme_id"] for record in promoted_theme_records()]
 
 
+def promoted_template_ids() -> list[str]:
+    return [record["template_id"] for record in promoted_template_records()]
+
+
 def all_theme_ids(include_legacy: bool = False) -> list[str]:
     theme_ids = set(PRODUCTION_THEME_IDS)
     theme_ids.update(promoted_theme_ids())
@@ -209,15 +215,26 @@ def all_theme_ids(include_legacy: bool = False) -> list[str]:
 
 def all_template_ids(include_legacy: bool = False) -> list[str]:
     template_ids = set(PRODUCTION_TEMPLATE_IDS)
+    template_ids.update(promoted_template_ids())
     if include_legacy:
         template_ids.update(LEGACY_TEMPLATE_IDS)
     return sorted(template_ids)
 
 
 def is_runtime_selectable(record: dict[str, Any], *, include_legacy_debug: bool = False) -> bool:
-    status = record.get("status")
-    if status == ASSET_STATUS_PRODUCTION:
+    if record.get("claim_level") == "source_inventory_only":
+        return False
+    gate = record.get("promotion_gate")
+    if isinstance(gate, dict) and gate.get("status") != "passed":
+        return False
+    if (
+        record.get("asset_status") == ASSET_STATUS_PRODUCTION
+        and record.get("quality_tier") == QUALITY_TIER_TRUSTED
+        and record.get("selection_scope") == "production"
+        and record.get("default_selectable") is True
+    ):
         return True
+    status = record.get("status")
     if status == ASSET_STATUS_LEGACY_DEBUG:
         return include_legacy_debug
     return status == "active" and record.get("default_selectable") is not False
@@ -296,6 +313,13 @@ def _theme_source_trace(family: dict[str, Any], theme_token: dict[str, Any]) -> 
     if isinstance(screenshots, list):
         records.extend({"source": item, "evidence": "source_screenshot"} for item in screenshots if isinstance(item, str) and item)
     return records
+
+
+def _source_trace(family: dict[str, Any], token: dict[str, Any]) -> list[dict[str, Any]]:
+    explicit = token.get("source_trace")
+    if isinstance(explicit, list) and explicit:
+        return [item for item in explicit if isinstance(item, dict)]
+    return _theme_source_trace(family, token)
 
 
 def theme_promotion_candidate(family: dict[str, Any]) -> dict[str, Any]:
@@ -383,10 +407,115 @@ def theme_promotion_candidate(family: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def template_promotion_candidate(family: dict[str, Any]) -> dict[str, Any]:
+    family_id = str(family.get("template_id") or "")
+    template_token = family.get("template_token") if isinstance(family.get("template_token"), dict) else {}
+    template_id = str(template_token.get("template_id") or family_id)
+    theme_token = family.get("theme_token") if isinstance(family.get("theme_token"), dict) else {}
+    semantic_fit = _non_empty_dict(family.get("semantic_fit"))
+    visual_dna = _non_empty_dict(family.get("visual_dna"))
+    cjk_policy = _non_empty_dict(family.get("cjk_policy"))
+    usage_policy = _non_empty_dict(family.get("family_usage_policy"))
+    asset_ids = mapping_asset_ids(family)
+    source = family.get("source") if isinstance(family.get("source"), dict) else {}
+    source_trace = _source_trace(family, template_token)
+    issues: list[dict[str, str]] = []
+
+    def block(code: str, message: str) -> None:
+        issues.append({"code": code, "message": message})
+
+    if family.get("claim_level") == "source_inventory_only" or family.get("status") == "source_inventoried":
+        block("source_inventory_only_family", "source inventory only families cannot promote to runtime templates")
+    if family.get("status") != "absorbed":
+        block("family_not_absorbed", "template promotion requires an absorbed family")
+    if family.get("claim_level") != "svglide_absorbed":
+        block("claim_not_absorbed", "template promotion requires svglide_absorbed claim level")
+    if f"template.{template_id}" not in asset_ids:
+        block("missing_template_mapping", "svglide_mapping.svglide_asset_ids must include template.<template_id>")
+    if f"theme.{family_id}" not in asset_ids:
+        block("missing_theme_mapping", "promoted templates must bind to a family theme")
+    if not template_token:
+        block("missing_template_token", "promoted templates require a template_token")
+    elif template_token.get("template_id") != template_id:
+        block("template_token_id_mismatch", "template_token.template_id must match the promoted template id")
+    for key in ("renderer_id", "layout_family", "required_content", "content_shapes", "max_items", "text_budget", "source_trace"):
+        if not template_token.get(key):
+            block(f"missing_template_token_{key}", f"template_token.{key} is required")
+    if template_token.get("status") != ASSET_STATUS_PRODUCTION:
+        block("template_token_not_production", "template_token.status must be production")
+    if template_token.get("quality_tier") != QUALITY_TIER_TRUSTED:
+        block("template_token_not_trusted", "template_token.quality_tier must be trusted")
+    if template_token.get("default_selectable") is not True:
+        block("template_token_not_default_selectable", "template_token.default_selectable must be true")
+    if template_token.get("selection_scope") != "production":
+        block("template_token_not_production_scope", "template_token.selection_scope must be production")
+    if not theme_token:
+        block("missing_theme_token", "promoted templates require a paired family theme_token")
+    elif theme_token.get("theme_id") != family_id:
+        block("theme_token_id_mismatch", "theme_token.theme_id must match the source family")
+    for key, value in (
+        ("semantic_fit", semantic_fit),
+        ("visual_dna", visual_dna),
+        ("cjk_policy", cjk_policy),
+        ("family_usage_policy", usage_policy),
+    ):
+        if not value:
+            block(f"missing_{key}", f"{key} is required for template promotion")
+    if not _non_empty_list(semantic_fit.get("best_for")) or not _non_empty_list(semantic_fit.get("avoid_when")):
+        block("missing_semantic_fit_scope", "semantic_fit.best_for and avoid_when are required")
+    if not _non_empty_list(visual_dna.get("screenshot_benchmarks")) and not source.get("reference_screenshot"):
+        block("missing_visual_evidence", "screenshot_benchmarks or reference_screenshot is required")
+    if not source_trace:
+        block("missing_source_trace", "source evidence is required")
+
+    gate_status = "passed" if not issues else "blocked"
+    return {
+        "id": template_id,
+        "source_family": family_id,
+        "template_id": template_id,
+        "theme_id": family_id,
+        "status": ASSET_STATUS_PRODUCTION if gate_status == "passed" else ASSET_STATUS_LEGACY_DEBUG,
+        "asset_status": ASSET_STATUS_PRODUCTION if gate_status == "passed" else ASSET_STATUS_LEGACY_DEBUG,
+        "quality_tier": QUALITY_TIER_TRUSTED if gate_status == "passed" else QUALITY_TIER_FIXTURE_ONLY,
+        "default_selectable": gate_status == "passed",
+        "selection_scope": "production" if gate_status == "passed" else "debug",
+        "promotion_status": "has_template_mapping" if gate_status == "passed" else "blocked",
+        "promotion_gate": {
+            "status": gate_status,
+            "issues": issues,
+            "required_evidence": [
+                "template_token",
+                "template_mapping",
+                "paired_theme_token",
+                "source_trace",
+                "semantic_fit",
+                "visual_dna",
+                "cjk_policy",
+                "family_usage_policy",
+            ],
+        },
+        "template_token": template_token,
+        "source_trace": source_trace,
+        "semantic_fit": semantic_fit,
+        "visual_dna": visual_dna,
+        "cjk_policy": cjk_policy,
+        "family_usage_policy": usage_policy,
+    }
+
+
 def promoted_theme_records(path: Path = FAMILIES_PATH) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for family in families(path):
         candidate = theme_promotion_candidate(family)
+        if candidate["promotion_gate"]["status"] == "passed":
+            records.append(candidate)
+    return records
+
+
+def promoted_template_records(path: Path = FAMILIES_PATH) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for family in families(path):
+        candidate = template_promotion_candidate(family)
         if candidate["promotion_gate"]["status"] == "passed":
             records.append(candidate)
     return records
@@ -412,6 +541,72 @@ def family_policy_context(limit: int | None = None) -> list[dict[str, Any]]:
     return records
 
 
+def _static_template_promotion_gate(family: dict[str, Any] | None, template_id: str) -> dict[str, Any] | None:
+    if not isinstance(family, dict):
+        return None
+    issues: list[dict[str, str]] = []
+    if family.get("status") != "absorbed":
+        issues.append({"code": "family_not_absorbed", "message": "static production template source family must be absorbed"})
+    if family.get("claim_level") != "svglide_absorbed":
+        issues.append({"code": "claim_not_absorbed", "message": "static production template source family must claim svglide_absorbed"})
+    if f"template.{template_id}" not in mapping_asset_ids(family):
+        issues.append({"code": "missing_template_mapping", "message": "source family must map to this production template"})
+    return {
+        "status": "passed" if not issues else "blocked",
+        "issues": issues,
+        "required_evidence": [
+            "static_absorption_record",
+            "template_mapping",
+            "source_trace",
+            "semantic_fit",
+            "visual_dna",
+            "cjk_policy",
+            "family_usage_policy",
+        ],
+    }
+
+
+def _promoted_template_payload(record: dict[str, Any]) -> dict[str, Any]:
+    token = record["template_token"]
+    semantic_fit = record.get("semantic_fit") if isinstance(record.get("semantic_fit"), dict) else {}
+    visual_dna = record.get("visual_dna") if isinstance(record.get("visual_dna"), dict) else {}
+    template_id = record["template_id"]
+    return {
+        "id": template_id,
+        "renderer_id": str(token.get("renderer_id") or f"artboard_satori.{template_id}"),
+        "layout_family": str(token.get("layout_family") or template_id.replace("-", "_")),
+        "required_content": non_empty_string_list(token.get("required_content"), ["title"]),
+        "optional_content": non_empty_string_list(token.get("optional_content"), ["eyebrow", "subtitle"]),
+        "max_items": token.get("max_items") if isinstance(token.get("max_items"), dict) else {},
+        "text_budget": token.get("text_budget") if isinstance(token.get("text_budget"), dict) else {"title": 60, "subtitle": 120},
+        "supported_theme_ids": [record["theme_id"]],
+        "selection_metadata": {
+            "best_for": non_empty_string_list(semantic_fit.get("best_for"), [template_id.replace("-", " ")]),
+            "avoid_for": non_empty_string_list(semantic_fit.get("avoid_when"), []),
+            "occasion_tags": non_empty_string_list(semantic_fit.get("best_for"), [template_id.replace("-", " ")]),
+            "tone_tags": non_empty_string_list(semantic_fit.get("tones"), ["structured"]),
+            "industry_tags": non_empty_string_list(semantic_fit.get("industries"), ["general"]),
+            "density": visual_dna.get("density") or "medium",
+            "formality": normalized_formality(semantic_fit.get("formality")),
+            "content_shapes": non_empty_string_list(token.get("content_shapes"), [template_id.replace("-", " ")]),
+            "audience_tags": non_empty_string_list(token.get("audience_tags"), ["general"]),
+            "visual_signature": non_empty_string_list(visual_dna.get("motifs") or visual_dna.get("decorative_motifs"), [template_id.replace("-", " ")]),
+            "required_assets": non_empty_string_list(token.get("required_assets"), []),
+            "decorative_elements": non_empty_string_list(visual_dna.get("decorative_motifs") or visual_dna.get("motifs"), []),
+        },
+        "source_template_id": record["source_family"],
+        "claim_level": "svglide_absorbed",
+        "source_trace": record["source_trace"],
+        "promotion_gate": record["promotion_gate"],
+        "family_usage_policy_summary": family_usage_policy_summary({"family_usage_policy": record.get("family_usage_policy")}),
+        "cjk_policy_summary": cjk_policy_summary({"cjk_policy": record.get("cjk_policy")}),
+        "extension_grammar_summary": extension_grammar_summary({"extension_grammar": token.get("extension_grammar")}),
+        "benchmark_roles": benchmark_roles({"visual_dna": visual_dna}),
+        "template_token": token,
+        **runtime_asset_metadata(ASSET_STATUS_PRODUCTION),
+    }
+
+
 def template_registry(include_legacy: bool = False) -> dict[str, Any]:
     theme_ids = all_theme_ids(include_legacy=include_legacy)
     records: list[dict[str, Any]] = []
@@ -421,7 +616,11 @@ def template_registry(include_legacy: bool = False) -> dict[str, Any]:
         for raw in mapping.get("svglide_asset_ids", []) if isinstance(mapping.get("svglide_asset_ids"), list) else []:
             if isinstance(raw, str) and raw.startswith("template."):
                 family_by_asset[raw.removeprefix("template.")] = family
+    promoted_by_id = {record["template_id"]: record for record in promoted_template_records()}
     for template_id in all_template_ids(include_legacy=include_legacy):
+        if template_id in promoted_by_id:
+            records.append(_promoted_template_payload(promoted_by_id[template_id]))
+            continue
         family = family_by_asset.get(template_id)
         asset_status = ASSET_STATUS_LEGACY_DEBUG if template_id in LEGACY_TEMPLATE_IDS else ASSET_STATUS_PRODUCTION
         semantic_fit = family.get("semantic_fit") if isinstance(family, dict) and isinstance(family.get("semantic_fit"), dict) else {}
@@ -460,6 +659,8 @@ def template_registry(include_legacy: bool = False) -> dict[str, Any]:
                 {
                     "source_template_id": family.get("template_id"),
                     "claim_level": family.get("claim_level"),
+                    "source_trace": _source_trace(family, {}),
+                    "promotion_gate": _static_template_promotion_gate(family, template_id),
                     "family_usage_policy_summary": family_usage_policy_summary(family),
                     "cjk_policy_summary": cjk_policy_summary(family),
                     "extension_grammar_summary": extension_grammar_summary(family),
@@ -502,7 +703,7 @@ def _promoted_theme_payload(record: dict[str, Any]) -> dict[str, Any]:
     template_ids = [
         item
         for item in non_empty_string_list(theme_token.get("template_bindings"), all_template_ids())
-        if item in PRODUCTION_TEMPLATE_IDS
+        if item in set(all_template_ids())
     ]
     if not template_ids:
         template_ids = all_template_ids()

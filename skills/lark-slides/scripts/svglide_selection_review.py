@@ -92,6 +92,38 @@ def legacy_status(record: dict[str, Any] | None) -> bool:
     return record.get("status") == "legacy_debug" or record.get("asset_status") == "legacy_debug" or record.get("quality_tier") == "fixture_only"
 
 
+def production_template_policy_issues(record: dict[str, Any] | None, template_id: str) -> list[dict[str, Any]]:
+    if not isinstance(record, dict):
+        return []
+    issues: list[dict[str, Any]] = []
+    is_production_runtime = (
+        record.get("asset_status") == beautiful_template_runtime.ASSET_STATUS_PRODUCTION
+        and record.get("quality_tier") == beautiful_template_runtime.QUALITY_TIER_TRUSTED
+        and record.get("default_selectable") is True
+        and record.get("selection_scope") == "production"
+    )
+    if not is_production_runtime:
+        return issues
+    if record.get("claim_level") == "source_inventory_only":
+        issues.append(
+            issue(
+                "selected_source_inventory_template",
+                f"selected_template_id {template_id!r} claims source_inventory_only",
+                path="selected_template_id",
+            )
+        )
+    gate = record.get("promotion_gate")
+    if not isinstance(gate, dict) or gate.get("status") != "passed":
+        issues.append(
+            issue(
+                "selected_template_promotion_gate_not_passed",
+                f"selected_template_id {template_id!r} does not have promotion_gate.status=passed",
+                path="selected_template_id",
+            )
+        )
+    return issues
+
+
 def candidate_by_id(records: Any, id_key: str) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     if not isinstance(records, list):
@@ -117,6 +149,8 @@ def selected_legacy_issues(selection: dict[str, Any], palette_selection: dict[st
         legacy_status(templates.get(template_id)) or template_id in beautiful_template_runtime.LEGACY_TEMPLATE_IDS
     ):
         issues.append(issue("selected_legacy_template", f"selected_template_id {template_id!r} is legacy_debug/fixture_only", path="selected_template_id"))
+    if isinstance(template_id, str):
+        issues.extend(production_template_policy_issues(templates.get(template_id), template_id))
     if isinstance(theme_id, str) and (
         legacy_status(themes.get(theme_id)) or theme_id in beautiful_template_runtime.LEGACY_THEME_IDS
     ):

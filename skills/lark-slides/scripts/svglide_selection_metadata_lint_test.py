@@ -104,6 +104,43 @@ class SelectionMetadataLintTest(unittest.TestCase):
         issues = lint.validate_template_metadata({"id": "bad", "status": "active", "selection_metadata": metadata})
         self.assertIn("selection_metadata_list_empty", {item["code"] for item in issues})
 
+    def test_template_lint_rejects_source_inventory_only_production_template(self) -> None:
+        issues = lint.validate_template_metadata(
+            {
+                "id": "fake-source-template",
+                "status": "active",
+                "asset_status": "production",
+                "quality_tier": "trusted",
+                "default_selectable": True,
+                "selection_scope": "production",
+                "claim_level": "source_inventory_only",
+                "selection_metadata": template_metadata(),
+                "promotion_gate": {"status": "passed", "issues": []},
+            }
+        )
+
+        self.assertIn("source_inventory_only_production_template", {item["code"] for item in issues})
+
+    def test_template_lint_requires_passed_promotion_gate_for_runtime_template(self) -> None:
+        record = {
+            "id": "fake-promoted-template",
+            "status": "active",
+            "asset_status": "production",
+            "quality_tier": "trusted",
+            "default_selectable": True,
+            "selection_scope": "production",
+            "claim_level": "svglide_absorbed",
+            "source_template_id": "fake-family",
+            "selection_metadata": template_metadata(),
+        }
+
+        missing_gate_codes = {item["code"] for item in lint.validate_template_metadata(record)}
+        record["promotion_gate"] = {"status": "blocked", "issues": [{"code": "missing_source_trace"}]}
+        blocked_gate_codes = {item["code"] for item in lint.validate_template_metadata(record)}
+
+        self.assertIn("template_promotion_gate_not_passed", missing_gate_codes)
+        self.assertIn("template_promotion_gate_not_passed", blocked_gate_codes)
+
     def test_theme_rejects_invalid_scheme_and_override_policy(self) -> None:
         metadata = theme_metadata()
         metadata["scheme"] = "purple"

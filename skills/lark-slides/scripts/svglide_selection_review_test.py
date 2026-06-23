@@ -141,6 +141,34 @@ class SelectionReviewTest(unittest.TestCase):
         self.assertIn("selected_legacy_theme", codes)
         self.assertIn("selected_legacy_palette", codes)
 
+    def test_selection_review_fails_source_inventory_template_even_if_candidate_claims_production(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _, selection = make_project(root)
+            fake_template = {
+                "template_id": "fake-source-template",
+                "status": "active",
+                "asset_status": "production",
+                "quality_tier": "trusted",
+                "default_selectable": True,
+                "selection_scope": "production",
+                "claim_level": "source_inventory_only",
+                "promotion_gate": {"status": "blocked", "issues": [{"code": "source_inventory_only_family"}]},
+            }
+            selection["selected_template_id"] = "fake-source-template"
+            selection["template_candidates"] = [fake_template]
+            write_json(root / "02-plan/theme-template-selection.json", selection)
+            plan = json.loads((root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
+            plan["slides"][0]["canvas_spec"]["template_id"] = "fake-source-template"
+            write_json(root / "02-plan/slide_plan.json", plan)
+
+            result = review.run_review(root)
+
+        self.assertEqual(result["status"], "failed")
+        codes = {item["code"] for item in result["issues"]}
+        self.assertIn("selected_source_inventory_template", codes)
+        self.assertIn("selected_template_promotion_gate_not_passed", codes)
+
     def test_selection_review_passes_plan_declared_multi_template_deck(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

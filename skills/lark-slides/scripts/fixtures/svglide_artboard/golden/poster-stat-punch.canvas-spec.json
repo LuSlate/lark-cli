@@ -1,61 +1,62 @@
 {
-  "version": "svglide-canvas-spec/v1",
   "canvas": {
-    "width": 960,
     "height": 540,
-    "viewBox": "0 0 960 540"
-  },
-  "safe_area": {
-    "x": 48,
-    "y": 40,
-    "width": 864,
-    "height": 460
-  },
-  "template_id": "poster-stat-punch",
-  "theme_id": "tomato-poster",
-  "theme": {
-    "colors": {
-      "background": "#FFFFFF",
-      "panel": "#F5F2EF",
-      "primary": "#D8000F",
-      "accent": "#1C1410",
-      "text": "#1C1410",
-      "muted": "#5A4036"
-    }
+    "viewBox": "0 0 960 540",
+    "width": 960
   },
   "content": {
     "eyebrow": "POSTER CLAIM",
-    "title": "现在就做判断",
-    "subtitle": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
-    "stat": "3X",
     "pillars": [
       "结论明确",
       "证据充分",
       "行动立即"
-    ]
+    ],
+    "stat": "3X",
+    "subtitle": "用海报式大标题和强 stat 承载 campaign、销售页或关键结论页。",
+    "title": "现在就做判断"
   },
-  "semantic_elements": [
-    {
-      "element_id": "title",
-      "kind": "text",
-      "role": "title",
-      "source_ref": "canvas_spec.content.title",
-      "bbox": {
-        "x": 56,
-        "y": 70,
-        "width": 760,
-        "height": 132
-      }
-    }
-  ],
   "quality_constraints": {
     "max_title_lines": 3,
     "min_font_size": 15,
     "safe_area": {
-      "x": 48,
-      "y": 40,
+      "height": 460,
       "width": 864,
-      "height": 460
+      "x": 48,
+      "y": 40
     }
-  }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 132,
+        "width": 760,
+        "x": 56,
+        "y": 70
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "poster-stat-punch",
+  "theme": {
+    "colors": {
+      "accent": "#111111",
+      "background": "#F8F8F4",
+      "muted": "#666666",
+      "panel": "#FFFFFF",
+      "primary": "#BE123C",
+      "surface": "#FFFFFF",
+      "text": "#111111"
+    }
+  },
+  "theme_id": "swiss-red",
+  "version": "svglide-canvas-spec/v1"
 }

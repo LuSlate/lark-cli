@@ -1,0 +1,63 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "FASHION QUARTERLY",
+    "points": [
+      "Editorial voice",
+      "Tight palette",
+      "Strong hierarchy"
+    ],
+    "quote": "Discipline creates the mood.",
+    "stat": "Issue 07",
+    "subtitle": "Burgundy, cream, and black organize a stylish brand story with measured contrast.",
+    "title": "Tri-tone Editorial Spread"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "tritone-editorial-spread",
+  "theme": {
+    "colors": {
+      "accent": "#111111",
+      "background": "#F7E9DF",
+      "muted": "#775A62",
+      "panel": "#E6B8C4",
+      "primary": "#8A1F3D",
+      "surface": "#FFF7F0",
+      "text": "#2A1520"
+    }
+  },
+  "theme_id": "editorial-tri-tone",
+  "version": "svglide-canvas-spec/v1"
+}

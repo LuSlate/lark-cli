@@ -1,0 +1,68 @@
+{
+  "canvas": {
+    "height": 540,
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "callout": "Launch proof is product-led.",
+    "cards": [
+      "Self-serve activation",
+      "Team workspace",
+      "Billing clarity",
+      "Partner channel"
+    ],
+    "eyebrow": "FOUNDER LAUNCH",
+    "stats": [
+      "Activation +31%",
+      "NPS 52",
+      "ARR 2.4x"
+    ],
+    "subtitle": "Chunky blocks frame proof, feature claims, and launch narrative without corporate polish.",
+    "title": "Indie SaaS Momentum"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 16,
+    "safe_area": {
+      "height": 460,
+      "width": 864,
+      "x": 48,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 864,
+    "x": 48,
+    "y": 40
+  },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 88,
+        "width": 710,
+        "x": 56,
+        "y": 96
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
+  "template_id": "block-frame-grid",
+  "theme": {
+    "colors": {
+      "accent": "#FE90E8",
+      "background": "#FFFDF5",
+      "muted": "#3B3B3B",
+      "panel": "#C0F7FE",
+      "primary": "#000000",
+      "surface": "#FFFFFF",
+      "text": "#000000"
+    }
+  },
+  "theme_id": "block-frame",
+  "version": "svglide-canvas-spec/v1"
+}
