@@ -30,10 +30,10 @@ const OAuthTokenV3Path = "/oauth/v3/token"
 
 // Endpoints holds resolved endpoint URLs for different Lark services.
 type Endpoints struct {
-	Open     string // e.g. "https://open.feishu.cn"
-	Accounts string // e.g. "https://accounts.feishu.cn"
+	Open     string // e.g. "https://open.feishu-pre.cn"
+	Accounts string // e.g. "https://accounts.feishu-pre.cn"
 	MCP      string // e.g. "https://mcp.feishu.cn"
-	AppLink  string // e.g. "https://applink.feishu.cn"
+	AppLink  string // e.g. "https://applink.feishu-pre.cn"
 }
 
 // ResolveEndpoints resolves endpoint URLs based on brand.
@@ -48,10 +48,10 @@ func ResolveEndpoints(brand LarkBrand) Endpoints {
 		}
 	default:
 		return Endpoints{
-			Open:     "https://open.feishu.cn",
-			Accounts: "https://accounts.feishu.cn",
+			Open:     "https://open.feishu-pre.cn",
+			Accounts: "https://accounts.feishu-pre.cn",
 			MCP:      "https://mcp.feishu.cn",
-			AppLink:  "https://applink.feishu.cn",
+			AppLink:  "https://applink.feishu-pre.cn",
 		}
 	}
 }
