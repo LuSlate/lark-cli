@@ -265,10 +265,10 @@ func pluginCheckInstalled(projectPath, pluginKey string) error {
 			if pluginDirExists(pluginDir) {
 				return appsFailedPreconditionError(
 					"plugin %q exists in node_modules but manifest.json is missing; the package may not have been built correctly", pluginKey,
-				).WithHint("reinstall with a properly built .tgz (ap build + npm pack), or run 'lark-cli apps +plugin-install --local <built.tgz>' to replace it")
+				).WithHint("run 'lark-cli apps +plugin-install --name %s' to reinstall from registry", pluginKey)
 			}
 			return appsFailedPreconditionError("plugin %q is not installed", pluginKey).
-				WithHint("run 'lark-cli apps +plugin-install --local <tgz>' or 'lark-cli apps +plugin-install --name %s' to install", pluginKey)
+				WithHint("run 'lark-cli apps +plugin-install --name %s' to install", pluginKey)
 		}
 		return appsFileIOError(err, "cannot check plugin installation for %s", pluginKey)
 	}
@@ -283,7 +283,9 @@ func pluginCheckInstalledVersion(projectPath, pluginKey, declaredVersion string)
 	}
 	var warnings []string
 	if installed := pluginInstalledVersion(projectPath, pluginKey); installed != "" && installed != declaredVersion {
-		warnings = append(warnings, fmt.Sprintf("installed %s differs from declared %s", installed, declaredVersion))
+		warnings = append(warnings, fmt.Sprintf(
+			"installed version %s differs from declared %s; run 'lark-cli apps +plugin-install --name %s@%s' to update, or continue with the installed version",
+			installed, declaredVersion, pluginKey, declaredVersion))
 	}
 	return warnings, nil
 }

@@ -180,7 +180,8 @@ func pluginInstallAll(ctx context.Context, rctx *common.RuntimeContext, projectP
 
 	var installed int
 	for key, version := range declared {
-		if existing := pluginInstalledVersion(projectPath, key); existing != "" {
+		existing := pluginInstalledVersion(projectPath, key)
+		if existing != "" && existing == version {
 			continue
 		}
 		target := key + "@" + version
