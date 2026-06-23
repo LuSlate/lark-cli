@@ -45,7 +45,7 @@ lark-cli drive +import --file ./crm.xlsx --type bitable --name "客户台账"
 # 导入 .base 快照为多维表格 / Base (bitable)（文件不能超过 20MB）
 lark-cli drive +import --file ./snapshot.base --type bitable --name "快照还原"
 
-# 导入 PPTX / PDF 为飞书幻灯片 (slides)（文件不能超过 500MB）
+# 导入 PPTX / PDF 为飞书幻灯片 (slides)（文件不能超过 500MB；PDF 可按每页约 10 秒预估导入处理时间）
 lark-cli drive +import --file ./deck.pptx --type slides --name "项目汇报"
 lark-cli drive +import --file ./deck.pdf --type slides --name "项目汇报"
 
@@ -79,6 +79,7 @@ lark-cli drive +import --file ./README.md --type docx --dry-run
   3. 自动轮询查询导入任务状态；如果在内置轮询窗口内完成，则直接返回导入结果；如果仍未完成，则返回 `ticket`、当前状态和后续查询命令
 - **默认根目录行为**：不传 `--folder-token` 时，shortcut 会保留空的 `point.mount_key`，Lark Import API 会将其视为"导入到调用者根目录"。
 - **导入到已有 bitable**：当 `--type bitable` 且传了 `--target-token` 时，请求 body 中会增加一个 `token` 字段指向目标多维表格的 token，point 挂载点逻辑不变。数据会挂载到该已有多维表格中，而非创建新文档。
+- **PDF 导入 Slides 耗时预估**：PDF 导入 Slides 是长耗时异步任务，通常按每页约 10 秒估算总处理时间。`drive +import` 内置轮询超时只表示本地等待窗口结束，不代表任务失败。看到 `ready=false` / `timed_out=true` 时，必须继续执行返回的 `next_command` 查询同一个 `ticket`，不要重试导入、不要提前放弃；至少等待到 `页数 * 10 秒` 的预估处理时间后，再结合任务状态判断是否异常。
 
 ### 支持的文件类型转换
 
