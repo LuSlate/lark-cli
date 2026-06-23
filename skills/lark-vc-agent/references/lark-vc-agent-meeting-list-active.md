@@ -26,10 +26,10 @@ lark-cli vc +meeting-list-active --as bot --user-id ou_xxx --format json
 
 | 身份 | 命令 | 返回范围 | 后续事件读取 |
 | ---- | ---- | -------- | ------------ |
-| 用户身份 | `--as user` | 当前登录用户正在参加的会议 | 继续 `+meeting-events --as user` |
+| 用户身份 | `--as user` | 当前登录用户正在参加的候选会议 | 后续 `+meeting-events --as bot`，并要求应用机器人在会中或曾参会 |
 | 应用身份 | `--as bot --user-id <user_open_id>` | 目标用户正在参加、且应用机器人也在会中的会议 | 继续 `+meeting-events --as bot` |
 
-硬规则：`meeting_id` 从哪种身份路径拿到，后续 `+meeting-events` 就沿用哪种身份。不要把用户身份拿到的 `meeting_id` 改用应用身份查，也不要把应用身份拿到的 `meeting_id` 改用用户身份查，除非用户明确要求切换场景。
+硬规则：`+meeting-list-active` 可以用用户身份发现候选会议，但 `+meeting-events` 统一是应用机器人视角，必须用 `--as bot`，并要求应用机器人在会中或曾参会。不要把应用身份拿到的 `meeting_id` 改用用户身份读事件。
 
 应用身份返回空，不代表目标用户不在任何会议中，只能说明没有找到“目标用户在会中且应用机器人也在会中”的当前会。
 
@@ -46,14 +46,14 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --form
 
 # 方式 3：只回答当前登录用户所在会议发生了什么
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view compact --format pretty
 ```
 
 ## 多会议选择
 
 - 如果返回多个会议，不要自动挑第一个。
 - 向用户展示每个候选的 `meeting_title` / `meeting_no` / `meeting_id`，等待用户选择。
-- 选择后继续使用发现该会议时的同一身份调用 `+meeting-events`。
+- 选择后用 `+meeting-events --as bot` 读取事件，并确认应用机器人在会中或曾参会。
 
 ## 9 位会议号匹配
 
