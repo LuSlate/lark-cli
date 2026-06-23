@@ -54,7 +54,7 @@ var WorkbookInfo = common.Shortcut{
 		})
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ var SheetCreate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ var SheetDelete = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -263,7 +263,7 @@ var SheetRename = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -333,7 +333,7 @@ var SheetMove = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -405,7 +405,7 @@ var SheetCopy = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -478,7 +478,7 @@ func newSheetVisibilityShortcut(command, desc, op string) common.Shortcut {
 			return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -518,7 +518,7 @@ var SheetSetTabColor = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -1526,6 +1526,12 @@ var WorkbookExport = common.Shortcut{
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		p, err := workbookExportParams(runtime)
 		if err != nil {
+			return err
+		}
+		// workbookExportParams resolves --url network-free (DryRun shares it); a
+		// /wiki/ URL carries a node_token that needs the get_node step only
+		// Execute may take, so re-resolve the token here.
+		if p.Token, err = resolveSpreadsheetTokenExec(runtime); err != nil {
 			return err
 		}
 		applyWorkbookOutputPath(&p, runtime.FileIO(), runtime.Str("output-path"))
