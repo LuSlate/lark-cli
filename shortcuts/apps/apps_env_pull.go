@@ -62,8 +62,9 @@ var AppsEnvPull = common.Shortcut{
 		projectPath, envFile, _ := resolveEnvPullTarget(strings.TrimSpace(rctx.Str("project-path")))
 		appID := strings.TrimSpace(rctx.Str("app-id"))
 		return common.NewDryRunAPI().
-			POST(fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))).
+			GET(fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))).
 			Desc("Pull app startup env vars into the local .env.local file").
+			Params(map[string]interface{}{"env": "dev", "include_values": true}).
 			Set("project_path", projectPath).
 			Set("env_file", envFile)
 	},
@@ -81,7 +82,7 @@ var AppsEnvPull = common.Shortcut{
 		}
 
 		path := fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))
-		data, err := rctx.CallAPITyped("POST", path, nil, nil)
+		data, err := rctx.CallAPITyped("GET", path, map[string]interface{}{"env": "dev", "include_values": true}, nil)
 		if err != nil {
 			return withAppsHint(err, "verify --app-id is correct and you have access to the app; list your apps with `lark-cli apps +list`")
 		}

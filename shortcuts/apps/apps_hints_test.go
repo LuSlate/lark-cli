@@ -17,10 +17,16 @@ import (
 func TestAppsEnvPull_4xxFailureCarriesListHint(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
-		Method: "POST",
+		Method: "GET",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Status: http.StatusForbidden,
 		Body:   map[string]interface{}{"msg": "permission denied"},
+		OnMatch: func(req *http.Request) {
+			assertEnvVarQuery(t, req, map[string]string{
+				"env":            "dev",
+				"include_values": "true",
+			})
+		},
 	})
 
 	err := runAppsShortcut(t, AppsEnvPull,
