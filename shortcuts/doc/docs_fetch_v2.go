@@ -14,12 +14,15 @@ import (
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
+const docsFetchExtraParam = `{"enable_user_cite_reference_map":true}`
+
 // v2FetchFlags returns the flag definitions for the v2 (OpenAPI) fetch path.
 func v2FetchFlags() []common.Flag {
 	return []common.Flag{
 		{Name: "doc-format", Desc: "output content format; xml keeps DocxXML structure and optional block ids, markdown is plain export, im-markdown downgrades residual DocxXML fragments for IM messages", Default: "xml", Enum: []string{"xml", "markdown", "im-markdown"}},
 		{Name: "detail", Desc: "detail level; simple for reading, with-ids for block references, full for styles and edit metadata", Default: "simple", Enum: []string{"simple", "with-ids", "full"}},
 		{Name: "lang", Desc: "user cite display language, e.g. en-US, zh-CN, ja-JP"},
+		{Name: "reference-map", Desc: "request user cite reference_map conversion in fetch output", Type: "bool"},
 		{Name: "revision-id", Desc: "document revision id; -1 means latest", Type: "int", Default: "-1"},
 		{Name: "scope", Desc: "read scope; full reads whole doc, outline lists headings, section expands from heading anchor, range uses block ids, keyword searches text", Default: "full", Enum: []string{"full", "outline", "range", "keyword", "section"}},
 		{Name: "start-block-id", Desc: "range/section anchor block id; required for section and optional start for range"},
@@ -90,6 +93,9 @@ func buildFetchBody(runtime *common.RuntimeContext) map[string]interface{} {
 	body := map[string]interface{}{
 		"format": effectiveFetchFormat(runtime),
 	}
+	if shouldEnableFetchReferenceMap(runtime) {
+		body["extra_param"] = docsFetchExtraParam
+	}
 	if v := runtime.Int("revision-id"); v > 0 {
 		body["revision_id"] = v
 	}
@@ -123,6 +129,10 @@ func buildFetchBody(runtime *common.RuntimeContext) map[string]interface{} {
 	injectDocsScene(runtime, body)
 
 	return body
+}
+
+func shouldEnableFetchReferenceMap(runtime *common.RuntimeContext) bool {
+	return runtime.Changed("reference-map") && runtime.Bool("reference-map")
 }
 
 func effectiveFetchFormat(runtime *common.RuntimeContext) string {

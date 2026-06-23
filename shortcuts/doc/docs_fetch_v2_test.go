@@ -487,6 +487,82 @@ func TestAddFetchDetailDowngradeWarningNoops(t *testing.T) {
 	}
 }
 
+func TestDocsFetchV2ReferenceMapFlagIsPublicBool(t *testing.T) {
+	t.Parallel()
+
+	var flag common.Flag
+	for _, candidate := range v2FetchFlags() {
+		if candidate.Name == "reference-map" {
+			flag = candidate
+			break
+		}
+	}
+	if flag.Name == "" {
+		t.Fatal("reference-map flag not found")
+	}
+	if flag.Hidden {
+		t.Fatal("reference-map flag should be public")
+	}
+	if flag.Type != "bool" {
+		t.Fatalf("reference-map flag Type = %q, want bool", flag.Type)
+	}
+	if !strings.Contains(flag.Desc, "reference_map") {
+		t.Fatalf("reference-map help should mention reference_map, got %q", flag.Desc)
+	}
+}
+
+func TestBuildFetchBodyOmitsFetchExtraParamByDefault(t *testing.T) {
+	t.Parallel()
+
+	runtime := newFetchBodyTestRuntime(context.Background())
+
+	body := buildFetchBody(runtime)
+	if _, ok := body["extra_param"]; ok {
+		t.Fatalf("extra_param should require explicit --reference-map: %#v", body)
+	}
+}
+
+func TestBuildFetchBodyIncludesFetchExtraParamWithReferenceMap(t *testing.T) {
+	t.Parallel()
+
+	runtime := newFetchBodyTestRuntime(context.Background())
+	mustSetFetchFlag(t, runtime, "reference-map", "true")
+
+	body := buildFetchBody(runtime)
+	extraParam, ok := body["extra_param"].(string)
+	if !ok || extraParam == "" {
+		t.Fatalf("extra_param = %#v, want JSON string", body["extra_param"])
+	}
+	var got map[string]bool
+	if err := json.Unmarshal([]byte(extraParam), &got); err != nil {
+		t.Fatalf("decode extra_param %q: %v", extraParam, err)
+	}
+	if got["enable_user_cite_reference_map"] != true {
+		t.Fatalf("enable_user_cite_reference_map = %#v, want true in %#v", got["enable_user_cite_reference_map"], got)
+	}
+	if _, ok := got["return_html5_block_data"]; ok {
+		t.Fatalf("extra_param should not request html5 block data: %#v", got)
+	}
+	if _, ok := got["reference_map_mode"]; ok {
+		t.Fatalf("extra_param should not use legacy reference_map_mode: %#v", got)
+	}
+	if len(got) != 1 {
+		t.Fatalf("extra_param should only contain user cite reference map toggle: %#v", got)
+	}
+}
+
+func TestBuildFetchBodyOmitsFetchExtraParamWithExplicitReferenceMapFalse(t *testing.T) {
+	t.Parallel()
+
+	runtime := newFetchBodyTestRuntime(context.Background())
+	mustSetFetchFlag(t, runtime, "reference-map", "false")
+
+	body := buildFetchBody(runtime)
+	if _, ok := body["extra_param"]; ok {
+		t.Fatalf("extra_param should stay disabled when --reference-map=false: %#v", body)
+	}
+}
+
 func TestDocsFetchDryRunDefaultsToV2Endpoint(t *testing.T) {
 	t.Parallel()
 
@@ -808,6 +884,7 @@ func newFetchBodyTestRuntime(ctx context.Context) *common.RuntimeContext {
 	cmd.Flags().String("doc-format", "xml", "")
 	cmd.Flags().String("detail", "simple", "")
 	cmd.Flags().String("lang", "", "")
+	cmd.Flags().Bool("reference-map", false, "")
 	cmd.Flags().Int("revision-id", -1, "")
 	cmd.Flags().String("scope", "full", "")
 	cmd.Flags().String("start-block-id", "", "")
@@ -836,6 +913,7 @@ func newFetchShortcutTestRuntime(t *testing.T, apiVersion string, setFlags map[s
 	cmd.Flags().String("doc-format", "xml", "")
 	cmd.Flags().String("detail", "simple", "")
 	cmd.Flags().String("lang", "", "")
+	cmd.Flags().Bool("reference-map", false, "")
 	cmd.Flags().Int("revision-id", -1, "")
 	cmd.Flags().String("scope", "full", "")
 	cmd.Flags().String("start-block-id", "", "")
