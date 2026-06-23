@@ -509,7 +509,7 @@ func TestMeetingEvents_ExecuteJSON_PageAll(t *testing.T) {
 
 	out := strings.ReplaceAll(stdout.String(), " ", "")
 	out = strings.ReplaceAll(out, "\n", "")
-	if count := strings.Count(out, `"id":"event-1"`); count != 2 {
+	if count := strings.Count(out, `"summary":"participantbot_001(DemoBot)joined"`); count != 2 {
 		t.Fatalf("expected 2 aggregated events, got %d: %s", count, stdout.String())
 	}
 	if !strings.Contains(out, `"has_more":false`) {
