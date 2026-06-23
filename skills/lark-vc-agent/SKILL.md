@@ -118,14 +118,14 @@ lark-cli vc +notes --meeting-ids "$MID"
 
 ```bash
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
-lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --view compact --format pretty
 ```
 
 如果只是回答当前登录用户所在会议发生了什么，先用用户身份发现候选会议；读取事件仍需要应用机器人视角：
 
 ```bash
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --view compact --format pretty
 ```
 
 ## Shortcuts
