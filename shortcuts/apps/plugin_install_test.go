@@ -24,7 +24,7 @@ func TestPluginInstall_SinglePlugin(t *testing.T) {
 	// Mock batch_get API
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
-		URL:    "/open-apis/spark/v1/plugins/-/versions/batch_get",
+		URL:    "/open-apis/spark/v1/plugin/versions/batch_get",
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
@@ -47,7 +47,7 @@ func TestPluginInstall_SinglePlugin(t *testing.T) {
 	})
 	reg.Register(&httpmock.Stub{
 		Method:      "GET",
-		URL:         "/open-apis/spark/v1/plugins/@test/my-plugin/versions/1.0.0/package",
+		URL:         "/open-apis/spark/v1/plugin/versions/download_package",
 		RawBody:     tgzData,
 		ContentType: "application/octet-stream",
 	})

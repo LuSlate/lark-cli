@@ -41,13 +41,13 @@ var AppsPluginInstall = common.Shortcut{
 		name := strings.TrimSpace(rctx.Str("name"))
 		if name == "" {
 			return common.NewDryRunAPI().
-				POST(apiBasePath+"/plugins/-/versions/batch_get").
+				POST(apiBasePath+"/plugin/versions/batch_get").
 				Desc("Batch-install all declared plugins from package.json actionPlugins").
 				Set("mode", "batch")
 		}
 		key, version := pluginParseInstallTarget(name)
 		return common.NewDryRunAPI().
-			POST(apiBasePath+"/plugins/-/versions/batch_get").
+			POST(apiBasePath+"/plugin/versions/batch_get").
 			Desc("Fetch plugin version metadata, then download .tgz package").
 			Set("plugin_key", key).
 			Set("version", version)
@@ -284,7 +284,7 @@ func pluginResolveVersion(ctx context.Context, rctx *common.RuntimeContext, key,
 		"items": []interface{}{item},
 	}
 
-	data, err := rctx.CallAPITyped("POST", apiBasePath+"/plugins/-/versions/batch_get", nil, body)
+	data, err := rctx.CallAPITyped("POST", apiBasePath+"/plugin/versions/batch_get", nil, body)
 	if err != nil {
 		p, ok := errs.ProblemOf(err)
 		if ok && p.Subtype == errs.SubtypeInvalidResponse {
@@ -347,7 +347,7 @@ func pluginExtractVersionInfo(data map[string]interface{}, key string) []map[str
 func pluginDownloadPackage(ctx context.Context, rctx *common.RuntimeContext, key, version, downloadURL, approach string) ([]byte, error) {
 	switch approach {
 	case "inner":
-		apiPath := pluginBuildInnerDownloadPath(key, version)
+		apiPath := pluginBuildDownloadPath(key, version)
 		return pluginDownloadViaAPI(ctx, rctx, apiPath)
 	case "public":
 		if downloadURL == "" {
@@ -358,24 +358,15 @@ func pluginDownloadPackage(ctx context.Context, rctx *common.RuntimeContext, key
 		if downloadURL != "" && strings.HasPrefix(downloadURL, "http") {
 			return pluginDownloadDirect(downloadURL)
 		}
-		apiPath := pluginBuildInnerDownloadPath(key, version)
+		apiPath := pluginBuildDownloadPath(key, version)
 		return pluginDownloadViaAPI(ctx, rctx, apiPath)
 	}
 }
 
-// pluginBuildInnerDownloadPath constructs the API path for downloading a plugin
-// package. For key "@scope/name", the path segments are scope and name.
-func pluginBuildInnerDownloadPath(key, version string) string {
-	scope, name := pluginSplitKey(key)
-	return fmt.Sprintf("%s/plugins/%s/%s/versions/%s/package", apiBasePath, scope, name, version)
-}
-
-// pluginSplitKey splits "@scope/name" into ("@scope", "name").
-func pluginSplitKey(key string) (string, string) {
-	if idx := strings.Index(key, "/"); idx > 0 {
-		return key[:idx], key[idx+1:]
-	}
-	return key, ""
+// pluginBuildDownloadPath constructs the API path for downloading a plugin
+// package. plugin_key and version are passed as query parameters.
+func pluginBuildDownloadPath(key, version string) string {
+	return fmt.Sprintf("%s/plugin/versions/download_package?plugin_key=%s&version=%s", apiBasePath, key, version)
 }
 
 func pluginDownloadViaAPI(ctx context.Context, rctx *common.RuntimeContext, apiPath string) ([]byte, error) {
