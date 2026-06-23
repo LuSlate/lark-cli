@@ -5,6 +5,7 @@ package config
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -189,7 +190,7 @@ func resolveRegisterAuthMethod(f *cmdutil.Factory, flag string) (string, error) 
 			),
 		).WithTheme(cmdutil.ThemeFeishu())
 		if err := form.Run(); err != nil {
-			if err == huh.ErrUserAborted {
+			if errors.Is(err, huh.ErrUserAborted) {
 				return "", output.ErrBare(1)
 			}
 			return "", err
