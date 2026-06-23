@@ -17,7 +17,7 @@ import (
 const (
 	defaultAppsTraceEnv = "online"
 	traceSearchEndpoint = "search_traces"
-	traceGetEndpoint    = "get_trace"
+	traceGetEndpoint    = "trace"
 )
 
 // AppsTraceList searches online app traces with observability filters.
@@ -181,10 +181,10 @@ func addTraceSearchTimeRange(body map[string]interface{}, rctx *common.RuntimeCo
 		return err
 	}
 	if hasSince {
-		body["start_timestamp_ns"] = nsString(since)
+		body["start_timestamp_ns"] = nsNumber(since)
 	}
 	if hasUntil {
-		body["end_timestamp_ns"] = nsString(until)
+		body["end_timestamp_ns"] = nsNumber(until)
 	}
 	return nil
 }
@@ -195,13 +195,19 @@ func buildTraceSearchFilter(rctx *common.RuntimeContext) map[string]interface{} 
 		filter["trace_ids"] = traceIDs
 	}
 	addTrimmedTraceFilterString(filter, "keyword", rctx.Str("root-span"))
-	addTrimmedTraceFilterString(filter, "user_id", rctx.Str("user-id"))
+	addTrimmedTraceFilterStrings(filter, "user_ids", rctx.Str("user-id"))
 	return filter
 }
 
 func addTrimmedTraceFilterString(filter map[string]interface{}, key, value string) {
 	if value = strings.TrimSpace(value); value != "" {
 		filter[key] = value
+	}
+}
+
+func addTrimmedTraceFilterStrings(filter map[string]interface{}, key, value string) {
+	if value = strings.TrimSpace(value); value != "" {
+		filter[key] = []string{value}
 	}
 }
 

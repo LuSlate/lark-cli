@@ -158,10 +158,10 @@ func parseAppsRelativeDuration(s string) (time.Duration, bool) {
 	return time.Duration(n) * unitDuration, true
 }
 
-func nsString(t time.Time) string {
-	return strconv.FormatInt(t.UnixNano(), 10)
+func nsNumber(t time.Time) int64 {
+	return t.UnixNano()
 }
 
-func secString(t time.Time) string {
-	return strconv.FormatInt(t.Unix(), 10)
+func secNumber(t time.Time) int64 {
+	return t.Unix()
 }

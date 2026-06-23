@@ -14,7 +14,9 @@ func TestAppsTraceList_DryRunBuildsSearchTracesBody(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsTraceList, []string{
 		"+trace-list", "--app-id", "app_x", "--trace-id", "trace-1",
-		"--root-span", "gateway", "--page-size", "10", "--dry-run", "--as", "user",
+		"--root-span", "gateway", "--user-id", "ou_1",
+		"--since", "2026-06-23T10:00:00Z", "--until", "2026-06-23T10:01:00Z",
+		"--page-size", "10", "--dry-run", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("dry-run err=%v", err)
@@ -44,6 +46,14 @@ func TestAppsTraceList_DryRunBuildsSearchTracesBody(t *testing.T) {
 	if got := filter["keyword"]; got != "gateway" {
 		t.Fatalf("filter.keyword = %v", got)
 	}
+	userIDs := filter["user_ids"].([]interface{})
+	if len(userIDs) != 1 || userIDs[0] != "ou_1" {
+		t.Fatalf("filter.user_ids = %#v", userIDs)
+	}
+	if env.API[0].Body["start_timestamp_ns"] != float64(1782208800000000000) ||
+		env.API[0].Body["end_timestamp_ns"] != float64(1782208860000000000) {
+		t.Fatalf("timestamps = %#v %#v", env.API[0].Body["start_timestamp_ns"], env.API[0].Body["end_timestamp_ns"])
+	}
 }
 
 func TestAppsTraceList_RejectsDevEnv(t *testing.T) {
@@ -71,7 +81,7 @@ func TestAppsTraceGet_DryRunBuildsGetTraceBody(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
 		t.Fatalf("decode dry-run: %v\n%s", err, stdout.String())
 	}
-	if env.API[0].Method != "POST" || env.API[0].URL != "/open-apis/spark/v1/apps/app_x/get_trace" {
+	if env.API[0].Method != "POST" || env.API[0].URL != "/open-apis/spark/v1/apps/app_x/trace" {
 		t.Fatalf("method/url = %s %s", env.API[0].Method, env.API[0].URL)
 	}
 	if env.API[0].Body["app_env"] != "online" || env.API[0].Body["trace_id"] != "trace-1" {
@@ -249,7 +259,7 @@ func TestAppsTraceGet_NormalizesTraceDetailCamelFields(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
-		URL:    "/open-apis/spark/v1/apps/app_x/get_trace",
+		URL:    "/open-apis/spark/v1/apps/app_x/trace",
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{

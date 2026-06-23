@@ -76,11 +76,11 @@ func TestAppsObservabilityCommonHelpers(t *testing.T) {
 		}
 	}
 	ts := time.Date(2026, 6, 23, 10, 11, 12, 123456789, time.UTC)
-	if got := nsString(ts); got != "1782209472123456789" {
-		t.Fatalf("nsString = %q", got)
+	if got := nsNumber(ts); got != int64(1782209472123456789) {
+		t.Fatalf("nsNumber = %d", got)
 	}
-	if got := secString(ts); got != "1782209472" {
-		t.Fatalf("secString = %q", got)
+	if got := secNumber(ts); got != int64(1782209472) {
+		t.Fatalf("secNumber = %d", got)
 	}
 }
 

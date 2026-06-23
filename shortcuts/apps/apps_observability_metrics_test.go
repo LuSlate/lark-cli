@@ -58,7 +58,10 @@ func TestAppsMetricQuery_DryRunUsesSeconds(t *testing.T) {
 	if _, ok := body["start_timestamp_ns"]; ok {
 		t.Fatalf("metric should not use start_timestamp_ns: %#v", body)
 	}
-	if body["start_timestamp"] != "1782208800" || body["end_timestamp"] != "1782208860" {
+	if _, ok := body["app_env"]; ok {
+		t.Fatalf("metric OpenAPI body should not include app_env: %#v", body)
+	}
+	if body["start_timestamp"] != float64(1782208800) || body["end_timestamp"] != float64(1782208860) {
 		t.Fatalf("metric timestamps = %v %v", body["start_timestamp"], body["end_timestamp"])
 	}
 	if body["down_sample"] != "1m" {
@@ -82,16 +85,21 @@ func TestAppsMetricQuery_FillsMissingRequestValuesWithZero(t *testing.T) {
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"items": []interface{}{
+				"points": []interface{}{
 					map[string]interface{}{
-						"timestamp":  "1782208800",
+						"timestamp":  float64(1782208800),
 						"dimensions": map[string]interface{}{"page": "/home"},
-						"values":     map[string]interface{}{"total": float64(12)},
+						"values": []interface{}{
+							map[string]interface{}{"metric_name": "client_api_request_count", "value": float64(12)},
+						},
 					},
 					map[string]interface{}{
-						"timestamp":  "1782208860",
+						"timestamp":  float64(1782208860),
 						"dimensions": map[string]interface{}{"page": "/settings"},
-						"values":     map[string]interface{}{"total": float64(8), "error": nil},
+						"values": []interface{}{
+							map[string]interface{}{"metric_name": "client_api_request_count", "value": float64(8)},
+							map[string]interface{}{"metric_name": "client_api_request_error_count", "value": nil},
+						},
 					},
 				},
 			},
@@ -166,6 +174,7 @@ func TestAppsAnalyticsQuery_DryRunUsesNanoseconds(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsAnalyticsQuery, []string{
 		"+analytics-query", "--app-id", "app_x", "--analytics", "users",
+		"--since", "2026-06-23T10:00:00Z", "--until", "2026-06-23T10:01:00Z",
 		"--granularity", "week", "--dry-run", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
@@ -194,6 +203,19 @@ func TestAppsAnalyticsQuery_DryRunUsesNanoseconds(t *testing.T) {
 	if body["time_aggregation_unit"] != "WEEK" {
 		t.Fatalf("time_aggregation_unit = %v", body["time_aggregation_unit"])
 	}
+	if _, ok := body["app_env"]; ok {
+		t.Fatalf("analytics OpenAPI body should not include app_env: %#v", body)
+	}
+	if _, ok := body["analytics_types"]; ok {
+		t.Fatalf("analytics OpenAPI body should use metric_types, not analytics_types: %#v", body)
+	}
+	if metricTypes, ok := body["metric_types"].([]interface{}); !ok || len(metricTypes) != 3 {
+		t.Fatalf("metric_types = %#v", body["metric_types"])
+	}
+	if body["start_timestamp_ns"] != float64(1782208800000000000) ||
+		body["end_timestamp_ns"] != float64(1782208860000000000) {
+		t.Fatalf("analytics timestamps = %#v %#v", body["start_timestamp_ns"], body["end_timestamp_ns"])
+	}
 }
 
 func TestAppsAnalyticsQuery_PageViewDesktopSeriesSetsDeviceFilter(t *testing.T) {
@@ -205,7 +227,7 @@ func TestAppsAnalyticsQuery_PageViewDesktopSeriesSetsDeviceFilter(t *testing.T) 
 			name: "series",
 			args: []string{
 				"+analytics-query", "--app-id", "app_x", "--analytics", "page-view",
-				"--series", "desktop", "--dry-run", "--as", "user",
+				"--series", "desktop", "--page", "/home", "--dry-run", "--as", "user",
 			},
 		},
 		{
@@ -234,6 +256,9 @@ func TestAppsAnalyticsQuery_PageViewDesktopSeriesSetsDeviceFilter(t *testing.T) 
 			if len(deviceTypes) != 1 || deviceTypes[0] != "desktop" {
 				t.Fatalf("device_types = %#v", deviceTypes)
 			}
+			if tc.name == "series" && filter["page"] != "/home" {
+				t.Fatalf("filter.page = %#v, want /home", filter["page"])
+			}
 		})
 	}
 }
@@ -246,10 +271,15 @@ func TestAppsAnalyticsQuery_DesktopSeriesUsesDesktopValueLabel(t *testing.T) {
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"data_points": []interface{}{
+				"series": []interface{}{
 					map[string]interface{}{
-						"timestamp_ns": "1782208800000000000",
-						"value":        float64(21),
+						"metric_type": "PAGE_VIEW",
+						"points": []interface{}{
+							map[string]interface{}{
+								"timestamp_ns": float64(1782208800000000000),
+								"value":        float64(21),
+							},
+						},
 					},
 				},
 			},

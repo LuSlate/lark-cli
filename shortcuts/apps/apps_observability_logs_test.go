@@ -16,7 +16,9 @@ func TestAppsLogList_DryRunBuildsSearchLogsBody(t *testing.T) {
 	err := runAppsShortcut(t, AppsLogList, []string{
 		"+log-list", "--app-id", "app_x", "--level", "error",
 		"--log-id", "LOG1", "--log-id", "LOG2", "--trace-id", "trace-1",
-		"--keyword", "timeout", "--min-duration", "200",
+		"--keyword", "timeout", "--module", "frontend", "--user-id", "ou_1",
+		"--page", "/home", "--api", "/api/orders", "--min-duration", "200",
+		"--since", "2026-06-23T10:00:00Z", "--until", "2026-06-23T10:01:00Z",
 		"--page-size", "20", "--dry-run", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
@@ -41,6 +43,21 @@ func TestAppsLogList_DryRunBuildsSearchLogsBody(t *testing.T) {
 	filter := env.API[0].Body["filter"].(map[string]interface{})
 	if got := filter["keyword"]; got != "timeout" {
 		t.Fatalf("filter.keyword = %v", got)
+	}
+	for key, want := range map[string]string{
+		"modules":  "frontend",
+		"user_ids": "ou_1",
+		"pages":    "/home",
+		"apis":     "/api/orders",
+	} {
+		values, ok := filter[key].([]interface{})
+		if !ok || len(values) != 1 || values[0] != want {
+			t.Fatalf("filter.%s = %#v, want [%q]", key, filter[key], want)
+		}
+	}
+	if env.API[0].Body["start_timestamp_ns"] != float64(1782208800000000000) ||
+		env.API[0].Body["end_timestamp_ns"] != float64(1782208860000000000) {
+		t.Fatalf("timestamps = %#v %#v", env.API[0].Body["start_timestamp_ns"], env.API[0].Body["end_timestamp_ns"])
 	}
 }
 

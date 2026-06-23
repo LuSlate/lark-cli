@@ -33,7 +33,7 @@ var AppsMetricQuery = common.Shortcut{
 	Risk:        "read",
 	Tips: []string{
 		"Example: lark-cli apps +metric-query --app-id <app_id> --metric requests --series total --since 1d",
-		"Tip: metric timestamps use second strings; use +analytics-query for PV/UV-style analytics.",
+		"Tip: metric timestamps use seconds; use +analytics-query for PV/UV-style analytics.",
 	},
 	Scopes:    []string{"spark:app:read"},
 	AuthTypes: []string{"user"},
@@ -53,11 +53,11 @@ var AppsMetricQuery = common.Shortcut{
 		if _, err := requireAppID(rctx.Str("app-id")); err != nil {
 			return err
 		}
-		_, _, _, err := buildMetricQueryBody(rctx)
+		_, _, _, _, err := buildMetricQueryBody(rctx)
 		return err
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
-		body, _, _, _ := buildMetricQueryBody(rctx)
+		body, _, _, _, _ := buildMetricQueryBody(rctx)
 		return common.NewDryRunAPI().
 			POST(metricQueryPath(rctx.Str("app-id"))).
 			Desc("Query online app metrics").
@@ -65,7 +65,7 @@ var AppsMetricQuery = common.Shortcut{
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		appID, _ := requireAppID(rctx.Str("app-id"))
-		body, labels, fillZero, err := buildMetricQueryBody(rctx)
+		body, names, labels, fillZero, err := buildMetricQueryBody(rctx)
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ var AppsMetricQuery = common.Shortcut{
 			return withAppsHint(err, appIDListHint)
 		}
 		out := observabilitySeriesOutput{
-			Items:   normalizeMetricSeries(data, labels, fillZero),
+			Items:   normalizeMetricSeries(data, names, labels, fillZero),
 			HasMore: false,
 		}
 		rctx.OutFormat(out, nil, func(w io.Writer) {
@@ -92,7 +92,7 @@ var AppsAnalyticsQuery = common.Shortcut{
 	Risk:        "read",
 	Tips: []string{
 		"Example: lark-cli apps +analytics-query --app-id <app_id> --analytics users --granularity week",
-		"Tip: analytics timestamps use nanosecond strings; use +metric-query for request/runtime metrics.",
+		"Tip: analytics timestamps use nanoseconds; use +metric-query for request/runtime metrics.",
 	},
 	Scopes:    []string{"spark:app:read"},
 	AuthTypes: []string{"user"},
@@ -104,7 +104,7 @@ var AppsAnalyticsQuery = common.Shortcut{
 		{Name: "series", Desc: "analytics series within the family, such as active-users or desktop-view"},
 		{Name: "since", Desc: "start time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
 		{Name: "until", Desc: "end time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339; defaults to now"},
-		{Name: "page", Type: "string_array", Desc: "frontend page or route filter; repeatable"},
+		{Name: "page", Desc: "frontend page or route filter"},
 		{Name: "device-type", Desc: "device type filter", Enum: []string{"desktop", "mobile"}},
 		{Name: "granularity", Default: defaultAppsAnalyticsGranular, Desc: "analytics aggregation granularity", Enum: []string{"day", "week", "month"}},
 	},
@@ -156,38 +156,37 @@ func analyticsQueryPath(appID string) string {
 	return appScopedPath(appID, analyticsQueryEndpoint)
 }
 
-func buildMetricQueryBody(rctx *common.RuntimeContext) (map[string]interface{}, []string, bool, error) {
+func buildMetricQueryBody(rctx *common.RuntimeContext) (map[string]interface{}, []string, []string, bool, error) {
 	env := strings.TrimSpace(rctx.Str("env"))
 	if env == "" {
 		env = defaultAppsMetricEnv
 	}
 	if err := validateObservabilityEnv(env); err != nil {
-		return nil, nil, false, err
+		return nil, nil, nil, false, err
 	}
 	names, labels, err := metricNamesForCLI(rctx.Str("metric"), rctx.Str("series"))
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, nil, false, err
 	}
 	since, until, err := defaultedObservabilityTimeRange(rctx.Str("since"), rctx.Str("until"))
 	if err != nil {
-		return nil, nil, false, err
+		return nil, nil, nil, false, err
 	}
 	downSample := strings.TrimSpace(rctx.Str("down-sample"))
 	if downSample == "" {
 		downSample = defaultAppsMetricDownSample
 	}
 	body := map[string]interface{}{
-		"app_env":              env,
 		"metric_names":         names,
-		"start_timestamp":      secString(since),
-		"end_timestamp":        secString(until),
+		"start_timestamp":      secNumber(since),
+		"end_timestamp":        secNumber(until),
 		"down_sample":          downSample,
 		"need_pack_lack_point": false,
 	}
 	if filter := buildMetricQueryFilter(rctx); len(filter) > 0 {
 		body["filter"] = filter
 	}
-	return body, labels, strings.TrimSpace(strings.ToLower(rctx.Str("metric"))) == "requests", nil
+	return body, names, labels, strings.TrimSpace(strings.ToLower(rctx.Str("metric"))) == "requests", nil
 }
 
 func buildMetricQueryFilter(rctx *common.RuntimeContext) map[string]interface{} {
@@ -221,14 +220,13 @@ func buildAnalyticsQueryBody(rctx *common.RuntimeContext) (map[string]interface{
 	if err != nil {
 		return nil, nil, err
 	}
-	if pages := cleanRepeatedStrings(rctx.StrArray("page")); len(pages) > 0 {
-		filter["pages"] = pages
+	if page := strings.TrimSpace(rctx.Str("page")); page != "" {
+		filter["page"] = page
 	}
 	body := map[string]interface{}{
-		"app_env":               env,
-		"analytics_types":       types,
-		"start_timestamp_ns":    nsString(since),
-		"end_timestamp_ns":      nsString(until),
+		"metric_types":          types,
+		"start_timestamp_ns":    nsNumber(since),
+		"end_timestamp_ns":      nsNumber(until),
 		"time_aggregation_unit": aggregation,
 	}
 	if len(filter) > 0 {
@@ -366,27 +364,27 @@ func analyticsGranularityForCLI(granularity string) (string, error) {
 	}
 }
 
-func normalizeMetricSeries(data map[string]interface{}, labels []string, fillZero bool) []map[string]interface{} {
-	return normalizeObservabilitySeries(data, labels, fillZero, "timestamp")
+func normalizeMetricSeries(data map[string]interface{}, names, labels []string, fillZero bool) []map[string]interface{} {
+	return normalizeObservabilitySeries(data, labels, observabilityNameLabels(names, labels), fillZero, "timestamp")
 }
 
 func normalizeAnalyticsSeries(data map[string]interface{}, labels []string) []map[string]interface{} {
-	return normalizeObservabilitySeries(data, labels, false, "timestamp_ns")
+	return normalizeObservabilitySeries(data, labels, nil, false, "timestamp_ns")
 }
 
-func normalizeObservabilitySeries(data map[string]interface{}, labels []string, fillZero bool, timeField string) []map[string]interface{} {
+func normalizeObservabilitySeries(data map[string]interface{}, labels []string, nameLabels map[string]string, fillZero bool, timeField string) []map[string]interface{} {
 	if series := observabilityMapSlice(data["series"]); len(series) > 0 {
-		return mergeObservabilitySeries(series, labels, fillZero, timeField)
+		return mergeObservabilitySeries(series, labels, nameLabels, fillZero, timeField)
 	}
 	if items := observabilityMapSlice(data["items"]); len(items) > 0 {
 		if observabilityHasNestedPoints(items) {
-			return mergeObservabilitySeries(items, labels, fillZero, timeField)
+			return mergeObservabilitySeries(items, labels, nameLabels, fillZero, timeField)
 		}
-		return normalizeObservabilityPoints(items, labels, fillZero, timeField)
+		return normalizeObservabilityPoints(items, labels, nameLabels, fillZero, timeField)
 	}
-	for _, key := range []string{"data_points", "dataPoints"} {
+	for _, key := range []string{"points", "data_points", "dataPoints"} {
 		if points := observabilityMapSlice(data[key]); len(points) > 0 {
-			return normalizeObservabilityPoints(points, labels, fillZero, timeField)
+			return normalizeObservabilityPoints(points, labels, nameLabels, fillZero, timeField)
 		}
 	}
 	return []map[string]interface{}{}
@@ -401,7 +399,7 @@ func observabilityHasNestedPoints(items []map[string]interface{}) bool {
 	return false
 }
 
-func mergeObservabilitySeries(series []map[string]interface{}, labels []string, fillZero bool, timeField string) []map[string]interface{} {
+func mergeObservabilitySeries(series []map[string]interface{}, labels []string, nameLabels map[string]string, fillZero bool, timeField string) []map[string]interface{} {
 	index := make(map[string]int)
 	items := make([]map[string]interface{}, 0)
 	for i, serie := range series {
@@ -428,7 +426,7 @@ func mergeObservabilitySeries(series []map[string]interface{}, labels []string, 
 				})
 			}
 			values := items[pos]["values"].(map[string]interface{})
-			values[label] = observabilityPointValue(point, label)
+			values[label] = observabilityPointValue(point, label, nameLabels)
 		}
 	}
 	if fillZero {
@@ -437,10 +435,10 @@ func mergeObservabilitySeries(series []map[string]interface{}, labels []string, 
 	return items
 }
 
-func normalizeObservabilityPoints(points []map[string]interface{}, labels []string, fillZero bool, timeField string) []map[string]interface{} {
+func normalizeObservabilityPoints(points []map[string]interface{}, labels []string, nameLabels map[string]string, fillZero bool, timeField string) []map[string]interface{} {
 	items := make([]map[string]interface{}, 0, len(points))
 	for _, point := range points {
-		values := observabilityPointValues(point, labels, fillZero)
+		values := observabilityPointValues(point, labels, nameLabels, fillZero)
 		items = append(items, map[string]interface{}{
 			timeField:    observabilityTimestamp(point, timeField),
 			"dimensions": observabilityDimensions(point),
@@ -465,7 +463,7 @@ func fillObservabilityZeroes(items []map[string]interface{}, labels []string) {
 	}
 }
 
-func observabilityPointValues(point map[string]interface{}, labels []string, fillZero bool) map[string]interface{} {
+func observabilityPointValues(point map[string]interface{}, labels []string, nameLabels map[string]string, fillZero bool) map[string]interface{} {
 	values := make(map[string]interface{}, len(labels))
 	switch raw := firstObservabilityValue(point, "values", "value_map", "valueMap"); v := raw.(type) {
 	case map[string]interface{}:
@@ -474,10 +472,26 @@ func observabilityPointValues(point map[string]interface{}, labels []string, fil
 				values[label] = value
 			}
 		}
+		for name, label := range nameLabels {
+			if value, ok := v[name]; ok {
+				values[label] = value
+			}
+		}
 	case []interface{}:
-		for i, label := range labels {
-			if i < len(v) {
-				values[label] = v[i]
+		for i, rawItem := range v {
+			if item, ok := rawItem.(map[string]interface{}); ok {
+				name := strings.TrimSpace(fmt.Sprint(firstObservabilityValue(item, "metric_name", "metricName", "name")))
+				label := nameLabels[name]
+				if label == "" && i < len(labels) {
+					label = labels[i]
+				}
+				if label != "" {
+					values[label] = firstObservabilityValue(item, "value")
+				}
+				continue
+			}
+			if i < len(labels) {
+				values[labels[i]] = rawItem
 			}
 		}
 	}
@@ -501,16 +515,35 @@ func observabilityPointValues(point map[string]interface{}, labels []string, fil
 	return values
 }
 
-func observabilityPointValue(point map[string]interface{}, label string) interface{} {
+func observabilityPointValue(point map[string]interface{}, label string, nameLabels map[string]string) interface{} {
 	if value, ok := point["value"]; ok {
 		return value
 	}
 	switch raw := firstObservabilityValue(point, "values", "value_map", "valueMap"); values := raw.(type) {
 	case map[string]interface{}:
+		for name, mappedLabel := range nameLabels {
+			if mappedLabel == label {
+				if value, ok := values[name]; ok {
+					return value
+				}
+			}
+		}
 		return values[label]
 	case []interface{}:
-		if len(values) > 0 {
-			return values[0]
+		for _, rawItem := range values {
+			item, ok := rawItem.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			name := strings.TrimSpace(fmt.Sprint(firstObservabilityValue(item, "metric_name", "metricName", "name")))
+			if nameLabels[name] == label {
+				return firstObservabilityValue(item, "value")
+			}
+		}
+		for _, rawItem := range values {
+			if _, ok := rawItem.(map[string]interface{}); !ok {
+				return rawItem
+			}
 		}
 	}
 	return nil
@@ -543,7 +576,7 @@ func observabilityMapSlice(raw interface{}) []map[string]interface{} {
 }
 
 func observabilitySeriesLabel(serie map[string]interface{}, labels []string, index int) string {
-	for _, key := range []string{"label", "series", "name"} {
+	for _, key := range []string{"label", "series", "name", "metric_type", "metricType"} {
 		if value, ok := serie[key].(string); ok {
 			value = strings.TrimSpace(value)
 			for _, label := range labels {
@@ -574,8 +607,37 @@ func observabilityDimensions(point map[string]interface{}) map[string]interface{
 		if dimensions, ok := point[key].(map[string]interface{}); ok {
 			return cloneMap(dimensions)
 		}
+		if dimensions := observabilityKVList(point[key]); len(dimensions) > 0 {
+			return dimensions
+		}
 	}
 	return map[string]interface{}{}
+}
+
+func observabilityNameLabels(names, labels []string) map[string]string {
+	out := make(map[string]string, len(names))
+	for i, name := range names {
+		if i < len(labels) {
+			out[name] = labels[i]
+		}
+	}
+	return out
+}
+
+func observabilityKVList(raw interface{}) map[string]interface{} {
+	items := observabilityMapSlice(raw)
+	if len(items) == 0 {
+		return nil
+	}
+	out := make(map[string]interface{}, len(items))
+	for _, item := range items {
+		key := strings.TrimSpace(fmt.Sprint(firstObservabilityValue(item, "key", "name")))
+		if key == "" {
+			continue
+		}
+		out[key] = firstObservabilityValue(item, "value")
+	}
+	return out
 }
 
 func firstObservabilityValue(m map[string]interface{}, keys ...string) interface{} {

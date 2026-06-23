@@ -200,10 +200,10 @@ func addLogSearchTimeRange(body map[string]interface{}, rctx *common.RuntimeCont
 		return err
 	}
 	if hasSince {
-		body["start_timestamp_ns"] = nsString(since)
+		body["start_timestamp_ns"] = nsNumber(since)
 	}
 	if hasUntil {
-		body["end_timestamp_ns"] = nsString(until)
+		body["end_timestamp_ns"] = nsNumber(until)
 	}
 	return nil
 }
@@ -224,14 +224,20 @@ func buildLogSearchFilter(rctx *common.RuntimeContext) (map[string]interface{}, 
 		filter["trace_ids"] = traceIDs
 	}
 	addTrimmedLogFilterString(filter, "keyword", rctx.Str("keyword"))
-	addTrimmedLogFilterString(filter, "module", rctx.Str("module"))
-	addTrimmedLogFilterString(filter, "user_id", rctx.Str("user-id"))
-	addTrimmedLogFilterString(filter, "page", rctx.Str("page"))
-	addTrimmedLogFilterString(filter, "api", rctx.Str("api"))
+	addTrimmedLogFilterStrings(filter, "modules", rctx.Str("module"))
+	addTrimmedLogFilterStrings(filter, "user_ids", rctx.Str("user-id"))
+	addTrimmedLogFilterStrings(filter, "pages", rctx.Str("page"))
+	addTrimmedLogFilterStrings(filter, "apis", rctx.Str("api"))
 	if err := addDurationFilters(filter, rctx); err != nil {
 		return nil, err
 	}
 	return filter, nil
+}
+
+func addTrimmedLogFilterStrings(filter map[string]interface{}, key, value string) {
+	if value = strings.TrimSpace(value); value != "" {
+		filter[key] = []string{value}
+	}
 }
 
 func addTrimmedLogFilterString(filter map[string]interface{}, key, value string) {
