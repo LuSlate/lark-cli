@@ -546,7 +546,7 @@ func TestMeetingEvents_ExecuteJSON(t *testing.T) {
 		`"is_self":true`,
 		`"event_type":"participant_joined"`,
 		`"actors":[`,
-		`"start_time":"2026-04-17T07:55:00Z"`,
+		`"start_time":"2026-04-17T06:35:00Z"`,
 		`"has_more":true`,
 		`"page_token":"1710000000000000000"`,
 		`"events":[`,

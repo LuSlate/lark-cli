@@ -15,16 +15,16 @@
 
 ```bash
 # 默认用法：全量拉取应用机器人当前可见事件，输出 normalized compact 契约
-lark-cli vc +meeting-events --as bot --meeting-id 69xxxxxxxxxxxxx28 --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
 
 # 指定时间范围，并拉全该时间窗内当前可见事件
-lark-cli vc +meeting-events --as bot --meeting-id 69xxxxxxxxxxxxx28 --start 2026-04-17T15:00:00+08:00 --end 2026-04-17T16:00:00+08:00 --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --start 2026-04-17T15:00:00+08:00 --end 2026-04-17T16:00:00+08:00 --page-all --view compact --format pretty
 
 # 基于上一次保存的 page_token 继续查新增事件
-lark-cli vc +meeting-events --as bot --meeting-id 69xxxxxxxxxxxxx28 --page-token <last_page_token> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-token <last_page_token> --page-all --view compact --format pretty
 
 # 兼容旧事件包或调试服务端原始响应时，使用 raw escape hatch
-lark-cli vc +meeting-events --as bot --meeting-id 69xxxxxxxxxxxxx28 --page-size 20 --view raw --format json
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-size 20 --view raw --format json
 ```
 
 ## 参数
@@ -69,21 +69,21 @@ lark-cli vc +meeting-events --as bot --meeting-id 69xxxxxxxxxxxxx28 --page-size 
 lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
 # 再查询事件
-lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --view compact
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --view compact
 ```
 
 如果应用机器人已经在会中，也可以先通过 active meeting 找会：
 
 ```bash
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
-lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
 ```
 
 如果只是用当前登录用户发现候选会议：
 
 ```bash
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
 ```
 
 若应用机器人已离会、未入会、或会议已经无法再判断身份，后端通常会报：
@@ -106,9 +106,9 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view
 
 执行准则：
 
-- **默认命令模板**：`lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --view compact --format pretty`
+- **默认命令模板**：`lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty`
 - 如果你发现自己执行成了不带 `--page-all` 的单页查询，而响应里又出现 `has_more=true` / `more available` / 非空 `page_token`，应立刻意识到这只是部分结果。
-- 遇到上述情况，默认补救方式是继续使用返回的 `page_token` 续拉，例如：`lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-token <returned_page_token> --page-all --view compact --format pretty`
+- 遇到上述情况，默认补救方式是继续使用返回的 `page_token` 续拉，例如：`lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-token <returned_page_token> --page-all --view compact --format pretty`
 - 只有在用户明确要求“就看第一页”“先不要翻页”时，才不要默认带 `--page-all`
 - 只要你是基于 `+meeting-events` 来回答一场**正在进行中的会议内容**，就不能直接复用上一次查询结果。无论用户是在问“现在是谁在说话”“刚刚发生了什么”“最新事件有哪些”，还是让你“总结一下这个会议讲什么”，都必须先重新执行一次 `+meeting-events`，确认拿到的是最新事件流，再回答用户。只有在用户明确要求基于某次历史快照继续分析时，才可以复用旧结果。
 
@@ -139,7 +139,7 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view
 - 如果上下文已有明确 `meeting_id`，直接用应用身份执行 `+meeting-events --as bot --page-all --view compact --format json`。
 - 如果上下文没有明确 `meeting_id`，先按用户当前意图选择身份：问“我/当前用户所在会议”用 `lark-cli vc +meeting-list-active --as user --format pretty`；问“应用机器人可见的目标用户会议”用 `lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format pretty`。返回多个会议时先让用户选择。
 - 如果上下文只有 9 位会议号，先按当前身份执行 `+meeting-list-active` 并按 `meeting_no` 匹配；匹配到唯一会议后再查事件。不要为了总结会议而自动调用 `+meeting-join`。
-- 这类问题拿到 `meeting_id` 后，用 `lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --view compact --format json` 拉取最新事件流。
+- 这类问题拿到 `meeting_id` 后，用 `lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format json` 拉取最新事件流。
 - 如果事件中出现共享文档线索，例如：
   - `magic_share_started`
   - `share_doc.title`
@@ -211,21 +211,21 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view
 lark-cli vc +meeting-join --as bot --meeting-number 123456789
 
 # 第 2 步：查询事件流
-lark-cli vc +meeting-events --as bot --meeting-id <meeting.id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
 ```
 
 ### 场景 1b：应用机器人已在会中，先发现 meeting_id 再读事件
 
 ```bash
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
-lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
 ```
 
 ### 场景 1c：当前登录用户正在会中，先发现 meeting_id 再读事件
 
 ```bash
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id 7628568141510692381 --page-all --view compact --format pretty
 ```
 
 ### 场景 2：过滤某段时间内的事件
@@ -233,7 +233,7 @@ lark-cli vc +meeting-events --as bot --meeting-id <meeting_id> --page-all --view
 ```bash
 lark-cli vc +meeting-events \
   --as bot \
-  --meeting-id <meeting.id> \
+  --meeting-id 7628568141510692381 \
   --start 2026-04-17T15:00:00+08:00 \
   --end 2026-04-17T16:00:00+08:00 \
   --page-all \
@@ -248,7 +248,7 @@ lark-cli vc +meeting-events \
 # 这次直接从该游标继续拉新增事件
 lark-cli vc +meeting-events \
   --as bot \
-  --meeting-id <meeting.id> \
+  --meeting-id 7628568141510692381 \
   --page-token <last_page_token> \
   --page-all \
   --view compact \
