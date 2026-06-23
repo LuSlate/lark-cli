@@ -69,16 +69,20 @@ output.fields: [...]
 
 ---
 
-## 生成调用代码
+## 生成调用代码（必须读取项目 Skill）
 
-完成上述决策后，**读取项目的技术栈 Skill** 获取具体代码模式（import 路径、call/callStream 写法、normalizeStream、NestJS 注入等）。
+完成上述决策后，**必须先读取项目中的插件调用 Skill**，获取具体代码模式（import 路径、call/callStream 写法、normalizeStream、NestJS 注入等）。**禁止凭记忆或本文件的摘要直接写调用代码。**
 
-技术栈 Skill 的位置（`<project-path>` 即 `lark-apps-plugin.md` § 确认项目上下文 中已确定的应用根目录）：
+Skill 文件位于（`<project-path>` 即应用根目录）：
 
 ```
-<project-path>/.agent/skills/plugin-guide/SKILL.md
+<project-path>/.agents/skills/plugin-guide/SKILL.md
+```
+或
+```
+<project-path>/.claude/skills/plugin-guide/SKILL.md
 ```
 
-技术栈 Skill 按项目类型不同：
-- **Design / Modern 应用**（纯前端）→ Skill 中仅 `capabilityClient`，代码放 `<project-path>/client/`
-- **全栈应用**（NestJS + React）→ Skill 中含 `capabilityClient` + `CapabilityService`，Client 代码放 `<project-path>/client/`，Server 代码放 `<project-path>/server/`
+**必须读取该文件后再写代码**，其中包含项目实际的 import 路径、调用写法、流式处理规范等。不同项目类型的 Skill 内容不同：
+- **Design / Modern 应用**（纯前端）→ 仅 `capabilityClient`，代码放 `client/`
+- **全栈应用**（NestJS + React）→ 含 `capabilityClient` + `CapabilityService`，Client 放 `client/`，Server 放 `server/`
