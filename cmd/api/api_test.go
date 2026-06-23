@@ -100,12 +100,23 @@ func TestApiCmd_RequestHeaderPassesToCall(t *testing.T) {
 	reg.Register(stub)
 
 	cmd := NewCmdApi(f, nil)
-	cmd.SetArgs([]string{"GET", "/open-apis/test", "--as", "user", "--request-header", "x-tt-env=ppe_pure_svg"})
+	cmd.SetArgs([]string{
+		"GET", "/open-apis/test", "--as", "user",
+		"--request-header", "Env=Pre_release",
+		"--request-header", "x-tt-env=ppe_pure_svg",
+		"--request-header", "x-use-ppe=1",
+	})
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	if got := stub.CapturedHeaders.Get("Env"); got != "Pre_release" {
+		t.Fatalf("Env header = %q, want Pre_release", got)
+	}
 	if got := stub.CapturedHeaders.Get("x-tt-env"); got != "ppe_pure_svg" {
 		t.Fatalf("x-tt-env header = %q, want ppe_pure_svg", got)
+	}
+	if got := stub.CapturedHeaders.Get("x-use-ppe"); got != "1" {
+		t.Fatalf("x-use-ppe header = %q, want 1", got)
 	}
 	if !strings.Contains(stdout.String(), "success") {
 		t.Error("expected 'success' in output")
@@ -123,7 +134,7 @@ func TestApiCmd_RequestHeaderRejectsUnsupportedKey(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected unsupported request header error")
 	}
-	if !strings.Contains(err.Error(), "only x-tt-env is allowed") {
+	if !strings.Contains(err.Error(), "allowed internal headers") {
 		t.Fatalf("err = %v, want supported-header message", err)
 	}
 }

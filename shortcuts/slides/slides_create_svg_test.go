@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -199,6 +200,174 @@ func TestSlidesCreateSVGRequestHeaderPassesToCreateAndSlideCalls(t *testing.T) {
 	}
 }
 
+func TestSlidesCreateSVGPPEProfilePassesFixedHeaders(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage1), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	createStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"xml_presentation_id": "pres_ppe", "revision_id": 1}},
+	}
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_ppe/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_ppe", "revision_id": 2}},
+	}
+	reg.Register(createStub)
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_ppe", "https://x.feishu.cn/slides/pres_ppe")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--ppe-profile", "ppe_pure_svg",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, stub := range []*httpmock.Stub{createStub, slideStub} {
+		if got := stub.CapturedHeaders.Get("Env"); got != "Pre_release" {
+			t.Fatalf("%s Env = %q, want Pre_release", stub.URL, got)
+		}
+		if got := stub.CapturedHeaders.Get("x-tt-env"); got != "ppe_pure_svg" {
+			t.Fatalf("%s x-tt-env = %q, want ppe_pure_svg", stub.URL, got)
+		}
+		if got := stub.CapturedHeaders.Get("x-use-ppe"); got != "1" {
+			t.Fatalf("%s x-use-ppe = %q, want 1", stub.URL, got)
+		}
+	}
+	data := decodeSlidesCreateEnvelope(t, stdout)
+	headers, _ := data["request_headers"].(map[string]interface{})
+	for _, key := range []string{"Env", "x-tt-env", "x-use-ppe"} {
+		if headers[key] == nil {
+			t.Fatalf("request_headers = %#v, want %s", headers, key)
+		}
+	}
+}
+
+func TestSlidesCreateSVGRejectsArbitraryRequestHeader(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage1), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--request-header", "Env=prod",
+		"--as", "user",
+	})
+	if err == nil {
+		t.Fatal("expected arbitrary request header value error")
+	}
+	if !strings.Contains(err.Error(), "allowed SVGlide PPE headers") {
+		t.Fatalf("err = %v, want whitelist message", err)
+	}
+}
+
+func TestSlidesCreateSVGAppendSkipsCreateAndPostsSlides(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	if err := os.WriteFile("page.svg", []byte(testSVGlidePage1), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	var capturedRevisionID string
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_append/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_append", "revision_id": 8}},
+		OnMatch: func(req *http.Request) {
+			capturedRevisionID = req.URL.Query().Get("revision_id")
+		},
+	}
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_append", "https://x.feishu.cn/slides/pres_append")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--append-to-presentation", "pres_append",
+		"--revision-id", "7",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var body map[string]interface{}
+	if err := json.Unmarshal(slideStub.CapturedBody, &body); err != nil {
+		t.Fatalf("decode slide body: %v", err)
+	}
+	assertSlideCreateBodyContains(t, slideStub, `slide:contract-version="svglide-authoring-contract/v1"`)
+	data := decodeSlidesCreateEnvelope(t, stdout)
+	if data["xml_presentation_id"] != "pres_append" || data["slides_added"] != float64(1) || data["revision_id"] != float64(8) {
+		t.Fatalf("append result = %#v", data)
+	}
+	if capturedRevisionID != "7" {
+		t.Fatalf("revision_id query = %q, want 7", capturedRevisionID)
+	}
+}
+
+func TestSlidesCreateSVGAppendUploadsImagesAndPassesHeaders(t *testing.T) {
+	dir := t.TempDir()
+	withSlidesTestWorkingDir(t, dir)
+	svg := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:slide="https://slides.bytedance.com/ns" slide:role="slide" viewBox="0 0 1280 720"><image slide:role="image" href="@hero.png" x="0" y="0" width="320" height="180"/></svg>`
+	if err := os.WriteFile("page.svg", []byte(svg), 0o644); err != nil {
+		t.Fatalf("write page.svg: %v", err)
+	}
+	if err := os.WriteFile("hero.png", testOneByOnePNG(t), 0o644); err != nil {
+		t.Fatalf("write hero.png: %v", err)
+	}
+
+	f, stdout, _, reg := cmdutil.TestFactory(t, slidesTestConfig(t, ""))
+	uploadStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/drive/v1/medias/upload_all",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"file_token": "boxcn_uploaded_append"}},
+	}
+	slideStub := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/slides_ai/v1/xml_presentations/pres_append_upload/slide",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"slide_id": "slide_append_upload", "revision_id": 4}},
+	}
+	reg.Register(uploadStub)
+	reg.Register(slideStub)
+	registerBatchQueryStub(reg, "pres_append_upload", "https://x.feishu.cn/slides/pres_append_upload")
+
+	err := runSlidesCreateSVGShortcut(t, f, stdout, []string{
+		"+create-svg",
+		"--file", "page.svg",
+		"--append-to-presentation", "pres_append_upload",
+		"--ppe-profile", "ppe_pure_svg",
+		"--as", "user",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := slideStub.CapturedHeaders.Get("x-tt-env"); got != "ppe_pure_svg" {
+		t.Fatalf("append slide x-tt-env = %q, want ppe_pure_svg", got)
+	}
+	if got := slideStub.CapturedHeaders.Get("Env"); got != "Pre_release" {
+		t.Fatalf("append slide Env = %q, want Pre_release", got)
+	}
+	data := decodeSlidesCreateEnvelope(t, stdout)
+	if data["images_uploaded"] != float64(1) {
+		t.Fatalf("images_uploaded = %v, want 1", data["images_uploaded"])
+	}
+	assertSlideCreateBodyContains(t, slideStub, `src="boxcn_uploaded_append"`)
+	assertSlideCreateBodyContains(t, slideStub, `<metadata data-svglide-assets="svglide-assets/v1">`)
+}
+
 func TestSlidesCreateSVGFontFamilyRewritesTextContent(t *testing.T) {
 	dir := t.TempDir()
 	withSlidesTestWorkingDir(t, dir)
@@ -369,7 +538,7 @@ func TestSlidesCreateSVGRejectsUnsupportedRequestHeader(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected unsupported request header error")
 	}
-	if !strings.Contains(err.Error(), "only x-tt-env is allowed") {
+	if !strings.Contains(err.Error(), "allowed SVGlide PPE headers") {
 		t.Fatalf("err = %v, want supported-header message", err)
 	}
 }

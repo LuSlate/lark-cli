@@ -673,10 +673,15 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                         "rewrite_host": "open.feishu-pre.cn",
                         "rule_file": rule_file,
                         "rule_sha256": runner.file_sha256(rule_path),
-                        "inject_headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg"},
+                        "inject_headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg", "x-use-ppe": "1"},
                     },
-                    "headers": {"x-tt-env": "ppe_pure_svg"},
+                    "headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg", "x-use-ppe": "1"},
                     "route": {"name": "slides +create-svg", "lane": "pure-svg"},
+                    "probe_command": [
+                        sys.executable,
+                        "-c",
+                        "import json; print(json.dumps({'xml_presentation_id':'ppe_probe','slide_ids':['probe_slide']}))",
+                    ],
                 }
             ),
             encoding="utf-8",
@@ -1774,7 +1779,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("+create-svg", command)
             self.assertIn("--dry-run", command)
 
-    def test_live_create_command_includes_ppe_request_header(self) -> None:
+    def test_live_create_command_includes_ppe_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = self.make_project(tmpdir)
             captured: list[list[str]] = []
@@ -1800,10 +1805,11 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                 command_runner=fake,
             )
 
-            self.assertEqual(captured[0][captured[0].index("--request-header") + 1], "x-tt-env=ppe_pure_svg")
+            self.assertEqual(captured[0][captured[0].index("--ppe-profile") + 1], "ppe_pure_svg")
+            self.assertNotIn("--request-header", captured[0])
             self.assertNotIn("--dry-run", captured[0])
             command_text = (project_root / "07-create/create-command.txt").read_text(encoding="utf-8")
-            self.assertIn("--request-header x-tt-env=ppe_pure_svg", command_text)
+            self.assertIn("--ppe-profile ppe_pure_svg", command_text)
 
     def test_ppe_proof_refuses_visual_acceptance_receipt_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1995,6 +2001,55 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(runner.RunnerError, "ppe_proof"):
+                runner.run_create_stage(
+                    project_root,
+                    runner.load_state(project_root),
+                    "live_create",
+                    dry_run=False,
+                    command_runner=lambda command, **_: self.completed(command, {"xml_presentation_id": "xml_1", "slide_ids": ["s1"]}),
+                )
+
+    def test_live_create_requires_ppe_create_probe(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            self.write_ppe_input(project_root)
+            runner.run_stage(project_root, "ppe-proof")
+            (project_root / "07-create/ppe-create-probe.json").unlink()
+
+            with self.assertRaisesRegex(runner.RunnerError, "ppe-create-probe|ppe_create_probe"):
+                runner.run_create_stage(
+                    project_root,
+                    runner.load_state(project_root),
+                    "live_create",
+                    dry_run=False,
+                    command_runner=lambda command, **_: self.completed(command, {"xml_presentation_id": "xml_1", "slide_ids": ["s1"]}),
+                )
+
+    def test_image_deck_live_create_requires_ppe_image_probe(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            (project_root / "03-assets/assets.json").write_text(json.dumps({"@./03-assets/raw/hero.png": "boxcn_hero"}), encoding="utf-8")
+
+            runner.run_create_stage(
+                project_root,
+                runner.load_state(project_root),
+                "dry_run",
+                dry_run=True,
+                command_runner=lambda command, **_: self.completed(command),
+            )
+            self.write_ppe_input(project_root)
+            runner.run_stage(project_root, "ppe-proof")
+            (project_root / "07-create/ppe-image-probe.json").unlink()
+
+            with self.assertRaisesRegex(runner.RunnerError, "ppe-image-probe|ppe_image_probe"):
                 runner.run_create_stage(
                     project_root,
                     runner.load_state(project_root),

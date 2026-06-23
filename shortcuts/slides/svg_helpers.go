@@ -57,6 +57,78 @@ type RewrittenSVGPage struct {
 	Assets  []svgAssetMeta
 }
 
+type svgRasterizeMode string
+
+const (
+	svgRasterizeOff       svgRasterizeMode = "off"
+	svgRasterizeAuto      svgRasterizeMode = "auto"
+	svgRasterizeStrict    svgRasterizeMode = "strict"
+	svgRasterizeForcePage svgRasterizeMode = "force-page"
+)
+
+type svgPrepareOptions struct {
+	RasterizeMode  svgRasterizeMode
+	RasterizeScale int
+	ReportPath     string
+	DryRun         bool
+}
+
+type svgPrepareReport struct {
+	Version                  string                 `json:"version"`
+	Mode                     string                 `json:"mode"`
+	RunID                    string                 `json:"run_id"`
+	BaseDir                  string                 `json:"base_dir"`
+	Pages                    []svgPreparePageReport `json:"pages"`
+	GeneratedAssets          []string               `json:"generated_assets"`
+	VisualArtifacts          svgVisualArtifacts     `json:"visual_artifacts"`
+	Quality                  svgPrepareQuality      `json:"quality"`
+	NativeTextBlockCount     int                    `json:"native_text_blocks"`
+	RasterizedTextBlockCount int                    `json:"rasterized_text_blocks"`
+	RasterImageCount         int                    `json:"raster_images"`
+	FullPageFallbackCount    int                    `json:"full_page_fallback_count"`
+	RasterTotalBytes         int64                  `json:"raster_total_bytes"`
+	RasterTotalMS            int64                  `json:"raster_total_ms"`
+	Warnings                 []string               `json:"warnings,omitempty"`
+}
+
+type svgPreparePageReport struct {
+	SourcePath     string                   `json:"source_path"`
+	SafePath       string                   `json:"safe_path"`
+	Mode           string                   `json:"mode"`
+	FallbackReason string                   `json:"fallback_reason,omitempty"`
+	Islands        []svgPrepareIslandReport `json:"islands"`
+	PNGs           []string                 `json:"pngs"`
+	RuntimeGateOK  bool                     `json:"runtime_gate_ok"`
+}
+
+type svgPrepareIslandReport struct {
+	ID            string     `json:"id"`
+	Reason        string     `json:"reason"`
+	SourceNodeIDs []string   `json:"source_node_ids,omitempty"`
+	BBox          [4]float64 `json:"bbox"`
+	OutputPNG     string     `json:"output_png"`
+	Scale         int        `json:"scale"`
+	Bytes         int64      `json:"bytes"`
+	RenderMS      int64      `json:"render_ms"`
+	AlphaCrop     bool       `json:"alpha_crop"`
+}
+
+type svgVisualArtifacts struct {
+	RichPreview      string `json:"rich_preview,omitempty"`
+	SafePreview      string `json:"safe_preview,omitempty"`
+	ReadbackSnapshot string `json:"readback_snapshot,omitempty"`
+	ContactSheet     string `json:"contact_sheet,omitempty"`
+}
+
+type svgPrepareQuality struct {
+	RichSafePixelDiff      *float64 `json:"rich_safe_pixel_diff,omitempty"`
+	CriticalAreaPixelDiff  *float64 `json:"critical_area_pixel_diff,omitempty"`
+	SafeReadbackVisualDiff *float64 `json:"safe_readback_visual_diff,omitempty"`
+	WaiverRequired         bool     `json:"waiver_required,omitempty"`
+	WaiverReason           string   `json:"waiver_reason,omitempty"`
+	GatePassed             bool     `json:"gate_passed"`
+}
+
 type svgAssetMeta struct {
 	Token    string `json:"token"`
 	Name     string `json:"name"`
@@ -84,7 +156,30 @@ var (
 	svgTransformRegex          = regexp.MustCompile(`(?is)([a-zA-Z]+)\(([^)]*)\)`)
 	svgBase64URLRegex          = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 	svgSHA256HashRegex         = regexp.MustCompile(`^sha256:[0-9a-fA-F]{64}$`)
-	svgShapeTags               = map[string]bool{
+	svgRasterUnsafeChecks      = []struct {
+		re   *regexp.Regexp
+		desc string
+	}{
+		{regexp.MustCompile(`(?is)<!DOCTYPE\b`), "DOCTYPE declarations are not allowed before rasterization"},
+		{regexp.MustCompile(`(?is)<\s*script\b`), "<script> is not allowed before rasterization"},
+		{regexp.MustCompile(`(?is)<\s*(iframe|object|embed)\b`), "<iframe>, <object>, and <embed> are not allowed before rasterization"},
+		{regexp.MustCompile(`(?is)\son[a-z]+\s*=`), "event handler attributes are not allowed before rasterization"},
+		{regexp.MustCompile(`(?is)\b(?:href|xlink:href|src)\s*=\s*["']\s*javascript:`), "javascript: URLs are not allowed before rasterization"},
+		{regexp.MustCompile(`(?is)<\s*link\b[^>]+\brel\s*=\s*["']stylesheet["'][^>]*\bhref\s*=\s*["']\s*https?://`), "external CSS is not allowed before rasterization"},
+		{regexp.MustCompile(`(?is)<\s*script\b[^>]+\bsrc\s*=\s*["']\s*https?://`), "external JavaScript is not allowed before rasterization"},
+	}
+	svgSafeHardChecks = []struct {
+		re   *regexp.Regexp
+		desc string
+	}{
+		{regexp.MustCompile(`(?is)<\s*(filter|mask|clipPath|pattern|symbol|use|marker|animate|animateTransform|animateMotion)\b`), "safe SVG still contains unsupported rich SVG elements"},
+		{regexp.MustCompile(`(?is)\s(?:filter|mask|clip-path)\s*=`), "safe SVG still contains unsupported filter/mask/clip-path attributes"},
+		{regexp.MustCompile(`(?is)\sstyle\s*=\s*["'][^"']*(filter|backdrop-filter|mix-blend-mode|clip-path|mask|box-shadow)\s*:`), "safe SVG still contains unsupported rich CSS effects"},
+		{regexp.MustCompile(`(?is)<\s*(text|polygon|polyline)\b`), "safe SVG still contains root-level text/polygon/polyline that must be rasterized or rewritten"},
+		{regexp.MustCompile(`(?is)<\s*script\b`), "safe SVG still contains <script>"},
+		{regexp.MustCompile(`(?is)\son[a-z]+\s*=`), "safe SVG still contains event handler attributes"},
+	}
+	svgShapeTags = map[string]bool{
 		"circle":        true,
 		"ellipse":       true,
 		"foreignObject": true,
@@ -175,6 +270,137 @@ func readSVGFiles(runtime *common.RuntimeContext, paths []string) ([]string, err
 		svgs = append(svgs, svg)
 	}
 	return svgs, nil
+}
+
+func prepareSVGFilesForCreate(runtime *common.RuntimeContext, paths []string, opts svgPrepareOptions) ([]string, *svgPrepareReport, error) {
+	if opts.RasterizeMode == svgRasterizeOff {
+		svgs, err := readSVGFiles(runtime, paths)
+		return svgs, nil, err
+	}
+
+	rawSVGS, err := readRawSVGFilesForRaster(runtime, paths)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	prepared, report, err := rasterizeRichSVGEffects(runtime, rawSVGS, paths, opts)
+	if err != nil {
+		return nil, report, err
+	}
+	if report == nil {
+		report = &svgPrepareReport{
+			Version: "1",
+			Mode:    string(opts.RasterizeMode),
+			Quality: svgPrepareQuality{GatePassed: true},
+		}
+	}
+	for i, svg := range prepared {
+		normalized, err := ensureSVGlideRootContractVersion(svg, paths[i])
+		if err != nil {
+			return nil, report, err
+		}
+		if err := validateSafeSVGNoResidualRichEffects(normalized, paths[i]); err != nil {
+			return nil, report, err
+		}
+		if err := validateSVGlideSVG(normalized, paths[i]); err != nil {
+			return nil, report, err
+		}
+		prepared[i] = normalized
+		if i < len(report.Pages) {
+			report.Pages[i].RuntimeGateOK = true
+		}
+	}
+	return prepared, report, nil
+}
+
+func svgPrepareOptionsFromRuntime(runtime *common.RuntimeContext, dryRun bool) svgPrepareOptions {
+	mode := svgRasterizeMode(strings.TrimSpace(runtime.Str("svg-rasterize-effects")))
+	if mode == "" {
+		mode = svgRasterizeOff
+	}
+	return svgPrepareOptions{
+		RasterizeMode:  mode,
+		RasterizeScale: runtime.Int("svg-rasterize-scale"),
+		ReportPath:     strings.TrimSpace(runtime.Str("svg-rasterize-report")),
+		DryRun:         dryRun,
+	}
+}
+
+func validateSVGRasterizeFlags(runtime *common.RuntimeContext) error {
+	mode := svgRasterizeMode(strings.TrimSpace(runtime.Str("svg-rasterize-effects")))
+	if mode == "" {
+		mode = svgRasterizeOff
+	}
+	switch mode {
+	case svgRasterizeOff, svgRasterizeAuto, svgRasterizeStrict, svgRasterizeForcePage:
+	default:
+		return common.FlagErrorf("--svg-rasterize-effects must be one of off, auto, strict, force-page")
+	}
+	if mode != svgRasterizeOff {
+		scale := runtime.Int("svg-rasterize-scale")
+		if scale < 2 || scale > 4 {
+			return output.ErrValidation("--svg-rasterize-scale must be between 2 and 4 when --svg-rasterize-effects is not off")
+		}
+	}
+	reportPath := strings.TrimSpace(runtime.Str("svg-rasterize-report"))
+	if reportPath != "" {
+		if _, err := runtime.ResolveSavePath(reportPath); err != nil {
+			return output.ErrValidation("--svg-rasterize-report %s: %v", reportPath, err)
+		}
+	}
+	return nil
+}
+
+func readRawSVGFilesForRaster(runtime *common.RuntimeContext, paths []string) ([]string, error) {
+	svgs := make([]string, 0, len(paths))
+	for _, path := range paths {
+		data, err := cmdutil.ReadInputFile(runtime.FileIO(), path)
+		if err != nil {
+			return nil, common.WrapInputStatError(err, fmt.Sprintf("--file %s", path))
+		}
+		if strings.TrimSpace(string(data)) == "" {
+			return nil, output.ErrValidation("--file %s: SVG file is empty", path)
+		}
+		svg := string(data)
+		if err := validateSVGRasterInputSafeToRender(svg, path); err != nil {
+			return nil, err
+		}
+		svgs = append(svgs, svg)
+	}
+	return svgs, nil
+}
+
+func validateSVGRasterInputSafeToRender(svg, path string) error {
+	for _, check := range svgRasterUnsafeChecks {
+		if check.re.MatchString(svg) {
+			return output.ErrValidation("--file %s: unsafe SVG raster input: %s", path, check.desc)
+		}
+	}
+	for _, tag := range svgImageTagRegex.FindAllString(svg, -1) {
+		for _, m := range svgImageHrefRegex.FindAllStringSubmatch(tag, -1) {
+			if len(m) < 6 || m[3] != m[5] {
+				continue
+			}
+			value := strings.TrimSpace(m[4])
+			lower := strings.ToLower(value)
+			if strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") {
+				return output.ErrValidation("--file %s: unsafe SVG raster input: external image resources must be resolved locally before rasterization", path)
+			}
+			if strings.HasPrefix(lower, "file://") {
+				return output.ErrValidation("--file %s: unsafe SVG raster input: arbitrary file:// URLs are not allowed", path)
+			}
+		}
+	}
+	return nil
+}
+
+func validateSafeSVGNoResidualRichEffects(svg, path string) error {
+	for _, check := range svgSafeHardChecks {
+		if check.re.MatchString(svg) {
+			return output.ErrValidation("--file %s: %s", path, check.desc)
+		}
+	}
+	return nil
 }
 
 func normalizeSVGFontFamily(raw string) (string, error) {
@@ -1269,6 +1495,22 @@ func svgAssetTokenForPath(assets svgAssetMap, path string) string {
 		return asset.Token
 	}
 	return normalizeSVGAssetMeta(assets[path]).Token
+}
+
+func validateSVGRasterAssetConflicts(assets svgAssetMap, report *svgPrepareReport) error {
+	if len(assets) == 0 || report == nil {
+		return nil
+	}
+	for _, asset := range report.GeneratedAssets {
+		key := strings.TrimSpace(asset)
+		if key == "" {
+			continue
+		}
+		if svgAssetTokenForPath(assets, key) != "" {
+			return output.ErrValidation("--assets conflicts with generated raster asset %q; remove this key so create-svg can upload the generated PNG", key)
+		}
+	}
+	return nil
 }
 
 func shouldTreatAsFileToken(value string) bool {

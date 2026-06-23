@@ -66,7 +66,11 @@ class SVGlideReadbackTest(unittest.TestCase):
                         "xml_presentation_id": "xml_1",
                         "revision_id": 2,
                         "slide_ids": ["s1"],
-                        "request_headers": {"x-tt-env": "ppe_pure_svg"},
+                        "request_headers": {
+                            "Env": "Pre_release",
+                            "x-tt-env": "ppe_pure_svg",
+                            "x-use-ppe": "1",
+                        },
                     }
                 }
             },
@@ -83,9 +87,14 @@ class SVGlideReadbackTest(unittest.TestCase):
         self.assertEqual(result["input_binding"]["revision_id"], 2)
         self.assertEqual(commands[0][:4], ["lark-cli", "api", "GET", "/open-apis/slides_ai/v1/xml_presentations/xml_1"])
         self.assertIn("--request-header", commands[0])
+        self.assertIn("Env=Pre_release", commands[0])
         self.assertIn("x-tt-env=ppe_pure_svg", commands[0])
+        self.assertIn("x-use-ppe=1", commands[0])
         raw = json.loads((project / "08-readback/xml-presentations-get.json").read_text(encoding="utf-8"))
-        self.assertEqual(raw["request_headers"], {"x-tt-env": "ppe_pure_svg"})
+        self.assertEqual(
+            raw["request_headers"],
+            {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg", "x-use-ppe": "1"},
+        )
 
     def test_readback_rejects_unsupported_request_header(self) -> None:
         project = self.make_project()
@@ -103,7 +112,7 @@ class SVGlideReadbackTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "failed")
         self.assertEqual(result["checks"]["readback_command"]["status"], "failed")
-        self.assertIn("only x-tt-env", result["checks"]["readback_command"]["reason"])
+        self.assertIn("supports only Env=Pre_release", result["checks"]["readback_command"]["reason"])
 
     def test_readback_counts_xml_content_and_checks_order_and_core_text(self) -> None:
         project = self.make_project()

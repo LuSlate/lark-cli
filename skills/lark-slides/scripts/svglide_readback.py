@@ -107,14 +107,20 @@ def extract_request_headers(live_create: Any) -> dict[str, str]:
     if not isinstance(raw, dict):
         return {}
     headers: dict[str, str] = {}
+    allowed_headers = {
+        "env": ("Env", "Pre_release"),
+        "x-tt-env": ("x-tt-env", "ppe_pure_svg"),
+        "x-use-ppe": ("x-use-ppe", "1"),
+    }
     for key, value in raw.items():
         if not isinstance(key, str) or not isinstance(value, str):
             raise ReadbackError("live-create request_headers must be a string key/value object")
         normalized_key = key.strip().lower()
         normalized_value = value.strip()
-        if normalized_key != "x-tt-env" or normalized_value != "ppe_pure_svg":
-            raise ReadbackError("readback currently supports only x-tt-env=ppe_pure_svg request header")
-        headers[normalized_key] = normalized_value
+        allowed = allowed_headers.get(normalized_key)
+        if allowed is None or normalized_value != allowed[1]:
+            raise ReadbackError("readback supports only Env=Pre_release, x-tt-env=ppe_pure_svg, x-use-ppe=1 request headers")
+        headers[allowed[0]] = normalized_value
     return headers
 
 

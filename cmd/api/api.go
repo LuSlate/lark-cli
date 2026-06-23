@@ -96,7 +96,7 @@ func NewCmdApiWithContext(ctx context.Context, f *cmdutil.Factory, runF func(*AP
 	cmd.Flags().StringVarP(&opts.JqExpr, "jq", "q", "", "jq expression to filter JSON output")
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "print request without executing")
 	cmd.Flags().StringVar(&opts.File, "file", "", "file to upload as multipart/form-data ([field=]path, supports - for stdin)")
-	cmd.Flags().StringArrayVar(&opts.Headers, "request-header", nil, "internal request header for controlled lanes; repeat key=value, currently only x-tt-env=ppe_pure_svg is allowed")
+	cmd.Flags().StringArrayVar(&opts.Headers, "request-header", nil, "internal request header for controlled lanes; repeat key=value, only Env=Pre_release, x-tt-env=ppe_pure_svg, x-use-ppe=1 are allowed")
 
 	cmd.ValidArgsFunction = func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
@@ -210,15 +210,26 @@ func parseAPIRequestHeaders(values []string) (http.Header, error) {
 		}
 		key = strings.TrimSpace(key)
 		value = strings.TrimSpace(value)
-		if !strings.EqualFold(key, "x-tt-env") {
-			return nil, output.ErrValidation("--request-header %q is not supported; only x-tt-env is allowed", key)
+		canonicalKey, canonicalValue, ok := allowedAPIInternalHeader(key)
+		if !ok || value != canonicalValue {
+			return nil, output.ErrValidation("--request-header %q is not supported; allowed internal headers are Env=Pre_release, x-tt-env=ppe_pure_svg, x-use-ppe=1", item)
 		}
-		if value != "ppe_pure_svg" {
-			return nil, output.ErrValidation("--request-header x-tt-env must be ppe_pure_svg")
-		}
-		headers.Set("x-tt-env", value)
+		headers.Set(canonicalKey, value)
 	}
 	return headers, nil
+}
+
+func allowedAPIInternalHeader(key string) (string, string, bool) {
+	switch {
+	case strings.EqualFold(key, "Env"):
+		return "Env", "Pre_release", true
+	case strings.EqualFold(key, "x-tt-env"):
+		return "x-tt-env", "ppe_pure_svg", true
+	case strings.EqualFold(key, "x-use-ppe"):
+		return "x-use-ppe", "1", true
+	default:
+		return "", "", false
+	}
 }
 
 func apiRun(opts *APIOptions) error {

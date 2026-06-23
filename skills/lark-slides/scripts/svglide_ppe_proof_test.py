@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -19,6 +20,9 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
 
 
 class SVGlidePPEProofTest(unittest.TestCase):
+    def completed(self, command: list[str], payload: dict[str, object] | None = None, returncode: int = 0, stderr: str = "") -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(command, returncode, stdout=json.dumps(payload or {"ok": True}), stderr=stderr)
+
     def write_inputs(self, project: Path) -> None:
         write_json(project / "06-check/quality-gate.json", {"status": "passed"})
         write_json(project / "07-create/dry-run.json", {"status": "passed"})
@@ -42,9 +46,9 @@ class SVGlidePPEProofTest(unittest.TestCase):
                 "rewrite_host": "open.feishu-pre.cn",
                 "rule_file": rule.name,
                 "rule_sha256": svglide_ppe_proof.file_sha256(rule),
-                "inject_headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg"},
+                "inject_headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg", "x-use-ppe": "1"},
             },
-            "headers": {"x-tt-env": "ppe_pure_svg"},
+            "headers": {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg", "x-use-ppe": "1"},
             "route": {"name": "slides +create-svg"},
         }
 
@@ -53,7 +57,7 @@ class SVGlidePPEProofTest(unittest.TestCase):
             project = Path(tmpdir)
             self.write_inputs(project)
 
-            result = svglide_ppe_proof.run_ppe_proof(project)
+            result = svglide_ppe_proof.run_ppe_proof(project, command_runner=lambda command, **_: self.completed(command))
 
             self.assertEqual(result["status"], "failed")
             self.assertEqual(result["issues"][0]["code"], "ppe_proof_input_missing")
@@ -63,11 +67,20 @@ class SVGlidePPEProofTest(unittest.TestCase):
             project = Path(tmpdir)
             self.write_inputs(project)
             write_json(project / "07-create/ppe-proof.input.json", self.complete_proof_input(project))
+            commands: list[list[str]] = []
 
-            result = svglide_ppe_proof.run_ppe_proof(project)
+            def fake(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+                commands.append(command)
+                return self.completed(command)
+
+            result = svglide_ppe_proof.run_ppe_proof(project, command_runner=fake)
 
             self.assertEqual(result["status"], "passed")
             self.assertTrue((project / "07-create/ppe-proof.json").exists())
+            self.assertEqual(result["ppe_create_probe"]["status"], "create_route_passed")
+            self.assertIn("--ppe-profile", commands[0])
+            self.assertIn("ppe_pure_svg", commands[0])
+            self.assertNotIn("--request-header", commands[0])
 
     def test_ppe_proof_rejects_missing_proxy_capture(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -79,10 +92,32 @@ class SVGlidePPEProofTest(unittest.TestCase):
             proxy.pop("capture")
             write_json(project / "07-create/ppe-proof.input.json", proof)
 
-            result = svglide_ppe_proof.run_ppe_proof(project)
+            result = svglide_ppe_proof.run_ppe_proof(project, command_runner=lambda command, **_: self.completed(command))
 
             self.assertEqual(result["status"], "failed")
             self.assertIn("ppe_proxy_capture_missing", [item["code"] for item in result["issues"]])
+
+    def test_ppe_proof_rejects_incomplete_fixed_header_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            self.write_inputs(project)
+            proof = self.complete_proof_input(project)
+            headers = proof["headers"]
+            proxy = proof["proxy"]
+            assert isinstance(headers, dict)
+            assert isinstance(proxy, dict)
+            headers.pop("x-use-ppe")
+            inject_headers = proxy["inject_headers"]
+            assert isinstance(inject_headers, dict)
+            inject_headers.pop("x-use-ppe")
+            write_json(project / "07-create/ppe-proof.input.json", proof)
+
+            result = svglide_ppe_proof.run_ppe_proof(project, command_runner=lambda command, **_: self.completed(command))
+
+            codes = [item["code"] for item in result["issues"]]
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("ppe_header_missing_x_use_ppe", codes)
+            self.assertIn("ppe_proxy_x_use_ppe_header_missing", codes)
 
     def test_ppe_proof_rejects_rule_hash_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -94,10 +129,24 @@ class SVGlidePPEProofTest(unittest.TestCase):
             proxy["rule_sha256"] = "not-the-real-hash"
             write_json(project / "07-create/ppe-proof.input.json", proof)
 
-            result = svglide_ppe_proof.run_ppe_proof(project)
+            result = svglide_ppe_proof.run_ppe_proof(project, command_runner=lambda command, **_: self.completed(command))
 
             self.assertEqual(result["status"], "failed")
             self.assertIn("ppe_proxy_rule_sha256_mismatch", [item["code"] for item in result["issues"]])
+
+    def test_image_probe_classifies_5090000_as_readback_blocked(self) -> None:
+        completed = subprocess.CompletedProcess(
+            ["lark-cli"],
+            1,
+            stdout="",
+            stderr="nodeServer internal error [5090000]",
+        )
+
+        status, detail = svglide_ppe_proof.classify_image_probe(completed)
+
+        self.assertEqual(status, "readback_blocked")
+        self.assertEqual(detail["classification"], "nodeserver_5090000")
+        self.assertNotEqual(detail["classification"], "api_error")
 
 
 if __name__ == "__main__":

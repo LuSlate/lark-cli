@@ -35,6 +35,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 TEMPLATE_GUARDRAILS_PATH = SCRIPT_DIR.parent / "references" / "svglide-template-guardrails.json"
 LARK_CLI_COMMAND_ENV = "SVGLIDE_LARK_CLI_CMD"
 DEFAULT_REPAIR_LOOP_FAILING_RECEIPT = Path("06-check/preflight.json")
+PPE_CREATE_PROBE = Path("07-create/ppe-create-probe.json")
+PPE_IMAGE_PROBE = Path("07-create/ppe-image-probe.json")
 
 STAGES = [
     "init",
@@ -2367,7 +2369,73 @@ def require_ppe_proof_current(project_root: Path) -> dict[str, Any]:
     for key, current in expected.items():
         if inputs.get(key) != current:
             raise RunnerError(f"PPE proof {key} does not match current project files; rerun ppe_proof")
+    require_ppe_create_probe_current(project_root, proof)
+    if project_has_image_assets(project_root):
+        require_ppe_image_probe_current(project_root, proof)
     return proof
+
+
+def require_ppe_create_probe_current(project_root: Path, proof: dict[str, Any]) -> dict[str, Any]:
+    probe = read_json(project_root / PPE_CREATE_PROBE)
+    if probe.get("status") != "create_route_passed":
+        raise RunnerError("ppe_create_probe must pass before live create")
+    proof_inputs = proof.get("inputs")
+    if not isinstance(proof_inputs, dict) or proof_inputs.get("create_probe_sha256") != file_sha256(project_root / PPE_CREATE_PROBE):
+        raise RunnerError("PPE proof create probe hash is stale; rerun ppe_proof")
+    probe_inputs = probe.get("inputs")
+    if not isinstance(probe_inputs, dict):
+        raise RunnerError("ppe_create_probe inputs are missing; rerun ppe_proof")
+    if probe_inputs.get("proof_input_sha256") != optional_project_file_hash(project_root, "07-create/ppe-proof.input.json"):
+        raise RunnerError("ppe_create_probe proof input hash is stale; rerun ppe_proof")
+    return probe
+
+
+def require_ppe_image_probe_current(project_root: Path, proof: dict[str, Any]) -> dict[str, Any]:
+    probe = read_json(project_root / PPE_IMAGE_PROBE)
+    if probe.get("status") != "image_meta_passed":
+        raise RunnerError("ppe_image_probe must pass before live create")
+    proof_inputs = proof.get("inputs")
+    if not isinstance(proof_inputs, dict) or proof_inputs.get("image_probe_required") is not True:
+        raise RunnerError("PPE proof is missing required image probe; rerun ppe_proof")
+    if proof_inputs.get("image_probe_sha256") != file_sha256(project_root / PPE_IMAGE_PROBE):
+        raise RunnerError("PPE proof image probe hash is stale; rerun ppe_proof")
+    probe_inputs = probe.get("inputs")
+    if not isinstance(probe_inputs, dict):
+        raise RunnerError("ppe_image_probe inputs are missing; rerun ppe_proof")
+    assets_path = project_root / "03-assets/assets.json"
+    expected_assets_hash = file_sha256(assets_path) if assets_path.exists() else None
+    if probe_inputs.get("assets_json_sha256") != expected_assets_hash:
+        raise RunnerError("ppe_image_probe assets hash is stale; rerun ppe_proof")
+    return probe
+
+
+def project_has_image_assets(project_root: Path) -> bool:
+    assets = read_json_optional(project_root / "03-assets/assets.json")
+    if any(isinstance(key, str) and key for key in assets) or any(isinstance(value, str) and value for value in assets.values()):
+        return True
+    manifest = read_json_optional(project_root / "03-assets/asset-manifest.json")
+    summary = manifest.get("summary") if isinstance(manifest.get("summary"), dict) else {}
+    for key in ["mapped_token_count", "acquired_count", "asset_acquired_count", "local_file_count", "image_job_count"]:
+        value = summary.get(key)
+        if isinstance(value, int) and value > 0:
+            return True
+    for key in ["acquired_assets", "contracts"]:
+        items = manifest.get(key)
+        if isinstance(items, list):
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                for field in ["asset_kind", "kind", "type"]:
+                    if any(token in str(item.get(field, "")).lower() for token in ["image", "photo", "picture"]):
+                        return True
+    prepared_dir = project_root / "04-svg/prepared"
+    for path in prepared_dir.glob("*.svg"):
+        try:
+            if "<image" in path.read_text(encoding="utf-8").lower():
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def write_direct_svg_package_check(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
@@ -2588,7 +2656,7 @@ def project_cli_arg_path(project_root: Path, path: Path) -> str:
         return path.as_posix()
 
 
-def ppe_live_request_headers(project_root: Path) -> list[str]:
+def require_ppe_live_profile_ready(project_root: Path) -> None:
     proof = require_ppe_proof_current(project_root)
     proof_payload = proof.get("proof")
     if not isinstance(proof_payload, dict):
@@ -2596,18 +2664,10 @@ def ppe_live_request_headers(project_root: Path) -> list[str]:
     headers = proof_payload.get("headers")
     if not isinstance(headers, dict):
         raise RunnerError("PPE proof headers are missing; rerun ppe_proof")
-    items: list[str] = []
-    for key, value in headers.items():
-        if not isinstance(key, str) or not isinstance(value, str):
-            raise RunnerError("PPE proof headers must be string key/value pairs")
-        normalized_key = key.strip().lower()
-        normalized_value = value.strip()
-        if normalized_key != "x-tt-env" or normalized_value != "ppe_pure_svg":
-            raise RunnerError("PPE proof currently supports only x-tt-env=ppe_pure_svg")
-        items.append(f"{normalized_key}={normalized_value}")
-    if not items:
-        raise RunnerError("PPE proof headers are empty; rerun ppe_proof")
-    return sorted(items)
+    expected_headers = {"Env": "Pre_release", "x-tt-env": "ppe_pure_svg", "x-use-ppe": "1"}
+    for key, value in expected_headers.items():
+        if headers.get(key) != value:
+            raise RunnerError(f"PPE proof headers.{key} must be {value}")
 
 
 def create_command(project_root: Path, *, dry_run: bool) -> list[str]:
@@ -2616,8 +2676,8 @@ def create_command(project_root: Path, *, dry_run: bool) -> list[str]:
     if assets.exists():
         command.extend(["--assets", project_cli_arg_path(project_root, assets)])
     if not dry_run:
-        for header in ppe_live_request_headers(project_root):
-            command.extend(["--request-header", header])
+        require_ppe_live_profile_ready(project_root)
+        command.extend(["--ppe-profile", "ppe_pure_svg"])
     for path in prepared_svg_files(project_root):
         command.extend(["--file", project_cli_arg_path(project_root, path)])
     if dry_run:
@@ -3019,8 +3079,8 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             stage,
             ["python3", (SCRIPT_DIR / "svglide_ppe_proof.py").as_posix(), project_root.as_posix(), "--pretty"],
             output_json=project_root / "07-create" / "ppe-proof.json",
-            inputs=["06-check/quality-gate.json", "07-create/dry-run.json", "07-create/ppe-proof.input.json"],
-            outputs=["07-create/ppe-proof.json"],
+            inputs=["06-check/quality-gate.json", "07-create/dry-run.json", "07-create/ppe-proof.input.json", "03-assets/assets.json"],
+            outputs=["07-create/ppe-proof.json", "07-create/ppe-create-probe.json", "07-create/ppe-image-probe.json"],
         )
     if stage == "pre_submit_review":
         require_stage_passed(state, "ppe_proof")
