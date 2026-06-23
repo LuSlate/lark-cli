@@ -1,11 +1,12 @@
 {
-  "id": "557349b40feb359bb791749a37571d59edb7e72e",
+  "id": "53194d7a111df326cc078b633f43587225bd0132",
   "worktree": "/Users/bytedance/Projects/cli",
-  "commit": "82a099feafb45d101116f10230ce7c2f92fbcfe5",
+  "commit": "cbd6e56ac07285fd973c53ff7382da0112b6cf5d",
   "phi0_worktree": "/Users/bytedance/Projects/cli",
   "lineage": [
     "phi0",
     "a1333f2e1f7e98bf6f705814b92cacae1f43565759e4e0c24a0a4700b241649e",
-    "557349b40feb359bb791749a37571d59edb7e72e"
+    "557349b40feb359bb791749a37571d59edb7e72e",
+    "53194d7a111df326cc078b633f43587225bd0132"
   ]
 }

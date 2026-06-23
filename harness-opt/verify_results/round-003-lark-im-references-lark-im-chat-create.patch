@@ -1,0 +1,135 @@
+From cbd6e56ac07285fd973c53ff7382da0112b6cf5d Mon Sep 17 00:00:00 2001
+From: "zhangheng.023" <zhangheng.023@bytedance.com>
+Date: Tue, 23 Jun 2026 19:51:49 +0800
+Subject: [PATCH] =?UTF-8?q?opt(round-003):=20references/lark-im-chat-creat?=
+ =?UTF-8?q?e.md=20=E2=80=94=20dedup=20Commands/Scenarios=20overlap=20+=20c?=
+ =?UTF-8?q?ompress=20--help-mirroring=20Common=20Errors=20into=20pointers,?=
+ =?UTF-8?q?=20keep=20232043=20two-step=20flow=20&=20all=20guardrails?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../lark-im/references/lark-im-chat-create.md | 78 +++++--------------
+ 1 file changed, 18 insertions(+), 60 deletions(-)
+
+diff --git a/skills/lark-im/references/lark-im-chat-create.md b/skills/lark-im/references/lark-im-chat-create.md
+index 76716f76..7d65e5d3 100644
+--- a/skills/lark-im/references/lark-im-chat-create.md
++++ b/skills/lark-im/references/lark-im-chat-create.md
+@@ -12,43 +12,24 @@ This skill maps to the shortcut: `lark-cli im +chat-create` (internally calls `P
+ ## Commands
+ 
+ ```bash
+-# Create a private group (default)
++# Private group (default)
+ lark-cli im +chat-create --name "My Group"
+ 
+-# Create a public group (name is required and must be at least 2 characters)
++# Public group (--name required, min 2 chars)
+ lark-cli im +chat-create --name "Public Group" --type public
+ 
+-# Create a topic chat
++# Topic chat (a 话题群; see note under Parameters)
+ lark-cli im +chat-create --name "Topic Group" --chat-mode topic
+ 
+-# Specify the group owner
+-lark-cli im +chat-create --name "My Group" --owner ou_xxx
++# Invite members and set owner (users: up to 50 ou_xxx; bots: up to 5 cli_xxx)
++lark-cli im +chat-create --name "My Group" --owner ou_xxx --users "ou_aaa,ou_bbb" --bots "cli_aaa"
+ 
+-# Invite user members (comma-separated open_ids, up to 50)
+-lark-cli im +chat-create --name "My Group" --users "ou_aaa,ou_bbb"
+-
+-# Invite bot members (comma-separated app IDs, up to 5)
+-lark-cli im +chat-create --name "My Group" --bots "cli_aaa,cli_bbb"
+-
+-# Invite both users and bots
+-lark-cli im +chat-create --name "My Group" --users "ou_aaa" --bots "cli_aaa"
+-
+-# Make the creating bot a group manager (bot identity only)
+-lark-cli im +chat-create --name "My Group" --set-bot-manager --as bot
+-
+-# JSON output
+-lark-cli im +chat-create --name "My Group" --format json
+-
+-# Create a group with bot identity
+-lark-cli im +chat-create --name "My Group" --users "ou_aaa" --as bot
+-
+-# Create a group with user identity
+-lark-cli im +chat-create --name "My Group" --users "ou_aaa,ou_bbb" --as user
+-
+-# Preview the request without creating anything
+-lark-cli im +chat-create --name "My Group" --dry-run
++# Bot identity, making the creating bot a manager
++lark-cli im +chat-create --name "My Group" --users "ou_aaa" --as bot --set-bot-manager
+ ```
+ 
++Run `lark-cli im +chat-create --help` for the full flag list, limits, and types. Single-flag variations (`--as user`, `--description`, `--format json`, `--dry-run` preview, etc.) follow the Parameters table below — `--dry-run` previews the request without creating anything.
++
+ ## Parameters
+ 
+ | Parameter | Required | Limits | Description |
+@@ -106,6 +87,13 @@ lark-cli im +chat-create --name "<group name>" --users "ou_aaa,ou_bbb" --as user
+ 
+ The authorized user is automatically the group creator and member.
+ 
++### Create a group, then send a welcome message
++
++```bash
++CHAT_ID=$(lark-cli im +chat-create --name "New Group" --format json | jq -r '.data.chat_id')
++lark-cli im +messages-send --chat-id "$CHAT_ID" --text "Welcome, everyone!"
++```
++
+ ## Output Fields
+ 
+ | Field | Description |
+@@ -117,43 +105,13 @@ The authorized user is automatically the group creator and member.
+ | `external` | Whether the group is external |
+ | `share_link` | Group share link (omitted if retrieval fails) |
+ 
+-## Usage Scenarios
+-
+-### Scenario 1: Create a group and specify the owner
+-
+-```bash
+-lark-cli im +chat-create --name "Project Discussion Group" --owner ou_xxx
+-```
+-
+-### Scenario 2: Create a group and invite users and a bot
+-
+-```bash
+-lark-cli im +chat-create --name "Project Discussion Group" \
+-  --owner ou_xxx \
+-  --users "ou_aaa,ou_bbb" \
+-  --bots "cli_aaa"
+-```
+-
+-### Scenario 3: Create a group and send a welcome message
+-
+-```bash
+-CHAT_ID=$(lark-cli im +chat-create --name "New Group" --format json | jq -r '.data.chat_id')
+-lark-cli im +messages-send --chat-id "$CHAT_ID" --text "Welcome, everyone!"
+-```
+-
+ ## Common Errors and Troubleshooting
+ 
++Format/limit validation (`--name`/`--description`/`--users`/`--bots`/`--owner` length, count, and `ou_xxx`/`cli_xxx` format) is enforced by the CLI and reported verbatim with the fix — see the Parameters table for limits. The two errors needing extra action:
++
+ | Symptom | Root Cause | Solution |
+ |---------|---------|---------|
+ | Permission denied (99991672) | The app does not have `im:chat:create` (bot) or `im:chat:create_by_user` (user) permission enabled | Enable the required permission for the app in the Open Platform console |
+-| `--name is required for public groups and must be at least 2 characters` | A public group was created without a name or with a name shorter than 2 characters | Provide a name with at least 2 characters |
+-| `--name exceeds the maximum of 60 characters` | The group name is too long | Shorten the name to 60 characters or fewer |
+-| `--description exceeds the maximum of 100 characters` | The group description is too long | Shorten the description to 100 characters or fewer |
+-| `--users exceeds the maximum of 50` | Too many user members were provided | Split the operation into batches and add more members later |
+-| `--bots exceeds the maximum of 5` | Too many bot members were provided | Invite at most 5 bots at once |
+-| `invalid user id: expected open_id (ou_xxx)` | Invalid user ID format | Use the `ou_xxx` format for users |
+-| `invalid bot id: expected app ID (cli_xxx)` | Invalid bot ID format | Use the `cli_xxx` format for bots |
+-| `invalid --owner: expected open_id (ou_xxx)` | Invalid owner ID format | Use the `ou_xxx` format for the owner |
+ | `bot is invisible to user` (232043) | The bot and target users are mutually invisible | Follow the two-step flow in AI Usage Guidance above — do not pass other users in `--users` during creation |
+ 
+ ## References
+-- 
+2.50.1 (Apple Git-155)
+

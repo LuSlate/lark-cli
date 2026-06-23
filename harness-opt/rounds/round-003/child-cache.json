@@ -1,0 +1,20 @@
+{
+  "1": {
+    "score": 1.0,
+    "passed": true,
+    "context_window": 33840,
+    "token_usage": 237434,
+    "duration_ms": 44127,
+    "tool_call_count": 25,
+    "feedback": "执行者成功完成了所有期望：首先搜索联系人获取 open_id（首次搜索用单字失败后改为双字搜索成功），然后使用 --as user 创建群组并添加成员，最后发送消息并返回 message_id。整个流程正确，使用了等效的 `--as user` 身份，符合用户「使用我的身份」的要求。验证结果确认所有操作均已生效。"
+  },
+  "3": {
+    "score": 1.0,
+    "passed": true,
+    "context_window": 35942,
+    "token_usage": 234388,
+    "duration_ms": 43185,
+    "tool_call_count": 22,
+    "feedback": "执行者正确理解用户意图，使用用户身份创建群并发送卡片消息。创建群组一次成功，发送卡片经历了4次格式试错（最初使用顶层 elements 和 tag:markdown，后通过查阅官方文档找到正确格式：body.elements + div + lark_md），最终成功发送并返回 message_id。试错后自行纠正符合评判原则，不构成判罚依据。\n- {'reason': '建议在 lark-im-messages-send.md 中增加飞书 interactive card 的标准格式示例，特别是 2.0 schema 下的 body.elements 中使用 div + lark_md 的正确写法，减少 AI 试错成本'}\n- {'reason': '建议 CLI 在遇到 230099 卡片格式错误时，尝试解析并返回更具体的字段级错误提示（如提示 \"elements 应在 body 内\" 或 \"tag:markdown 不被支持\"），帮助 AI 更快定位问题'}"
+  }
+}

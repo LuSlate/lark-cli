@@ -1,0 +1,27 @@
+{
+  "1": [
+    "auth login",
+    "auth qrcode",
+    "contact +search-user"
+  ],
+  "3": [
+    "auth login",
+    "auth qrcode",
+    "auth status",
+    "im +chat-create",
+    "im +messages-send"
+  ],
+  "2": [
+    "auth login",
+    "auth qrcode",
+    "auth status",
+    "im +chat-messages-list",
+    "im +chat-search",
+    "im +messages-mget",
+    "im +messages-search",
+    "im +messages-send",
+    "im messages forward",
+    "schema im.messages.forward",
+    "schema im.messages.search"
+  ]
+}
