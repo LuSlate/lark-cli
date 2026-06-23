@@ -1,0 +1,25 @@
+# tests_skill_eval/im/im_evals_v2.yaml
+# Domain: im | 来源: 飞书 Base FajkboidGaoOYhscbavcSiJFnkg / table tblrrM5FAoxng4ez / view vewbAnHBit
+# 共 3 题。query↔expectations 已对齐。Root 为 YAML list。
+
+- case_id: CLI_核心评测_014
+  query: |-
+    使用我的身份给创建一个「IM合作群」拉傅一铭和傅二铭进群，并发送一条「大家体验有问题随时沟通」文本消息。直接执行，不需要二次确认
+  expectations: |-
+    1. 使用当前用户身份创建名为「IM合作群」的群聊。
+    2. 将傅一铭和傅二铭加入该群。
+    3. 在该群发送文本消息「大家体验有问题随时沟通」，并返回可验证的 chat_id / message_id 或发送结果。
+- case_id: CLI_核心评测_015
+  query: |-
+    使用我的身份帮我筛选出命名为fusanming_at_openclaw群的群 在最近包含"飞豆"关键字的消息，将它们转发到fusanming_at_需求测试群，并在fusanming_at_需求测试群里 @傅六铭 做知会。直接执行，不需要二次确认
+  expectations: |-
+    1. 成功定位名为「fusanming_at_openclaw群」的群，并获取最近包含「飞豆」关键字的消息。
+    2. 将筛选出的相关消息内容转发到「fusanming_at_需求测试群」。
+    3. 在「fusanming_at_需求测试群」中 @傅六铭 做知会，消息发送成功。
+- case_id: CLI_核心评测_080
+  query: |-
+    使用我的身份创建一个群，叫「今晚吃什么」。创建一张卡片发送到群中，内容为：今天晚上吃什么。直接执行，不需要二次确认
+  expectations: |-
+    1. 使用用户身份创建一个名为「今晚吃什么」的群，预期返回 chat_id。
+    2. 创建一张飞书卡片，卡片内容包含「今天晚上吃什么」。
+    3. 将该卡片发送到新建群中，预期返回 message_id。

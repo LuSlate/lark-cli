@@ -1,0 +1,5 @@
+# harness-opt 只入库轻量决策记录;重的原始评测 run 不进版本库(dashboard 仍读磁盘)。
+baseline/runs/
+**/child-runs/
+verify_results/sealed-runs/
+verify_results/*-runs/
