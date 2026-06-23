@@ -51,6 +51,11 @@ var AppsPluginUninstall = common.Shortcut{
 			return err
 		}
 
+		// Block uninstall if any instances still reference this plugin package.
+		if err := pluginCheckDependentInstances(projectPath, key, rctx.Str("capabilities-dir")); err != nil {
+			return err
+		}
+
 		pkgDir := filepath.Join(projectPath, "node_modules", key)
 		if err := os.RemoveAll(pkgDir); err != nil { //nolint:forbidigo // shortcuts cannot import internal/vfs; remove plugin directory.
 			return appsFileIOError(err, "cannot remove %s", pkgDir)

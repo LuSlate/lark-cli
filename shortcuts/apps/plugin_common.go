@@ -275,6 +275,36 @@ func pluginCheckInstalled(projectPath, pluginKey string) error {
 	return nil
 }
 
+// pluginCheckDependentInstances scans the capabilities directory for instances
+// that reference the given pluginKey. Returns nil if none found, an error with
+// the list of dependent instance ids if any exist, or the underlying I/O error.
+func pluginCheckDependentInstances(projectPath, pluginKey, capDirFlag string) error {
+	capDir, err := pluginResolveCapDir(projectPath, capDirFlag)
+	if err != nil {
+		// No capabilities directory → no instances can exist → no conflict.
+		return nil
+	}
+	caps, err := pluginListCapabilities(capDir)
+	if err != nil {
+		// Cannot scan → best-effort, don't block.
+		return nil
+	}
+	var deps []string
+	for _, cap := range caps {
+		if pk, _ := cap["pluginKey"].(string); pk == pluginKey {
+			if id, _ := cap["id"].(string); id != "" {
+				deps = append(deps, id)
+			}
+		}
+	}
+	if len(deps) == 0 {
+		return nil
+	}
+	return appsFailedPreconditionError(
+		"plugin %q is still referenced by %d instance(s): %s", pluginKey, len(deps), strings.Join(deps, ", "),
+	).WithHint("delete these instances first (lark-cli apps +plugin-instance-delete --id <id> for each), clean up calling code and types, then retry uninstall")
+}
+
 // pluginCheckInstalledVersion checks that the plugin is installed and warns if
 // the installed version differs from the declared version. Returns (warnings, error).
 func pluginCheckInstalledVersion(projectPath, pluginKey, declaredVersion string) ([]string, error) {
