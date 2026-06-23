@@ -73,14 +73,17 @@ output.fields: [...]
 
 完成上述决策后，**读取项目的技术栈 Skill** 获取具体代码模式（import 路径、call/callStream 写法、normalizeStream、NestJS 注入等）。
 
+技术栈 Skill 的位置（`<project-path>` 即 `lark-apps-plugin.md` § 确认项目上下文 中已确定的应用根目录）：
+
+```
+<project-path>/.agent/skills/plugin-guide/SKILL.md
+```
+
+如该文件不存在，检查 `<project-path>/skills/plugin-guide/SKILL.md`。都不存在时，按以下最小规则写代码：
+- `import { capabilityClient } from '@lark-apaas/client-toolkit'`
+- `outputMode = unary` → `capabilityClient.load(id).call(actionKey, input)`
+- `outputMode = stream` → `capabilityClient.load(id).callStream(actionKey, input)`
+
 技术栈 Skill 按项目类型不同：
-- **Design / Modern 应用**（纯前端）→ 读 `plugin-guide` Skill（仅 `capabilityClient`）
-- **全栈应用**（NestJS + React）→ 读 `plugin-guide` Skill（`capabilityClient` + `CapabilityService`）
-
-技术栈 Skill 的位置取决于运行环境：
-- **妙搭平台 Agent**：自动加载 steering skill（`steering-topic: plugin_guide`）
-- **本地 Code Agent**：读仓库内 `.agent/skills/plugin-guide/SKILL.md`（如存在）
-
-根据技术栈 Skill 中的指引，基于 manifest 的 `actions[].outputMode` 选择调用方式：
-- `unary` → `capabilityClient.load(id).call(actionKey, input)`
-- `stream` → `capabilityClient.load(id).callStream(actionKey, input)` + normalizeStream
+- **Design / Modern 应用**（纯前端）→ Skill 中仅 `capabilityClient`，代码放 `<project-path>/client/`
+- **全栈应用**（NestJS + React）→ Skill 中含 `capabilityClient` + `CapabilityService`，Client 代码放 `<project-path>/client/`，Server 代码放 `<project-path>/server/`
