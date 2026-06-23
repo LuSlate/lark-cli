@@ -8,6 +8,7 @@
   ],
   "private_strategy_files": [
     "skills/lark-slides/references/svglide-svg-private.rules.json",
+    "skills/lark-slides/references/svglide-design-asset-composition-tdd-plan.md",
     "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
     "skills/lark-slides/references/svglide-workflow.spec.md",
     "skills/lark-slides/references/svglide-artifacts.spec.md",

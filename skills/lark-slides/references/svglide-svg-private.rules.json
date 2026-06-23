@@ -7,6 +7,7 @@
     "skills/lark-slides/references/svglide-route-admission.md"
   ],
   "private_strategy_files": [
+    "skills/lark-slides/references/svglide-design-asset-composition-tdd-plan.md",
     "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
     "skills/lark-slides/references/svglide-workflow.spec.md",
     "skills/lark-slides/references/svglide-artifacts.spec.md",
@@ -132,6 +133,7 @@
   "write_scope": [
     "skills/lark-slides/SKILL.md",
     "skills/lark-slides/references/svglide-route-admission.md",
+    "skills/lark-slides/references/svglide-design-asset-composition-tdd-plan.md",
     "skills/lark-slides/references/svglide-ppt-master-migration.matrix.md",
     "skills/lark-slides/references/svglide-workflow.spec.md",
     "skills/lark-slides/references/svglide-artifacts.spec.md",
