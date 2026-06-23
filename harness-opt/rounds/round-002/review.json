@@ -1,0 +1,15 @@
+{
+  "generated_by": "lark-cli-harness:opt-reviewer",
+  "verdict": "PASS",
+  "module": "skills/lark-im/references/lark-im-messages-send.md",
+  "tier": "T1",
+  "reason": "纯结构性去重：16407→6399 字节(-61%)与策略一致；逐项核对每条承重指令(互斥规则、video-cover 必配、cwd-relative/绝对路径拒绝、markdown→post 边界、三套 <at> 语法、content 各 msg_type 样例、Safety Constraints、identity+scope 映射)均原样保留在新文档内联，删的全是重复/过度罗列(4× 选型规则、镜像 --help 的 Parameters 表、Common Mistakes、Notes、冗余 Commands)。无硬编码评测答案、未针对 080 卡片流窄化、未碰 SKILL.md 身份路由、单文件单根因。",
+  "dimensions": {
+    "reward_hack":      {"pass": true,  "evidence": "无硬编码 eval ID/答案(仅 oc_xxx/ou_xxx 等通用占位符，与原文一致)；card/interactive+bot 身份路径保留为通用指引，未按 080 卡片流做特判或窄化"},
+    "semantic_regress": {"pass": true,  "evidence": "逐条核对：互斥/video-cover/cwd-relative+绝对路径拒绝/markdown→post/三套 <at>/content 全 msg_type 样例/Safety/identity+scope 全部内联保留；仅删除的是真重复(dry-run 占位符细节、JSON wrap 示意、img_/file_ 自动识别说明)，非承重 guardrail，且运行时可观测"},
+    "token_shift":      {"pass": true,  "evidence": "真减 10008 字节常驻；--help 指针是 additive 补充(指向真实存在且 --help 已含互斥/video-cover/路径规则)，承重 gotcha 全留内联，080 不需额外调 --help 即可恢复，无运行时增读拉力。注:work-order 提的 schema im.messages.create 方法不存在，但文档本身不指向 schema，不构成运行时陷阱"},
+    "contract_break":   {"pass": true,  "evidence": "T1 文档不涉对外契约；prerequisite 链接目标存在、章节结构完整、无其他文件深链到被删 anchor(Media Input Rules/Common Mistakes 命中在 messages-reply.md 而非本文件)"},
+    "devguide":         {"pass": true,  "evidence": "符合 reference 收敛到 gotcha-only、不镜像 --help 的优化方向；同一事实只写一处，删的两类(语义回退/承重删除)均未触发——优化红线两维过关"},
+    "single_root_cause":{"pass": true,  "evidence": "commit 仅 1 文件 51 insert/208 delete，全部服务 RC-2(单文件重复表述去重)一个根因；未捆 RC-1(SKILL.md)/RC-3(chat-create)，未把无关删除以 token 对冲缝入"}
+  }
+}
