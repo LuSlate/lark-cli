@@ -216,6 +216,8 @@ lark-cli apps +plugin-install --name @official-plugins/ai-text-generate@1.0.0 --
 - 已安装同版本会跳过（status=already_installed）
 - 失败时 hint 会指示原因（网络/版本不存在/package.json 缺失）
 
+> **❌ 禁止用 `npm install <tgz>` 代替 `+plugin-install`** — npm install 写入 `dependencies`，插件安装必须写入 `actionPlugins`，两者互不兼容。API 不可用时用 `--local` 模式或 `npx fullstack-cli action-plugin init`。
+
 ### Step 2 — 设计 paramsSchema 和 formValue
 
 设计前必须先读插件的 form.schema：

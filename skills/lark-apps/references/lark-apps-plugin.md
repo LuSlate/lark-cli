@@ -10,6 +10,17 @@
 - **插件实例（Plugin Instance / Capability）**：基于插件包创建的业务配置，存储在 `capabilities/{id}.json`，定义 `paramsSchema`（业务入参）和 `formValue`（表单映射，通过 `{{input.xxx}}` 引用 paramsSchema 参数）。
 - **变量映射**：`调用方传值 → paramsSchema 定义变量 → formValue 消费变量 {{input.xxx}} → Plugin form.schema 接收`。
 
+### ⚠️ 插件包 ≠ npm 包（必读）
+
+| | 插件包 | npm 依赖 |
+|------|------|------|
+| 安装命令 | `lark-cli apps +plugin-install` | `npm install` |
+| 写入字段 | `package.json` → **`actionPlugins`** | `package.json` → `dependencies` / `devDependencies` |
+| 用途 | 妙搭平台 AI 能力 | 项目依赖库 |
+| **禁止** | ❌ 不能用 `npm install` 装插件包 | ❌ 不能用 `+plugin-install` 装普通依赖 |
+
+两套机制完全独立。插件包虽然放在 `node_modules/`，但由 `actionPlugins` 字段管理，**与 npm dependencies 无关**。混淆会导致运行时找不到插件。
+
 ## 确认项目上下文
 
 所有本地 plugin 命令需要 `--project-path`。按以下顺序确认：
@@ -171,3 +182,4 @@
 3. **校验失败走重试协议** — Create / Update 返回校验错误时，按 [`lark-apps-plugin-crud.md`](lark-apps-plugin-crud.md) § 校验失败重试 处理：解析 hint → 修正 → 重试（max 3 次）。
 4. **写代码前读源码** — Create 完成后，Agent 应读取 `node_modules/{pluginKey}/manifest.json` 和 `capabilities/{id}.json` 理解插件能力，再按 [`lark-apps-plugin-call.md`](lark-apps-plugin-call.md) 生成调用代码。禁止凭记忆猜测 actionKey / inputSchema / outputMode。
 5. **不要在 formValue 中使用 Handlebars 控制语法** — 仅允许 `{{input.xxx}}`，严禁 `{{#if}}` / `{{#each}}` / `{{else}}` 等。
+6. **禁止用 `npm install` 代替 `+plugin-install`** — 插件包写入 `actionPlugins`，npm 写入 `dependencies`，两套独立机制。混用会导致插件无法被识别。
