@@ -1,0 +1,222 @@
+{
+  "skills/lark-im/SKILL.md": {
+    "reach": 1.0,
+    "read_cases": [
+      "1",
+      "2",
+      "3"
+    ],
+    "actual_cases": [
+      "1",
+      "2",
+      "3"
+    ],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": true
+  },
+  "skills/lark-im/references/lark-im-chat-create.md": {
+    "reach": 0.667,
+    "read_cases": [
+      "1",
+      "3"
+    ],
+    "actual_cases": [
+      "1",
+      "3"
+    ],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-chat-identity.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-chat-list.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-chat-messages-list.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-chat-search.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-chat-update.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-group-list-item.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-group-list.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-group-query-item.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-groups.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-shortcut-create.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-shortcut-list.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-feed-shortcut-remove.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-flag-cancel.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-flag-create.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-flag-list.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-message-enrichment.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-messages-mget.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-messages-reply.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-messages-resources-download.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-messages-search.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-messages-send.md": {
+    "reach": 0.667,
+    "read_cases": [
+      "1",
+      "3"
+    ],
+    "actual_cases": [
+      "1",
+      "3"
+    ],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-reactions.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  },
+  "skills/lark-im/references/lark-im-threads-messages-list.md": {
+    "reach": 0.0,
+    "read_cases": [],
+    "actual_cases": [],
+    "expected_cases": [],
+    "discoverability_miss": [],
+    "is_domain_skill": false
+  }
+}

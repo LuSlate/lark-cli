@@ -1,0 +1,404 @@
+{
+  "round": 1,
+  "status": "admitted",
+  "parent_id": "phi0",
+  "parent_worktree": "/Users/bytedance/Projects/cli",
+  "child_worktree": "/Users/bytedance/Projects/cli",
+  "base_commit": "040ef17eae0ac350c556081544793aacce675e90",
+  "module": "skills/lark-im/SKILL.md",
+  "candidate_modules": [
+    "skills/lark-im/SKILL.md",
+    "skills/lark-im/references/lark-im-chat-create.md",
+    "skills/lark-im/references/lark-im-chat-identity.md",
+    "skills/lark-im/references/lark-im-chat-list.md",
+    "skills/lark-im/references/lark-im-chat-messages-list.md",
+    "skills/lark-im/references/lark-im-chat-search.md",
+    "skills/lark-im/references/lark-im-chat-update.md",
+    "skills/lark-im/references/lark-im-feed-group-list-item.md",
+    "skills/lark-im/references/lark-im-feed-group-list.md",
+    "skills/lark-im/references/lark-im-feed-group-query-item.md",
+    "skills/lark-im/references/lark-im-feed-groups.md",
+    "skills/lark-im/references/lark-im-feed-shortcut-create.md",
+    "skills/lark-im/references/lark-im-feed-shortcut-list.md",
+    "skills/lark-im/references/lark-im-feed-shortcut-remove.md",
+    "skills/lark-im/references/lark-im-flag-cancel.md",
+    "skills/lark-im/references/lark-im-flag-create.md",
+    "skills/lark-im/references/lark-im-flag-list.md",
+    "skills/lark-im/references/lark-im-message-enrichment.md",
+    "skills/lark-im/references/lark-im-messages-mget.md",
+    "skills/lark-im/references/lark-im-messages-reply.md",
+    "skills/lark-im/references/lark-im-messages-resources-download.md",
+    "skills/lark-im/references/lark-im-messages-search.md",
+    "skills/lark-im/references/lark-im-messages-send.md",
+    "skills/lark-im/references/lark-im-reactions.md",
+    "skills/lark-im/references/lark-im-threads-messages-list.md"
+  ],
+  "module_reach": {
+    "skills/lark-im/SKILL.md": {
+      "reach": 1.0,
+      "read_cases": [
+        "1",
+        "2",
+        "3"
+      ],
+      "actual_cases": [
+        "1",
+        "2",
+        "3"
+      ],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": true
+    },
+    "skills/lark-im/references/lark-im-chat-create.md": {
+      "reach": 0.667,
+      "read_cases": [
+        "1",
+        "3"
+      ],
+      "actual_cases": [
+        "1",
+        "3"
+      ],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-chat-identity.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-chat-list.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-chat-messages-list.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-chat-search.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-chat-update.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-group-list-item.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-group-list.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-group-query-item.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-groups.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-shortcut-create.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-shortcut-list.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-feed-shortcut-remove.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-flag-cancel.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-flag-create.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-flag-list.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-message-enrichment.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-messages-mget.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-messages-reply.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-messages-resources-download.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-messages-search.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-messages-send.md": {
+      "reach": 0.667,
+      "read_cases": [
+        "1",
+        "3"
+      ],
+      "actual_cases": [
+        "1",
+        "3"
+      ],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-reactions.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    },
+    "skills/lark-im/references/lark-im-threads-messages-list.md": {
+      "reach": 0.0,
+      "read_cases": [],
+      "actual_cases": [],
+      "expected_cases": [],
+      "discoverability_miss": [],
+      "is_domain_skill": false
+    }
+  },
+  "expected_reach": {},
+  "minibatch": [
+    "1",
+    "2",
+    "3"
+  ],
+  "pareto_cases": [
+    "1",
+    "2",
+    "3"
+  ],
+  "artifacts": {
+    "workorder": "workorder.md",
+    "diagnosis": "diagnosis.md",
+    "attribution": "attribution.json",
+    "strategy": "strategy.md",
+    "review": "review.json",
+    "trend": "trend.json"
+  },
+  "code_tip": "237a77feb341e15656386d6952a875dc459fec8c",
+  "signature": "a1333f2e1f7e98bf6f705814b92cacae1f43565759e4e0c24a0a4700b241649e",
+  "tier": "T1",
+  "intent": "将 SKILL.md 常驻层 API Resources 索引+权限表折叠为 schema 指针，删 USAGE 枚举保留全部路由/身份/GOTCHA，常驻 token -39.8%",
+  "target_axis": "token",
+  "changed_files": [
+    "skills/lark-im/SKILL.md"
+  ],
+  "decision_basis": {
+    "type": "module",
+    "module": "skills/lark-im/SKILL.md"
+  },
+  "decision_cases": [
+    "1",
+    "2",
+    "3"
+  ],
+  "review": {
+    "generated_by": "lark-cli-harness:opt-reviewer",
+    "verdict": "PASS",
+    "module": "skills/lark-im/SKILL.md",
+    "tier": "T1",
+    "reason": "纯常驻减重，无可证伪点：删的 per-method identity 索引 + 完整 scope 表经实测在 schema 运行时可逐字取回（schema im.chats.create 返回与被删文本相同的 Identity 串、schema._meta.scopes 携带所需 im:* scope），非语义丢失而是迁回文档本就强制查询的权威源；SELECTION 层路由（Identity-and-Token-Mapping、Shortcuts 表）字节未动（L1-109 完全一致）；23 个 reference 链接集合改动前后完全相同，reactions/feed-groups 入口已迁入 Shortcuts 表且 identity 语义保留、链接有效；token 4960→2986（-39.8%，tiktoken cl100k_base 实测吻合声明）为真删非搬运；只服务 RC-2 一个根因。试图证伪四维均找不到证据。",
+    "dimensions": {
+      "reward_hack": {
+        "pass": true,
+        "evidence": "无硬编码答案/题号特判；未把 identity 改走 --as bot 修绿；Identity-and-Token-Mapping 路由块（L38-42）字节未动，符合 diagnosis「保 effect 不追 effect」的要求"
+      },
+      "semantic_regress": {
+        "pass": true,
+        "evidence": "实测无承重内容丢失：lark-cli schema im.chats.create 逐字返回被删的 Identity 串、schema._meta.scopes 携带所需 scope（如 im:message.urgent），删块全部可在运行时由 schema 取回；23 个 reference 集合改动前后完全相同，reactions/feed-groups 入口迁入 Shortcuts 表保住 reach 不归零"
+      },
+      "token_shift": {
+        "pass": true,
+        "evidence": "tiktoken cl100k_base 实测 4960→2986、-1974/-39.8% 与声明吻合；是 reach=1.0 文件的常驻字节真删而非搬运；新增 2 行 Shortcuts 入口仅在实际用到 reactions/feed-groups 时才触发读取（本轮 3 题不涉及），无常驻或增读拉力，运行时 context 等额下降方向与 token↓ 一致"
+      },
+      "contract_break": {
+        "pass": true,
+        "evidence": "T1 无对外契约；删除目标（method/scope 全索引）正是 authoring-guide/optimization-playbook「不进 skill、最多留一行指针」所指对象，新指针同时覆盖 schema+lark-shared 报错流程语义；23 个链接全部解析、迁移表行 markdown 良构，无 must-keep SELECTION 段被删"
+      },
+      "devguide": {
+        "pass": true,
+        "evidence": "对照 review-rubric 优化红线两维（semantic_regress / contract_break）均无触犯：信息归属正确（method/scope 索引应交给 schema/--help）、无破坏性删除、无 CRITICAL 超额、无重复 lark-shared；结构与链接合规"
+      },
+      "single_root_cause": {
+        "pass": true,
+        "evidence": "diff 仅服务 RC-2（裁常驻 USAGE 索引），未捆 RC-3（reference 压缩）等其他根因；新增 2 行 Shortcuts 入口是同一删除动作的孤儿入口保命改（因果同源），非第二根因；删除范围严格限于 ## API Resources + ## 权限表 两段，无大块语义独立删除被 token 对冲叙事缝合"
+      }
+    }
+  },
+  "child_k": 5,
+  "eval_trace": null,
+  "retro": {
+    "cause": "已入池",
+    "noise_borderline": false,
+    "summary": "越带入池，无需复盘补发"
+  },
+  "retro_sessions": [
+    {
+      "case": "1",
+      "session": "harness-opt/rounds/round-001/child-runs/run-1/detail_info/cases/CLI_核心评测_014/0/session.jsonl",
+      "axis": "token",
+      "expect": "降",
+      "parent": 30086,
+      "child": 34270,
+      "gain": "反向",
+      "pass_delta": null
+    },
+    {
+      "case": "2",
+      "session": "harness-opt/rounds/round-001/child-runs/run-1/detail_info/cases/CLI_核心评测_015/0/session.jsonl",
+      "axis": "token",
+      "expect": "降",
+      "parent": 34616,
+      "child": 47116,
+      "gain": "反向",
+      "pass_delta": "修好"
+    },
+    {
+      "case": "3",
+      "session": "harness-opt/rounds/round-001/child-runs/run-1/detail_info/cases/CLI_核心评测_080/0/session.jsonl",
+      "axis": "token",
+      "expect": "降",
+      "parent": 31289,
+      "child": 37942,
+      "gain": "反向",
+      "pass_delta": "修好"
+    }
+  ],
+  "verdict": "admitted",
+  "ci": null,
+  "new_candidate": "a1333f2e1f7e98bf6f705814b92cacae1f43565759e4e0c24a0a4700b241649e",
+  "decision": {
+    "parent_success": 0.3333333333333333,
+    "child_success": 1.0,
+    "parent_score": 0.5111111111111111,
+    "child_score": 0.6666666666666666,
+    "score_saved": 0.15555555555555556,
+    "score_threshold": 0.09532271373123208,
+    "parent_token": 31997.0,
+    "child_token": 39776.0,
+    "saved": -7779.0,
+    "threshold": 4532.708313776408,
+    "parent_duration": 50189.0,
+    "child_duration": 68024.66666666667,
+    "dur_saved": -17835.66666666667,
+    "dur_threshold": 4899.200953624988,
+    "dur_margin": 1.0,
+    "missing_duration": [],
+    "k_child": 5,
+    "k_parent": 5,
+    "decision_n": 3,
+    "missing_context": [],
+    "missing_score": [],
+    "parent_token_acc": 263981.0,
+    "child_token_acc": 379441.6666666667,
+    "phi0_score": 0.5111111111111111,
+    "eff_margin": 1.0,
+    "parent_token_full": 31997.0,
+    "child_token_full": 39776.0,
+    "saved_full": -7779.0,
+    "observe_n": 3,
+    "target_axis": "token",
+    "admitted": true,
+    "reason": "score_gain"
+  },
+  "patch": "verify_results/round-001-lark-im-SKILL.patch"
+}

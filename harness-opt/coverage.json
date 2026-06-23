@@ -1,0 +1,869 @@
+{
+  "summary": {
+    "total_cases": 3,
+    "files": 25,
+    "expected_declared": 0,
+    "blind_spots": 22,
+    "overfit_high": 5,
+    "suggest_add_cases": [
+      "skills/lark-im/references/lark-im-chat-identity.md",
+      "skills/lark-im/references/lark-im-flag-cancel.md",
+      "skills/lark-im/references/lark-im-flag-create.md",
+      "skills/lark-im/references/lark-im-message-enrichment.md",
+      "skills/lark-im/references/lark-im-messages-search.md"
+    ],
+    "suggest_fix_routing": []
+  },
+  "files": [
+    {
+      "path": "skills/lark-im/references/lark-im-chat-identity.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "高",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 0,
+        "R2": 0,
+        "R3": 50
+      },
+      "total_lines": 55,
+      "overfit_risk": "高",
+      "suggest_add_cases": true,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-messages-search.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "高",
+      "risk_lines": {
+        "R0": 6,
+        "R1": 85,
+        "R2": 112,
+        "R3": 31
+      },
+      "total_lines": 234,
+      "overfit_risk": "高",
+      "suggest_add_cases": true,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-flag-cancel.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "高",
+      "risk_lines": {
+        "R0": 6,
+        "R1": 25,
+        "R2": 21,
+        "R3": 15
+      },
+      "total_lines": 67,
+      "overfit_risk": "高",
+      "suggest_add_cases": true,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-flag-create.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "高",
+      "risk_lines": {
+        "R0": 7,
+        "R1": 25,
+        "R2": 20,
+        "R3": 15
+      },
+      "total_lines": 67,
+      "overfit_risk": "高",
+      "suggest_add_cases": true,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-message-enrichment.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "高",
+      "risk_lines": {
+        "R0": 1,
+        "R1": 0,
+        "R2": 43,
+        "R3": 10
+      },
+      "total_lines": 54,
+      "overfit_risk": "高",
+      "suggest_add_cases": true,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-chat-messages-list.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 90,
+        "R2": 40,
+        "R3": 22
+      },
+      "total_lines": 157,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-messages-reply.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 1,
+        "R1": 139,
+        "R2": 109,
+        "R3": 14
+      },
+      "total_lines": 263,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-groups.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 50,
+        "R1": 368,
+        "R2": 22,
+        "R3": 12
+      },
+      "total_lines": 452,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-chat-search.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 102,
+        "R2": 24,
+        "R3": 11
+      },
+      "total_lines": 142,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-chat-update.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 67,
+        "R2": 2,
+        "R3": 10
+      },
+      "total_lines": 84,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-messages-resources-download.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 55,
+        "R2": 24,
+        "R3": 10
+      },
+      "total_lines": 94,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-threads-messages-list.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 6,
+        "R1": 72,
+        "R2": 28,
+        "R3": 9
+      },
+      "total_lines": 115,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-chat-list.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 1,
+        "R1": 103,
+        "R2": 56,
+        "R3": 6
+      },
+      "total_lines": 166,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-flag-list.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 80,
+        "R2": 9,
+        "R3": 6
+      },
+      "total_lines": 100,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-reactions.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 73,
+        "R1": 206,
+        "R2": 18,
+        "R3": 2
+      },
+      "total_lines": 299,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-group-list-item.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 7,
+        "R1": 44,
+        "R2": 17,
+        "R3": 0
+      },
+      "total_lines": 68,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-group-list.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 6,
+        "R1": 44,
+        "R2": 15,
+        "R3": 0
+      },
+      "total_lines": 65,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-group-query-item.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 6,
+        "R1": 21,
+        "R2": 17,
+        "R3": 0
+      },
+      "total_lines": 44,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-shortcut-create.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 7,
+        "R1": 70,
+        "R2": 20,
+        "R3": 0
+      },
+      "total_lines": 97,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-shortcut-list.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 6,
+        "R1": 73,
+        "R2": 24,
+        "R3": 0
+      },
+      "total_lines": 103,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-feed-shortcut-remove.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 10,
+        "R1": 24,
+        "R2": 14,
+        "R3": 0
+      },
+      "total_lines": 48,
+      "overfit_risk": "关注",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/SKILL.md",
+      "is_domain_skill": true,
+      "actual": {
+        "count": 3,
+        "pct": 1.0,
+        "tier": "密"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 3,
+        "pct": 1.0,
+        "tier": "密"
+      },
+      "discoverability_miss": 0,
+      "density_count": 3,
+      "density_pct": 1.0,
+      "density_tier": "密",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 122,
+        "R1": 0,
+        "R2": 68,
+        "R3": 41
+      },
+      "total_lines": 231,
+      "overfit_risk": "低",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-chat-create.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 2,
+        "pct": 0.667,
+        "tier": "密"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 2,
+        "pct": 0.667,
+        "tier": "密"
+      },
+      "discoverability_miss": 0,
+      "density_count": 2,
+      "density_pct": 0.667,
+      "density_tier": "密",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 116,
+        "R2": 12,
+        "R3": 29
+      },
+      "total_lines": 162,
+      "overfit_risk": "低",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-messages-send.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 2,
+        "pct": 0.667,
+        "tier": "密"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 2,
+        "pct": 0.667,
+        "tier": "密"
+      },
+      "discoverability_miss": 0,
+      "density_count": 2,
+      "density_pct": 0.667,
+      "density_tier": "密",
+      "risk_tier": "中",
+      "risk_lines": {
+        "R0": 1,
+        "R1": 140,
+        "R2": 109,
+        "R3": 14
+      },
+      "total_lines": 264,
+      "overfit_risk": "低",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    },
+    {
+      "path": "skills/lark-im/references/lark-im-messages-mget.md",
+      "is_domain_skill": false,
+      "actual": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "expected": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "union": {
+        "count": 0,
+        "pct": 0.0,
+        "tier": "盲区"
+      },
+      "discoverability_miss": 0,
+      "density_count": 0,
+      "density_pct": 0.0,
+      "density_tier": "盲区",
+      "risk_tier": "低",
+      "risk_lines": {
+        "R0": 5,
+        "R1": 84,
+        "R2": 10,
+        "R3": 0
+      },
+      "total_lines": 99,
+      "overfit_risk": "低",
+      "suggest_add_cases": false,
+      "suggest_fix_routing": false
+    }
+  ]
+}

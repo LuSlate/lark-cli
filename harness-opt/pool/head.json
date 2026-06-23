@@ -1,9 +1,10 @@
 {
-  "id": "phi0",
+  "id": "a1333f2e1f7e98bf6f705814b92cacae1f43565759e4e0c24a0a4700b241649e",
   "worktree": "/Users/bytedance/Projects/cli",
-  "commit": null,
+  "commit": "237a77feb341e15656386d6952a875dc459fec8c",
   "phi0_worktree": "/Users/bytedance/Projects/cli",
   "lineage": [
-    "phi0"
+    "phi0",
+    "a1333f2e1f7e98bf6f705814b92cacae1f43565759e4e0c24a0a4700b241649e"
   ]
 }

@@ -2,10 +2,10 @@
   "task_id": "OPT-IM-1",
   "title": "优化 lark-im（省 token 保成功率）",
   "branch": "feat/opt-im-token",
-  "current_phase": "baseline",
+  "current_phase": "round",
   "phase_status": "in_progress",
   "started_at": "2026-06-23T17:52:10",
-  "updated_at": "2026-06-23T17:54:04",
+  "updated_at": "2026-06-23T18:14:17",
   "blockers": null,
   "transcript_path": "/Users/bytedance/.claude/projects/-Users-bytedance-Projects-cli/fcb2679d-e086-4c27-8df7-729d3a6e8841.jsonl",
   "phases": {
@@ -15,13 +15,13 @@
       "end": "2026-06-23T17:54:04"
     },
     "baseline": {
-      "status": "in_progress",
+      "status": "completed",
       "start": "2026-06-23T17:54:04",
-      "end": null
+      "end": "2026-06-23T18:14:17"
     },
     "round": {
-      "status": "pending",
-      "start": null,
+      "status": "in_progress",
+      "start": "2026-06-23T18:14:17",
       "end": null,
       "iterations": []
     },

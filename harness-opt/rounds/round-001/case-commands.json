@@ -1,0 +1,24 @@
+{
+  "1": [
+    "auth login",
+    "auth qrcode",
+    "auth status",
+    "contact +search-user",
+    "contact resolve \"傅一铭\"",
+    "contact resolve \"傅二铭\"",
+    "im +chat-create"
+  ],
+  "3": [
+    "auth login",
+    "auth qrcode",
+    "im +chat-create",
+    "im +messages-send"
+  ],
+  "2": [
+    "auth login",
+    "auth qrcode",
+    "im +chat-messages-list",
+    "im +chat-search",
+    "im +messages-search"
+  ]
+}
