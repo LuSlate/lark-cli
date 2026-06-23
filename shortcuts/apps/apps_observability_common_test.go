@@ -5,6 +5,7 @@ package apps
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -35,6 +36,9 @@ func TestAppsObservabilityValidateEnvOnlyOnline(t *testing.T) {
 	p := requireAppsValidationParam(t, err, "--env")
 	if p.Subtype != errs.SubtypeInvalidArgument {
 		t.Fatalf("problem = %#v, want invalid_argument param --env", p)
+	}
+	if !strings.Contains(p.Hint, "only online is supported") {
+		t.Fatalf("hint = %q, want only-online guidance", p.Hint)
 	}
 }
 

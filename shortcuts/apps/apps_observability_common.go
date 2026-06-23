@@ -30,7 +30,8 @@ func validateObservabilityEnv(env string) error {
 	case "", "online":
 		return nil
 	default:
-		return appsValidationParamError("--env", "observability commands only support --env online (got %q)", env)
+		return appsValidationParamError("--env", "observability commands only support --env online (got %q)", env).
+			WithHint("only online is supported; omit --env to use the default online environment")
 	}
 }
 
