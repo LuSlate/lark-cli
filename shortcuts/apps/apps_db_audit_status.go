@@ -72,6 +72,7 @@ var AppsDBAuditStatus = common.Shortcut{
 	},
 }
 
+// buildAuditStatusParams 组装 audit_status 查询参数：env 及可选 table（单表查询）。
 func buildAuditStatusParams(rctx *common.RuntimeContext) map[string]interface{} {
 	params := map[string]interface{}{"env": rctx.Str("env")}
 	if t := strings.TrimSpace(rctx.Str("table")); t != "" {
@@ -104,6 +105,7 @@ func projectAuditStatusItems(raw interface{}) []map[string]interface{} {
 	return out
 }
 
+// renderAuditStatusPretty 单表渲染 key/value、多表渲染对齐表格（table/enabled/enabled_at/retention）。
 func renderAuditStatusPretty(w io.Writer, items []map[string]interface{}, table string) {
 	if len(items) == 0 {
 		io.WriteString(w, "No audit configuration found.\n")

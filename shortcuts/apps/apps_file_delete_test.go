@@ -5,9 +5,11 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -15,9 +17,16 @@ const fileDeleteURL = "/open-apis/spark/v1/apps/app_x/storage/file_batch_remove"
 
 func TestAppsFileDelete_RequiresAppIDAndPath(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsFileDelete,
-		[]string{"+file-delete", "--app-id", "app_x", "--yes", "--as", "user"}, factory, stdout); err == nil || !strings.Contains(err.Error(), "path") {
-		t.Fatalf("expected path required error, got %v", err)
+	// 传入仅含空白的 --path：满足 cobra 的 Required 检查，但 cleanDeletePaths 去空后为空，
+	// 触发 Validate 内的 typed --path 校验。
+	err := runAppsShortcut(t, AppsFileDelete,
+		[]string{"+file-delete", "--app-id", "app_x", "--path", "  ", "--yes", "--as", "user"}, factory, stdout)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--path" {
+		t.Fatalf("Param = %q, want --path", ve.Param)
 	}
 }
 

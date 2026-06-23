@@ -5,10 +5,12 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -70,8 +72,12 @@ func TestAppsFileList_RequiresAppID(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileList,
 		[]string{"+file-list", "--app-id", "  ", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "app-id") {
-		t.Fatalf("expected app-id required error, got %v", err)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--app-id" {
+		t.Fatalf("Param = %q, want --app-id", ve.Param)
 	}
 }
 

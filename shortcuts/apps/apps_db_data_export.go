@@ -15,8 +15,8 @@ import (
 
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/extension/fileio"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -54,10 +54,10 @@ var AppsDBDataExport = common.Shortcut{
 			return err
 		}
 		if strings.TrimSpace(rctx.Str("table")) == "" {
-			return output.ErrValidation("--table is required")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--table is required").WithParam("--table")
 		}
 		if n := rctx.Int("limit"); n <= 0 || n > dbDataExportMaxRows {
-			return output.ErrValidation("--limit must be a positive integer ≤ %d", dbDataExportMaxRows)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--limit must be a positive integer ≤ %d", dbDataExportMaxRows).WithParam("--limit")
 		}
 		if _, _, err := exportFormatAndOutput(rctx); err != nil {
 			return err
@@ -101,7 +101,7 @@ var AppsDBDataExport = common.Shortcut{
 			},
 		})
 		if err != nil {
-			return withAppsHint(output.ErrNetwork("export request failed: %v", err), dbDataExportHint)
+			return withAppsHint(errs.NewNetworkError(errs.SubtypeNetworkTransport, "export request failed").WithCause(err), dbDataExportHint)
 		}
 		// 成功是原始字节；业务错误网关以 JSON 信封 {code,msg} 返回（以 '{' 开头）。
 		if b := bytes.TrimSpace(resp.RawBody); len(b) > 0 && b[0] == '{' {
@@ -110,11 +110,11 @@ var AppsDBDataExport = common.Shortcut{
 			}
 		}
 		if resp.StatusCode >= 400 {
-			return withAppsHint(output.ErrNetwork("export failed: HTTP %d", resp.StatusCode), dbDataExportHint)
+			return withAppsHint(errs.NewNetworkError(errs.SubtypeNetworkServer, "export failed: HTTP %d", resp.StatusCode), dbDataExportHint)
 		}
 		body := resp.RawBody
 		if len(body) > dbDataExportMaxBytes {
-			return output.ErrValidation("export exceeds 1 MB limit (%d bytes); filter rows with +db-execute (WHERE/LIMIT) and export smaller subsets", len(body))
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "export exceeds 1 MB limit (%d bytes); filter rows with +db-execute (WHERE/LIMIT) and export smaller subsets", len(body))
 		}
 
 		saved, err := rctx.FileIO().Save(out, fileio.SaveOptions{
@@ -122,7 +122,7 @@ var AppsDBDataExport = common.Shortcut{
 			ContentLength: int64(len(body)),
 		}, bytes.NewReader(body))
 		if err != nil {
-			return output.ErrValidation("--output: %v", err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--output: %v", err).WithParam("--output")
 		}
 		// 行数取自预查的 total（导出最多 limit 行，故取 min）；total 查询失败时按导出内容数行兜底。
 		rows := 0

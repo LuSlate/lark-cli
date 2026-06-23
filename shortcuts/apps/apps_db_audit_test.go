@@ -5,10 +5,12 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -76,9 +78,14 @@ func TestAppsDBAuditEnable_RequiresTableAndValidRetention(t *testing.T) {
 	}
 	// 非法 retention → enum 校验 (validation)
 	factory2, stdout2, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsDBAuditEnable,
-		[]string{"+db-audit-enable", "--app-id", "app_x", "--table", "orders", "--retention", "99d", "--as", "user"}, factory2, stdout2); err == nil || !strings.Contains(err.Error(), "retention") {
-		t.Fatalf("expected retention enum error, got %v", err)
+	err := runAppsShortcut(t, AppsDBAuditEnable,
+		[]string{"+db-audit-enable", "--app-id", "app_x", "--table", "orders", "--retention", "99d", "--as", "user"}, factory2, stdout2)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--retention" {
+		t.Fatalf("Param = %q, want --retention", ve.Param)
 	}
 }
 

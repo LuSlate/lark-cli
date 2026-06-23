@@ -48,7 +48,7 @@ var AppsDBQuotaGet = common.Shortcut{
 		}
 		data, err := rctx.CallAPITyped("GET", appDbQuotaPath(appID), map[string]interface{}{"env": rctx.Str("env")}, nil)
 		if err != nil {
-			return withAppsHint(err, dbEnvMigrateHint)
+			return withAppsHint(err, appIDListHint)
 		}
 		// 配额未对接（storage_quota_bytes=0/缺失）时删掉 quota / usage_percent。
 		if q, ok := numericAsFloat(data["storage_quota_bytes"]); !ok || q == 0 {
@@ -62,7 +62,7 @@ var AppsDBQuotaGet = common.Shortcut{
 	},
 }
 
-// renderDbQuotaPretty 打 usage（已用 / 配额 (百分比)）与 tables / views 行。
+// renderDbQuotaPretty 打 Storage（已用 / 配额 (百分比)）与 Tables / Views 行（标签对齐 miaoda-cli）。
 func renderDbQuotaPretty(w io.Writer, data map[string]interface{}) {
 	used := humanBytes(data["storage_used_bytes"])
 	usage := used
@@ -73,12 +73,12 @@ func renderDbQuotaPretty(w io.Writer, data map[string]interface{}) {
 		}
 		usage = fmt.Sprintf("%s / %s%s", used, humanBytes(data["storage_quota_bytes"]), pct)
 	}
-	pairs := [][2]string{{"usage", usage}}
+	pairs := [][2]string{{"Storage", usage}}
 	if f, ok := numericAsFloat(data["tables"]); ok {
-		pairs = append(pairs, [2]string{"tables", fmt.Sprintf("%d", int64(f))})
+		pairs = append(pairs, [2]string{"Tables", fmt.Sprintf("%d", int64(f))})
 	}
 	if f, ok := numericAsFloat(data["views"]); ok {
-		pairs = append(pairs, [2]string{"views", fmt.Sprintf("%d", int64(f))})
+		pairs = append(pairs, [2]string{"Views", fmt.Sprintf("%d", int64(f))})
 	}
 	renderKeyValuePairs(w, pairs)
 }

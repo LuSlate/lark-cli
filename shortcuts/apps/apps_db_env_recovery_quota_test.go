@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -130,8 +131,15 @@ func TestAppsDBEnvMigrate_PollFailedSurfacesError(t *testing.T) {
 	})
 	err := runAppsShortcut(t, AppsDBEnvMigrate,
 		[]string{"+db-env-migrate", "--app-id", "app_x", "--yes", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "lock timeout") {
-		t.Fatalf("expected failed-status error, got %v", err)
+	p, ok := errs.ProblemOf(err)
+	if !ok || p.Category != errs.CategoryAPI || p.Subtype != errs.SubtypeServerError {
+		t.Fatalf("got %T %v, want API/server_error typed error", err, err)
+	}
+	if !strings.Contains(p.Message, "lock timeout") {
+		t.Fatalf("Message = %q, want it to contain 'lock timeout'", p.Message)
+	}
+	if !strings.Contains(p.Hint, "+db-env-diff") {
+		t.Fatalf("Hint = %q, want the db-env-migrate recovery hint", p.Hint)
 	}
 }
 
@@ -217,8 +225,15 @@ func TestAppsDBRecoveryDiff_PreviewFailed(t *testing.T) {
 	})
 	err := runAppsShortcut(t, AppsDBRecoveryDiff,
 		[]string{"+db-recovery-diff", "--app-id", "app_x", "--target", "2h", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "snapshot expired") {
-		t.Fatalf("expected preview-failed error, got %v", err)
+	p, ok := errs.ProblemOf(err)
+	if !ok || p.Category != errs.CategoryAPI || p.Subtype != errs.SubtypeServerError {
+		t.Fatalf("got %T %v, want API/server_error typed error", err, err)
+	}
+	if !strings.Contains(p.Message, "snapshot expired") {
+		t.Fatalf("Message = %q, want it to contain 'snapshot expired'", p.Message)
+	}
+	if !strings.Contains(p.Hint, "PITR window") {
+		t.Fatalf("Hint = %q, want the db-recovery recovery hint", p.Hint)
 	}
 }
 
@@ -282,7 +297,7 @@ func TestAppsDBQuotaGet_WithQuotaPretty(t *testing.T) {
 		t.Fatalf("execute err=%v", err)
 	}
 	got := stdout.String()
-	for _, want := range []string{"usage", "(10.0%)", "tables", "4", "views", "1"} {
+	for _, want := range []string{"Storage", "(10.0%)", "Tables", "4", "Views", "1"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q:\n%s", want, got)
 		}

@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -47,7 +47,7 @@ var AppsDBAuditList = common.Shortcut{
 			return err
 		}
 		if len(auditListTables(rctx)) == 0 {
-			return output.ErrValidation("--table is required (at least one table)")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--table is required (at least one table)").WithParam("--table")
 		}
 		return normalizeTimeFlags(rctx, "since", "until")
 	},
@@ -204,6 +204,7 @@ func auditListTables(rctx *common.RuntimeContext) []string {
 	return out
 }
 
+// buildAuditListParams 组装 audit_list 查询参数：env / tables(逗号拼接) / page_size 及可选 since/until/page_token。
 func buildAuditListParams(rctx *common.RuntimeContext, tables []string) map[string]interface{} {
 	params := map[string]interface{}{
 		"env":       rctx.Str("env"),
@@ -232,6 +233,7 @@ type auditLogItem struct {
 	After       interface{}  `json:"after,omitempty"`
 }
 
+// projectAuditLogItems 把服务端原始审计事件投影为白名单 auditLogItem（operator 解析、before/after 还原成对象）。
 func projectAuditLogItems(raw interface{}) []auditLogItem {
 	arr, _ := raw.([]interface{})
 	out := make([]auditLogItem, 0, len(arr))

@@ -5,6 +5,7 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -20,9 +22,14 @@ const fileSignURLForDownload = "/open-apis/spark/v1/apps/app_x/storage/file_sign
 
 func TestAppsFileDownload_RequiresAppIDAndPath(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsFileDownload,
-		[]string{"+file-download", "--app-id", "app_x", "--path", "  ", "--as", "user"}, factory, stdout); err == nil || !strings.Contains(err.Error(), "path") {
-		t.Fatalf("expected path error, got %v", err)
+	err := runAppsShortcut(t, AppsFileDownload,
+		[]string{"+file-download", "--app-id", "app_x", "--path", "  ", "--as", "user"}, factory, stdout)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--path" {
+		t.Fatalf("Param = %q, want --path", ve.Param)
 	}
 }
 

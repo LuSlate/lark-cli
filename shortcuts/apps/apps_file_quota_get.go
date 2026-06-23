@@ -46,7 +46,7 @@ var AppsFileQuotaGet = common.Shortcut{
 		}
 		data, err := rctx.CallAPITyped("GET", appFileQuotaPath(appID), nil, nil)
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		// 配额未对接（storage_quota_bytes=0/缺失）时删掉 quota / usage_percent，避免误导。
 		projectFileQuota(data)
@@ -65,7 +65,7 @@ func projectFileQuota(data map[string]interface{}) {
 	}
 }
 
-// renderFileQuotaPretty 打 usage（已用 / 配额 (百分比)）与 files 行。
+// renderFileQuotaPretty 打 Storage（已用 / 配额 (百分比)）与 Files 行（标签对齐 miaoda-cli）。
 func renderFileQuotaPretty(w io.Writer, data map[string]interface{}) {
 	used := humanBytes(data["storage_used_bytes"])
 	usage := used
@@ -76,9 +76,9 @@ func renderFileQuotaPretty(w io.Writer, data map[string]interface{}) {
 		}
 		usage = fmt.Sprintf("%s / %s%s", used, humanBytes(data["storage_quota_bytes"]), pct)
 	}
-	pairs := [][2]string{{"usage", usage}}
+	pairs := [][2]string{{"Storage", usage}}
 	if f, ok := numericAsFloat(data["files"]); ok {
-		pairs = append(pairs, [2]string{"files", fmt.Sprintf("%d", int64(f))})
+		pairs = append(pairs, [2]string{"Files", fmt.Sprintf("%d", int64(f))})
 	}
 	renderKeyValuePairs(w, pairs)
 }

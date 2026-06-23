@@ -5,9 +5,11 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -17,8 +19,12 @@ func TestAppsDBChangelogList_RequiresAppID(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBChangelogList,
 		[]string{"+db-changelog-list", "--app-id", "  ", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "app-id") {
-		t.Fatalf("expected app-id error, got %v", err)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--app-id" {
+		t.Fatalf("Param = %q, want --app-id", ve.Param)
 	}
 }
 
@@ -53,8 +59,12 @@ func TestAppsDBChangelogList_RejectsBadSince(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBChangelogList,
 		[]string{"+db-changelog-list", "--app-id", "app_x", "--since", "notatime", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "since") {
-		t.Fatalf("expected --since validation, got %v", err)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--since" {
+		t.Fatalf("Param = %q, want --since", ve.Param)
 	}
 }
 

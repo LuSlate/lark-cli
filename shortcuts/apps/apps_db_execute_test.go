@@ -15,7 +15,7 @@ import (
 	"github.com/larksuite/cli/internal/output"
 )
 
-func TestAppsDBExecute_SingleSELECTJSONEnvelopeWrapsResults(t *testing.T) {
+func TestAppsDBExecute_SingleSELECTJSONIsRowArray(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
@@ -33,20 +33,123 @@ func TestAppsDBExecute_SingleSELECTJSONEnvelopeWrapsResults(t *testing.T) {
 		factory, stdout); err != nil {
 		t.Fatalf("execute err=%v", err)
 	}
-	// JSON envelope 应该把 result 字符串 parse 之后放进 data.results
+	// PRD 单 SELECT：data 直接是行数组（不再是 data.results[].data 字符串）
 	var env struct {
-		Data struct {
-			Results []map[string]interface{} `json:"results"`
-		} `json:"data"`
+		Data []map[string]interface{} `json:"data"`
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
 		t.Fatalf("decode envelope: %v\n%s", err, stdout.String())
 	}
-	if len(env.Data.Results) != 1 {
-		t.Fatalf("data.results = %d items (want 1)", len(env.Data.Results))
+	if len(env.Data) != 1 {
+		t.Fatalf("data = %d rows (want 1)\n%s", len(env.Data), stdout.String())
 	}
-	if env.Data.Results[0]["sql_type"] != "SELECT" {
-		t.Fatalf("results[0].sql_type = %v", env.Data.Results[0]["sql_type"])
+	if env.Data[0]["id"] != float64(101) || env.Data[0]["total_cents"] != float64(2500) {
+		t.Fatalf("data[0] = %v, want {id:101,total_cents:2500}", env.Data[0])
+	}
+}
+
+func TestAppsDBExecute_SingleDMLJSONShape(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/sql_commands",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"result": `[{"sql_type":"INSERT","data":"","affected_rows":3}]`,
+			},
+		},
+	})
+	if err := runAppsShortcut(t, AppsDBExecute,
+		[]string{"+db-execute", "--yes", "--app-id", "app_x", "--sql", "insert", "--as", "user"},
+		factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	// PRD 单 DML：data = {command, rows_affected}
+	var env struct {
+		Data struct {
+			Command      string `json:"command"`
+			RowsAffected int    `json:"rows_affected"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode: %v\n%s", err, stdout.String())
+	}
+	if env.Data.Command != "INSERT" || env.Data.RowsAffected != 3 {
+		t.Fatalf("data = %+v, want {command:INSERT, rows_affected:3}", env.Data)
+	}
+}
+
+func TestAppsDBExecute_SingleDDLJSONShape(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/sql_commands",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"result": `[{"sql_type":"CREATE_TABLE","data":"[]"}]`,
+			},
+		},
+	})
+	if err := runAppsShortcut(t, AppsDBExecute,
+		[]string{"+db-execute", "--yes", "--app-id", "app_x", "--sql", "create", "--as", "user"},
+		factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	// PRD 单 DDL：data = {command}
+	var env struct {
+		Data struct {
+			Command string `json:"command"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode: %v\n%s", err, stdout.String())
+	}
+	if env.Data.Command != "CREATE_TABLE" {
+		t.Fatalf("data.command = %q, want CREATE_TABLE", env.Data.Command)
+	}
+}
+
+func TestAppsDBExecute_MultiStatementJSONShape(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/sql_commands",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"result": `[` +
+					`{"sql_type":"INSERT","data":"","affected_rows":1},` +
+					`{"sql_type":"SELECT","data":"[{\"id\":999}]","record_count":1}` +
+					`]`,
+			},
+		},
+	})
+	if err := runAppsShortcut(t, AppsDBExecute,
+		[]string{"+db-execute", "--yes", "--app-id", "app_x", "--sql", "x", "--as", "user"},
+		factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	// PRD 多语句：data 是元素数组；SELECT 包成 {command:"SELECT", rows:[...]}
+	var env struct {
+		Data []map[string]interface{} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode: %v\n%s", err, stdout.String())
+	}
+	if len(env.Data) != 2 {
+		t.Fatalf("data = %d elements (want 2)\n%s", len(env.Data), stdout.String())
+	}
+	if env.Data[0]["command"] != "INSERT" || env.Data[0]["rows_affected"] != float64(1) {
+		t.Fatalf("data[0] = %v, want {command:INSERT, rows_affected:1}", env.Data[0])
+	}
+	if env.Data[1]["command"] != "SELECT" {
+		t.Fatalf("data[1].command = %v, want SELECT", env.Data[1]["command"])
+	}
+	rows, ok := env.Data[1]["rows"].([]interface{})
+	if !ok || len(rows) != 1 {
+		t.Fatalf("data[1].rows = %v, want 1 row", env.Data[1]["rows"])
 	}
 }
 
@@ -178,8 +281,8 @@ func TestAppsDBExecute_LegacyWireSingleSelect(t *testing.T) {
 	}
 }
 
-func TestAppsDBExecute_LegacyWireSingleSelectJSONEnvelope(t *testing.T) {
-	// 验证 JSON envelope 也把 legacy result 正确归一化进 data.results
+func TestAppsDBExecute_LegacyWireSingleSelectJSONIsRowArray(t *testing.T) {
+	// 验证 legacy wire 的 SELECT 也归一化成 PRD 行数组形态（data 直接是行）
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
@@ -197,21 +300,16 @@ func TestAppsDBExecute_LegacyWireSingleSelectJSONEnvelope(t *testing.T) {
 		t.Fatalf("execute err=%v", err)
 	}
 	var env struct {
-		Data struct {
-			Results []map[string]interface{} `json:"results"`
-		} `json:"data"`
+		Data []map[string]interface{} `json:"data"`
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
 		t.Fatalf("decode: %v\n%s", err, stdout.String())
 	}
-	if len(env.Data.Results) != 1 {
-		t.Fatalf("results length = %d, want 1; got: %v", len(env.Data.Results), env.Data.Results)
+	if len(env.Data) != 1 {
+		t.Fatalf("data length = %d, want 1; got: %v", len(env.Data), env.Data)
 	}
-	if env.Data.Results[0]["sql_type"] != "SELECT" {
-		t.Fatalf("results[0].sql_type = %v, want SELECT", env.Data.Results[0]["sql_type"])
-	}
-	if env.Data.Results[0]["record_count"] != float64(1) {
-		t.Fatalf("results[0].record_count = %v, want 1", env.Data.Results[0]["record_count"])
+	if env.Data[0]["x"] != float64(1) {
+		t.Fatalf("data[0].x = %v, want 1", env.Data[0]["x"])
 	}
 }
 
@@ -588,6 +686,75 @@ func TestAppsDBExecute_SingleErrorReturnsTypedError(t *testing.T) {
 	}
 	if completed, ok := detail["completed"].([]map[string]interface{}); !ok || len(completed) != 0 {
 		t.Errorf("completed = %v, want empty", detail["completed"])
+	}
+}
+
+// TestAppsDBExecute_TransactionFailureRolledBack 钉死「显式事务内失败 → rolled_back=true」：
+// 实测后端把 BEGIN 也作为 statement 返回；失败时 completed 含未配对 BEGIN → 整批回滚，
+// rolled_back=true、completed=[]、statement_index 指向 ERROR 位置。
+func TestAppsDBExecute_TransactionFailureRolledBack(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/sql_commands",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				// BOE 实测 wire：BEGIN; CREATE; INSERT(ok); INSERT(dup→ERROR)
+				"result": `[` +
+					`{"sql_type":"BEGIN","data":"[]"},` +
+					`{"sql_type":"CREATE_TABLE","data":"[]"},` +
+					`{"sql_type":"INSERT","data":"[{\"rowCount\":1}]","affected_rows":1},` +
+					`{"sql_type":"ERROR","data":"{\"code\":\"k_dl_1300002\",\"message\":\"duplicate key value violates unique constraint\"}"}` +
+					`]`,
+			},
+		},
+	})
+	err := runAppsShortcut(t, AppsDBExecute,
+		[]string{"+db-execute", "--yes", "--app-id", "app_x", "--sql", "x", "--as", "user"},
+		factory, stdout)
+	if err == nil {
+		t.Fatalf("transaction failure must return a typed error; stdout:\n%s", stdout.String())
+	}
+	var exitErr *output.ExitError
+	if !errors.As(err, &exitErr) || exitErr.Detail == nil {
+		t.Fatalf("want *output.ExitError with detail, got %T: %v", err, err)
+	}
+	detail, _ := exitErr.Detail.Detail.(map[string]interface{})
+	if detail["statement_index"] != 3 {
+		t.Errorf("statement_index = %v, want 3", detail["statement_index"])
+	}
+	if detail["rolled_back"] != true {
+		t.Errorf("rolled_back = %v, want true (failure inside explicit BEGIN…COMMIT transaction)", detail["rolled_back"])
+	}
+	if completed, ok := detail["completed"].([]map[string]interface{}); !ok || len(completed) != 0 {
+		t.Errorf("completed = %v, want empty (nothing persisted on rollback)", detail["completed"])
+	}
+	if !strings.Contains(exitErr.Detail.Hint, "rolled back") {
+		t.Errorf("hint should mention rollback: %q", exitErr.Detail.Hint)
+	}
+}
+
+func TestInferRolledBack_Cases(t *testing.T) {
+	stmt := func(t string) map[string]interface{} { return map[string]interface{}{"sql_type": t} }
+	cases := []struct {
+		name      string
+		completed []map[string]interface{}
+		want      bool
+	}{
+		{"empty", nil, false},
+		{"autocommit single", []map[string]interface{}{stmt("INSERT")}, false},
+		{"open tx (unmatched BEGIN)", []map[string]interface{}{stmt("BEGIN"), stmt("CREATE_TABLE"), stmt("INSERT")}, true},
+		{"closed tx (BEGIN+COMMIT)", []map[string]interface{}{stmt("BEGIN"), stmt("INSERT"), stmt("COMMIT")}, false},
+		{"reopened tx", []map[string]interface{}{stmt("BEGIN"), stmt("COMMIT"), stmt("BEGIN"), stmt("INSERT")}, true},
+		{"rollback closes tx", []map[string]interface{}{stmt("BEGIN"), stmt("INSERT"), stmt("ROLLBACK")}, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := inferRolledBack(c.completed); got != c.want {
+				t.Errorf("inferRolledBack(%s) = %v, want %v", c.name, got, c.want)
+			}
+		})
 	}
 }
 

@@ -5,9 +5,11 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -40,8 +42,12 @@ func TestAppsFileSign_RejectsDurationOverMax(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileSign,
 		[]string{"+file-sign", "--app-id", "app_x", "--path", "/x.png", "--expires-in", "9999999", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "30d") {
-		t.Fatalf("expected duration-exceeded validation error, got %v", err)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--expires-in" {
+		t.Fatalf("Param = %q, want --expires-in", ve.Param)
 	}
 }
 

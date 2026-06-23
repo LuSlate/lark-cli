@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -44,7 +44,7 @@ var AppsFileSign = common.Shortcut{
 			return err
 		}
 		if rctx.Int("expires-in") > fileSignMaxExpiresSeconds {
-			return output.ErrValidation("--expires-in exceeds the maximum of %d seconds (30d)", fileSignMaxExpiresSeconds)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--expires-in exceeds the maximum of %d seconds (30d)", fileSignMaxExpiresSeconds).WithParam("--expires-in")
 		}
 		return nil
 	},
@@ -62,7 +62,7 @@ var AppsFileSign = common.Shortcut{
 		}
 		data, err := rctx.CallAPITyped("POST", appFileSignPath(appID), nil, buildFileSignBody(rctx))
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		rctx.OutFormat(data, nil, func(w io.Writer) {
 			fmt.Fprintln(w, common.GetString(data, "signed_url"))
@@ -71,6 +71,7 @@ var AppsFileSign = common.Shortcut{
 	},
 }
 
+// buildFileSignBody 组装 file_sign 请求体：path 及可选 expires_in（秒）。
 func buildFileSignBody(rctx *common.RuntimeContext) map[string]interface{} {
 	path, _ := requireFilePath(rctx.Str("path"))
 	body := map[string]interface{}{"path": path}

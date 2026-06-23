@@ -56,9 +56,12 @@ var AppsDBAuditEnable = common.Shortcut{
 		}
 		table := strings.TrimSpace(rctx.Str("table"))
 		retention := rctx.Str("retention")
+		stop := rctx.StartSpinner("Enabling audit logging for " + table)
+		defer stop()
 		data, err := rctx.CallAPITyped("POST", appAuditSetPath(appID),
 			map[string]interface{}{"env": rctx.Str("env")},
 			map[string]interface{}{"table": table, "enabled": true, "retention": retention})
+		stop()
 		if err != nil {
 			return withAppsHint(err, dbAuditSetHint)
 		}

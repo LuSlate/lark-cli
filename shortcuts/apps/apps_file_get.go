@@ -51,7 +51,7 @@ var AppsFileGet = common.Shortcut{
 		}
 		data, err := rctx.CallAPITyped("GET", appFileGetPath(appID), buildFileGetParams(rctx), nil)
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		info := projectFileInfo(data)
 		rctx.OutFormat(info, nil, func(w io.Writer) {
@@ -61,6 +61,7 @@ var AppsFileGet = common.Shortcut{
 	},
 }
 
+// buildFileGetParams 组装 file_get 查询参数：按 path 精确寻址单文件。
 func buildFileGetParams(rctx *common.RuntimeContext) map[string]interface{} {
 	path, _ := requireFilePath(rctx.Str("path"))
 	return map[string]interface{}{"path": path}

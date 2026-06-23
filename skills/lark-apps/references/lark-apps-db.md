@@ -73,7 +73,7 @@ lark-cli apps +db-env-migrate --app-id app_xxx --yes
 
 ### 数据导入导出
 
-**`+db-data-export`**：把一张表导出到本地文件。导出格式跟随 `--output` 的扩展名——`.csv` / `.json` / `.sql`，缺省按 `<表名>.csv` 落在当前目录。两道体量约束：
+**`+db-data-export`**：把一张表导出到本地文件。导出格式**只由 `--output` 的扩展名决定**——`.csv` / `.json` / `.sql`，缺省按 `<表名>.csv` 落在当前目录。注意：全局 `--format json|pretty` 只控制**命令自身输出**（成功摘要 / 错误信封）的渲染，**不影响导出文件的格式**；`--output` 后缀必须是 `.csv/.json/.sql` 之一，否则报 validation 错误（exit 2），且不支持导出到 stdout。两道体量约束：
 
 - `--limit`（1..5000，默认 5000）是**行数上限守卫**：表的行数超过它会被整体拒掉（不是「只导前 N 行」）；
 - 导出产物 >1 MB 也会被拒。
@@ -90,6 +90,8 @@ lark-cli apps +db-data-export --app-id app_xxx --table orders --output ./orders.
 ```bash
 lark-cli apps +db-data-import --app-id app_xxx --table orders --file ./orders.csv --env dev --yes
 ```
+
+**导入/导出限额**：体积 ≤ **1 MB**、行数 ≤ **5000**，导入导出都一样，超限会被拒。超限就分批——导入拆成 ≤1 MB / ≤5000 行的多个文件，导出用 `WHERE` / `LIMIT` 缩小范围。
 
 ### 变更追溯与审计
 

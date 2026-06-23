@@ -73,6 +73,7 @@ var AppsDBChangelogList = common.Shortcut{
 	},
 }
 
+// buildChangelogParams 组装 changelog_list 查询参数：env / page_size 及可选 table/change_id/since/until/page_token。
 func buildChangelogParams(rctx *common.RuntimeContext) map[string]interface{} {
 	params := map[string]interface{}{
 		"env":       rctx.Str("env"),
@@ -101,6 +102,7 @@ type changelogItem struct {
 	Statement   string       `json:"statement,omitempty"`
 }
 
+// projectChangelogItems 把服务端原始 DDL 变更记录投影为白名单 changelogItem（operator 解析成对象）。
 func projectChangelogItems(raw interface{}) []changelogItem {
 	arr, _ := raw.([]interface{})
 	out := make([]changelogItem, 0, len(arr))

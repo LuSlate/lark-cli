@@ -14,8 +14,8 @@ import (
 
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/cmdutil"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -51,14 +51,20 @@ var AppsDBDataImport = common.Shortcut{
 			return err
 		}
 		if strings.TrimSpace(rctx.Str("file")) == "" {
-			return output.ErrValidation("--file is required")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--file is required").WithParam("--file")
 		}
 		// 文件名即可校验格式（服务端按扩展名推断）与推断表名，无需读取内容。
 		if _, err := resolveDataFormat(filepath.Ext(rctx.Str("file")), false); err != nil {
 			return err
 		}
+		// 体积守卫前移到 Validate：用 Stat 先查大小（不读内容），dry-run 也能拦超大文件、且
+		// 在读整个文件进内存之前就失败（对齐 +file-upload）。Stat 失败不在此报错，留给 Execute
+		// 的 ReadInputFile 产出更精确的「文件不存在/越界」错误。
+		if st, serr := rctx.FileIO().Stat(strings.TrimSpace(rctx.Str("file"))); serr == nil && st.Size() > dbDataImportMaxBytes {
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "import data exceeds 1 MB limit (file is %d bytes); split into ≤1 MB chunks", st.Size()).WithParam("--file")
+		}
 		if importTableName(rctx) == "" {
-			return output.ErrValidation("cannot infer target table from file name; specify --table")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "cannot infer target table from file name; specify --table").WithParam("--table")
 		}
 		return nil
 	},
@@ -79,10 +85,10 @@ var AppsDBDataImport = common.Shortcut{
 		file := strings.TrimSpace(rctx.Str("file"))
 		content, err := cmdutil.ReadInputFile(rctx.FileIO(), file)
 		if err != nil {
-			return output.ErrValidation("--file: %v", err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--file: %v", err).WithParam("--file")
 		}
 		if len(content) > dbDataImportMaxBytes {
-			return output.ErrValidation("import data exceeds 1 MB limit (file is %d bytes); split into ≤1 MB chunks", len(content))
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "import data exceeds 1 MB limit (file is %d bytes); split into ≤1 MB chunks", len(content)).WithParam("--file")
 		}
 		fileName := filepath.Base(file)
 		table := importTableName(rctx)
@@ -99,7 +105,7 @@ var AppsDBDataImport = common.Shortcut{
 			Body:        fd,
 		}, larkcore.WithFileUpload())
 		if err != nil {
-			return withAppsHint(output.ErrNetwork("import request failed: %v", err), dbDataImportHint)
+			return withAppsHint(errs.NewNetworkError(errs.SubtypeNetworkTransport, "import request failed").WithCause(err), dbDataImportHint)
 		}
 		data, err := rctx.ClassifyAPIResponse(resp)
 		if err != nil {

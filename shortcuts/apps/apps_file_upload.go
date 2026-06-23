@@ -15,7 +15,6 @@ import (
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/cmdutil"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -49,17 +48,17 @@ var AppsFileUpload = common.Shortcut{
 		}
 		f := strings.TrimSpace(rctx.Str("file"))
 		if f == "" {
-			return output.ErrValidation("--file is required")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--file is required").WithParam("--file")
 		}
 		st, err := rctx.FileIO().Stat(f)
 		if err != nil {
-			return output.ErrValidation("--file: %v", err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--file: %v", err).WithParam("--file").WithCause(err)
 		}
 		if st.IsDir() {
-			return output.ErrValidation("--file must be a file, not a directory")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--file must be a file, not a directory").WithParam("--file")
 		}
 		if st.Size() > fileUploadMaxBytes {
-			return output.ErrValidation("file size %d bytes exceeds the 100 MB upload limit", st.Size())
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "file size %d bytes exceeds the 100 MB upload limit", st.Size()).WithParam("--file")
 		}
 		return nil
 	},
@@ -78,7 +77,7 @@ var AppsFileUpload = common.Shortcut{
 		localPath := strings.TrimSpace(rctx.Str("file"))
 		content, err := cmdutil.ReadInputFile(rctx.FileIO(), localPath)
 		if err != nil {
-			return output.ErrValidation("--file: %v", err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--file: %v", err).WithParam("--file").WithCause(err)
 		}
 		fileName := filepath.Base(localPath)
 		contentType := mimeByExt(fileName)
@@ -90,7 +89,7 @@ var AppsFileUpload = common.Shortcut{
 			"content_type": contentType,
 		})
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		uploadURL := common.GetString(pre, "upload_url")
 		uploadID := common.GetString(pre, "upload_id")
@@ -110,7 +109,7 @@ var AppsFileUpload = common.Shortcut{
 			"etag":      etag,
 		})
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		info := projectFileInfo(result)
 		rctx.OutFormat(info, nil, func(w io.Writer) {
@@ -130,7 +129,7 @@ var AppsFileUpload = common.Shortcut{
 func putFileBytes(ctx context.Context, url string, content []byte, contentType, fileName string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(content))
 	if err != nil {
-		return "", output.ErrNetwork("build upload request: %v", err)
+		return "", errs.NewNetworkError(errs.SubtypeNetworkTransport, "build upload request").WithCause(err)
 	}
 	req.ContentLength = int64(len(content))
 	if contentType != "" {
@@ -139,12 +138,16 @@ func putFileBytes(ctx context.Context, url string, content []byte, contentType, 
 	req.Header.Set("Content-Disposition", "attachment; filename=\""+sanitizeUploadFileName(fileName)+"\"")
 	resp, err := newFileTransferClient().Do(req)
 	if err != nil {
-		return "", output.ErrNetwork("upload failed: %v", err)
+		return "", errs.NewNetworkError(errs.SubtypeNetworkTransport, "upload failed").WithCause(err)
 	}
 	defer resp.Body.Close()
 	io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
 	if resp.StatusCode >= 400 {
-		return "", output.ErrNetwork("upload failed: HTTP %d", resp.StatusCode)
+		subtype := errs.SubtypeNetworkTransport
+		if resp.StatusCode >= 500 {
+			subtype = errs.SubtypeNetworkServer
+		}
+		return "", errs.NewNetworkError(subtype, "upload failed: HTTP %d", resp.StatusCode)
 	}
 	return resp.Header.Get("ETag"), nil
 }

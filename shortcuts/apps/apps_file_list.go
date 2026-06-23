@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -55,7 +55,7 @@ var AppsFileList = common.Shortcut{
 			}
 			n, err := normalizeTimestamp(rctx.Str(f))
 			if err != nil {
-				return output.ErrValidation("--%s: %v", f, err)
+				return errs.NewValidationError(errs.SubtypeInvalidArgument, "--%s: %v", f, err).WithParam("--" + f)
 			}
 			_ = rctx.Cmd.Flags().Set(f, n)
 		}
@@ -75,7 +75,7 @@ var AppsFileList = common.Shortcut{
 		}
 		data, err := rctx.CallAPITyped("GET", appFileListPath(appID), buildFileListParams(rctx), nil)
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		// 白名单投影：server created_at/created_by → uploaded_at/uploaded_by，替换原始 items[]。
 		items := projectFileItems(data["items"])
@@ -87,6 +87,7 @@ var AppsFileList = common.Shortcut{
 	},
 }
 
+// projectFileItems 把服务端原始 items 逐项投影为白名单 fileInfo（created_*→uploaded_*）。
 func projectFileItems(raw interface{}) []fileInfo {
 	arr, _ := raw.([]interface{})
 	out := make([]fileInfo, 0, len(arr))
@@ -98,6 +99,7 @@ func projectFileItems(raw interface{}) []fileInfo {
 	return out
 }
 
+// buildFileListParams 组装 file_list 查询参数：page_size 及可选 name/path/type/size_gt/size_lt/uploaded_since/uploaded_until/page_token。
 func buildFileListParams(rctx *common.RuntimeContext) map[string]interface{} {
 	params := map[string]interface{}{
 		"page_size": rctx.Int("page-size"),

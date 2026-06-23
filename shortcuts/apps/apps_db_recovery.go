@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/larksuite/cli/errs"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -103,12 +102,15 @@ var AppsDBRecoveryApply = common.Shortcut{
 			return err
 		}
 		target := rctx.Str("target")
+		stop := rctx.StartSpinner("Restoring database to " + target)
+		defer stop()
 		submit, err := rctx.CallAPITyped("POST", appRecoveryPath(appID), nil, map[string]interface{}{"target": target, "dry_run": false})
 		if err != nil {
 			return withAppsHint(err, dbRecoveryHint)
 		}
 		// 目标=当前态 → 后端短路 no_changes，不轮询。
 		if strings.ToLower(common.GetString(submit, "status")) == "no_changes" {
+			stop()
 			out := map[string]interface{}{"status": "no_changes", "target": target}
 			rctx.OutFormat(out, nil, func(w io.Writer) {
 				io.WriteString(w, "No changes — database is already at this state.\n")
@@ -128,13 +130,14 @@ var AppsDBRecoveryApply = common.Shortcut{
 					if msg == "" {
 						msg = fmt.Sprintf("recovery to %s failed", target)
 					}
-					return false, withAppsHint(output.ErrAPI(0, msg, nil), dbRecoveryHint)
+					return false, withAppsHint(errs.NewAPIError(errs.SubtypeServerError, "%s", msg), dbRecoveryHint)
 				}
 				return false, nil
 			})
 		if perr != nil {
 			return perr
 		}
+		stop()
 		out := map[string]interface{}{"status": "restored", "target": target}
 		if n := intFromAny(final["restore_time_sec"]); n > 0 {
 			out["restore_time_sec"] = n
@@ -152,6 +155,8 @@ var AppsDBRecoveryApply = common.Shortcut{
 
 // runRecoveryPreview 触发 PITR 预览（dry_run=true）拿 preview_request_id，轮询 diff_status 至终态。
 func runRecoveryPreview(rctx *common.RuntimeContext, appID, target string) (map[string]interface{}, error) {
+	stop := rctx.StartSpinner("Previewing recovery to " + target)
+	defer stop()
 	submit, err := rctx.CallAPITyped("POST", appRecoveryPath(appID), nil, map[string]interface{}{"target": target, "dry_run": true})
 	if err != nil {
 		return nil, withAppsHint(err, dbRecoveryHint)
@@ -173,7 +178,7 @@ func runRecoveryPreview(rctx *common.RuntimeContext, appID, target string) (map[
 				if msg == "" {
 					msg = "recovery preview failed"
 				}
-				return false, withAppsHint(output.ErrAPI(0, msg, nil), dbRecoveryHint)
+				return false, withAppsHint(errs.NewAPIError(errs.SubtypeServerError, "%s", msg), dbRecoveryHint)
 			}
 			return false, nil
 		})
@@ -218,6 +223,7 @@ func recoveryDiffOutput(target string, preview map[string]interface{}) map[strin
 	}
 }
 
+// renderRecoveryDiff 渲染 PITR 恢复预览：受影响表数、逐表变化描述及预估耗时；无变更打提示。
 func renderRecoveryDiff(w io.Writer, target string, out map[string]interface{}) {
 	changes, _ := out["changes"].([]recoveryChange)
 	if len(changes) == 0 {

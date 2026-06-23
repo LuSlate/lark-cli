@@ -5,11 +5,13 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -31,8 +33,12 @@ func TestAppsDBDataExport_RejectsBadLimit(t *testing.T) {
 		factory, stdout, _ := newAppsExecuteFactory(t)
 		err := runAppsShortcut(t, AppsDBDataExport,
 			[]string{"+db-data-export", "--app-id", "app_x", "--table", "orders", "--limit", lim, "--as", "user"}, factory, stdout)
-		if err == nil || !strings.Contains(err.Error(), "limit") {
-			t.Fatalf("limit=%s expected validation error, got %v", lim, err)
+		var ve *errs.ValidationError
+		if !errors.As(err, &ve) {
+			t.Fatalf("limit=%s err = %T %v, want *errs.ValidationError", lim, err, err)
+		}
+		if ve.Param != "--limit" {
+			t.Fatalf("limit=%s Param = %q, want --limit", lim, ve.Param)
 		}
 	}
 }
@@ -41,7 +47,8 @@ func TestAppsDBDataExport_RejectsBadOutputExtension(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBDataExport,
 		[]string{"+db-data-export", "--app-id", "app_x", "--table", "orders", "--output", "dump.xml", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "format") {
+	p, ok := errs.ProblemOf(err)
+	if !ok || p.Category != errs.CategoryValidation || p.Subtype != errs.SubtypeInvalidArgument {
 		t.Fatalf("expected unsupported-format validation for .xml, got %v", err)
 	}
 }

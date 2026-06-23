@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
@@ -86,42 +86,46 @@ func newFileTransferClient() *http.Client {
 // 全部走 spark OpenAPI，path 形如 /open-apis/spark/v1/apps/{app_id}/storage/<name>。
 // 路由段不含 HTTP 方法名（file_get→file、file_delete→file_batch_remove、file_quota_get→file_quota）。
 
+// appFileListPath 返回文件列表 URL：storage/file_list。
 func appFileListPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file_list", apiBasePath, validate.EncodePathSegment(appID))
 }
 
+// appFileGetPath 返回单文件元数据 URL：storage/file（file_get→file，路由不含方法名）。
 func appFileGetPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file", apiBasePath, validate.EncodePathSegment(appID))
 }
 
+// appFileSignPath 返回临时签名下载 URL 生成接口：storage/file_sign。
 func appFileSignPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file_sign", apiBasePath, validate.EncodePathSegment(appID))
 }
 
+// appFilePreUploadPath 返回上传预处理（取 presigned 直传地址）URL：storage/file_pre_upload。
 func appFilePreUploadPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file_pre_upload", apiBasePath, validate.EncodePathSegment(appID))
 }
 
+// appFileUploadCallbackPath 返回直传完成回调（登记文件）URL：storage/file_upload_callback。
 func appFileUploadCallbackPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file_upload_callback", apiBasePath, validate.EncodePathSegment(appID))
 }
 
+// appFileBatchRemovePath 返回批量删除文件 URL：storage/file_batch_remove（file_delete→file_batch_remove）。
 func appFileBatchRemovePath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file_batch_remove", apiBasePath, validate.EncodePathSegment(appID))
 }
 
+// appFileQuotaPath 返回存储配额查询 URL：storage/file_quota（file_quota_get→file_quota）。
 func appFileQuotaPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/storage/file_quota", apiBasePath, validate.EncodePathSegment(appID))
 }
-
-// fileListHint 是 file 读类命令最可能的失败（错 app-id / 路径不存在）的恢复提示。
-const fileListHint = "verify --app-id is correct and you have access; list files with `lark-cli apps +file-list --app-id <app_id>`"
 
 // requireFilePath trims --path and rejects blank, returning a uniform validation error.
 func requireFilePath(raw string) (string, error) {
 	p := strings.TrimSpace(raw)
 	if p == "" {
-		return "", output.ErrValidation("--path is required")
+		return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--path is required").WithParam("--path")
 	}
 	return p, nil
 }
@@ -182,7 +186,7 @@ func normalizeTimeFlags(rctx *common.RuntimeContext, flags ...string) error {
 		}
 		n, err := normalizeTimestamp(rctx.Str(f))
 		if err != nil {
-			return output.ErrValidation("--%s: %v", f, err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--%s: %v", f, err).WithParam("--" + f)
 		}
 		_ = rctx.Cmd.Flags().Set(f, n)
 	}

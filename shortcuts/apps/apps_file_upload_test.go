@@ -5,6 +5,7 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,14 +14,22 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
 func TestAppsFileUpload_RequiresAppIDAndFile(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsFileUpload,
-		[]string{"+file-upload", "--app-id", "app_x", "--as", "user"}, factory, stdout); err == nil || !strings.Contains(err.Error(), "file") {
-		t.Fatalf("expected --file required error, got %v", err)
+	// --file is a cobra-required flag; pass whitespace so cobra's required check
+	// passes and our Validate (which trims) rejects it with a typed error.
+	err := runAppsShortcut(t, AppsFileUpload,
+		[]string{"+file-upload", "--app-id", "app_x", "--file", "  ", "--as", "user"}, factory, stdout)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--file" {
+		t.Fatalf("Param = %q, want --file", ve.Param)
 	}
 }
 
@@ -37,8 +46,12 @@ func TestAppsFileUpload_RejectsDirectory(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileUpload,
 		[]string{"+file-upload", "--app-id", "app_x", "--file", "sub", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "directory") {
-		t.Fatalf("expected directory rejection, got %v", err)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--file" {
+		t.Fatalf("Param = %q, want --file", ve.Param)
 	}
 }
 

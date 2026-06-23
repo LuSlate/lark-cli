@@ -18,17 +18,26 @@ type IOStreams struct {
 	Out        io.Writer
 	ErrOut     io.Writer
 	IsTerminal bool
+	// ErrIsTerminal reports whether ErrOut is an interactive terminal. Use it to
+	// gate stderr-only animations (spinners) so pipes / CI / captured stderr stay
+	// clean. Derived from ErrOut's underlying *os.File; non-file writers → false.
+	ErrIsTerminal bool
 }
 
 // NewIOStreams builds an IOStreams from arbitrary readers/writers.
 // IsTerminal is derived from in's underlying *os.File, if any; non-file
 // readers (bytes.Buffer, strings.Reader, …) yield IsTerminal=false.
+// ErrIsTerminal is derived the same way from errOut.
 func NewIOStreams(in io.Reader, out, errOut io.Writer) *IOStreams {
 	isTerminal := false
 	if f, ok := in.(*os.File); ok {
 		isTerminal = term.IsTerminal(int(f.Fd()))
 	}
-	return &IOStreams{In: in, Out: out, ErrOut: errOut, IsTerminal: isTerminal}
+	errIsTerminal := false
+	if f, ok := errOut.(*os.File); ok {
+		errIsTerminal = term.IsTerminal(int(f.Fd()))
+	}
+	return &IOStreams{In: in, Out: out, ErrOut: errOut, IsTerminal: isTerminal, ErrIsTerminal: errIsTerminal}
 }
 
 // SystemIO creates an IOStreams wired to the process's standard file descriptors.
@@ -57,6 +66,7 @@ func normalizeStreams(s *IOStreams) *IOStreams {
 		}
 		if out.ErrOut == nil {
 			out.ErrOut = sys.ErrOut
+			out.ErrIsTerminal = sys.ErrIsTerminal
 		}
 	}
 	return &out

@@ -5,10 +5,12 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -32,8 +34,12 @@ func TestAppsDBDataImport_RequiresAppID(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBDataImport,
 		[]string{"+db-data-import", "--app-id", "  ", "--file", "orders.csv", "--yes", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "app-id") {
-		t.Fatalf("expected app-id error, got %v", err)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--app-id" {
+		t.Fatalf("Param = %q, want --app-id", ve.Param)
 	}
 }
 
@@ -43,7 +49,8 @@ func TestAppsDBDataImport_RejectsUnsupportedFormat(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBDataImport,
 		[]string{"+db-data-import", "--app-id", "app_x", "--file", "data.txt", "--yes", "--as", "user"}, factory, stdout)
-	if err == nil || !strings.Contains(err.Error(), "format") {
+	p, ok := errs.ProblemOf(err)
+	if !ok || p.Category != errs.CategoryValidation || p.Subtype != errs.SubtypeInvalidArgument {
 		t.Fatalf("expected unsupported-format validation, got %v", err)
 	}
 }
@@ -65,9 +72,14 @@ func TestAppsDBDataImport_RejectsOversizeFile(t *testing.T) {
 	big := append([]byte("id\n"), make([]byte, dbDataImportMaxBytes+1)...)
 	_ = os.WriteFile("big.csv", big, 0o600)
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsDBDataImport,
-		[]string{"+db-data-import", "--app-id", "app_x", "--file", "big.csv", "--yes", "--as", "user"}, factory, stdout); err == nil || !strings.Contains(err.Error(), "1 MB") {
-		t.Fatalf("expected 1MB limit error, got %v", err)
+	err := runAppsShortcut(t, AppsDBDataImport,
+		[]string{"+db-data-import", "--app-id", "app_x", "--file", "big.csv", "--yes", "--as", "user"}, factory, stdout)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected 1MB limit error, got %T %v", err, err)
+	}
+	if ve.Param != "--file" {
+		t.Fatalf("Param = %q, want --file", ve.Param)
 	}
 }
 

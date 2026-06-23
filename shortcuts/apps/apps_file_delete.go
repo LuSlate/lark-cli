@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -40,7 +40,7 @@ var AppsFileDelete = common.Shortcut{
 			return err
 		}
 		if len(cleanDeletePaths(rctx)) == 0 {
-			return output.ErrValidation("--path is required (at least one remote path)")
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--path is required (at least one remote path)").WithParam("--path")
 		}
 		return nil
 	},
@@ -59,7 +59,7 @@ var AppsFileDelete = common.Shortcut{
 		paths := cleanDeletePaths(rctx)
 		data, err := rctx.CallAPITyped("POST", appFileBatchRemovePath(appID), nil, map[string]interface{}{"paths": paths})
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		results := projectDeleteResults(data["results"], paths)
 		out := map[string]interface{}{"results": results}
@@ -120,6 +120,7 @@ func projectDeleteResults(raw interface{}, inputs []string) []map[string]interfa
 	return out
 }
 
+// deleteErrorMessage 据 error_code 生成删除失败文案：FILE_NOT_FOUND 提示文件不存在，其余统一删除失败。
 func deleteErrorMessage(code, path string) string {
 	if code == "FILE_NOT_FOUND" {
 		return fmt.Sprintf("File '%s' does not exist", path)

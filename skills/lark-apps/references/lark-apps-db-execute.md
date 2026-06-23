@@ -26,7 +26,11 @@ lark-cli apps +db-execute --app-id app_xxx --env dev --sql - --yes < /Users/.../
 
 ## 输出契约
 
-- 成功默认 JSON 读取 `data.results[]`；每个元素对应一条 SQL，常见字段有 `sql_type`、`data`、`record_count`、`affected_rows`。
+- 成功默认 JSON 的 `data` 按 SQL 类型自适应（不透传后端原始串）：
+  - 单 SELECT → `data` 是行数组 `[{...}]`（空 → `[]`），直接 `-q '.data[].col'` 取字段。
+  - 单 DML → `data = {command, rows_affected}`（如 `{"command":"INSERT","rows_affected":1}`）。
+  - 单 DDL → `data = {command}`（如 `{"command":"CREATE_TABLE"}`）。
+  - 多语句 → `data` 是元素数组：SELECT 为 `{command:"SELECT", rows:[...]}`，DML 为 `{command, rows_affected}`，DDL 为 `{command}`。
 - pretty 会按 SELECT/DML/DDL 自适应渲染；多语句会逐条显示 Statement 摘要。
 - 失败可能仍有前序语句已执行；看 `error.detail.statement_index`、`completed`、`rolled_back` 和 `hint` 决定从哪条继续。
 

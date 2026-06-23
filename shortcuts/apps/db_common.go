@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/validate"
 )
 
@@ -37,11 +37,11 @@ func pollUntil(ctx context.Context, interval, maxWait time.Duration,
 			return data, nil
 		}
 		if i+1 >= maxAttempts {
-			return nil, output.ErrNetwork("timed out waiting for completion after %s", maxWait)
+			return nil, errs.NewNetworkError(errs.SubtypeNetworkTimeout, "timed out waiting for completion after %s", maxWait)
 		}
 		select {
 		case <-ctx.Done():
-			return nil, output.ErrNetwork("cancelled while waiting: %v", ctx.Err())
+			return nil, errs.NewNetworkError(errs.SubtypeNetworkTransport, "cancelled while waiting").WithCause(ctx.Err())
 		case <-time.After(interval):
 		}
 	}
@@ -71,36 +71,54 @@ func appDbEnvCreatePath(appID string) string {
 
 // ── 多环境发布（env diff/migrate）/ 数据恢复（recovery）/ 配额 路由 ──
 
+// appEnvMigratePath 返回 dev→online 发布（预览/落地共用）URL：db/env_migrate。
 func appEnvMigratePath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/env_migrate", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appEnvMigrateStatusPath 返回发布异步任务状态查询 URL：db/env_migrate_status。
 func appEnvMigrateStatusPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/env_migrate_status", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appRecoveryPath 返回 PITR 数据恢复（预览/落地共用）URL：db/env_recovery。
 func appRecoveryPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/env_recovery", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appRecoveryDiffStatusPath 返回恢复预览（diff）异步状态查询 URL：db/env_recovery_diff_status。
 func appRecoveryDiffStatusPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/env_recovery_diff_status", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appRecoveryApplyStatusPath 返回恢复落地异步状态查询 URL：db/env_recovery_apply_status。
 func appRecoveryApplyStatusPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/env_recovery_apply_status", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appDbQuotaPath 返回 db 配额查询 URL：db/quota。
 func appDbQuotaPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/quota", apiBasePath, validate.EncodePathSegment(appID))
 }
 
 // ── 变更追溯（changelog / audit）路由 ──
 
+// appChangelogListPath 返回 DDL 变更记录列表 URL：db/changelog_list。
 func appChangelogListPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/changelog_list", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appAuditStatusPath 返回表审计开关状态查询 URL：db/audit_status。
 func appAuditStatusPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/audit_status", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appAuditSetPath 返回表审计开关设置 URL：db/audit_set。
 func appAuditSetPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/audit_set", apiBasePath, validate.EncodePathSegment(appID))
 }
+
+// appAuditListPath 返回行级审计事件列表 URL：db/audit_list。
 func appAuditListPath(appID string) string {
 	return fmt.Sprintf("%s/apps/%s/db/audit_list", apiBasePath, validate.EncodePathSegment(appID))
 }
@@ -176,9 +194,9 @@ func resolveDataFormat(ext string, allowSQL bool) (string, error) {
 		}
 	}
 	if allowSQL {
-		return "", output.ErrValidation("unsupported data format %q (file must end in .csv, .json or .sql)", raw)
+		return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "unsupported data format %q (file must end in .csv, .json or .sql)", raw)
 	}
-	return "", output.ErrValidation("unsupported data format %q (file must end in .csv or .json)", raw)
+	return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "unsupported data format %q (file must end in .csv or .json)", raw)
 }
 
 // countDataRows 粗估数据行数（用于导入上限校验、导出兜底计数）。
@@ -211,7 +229,7 @@ func countDataRows(body []byte, format string) int {
 func requireAppID(raw string) (string, error) {
 	id := strings.TrimSpace(raw)
 	if id == "" {
-		return "", output.ErrValidation("--app-id is required")
+		return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--app-id is required").WithParam("--app-id")
 	}
 	return id, nil
 }

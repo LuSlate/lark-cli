@@ -5,9 +5,11 @@ package apps
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
@@ -15,14 +17,24 @@ const fileGetURL = "/open-apis/spark/v1/apps/app_x/storage/file"
 
 func TestAppsFileGet_RequiresAppIDAndPath(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsFileGet,
-		[]string{"+file-get", "--app-id", "  ", "--path", "/x.png", "--as", "user"}, factory, stdout); err == nil || !strings.Contains(err.Error(), "app-id") {
-		t.Fatalf("expected app-id error, got %v", err)
+	err := runAppsShortcut(t, AppsFileGet,
+		[]string{"+file-get", "--app-id", "  ", "--path", "/x.png", "--as", "user"}, factory, stdout)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err, err)
+	}
+	if ve.Param != "--app-id" {
+		t.Fatalf("Param = %q, want --app-id", ve.Param)
 	}
 	factory2, stdout2, _ := newAppsExecuteFactory(t)
-	if err := runAppsShortcut(t, AppsFileGet,
-		[]string{"+file-get", "--app-id", "app_x", "--path", "  ", "--as", "user"}, factory2, stdout2); err == nil || !strings.Contains(err.Error(), "path") {
-		t.Fatalf("expected path error, got %v", err)
+	err2 := runAppsShortcut(t, AppsFileGet,
+		[]string{"+file-get", "--app-id", "app_x", "--path", "  ", "--as", "user"}, factory2, stdout2)
+	var ve2 *errs.ValidationError
+	if !errors.As(err2, &ve2) {
+		t.Fatalf("err = %T %v, want *errs.ValidationError", err2, err2)
+	}
+	if ve2.Param != "--path" {
+		t.Fatalf("Param = %q, want --path", ve2.Param)
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/extension/fileio"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -65,7 +64,7 @@ var AppsFileDownload = common.Shortcut{
 		// 1. 签名拿 presigned signed_url。
 		signData, err := rctx.CallAPITyped("POST", appFileSignPath(appID), nil, map[string]interface{}{"path": remotePath})
 		if err != nil {
-			return withAppsHint(err, fileListHint)
+			return err
 		}
 		signedURL := common.GetString(signData, "signed_url")
 		if signedURL == "" {
@@ -82,23 +81,27 @@ var AppsFileDownload = common.Shortcut{
 		}
 		req, err := http.NewRequestWithContext(rctx.Ctx(), http.MethodGet, signedURL, nil) //nolint:forbidigo // GET from a presigned object-storage URL bypasses the Lark gateway; raw HTTP required (not a Lark API call).
 		if err != nil {
-			return output.ErrNetwork("build download request: %v", err)
+			return errs.NewNetworkError(errs.SubtypeNetworkTransport, "build download request").WithCause(err)
 		}
 		resp, err := newFileTransferClient().Do(req) //nolint:forbidigo // see above: direct presigned-URL download, RuntimeContext.DoAPI does not apply.
 		if err != nil {
-			return output.ErrNetwork("download failed: %v", err)
+			return errs.NewNetworkError(errs.SubtypeNetworkTransport, "download failed").WithCause(err)
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode >= 400 {
 			io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
-			return output.ErrNetwork("download failed: HTTP %d", resp.StatusCode)
+			subtype := errs.SubtypeNetworkTransport
+			if resp.StatusCode >= 500 {
+				subtype = errs.SubtypeNetworkServer
+			}
+			return errs.NewNetworkError(subtype, "download failed: HTTP %d", resp.StatusCode)
 		}
 		saved, err := rctx.FileIO().Save(out, fileio.SaveOptions{
 			ContentType:   resp.Header.Get("Content-Type"),
 			ContentLength: resp.ContentLength,
 		}, resp.Body)
 		if err != nil {
-			return output.ErrValidation("--output: %v", err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--output").WithParam("--output").WithCause(err)
 		}
 		resolved, perr := rctx.FileIO().ResolvePath(out)
 		if perr != nil || resolved == "" {

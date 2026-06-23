@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -48,7 +48,10 @@ var AppsDBEnvDiff = common.Shortcut{
 		if err != nil {
 			return err
 		}
+		stop := rctx.StartSpinner("Diffing dev → main")
+		defer stop()
 		data, err := rctx.CallAPITyped("POST", appEnvMigratePath(appID), nil, map[string]interface{}{"dry_run": true})
+		stop()
 		if err != nil {
 			return withAppsHint(err, dbEnvMigrateHint)
 		}
@@ -94,6 +97,8 @@ var AppsDBEnvMigrate = common.Shortcut{
 		if err != nil {
 			return err
 		}
+		stop := rctx.StartSpinner("Publishing dev → main")
+		defer stop()
 		submit, err := rctx.CallAPITyped("POST", appEnvMigratePath(appID), nil, map[string]interface{}{"dry_run": false})
 		if err != nil {
 			return withAppsHint(err, dbEnvMigrateHint)
@@ -115,7 +120,7 @@ var AppsDBEnvMigrate = common.Shortcut{
 					case "success", "applied", "migrated":
 						return true, nil
 					case "failed":
-						return false, withAppsHint(output.ErrAPI(0, migrateFailMsg(d, taskID), nil), dbEnvMigrateHint)
+						return false, withAppsHint(errs.NewAPIError(errs.SubtypeServerError, "%s", migrateFailMsg(d, taskID)), dbEnvMigrateHint)
 					}
 					return false, nil
 				})
@@ -126,6 +131,7 @@ var AppsDBEnvMigrate = common.Shortcut{
 				applied = n
 			}
 		}
+		stop() // clear spinner before printing the result
 		out := map[string]interface{}{"status": "migrated", "from": from, "to": to, "changes_applied": applied}
 		rctx.OutFormat(out, nil, func(w io.Writer) {
 			fmt.Fprintf(w, "✓ Migrated %s → %s (%d changes)\n", from, to, applied)
@@ -140,6 +146,7 @@ type migrationChange struct {
 	Statement string `json:"statement"`
 }
 
+// projectMigrationChanges 把服务端原始变更项投影为白名单 migrationChange（type/table/statement）。
 func projectMigrationChanges(raw interface{}) []migrationChange {
 	arr, _ := raw.([]interface{})
 	out := make([]migrationChange, 0, len(arr))
@@ -155,6 +162,7 @@ func projectMigrationChanges(raw interface{}) []migrationChange {
 	return out
 }
 
+// renderMigrationDiff 渲染 dev→online 待发布变更：无变更打提示，否则逐条打 statement。
 func renderMigrationDiff(w io.Writer, from, to string, changes []migrationChange) {
 	if len(changes) == 0 {
 		fmt.Fprintf(w, "No pending changes from %s to %s.\n", from, to)
@@ -166,6 +174,7 @@ func renderMigrationDiff(w io.Writer, from, to string, changes []migrationChange
 	}
 }
 
+// migrateFailMsg 取发布失败信息：优先服务端 error_message，缺失则用带 task_id 的兜底文案。
 func migrateFailMsg(d map[string]interface{}, taskID string) string {
 	if m := common.GetString(d, "error_message"); m != "" {
 		return m
