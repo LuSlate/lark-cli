@@ -79,11 +79,6 @@ output.fields: [...]
 <project-path>/.agent/skills/plugin-guide/SKILL.md
 ```
 
-如该文件不存在，检查 `<project-path>/skills/plugin-guide/SKILL.md`。都不存在时，按以下最小规则写代码：
-- `import { capabilityClient } from '@lark-apaas/client-toolkit'`
-- `outputMode = unary` → `capabilityClient.load(id).call(actionKey, input)`
-- `outputMode = stream` → `capabilityClient.load(id).callStream(actionKey, input)`
-
 技术栈 Skill 按项目类型不同：
 - **Design / Modern 应用**（纯前端）→ Skill 中仅 `capabilityClient`，代码放 `<project-path>/client/`
 - **全栈应用**（NestJS + React）→ Skill 中含 `capabilityClient` + `CapabilityService`，Client 代码放 `<project-path>/client/`，Server 代码放 `<project-path>/server/`
