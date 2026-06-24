@@ -299,7 +299,6 @@ func TestParseSpreadsheetRef(t *testing.T) {
 		{name: "neither provided", wantErr: true},
 	}
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			ref, err := parseSpreadsheetRef(mk(tc.url, tc.tok))

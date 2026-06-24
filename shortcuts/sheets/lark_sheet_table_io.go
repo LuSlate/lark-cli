@@ -250,7 +250,7 @@ func parseTablePutPayload(runtime flagView) (*tablePayload, error) {
 		Sheets []tableSheetIn `json:"sheets"`
 	}
 	if err := dec.Decode(&wire); err != nil {
-		return nil, common.ValidationErrorf("--sheets: invalid JSON: %v", err)
+		return nil, common.ValidationErrorf("--sheets: invalid JSON: %w", err)
 	}
 	p := &tablePayload{Sheets: make([]tableSheetSpec, 0, len(wire.Sheets))}
 	for i := range wire.Sheets {
@@ -355,7 +355,7 @@ func (p *tablePayload) validate() error {
 			// stray empty spreadsheet behind.
 			for c := range s.Columns {
 				if _, err := buildTypedCell(&s.Columns[c], s.Rows[r][c]); err != nil {
-					return common.ValidationErrorf("--sheets[%d] %q: row %d column %q: %v", i, s.Name, r, s.Columns[c].Name, err)
+					return common.ValidationErrorf("--sheets[%d] %q: row %d column %q: %w", i, s.Name, r, s.Columns[c].Name, err)
 				}
 			}
 		}
@@ -419,7 +419,7 @@ func buildSheetMatrix(s *tableSheetSpec, writeHeader bool) ([][]interface{}, err
 		for c := range s.Columns {
 			cell, err := buildTypedCell(&s.Columns[c], s.Rows[r][c])
 			if err != nil {
-				return nil, common.ValidationErrorf("sheet %q row %d column %q: %v", s.Name, r, s.Columns[c].Name, err)
+				return nil, common.ValidationErrorf("sheet %q row %d column %q: %w", s.Name, r, s.Columns[c].Name, err)
 			}
 			row[c] = cell
 		}
@@ -551,7 +551,7 @@ func isoDateToSerial(s string) (int, error) {
 	}
 	t, err := time.Parse("2006-01-02", s)
 	if err != nil {
-		return 0, fmt.Errorf("date %q must be ISO yyyy-mm-dd: %v", s, err) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
+		return 0, fmt.Errorf("date %q must be ISO yyyy-mm-dd: %w", s, err) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
 	}
 	return int(math.Round(t.Sub(excelEpoch).Hours() / 24)), nil
 }
@@ -1164,7 +1164,7 @@ var TableGet = common.Shortcut{
 			spec, _ := sheets[0].(map[string]interface{})
 			data, err := encodeSheetMapToArrowIPC(spec)
 			if err != nil {
-				return common.ValidationErrorf("--dataframe-out: encode arrow: %v", err)
+				return common.ValidationErrorf("--dataframe-out: encode arrow: %w", err)
 			}
 			if err := writeDataframeOut(runtime, dfOut, data); err != nil {
 				return err
