@@ -40,17 +40,72 @@ def write_template_fidelity_receipt(
     selected_template_id: str = "cover-hero",
     score: float = 0.91,
 ) -> None:
+    reference_screenshot = "beautiful-html-templates/screenshots/blue-professional-1.png"
+    render_screenshot = "04-svg/page-001.svg"
+    reference_path = svglide_quality_gate.resolve_template_fidelity_evidence_path(project, reference_screenshot)
+    render_path = svglide_quality_gate.resolve_template_fidelity_evidence_path(project, render_screenshot)
     payload = {
         "schema_version": "svglide-template-fidelity/v1",
         "stage": "template_fidelity",
         "status": status,
         "template_id": template_id,
         "selected_template_id": selected_template_id,
-        "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
-        "rendered": "04-svg/page-001.svg",
+        "reference_screenshot": reference_screenshot,
+        "render_screenshot": render_screenshot,
+        "generated_by": "beautiful_template_fidelity_check.py",
+        "generator_version": "svglide-template-fidelity-check/v2",
+        "command": [
+            "beautiful_template_fidelity_check.py",
+            "--rendered",
+            render_screenshot,
+            "--reference",
+            reference_screenshot,
+            "--template-id",
+            template_id,
+        ],
+        "reference_sha256": svglide_quality_gate.file_sha256(reference_path),
+        "render_sha256": svglide_quality_gate.file_sha256(render_path),
         "score": score,
         "threshold": 0.72,
+        "metrics": {
+            "color_distribution": 0.91,
+            "layout_structure": 0.9,
+            "edge_density": 0.88,
+            "whitespace": 0.9,
+            "dominant_region": 0.9,
+            "color_complexity": 0.9,
+            "primary_color_alignment": 0.9,
+            "layout_region": 0.9,
+            "decorative_density": 0.9,
+            "typographic_hierarchy": 0.9,
+        },
         "issues": [] if status == "passed" else [{"code": "structure_similarity_below_threshold"}],
+        "role_consumption": {
+            "source": "02-plan/slide_plan.json#slides[0].canvas_spec",
+            "font_roles": {
+                "display": "SVGlideDisplay",
+                "body": "SVGlideBody",
+                "label": "SVGlideLabel",
+                "metric": "SVGlideMetric",
+            },
+            "typography_roles": {
+                "display": {"font_weight": 800, "line_height": 1.0},
+                "body": {"font_weight": 400, "line_height": 1.4},
+                "label": {"font_weight": 700, "letter_spacing": 0.08},
+                "metric": {"font_weight": 900, "line_height": 0.95},
+            },
+            "text_style_roles": {
+                "bold": {"mapped_weight": {"display": 800}},
+                "italic": {"mapped_style": "normal"},
+                "underline": {"mapped_decoration": "none"},
+                "line_through": {"mapped_decoration": "none"},
+                "emphasis": {"weight_shift": "one role step"},
+                "text_decoration_policy": {
+                    "underline": {"style": "solid", "color": "currentColor", "thickness": "1px"},
+                    "line_through": {"style": "none", "color": "currentColor", "thickness": "0px"},
+                },
+            },
+        },
     }
     write_json(project / "06-check/template-fidelity.json", payload)
     write_json(project / "receipts/template-fidelity.json", payload)
@@ -618,6 +673,99 @@ def attach_passing_artboard_receipt(project: Path) -> None:
     write_json(project / "receipts/template-fit-check.json", json.loads((project / "06-check/template-fit.json").read_text(encoding="utf-8")))
 
 
+def attach_passing_snapshot_visual_fidelity(project: Path) -> None:
+    visual_dir = project / "06-check/visual-fidelity"
+    visual_dir.mkdir(parents=True, exist_ok=True)
+    (project / "06-check/readback").mkdir(parents=True, exist_ok=True)
+    baseline_png = visual_dir / "page-001.cli-baseline.png"
+    slide_render_png = visual_dir / "page-001.slide-render.png"
+    snapshot_json = project / "06-check/readback/page-001.snapshot.json"
+    equivalence_receipt = visual_dir / "page-001.renderer-equivalence-receipt.json"
+    baseline_png.write_bytes(b"cli-baseline-png")
+    slide_render_png.write_bytes(b"slide-render-png")
+    write_json(snapshot_json, {"blocks": [{"id": "title", "type": "shape"}]})
+    write_json(
+        equivalence_receipt,
+        {
+            "schema_version": "svglide-snapshot-renderer-equivalence/v1",
+            "status": "passed",
+            "slide_render_model_compatible": True,
+            "renderer_scope": "slide_snapshot_renderer",
+            "evidence": "unit-test-production-equivalent-renderer",
+        },
+    )
+    write_json(
+        visual_dir / "manifest.json",
+        {
+            "schema_version": "svglide-snapshot-visual-fidelity-manifest/v1",
+            "prepared_svgs": ["04-svg/prepared/page-001.svg"],
+            "baseline_render_receipts": ["06-check/visual-fidelity/page-001.baseline-render-receipt.json"],
+            "slide_render_receipts": ["06-check/visual-fidelity/page-001.slide-render-receipt.json"],
+            "visual_fidelity_receipts": ["06-check/visual-fidelity/page-001.visual-fidelity-receipt.json"],
+        },
+    )
+    write_json(
+        visual_dir / "page-001.baseline-render-receipt.json",
+        {
+            "artifact_type": "cli_prepared_svg_baseline",
+            "prepared_svg": "04-svg/prepared/page-001.svg",
+            "prepared_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/prepared/page-001.svg"),
+            "baseline_png": "06-check/visual-fidelity/page-001.cli-baseline.png",
+            "baseline_png_sha256": svglide_quality_gate.file_sha256(baseline_png),
+            "rasterizer": "browser",
+            "rasterizer_version": "test",
+            "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+            "font_manifest_sha256": "sha256:" + "1" * 64,
+            "created_at": "2026-06-24T00:00:00Z",
+        },
+    )
+    write_json(
+        visual_dir / "page-001.slide-render-receipt.json",
+        {
+            "artifact_type": "slide_snapshot_render",
+            "snapshot_json": "06-check/readback/page-001.snapshot.json",
+            "snapshot_json_sha256": svglide_quality_gate.file_sha256(snapshot_json),
+            "slide_render_png": "06-check/visual-fidelity/page-001.slide-render.png",
+            "slide_render_png_sha256": svglide_quality_gate.file_sha256(slide_render_png),
+            "render_source": "snapshot_renderer",
+            "render_source_version": "test",
+            "renderer_equivalence_receipt": "06-check/visual-fidelity/page-001.renderer-equivalence-receipt.json",
+            "renderer_equivalence_receipt_sha256": svglide_quality_gate.file_sha256(equivalence_receipt),
+            "capture_method": "automated",
+            "capture_command": "python3 render_snapshot.py",
+            "presentation_id": "presentation-fixture",
+            "revision_id": "revision-fixture",
+            "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+            "created_at": "2026-06-24T00:00:00Z",
+        },
+    )
+    write_json(
+        visual_dir / "page-001.visual-fidelity-receipt.json",
+        {
+            "status": "passed",
+            "visual_fidelity_status": "passed",
+            "metrics": {
+                "pixel_diff_ratio": 0.0,
+                "text_region_diff_ratio": 0.0,
+                "bbox_shift_px": 0,
+                "line_count_match": True,
+                "dominant_text_color_match": True,
+                "phash_distance": 0,
+            },
+            "text_regions": [
+                {
+                    "text_style_id": "txt_001",
+                    "content_hash": "sha256:" + "2" * 64,
+                    "svg_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                    "snapshot_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                    "bbox_shift_px": 0,
+                    "text_region_status": "passed",
+                }
+            ],
+        },
+    )
+
+
 def refresh_artboard_node_layout_hashes(project: Path) -> None:
     node_layout_sha = svglide_quality_gate.file_sha256(project / "04-artboard/raw/page-001.node-layout-map.json")
     for receipt_rel in [
@@ -786,7 +934,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
             receipt_path = project / "06-check/template-fidelity.json"
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-            receipt["rendered"] = "04-svg/missing-page.svg"
+            receipt["render_screenshot"] = "04-svg/missing-page.svg"
             write_json(receipt_path, receipt)
 
             result = svglide_quality_gate.run_quality_gate(project, profile="production")
@@ -819,6 +967,96 @@ class SVGlideQualityGateTest(unittest.TestCase):
                 checks = {check["name"]: check for check in result["checks"]}
                 template_check = checks["template-fidelity"]
                 self.assertIn("template_fidelity_score_invalid", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_passed_template_fidelity_has_issues(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+            receipt_path = project / "06-check/template-fidelity.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["issues"] = [{"code": "primary_color_drift", "message": "render dominant palette drifted"}]
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        template_check = checks["template-fidelity"]
+        self.assertIn("template_fidelity_unresolved_issues", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_metrics_are_incomplete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+            receipt_path = project / "06-check/template-fidelity.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["metrics"].pop("decorative_density")
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        template_check = checks["template-fidelity"]
+        self.assertIn("template_fidelity_metrics_incomplete", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_role_consumption_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+            receipt_path = project / "06-check/template-fidelity.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt.pop("role_consumption", None)
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        template_check = checks["template-fidelity"]
+        self.assertIn("template_fidelity_role_consumption_missing", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_role_consumption_incomplete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+            receipt_path = project / "06-check/template-fidelity.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["role_consumption"]["typography_roles"].pop("display")
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        template_check = checks["template-fidelity"]
+        self.assertIn("template_fidelity_role_consumption_incomplete", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_hash_mismatches(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+            receipt_path = project / "06-check/template-fidelity.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["render_sha256"] = "0" * 64
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        template_check = checks["template-fidelity"]
+        self.assertIn("template_fidelity_render_hash_mismatch", {item["code"] for item in template_check["issues"]})
 
     def test_debug_quality_gate_template_fidelity_skip_declares_claim_boundary(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -962,6 +1200,159 @@ class SVGlideQualityGateTest(unittest.TestCase):
             self.assertEqual(missing["status"], "missing")
             self.assertEqual(result["inputs"]["generation_mode"], "artboard_satori")
             self.assertIn("artboard_package_check", result["inputs"])
+
+    def test_quality_gate_artboard_satori_requires_snapshot_visual_fidelity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            visual_check = [check for check in result["checks"] if check["name"] == "snapshot-visual-fidelity"][0]
+            self.assertEqual(visual_check["status"], "failed")
+            self.assertEqual(visual_check["action"], "structure_only_partial")
+            self.assertIn("snapshot_visual_fidelity", result["inputs"])
+            self.assertIn("visual_fidelity_manifest_missing", {issue["code"] for issue in visual_check["issues"]})
+
+    def test_quality_gate_artboard_satori_allows_precreate_partial_visual_fidelity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            visual_dir = project / "06-check/visual-fidelity"
+            baseline_png = visual_dir / "page-001.cli-baseline.png"
+            equivalence_receipt = visual_dir / "page-001.renderer-equivalence-receipt.json"
+            visual_dir.mkdir(parents=True, exist_ok=True)
+            baseline_png.write_bytes(b"cli-baseline-png")
+            write_json(
+                equivalence_receipt,
+                {
+                    "schema_version": "svglide-snapshot-renderer-equivalence/v1",
+                    "status": "failed",
+                    "slide_render_model_compatible": False,
+                    "renderer_scope": "bounded_text_subset",
+                    "reason": "slide_render_png_unavailable_before_live_create",
+                },
+            )
+            write_json(
+                project / "06-check/visual-fidelity/manifest.json",
+                {
+                    "schema_version": "svglide-snapshot-visual-fidelity-manifest/v1",
+                    "prepared_svgs": ["04-svg/prepared/page-001.svg"],
+                    "baseline_render_receipts": ["06-check/visual-fidelity/page-001.baseline-render-receipt.json"],
+                    "slide_render_receipts": ["06-check/visual-fidelity/page-001.slide-render-receipt.json"],
+                    "visual_fidelity_receipts": ["06-check/visual-fidelity/page-001.visual-fidelity-receipt.json"],
+                },
+            )
+            write_json(
+                project / "06-check/visual-fidelity/page-001.baseline-render-receipt.json",
+                {
+                    "artifact_type": "cli_prepared_svg_baseline",
+                    "prepared_svg": "04-svg/prepared/page-001.svg",
+                    "prepared_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/prepared/page-001.svg"),
+                    "baseline_png": "06-check/visual-fidelity/page-001.cli-baseline.png",
+                    "baseline_png_sha256": svglide_quality_gate.file_sha256(baseline_png),
+                    "rasterizer": "resvg",
+                    "rasterizer_version": "test",
+                    "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                },
+            )
+            write_json(
+                project / "06-check/visual-fidelity/page-001.slide-render-receipt.json",
+                {
+                    "artifact_type": "slide_snapshot_render",
+                    "snapshot_json": "06-check/readback/page-001.snapshot.json",
+                    "snapshot_json_sha256": "missing",
+                    "slide_render_png": "06-check/visual-fidelity/page-001.slide-render.png",
+                    "slide_render_png_sha256": "missing",
+                    "render_source": "snapshot_renderer",
+                    "render_source_version": "svglide-snapshot-renderer/v1",
+                    "renderer_equivalence_receipt": "06-check/visual-fidelity/page-001.renderer-equivalence-receipt.json",
+                    "renderer_equivalence_receipt_sha256": svglide_quality_gate.file_sha256(equivalence_receipt),
+                    "capture_method": "automated",
+                    "capture_command": "python3 skills/lark-slides/scripts/svglide_snapshot_visual_fidelity.py",
+                    "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                },
+            )
+            write_json(
+                project / "06-check/visual-fidelity/page-001.visual-fidelity-receipt.json",
+                {
+                    "status": "not_measured",
+                    "visual_fidelity_status": "not_measured",
+                    "reason": "slide_render_png_unavailable",
+                    "allowed_claim": "snapshot_structure_fidelity_only",
+                    "metrics": {},
+                    "text_regions": [],
+                },
+            )
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "passed")
+            visual_check = [check for check in result["checks"] if check["name"] == "snapshot-visual-fidelity"][0]
+            self.assertEqual(visual_check["status"], "skipped")
+            self.assertEqual(visual_check["action"], "create_live")
+            self.assertEqual(visual_check["visual_fidelity_status"], "structure_only_partial")
+            self.assertEqual(visual_check["allowed_claim"], "snapshot_structure_fidelity_only")
+            self.assertIn("slide_render_png_unavailable", {issue["code"] for issue in visual_check["issues"]})
+
+    def test_quality_gate_artboard_satori_rejects_empty_visual_fidelity_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            write_json(
+                project / "06-check/visual-fidelity/manifest.json",
+                {
+                    "schema_version": "svglide-snapshot-visual-fidelity-manifest/v1",
+                    "prepared_svgs": ["04-svg/prepared/page-001.svg"],
+                    "baseline_render_receipts": [],
+                    "slide_render_receipts": [],
+                    "visual_fidelity_receipts": [],
+                },
+            )
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "failed")
+            visual_check = [check for check in result["checks"] if check["name"] == "snapshot-visual-fidelity"][0]
+            self.assertEqual(visual_check["status"], "failed")
+            self.assertTrue(
+                {"baseline_render_receipts_empty", "slide_render_receipts_empty", "visual_fidelity_receipts_empty"}
+                <= {issue["code"] for issue in visual_check["issues"]}
+            )
+
+    def test_quality_gate_artboard_satori_passes_with_snapshot_visual_fidelity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
+            write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
+            write_passing_semantic_review(project)
+            attach_passing_artboard_receipt(project)
+            attach_passing_snapshot_visual_fidelity(project)
+
+            result = svglide_quality_gate.run_quality_gate(project)
+
+            self.assertEqual(result["status"], "passed")
+            visual_check = [check for check in result["checks"] if check["name"] == "snapshot-visual-fidelity"][0]
+            self.assertEqual(visual_check["status"], "passed")
+            self.assertEqual(visual_check["action"], "create_live")
+            self.assertEqual(visual_check["visual_fidelity_status"], "passed")
+            self.assertEqual(visual_check["error_count"], 0)
+            self.assertEqual(result["inputs"]["snapshot_visual_fidelity"], "06-check/visual-fidelity/manifest.json")
+            self.assertIn("snapshot_visual_fidelity_evidence", result["input_hashes"])
 
     def test_user_visible_profiles_reject_local_preview_asset_metadata(self) -> None:
         for profile in ["preview_only", "local_real_preview", "production_live", "production"]:

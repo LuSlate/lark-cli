@@ -1,66 +1,167 @@
 {
-  "version": "svglide-canvas-spec/v1",
   "canvas": {
-    "width": 960,
     "height": 540,
-    "viewBox": "0 0 960 540"
+    "viewBox": "0 0 960 540",
+    "width": 960
+  },
+  "content": {
+    "eyebrow": "User Research Synthesis / [Month, Year]",
+    "footer_left": "Research Team · [Month, Year]",
+    "footer_right": "Round [N] · Internal",
+    "page": "01 / 16",
+    "subtitle": "What we learned from 24 interviews and what it means for the product.",
+    "title": "User Research Synthesis"
+  },
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 6,
+    "safe_area": {
+      "height": 466,
+      "width": 740,
+      "x": 110,
+      "y": 37
+    }
   },
   "safe_area": {
-    "x": 48,
-    "y": 40,
-    "width": 864,
-    "height": 460
+    "height": 466,
+    "width": 740,
+    "x": 110,
+    "y": 37
   },
+  "semantic_elements": [
+    {
+      "bbox": {
+        "height": 140,
+        "width": 520,
+        "x": 110,
+        "y": 242
+      },
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title"
+    }
+  ],
   "template_id": "ledger-briefing",
-  "theme_id": "ivory-ledger",
   "theme": {
     "colors": {
       "background": "#FAFADF",
       "panel": "#F5F0E4",
       "primary": "#1A1A16",
-      "accent": "#5E5E54",
+      "accent": "#1A1A16",
+      "line": "#1A1A16",
       "text": "#1A1A16",
       "muted": "#5E5E54"
-    }
-  },
-  "content": {
-    "eyebrow": "OPERATING LEDGER",
-    "title": "复盘事项账本",
-    "subtitle": "把结论、证据和 owner 放进克制的黑白账本结构。",
-    "items": [
-      "增长口径已统一",
-      "风险归因待复核",
-      "Owner 已明确",
-      "下周完成验证"
-    ],
-    "metrics": [
-      "Q2",
-      "18%",
-      "04"
-    ]
-  },
-  "semantic_elements": [
-    {
-      "element_id": "title",
-      "kind": "text",
-      "role": "title",
-      "source_ref": "canvas_spec.content.title",
-      "bbox": {
-        "x": 56,
-        "y": 80,
-        "width": 760,
-        "height": 120
+    },
+    "typography": {
+      "font_roles": {
+        "display": "SVGlideDisplay",
+        "body": "SVGlideBody",
+        "label": "SVGlideLabel",
+        "metric": "SVGlideMetric"
+      },
+      "role_tokens": {
+        "display": {
+          "font_role": "display",
+          "source_font": "Lora",
+          "runtime_alias": "SVGlideDisplay",
+          "font_size": 54,
+          "font_weight": 900,
+          "line_height": 0.9,
+          "letter_spacing": 0,
+          "text_transform": "latin_uppercase_only",
+          "max_lines": 3,
+          "alignment": "source_layout_dependent"
+        },
+        "body": {
+          "font_role": "body",
+          "source_font": "Jost",
+          "runtime_alias": "SVGlideBody",
+          "font_size": 18,
+          "font_weight": 400,
+          "line_height": 1.32,
+          "letter_spacing": 0,
+          "text_transform": "preserve_source_case",
+          "max_lines": 5,
+          "alignment": "source_layout_dependent"
+        },
+        "label": {
+          "font_role": "label",
+          "source_font": "JetBrains Mono",
+          "runtime_alias": "SVGlideLabel",
+          "font_size": 10,
+          "font_weight": 700,
+          "line_height": 1.05,
+          "letter_spacing": 0.08,
+          "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+          "max_lines": 1,
+          "alignment": "source_layout_dependent"
+        },
+        "metric": {
+          "font_role": "metric",
+          "source_font": "JetBrains Mono",
+          "runtime_alias": "SVGlideMetric",
+          "font_size": 42,
+          "font_weight": 900,
+          "line_height": 0.95,
+          "letter_spacing": 0,
+          "text_transform": "preserve_numbers_and_units",
+          "max_lines": 2,
+          "alignment": "source_layout_dependent"
+        }
+      },
+      "strategy_source": "skills/lark-slides/references/visual-contracts/beautiful/monochrome.ledger-briefing.json",
+      "text_style_roles": {
+        "bold": {
+          "source_usage": "source uses heavy display/label weights",
+          "mapped_weight": {
+            "display": 900,
+            "label": 700,
+            "metric": 900
+          },
+          "allowed_roles": [
+            "display",
+            "label",
+            "metric"
+          ]
+        },
+        "italic": {
+          "source_usage": "source uses italic/font-style or italic-family tokens",
+          "mapped_style": "latin_only_when_source_requires_else_normal",
+          "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+          "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+        },
+        "underline": {
+          "source_usage": "source uses underline/text-decoration or hairline emphasis",
+          "mapped_decoration": "native underline only for actual text-decoration source usage",
+          "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+        },
+        "line_through": {
+          "source_usage": "not present in source; default no line-through",
+          "mapped_decoration": "none",
+          "fallback_shape": "none"
+        },
+        "emphasis": {
+          "color_shift": "use source accent color roles only",
+          "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+          "weight_shift": "increase one role step within font_weight_scale",
+          "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+        },
+        "text_decoration_policy": {
+          "underline": {
+            "style": "solid",
+            "color": "currentColor",
+            "thickness": "1px"
+          },
+          "line_through": {
+            "style": "none",
+            "color": "currentColor",
+            "thickness": "0px"
+          }
+        }
       }
     }
-  ],
-  "quality_constraints": {
-    "max_title_lines": 3,
-    "min_font_size": 15,
-    "safe_area": {
-      "x": 48,
-      "y": 40,
-      "width": 864,
-      "height": 460
-    }
-  }
+  },
+  "theme_id": "monochrome",
+  "version": "svglide-canvas-spec/v1"
 }

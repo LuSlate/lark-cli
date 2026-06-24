@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { renderTree } from './templates/p0-templates.mjs'
-import { REQUIRED_FONT_ROLES, fontRoleAliasesFromTheme, fontRolesFromTheme } from './components/typography.mjs'
+import { REQUIRED_FONT_ROLES, fontRoleAliasesFromTheme, fontRolesFromTheme, typographyRolesFromTheme } from './components/typography.mjs'
 
 const SATORI_VERSION = '0.26.0'
 const RESVG_VERSION = '2.6.2'
@@ -174,6 +174,8 @@ async function main() {
   const Resvg = await loadResvg()
   const spec = JSON.parse(await fs.readFile(inputPath, 'utf8'))
   const fontBundle = await loadFonts(spec)
+  const typographyRoles = typographyRolesFromTheme(spec)
+  const textStyleRoles = spec.theme?.typography?.text_style_roles || {}
   const observations = []
   const svg = await satori(renderTree(spec), {
     width: 960,
@@ -207,6 +209,10 @@ async function main() {
           font_path: fontBundle.primaryFont.path,
           font_paths: fontBundle.receipt.font_paths,
           font_receipt: fontBundle.receipt,
+          font_roles: fontBundle.receipt.resolved_roles,
+          typography_roles: typographyRoles,
+          text_style_roles: textStyleRoles,
+          typography_strategy_source: spec.theme?.typography?.strategy_source || null,
           png_bytes: pngBytes ? pngBytes.length : null
         },
         null,

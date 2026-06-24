@@ -424,6 +424,7 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
         "golden_spec",
         "promotion_gate",
         "source_trace",
+        "supported_theme_ids",
         "family_usage_policy_summary",
         "cjk_policy_summary",
         "extension_grammar_summary",
@@ -559,6 +560,20 @@ def include_declared_candidates(candidates: list[dict[str, Any]], *, declared_id
     return selected
 
 
+def theme_candidates_for_selected_template(themes: list[dict[str, Any]], selected_template: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(selected_template, dict):
+        return themes
+    allowed_theme_ids = set(list_value(selected_template.get("supported_theme_ids")))
+    if not allowed_theme_ids:
+        return themes
+    constrained = [
+        theme
+        for theme in themes
+        if str(theme.get("theme_id") or theme.get("id") or "") in allowed_theme_ids
+    ]
+    return constrained or themes
+
+
 def select_theme_template(project_root: Path, brief: str, *, top_k: int = 5, evidence: dict[str, Any] | None = None) -> dict[str, Any]:
     palette_selection = load_palette_selection(project_root)
     plan = load_plan_if_present(project_root)
@@ -568,9 +583,11 @@ def select_theme_template(project_root: Path, brief: str, *, top_k: int = 5, evi
 
     template_candidates = [score_template(signals, item, brief=brief) for item in templates]
     template_candidates.sort(key=lambda item: (-int(item.get("score") or 0), str(item.get("template_id") or item.get("id"))))
-    selected_template_ids = [str(item.get("template_id") or item.get("id")) for item in template_candidates[:top_k]]
+    selected_template = template_candidates[0] if template_candidates else None
+    selected_template_ids = [str(selected_template.get("template_id") or selected_template.get("id"))] if isinstance(selected_template, dict) else []
 
-    theme_candidates = [score_theme(signals, item, selected_template_ids, palette_selection, brief=brief) for item in themes]
+    constrained_themes = theme_candidates_for_selected_template(themes, selected_template)
+    theme_candidates = [score_theme(signals, item, selected_template_ids, palette_selection, brief=brief) for item in constrained_themes]
     theme_candidates.sort(key=lambda item: (-int(item.get("score") or 0), str(item.get("theme_id") or item.get("id"))))
 
     template_confidence = confidence_from_scores(template_candidates)

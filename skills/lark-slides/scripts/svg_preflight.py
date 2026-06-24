@@ -1175,12 +1175,18 @@ def validate_visible_svg_text_leaks(text_boxes: list[dict[str, Any]]) -> list[di
                 style_terms.append(term)
     style_terms.append("beautiful-feishu-whiteboard")
 
+    def leaked_style_term(term: str, lower_text: str) -> bool:
+        term_lower = term.lower()
+        if len(term_lower) < 8 and re.fullmatch(r"[a-z][a-z0-9 ]*", term_lower):
+            return lower_text == term_lower
+        return term_lower in lower_text
+
     for item in text_boxes:
         text = textify(item.get("text")).strip()
         if not text:
             continue
         lower = text.lower()
-        leaked_style_terms = [term for term in style_terms if term.lower() in lower]
+        leaked_style_terms = [term for term in style_terms if leaked_style_term(term, lower)]
         if leaked_style_terms or TOOL_LEAK_RE.search(text) or PATH_LIKE_RE.search(text):
             element = item.get("element")
             issues.append(

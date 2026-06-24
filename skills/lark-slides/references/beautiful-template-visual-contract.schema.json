@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "svglide/beautiful-template-visual-contract.schema.json",
+  "title": "SVGlide Beautiful Template Visual Contract",
+  "type": "object",
+  "required": [
+    "version",
+    "family_id",
+    "runtime_template_id",
+    "source",
+    "layout",
+    "typography",
+    "palette",
+    "decorative",
+    "image",
+    "component",
+    "page_type",
+    "satori",
+    "font_strategy",
+    "typography_strategy",
+    "text_style_strategy",
+    "do_not_simplify"
+  ],
+  "properties": {
+    "version": {
+      "const": "svglide-beautiful-template-visual-contract/v1"
+    },
+    "family_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_template_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "source_template_html",
+        "source_design_md",
+        "source_template_json",
+        "reference_screenshot"
+      ]
+    },
+    "layout": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "typography": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "palette": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "decorative": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "image": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "component": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "page_type": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "satori": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "font_strategy": {
+      "type": "object",
+      "required": [
+        "source_fonts",
+        "slide_native_preferred",
+        "adobe_or_embedded_fallback",
+        "cjk_fallback",
+        "role_mapping",
+        "forbidden",
+        "mapping_reason"
+      ],
+      "properties": {
+        "source_fonts": {
+          "type": "array",
+          "minItems": 1
+        },
+        "slide_native_preferred": {
+          "type": "array",
+          "minItems": 1
+        },
+        "adobe_or_embedded_fallback": {
+          "type": "array",
+          "minItems": 1
+        },
+        "cjk_fallback": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role_mapping": {
+          "type": "object",
+          "required": ["display", "body", "label", "metric"]
+        },
+        "forbidden": {
+          "type": "array",
+          "minItems": 1
+        },
+        "mapping_reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "typography_strategy": {
+      "type": "object",
+      "required": [
+        "source_typography_tokens",
+        "role_mapping",
+        "font_size_scale",
+        "font_weight_scale",
+        "line_height_scale",
+        "letter_spacing_scale",
+        "word_spacing",
+        "paragraph_spacing",
+        "text_transform_policy",
+        "hierarchy_ratio",
+        "max_lines",
+        "measure",
+        "alignment",
+        "wrapping_policy",
+        "text_direction",
+        "writing_mode",
+        "cjk_typography_adjustment",
+        "mapping_reason",
+        "extraction_confidence",
+        "source_refs"
+      ]
+    },
+    "text_style_strategy": {
+      "type": "object",
+      "required": [
+        "bold",
+        "italic",
+        "underline",
+        "line_through",
+        "emphasis",
+        "text_decoration_policy",
+        "forbidden",
+        "extraction_confidence",
+        "source_refs"
+      ]
+    },
+    "do_not_simplify": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

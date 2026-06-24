@@ -1043,6 +1043,15 @@ python3 -m unittest \
 
 目标：在完成 legacy 隔离后，继续解决 beautiful 模板“已吸收但未高保真可执行”的问题。最终 production 默认链路必须从“可选元数据”升级为“可执行 renderer + golden fixture + screenshot fidelity receipt”。
 
+M9 前置输入要求：
+
+```text
+font_strategy / typography_strategy / text_style_strategy 是后续 dedicated renderer 的前置输入。
+没有完成字体与排版抽取契约的模板，不允许进入 default_selectable / production。
+后续 renderer/golden/fidelity 必须消费该契约；不能只把字段写入 matrix 或 visual_contract。
+只有具备 dedicated renderer、golden fixture、visual_contract、font/typography/text-style receipt、screenshot fidelity pass 的模板，才能进入 production/default_selectable。
+```
+
 当前事实：
 
 ```text
@@ -1062,6 +1071,7 @@ CLI absorbed family：34 套
 -> 未通过 gate 的模板保持 experimental / needs_review / legacy_debug，不能默认可选
 -> default_selectable_count 不做数量承诺，可以小于 34
 -> 每套 production/default_selectable template 必须有 reference screenshot fidelity receipt
+-> 每套 production/default_selectable template 必须有 font_roles / typography_roles / text_style_roles receipt 证据
 -> selector 只选择通过 executable + fidelity contract 的模板
 ```
 
@@ -1373,6 +1383,236 @@ python3 -m unittest \
 CJK fallback 必须明确，不能牺牲中文可读性。
 ```
 
+#### M9.5.1 beautiful 字体与排版系统吸收
+
+目标：给 34 个 beautiful template candidate 全部补齐 Slide 可用优先的字体与排版系统映射，并让它成为后续 renderer/fidelity 的强约束。该步骤不下载字体、不做 FontBlock、不改 slide server、不把任何模板升 production。
+
+每个 candidate 必须补齐：
+
+```text
+font_strategy
+typography_strategy
+text_style_strategy
+```
+
+数据来源必须来自真实 beautiful 源模板：
+
+```text
+beautiful-html-templates/templates/<family>/design.md
+beautiful-html-templates/templates/<family>/template.html
+beautiful-html-templates/templates/<family>/template.json
+beautiful-html-templates/screenshots/<family>-1.png 作为视觉校验参考
+```
+
+字体优先级：
+
+```text
+1. Slide 默认/系统字体
+2. Adobe 开源字体：Source Sans Pro / Source Serif Pro / Source Code Pro / 思源黑体 / 思源宋体 / 思源等宽
+3. 飞书内嵌开源商用中文字体
+4. Google Fonts 仅作为 source_fonts 记录，不作为默认 production 依赖，除非有明确 receipt
+```
+
+`font_strategy` 必须包含：
+
+```text
+source_fonts
+slide_native_preferred
+adobe_or_embedded_fallback
+cjk_fallback
+role_mapping.display/body/label/metric
+forbidden
+mapping_reason
+```
+
+`typography_strategy` 必须包含：
+
+```text
+source_typography_tokens
+role_mapping.display/body/label/metric
+font_size_scale
+font_weight_scale
+line_height_scale
+letter_spacing_scale
+word_spacing
+paragraph_spacing
+text_transform_policy
+hierarchy_ratio
+max_lines
+measure
+alignment
+wrapping_policy
+text_direction
+writing_mode
+cjk_typography_adjustment
+mapping_reason
+extraction_confidence
+source_refs
+```
+
+`text_style_strategy` 必须包含：
+
+```text
+bold.source_usage / mapped_weight / allowed_roles
+italic.source_usage / mapped_style / fallback_when_unavailable
+underline.source_usage / mapped_decoration / fallback_shape
+line_through.source_usage / mapped_decoration / fallback_shape
+emphasis.color_shift / font_family_switch / weight_shift / style_shift
+text_decoration_policy.underline/style/color/thickness
+text_decoration_policy.line_through/style/color/thickness
+forbidden
+extraction_confidence
+source_refs
+```
+
+抽取证据规则：
+
+```text
+每个 strategy 字段必须有 extraction_confidence：
+- direct_from_design_md
+- css_extracted_from_template_html
+- inferred_from_layout
+- absent_use_default
+
+如果 extraction_confidence 不是 absent_use_default，必须有 source_refs。
+source_refs 每条必须包含 path、selector_or_token、raw_value。
+word_spacing / text_direction / writing_mode / max_lines 等源模板可能缺失字段，允许 absent_use_default，但不能伪造成已抽取。
+screenshots 只作为视觉校验参考，不能伪造成结构字段来源。
+```
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/references/beautiful-template-visual-contract.schema.json` | schema 要求 `font_strategy`、`typography_strategy`、`text_style_strategy` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 34/34 visual_contract 或 matrix candidate 必须有三类 strategy |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | `font_strategy.role_mapping.display/body/label/metric` 必须完整 |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | role_mapping 字体必须来自允许白名单，或被标记为 `source_only` / `requires_download` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 源模板使用 italic / underline / text-decoration / text-transform / letter-spacing 时，contract 必须记录映射或 loss |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 每个 strategy 字段必须有 `extraction_confidence`；非 `absent_use_default` 必须有 `source_refs.path/selector_or_token/raw_value` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | `word_spacing` / `text_direction` / `writing_mode` / `max_lines` 等缺源字段只能标记 `absent_use_default`，不能伪造成 extracted |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 不能把 34 套 family 都映射成同一套 role_mapping 或 typography_strategy |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | default_selectable/production template 的 renderer receipt 必须体现 font_roles、typography_roles、text_style_roles |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | existing dedicated renderer 不能只调用 `fontRole()` 后忽略 `fontWeight` / `lineHeight` / `letterSpacing` / `textTransform` |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/references/beautiful-template-executable-matrix.json` | 34 个 candidate 全部补 `font_strategy`、`typography_strategy`、`text_style_strategy`、`extraction_confidence`、`source_refs` |
+| `skills/lark-slides/references/visual-contracts/beautiful/*.json` | 34 份 visual contract 同步写入三类 strategy、抽取置信度和 source refs |
+| `skills/lark-slides/references/beautiful-template-visual-contract.schema.json` | 将三类 strategy 纳入 required 和结构校验 |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint.py` | 增加 strategy 完整性、字体白名单、source style mapping、非同质化校验 |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 增加 Red 对应测试 |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | 增加 34/34 strategy 统计和防伪字段测试 |
+| `skills/lark-slides/scripts/fixtures/svglide_artboard/golden/*.canvas-spec.json` | 已有 dedicated renderer/golden spec 的模板补 `theme.typography.font_roles`、`role_tokens`、`text_style_roles` |
+
+已有样本 retrofit 规则：
+
+```text
+不得回滚已经完成的 dedicated renderer、golden spec、preview、fidelity receipt、selector/gate/visual_contract/fidelity 测试。
+已有 renderer/fidelity 的模板只视为“已完成 renderer/fidelity 的一批样本”，不视为 34 套复刻完成。
+已有 dedicated renderer 必须检查是否只用了 fontRole()；如果没有显式消费 fontWeight / lineHeight / letterSpacing / textTransform，需要修 renderer，不允许只补 JSON 字段。
+已有 renderer 必须表达 source design.md 里的 bold/italic/underline/emphasis 策略；Satori/Slide 无法表达的必须写入 satori_constraints 或 loss_notes。
+已有 golden spec 必须补 theme.typography.font_roles 和 typography role tokens，且与 visual_contract/matrix 中策略一致。
+已有 fidelity receipt 不因补策略而删除；如果 renderer 改动导致 preview PNG 变化，必须重跑 render 和 fidelity receipt，更新 receipt hash。
+如果 fidelity 下降或失败，保留 failure reason，不能伪装 passed。
+未完成 renderer 的模板只补三类 strategy，不伪装 renderer/fidelity。
+新增 strategy 字段不改变 promotion_status，不自动提升 production/default_selectable。
+```
+
+执行规则：
+
+```text
+每个 family 必须映射 display/body/label/metric 四个角色。
+每个 family 必须有 cjk_fallback 和 cjk_typography_adjustment。
+如果某套四个 role 使用同一字体，必须写 justification。
+未完成 renderer 的模板只补 contract/matrix，不伪装 renderer/fidelity。
+如果 Satori/Slide 字体能力无法表达某个源样式，必须在 satori_constraints 或 loss_notes 中记录，不允许静默丢弃。
+```
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py \
+  skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py \
+  skills/lark-slides/scripts/svglide_artboard_template_golden_test.py
+
+python3 skills/lark-slides/scripts/beautiful_template_visual_contract_lint.py
+```
+
+完成标准：
+
+```text
+34/34 candidate 都有 font_strategy / typography_strategy / text_style_strategy。
+34/34 candidate 的三类 strategy 都有逐字段 extraction_confidence。
+非 absent_use_default 的字段都有 source_refs.path / selector_or_token / raw_value。
+已有 renderer 的模板全部已对齐三类策略。
+已有 golden spec 的 font_roles 与 visual_contract/matrix 中策略一致。
+如有 renderer 变化，相关 preview/fidelity receipt 已重跑并更新 hash。
+production/default_selectable 数量不因为本次 retrofit 自动增加。
+```
+
+#### M9.5.2 已有 renderer / golden / fidelity 的 retrofit
+
+目标：对已经完成 renderer/fidelity 的样本补齐并回填三类策略，保留已有 dedicated renderer、golden spec、preview、fidelity receipt 和已通过的 selector/gate/visual_contract/fidelity 测试。该步骤只把既有样本纳入字体、排版、文本样式强约束，不把它们视为 34 套复刻完成，也不改变 promotion_status。
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | 每个已有 `renderer_module` 的 matrix 行，其 golden spec 必须包含 `theme.typography.font_roles` 与 `theme.typography.role_tokens.display/body/label/metric` |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | golden spec 的 `role_tokens` 必须与 matrix/visual_contract 的 `typography_strategy.role_mapping` 一致 |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | render receipt 必须输出 `font_roles`、`typography_roles`、`typography_strategy_source`，证明真实渲染链路消费了策略 |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | 已有 dedicated renderer 不能只注册 `fontRole()`；必须通过 receipt 或源码显式体现 `fontWeight`、`lineHeight`、`letterSpacing`、`textTransform` |
+| `skills/lark-slides/scripts/beautiful_template_fidelity_check_test.py` | renderer 变化后必须能重新生成 preview PNG 和 fidelity receipt；失败时保留 failure reason，不能伪装 passed |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | strategy 字段补齐不得改变 production/default_selectable 统计 |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/fixtures/svglide_artboard/golden/*.canvas-spec.json` | 对已有 renderer 样本回填 `theme.typography.font_roles`、`role_tokens`、`strategy_source`，并与 matrix/contract 保持一致 |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/*.mjs` | 修复只靠 `fontRole()` 或错误 spread 顺序导致的策略覆盖/忽略；必要时显式设置 weight、line-height、letter-spacing、text-transform |
+| `skills/lark-slides/references/receipts/template-fidelity/*.json` | renderer 或 spec 变化后重跑 preview/fidelity，保留新 hash；失败 receipt 必须记录原因 |
+| `skills/lark-slides/references/beautiful-template-executable-matrix.json` | 已有 renderer/fidelity 样本继续保留 `renderer_module/golden_spec/fidelity_receipt`；新增 strategy 字段不改变 promotion 状态 |
+
+执行规则：
+
+```text
+已有 dedicated renderer / golden spec / preview / fidelity receipt 不得回滚或删除。
+已有通过的 selector/gate/visual_contract/fidelity 测试必须继续通过。
+已有 renderer/fidelity 样本只算“已完成 renderer/fidelity 的一批样本”，不等于 34 套复刻完成。
+已有 renderer 若改动导致 preview PNG 变化，必须重跑对应 fidelity receipt 并更新 hash。
+fidelity 下降或失败时保留 failure reason，不能手工改成 passed。
+未完成 renderer 的模板只补三类 strategy，不伪装 renderer/golden/fidelity。
+新增 strategy 字段不改变 promotion_status，不自动提升 production/default_selectable。
+```
+
+完成标准：
+
+```text
+34/34 candidate 都有三类 strategy。
+已有 renderer 的模板全部与 font_strategy / typography_strategy / text_style_strategy 对齐。
+已有 golden spec 的 font_roles、role_tokens 与 visual_contract/matrix 策略一致。
+如有 renderer 或 spec 变化，相关 preview/fidelity receipt 已重跑。
+production/default_selectable 数量不因为本次 retrofit 增加。
+```
+
+防偏移审查点：
+
+```text
+不得只补字体名。
+不得丢弃字重、字号、行高、字距、大小写、斜体、加粗、下划线、强调策略。
+不得把 34 套 family 映射成同一套字体/排版规则。
+不得用 Google Fonts 作为 production 默认依赖，除非有明确 receipt。
+不得把 strategy 字段存在当成 production 资格。
+不得硬补字段伪装 production。
+不得没有 source_refs 却标记为 extracted。
+不得让 renderer 忽略 typography contract。
+```
+
 #### M9.6 selector 只选真正可执行模板
 
 Red diff：
@@ -1480,9 +1720,217 @@ python3 skills/lark-slides/scripts/svglide_project_runner.py \
 没有 fidelity/adherence receipt 时，不能宣称 high-quality / upper-bound visual。
 ```
 
+### M10. 34 套 Beautiful Template 全部尽力复刻
+
+目标：M9 只解决“未闭环模板不能污染 production 默认链路”；M10 才是把 34 套 beautiful template 逐套复刻成可执行 renderer 的主体工程。M10 的完成标准不是把 34 套硬标成 production，而是每套都完成真实复刻尝试、证据链、golden render 和 fidelity 判定。
+
+目标状态：
+
+```text
+34 套 beautiful family
+-> 34 份 visual_contract 文件
+-> 34 个 dedicated renderer module
+-> 34 个 golden canvas spec
+-> 34 组原始 screenshot reference binding
+-> 34 份真实命令生成的 fidelity receipt
+-> 通过 fidelity/adherence gate 的逐个进入 production/default_selectable
+-> 未通过的保持 needs_review，并列出失败原因和下一步修复点
+```
+
+非目标：
+
+```text
+不承诺像素级复刻。
+不为了凑数量降低 fidelity 阈值。
+不允许把 evaluation stub、generic fallback、p0 通用模板包装成 dedicated renderer。
+不允许只有 matrix/registry 字段，没有真实 renderer/golden/screenshot/receipt。
+```
+
+#### M10.1 建立 34 份 visual_contract
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 每个 family 必须有 `references/visual-contracts/beautiful/<family>.json` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | 每份 contract 必须绑定 `template.html`、`template.json`、`design.md`、至少 1 张 screenshot |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | contract 必须包含 layout、typography、palette、decorative、image、component、page_type、satori、do_not_simplify 约束 |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | contract 必须包含 `font_strategy`、`typography_strategy`、`text_style_strategy` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | `font_strategy` 必须包含 `source_fonts`、`slide_native_preferred`、`adobe_or_embedded_fallback`、`cjk_fallback`、`role_mapping.display/body/label/metric`、`forbidden`、`mapping_reason` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | `typography_strategy` 必须包含 `source_typography_tokens`、`font_size_scale`、`font_weight_scale`、`line_height_scale`、`letter_spacing_scale`、`text_transform_policy`、`hierarchy_ratio`、`max_lines`、`measure`、`alignment`、`cjk_typography_adjustment` |
+| `skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py` | `text_style_strategy` 必须包含 `bold`、`italic`、`underline`、`emphasis`、`forbidden` |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/references/beautiful-template-visual-contract.schema.json` | 新增 visual contract schema |
+| `skills/lark-slides/references/visual-contracts/beautiful/*.json` | 为 34 套 family 生成独立 contract |
+| `skills/lark-slides/references/visual-contracts/beautiful/*.json` | 为 34 套 family 补齐 `font_strategy`、`typography_strategy`、`text_style_strategy` |
+| `skills/lark-slides/references/beautiful-template-executable-matrix.json` | 每行新增 `visual_contract_path`，并补齐 source evidence 和 screenshot binding |
+| `skills/lark-slides/references/beautiful-template-executable-matrix.json` | 每行同步 `font_strategy`、`typography_strategy`、`text_style_strategy`，作为 renderer/fidelity 强约束 |
+| `skills/lark-slides/references/beautiful-template-executable-matrix.json` | 区分 `renderer_module/golden_spec/fidelity_receipt` 真实证据字段和 `planned_renderer_module/planned_golden_spec/planned_fidelity_receipt` 计划字段 |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py \
+  skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py
+```
+
+防偏移审查点：
+
+```text
+contract 必须来自真实 template/design/screenshot 证据，不得手写空话。
+非 production family 也要有 contract，因为 M10 的目标是全部尝试复刻，而不是只保护默认链路。
+contract 文件存在不代表 production，production 仍必须等待 renderer/golden/fidelity pass。
+未真实落地的 renderer/golden/receipt 只能写入 planned_* 字段；真实字段一旦非空，lint 必须校验文件存在。
+font_strategy / typography_strategy / text_style_strategy 必须来自 source evidence，不能只写通用字体名。
+不得丢弃字重、字号、行高、字距、大小写、斜体、加粗、下划线、强调策略。
+不得把 34 套 family 映射成同一套字体/排版规则。
+```
+
+#### M10.2 建立 dedicated renderer module 批量模板
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_artboard_renderer_test.py` | matrix 中 `promotion_status=production` 的模板必须由 `templates/beautiful/<template-id>.mjs` 渲染 |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | 每个有 renderer module 的 beautiful template 必须能 render SVG/PNG |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | renderer contract 的 `source_family`、`reference_screenshot`、`template_id` 必须与 matrix 对齐 |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/<template-id>.mjs` | 每套 family 一个 dedicated renderer |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/index.mjs` | 显式注册 dedicated renderer，不通过 evaluation stub 注册 production |
+| `skills/lark-slides/scripts/fixtures/svglide_artboard/golden/<template-id>.canvas-spec.json` | 每套 renderer 对应一个 golden spec |
+
+批量顺序：
+
+```text
+Batch A: blue-professional, signal, soft-editorial, coral, bold-poster
+Batch B: editorial-tri-tone, editorial-forest, emerald-editorial, broadside, monochrome, vellum
+Batch C: cobalt-grid, capsule, cartesian, long-table, raw-grid, neo-grid-bold
+Batch D: biennale-yellow, block-frame, mat, peoples-platform, stencil-tablet, studio
+Batch E: 8-bit-orbit, creative-mode, daisy-days, playful, retro-windows, retro-zine
+Batch F: grove, pin-and-paper, pink-script, sakura-chroma, scatterbrain
+```
+
+防偏移审查点：
+
+```text
+每个 renderer 必须表达该 family 的独有视觉结构：主色、版式骨架、标题层级、装饰词汇、图文关系。
+允许因为 Satori 限制做近似，但必须在 visual_contract.satori_constraints 中写清损失。
+禁止所有 renderer 复制同一个通用 pageShell 再换颜色。
+```
+
+#### M10.3 每批执行 TDD 闭环
+
+每批 5-6 套模板按固定顺序推进：
+
+```text
+1. source audit：读取 template.html / template.json / design.md / screenshots
+2. visual_contract：补 contract 并通过 lint
+3. renderer red：增加 renderer/golden/fidelity 失败测试
+4. renderer green：实现 dedicated renderer
+5. golden render：生成 SVG + PNG
+6. fidelity receipt：运行 checker，生成 receipt
+7. selector/gate：只有 pass 的进入 production/default_selectable
+8. independent review：审查是否存在字段补齐、假 receipt、通用 fallback 冒充
+```
+
+每套模板只有两种合法阶段结果：
+
+```text
+production/default_selectable:
+  dedicated renderer 存在
+  golden spec 存在
+  reference screenshot 存在
+  visual_contract 存在
+  fidelity receipt 为真实命令生成
+  fidelity/adherence passed
+  selector/quality_gate 已消费 receipt
+
+needs_review:
+  已完成真实复刻尝试
+  有 renderer 或失败草稿
+  有 golden/render failure 记录
+  有 fidelity/adherence failure reason
+  default_selectable=false
+  如果只是计划路径，必须写 planned_renderer_module / planned_golden_spec / planned_fidelity_receipt
+```
+
+防偏移审查点：
+
+```text
+不得出现第三种“字段看似齐全但没有证据”的状态。
+不得把 fidelity failed 的模板放进 selector 默认链路。
+不得把未完成 renderer 的 family 从矩阵中删除来降低分母。
+不得把 planned_* 字段复制到真实证据字段里伪装完成。
+```
+
+#### M10.4 全量复刻验收报告
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_restoration_report_test.py` | 报告必须覆盖 34/34 family |
+| `skills/lark-slides/scripts/beautiful_template_restoration_report_test.py` | 报告必须区分 candidate、attempted、rendered、fidelity_passed、production/default_selectable |
+| `skills/lark-slides/scripts/beautiful_template_restoration_report_test.py` | 报告必须列出每个 needs_review 模板的阻断原因 |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/references/beautiful-template-restoration-report.json` | 生成全量复刻报告 |
+| `skills/lark-slides/scripts/beautiful_template_restoration_report.py` | 从 matrix、contract、golden、receipt 汇总状态 |
+
+验收指标：
+
+| 指标 | 目标 |
+| --- | --- |
+| candidate family | 34/34 |
+| visual_contract | 34/34 |
+| font_strategy | 34/34 |
+| typography_strategy | 34/34 |
+| text_style_strategy | 34/34 |
+| strategy_valid | 34/34 |
+| screenshot binding | 34/34 |
+| dedicated renderer attempt | 34/34 |
+| golden render attempt | 34/34 |
+| fidelity receipt attempt | 34/34 |
+| production/default_selectable | 只统计 fidelity passed 的数量，不固定为 34 |
+| legacy/baseline/default 污染 | 0 |
+| hand-written fake receipt | 0 |
+| missing-file production field | 0 |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/beautiful_template_visual_contract_lint_test.py \
+  skills/lark-slides/scripts/beautiful_template_restoration_report_test.py \
+  skills/lark-slides/scripts/svglide_artboard_template_golden_test.py \
+  skills/lark-slides/scripts/beautiful_template_fidelity_check_test.py \
+  skills/lark-slides/scripts/svglide_theme_template_selector_test.py \
+  skills/lark-slides/scripts/svglide_quality_gate_test.py
+```
+
+防偏移审查点：
+
+```text
+最终报告不能只报 production 数量，必须同时报 failed/needs_review 明细。
+如果某套模板无法基本还原，应保留失败证据和降级理由，而不是删除或伪装通过。
+```
+
 ## 6. 最小提交边界
 
-建议拆成 6 个 commit，方便回滚。
+建议拆成 8 个 commit，方便回滚。
 
 | Commit | 范围 | 说明 |
 | --- | --- | --- |
@@ -1492,6 +1940,8 @@ python3 skills/lark-slides/scripts/svglide_project_runner.py \
 | 4 | M7 + M8 | fixture/debug 兼容和 E2E 回归 |
 | 5 | M9.1 + M9.2 + M9.3 + M9.4 | beautiful template production contract、blue-professional 样板闭环、34 套 evaluation matrix、fidelity gate |
 | 6 | M9.5 + M9.6 + M9.7 + M9.8 | 字体系统、executable-only selector、visual_dna 硬约束、runner gate 接入 |
+| 7 | M10.1 + M10.2 | 34 份 visual_contract、dedicated renderer 批量模板和前两批样板 |
+| 8 | M10.3 + M10.4 | 34 套逐批复刻、全量 fidelity 结果和 restoration report |
 
 每个 commit 必须满足：
 
@@ -1562,6 +2012,11 @@ go test ./shortcuts/slides
 所有 default_selectable production template 都有 golden canvas spec
 所有 default_selectable production template 都有真实 screenshot fidelity receipt
 所有 default_selectable production template 都有 visual_contract，且与 template_id/source screenshot 绑定
+34/34 beautiful candidate 都有 font_strategy
+34/34 beautiful candidate 都有 typography_strategy
+34/34 beautiful candidate 都有 text_style_strategy
+34/34 beautiful candidate 的字体与排版策略可解释、可验证，并以 Slide 可用字体优先
+所有后续 dedicated renderer 必须消费 font/typography/text style strategy，不能只堆 renderer 或只写 fontRole
 0 production beautiful template 走通用 beautifulTemplate() fallback
 template fidelity/adherence receipt 是 production quality gate 的前置条件
 ```

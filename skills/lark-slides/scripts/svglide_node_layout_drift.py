@@ -103,47 +103,127 @@ def _attr(element: ET.Element, name: str) -> str | None:
     return None
 
 
+def _local_name(element: ET.Element) -> str:
+    return element.tag.rsplit("}", 1)[-1]
+
+
+def _mask_rect_bbox(element: ET.Element) -> dict[str, float] | None:
+    if _local_name(element) != "mask":
+        return None
+    for child in list(element):
+        if _local_name(child) != "rect":
+            continue
+        bbox = {
+            "x": number(_attr(child, "x")),
+            "y": number(_attr(child, "y")),
+            "width": number(_attr(child, "width")),
+            "height": number(_attr(child, "height")),
+        }
+        if bbox["width"] > 0 and bbox["height"] > 0:
+            return bbox
+    return None
+
+
+def _observation_for_element(element: ET.Element) -> dict[str, Any] | None:
+    local_name = _local_name(element)
+    node_id = _attr(element, "data-node-id")
+    bbox: dict[str, float] | None = None
+    extra: dict[str, Any] = {}
+    if local_name in {"rect", "foreignObject", "image"}:
+        bbox = {
+            "x": number(_attr(element, "x")),
+            "y": number(_attr(element, "y")),
+            "width": number(_attr(element, "width")),
+            "height": number(_attr(element, "height")),
+        }
+        for key in ["fill", "stroke", "opacity"]:
+            value = _attr(element, key)
+            if value is not None:
+                extra[key] = value
+    elif local_name == "text":
+        font_size = number(_attr(element, "font-size"), 18)
+        text = normalize_text("".join(element.itertext()))
+        bbox = {
+            "x": number(_attr(element, "data-box-x"), number(_attr(element, "x"))),
+            "y": number(_attr(element, "data-box-y"), number(_attr(element, "y")) - font_size),
+            "width": number(_attr(element, "data-box-width"), max(len(text) * font_size * 0.62, font_size * 2)),
+            "height": number(_attr(element, "data-box-height"), font_size * 1.35),
+        }
+        extra["font_size"] = font_size
+        for attr, key in [("font-weight", "font_weight"), ("fill", "fill"), ("opacity", "opacity")]:
+            value = _attr(element, attr)
+            if value is not None:
+                extra[key] = value
+    elif local_name == "circle":
+        radius = number(_attr(element, "r"))
+        bbox = {
+            "x": number(_attr(element, "cx")) - radius,
+            "y": number(_attr(element, "cy")) - radius,
+            "width": radius * 2,
+            "height": radius * 2,
+        }
+        for key in ["fill", "stroke", "opacity"]:
+            value = _attr(element, key)
+            if value is not None:
+                extra[key] = value
+    elif local_name == "path":
+        bbox = {
+            "x": number(_attr(element, "x")),
+            "y": number(_attr(element, "y")),
+            "width": number(_attr(element, "width")),
+            "height": number(_attr(element, "height")),
+        }
+        for attr, key in [("d", "d"), ("fill", "fill"), ("stroke", "stroke"), ("stroke-width", "stroke_width"), ("opacity", "opacity")]:
+            value = _attr(element, attr)
+            if value is not None:
+                extra[key] = value
+    if bbox is None or bbox["width"] <= 0 or bbox["height"] <= 0:
+        return None
+    observation = {
+        "id": node_id,
+        "kind": local_name,
+        "text": normalize_text("".join(element.itertext())) or None,
+        "bbox": bbox,
+    }
+    observation.update(extra)
+    return observation
+
+
 def observations_from_svg(svg_path: Path) -> list[dict[str, Any]]:
     root = ET.fromstring(svg_path.read_text(encoding="utf-8"))
     observations: list[dict[str, Any]] = []
-    for element in root.iter():
-        local_name = element.tag.rsplit("}", 1)[-1]
-        node_id = _attr(element, "data-node-id")
-        bbox: dict[str, float] | None = None
-        if local_name in {"rect", "foreignObject", "image"}:
-            bbox = {
-                "x": number(_attr(element, "x")),
-                "y": number(_attr(element, "y")),
-                "width": number(_attr(element, "width")),
-                "height": number(_attr(element, "height")),
-            }
-        elif local_name == "text":
-            font_size = number(_attr(element, "font-size"), 18)
-            text = normalize_text("".join(element.itertext()))
-            bbox = {
-                "x": number(_attr(element, "data-box-x"), number(_attr(element, "x"))),
-                "y": number(_attr(element, "data-box-y"), number(_attr(element, "y")) - font_size),
-                "width": number(_attr(element, "data-box-width"), max(len(text) * font_size * 0.62, font_size * 2)),
-                "height": number(_attr(element, "data-box-height"), font_size * 1.35),
-            }
-        elif local_name == "circle":
-            radius = number(_attr(element, "r"))
-            bbox = {
-                "x": number(_attr(element, "cx")) - radius,
-                "y": number(_attr(element, "cy")) - radius,
-                "width": radius * 2,
-                "height": radius * 2,
-            }
-        if bbox is None or bbox["width"] <= 0 or bbox["height"] <= 0:
+    pending_mask_bbox: dict[str, float] | None = None
+    pending_text_parts: list[str] = []
+    pending_text_style: dict[str, Any] = {}
+
+    def flush_pending_text() -> None:
+        nonlocal pending_mask_bbox, pending_text_parts, pending_text_style
+        text = normalize_text("".join(pending_text_parts))
+        if pending_mask_bbox is not None and text:
+            observation = {"id": None, "kind": "text", "text": text, "bbox": pending_mask_bbox}
+            observation.update(pending_text_style)
+            observations.append(observation)
+        pending_mask_bbox = None
+        pending_text_parts = []
+        pending_text_style = {}
+
+    for element in list(root):
+        local_name = _local_name(element)
+        if local_name == "mask":
+            flush_pending_text()
+            pending_mask_bbox = _mask_rect_bbox(element)
             continue
-        observations.append(
-            {
-                "id": node_id,
-                "kind": local_name,
-                "text": normalize_text("".join(element.itertext())) or None,
-                "bbox": bbox,
-            }
-        )
+        if local_name == "text" and pending_mask_bbox is not None:
+            pending_text_parts.append("".join(element.itertext()))
+            if not pending_text_style:
+                text_observation = _observation_for_element(element) or {}
+                pending_text_style = {key: text_observation[key] for key in ["fill", "opacity", "font_size", "font_weight"] if key in text_observation}
+            continue
+        flush_pending_text()
+        observation = _observation_for_element(element)
+        if observation is not None:
+            observations.append(observation)
+    flush_pending_text()
     return observations
 
 

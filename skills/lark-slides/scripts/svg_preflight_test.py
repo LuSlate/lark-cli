@@ -666,6 +666,21 @@ class SvgPreflightTest(unittest.TestCase):
         codes = [issue["code"] for issue in result.get("issues", [])]
         self.assertNotIn("visible_svg_metadata_leak", codes)
 
+    def test_lint_svg_allows_short_preset_name_inside_business_title(self) -> None:
+        svg = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:slide="https://slides.bytedance.com/ns"
+             slide:role="slide"
+             width="960" height="540" viewBox="0 0 960 540">
+          <foreignObject id="title" slide:role="shape" slide:shape-type="text" x="80" y="80" width="620" height="120">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:48px;font-weight:900;color:#111;">Studio &amp; Salon</div>
+          </foreignObject>
+        </svg>
+        """
+        result = svg_preflight.lint_svg(with_contract(svg))
+        codes = [issue["code"] for issue in result.get("issues", [])]
+        self.assertNotIn("visible_svg_metadata_leak", codes)
+
     def test_lint_svg_reports_light_text_without_dark_backing(self) -> None:
         svg = """
         <svg xmlns="http://www.w3.org/2000/svg"

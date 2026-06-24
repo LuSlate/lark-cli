@@ -3,28 +3,153 @@
   "stage": "template_fidelity",
   "status": "passed",
   "template_id": "executive-dashboard",
-  "selected_template_id": "executive-dashboard",
-  "source_family": "blue-professional",
-  "page_type": "cover",
-  "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
-  "render_screenshot": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.preview.png",
+  "page_type": "default",
+  "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/blue-professional-1.png",
+  "render_screenshot": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.preview.png",
   "reference_selection": {
-    "rule": "matrix_cover_reference",
-    "path": "beautiful-html-templates/screenshots/blue-professional-1.png"
+    "rule": "explicit",
+    "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/blue-professional-1.png"
   },
-  "score": 0.9842,
+  "score": 0.9855,
   "threshold": 0.72,
   "metrics": {
-    "color_distribution": 0.9851,
-    "layout_structure": 0.9684,
-    "edge_density": 0.9946,
+    "color_distribution": 0.9805,
+    "layout_structure": 0.9566,
+    "edge_density": 0.9754,
     "whitespace": 1.0,
-    "dominant_region": 0.9846
+    "dominant_region": 0.9981,
+    "color_complexity": 1.0,
+    "primary_color_alignment": 1.0,
+    "layout_region": 1.0,
+    "decorative_density": 1.0,
+    "typographic_hierarchy": 1.0
   },
-  "visual_contract": {
-    "motifs": ["left-aligned executive cover", "blue accent rule", "cream canvas", "right slanted neutral panel"],
-    "layout_regions": ["accent_rule", "title", "subtitle", "footer", "right_panel"],
-    "forbidden": ["random decorative lines", "cyber glow", "baseline blueprint nodes"]
-  },
-  "issues": []
+  "issues": [],
+  "generated_by": "beautiful_template_fidelity_check.py",
+  "generator_version": "svglide-template-fidelity-check/v2",
+  "command": [
+    "beautiful_template_fidelity_check.py",
+    "--rendered",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.preview.png",
+    "--reference",
+    "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/blue-professional-1.png",
+    "--template-id",
+    "executive-dashboard",
+    "--page-type",
+    "default",
+    "--canvas-spec",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json",
+    "--out",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json"
+  ],
+  "reference_sha256": "0f08aefe70cb14ca7f3126ecc2f34319ca8f281ecdf81c6d6486ea93b2236f8c",
+  "render_sha256": "d64907ddd34b2d036eaea35b43ef1a7d3dc49a7a9b7b56a72a13f1982e774d23",
+  "role_consumption": {
+    "source": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json",
+    "font_roles": {
+      "display": "SVGlideDisplay",
+      "body": "SVGlideBody",
+      "label": "SVGlideLabel",
+      "metric": "SVGlideMetric"
+    },
+    "typography_roles": {
+      "display": {
+        "font_role": "display",
+        "source_font": "Space Grotesk",
+        "runtime_alias": "SVGlideDisplay",
+        "font_size": 54,
+        "font_weight": 900,
+        "line_height": 0.9,
+        "letter_spacing": 0,
+        "text_transform": "latin_uppercase_only",
+        "max_lines": 3,
+        "alignment": "source_layout_dependent"
+      },
+      "body": {
+        "font_role": "body",
+        "source_font": "Inter",
+        "runtime_alias": "SVGlideBody",
+        "font_size": 20,
+        "font_weight": 400,
+        "line_height": 1.32,
+        "letter_spacing": 0,
+        "text_transform": "preserve_source_case",
+        "max_lines": 5,
+        "alignment": "source_layout_dependent"
+      },
+      "label": {
+        "font_role": "label",
+        "source_font": "Space Grotesk",
+        "runtime_alias": "SVGlideLabel",
+        "font_size": 12,
+        "font_weight": 700,
+        "line_height": 1.05,
+        "letter_spacing": 0.08,
+        "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+        "max_lines": 1,
+        "alignment": "source_layout_dependent"
+      },
+      "metric": {
+        "font_role": "metric",
+        "source_font": "Space Grotesk",
+        "runtime_alias": "SVGlideMetric",
+        "font_size": 42,
+        "font_weight": 900,
+        "line_height": 0.95,
+        "letter_spacing": 0,
+        "text_transform": "preserve_numbers_and_units",
+        "max_lines": 2,
+        "alignment": "source_layout_dependent"
+      }
+    },
+    "text_style_roles": {
+      "bold": {
+        "source_usage": "source uses heavy display/label weights",
+        "mapped_weight": {
+          "display": 900,
+          "label": 700,
+          "metric": 900
+        },
+        "allowed_roles": [
+          "display",
+          "label",
+          "metric"
+        ]
+      },
+      "italic": {
+        "source_usage": "source uses italic/font-style or italic-family tokens",
+        "mapped_style": "latin_only_when_source_requires_else_normal",
+        "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+        "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+      },
+      "underline": {
+        "source_usage": "source uses underline/text-decoration or hairline emphasis",
+        "mapped_decoration": "native underline only for actual text-decoration source usage",
+        "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+      },
+      "line_through": {
+        "source_usage": "not present in source; default no line-through",
+        "mapped_decoration": "none",
+        "fallback_shape": "none"
+      },
+      "emphasis": {
+        "color_shift": "use source accent color roles only",
+        "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+        "weight_shift": "increase one role step within font_weight_scale",
+        "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+      },
+      "text_decoration_policy": {
+        "underline": {
+          "style": "solid",
+          "color": "currentColor",
+          "thickness": "1px"
+        },
+        "line_through": {
+          "style": "none",
+          "color": "currentColor",
+          "thickness": "0px"
+        }
+      }
+    }
+  }
 }

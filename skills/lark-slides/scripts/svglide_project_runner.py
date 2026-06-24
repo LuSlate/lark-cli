@@ -22,6 +22,7 @@ import svglide_asset_injector
 import beautiful_template_fidelity_check
 import svglide_schema
 import svglide_stage_invalidation
+import svglide_snapshot_visual_fidelity
 
 
 RUNNER_VERSION = "svglide-project-runner/v0"
@@ -65,6 +66,7 @@ STAGES = [
     "visual_distinctness_review",
     "diversity_gate",
     "theme_adherence",
+    "snapshot_visual_fidelity",
     "quality_gate",
     "generation_benchmark",
     "dry_run",
@@ -104,6 +106,8 @@ STAGE_ALIASES = {
     "diversity-gate": "diversity_gate",
     "diversity-review": "diversity_gate",
     "theme-adherence": "theme_adherence",
+    "snapshot-visual-fidelity": "snapshot_visual_fidelity",
+    "snapshot-fidelity": "snapshot_visual_fidelity",
     "generate": "generate_svg",
     "generate-svg": "generate_svg",
     "preview-lint": "preview_lint",
@@ -134,6 +138,7 @@ PROJECT_DIRS = [
     "04-svg/prepared",
     "05-preview",
     "06-check",
+    "06-check/visual-fidelity",
     "07-create",
     "08-readback",
     "09-export",
@@ -168,6 +173,7 @@ IMPLEMENTED_STAGES = {
     "visual_distinctness_review",
     "diversity_gate",
     "theme_adherence",
+    "snapshot_visual_fidelity",
     "quality_gate",
     "generation_benchmark",
     "dry_run",
@@ -829,6 +835,10 @@ def file_sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def snapshot_visual_fidelity_evidence_hash(project_root: Path) -> str:
+    return svglide_snapshot_visual_fidelity.visual_fidelity_evidence_hash(project_root)
+
+
 def prepared_svg_files(project_root: Path) -> list[Path]:
     files = sorted((project_root / "04-svg" / "prepared").glob("*.svg"))
     if not files:
@@ -1304,6 +1314,23 @@ def rendered_png_for_template_fidelity(project_root: Path, page: int) -> Path:
     return candidates[0]
 
 
+def role_consumption_for_template_fidelity(project_root: Path, template_id: str | None, page: int) -> dict[str, Any] | None:
+    if not template_id:
+        return None
+    plan = read_json_optional(plan_path(project_root))
+    for index, slide in enumerate(plan.get("slides", []) if isinstance(plan.get("slides"), list) else [], start=1):
+        if not isinstance(slide, dict) or int(slide.get("page") or index) != page:
+            continue
+        canvas_spec = slide.get("canvas_spec")
+        if not isinstance(canvas_spec, dict):
+            continue
+        selected = canvas_spec.get("selected_template_id") or canvas_spec.get("template_id")
+        if selected == template_id:
+            source = f"{plan_path(project_root)}#slides[{index - 1}].canvas_spec"
+            return beautiful_template_fidelity_check.role_consumption_from_canvas_spec_payload(canvas_spec, source=source)
+    return None
+
+
 def run_template_fidelity_stage(project_root: Path, state: dict[str, Any], *, profile: str) -> dict[str, Any]:
     started_at = now_iso()
     started_perf = time.perf_counter()
@@ -1341,6 +1368,7 @@ def run_template_fidelity_stage(project_root: Path, state: dict[str, Any], *, pr
             reference_screenshot=reference,
             template_id=str(template_id),
             page_type="default",
+            role_consumption=role_consumption_for_template_fidelity(project_root, template_id, page),
         )
         payload["selected_template_id"] = template_id
         payload["page"] = page
@@ -2437,6 +2465,14 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
             raise RunnerError("quality gate is missing artboard-package-check check; rerun quality_gate")
         if input_hashes.get("artboard_package_check") != optional_project_file_hash(project_root, "06-check/artboard-package-check.json"):
             raise RunnerError("quality gate artboard_package_check hash is stale; rerun quality_gate")
+        if inputs.get("snapshot_visual_fidelity") != "06-check/visual-fidelity/manifest.json":
+            raise RunnerError("quality gate is missing snapshot_visual_fidelity input; rerun snapshot_visual_fidelity and quality_gate")
+        if "snapshot-visual-fidelity" not in check_names:
+            raise RunnerError("quality gate is missing snapshot-visual-fidelity check; rerun quality_gate")
+        if input_hashes.get("snapshot_visual_fidelity") != optional_project_file_hash(project_root, "06-check/visual-fidelity/manifest.json"):
+            raise RunnerError("quality gate snapshot_visual_fidelity hash is stale; rerun quality_gate")
+        if input_hashes.get("snapshot_visual_fidelity_evidence") != snapshot_visual_fidelity_evidence_hash(project_root):
+            raise RunnerError("quality gate snapshot_visual_fidelity evidence is stale; rerun quality_gate")
     return gate
 
 
@@ -3277,6 +3313,32 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["02-plan/slide_plan.json", "06-check/theme-validate.json", "04-svg/prepared"],
             outputs=["06-check/theme-adherence.json", "receipts/theme-adherence.json"],
         )
+    if stage == "snapshot_visual_fidelity":
+        if plan_generation_mode(project_root) != "artboard_satori":
+            started_at = now_iso()
+            receipt = complete_stage(
+                project_root,
+                state,
+                stage,
+                "passed",
+                started_at=started_at,
+                inputs=["receipts/generate_svg.json"],
+                outputs=[],
+                command=["skip", "snapshot_visual_fidelity", "generation_mode=direct_svg"],
+            )
+            receipt["skip_reason"] = "generation_mode_not_artboard_satori"
+            write_json(receipt_path(project_root, stage), receipt)
+            return receipt
+        require_stage_passed(state, "theme_adherence")
+        return run_script_stage(
+            project_root,
+            state,
+            stage,
+            ["python3", (SCRIPT_DIR / "svglide_snapshot_visual_fidelity.py").as_posix(), project_root.as_posix(), "--pretty"],
+            output_json=project_root / "receipts" / "snapshot_visual_fidelity.json",
+            inputs=["04-svg/prepared", "06-check/readback", "08-readback"],
+            outputs=["06-check/visual-fidelity/manifest.json", "receipts/snapshot_visual_fidelity.json"],
+        )
     if stage == "quality_gate":
         if selection_gate_required(project_root, state):
             require_stage_passed(state, "palette_review")
@@ -3291,6 +3353,8 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
         require_stage_passed(state, "runtime_review")
         require_stage_passed(state, "visual_distinctness_review")
         require_stage_passed(state, "theme_adherence")
+        if plan_generation_mode(project_root) == "artboard_satori":
+            require_stage_passed(state, "snapshot_visual_fidelity")
         return run_script_stage(
             project_root,
             state,
@@ -3311,6 +3375,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
                 "06-check/theme-template-selection-review.json",
                 "06-check/plan-bundle-review.json",
                 "06-check/diversity-gate.json",
+                "06-check/visual-fidelity/manifest.json",
                 "receipts/generate_svg.json",
             ],
             outputs=["06-check/quality-gate.json"],

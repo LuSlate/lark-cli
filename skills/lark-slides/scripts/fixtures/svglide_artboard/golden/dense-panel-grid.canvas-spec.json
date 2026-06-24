@@ -1,17 +1,172 @@
 {
   "version": "svglide-canvas-spec/v1",
-  "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
-  "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
+  "canvas": {
+    "width": 960,
+    "height": 540,
+    "viewBox": "0 0 960 540"
+  },
+  "safe_area": {
+    "x": 48,
+    "y": 40,
+    "width": 864,
+    "height": 460
+  },
   "template_id": "dense-panel-grid",
   "theme_id": "cobalt-grid",
-  "theme": {"colors": {"background": "#081C4A", "panel": "#102C6B", "primary": "#60A5FA", "accent": "#FDE047", "text": "#EEF6FF", "muted": "#B7C8E8"}},
-  "content": {
-    "eyebrow": "OPERATING GRID",
-    "title": "渠道健康度复盘",
-    "subtitle": "12x8 面板节奏承载高密度指标，强调异常和下一步。",
-    "metrics": ["转化 +12%", "履约 94%", "成本 -8%", "风险 L2", "样本 42k", "NPS 48"],
-    "notes": ["北区增长稳定", "瓶颈转向交付", "Owner 需要清晰"]
+  "theme": {
+    "colors": {
+      "background": "#081C4A",
+      "panel": "#102C6B",
+      "primary": "#60A5FA",
+      "accent": "#FDE047",
+      "text": "#EEF6FF",
+      "muted": "#B7C8E8"
+    },
+    "typography": {
+      "font_roles": {
+        "display": "SVGlideDisplay",
+        "body": "SVGlideBody",
+        "label": "SVGlideLabel",
+        "metric": "SVGlideMetric"
+      },
+      "role_tokens": {
+        "display": {
+          "font_role": "display",
+          "source_font": "Space Grotesk",
+          "runtime_alias": "SVGlideDisplay",
+          "font_size": 88,
+          "font_weight": 900,
+          "line_height": 0.9,
+          "letter_spacing": 0,
+          "text_transform": "latin_uppercase_only",
+          "max_lines": 3,
+          "alignment": "source_layout_dependent"
+        },
+        "body": {
+          "font_role": "body",
+          "source_font": "Helvetica Neue",
+          "runtime_alias": "SVGlideBody",
+          "font_size": 18,
+          "font_weight": 400,
+          "line_height": 1.32,
+          "letter_spacing": 0,
+          "text_transform": "preserve_source_case",
+          "max_lines": 5,
+          "alignment": "source_layout_dependent"
+        },
+        "label": {
+          "font_role": "label",
+          "source_font": "JetBrains Mono",
+          "runtime_alias": "SVGlideLabel",
+          "font_size": 10,
+          "font_weight": 700,
+          "line_height": 1.05,
+          "letter_spacing": 0.08,
+          "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+          "max_lines": 1,
+          "alignment": "source_layout_dependent"
+        },
+        "metric": {
+          "font_role": "metric",
+          "source_font": "JetBrains Mono",
+          "runtime_alias": "SVGlideMetric",
+          "font_size": 56,
+          "font_weight": 900,
+          "line_height": 0.95,
+          "letter_spacing": 0,
+          "text_transform": "preserve_numbers_and_units",
+          "max_lines": 2,
+          "alignment": "source_layout_dependent"
+        }
+      },
+      "strategy_source": "skills/lark-slides/references/visual-contracts/beautiful/neo-grid-bold.dense-panel-grid.json",
+      "text_style_roles": {
+        "bold": {
+          "source_usage": "source uses heavy display/label weights",
+          "mapped_weight": {
+            "display": 900,
+            "label": 700,
+            "metric": 900
+          },
+          "allowed_roles": [
+            "display",
+            "label",
+            "metric"
+          ]
+        },
+        "italic": {
+          "source_usage": "source uses italic/font-style or italic-family tokens",
+          "mapped_style": "latin_only_when_source_requires_else_normal",
+          "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+          "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+        },
+        "underline": {
+          "source_usage": "source uses underline/text-decoration or hairline emphasis",
+          "mapped_decoration": "native underline only for actual text-decoration source usage",
+          "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+        },
+        "line_through": {
+          "source_usage": "not present in source; default no line-through",
+          "mapped_decoration": "none",
+          "fallback_shape": "none"
+        },
+        "emphasis": {
+          "color_shift": "use source accent color roles only",
+          "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+          "weight_shift": "increase one role step within font_weight_scale",
+          "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+        },
+        "text_decoration_policy": {
+          "underline": {
+            "style": "solid",
+            "color": "currentColor",
+            "thickness": "1px"
+          },
+          "line_through": {
+            "style": "none",
+            "color": "currentColor",
+            "thickness": "0px"
+          }
+        }
+      }
+    }
   },
-  "semantic_elements": [{"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 226, "y": 66, "width": 620, "height": 92}}],
-  "quality_constraints": {"max_title_lines": 2, "min_font_size": 18, "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460}}
+  "content": {
+    "eyebrow": "08 / 13",
+    "title": "THE FUTURE OF\nDATA-DRIVEN\nFINANCE",
+    "subtitle": "All rights reserved.",
+    "metrics": [
+      "THE FUTURE OF DATA-DRIVEN FINANCE",
+      "Q2 2026 DIGITS"
+    ],
+    "notes": [
+      "北区增长稳定",
+      "瓶颈转向交付",
+      "Owner 需要清晰"
+    ]
+  },
+  "semantic_elements": [
+    {
+      "element_id": "title",
+      "kind": "text",
+      "role": "title",
+      "source_ref": "canvas_spec.content.title",
+      "bbox": {
+        "x": 226,
+        "y": 66,
+        "width": 620,
+        "height": 92
+      }
+    }
+  ],
+  "quality_constraints": {
+    "max_title_lines": 2,
+    "min_font_size": 18,
+    "safe_area": {
+      "x": 48,
+      "y": 40,
+      "width": 864,
+      "height": 460
+    }
+  }
 }

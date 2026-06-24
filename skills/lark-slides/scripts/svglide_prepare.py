@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import svglide_satori_text_style_manifest
+
 
 SVG_IMAGE_TAG_RE = re.compile(r"<image\b[^>]*>", re.IGNORECASE | re.DOTALL)
 SVG_IMAGE_HREF_RE = re.compile(r"""(?:^|\s)(?:xlink:href|href)\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
@@ -192,11 +194,24 @@ def prepare_project(project: Path) -> dict[str, Any]:
     started_at = now_iso()
     prepared_files: list[dict[str, Any]] = []
     asset_refs: list[dict[str, Any]] = []
+    text_style_manifest_count = 0
+    text_style_manifest_bound_count = 0
+    text_style_manifest_loss_count = 0
+    text_style_manifest_losses: list[dict[str, Any]] = []
+    should_inject_text_style_manifest = generation_mode(project) == "artboard_satori"
     for source in sources:
         svg_text = source.read_text(encoding="utf-8")
         refs = validate_asset_refs(project, source, svg_text, assets)
         target = prepared_dir / source.name
-        shutil.copyfile(source, target)
+        if should_inject_text_style_manifest:
+            manifest_result = svglide_satori_text_style_manifest.inject_text_style_manifest(svg_text)
+            target.write_text(manifest_result.svg_text, encoding="utf-8")
+            text_style_manifest_count += manifest_result.item_count
+            text_style_manifest_bound_count += manifest_result.bound_count
+            text_style_manifest_loss_count += manifest_result.loss_count
+            text_style_manifest_losses.extend(manifest_result.losses)
+        else:
+            shutil.copyfile(source, target)
         prepared_files.append(
             {
                 "source": str(source.relative_to(project)),
@@ -218,6 +233,15 @@ def prepare_project(project: Path) -> dict[str, Any]:
         "contract_manifest": contract_manifest,
         "asset_refs": asset_refs,
         "normalizations": [],
+        "text_style_manifest_count": text_style_manifest_count,
+        "text_style_manifest_bound_count": text_style_manifest_bound_count,
+        "text_style_manifest_loss_count": text_style_manifest_loss_count,
+        "text_style_manifest": {
+            "item_count": text_style_manifest_count,
+            "bound_count": text_style_manifest_bound_count,
+            "loss_count": text_style_manifest_loss_count,
+            "losses": text_style_manifest_losses,
+        },
     }
     receipt_path = receipts_dir / "prepare.json"
     receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

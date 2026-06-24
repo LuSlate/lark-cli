@@ -1,0 +1,1452 @@
+{
+  "version": "svglide-beautiful-template-visual-contract/v1",
+  "family_id": "mat",
+  "runtime_template_id": "mat-midcentury-board",
+  "source": {
+    "source_template_html": "beautiful-html-templates/templates/mat/template.html",
+    "source_design_md": "beautiful-html-templates/templates/mat/design.md",
+    "source_template_json": "beautiful-html-templates/templates/mat/template.json",
+    "reference_screenshot": "beautiful-html-templates/screenshots/mat-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/mat-1.png",
+      "beautiful-html-templates/screenshots/mat-4.png",
+      "beautiful-html-templates/screenshots/mat-8.png"
+    ],
+    "absorption_records": [
+      "skills/lark-slides/references/absorptions/beautiful-html-templates/mat.mat-midcentury-board.json"
+    ],
+    "template_json_name": "Mat",
+    "template_json_slug": "mat"
+  },
+  "layout": {
+    "layout_family": "mat_midcentury_board",
+    "density": "medium",
+    "formality": "medium",
+    "layout_rhythm": "mat: medium density, medium formality. Dark sage canvas with bone paper and burnt-orange accent; mid-century modern with wood undertones.",
+    "spacing_rhythm": "Reuse source spacing tokens and grid gaps: {\"pad_x\": \"5.5vw\", \"pad_y\": \"5.5vh\", \"gap_lg\": \"4.5vh\", \"gap_md\": \"2.8vh\", \"gap_sm\": \"1.4vh\"}",
+    "source_layout_classes": [],
+    "variant_ids": [
+      "cover",
+      "agenda",
+      "section_divider",
+      "context_overview",
+      "metric_dashboard",
+      "problem_analysis",
+      "cause_analysis",
+      "comparison",
+      "timeline",
+      "case_evidence",
+      "action_plan",
+      "risk_dependency",
+      "closing"
+    ]
+  },
+  "typography": {
+    "template_json_typography": {
+      "display": "Bricolage Grotesque",
+      "body": "DM Sans",
+      "mono": "DM Mono",
+      "cn": "Noto Sans SC",
+      "style": "expressive variable grotesk display + clean DM body + DM Mono captions"
+    },
+    "design_tokens_typography": {
+      "body": "DM Sans",
+      "cn": "Noto Sans SC",
+      "display": "Bricolage Grotesque",
+      "mono": "DM Mono",
+      "style": "expressive variable grotesk display + clean DM body + DM Mono captions"
+    },
+    "visual_dna_typography_roles": {
+      "body": "DM Sans",
+      "caption": "small caption -> system-sans-cjk-regular",
+      "display": "Bricolage Grotesque",
+      "label": "compact label -> system-sans-cjk-medium",
+      "metric": "display numeric emphasis -> system-sans-cjk-heavy"
+    },
+    "typography_role": "expressive variable grotesk display + clean DM body + DM Mono captions",
+    "font_policy": {
+      "fallback_stack": "system-sans-cjk",
+      "font_role_map": {
+        "body": "system-sans-cjk-regular",
+        "display": "system-sans-cjk-heavy",
+        "label": "system-sans-cjk-medium",
+        "metric": "system-sans-cjk-heavy",
+        "mono": "system-mono"
+      },
+      "original_families": [
+        "Bricolage Grotesque",
+        "DM Sans"
+      ]
+    },
+    "cjk_policy": {
+      "body_font_cn": "Noto Sans SC",
+      "design_intent_font_pairing": [
+        "Noto Serif SC",
+        "Noto Sans SC"
+      ],
+      "display_font_cn": "Noto Serif SC",
+      "emphasis_policy": "color_or_weight_only",
+      "italic_policy": "drop_italic",
+      "known_degradation": "The Bricolage Grotesque \"heavy, rounded grotesque with mechanical character\" is one of Mat's most distinctive typographic moves in Latin — it's what gives the system its industrial-product-page voice. Chinese has no exact equivalent: Noto Serif SC at weight 700 provides structural mass but reads as more traditional / literary than Bricolage's rounded moderni",
+      "latin_accent_policy": "latin_only_allowed_when_semantic_annotation",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "mono_font_policy": "latin_only_or_system_mono",
+      "runtime_font_policy": "system_font_only_no_remote_dependency",
+      "runtime_font_stack": [
+        "system-sans-cjk",
+        "system-sans-cjk-heavy",
+        "system-sans-cjk-regular",
+        "system-mono"
+      ],
+      "source_section_heading": "CJK & International Content",
+      "source_section_sha256": "100a2f15bc7c887da7af8bdac97512612946e64891bd73ad605f3b0beeb6c067",
+      "strategy": "replace_family_whole_element"
+    }
+  },
+  "palette": {
+    "template_json_palette": {
+      "bg": "#232e26",
+      "bg_alt": "#2e3d30",
+      "fg": "#f0e8d2",
+      "accent": "#c07030",
+      "bg_light": "#ede6d0",
+      "wood": "#7a4e24",
+      "description": "muted sage green canvas with warm bone paper and a saturated burnt-orange accent; an underlying wood tone for tactile detail"
+    },
+    "design_token_colors": {
+      "accent_orange": "#C07030",
+      "bg_cream": "#EDE6D0",
+      "bg_cream_alt": "#E4DAC4",
+      "bg_dark": "#232E26",
+      "bg_dark_alt": "#2E3D30",
+      "border_on_cream": "rgba(30, 40, 32, 0.14)",
+      "border_on_dark": "rgba(240, 232, 210, 0.12)",
+      "ink_cream": "#F0E8D2",
+      "ink_cream_2": "rgba(240, 232, 210, 0.58)",
+      "ink_cream_3": "rgba(240, 232, 210, 0.3)",
+      "ink_dark": "#1E2820",
+      "ink_dark_2": "rgba(30, 40, 32, 0.6)",
+      "ink_dark_3": "rgba(30, 40, 32, 0.3)",
+      "wood_glow": "#7A4E24"
+    },
+    "theme_token_colors": {
+      "accent": "#3B5F53",
+      "background": "#EEE2CF",
+      "danger": "#B91C1C",
+      "muted": "#766A5D",
+      "panel": "#C9C7A5",
+      "primary": "#9B4F2F",
+      "success": "#3A7D44",
+      "surface": "#F8F0E2",
+      "text": "#2D2520",
+      "warning": "#B7791F"
+    },
+    "theme_token_semantic_colors": {
+      "brand.accent": "#3B5F53",
+      "brand.primary": "#9B4F2F",
+      "canvas.background": "#EEE2CF",
+      "status.danger": "#B91C1C",
+      "status.success": "#3A7D44",
+      "status.warning": "#B7791F",
+      "surface.default": "#F8F0E2",
+      "surface.panel": "#C9C7A5",
+      "text.default": "#2D2520",
+      "text.muted": "#766A5D"
+    },
+    "visual_dna_palette_roles": {
+      "accent": "#c07030",
+      "background": "#232e26",
+      "border": "#232e26",
+      "muted": "#232e26",
+      "negative": "#232e26",
+      "positive": "#232e26",
+      "primary": "#c07030",
+      "surface": "#232e26",
+      "text": "#232e26"
+    },
+    "css_color_variables": {
+      "c_bg": "#232e26",
+      "c_bg_alt": "#2e3d30",
+      "c_bg_light": "#ede6d0",
+      "c_bg_light_alt": "#e4dac4",
+      "c_accent": "#c07030",
+      "c_border": "rgba(240, 232, 210, 0.12)",
+      "c_border_light": "rgba(30, 40, 32, 0.14)"
+    }
+  },
+  "decorative": {
+    "decorative_motifs": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "poster blocks",
+      "quote mark"
+    ],
+    "visual_effects": [
+      {
+        "effect_id": "tinted_card",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: tinted_card."
+      },
+      {
+        "effect_id": "accent_rule",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: accent_rule."
+      },
+      {
+        "effect_id": "soft_shadow",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: soft_shadow."
+      },
+      {
+        "effect_id": "gradient_accent",
+        "lowering_policy": "css_to_satori",
+        "notes": "Derived from beautiful-html-template source signal: gradient_accent."
+      },
+      {
+        "effect_id": "image_crop",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: image_crop."
+      },
+      {
+        "effect_id": "paper_texture",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: paper_texture."
+      },
+      {
+        "effect_id": "window_chrome",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: window_chrome."
+      },
+      {
+        "effect_id": "bold_border",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: bold_border."
+      }
+    ],
+    "decorative_vocabulary": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "poster blocks",
+      "quote mark"
+    ],
+    "chrome_rules": [
+      "bar-x-label",
+      "compare-label",
+      "label",
+      "mat-stat-label",
+      "slide-chrome"
+    ],
+    "motif_budget": {
+      "allowed": [
+        "grid",
+        "accent line",
+        "card panels",
+        "paper texture",
+        "poster blocks",
+        "quote mark"
+      ],
+      "density": "medium",
+      "forbidden": [
+        "cross_family_components",
+        "debug guide",
+        "fake_italic",
+        "new_decorative_motif",
+        "new_palette",
+        "random decorative lines",
+        "reference line",
+        "remote font dependency",
+        "remote_font_dependency"
+      ]
+    },
+    "forbidden_mutations": [
+      "new_palette",
+      "cross_family_components",
+      "fake_italic",
+      "new_decorative_motif",
+      "remote_font_dependency"
+    ]
+  },
+  "image": {
+    "strategy": "Preserve source image regions and screenshot-backed composition; runtime generation must use traceable online/approved image assets, not local decorative placeholders.",
+    "reference_screenshot": "beautiful-html-templates/screenshots/mat-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/mat-1.png",
+      "beautiful-html-templates/screenshots/mat-4.png",
+      "beautiful-html-templates/screenshots/mat-8.png"
+    ],
+    "required_assets": [],
+    "image_related_classes": []
+  },
+  "component": {
+    "component_candidates": [
+      "title_block",
+      "section_label",
+      "metric_card",
+      "finding_callout",
+      "evidence_table",
+      "comparison_matrix",
+      "timeline",
+      "process_flow",
+      "image_panel",
+      "logo_strip",
+      "mini_chart",
+      "qualitative_radar",
+      "action_list",
+      "risk_matrix",
+      "architecture_diagram"
+    ],
+    "component_ids": [
+      "title_block",
+      "comparison_matrix",
+      "timeline",
+      "metric_card"
+    ],
+    "component_grammar": [
+      "title_block",
+      "section_label",
+      "metric_card",
+      "finding_callout",
+      "evidence_table",
+      "comparison_matrix"
+    ],
+    "html_component_classes": [
+      "bullet-list",
+      "chart-baseline",
+      "chart-header",
+      "chart-source",
+      "chart-wrapper",
+      "compare-panel",
+      "info-card",
+      "info-card-body",
+      "info-card-heading",
+      "list-head",
+      "list-items",
+      "mat-stat",
+      "mat-stat-label",
+      "mat-stat-val",
+      "quote-attr",
+      "quote-mark",
+      "quote-text",
+      "slide--chart",
+      "slide--list",
+      "slide--quote",
+      "slide--statement",
+      "slide--stats"
+    ],
+    "content_shapes": [
+      "midcentury board",
+      "tactile cards",
+      "timeline"
+    ]
+  },
+  "page_type": {
+    "source_slide_count": 9,
+    "supported_page_roles": [
+      "action_plan",
+      "agenda",
+      "business_review",
+      "case_evidence",
+      "cause_analysis",
+      "closing",
+      "comparison",
+      "context_overview",
+      "cover",
+      "metric_overview",
+      "problem_analysis",
+      "risk_dependency",
+      "roadmap",
+      "section",
+      "timeline"
+    ],
+    "layout_variants": [
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "cover"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cover"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cover"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "agenda"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "agenda"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "agenda"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "section-divider"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "section"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "section_divider"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "context-overview"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "context_overview"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "context_overview"
+      },
+      {
+        "component_candidates": [
+          "metric_card",
+          "mini_chart",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "metric-dashboard"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "metric_overview",
+          "business_review"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "metric_dashboard"
+      },
+      {
+        "component_candidates": [
+          "finding_callout",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "problem-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "problem_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "problem_analysis"
+      },
+      {
+        "component_candidates": [
+          "process_flow",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "cause-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cause_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cause_analysis"
+      },
+      {
+        "component_candidates": [
+          "comparison_matrix",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "comparison"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "comparison"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "comparison"
+      },
+      {
+        "component_candidates": [
+          "timeline",
+          "process_flow"
+        ],
+        "layout_intents": [
+          "timeline"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "timeline",
+          "roadmap"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "timeline"
+      },
+      {
+        "component_candidates": [
+          "image_panel",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "case-evidence"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "case_evidence"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "case_evidence"
+      },
+      {
+        "component_candidates": [
+          "action_list",
+          "risk_matrix"
+        ],
+        "layout_intents": [
+          "action-plan"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "action_plan"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "action_plan"
+      },
+      {
+        "component_candidates": [
+          "risk_matrix",
+          "action_list"
+        ],
+        "layout_intents": [
+          "risk-dependency"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "risk_dependency"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "risk_dependency"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "closing"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "closing"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "closing"
+      }
+    ],
+    "required_content": [
+      "title",
+      "cards"
+    ],
+    "optional_content": [
+      "eyebrow",
+      "subtitle",
+      "timeline"
+    ]
+  },
+  "satori": {
+    "runtime": "owned_satori_template",
+    "renderer_id": "artboard_satori.mat-midcentury-board",
+    "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/mat-midcentury-board.mjs",
+    "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/mat-midcentury-board.canvas-spec.json",
+    "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/mat.mat-midcentury-board.json",
+    "renderer_contract": {
+      "external_html_css_js": "forbidden",
+      "forbidden_svg_features": [
+        "filter",
+        "pattern",
+        "foreignObject",
+        "image",
+        "use",
+        "linearGradient",
+        "radialGradient"
+      ],
+      "python_generic_fallback": "forbidden",
+      "runtime": "owned_satori_template"
+    },
+    "constraints": {
+      "external_html_css_js": "forbidden",
+      "generic_fallback_as_production": "forbidden",
+      "production_requires": [
+        "dedicated_renderer",
+        "golden_spec",
+        "fidelity_receipt"
+      ]
+    },
+    "migration_status": "needs_dedicated_renderer",
+    "font_and_typography_constraints": [
+      "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+      "letter spacing is preserved for Latin labels and reset/softened for CJK"
+    ]
+  },
+  "do_not_simplify": [
+    "preserve_fonts_palette_grid_slide_classes_decorative_elements",
+    "do_not_recolor_without_explicit_brand_override",
+    "do_not_mix_template_families",
+    "extend_missing_layout_inside_same_family",
+    "do_not_strip_identity_decorations",
+    "new_palette",
+    "cross_family_components",
+    "fake_italic",
+    "new_decorative_motif",
+    "remote_font_dependency",
+    "do_not_replace_family_with_generic_card_shell",
+    "do_not_mark_production_without_renderer_golden_fidelity_receipt",
+    "do_not_strip_identity_decorations",
+    "do_not_recolor_without_explicit_brand_override"
+  ],
+  "extraction_receipt": {
+    "basis": [
+      "template.json",
+      "design.md",
+      "template.html",
+      "reference_screenshot",
+      "beautiful-html-template-families.json"
+    ],
+    "claim_boundary": "visual contract only; not a renderer implementation or fidelity pass",
+    "promotion_status": "needs_review"
+  },
+  "font_strategy": {
+    "source_fonts": [
+      "Bricolage Grotesque",
+      "DM Sans",
+      "DM Mono"
+    ],
+    "slide_native_preferred": [
+      "system-sans-cjk",
+      "system-mono"
+    ],
+    "adobe_or_embedded_fallback": [
+      "Source Sans Pro",
+      "Source Code Pro",
+      "思源黑体",
+      "思源等宽"
+    ],
+    "cjk_fallback": "Noto Serif SC",
+    "role_mapping": {
+      "display": {
+        "source_font": "Bricolage Grotesque",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideDisplay",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideDisplay"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Bricolage Grotesque 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "body": {
+        "source_font": "DM Sans",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideBody",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideBody"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 DM Sans 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "label": {
+        "source_font": "DM Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideLabel",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideLabel"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 DM Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      },
+      "metric": {
+        "source_font": "DM Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideMetric",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideMetric"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 DM Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      }
+    },
+    "forbidden": [
+      "remote_font_runtime_dependency",
+      "google_fonts_as_production_default_without_receipt",
+      "collapse_all_roles_to_unexplained_single_font",
+      "drop_cjk_fallback"
+    ],
+    "mapping_reason": "根据 design.md/template.html/template.json 中的 font-family 与 typography token 提取源字体；运行时按 Slide/系统/Adobe/思源可用字体降级。",
+    "source_evidence": [
+      "beautiful-html-templates/templates/mat/design.md",
+      "beautiful-html-templates/templates/mat/template.html",
+      "beautiful-html-templates/templates/mat/template.json",
+      "beautiful-html-templates/screenshots/mat-1.png"
+    ],
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "source_fonts": "css_extracted_from_template_html",
+      "adobe_or_embedded_fallback": "inferred_from_layout",
+      "cjk_fallback": "inferred_from_layout",
+      "role_mapping.metric": "inferred_from_layout",
+      "forbidden": "inferred_from_layout",
+      "slide_native_preferred": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "DM Sans"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "Bricolage Grotesque"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "source_fonts": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Bricolage Grotesque', 'Noto Serif SC', sans-serif; 'DM Sans', 'Noto Serif SC', sans-serif; 'DM Mono', 'Noto Serif SC', monospace; var(--f-mono); var(--f-display); var(--f-heading); var(--f-body)"
+        }
+      ],
+      "adobe_or_embedded_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Bricolage Grotesque', 'Noto Serif SC', sans-serif; 'DM Sans', 'Noto Serif SC', sans-serif; 'DM Mono', 'Noto Serif SC', monospace; var(--f-mono); var(--f-display); var(--f-heading); var(--f-body)"
+        }
+      ],
+      "cjk_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Bricolage Grotesque', 'Noto Serif SC', sans-serif; 'DM Sans', 'Noto Serif SC', sans-serif; 'DM Mono', 'Noto Serif SC', monospace; var(--f-mono); var(--f-display); var(--f-heading); var(--f-body)"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Bricolage Grotesque', 'Noto Serif SC', sans-serif; 'DM Sans', 'Noto Serif SC', sans-serif; 'DM Mono', 'Noto Serif SC', monospace; var(--f-mono); var(--f-display); var(--f-heading); var(--f-body)"
+        }
+      ],
+      "slide_native_preferred": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Bricolage Grotesque', 'Noto Serif SC', sans-serif; 'DM Sans', 'Noto Serif SC', sans-serif; 'DM Mono', 'Noto Serif SC', monospace; var(--f-mono); var(--f-display); var(--f-heading); var(--f-body)"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Bricolage Grotesque', 'Noto Serif SC', sans-serif; 'DM Sans', 'Noto Serif SC', sans-serif; 'DM Mono', 'Noto Serif SC', monospace; var(--f-mono); var(--f-display); var(--f-heading); var(--f-body)"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ]
+    }
+  },
+  "typography_strategy": {
+    "source_typography_tokens": {
+      "font_families": [
+        "Bricolage Grotesque",
+        "DM Sans",
+        "DM Mono"
+      ],
+      "font_size": [
+        "12vw",
+        "7vw",
+        "4vw",
+        "2.4vw",
+        "1.5vw",
+        "1.05vw",
+        "0.82vw",
+        "0.7vw",
+        "5.5vw",
+        "3.4vw"
+      ],
+      "font_weight": [
+        "800",
+        "700",
+        "600",
+        "400",
+        "500"
+      ],
+      "line_height": [
+        "0.88",
+        "0.92",
+        "1.0",
+        "1.1",
+        "1.55",
+        "1.65",
+        "1.5",
+        "1.2",
+        "0.6",
+        "1"
+      ],
+      "letter_spacing": [
+        "-0.03em",
+        "-0.025em",
+        "-0.02em",
+        "-0.01em",
+        "0.12em",
+        "0` — or a tiny positive `0.02em` if the headline feels visually packed.",
+        "0.1em",
+        "0.14em",
+        "0.06em"
+      ],
+      "text_transform": [
+        "uppercase",
+        "uppercase` on CJK text.** Chinese has no case",
+        "uppercase`.)"
+      ],
+      "word_spacing": [],
+      "paragraph_spacing": [
+        "var(--gap-md)",
+        "var(--gap-lg)",
+        "var(--gap-sm)",
+        "var(--gap-lg)\" > The numbers that define the [product category]. </h2> <!-- Three stat cells — vertical borders between them --> <div style=\"display: grid",
+        "7px",
+        "var(--gap-md)",
+        "0.5em",
+        "var(--gap-sm)",
+        "0",
+        "var(--gap-lg)",
+        "calc(var(--pad-x) * 1.4)",
+        "0.4vh",
+        "calc(var(--pad-x) * 1.2)",
+        "3vw",
+        "1vh",
+        "0\" > <div class=\"mat-stat\"> <div class=\"mat-stat-val\">4.7k</div> <div class=\"mat-stat-label\"> Units sold in the first 90 days of launch, across 12 countries. </div> </div> <div class=\"mat-stat\"> <div class=\"mat-stat-val\">3.2×</div> <div class=\"mat-stat-label\"> Longer lifespan than the leading competitor in independent studio tests. </div> </div> <div class=\"mat-stat\"> <div class=\"mat-stat-val\">#1</div> <div class=\"mat-stat-label\"> Top-rated [product category] by Studio Supply Journal for two consecutive years. </div> </div> </div> </div> <footer class=\"slide-foot\"> <span class=\"label muted\">[Studio Name] · Product Brief</span> <span class=\"label muted\">Design Studio</span> </footer> </section> <!-- ═══ SLIDE 05 · QUOTE ══════════════════════════════════════════════ --> <!-- Chromeless. Full-slide pull quote with warm orange mark. Bricolage Grotesque at 3.4vw — weighted, not delicate. Attribution stacked below in mono label format. --> <section class=\"slide dark slide--quote\" data-slide=\"5\"> <div class=\"quote-mark\">\"</div> <div class=\"quote-text\"> Good design is as little design as possible. </div> <div class=\"quote-attr\"> <span class=\"label accent\">Dieter Rams</span> <span class=\"label muted\">Designer</span> </div> </section> <!-- ═══ SLIDE 06 · LIST (light) ═══════════════════════════════════════ --> <!-- Cream background — the warm inversion of the dark slides. Wide left margin holds the headline zone. Right 60% holds the bullet list. This is the one slide in the deck where light background is used. --> <section class=\"slide light slide--list\" data-slide=\"6\"> <header class=\"slide-chrome\"> <span class=\"label\" style=\"color: var(--c-fg-light-3)\" >Why It Matters</span > <span class=\"label\" style=\"color: var(--c-fg-light-3)\">06</span> </header> <div class=\"slide-body\"> <div class=\"list-head\"> <span class=\"kicker\">The Case</span> <h2 class=\"h2\" style=\"color: var(--c-fg-light)\"> What a studio tool should do for the maker. </h2> <p class=\"lead\" style=\"color: var(--c-fg-light-2)\"> Four principles that informed every material and dimension decision in the [product category]'s design. </p> </div> <div class=\"list-items\"> <ul class=\"bullet-list\"> <li>Disappear when in use so the work takes all the attention</li> <li> Improve output quality through surface calibration, not just feel </li> <li> Last long enough to become a trusted part of the studio environment </li> <li> Be honest about what it is — no branding that competes with the work </li> </ul> </div> </div> <footer class=\"slide-foot\"> <span class=\"label\" style=\"color: var(--c-fg-light-3)\" >[Studio Name] · Product Brief</span > <span class=\"label\" style=\"color: var(--c-fg-light-3)\" >Design Studio</span > </footer> </section> <!-- ═══ SLIDE 07 · COMPARE ════════════════════════════════════════════ --> <!-- Three-column grid: left panel | 1px divider line | right panel. Before label is muted mono. After label gets warm orange accent. Each panel has a heading, lead context, and 3 bullets. --> <section class=\"slide dark slide--compare\" data-slide=\"7\"> <header class=\"slide-chrome\"> <span class=\"label muted\">Before / After</span> <span class=\"label muted\">07</span> </header> <div class=\"slide-body\"> <div class=\"compare-panel left\"> <div class=\"compare-label\">The Old Way</div> <h3 class=\"h3\" style=\"color: var(--c-fg)\"> Generic [product category] from a supply catalog. </h3> <p class=\"lead muted\"> Works until it does not. Warps in heat, discolors with use, and feels like an afterthought. </p> <ul class=\"bullet-list\" style=\"--sz-lead: 1.05vw\"> <li>Slips on polished surfaces without a grip layer</li> <li>Grooves deepen and skew precision over time</li> <li>Replaced every six months on average</li> </ul> </div> <!-- The 1px vertical divider — a CSS column, not a border --> <div class=\"compare-divider-line\"></div> <div class=\"compare-panel right\"> <div class=\"compare-label after\">The New Way</div> <h3 class=\"h3\" style=\"color: var(--c-fg)\"> [Product Name], purpose-built. </h3> <p class=\"lead muted\"> A surface that gets better with use. The material compresses and recovers, keeping edges clean. </p> <ul class=\"bullet-list\" style=\"--sz-lead: 1.05vw\"> <li>Self-heals around use lines, keeping the surface flat</li> <li>Grip base holds any workbench without adhesives</li> <li> 3000-use tested lifespan — typically 2 to 3 years in daily use </li> </ul> </div> </div> <footer class=\"slide-foot\"> <span class=\"label muted\">[Studio Name] · Product Brief</span> <span class=\"label muted\">Design Studio</span> </footer> </section> <!-- ═══ SLIDE 08 · CHART ══════════════════════════════════════════════ --> <!-- Vertical bar chart. One bar is highlighted in warm orange (.accent). Bar heights set inline as percentages of the 30vh bar-track. Source attribution at the bottom in DM Mono. --> <section class=\"slide dark slide--chart\" data-slide=\"8\"> <header class=\"slide-chrome\"> <span class=\"label muted\">Performance</span> <span class=\"label muted\">08</span> </header> <div class=\"slide-body\"> <div class=\"chart-header\"> <h2 class=\"h2\" style=\"color: var(--c-fg)\"> Lifespan by material category. </h2> <span class=\"label muted\">Units: months of daily studio use</span> </div> <div class=\"chart-wrapper\"> <div class=\"bar-track\"> <!-- PVC Generic --> <div class=\"bar-col\"> <span class=\"bar-val\">6</span> <div class=\"bar-fill\" style=\"height: 20%\"></div> <span class=\"bar-x-label\">PVC</span> </div> <!-- Rubber Composite --> <div class=\"bar-col\"> <span class=\"bar-val\">11</span> <div class=\"bar-fill\" style=\"height: 37%\"></div> <span class=\"bar-x-label\">Rubber</span> </div> <!-- Glass --> <div class=\"bar-col\"> <span class=\"bar-val\">18</span> <div class=\"bar-fill\" style=\"height: 60%\"></div> <span class=\"bar-x-label\">Glass</span> </div> <!-- [Product Name] — accent bar, the highlighted data point --> <div class=\"bar-col\"> <span class=\"bar-val hi\">30</span> <div class=\"bar-fill accent\" style=\"height: 100%\"></div> <span class=\"bar-x-label\">[Product]</span> </div> <!-- Leather --> <div class=\"bar-col\"> <span class=\"bar-val\">22</span> <div class=\"bar-fill\" style=\"height: 73%\"></div> <span class=\"bar-x-label\">Leather</span> </div> </div> <div class=\"chart-baseline\"></div> </div> <div class=\"chart-source\"> Source: Independent Material Durability Study · [Studio] Lab 2025 </div> </div> <footer class=\"slide-foot\"> <span class=\"label muted\">[Studio Name] · Product Brief</span> <span class=\"label muted\">Design Studio</span> </footer> </section> <!-- ═══ SLIDE 09 · END ════════════════════════════════════════════════ --> <!-- Chromeless. Mirrors the cover's four-quadrant energy. Left column: kicker + closing headline + lead CTA. Right column: info card (cream inset — signature material contrast). Bottom foot: label pair, separated by a top border. Side label on the right edge echoes Slide 01. --> <section class=\"slide dark slide--end\" data-slide=\"9\" style=\"position: relative\" > <div class=\"end-main\"> <span class=\"kicker\">Ready to Build</span> <h2 class=\"h1\" style=\"color: var(--c-fg)\"> Start with the right surface. </h2> <p class=\"lead muted\" style=\"max-width: 85%\"> Order the [Product Name] at [studio-website.com] or find it at select independent supply stores worldwide. </p> </div> <div class=\"end-side\"> <div class=\"info-card\"> <div class=\"info-card-heading\">Get in touch.</div> <div class=\"info-card-body\"> hello@[studio-website.com]<br /> @[studio] on all platforms<br /> Available in 40+ countries </div> </div> </div> <div class=\"end-foot\"> <span class=\"label muted\">[Studio Name] · 2026</span> <span class=\"label muted\">[studio-website.com]</span> </div> </section> </div> <!-- /#deck --> <nav id=\"nav-dots\" aria-label=\"Slide navigation\"></nav> <div id=\"slide-counter\"></div> <script> /* ── Navigation engine — copied verbatim from skeleton.html ──────── */ (function () { const deck = document.getElementById(\"deck\")"
+      ],
+      "text_direction": [
+        "column"
+      ],
+      "writing_mode": [],
+      "text_decoration": []
+    },
+    "role_mapping": {
+      "display": {
+        "font_role": "display",
+        "source_font": "Bricolage Grotesque",
+        "runtime_alias": "SVGlideDisplay",
+        "font_size": 54,
+        "font_weight": 900,
+        "line_height": 0.9,
+        "letter_spacing": 0,
+        "text_transform": "latin_uppercase_only",
+        "max_lines": 3,
+        "alignment": "source_layout_dependent"
+      },
+      "body": {
+        "font_role": "body",
+        "source_font": "DM Sans",
+        "runtime_alias": "SVGlideBody",
+        "font_size": 20,
+        "font_weight": 400,
+        "line_height": 1.32,
+        "letter_spacing": 0,
+        "text_transform": "preserve_source_case",
+        "max_lines": 5,
+        "alignment": "source_layout_dependent"
+      },
+      "label": {
+        "font_role": "label",
+        "source_font": "DM Mono",
+        "runtime_alias": "SVGlideLabel",
+        "font_size": 12,
+        "font_weight": 700,
+        "line_height": 1.05,
+        "letter_spacing": 0.08,
+        "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+        "max_lines": 1,
+        "alignment": "source_layout_dependent"
+      },
+      "metric": {
+        "font_role": "metric",
+        "source_font": "DM Mono",
+        "runtime_alias": "SVGlideMetric",
+        "font_size": 42,
+        "font_weight": 900,
+        "line_height": 0.95,
+        "letter_spacing": 0,
+        "text_transform": "preserve_numbers_and_units",
+        "max_lines": 2,
+        "alignment": "source_layout_dependent"
+      }
+    },
+    "font_size_scale": {
+      "display": 54,
+      "body": 20,
+      "label": 12,
+      "metric": 42
+    },
+    "font_weight_scale": {
+      "display": 900,
+      "body": 400,
+      "label": 700,
+      "metric": 900
+    },
+    "line_height_scale": {
+      "display": 0.9,
+      "body": 1.32,
+      "label": 1.05,
+      "metric": 0.95
+    },
+    "letter_spacing_scale": {
+      "display": 0,
+      "body": 0,
+      "label": 0.08,
+      "metric": 0
+    },
+    "text_transform_policy": {
+      "display": "latin_uppercase_only",
+      "body": "preserve_source_case",
+      "label": "latin_uppercase_labels_reset_cjk_spacing",
+      "metric": "preserve_numbers_and_units"
+    },
+    "hierarchy_ratio": 2.7,
+    "max_lines": {
+      "display": 3,
+      "body": 5,
+      "label": 1,
+      "metric": 2
+    },
+    "measure": {
+      "display": "0.55-0.78 canvas width",
+      "body": "40-70 characters or CJK equivalent",
+      "label": "short mono labels",
+      "metric": "short numeric/stat blocks"
+    },
+    "alignment": {
+      "primary": "follow source composition",
+      "fallback": "left/top aligned unless source screenshot is centered"
+    },
+    "cjk_typography_adjustment": {
+      "display_font_cn": "Noto Serif SC",
+      "body_font_cn": "Noto Sans SC",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "italic_policy": "drop_italic"
+    },
+    "mapping_reason": "按源模板字号/字重/行高/字距/大小写规则抽象到 960x540 Slide 画布的四个文本角色。",
+    "word_spacing": {
+      "display": 0,
+      "body": 0,
+      "label": 0,
+      "metric": 0
+    },
+    "paragraph_spacing": {
+      "display_after": 0,
+      "body_after": 12,
+      "label_after": 0,
+      "metric_after": 0
+    },
+    "wrapping_policy": {
+      "display": "manual_break_or_balance",
+      "body": "wrap_with_measure",
+      "label": "no_wrap_preferred",
+      "metric": "no_wrap_preferred"
+    },
+    "text_direction": {
+      "default": "column",
+      "cjk": "ltr"
+    },
+    "writing_mode": {
+      "default": "horizontal-tb",
+      "vertical_roles": []
+    },
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "font_size_scale": "css_extracted_from_template_html",
+      "max_lines": "inferred_from_layout",
+      "writing_mode": "absent_use_default",
+      "text_direction": "css_extracted_from_template_html",
+      "alignment": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout",
+      "paragraph_spacing": "css_extracted_from_template_html",
+      "text_transform_policy": "css_extracted_from_template_html",
+      "line_height_scale": "css_extracted_from_template_html",
+      "wrapping_policy": "inferred_from_layout",
+      "font_weight_scale": "css_extracted_from_template_html",
+      "source_typography_tokens": "css_extracted_from_template_html",
+      "word_spacing": "absent_use_default",
+      "role_mapping.metric": "inferred_from_layout",
+      "cjk_typography_adjustment": "inferred_from_layout",
+      "hierarchy_ratio": "inferred_from_layout",
+      "measure": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "letter_spacing_scale": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "DM Sans"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "Bricolage Grotesque"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "font_size_scale": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font_size_scale",
+          "raw_value": "10px; var(--sz-display); var(--sz-h1); var(--sz-h2); var(--sz-h3); var(--sz-lead); var(--sz-body); var(--sz-caption); var(--sz-label); 5.5vw; 8vw; 3.4vw"
+        }
+      ],
+      "max_lines": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "text_direction": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.text_direction",
+          "raw_value": "column"
+        }
+      ],
+      "alignment": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "paragraph_spacing": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.paragraph_spacing",
+          "raw_value": "var(--gap-md); var(--gap-lg); var(--gap-sm); var(--gap-lg)\" > The numbers that define the [product category]. </h2> <!-- Three stat cells — vertical borders between them --> <div style=\"display: grid; 7px; var(--gap-md); 0.5em; var(--gap-sm); 0; var(--gap-lg); calc(var(--pad-x) * 1.4); 0.4vh; calc(var(--pad-x) * 1.2); 3vw; 1vh; 0\" > <div class=\"mat-stat\"> <div class=\"mat-stat-val\">4.7k</div> <div class=\"mat-stat-label\"> Units sold in the first 90 days of launch, across 12 countries. </div> </div"
+        }
+      ],
+      "text_transform_policy": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.text_transform_policy",
+          "raw_value": "uppercase` on CJK text.** Chinese has no case; uppercase`.) - **Use Chinese full-width punctuation** (`，。：；！？「」『』（）`) inside Chinese sentences, not the Latin equivalents (`,.:; uppercase"
+        }
+      ],
+      "line_height_scale": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.line_height_scale",
+          "raw_value": "0.88; 0.92; 1; 1.1; 1.55; 1.65; 1.5; 1.6; 0.6; 1.2"
+        }
+      ],
+      "wrapping_policy": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "font_weight_scale": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font_weight_scale",
+          "raw_value": "800; 700; 600; 400; 500"
+        }
+      ],
+      "source_typography_tokens": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.source_typography_tokens",
+          "raw_value": "10px; var(--sz-display); var(--sz-h1); var(--sz-h2); var(--sz-h3); var(--sz-lead); var(--sz-body); var(--sz-caption); var(--sz-label); 5.5vw; 8vw; 3.4vw; 800; 700; 600; 400; 500; 0.88; 0.92; 1; 1.1; 1.55; 1.65; 1.5; 1.6; 0.6; 1.2; 0` — or a tiny positive `0.02em` if the headline feels visually packed. - **Never `text-transform: uppercase` on CJK text.** Chinese has no case; 0.12em; -0.03em; -0.025em; -0.02em; -0.01em; 0.1em; 0.14em; 0.06em; uppercase` on CJK text.** Chinese has no case; uppercas"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/mat/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ght: ink-dark c-bg: bg-dark c-bg-light: bg-cream c-accent: accent-orange typography: display: fontFamily: \"Bricolage Grotesque, Noto Sans SC, sans-serif\" fontSize: 12vw fontWeight: 800 lineHeight: 0.88 letterSpacing: -0.03em h1: fontFamily: \"Bricolage Grotesque, No"
+        }
+      ],
+      "cjk_typography_adjustment": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "hierarchy_ratio": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "measure": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "letter_spacing_scale": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.letter_spacing_scale",
+          "raw_value": "0` — or a tiny positive `0.02em` if the headline feels visually packed. - **Never `text-transform: uppercase` on CJK text.** Chinese has no case; 0.12em; -0.03em; -0.025em; -0.02em; -0.01em; 0.1em; 0.14em; 0.06em"
+        }
+      ]
+    }
+  },
+  "text_style_strategy": {
+    "bold": {
+      "source_usage": "source uses heavy display/label weights",
+      "mapped_weight": {
+        "display": 900,
+        "label": 700,
+        "metric": 900
+      },
+      "allowed_roles": [
+        "display",
+        "label",
+        "metric"
+      ]
+    },
+    "italic": {
+      "source_usage": "source uses italic/font-style or italic-family tokens",
+      "mapped_style": "latin_only_when_source_requires_else_normal",
+      "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+      "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+    },
+    "underline": {
+      "source_usage": "source uses underline/text-decoration or hairline emphasis",
+      "mapped_decoration": "native underline only for actual text-decoration source usage",
+      "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+    },
+    "line_through": {
+      "source_usage": "not present in source; default no line-through",
+      "mapped_decoration": "none",
+      "fallback_shape": "none"
+    },
+    "emphasis": {
+      "color_shift": "use source accent color roles only",
+      "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+      "weight_shift": "increase one role step within font_weight_scale",
+      "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+    },
+    "text_decoration_policy": {
+      "underline": {
+        "style": "solid",
+        "color": "currentColor",
+        "thickness": "1px"
+      },
+      "line_through": {
+        "style": "none",
+        "color": "currentColor",
+        "thickness": "0px"
+      }
+    },
+    "forbidden": [
+      "fake_cjk_italic",
+      "drop_source_text_transform",
+      "drop_source_letter_spacing_without_loss_note",
+      "use_cross_family_font_motif",
+      "remote_font_dependency_without_receipt"
+    ],
+    "extraction_confidence": {
+      "text_decoration_policy.line_through.color": "absent_use_default",
+      "text_decoration_policy.underline.color": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.style": "absent_use_default",
+      "italic": "css_extracted_from_template_html",
+      "forbidden": "inferred_from_layout",
+      "emphasis": "inferred_from_layout",
+      "text_decoration_policy.underline.thickness": "css_extracted_from_template_html",
+      "underline": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.thickness": "absent_use_default",
+      "line_through": "absent_use_default",
+      "text_decoration_policy.underline.style": "css_extracted_from_template_html",
+      "bold": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "text_decoration_policy.underline.color": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "(400, 500) for display moments; they read as undecided. Italics are not used. Underline is not used. The only emphasis mechanism inside body copy is the orange `<em>` inline. The only structural emphasis is the kicker and the bullet em-dash. ## Layout ### Canvas System Mat is **viewport-fluid b"
+        }
+      ],
+      "italic": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-style",
+          "raw_value": "makes the dash feel like a deliberate mark and not a stray punctuation glyph. Italics are not used for typographic decoration in this system. The `<em>` tag is repurposed as an **orange inline emphasis** — `<em>` inside a stat value or a quote attribution switches to `{colors.accent-orange}` and s"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "emphasis": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "r { position: fixed; bottom: 20px; right: 28px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; color: rgba(255, 255, 255, 0.25); z-index: 100; user-select: none; } /* ╔═════════════════════════"
+        }
+      ],
+      "text_decoration_policy.underline.thickness": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "(400, 500) for display moments; they read as undecided. Italics are not used. Underline is not used. The only emphasis mechanism inside body copy is the orange `<em>` inline. The only structural emphasis is the kicker and the bullet em-dash. ## Layout ### Canvas System Mat is **viewport-fluid b"
+        }
+      ],
+      "underline": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "(400, 500) for display moments; they read as undecided. Italics are not used. Underline is not used. The only emphasis mechanism inside body copy is the orange `<em>` inline. The only structural emphasis is the kicker and the bullet em-dash. ## Layout ### Canvas System Mat is **viewport-fluid b"
+        }
+      ],
+      "text_decoration_policy.underline.style": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "(400, 500) for display moments; they read as undecided. Italics are not used. Underline is not used. The only emphasis mechanism inside body copy is the orange `<em>` inline. The only structural emphasis is the kicker and the bullet em-dash. ## Layout ### Canvas System Mat is **viewport-fluid b"
+        }
+      ],
+      "bold": [
+        {
+          "path": "beautiful-html-templates/templates/mat/template.html",
+          "selector_or_token": "css.font-weight",
+          "raw_value": "800; 700; 600; 400; 500"
+        }
+      ]
+    }
+  },
+  "loss_notes": [
+    "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+    "letter spacing is preserved for Latin labels and reset/softened for CJK"
+  ]
+}

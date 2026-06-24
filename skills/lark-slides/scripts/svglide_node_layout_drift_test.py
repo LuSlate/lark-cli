@@ -15,6 +15,28 @@ import svglide_node_layout_drift as drift
 
 
 class NodeLayoutDriftTest(unittest.TestCase):
+    def test_observations_from_svg_groups_satori_masked_text_runs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            svg_path = Path(tmpdir) / "page.satori.svg"
+            svg_path.write_text(
+                '<svg width="960" height="540" viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg">'
+                '<mask id="satori_om-id-1"><rect x="80" y="226" width="204" height="74" fill="#fff"/></mask>'
+                '<text x="90" y="239" font-size="12">Hello</text>'
+                '<text x="126" y="239" font-size="12"> </text>'
+                '<text x="132" y="239" font-size="12">world</text>'
+                '<mask id="satori_om-id-2"><rect x="338" y="100" width="284" height="340" fill="#fff"/></mask>'
+                '<path x="338" y="100" width="284" height="340" fill="#D6DD63" d="M338 100 H622 V440 H338 Z"/>'
+                "</svg>",
+                encoding="utf-8",
+            )
+
+            observations = drift.observations_from_svg(svg_path)
+
+        text_observations = [item for item in observations if item["kind"] == "text"]
+        self.assertEqual(len(text_observations), 1)
+        self.assertEqual(text_observations[0]["text"], "Hello world")
+        self.assertEqual(text_observations[0]["bbox"], {"x": 80.0, "y": 226.0, "width": 204.0, "height": 74.0})
+
     def test_rendered_satori_text_min_height_expansion_does_not_count_as_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             svg_path = Path(tmpdir) / "page.satori.svg"

@@ -1,0 +1,1369 @@
+{
+  "version": "svglide-beautiful-template-visual-contract/v1",
+  "family_id": "pin-and-paper",
+  "runtime_template_id": "annotated-field-board",
+  "source": {
+    "source_template_html": "beautiful-html-templates/templates/pin-and-paper/template.html",
+    "source_design_md": "beautiful-html-templates/templates/pin-and-paper/design.md",
+    "source_template_json": "beautiful-html-templates/templates/pin-and-paper/template.json",
+    "reference_screenshot": "beautiful-html-templates/screenshots/pin-and-paper-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/pin-and-paper-1.png",
+      "beautiful-html-templates/screenshots/pin-and-paper-11.png",
+      "beautiful-html-templates/screenshots/pin-and-paper-3.png"
+    ],
+    "absorption_records": [
+      "skills/lark-slides/references/absorptions/beautiful-html-templates/pin-and-paper.annotated-field-board.json"
+    ],
+    "template_json_name": "Pin & Paper",
+    "template_json_slug": "pin-and-paper"
+  },
+  "layout": {
+    "layout_family": null,
+    "density": "medium",
+    "formality": "medium",
+    "layout_rhythm": "pin-and-paper: medium density, medium formality. Yellow paper with safety-pin illustrations, ink-blue handwritten Caveat, paper-grain texture.",
+    "spacing_rhythm": "Reuse source spacing tokens and grid gaps: {\"pad_edge\": \"64px\", \"pad_top\": \"110px\", \"pad_bottom\": \"90px\", \"card_pad_md\": \"28px 28px 24px\", \"card_pad_lg\": \"32px 22px 22px\", \"card_pad_xl\": \"36px 28px 28px\", \"card_pad_quote\": \"60px 80px\", \"grid_gap_sm\": \"22px\", \"gri",
+    "source_layout_classes": [],
+    "variant_ids": [
+      "cover",
+      "agenda",
+      "section_divider",
+      "context_overview",
+      "metric_dashboard",
+      "problem_analysis",
+      "cause_analysis",
+      "comparison",
+      "timeline",
+      "case_evidence",
+      "action_plan",
+      "risk_dependency",
+      "closing"
+    ]
+  },
+  "typography": {
+    "template_json_typography": {
+      "display": "Caveat",
+      "body": "Space Grotesk",
+      "mono": "DM Mono",
+      "style": "handwritten script for warmth + grotesk for legibility + mono for captions; textbook annotation feel"
+    },
+    "design_tokens_typography": {
+      "body": "Space Grotesk",
+      "display": "Caveat",
+      "mono": "DM Mono",
+      "style": "handwritten script for warmth + grotesk for legibility + mono for captions; textbook annotation feel"
+    },
+    "visual_dna_typography_roles": {
+      "body": "Space Grotesk",
+      "caption": "small caption -> system-sans-cjk-regular",
+      "display": "Caveat",
+      "label": "compact label -> system-sans-cjk-medium",
+      "metric": "display numeric emphasis -> system-sans-cjk-heavy"
+    },
+    "typography_role": "handwritten script for warmth + grotesk for legibility + mono for captions; textbook annotation feel",
+    "font_policy": {
+      "fallback_stack": "system-sans-cjk",
+      "font_role_map": {
+        "body": "system-sans-cjk-regular",
+        "display": "system-sans-cjk-heavy",
+        "label": "system-sans-cjk-medium",
+        "metric": "system-sans-cjk-heavy",
+        "mono": "system-mono"
+      },
+      "original_families": [
+        "Caveat",
+        "Space Grotesk"
+      ]
+    },
+    "cjk_policy": {
+      "body_font_cn": "LXGW WenKai body",
+      "design_intent_font_pairing": [
+        "LXGW WenKai",
+        "LXGW WenKai body",
+        "LXGW WenKai are visually adjacent",
+        "霞鹜文楷 LXGW WenKai"
+      ],
+      "display_font_cn": "LXGW WenKai",
+      "emphasis_policy": "color_or_weight_only",
+      "italic_policy": "weight_only_emphasis",
+      "known_degradation": "Long Cang and LXGW WenKai are visually adjacent — both carry handwritten kaishu DNA. The three-voice editorial pairing (print / handwritten / archival) collapses into a two-voice pairing in pure Chinese (handwritten-display / handwritten-body / archival-Latin-only). This is not a bug — pure-Chinese decks in Pin & Paper read as more uniformly hand-touched tha",
+      "latin_accent_policy": "latin_only_allowed_when_semantic_annotation",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "mono_font_policy": "latin_only_or_system_mono",
+      "runtime_font_policy": "system_font_only_no_remote_dependency",
+      "runtime_font_stack": [
+        "system-sans-cjk",
+        "system-sans-cjk-heavy",
+        "system-sans-cjk-regular",
+        "system-mono"
+      ],
+      "source_section_heading": "CJK & International Content",
+      "source_section_sha256": "899cc60f29b1d9277e471d1275e3a31941deef2fe840bd3112fcf29a588ee267",
+      "strategy": "replace_family_whole_element"
+    }
+  },
+  "palette": {
+    "template_json_palette": {
+      "paper": "#EFE56A",
+      "cream": "#F8F1D6",
+      "ink": "#1F3A8A",
+      "red": "#C2342B",
+      "description": "saturated yellow paper, soft cream alternate, deep ink-blue type, plus rust red, kraft, and olive accents; visible paper grain texture"
+    },
+    "design_token_colors": {
+      "cream": "#F8F1D6",
+      "ink": "#1F3A8A",
+      "ink_deep": "#0E1430",
+      "ink_line": "#3457C4",
+      "ink_soft": "#2D4FB8",
+      "kraft": "#C9A66B",
+      "olive": "#6B7A2E",
+      "orange": "#D8702A",
+      "paper": "#EFE56A",
+      "paper_2": "#F5ECA0",
+      "paper_3": "#E8D85A",
+      "paper_extra": "#FBE6A4",
+      "red": "#C2342B"
+    },
+    "theme_token_colors": {},
+    "theme_token_semantic_colors": {},
+    "visual_dna_palette_roles": {
+      "accent": "#C2342B",
+      "background": "#EFE56A",
+      "border": "#1F3A8A",
+      "muted": "#EFE56A",
+      "negative": "#C2342B",
+      "positive": "#EFE56A",
+      "primary": "#1F3A8A",
+      "surface": "#F8F1D6",
+      "text": "#1F3A8A"
+    },
+    "css_color_variables": {
+      "paper": "#EFE56A",
+      "paper_2": "#F5ECA0",
+      "paper_3": "#E8D85A",
+      "ink": "#1F3A8A",
+      "ink_soft": "#2D4FB8",
+      "ink_line": "#3457C4"
+    }
+  },
+  "decorative": {
+    "decorative_motifs": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "poster blocks",
+      "quote mark",
+      "sticker collage"
+    ],
+    "visual_effects": [
+      {
+        "effect_id": "tinted_card",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: tinted_card."
+      },
+      {
+        "effect_id": "accent_rule",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: accent_rule."
+      },
+      {
+        "effect_id": "soft_shadow",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: soft_shadow."
+      },
+      {
+        "effect_id": "gradient_accent",
+        "lowering_policy": "css_to_satori",
+        "notes": "Derived from beautiful-html-template source signal: gradient_accent."
+      },
+      {
+        "effect_id": "image_crop",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: image_crop."
+      },
+      {
+        "effect_id": "paper_texture",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: paper_texture."
+      },
+      {
+        "effect_id": "window_chrome",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: window_chrome."
+      },
+      {
+        "effect_id": "bold_border",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: bold_border."
+      }
+    ],
+    "decorative_vocabulary": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "poster blocks",
+      "quote mark",
+      "sticker collage"
+    ],
+    "chrome_rules": [
+      "footer",
+      "label",
+      "row-label"
+    ],
+    "motif_budget": {},
+    "forbidden_mutations": [
+      "new_palette",
+      "cross_family_components",
+      "fake_italic",
+      "new_decorative_motif",
+      "remote_font_dependency"
+    ]
+  },
+  "image": {
+    "strategy": "Preserve source image regions and screenshot-backed composition; runtime generation must use traceable online/approved image assets, not local decorative placeholders.",
+    "reference_screenshot": "beautiful-html-templates/screenshots/pin-and-paper-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/pin-and-paper-1.png",
+      "beautiful-html-templates/screenshots/pin-and-paper-11.png",
+      "beautiful-html-templates/screenshots/pin-and-paper-3.png"
+    ],
+    "required_assets": [],
+    "image_related_classes": []
+  },
+  "component": {
+    "component_candidates": [
+      "title_block",
+      "section_label",
+      "metric_card",
+      "finding_callout",
+      "evidence_table",
+      "comparison_matrix",
+      "timeline",
+      "process_flow",
+      "image_panel",
+      "logo_strip",
+      "mini_chart",
+      "qualitative_radar",
+      "action_list",
+      "risk_matrix",
+      "architecture_diagram"
+    ],
+    "component_ids": [],
+    "component_grammar": [
+      "card",
+      "panel",
+      "s-agenda",
+      "s-chart",
+      "s-cover",
+      "s-cta",
+      "s-matrix",
+      "s-notes",
+      "s-notice",
+      "s-process"
+    ],
+    "html_component_classes": [
+      "card",
+      "grid",
+      "list",
+      "panel",
+      "s-chart",
+      "s-quote",
+      "s-stats",
+      "stat",
+      "table",
+      "timeline"
+    ],
+    "content_shapes": []
+  },
+  "page_type": {
+    "source_slide_count": 11,
+    "supported_page_roles": [
+      "action_plan",
+      "agenda",
+      "business_review",
+      "case_evidence",
+      "cause_analysis",
+      "closing",
+      "comparison",
+      "context_overview",
+      "cover",
+      "metric_overview",
+      "problem_analysis",
+      "risk_dependency",
+      "roadmap",
+      "section",
+      "timeline"
+    ],
+    "layout_variants": [
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "cover"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cover"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cover"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "agenda"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "agenda"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "agenda"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "section-divider"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "section"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "section_divider"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "context-overview"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "context_overview"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "context_overview"
+      },
+      {
+        "component_candidates": [
+          "metric_card",
+          "mini_chart",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "metric-dashboard"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "metric_overview",
+          "business_review"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "metric_dashboard"
+      },
+      {
+        "component_candidates": [
+          "finding_callout",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "problem-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "problem_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "problem_analysis"
+      },
+      {
+        "component_candidates": [
+          "process_flow",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "cause-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cause_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cause_analysis"
+      },
+      {
+        "component_candidates": [
+          "comparison_matrix",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "comparison"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "comparison"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "comparison"
+      },
+      {
+        "component_candidates": [
+          "timeline",
+          "process_flow"
+        ],
+        "layout_intents": [
+          "timeline"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "timeline",
+          "roadmap"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "timeline"
+      },
+      {
+        "component_candidates": [
+          "image_panel",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "case-evidence"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "case_evidence"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "case_evidence"
+      },
+      {
+        "component_candidates": [
+          "action_list",
+          "risk_matrix"
+        ],
+        "layout_intents": [
+          "action-plan"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "action_plan"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "action_plan"
+      },
+      {
+        "component_candidates": [
+          "risk_matrix",
+          "action_list"
+        ],
+        "layout_intents": [
+          "risk-dependency"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "risk_dependency"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "risk_dependency"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "closing"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "closing"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "closing"
+      }
+    ],
+    "required_content": [],
+    "optional_content": []
+  },
+  "satori": {
+    "runtime": "owned_satori_template",
+    "renderer_id": "artboard_satori.annotated-field-board",
+    "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/annotated-field-board.mjs",
+    "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/annotated-field-board.canvas-spec.json",
+    "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/pin-and-paper.annotated-field-board.json",
+    "renderer_contract": {},
+    "constraints": {
+      "external_html_css_js": "forbidden",
+      "generic_fallback_as_production": "forbidden",
+      "production_requires": [
+        "dedicated_renderer",
+        "golden_spec",
+        "fidelity_receipt"
+      ]
+    },
+    "migration_status": "needs_dedicated_renderer",
+    "font_and_typography_constraints": [
+      "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
+      "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+      "letter spacing is preserved for Latin labels and reset/softened for CJK"
+    ]
+  },
+  "do_not_simplify": [
+    "preserve_fonts_palette_grid_slide_classes_decorative_elements",
+    "do_not_recolor_without_explicit_brand_override",
+    "do_not_mix_template_families",
+    "extend_missing_layout_inside_same_family",
+    "do_not_strip_identity_decorations",
+    "new_palette",
+    "cross_family_components",
+    "fake_italic",
+    "new_decorative_motif",
+    "remote_font_dependency",
+    "do_not_replace_family_with_generic_card_shell",
+    "do_not_mark_production_without_renderer_golden_fidelity_receipt",
+    "do_not_strip_identity_decorations",
+    "do_not_recolor_without_explicit_brand_override"
+  ],
+  "extraction_receipt": {
+    "basis": [
+      "template.json",
+      "design.md",
+      "template.html",
+      "reference_screenshot",
+      "beautiful-html-template-families.json"
+    ],
+    "claim_boundary": "visual contract only; not a renderer implementation or fidelity pass",
+    "promotion_status": "needs_review"
+  },
+  "font_strategy": {
+    "source_fonts": [
+      "Caveat",
+      "Space Grotesk",
+      "Helvetica Neue",
+      "cursive",
+      "DM Mono"
+    ],
+    "slide_native_preferred": [
+      "system-sans-cjk",
+      "system-mono"
+    ],
+    "adobe_or_embedded_fallback": [
+      "Source Sans Pro",
+      "Source Code Pro",
+      "思源黑体",
+      "思源等宽"
+    ],
+    "cjk_fallback": "LXGW WenKai",
+    "role_mapping": {
+      "display": {
+        "source_font": "Caveat",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideDisplay",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideDisplay"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Caveat 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "body": {
+        "source_font": "Space Grotesk",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideBody",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideBody"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Space Grotesk 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "label": {
+        "source_font": "DM Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideLabel",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideLabel"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 DM Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      },
+      "metric": {
+        "source_font": "DM Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideMetric",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideMetric"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 DM Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      }
+    },
+    "forbidden": [
+      "remote_font_runtime_dependency",
+      "google_fonts_as_production_default_without_receipt",
+      "collapse_all_roles_to_unexplained_single_font",
+      "drop_cjk_fallback"
+    ],
+    "mapping_reason": "根据 design.md/template.html/template.json 中的 font-family 与 typography token 提取源字体；运行时按 Slide/系统/Adobe/思源可用字体降级。",
+    "source_evidence": [
+      "beautiful-html-templates/templates/pin-and-paper/design.md",
+      "beautiful-html-templates/templates/pin-and-paper/template.html",
+      "beautiful-html-templates/templates/pin-and-paper/template.json",
+      "beautiful-html-templates/screenshots/pin-and-paper-1.png"
+    ],
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "source_fonts": "css_extracted_from_template_html",
+      "adobe_or_embedded_fallback": "inferred_from_layout",
+      "cjk_fallback": "inferred_from_layout",
+      "role_mapping.metric": "inferred_from_layout",
+      "forbidden": "inferred_from_layout",
+      "slide_native_preferred": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "Space Grotesk"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "Caveat"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "source_fonts": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "\"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; \"DM Mono\", ui-monospace, monospace; \"Caveat\", cursive; \"DM Mono\", monospace; \"Space Grotesk\", sans-serif"
+        }
+      ],
+      "adobe_or_embedded_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "\"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; \"DM Mono\", ui-monospace, monospace; \"Caveat\", cursive; \"DM Mono\", monospace; \"Space Grotesk\", sans-serif"
+        }
+      ],
+      "cjk_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "\"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; \"DM Mono\", ui-monospace, monospace; \"Caveat\", cursive; \"DM Mono\", monospace; \"Space Grotesk\", sans-serif"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "\"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; \"DM Mono\", ui-monospace, monospace; \"Caveat\", cursive; \"DM Mono\", monospace; \"Space Grotesk\", sans-serif"
+        }
+      ],
+      "slide_native_preferred": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "\"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; \"DM Mono\", ui-monospace, monospace; \"Caveat\", cursive; \"DM Mono\", monospace; \"Space Grotesk\", sans-serif"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "\"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; \"DM Mono\", ui-monospace, monospace; \"Caveat\", cursive; \"DM Mono\", monospace; \"Space Grotesk\", sans-serif"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ]
+    }
+  },
+  "typography_strategy": {
+    "source_typography_tokens": {
+      "font_families": [
+        "Caveat",
+        "Space Grotesk",
+        "Helvetica Neue",
+        "cursive",
+        "DM Mono"
+      ],
+      "font_size": [
+        "196px",
+        "168px",
+        "130px",
+        "110px",
+        "96px",
+        "84px",
+        "50px",
+        "44px",
+        "38px",
+        "28px"
+      ],
+      "font_weight": [
+        "700",
+        "500",
+        "600",
+        "400"
+      ],
+      "line_height": [
+        "1.08",
+        "1.05",
+        "0.85",
+        "1.1",
+        "1.0",
+        "1.02",
+        "1.45",
+        "1.35",
+        "1.4",
+        "0.8"
+      ],
+      "letter_spacing": [
+        "-0.04em",
+        "-0.035em",
+        "-0.03em",
+        "-0.02em",
+        "-0.015em",
+        "0.12em",
+        "0.18em",
+        "0.14em",
+        "0 on CJK",
+        ".12em"
+      ],
+      "text_transform": [
+        "uppercase",
+        "no uppercase on CJK"
+      ],
+      "word_spacing": [],
+      "paragraph_spacing": [
+        "8px",
+        "14px",
+        "36px",
+        "24px",
+        "32px",
+        "28px",
+        "10px",
+        "40px",
+        "22px",
+        "8px",
+        "60px",
+        "20px"
+      ],
+      "text_direction": [
+        "column"
+      ],
+      "writing_mode": [],
+      "text_decoration": []
+    },
+    "role_mapping": {
+      "display": {
+        "font_role": "display",
+        "source_font": "Caveat",
+        "runtime_alias": "SVGlideDisplay",
+        "font_size": 54,
+        "font_weight": 900,
+        "line_height": 0.9,
+        "letter_spacing": 0,
+        "text_transform": "latin_uppercase_only",
+        "max_lines": 3,
+        "alignment": "source_layout_dependent"
+      },
+      "body": {
+        "font_role": "body",
+        "source_font": "Space Grotesk",
+        "runtime_alias": "SVGlideBody",
+        "font_size": 20,
+        "font_weight": 400,
+        "line_height": 1.32,
+        "letter_spacing": 0,
+        "text_transform": "preserve_source_case",
+        "max_lines": 5,
+        "alignment": "source_layout_dependent"
+      },
+      "label": {
+        "font_role": "label",
+        "source_font": "DM Mono",
+        "runtime_alias": "SVGlideLabel",
+        "font_size": 12,
+        "font_weight": 700,
+        "line_height": 1.05,
+        "letter_spacing": 0.08,
+        "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+        "max_lines": 1,
+        "alignment": "source_layout_dependent"
+      },
+      "metric": {
+        "font_role": "metric",
+        "source_font": "DM Mono",
+        "runtime_alias": "SVGlideMetric",
+        "font_size": 42,
+        "font_weight": 900,
+        "line_height": 0.95,
+        "letter_spacing": 0,
+        "text_transform": "preserve_numbers_and_units",
+        "max_lines": 2,
+        "alignment": "source_layout_dependent"
+      }
+    },
+    "font_size_scale": {
+      "display": 54,
+      "body": 20,
+      "label": 12,
+      "metric": 42
+    },
+    "font_weight_scale": {
+      "display": 900,
+      "body": 400,
+      "label": 700,
+      "metric": 900
+    },
+    "line_height_scale": {
+      "display": 0.9,
+      "body": 1.32,
+      "label": 1.05,
+      "metric": 0.95
+    },
+    "letter_spacing_scale": {
+      "display": 0,
+      "body": 0,
+      "label": 0.08,
+      "metric": 0
+    },
+    "text_transform_policy": {
+      "display": "latin_uppercase_only",
+      "body": "preserve_source_case",
+      "label": "latin_uppercase_labels_reset_cjk_spacing",
+      "metric": "preserve_numbers_and_units"
+    },
+    "hierarchy_ratio": 2.7,
+    "max_lines": {
+      "display": 3,
+      "body": 5,
+      "label": 1,
+      "metric": 2
+    },
+    "measure": {
+      "display": "0.55-0.78 canvas width",
+      "body": "40-70 characters or CJK equivalent",
+      "label": "short mono labels",
+      "metric": "short numeric/stat blocks"
+    },
+    "alignment": {
+      "primary": "follow source composition",
+      "fallback": "left/top aligned unless source screenshot is centered"
+    },
+    "cjk_typography_adjustment": {
+      "display_font_cn": "LXGW WenKai",
+      "body_font_cn": "LXGW WenKai body",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "italic_policy": "weight_only_emphasis"
+    },
+    "mapping_reason": "按源模板字号/字重/行高/字距/大小写规则抽象到 960x540 Slide 画布的四个文本角色。",
+    "word_spacing": {
+      "display": 0,
+      "body": 0,
+      "label": 0,
+      "metric": 0
+    },
+    "paragraph_spacing": {
+      "display_after": 0,
+      "body_after": 12,
+      "label_after": 0,
+      "metric_after": 0
+    },
+    "wrapping_policy": {
+      "display": "manual_break_or_balance",
+      "body": "wrap_with_measure",
+      "label": "no_wrap_preferred",
+      "metric": "no_wrap_preferred"
+    },
+    "text_direction": {
+      "default": "column",
+      "cjk": "ltr"
+    },
+    "writing_mode": {
+      "default": "horizontal-tb",
+      "vertical_roles": []
+    },
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "font_size_scale": "css_extracted_from_template_html",
+      "max_lines": "inferred_from_layout",
+      "writing_mode": "absent_use_default",
+      "text_direction": "css_extracted_from_template_html",
+      "alignment": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout",
+      "paragraph_spacing": "css_extracted_from_template_html",
+      "text_transform_policy": "css_extracted_from_template_html",
+      "line_height_scale": "css_extracted_from_template_html",
+      "wrapping_policy": "inferred_from_layout",
+      "font_weight_scale": "css_extracted_from_template_html",
+      "source_typography_tokens": "css_extracted_from_template_html",
+      "word_spacing": "absent_use_default",
+      "role_mapping.metric": "inferred_from_layout",
+      "cjk_typography_adjustment": "inferred_from_layout",
+      "hierarchy_ratio": "inferred_from_layout",
+      "measure": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "letter_spacing_scale": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "Space Grotesk"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "Caveat"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "font_size_scale": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font_size_scale",
+          "raw_value": "18px; 15px; 16px; 196px; 38px; 96px; 22px; 44px; 84px; 20px; 32px; 168px; 36px; 50px; 28px; 19px"
+        }
+      ],
+      "max_lines": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "text_direction": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.text_direction",
+          "raw_value": "column"
+        }
+      ],
+      "alignment": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "paragraph_spacing": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.paragraph_spacing",
+          "raw_value": "8px; 14px; 36px; 24px; 32px; 28px; 10px; 40px; 22px; 8px; 60px; 20px"
+        }
+      ],
+      "text_transform_policy": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.text_transform_policy",
+          "raw_value": "no uppercase on CJK - Full-width punctuation （，。：；！？「」（）） - No period on display headlines (Chinese typography convention) - Pangu spacing 盘古之白 (space between CJK and Latin: `使用 Claude` not `使用Claude`) - One font per sentence ### Aesthetic Notes for This System Pin & Paper is the strongest fit for Chinese in this entire library. The yellow legal-pad surface, the cobalt ink, the safety-pin illustrations, and the field-notebook register all translate naturally into Chinese — the system reads as a "
+        }
+      ],
+      "line_height_scale": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.line_height_scale",
+          "raw_value": "body 1.75–1.85, display 1.15–1.25 - Letter-spacing: 0 on CJK - Text-transform: no uppercase on CJK - Full-width punctuation （，。：；！？「」（）） - No period on display headlines (Chinese typography convention) - Pangu spacing 盘古之白 (space between CJK and Latin: `使用 Claude` not `使用Claude`) - One font per sentence ### Aesthetic Notes for This System Pin & Paper is the strongest fit for Chinese in this entire library. The yellow legal-pad surface, the cobalt ink, the safety-pin illustrations, and the field-"
+        }
+      ],
+      "wrapping_policy": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "font_weight_scale": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font_weight_scale",
+          "raw_value": "500; 700; 600"
+        }
+      ],
+      "source_typography_tokens": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.source_typography_tokens",
+          "raw_value": "18px; 15px; 16px; 196px; 38px; 96px; 22px; 44px; 84px; 20px; 32px; 168px; 36px; 50px; 28px; 19px; 500; 700; 600; body 1.75–1.85, display 1.15–1.25 - Letter-spacing: 0 on CJK - Text-transform: no uppercase on CJK - Full-width punctuation （，。：；！？「」（）） - No period on display headlines (Chinese typography convention) - Pangu spacing 盘古之白 (space between CJK and Latin: `使用 Claude` not `使用Claude`) - One font per sentence ### Aesthetic Notes for This System Pin & Paper is the strongest fit for Chinese i"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "DM Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "2A\" color-aliases: c-bg: paper c-text: ink c-card: cream c-stamp: red typography: display-mega: fontFamily: \"Space Grotesk, Helvetica Neue, Arial, sans-serif\" fontSize: 196px fontWeight: 700 lineHeight: 1.08 letterSpacing: -0.04em display-section: fontFamily: \"S"
+        }
+      ],
+      "cjk_typography_adjustment": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "hierarchy_ratio": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "measure": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "letter_spacing_scale": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.letter_spacing_scale",
+          "raw_value": "0 on CJK - Text-transform: no uppercase on CJK - Full-width punctuation （，。：；！？「」（）） - No period on display headlines (Chinese typography convention) - Pangu spacing 盘古之白 (space between CJK and Latin: `使用 Claude` not `使用Claude`) - One font per sentence ### Aesthetic Notes for This System Pin & Paper is the strongest fit for Chinese in this entire library. The yellow legal-pad surface, the cobalt ink, the safety-pin illustrations, and the field-notebook register all translate naturally into Chine"
+        }
+      ]
+    }
+  },
+  "text_style_strategy": {
+    "bold": {
+      "source_usage": "source uses heavy display/label weights",
+      "mapped_weight": {
+        "display": 900,
+        "label": 700,
+        "metric": 900
+      },
+      "allowed_roles": [
+        "display",
+        "label",
+        "metric"
+      ]
+    },
+    "italic": {
+      "source_usage": "source uses italic/font-style or italic-family tokens",
+      "mapped_style": "latin_only_when_source_requires_else_normal",
+      "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+      "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+    },
+    "underline": {
+      "source_usage": "source uses underline/text-decoration or hairline emphasis",
+      "mapped_decoration": "native underline only for actual text-decoration source usage",
+      "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+    },
+    "line_through": {
+      "source_usage": "not present in source; default no line-through",
+      "mapped_decoration": "none",
+      "fallback_shape": "none"
+    },
+    "emphasis": {
+      "color_shift": "use source accent color roles only",
+      "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+      "weight_shift": "increase one role step within font_weight_scale",
+      "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+    },
+    "text_decoration_policy": {
+      "underline": {
+        "style": "solid",
+        "color": "currentColor",
+        "thickness": "1px"
+      },
+      "line_through": {
+        "style": "none",
+        "color": "currentColor",
+        "thickness": "0px"
+      }
+    },
+    "forbidden": [
+      "fake_cjk_italic",
+      "drop_source_text_transform",
+      "drop_source_letter_spacing_without_loss_note",
+      "use_cross_family_font_motif",
+      "remote_font_dependency_without_receipt"
+    ],
+    "extraction_confidence": {
+      "text_decoration_policy.line_through.color": "absent_use_default",
+      "text_decoration_policy.underline.color": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.style": "absent_use_default",
+      "italic": "css_extracted_from_template_html",
+      "forbidden": "inferred_from_layout",
+      "emphasis": "inferred_from_layout",
+      "text_decoration_policy.underline.thickness": "css_extracted_from_template_html",
+      "underline": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.thickness": "absent_use_default",
+      "line_through": "absent_use_default",
+      "text_decoration_policy.underline.style": "css_extracted_from_template_html",
+      "bold": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "text_decoration_policy.underline.color": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "a, and 'me' voice annotations. May be rotated slightly (-3 to -1.5 degrees) and underlined via 2px solid ink for emphasis.\" stamp: border: \"3px solid {colors.red}\" color: \"{colors.red}\" padding: \"6px 16px\" fontFamily: \"DM Mono, monospace\" fontSize: 16px letterSpacing: 0.18e"
+        }
+      ],
+      "italic": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-style",
+          "raw_value": "esk, or a body paragraph in Caveat) collapses the system's editorial register. Italic letterforms are not used. Underline is used only on `.underline` spans inside Caveat scribble text (2px solid ink). Bold inside body is rare; emphasis is achieved either by switching to a heavier Space Grotesk wei"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "emphasis": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e: #D8702A; } html, body { margin:0; padding:0; background:#1a1a1a; } body { font-family: \"Space Grotesk\", \"Helvetica Neue\", Arial, sans-serif; color: var(--ink); } deck-stage { background: #1a1a1a; } section.slide { background: radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,.18), t"
+        }
+      ],
+      "text_decoration_policy.underline.thickness": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "a, and 'me' voice annotations. May be rotated slightly (-3 to -1.5 degrees) and underlined via 2px solid ink for emphasis.\" stamp: border: \"3px solid {colors.red}\" color: \"{colors.red}\" padding: \"6px 16px\" fontFamily: \"DM Mono, monospace\" fontSize: 16px letterSpacing: 0.18e"
+        }
+      ],
+      "underline": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "a, and 'me' voice annotations. May be rotated slightly (-3 to -1.5 degrees) and underlined via 2px solid ink for emphasis.\" stamp: border: \"3px solid {colors.red}\" color: \"{colors.red}\" padding: \"6px 16px\" fontFamily: \"DM Mono, monospace\" fontSize: 16px letterSpacing: 0.18e"
+        }
+      ],
+      "text_decoration_policy.underline.style": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "a, and 'me' voice annotations. May be rotated slightly (-3 to -1.5 degrees) and underlined via 2px solid ink for emphasis.\" stamp: border: \"3px solid {colors.red}\" color: \"{colors.red}\" padding: \"6px 16px\" fontFamily: \"DM Mono, monospace\" fontSize: 16px letterSpacing: 0.18e"
+        }
+      ],
+      "bold": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": "css.font-weight",
+          "raw_value": "500; 700; 600"
+        }
+      ]
+    }
+  },
+  "loss_notes": [
+    "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
+    "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+    "letter spacing is preserved for Latin labels and reset/softened for CJK"
+  ]
+}

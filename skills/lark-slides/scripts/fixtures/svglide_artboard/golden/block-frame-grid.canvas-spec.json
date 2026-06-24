@@ -5,25 +5,15 @@
     "width": 960
   },
   "content": {
-    "callout": "Launch proof is product-led.",
-    "cards": [
-      "Self-serve activation",
-      "Team workspace",
-      "Billing clarity",
-      "Partner channel"
-    ],
-    "eyebrow": "FOUNDER LAUNCH",
-    "stats": [
-      "Activation +31%",
-      "NPS 52",
-      "ARR 2.4x"
-    ],
-    "subtitle": "Chunky blocks frame proof, feature claims, and launch narrative without corporate polish.",
-    "title": "Indie SaaS Momentum"
+    "cta": "Get Started",
+    "eyebrow": "Presentation Template",
+    "page": "01 / 10",
+    "subtitle": "A bold, high-contrast template designed for maximum visual impact and uncompromising clarity.",
+    "title": "Neo-Brutalism Style"
   },
   "quality_constraints": {
-    "max_title_lines": 2,
-    "min_font_size": 16,
+    "max_title_lines": 3,
+    "min_font_size": 7,
     "safe_area": {
       "height": 460,
       "width": 864,
@@ -40,10 +30,10 @@
   "semantic_elements": [
     {
       "bbox": {
-        "height": 88,
-        "width": 710,
-        "x": 56,
-        "y": 96
+        "height": 154,
+        "width": 330,
+        "x": 288,
+        "y": 182
       },
       "element_id": "title",
       "kind": "text",
@@ -54,13 +44,121 @@
   "template_id": "block-frame-grid",
   "theme": {
     "colors": {
-      "accent": "#FE90E8",
-      "background": "#FFFDF5",
-      "muted": "#3B3B3B",
-      "panel": "#C0F7FE",
-      "primary": "#000000",
-      "surface": "#FFFFFF",
+      "background": "#FFDC8B",
+      "surface": "#FFFDF5",
+      "primary": "#FE90E8",
+      "accent": "#99E885",
+      "yellow": "#F7CB46",
+      "blue": "#C0F7FE",
       "text": "#000000"
+    },
+    "typography": {
+      "font_roles": {
+        "display": "SVGlideDisplay",
+        "body": "SVGlideBody",
+        "label": "SVGlideLabel",
+        "metric": "SVGlideMetric"
+      },
+      "role_tokens": {
+        "display": {
+          "font_role": "display",
+          "source_font": "Space Grotesk",
+          "runtime_alias": "SVGlideDisplay",
+          "font_size": 54,
+          "font_weight": 900,
+          "line_height": 0.9,
+          "letter_spacing": 0,
+          "text_transform": "latin_uppercase_only",
+          "max_lines": 3,
+          "alignment": "source_layout_dependent"
+        },
+        "body": {
+          "font_role": "body",
+          "source_font": "Inter",
+          "runtime_alias": "SVGlideBody",
+          "font_size": 18,
+          "font_weight": 400,
+          "line_height": 1.32,
+          "letter_spacing": 0,
+          "text_transform": "preserve_source_case",
+          "max_lines": 5,
+          "alignment": "source_layout_dependent"
+        },
+        "label": {
+          "font_role": "label",
+          "source_font": "Space Grotesk",
+          "runtime_alias": "SVGlideLabel",
+          "font_size": 10,
+          "font_weight": 700,
+          "line_height": 1.05,
+          "letter_spacing": 0.08,
+          "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+          "max_lines": 1,
+          "alignment": "source_layout_dependent"
+        },
+        "metric": {
+          "font_role": "metric",
+          "source_font": "Space Grotesk",
+          "runtime_alias": "SVGlideMetric",
+          "font_size": 42,
+          "font_weight": 900,
+          "line_height": 0.95,
+          "letter_spacing": 0,
+          "text_transform": "preserve_numbers_and_units",
+          "max_lines": 2,
+          "alignment": "source_layout_dependent"
+        }
+      },
+      "strategy_source": "skills/lark-slides/references/visual-contracts/beautiful/block-frame.block-frame-grid.json",
+      "text_style_roles": {
+        "bold": {
+          "source_usage": "source uses heavy display/label weights",
+          "mapped_weight": {
+            "display": 900,
+            "label": 700,
+            "metric": 900
+          },
+          "allowed_roles": [
+            "display",
+            "label",
+            "metric"
+          ]
+        },
+        "italic": {
+          "source_usage": "source uses italic/font-style or italic-family tokens",
+          "mapped_style": "latin_only_when_source_requires_else_normal",
+          "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+          "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+        },
+        "underline": {
+          "source_usage": "source uses underline/text-decoration or hairline emphasis",
+          "mapped_decoration": "native underline only for actual text-decoration source usage",
+          "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+        },
+        "line_through": {
+          "source_usage": "not present in source; default no line-through",
+          "mapped_decoration": "none",
+          "fallback_shape": "none"
+        },
+        "emphasis": {
+          "color_shift": "use source accent color roles only",
+          "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+          "weight_shift": "increase one role step within font_weight_scale",
+          "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+        },
+        "text_decoration_policy": {
+          "underline": {
+            "style": "solid",
+            "color": "currentColor",
+            "thickness": "1px"
+          },
+          "line_through": {
+            "style": "none",
+            "color": "currentColor",
+            "thickness": "0px"
+          }
+        }
+      }
     }
   },
   "theme_id": "block-frame",

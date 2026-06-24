@@ -1,0 +1,155 @@
+{
+  "schema_version": "svglide-template-fidelity/v1",
+  "stage": "template_fidelity",
+  "status": "passed",
+  "template_id": "intelligence-brief",
+  "page_type": "default",
+  "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+  "render_screenshot": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.preview.png",
+  "reference_selection": {
+    "rule": "explicit",
+    "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+  },
+  "score": 0.8021,
+  "threshold": 0.72,
+  "metrics": {
+    "color_distribution": 0.5548,
+    "layout_structure": 0.7105,
+    "edge_density": 0.6348,
+    "whitespace": 1.0,
+    "dominant_region": 0.8287,
+    "color_complexity": 1.0,
+    "primary_color_alignment": 0.9875,
+    "layout_region": 1.0,
+    "decorative_density": 1.0,
+    "typographic_hierarchy": 1.0
+  },
+  "issues": [],
+  "generated_by": "beautiful_template_fidelity_check.py",
+  "generator_version": "svglide-template-fidelity-check/v2",
+  "command": [
+    "beautiful_template_fidelity_check.py",
+    "--rendered",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.preview.png",
+    "--reference",
+    "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+    "--template-id",
+    "intelligence-brief",
+    "--page-type",
+    "default",
+    "--canvas-spec",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.canvas-spec.json",
+    "--out",
+    "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/references/receipts/template-fidelity/signal.intelligence-brief.json"
+  ],
+  "reference_sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+  "render_sha256": "a6594ee3320b476b4525e5a6f36eb96b53501904354770f26b54177c95683b06",
+  "role_consumption": {
+    "source": "/Users/bytedance/bd-projects/workspaces/SVGlide/.worktrees/cli-svglide-svg-private/skills/lark-slides/scripts/fixtures/svglide_artboard/golden/intelligence-brief.canvas-spec.json",
+    "font_roles": {
+      "display": "SVGlideDisplay",
+      "body": "SVGlideBody",
+      "label": "SVGlideLabel",
+      "metric": "SVGlideMetric"
+    },
+    "typography_roles": {
+      "display": {
+        "font_role": "display",
+        "source_font": "Source Serif 4",
+        "runtime_alias": "SVGlideDisplay",
+        "font_size": 54,
+        "font_weight": 400,
+        "line_height": 0.96,
+        "letter_spacing": 0,
+        "text_transform": "latin_uppercase_only",
+        "max_lines": 3,
+        "alignment": "source_layout_dependent"
+      },
+      "body": {
+        "font_role": "body",
+        "source_font": "DM Sans",
+        "runtime_alias": "SVGlideBody",
+        "font_size": 18,
+        "font_weight": 400,
+        "line_height": 1.32,
+        "letter_spacing": 0,
+        "text_transform": "preserve_source_case",
+        "max_lines": 5,
+        "alignment": "source_layout_dependent"
+      },
+      "label": {
+        "font_role": "label",
+        "source_font": "IBM Plex Mono",
+        "runtime_alias": "SVGlideLabel",
+        "font_size": 10,
+        "font_weight": 700,
+        "line_height": 1.05,
+        "letter_spacing": 0.08,
+        "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+        "max_lines": 1,
+        "alignment": "source_layout_dependent"
+      },
+      "metric": {
+        "font_role": "metric",
+        "source_font": "IBM Plex Mono",
+        "runtime_alias": "SVGlideMetric",
+        "font_size": 42,
+        "font_weight": 900,
+        "line_height": 0.95,
+        "letter_spacing": 0,
+        "text_transform": "preserve_numbers_and_units",
+        "max_lines": 2,
+        "alignment": "source_layout_dependent"
+      }
+    },
+    "text_style_roles": {
+      "bold": {
+        "source_usage": "source uses heavy display/label weights",
+        "mapped_weight": {
+          "display": 400,
+          "label": 700,
+          "metric": 900
+        },
+        "allowed_roles": [
+          "display",
+          "label",
+          "metric"
+        ]
+      },
+      "italic": {
+        "source_usage": "source uses italic/font-style or italic-family tokens",
+        "mapped_style": "latin_only_when_source_requires_else_normal",
+        "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+        "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+      },
+      "underline": {
+        "source_usage": "source uses underline/text-decoration or hairline emphasis",
+        "mapped_decoration": "native underline only for actual text-decoration source usage",
+        "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+      },
+      "line_through": {
+        "source_usage": "not present in source; default no line-through",
+        "mapped_decoration": "none",
+        "fallback_shape": "none"
+      },
+      "emphasis": {
+        "color_shift": "use source accent color roles only",
+        "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+        "weight_shift": "increase one role step within font_weight_scale",
+        "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+      },
+      "text_decoration_policy": {
+        "underline": {
+          "style": "solid",
+          "color": "currentColor",
+          "thickness": "1px"
+        },
+        "line_through": {
+          "style": "none",
+          "color": "currentColor",
+          "thickness": "0px"
+        }
+      }
+    }
+  }
+}

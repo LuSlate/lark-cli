@@ -15,6 +15,7 @@ from typing import Any
 import svglide_node_layout_drift
 import svglide_schema
 import svglide_semantic_map_ir
+import svglide_snapshot_visual_fidelity
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -64,6 +65,21 @@ SELECTION_CHECKS = [
 ARTBOARD_PACKAGE_CHECK = ("artboard-package-check", CHECK_DIR / "artboard-package-check.json")
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
 TEMPLATE_FIDELITY_CHECK = ("template-fidelity", CHECK_DIR / "template-fidelity.json")
+SNAPSHOT_VISUAL_FIDELITY_CHECK = ("snapshot-visual-fidelity", CHECK_DIR / "visual-fidelity/manifest.json")
+REQUIRED_TEMPLATE_FIDELITY_METRICS = {
+    "color_distribution",
+    "layout_structure",
+    "edge_density",
+    "whitespace",
+    "dominant_region",
+    "color_complexity",
+    "primary_color_alignment",
+    "layout_region",
+    "decorative_density",
+    "typographic_hierarchy",
+}
+REQUIRED_TEMPLATE_FIDELITY_FONT_ROLES = {"display", "body", "label", "metric"}
+REQUIRED_TEMPLATE_FIDELITY_TEXT_STYLE_ROLES = {"bold", "italic", "underline", "line_through", "emphasis", "text_decoration_policy"}
 OPTIONAL_CHECKS = []
 PASS_ACTION = "create_live"
 FAIL_ACTIONS = {"repair_and_rerun", "failed", "fail"}
@@ -1055,20 +1071,97 @@ def load_template_fidelity_check(project: Path, *, profile: str) -> dict[str, An
         check["issues"].append(issue("template_fidelity_score_invalid", "template fidelity receipt must include numeric score and threshold"))
     elif score < threshold:
         check["issues"].append(issue("template_fidelity_score_below_threshold", "template fidelity score is below threshold"))
+    receipt_issues = payload.get("issues")
+    if isinstance(receipt_issues, list) and receipt_issues:
+        check["issues"].append(issue("template_fidelity_unresolved_issues", "template fidelity receipt must not contain unresolved issues"))
+    metrics = payload.get("metrics")
+    if not isinstance(metrics, dict):
+        check["issues"].append(issue("template_fidelity_metrics_incomplete", "template fidelity receipt must include metrics object"))
+    else:
+        missing_metrics = sorted(key for key in REQUIRED_TEMPLATE_FIDELITY_METRICS if key not in metrics)
+        invalid_metrics = sorted(key for key in REQUIRED_TEMPLATE_FIDELITY_METRICS if key in metrics and not isinstance(metrics.get(key), (int, float)))
+        out_of_range_metrics = sorted(
+            key
+            for key in REQUIRED_TEMPLATE_FIDELITY_METRICS
+            if isinstance(metrics.get(key), (int, float)) and not 0 <= metrics[key] <= 1
+        )
+        if missing_metrics or invalid_metrics or out_of_range_metrics:
+            detail = ", ".join(
+                part
+                for part in [
+                    f"missing: {', '.join(missing_metrics)}" if missing_metrics else "",
+                    f"non-numeric: {', '.join(invalid_metrics)}" if invalid_metrics else "",
+                    f"out-of-range: {', '.join(out_of_range_metrics)}" if out_of_range_metrics else "",
+                ]
+                if part
+            )
+            check["issues"].append(issue("template_fidelity_metrics_incomplete", f"template fidelity metrics are incomplete or invalid ({detail})"))
     if selected and isinstance(receipt_template, str) and receipt_template not in selected:
         check["issues"].append(issue("template_fidelity_template_mismatch", "template fidelity receipt template_id does not match selected template"))
     if not isinstance(receipt_template, str) or not receipt_template:
         check["issues"].append(issue("template_fidelity_template_missing", "template fidelity receipt must include template_id"))
+    if payload.get("generated_by") != "beautiful_template_fidelity_check.py":
+        check["issues"].append(issue("template_fidelity_provenance_missing", "template fidelity receipt must include generated_by"))
+    if not isinstance(payload.get("generator_version"), str) or not payload.get("generator_version"):
+        check["issues"].append(issue("template_fidelity_provenance_missing", "template fidelity receipt must include generator_version"))
+    if not isinstance(payload.get("command"), list) or not payload.get("command"):
+        check["issues"].append(issue("template_fidelity_provenance_missing", "template fidelity receipt must include generation command"))
+    if required:
+        role_consumption = payload.get("role_consumption") if isinstance(payload.get("role_consumption"), dict) else {}
+        if not role_consumption:
+            check["issues"].append(
+                issue("template_fidelity_role_consumption_missing", "production template fidelity receipt must include role_consumption")
+            )
+        else:
+            if not isinstance(role_consumption.get("source"), str) or not role_consumption.get("source"):
+                check["issues"].append(
+                    issue("template_fidelity_role_consumption_incomplete", "template fidelity role_consumption.source is required")
+                )
+            for key in ("font_roles", "typography_roles"):
+                roles = role_consumption.get(key) if isinstance(role_consumption.get(key), dict) else {}
+                for role in sorted(REQUIRED_TEMPLATE_FIDELITY_FONT_ROLES):
+                    if not roles.get(role):
+                        check["issues"].append(
+                            issue(
+                                "template_fidelity_role_consumption_incomplete",
+                                f"template fidelity role_consumption.{key}.{role} is required",
+                            )
+                        )
+            text_style_roles = role_consumption.get("text_style_roles") if isinstance(role_consumption.get("text_style_roles"), dict) else {}
+            for role in sorted(REQUIRED_TEMPLATE_FIDELITY_TEXT_STYLE_ROLES):
+                if not text_style_roles.get(role):
+                    check["issues"].append(
+                        issue(
+                            "template_fidelity_role_consumption_incomplete",
+                            f"template fidelity role_consumption.text_style_roles.{role} is required",
+                        )
+                    )
     reference_screenshot = payload.get("reference_screenshot")
     render_screenshot = payload.get("render_screenshot") or payload.get("rendered")
+    reference_path = None
+    render_path = None
     if not reference_screenshot:
         check["issues"].append(issue("template_fidelity_reference_missing", "template fidelity receipt must include reference_screenshot"))
-    elif not resolve_template_fidelity_evidence_path(project, reference_screenshot).is_file():
-        check["issues"].append(issue("template_fidelity_reference_file_missing", "template fidelity receipt reference_screenshot must exist"))
+    else:
+        reference_path = resolve_template_fidelity_evidence_path(project, reference_screenshot)
+        if not reference_path.is_file():
+            check["issues"].append(issue("template_fidelity_reference_file_missing", "template fidelity receipt reference_screenshot must exist"))
     if not render_screenshot:
         check["issues"].append(issue("template_fidelity_render_missing", "template fidelity receipt must include render_screenshot"))
-    elif not resolve_template_fidelity_evidence_path(project, render_screenshot).is_file():
-        check["issues"].append(issue("template_fidelity_render_file_missing", "template fidelity receipt render_screenshot must exist"))
+    else:
+        render_path = resolve_template_fidelity_evidence_path(project, render_screenshot)
+        if not render_path.is_file():
+            check["issues"].append(issue("template_fidelity_render_file_missing", "template fidelity receipt render_screenshot must exist"))
+    if reference_path and reference_path.is_file():
+        expected_hash = payload.get("reference_sha256")
+        actual_hash = file_sha256(reference_path)
+        if not isinstance(expected_hash, str) or expected_hash != actual_hash:
+            check["issues"].append(issue("template_fidelity_reference_hash_mismatch", "template fidelity reference_sha256 must match reference_screenshot"))
+    if render_path and render_path.is_file():
+        expected_hash = payload.get("render_sha256")
+        actual_hash = file_sha256(render_path)
+        if not isinstance(expected_hash, str) or expected_hash != actual_hash:
+            check["issues"].append(issue("template_fidelity_render_hash_mismatch", "template fidelity render_sha256 must match render_screenshot"))
 
     check["error_count"] = len(check["issues"])
     check["action"] = PASS_ACTION if not check["issues"] else "repair_and_rerun"
@@ -1200,6 +1293,53 @@ def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: 
     return check
 
 
+def load_snapshot_visual_fidelity_check(project: Path, *, required: bool) -> dict[str, Any]:
+    rel = SNAPSHOT_VISUAL_FIDELITY_CHECK[1]
+    path = project / rel
+    result = svglide_snapshot_visual_fidelity.run_visual_fidelity(project)
+    if result.get("status") == "passed":
+        precreate_result = result
+    else:
+        precreate_result = svglide_snapshot_visual_fidelity.run_precreate_visual_fidelity(project)
+    issues = precreate_result.get("issues") if isinstance(precreate_result.get("issues"), list) else []
+    normalized_issues = [
+        issue_item
+        for issue_item in issues
+        if isinstance(issue_item, dict) and isinstance(issue_item.get("code"), str)
+    ]
+    status = result.get("status")
+    precreate_status = precreate_result.get("status")
+    check: dict[str, Any] = {
+        "name": SNAPSHOT_VISUAL_FIDELITY_CHECK[0],
+        "path": relpath(path, project),
+        "required": required,
+        "status": "passed" if status == "passed" and not normalized_issues else "failed",
+        "error_count": len(normalized_issues),
+        "action": PASS_ACTION,
+        "waivers": [],
+        "issues": normalized_issues,
+        "visual_fidelity_status": "passed",
+        "evidence_sha256": svglide_snapshot_visual_fidelity.visual_fidelity_evidence_hash(project),
+    }
+    if precreate_status == "structure_only_partial":
+        check["status"] = "skipped"
+        check["action"] = PASS_ACTION
+        check["visual_fidelity_status"] = "structure_only_partial"
+        check["allowed_claim"] = "snapshot_structure_fidelity_only"
+    elif check["status"] != "passed":
+        check["action"] = "structure_only_partial"
+        check["visual_fidelity_status"] = "structure_only_partial"
+        check["allowed_claim"] = "snapshot_structure_fidelity_only"
+    if not path.exists() and not normalized_issues and required:
+        check["issues"].append(issue("visual_fidelity_manifest_missing", f"required visual fidelity manifest is missing: {rel.as_posix()}"))
+        check["error_count"] = len(check["issues"])
+        check["status"] = "failed"
+        check["action"] = "structure_only_partial"
+        check["visual_fidelity_status"] = "structure_only_partial"
+        check["allowed_claim"] = "snapshot_structure_fidelity_only"
+    return check
+
+
 def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dict[str, Any]:
     project = project.resolve()
     checks = [load_generator_receipt(project, profile=profile)]
@@ -1215,7 +1355,9 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     conditional_checks: list[tuple[str, Path]] = []
     if generation_mode == "artboard_satori":
         conditional_checks.append(ARTBOARD_PACKAGE_CHECK)
+        conditional_checks.append(SNAPSHOT_VISUAL_FIDELITY_CHECK)
         checks.append(load_check(project, *ARTBOARD_PACKAGE_CHECK, required=True, profile=profile))
+        checks.append(load_snapshot_visual_fidelity_check(project, required=True))
     chart_required = plan_requires_chart_verify(project)
     if chart_required is None:
         checks.append(
@@ -1293,6 +1435,8 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     }
     result["inputs"]["generator_receipt"] = GENERATOR_RECEIPT_PATH.as_posix()
     result["inputs"]["generation_mode"] = generation_mode or "unknown"
+    if generation_mode == "artboard_satori":
+        result["input_hashes"]["snapshot_visual_fidelity_evidence"] = svglide_snapshot_visual_fidelity.visual_fidelity_evidence_hash(project)
     schema = svglide_schema.read_json(svglide_schema.schema_path("svglide-quality-gate.schema.json"))
     schema_issues = svglide_schema.validate_json_schema(result, schema)
     if schema_issues:

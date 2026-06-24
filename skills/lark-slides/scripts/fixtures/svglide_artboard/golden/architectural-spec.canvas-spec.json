@@ -1,61 +1,165 @@
 {
-  "version": "svglide-canvas-spec/v1",
   "canvas": {
-    "width": 960,
     "height": 540,
-    "viewBox": "0 0 960 540"
-  },
-  "safe_area": {
-    "x": 48,
-    "y": 40,
-    "width": 864,
-    "height": 460
-  },
-  "template_id": "architectural-spec",
-  "theme_id": "stone-architect",
-  "theme": {
-    "colors": {
-      "background": "#EFE9DC",
-      "panel": "#F8F4EA",
-      "primary": "#5F5549",
-      "accent": "#A28A6A",
-      "text": "#27221D",
-      "muted": "#756B60"
-    }
+    "viewBox": "0 0 960 540",
+    "width": 960
   },
   "content": {
-    "eyebrow": "ARCHITECTURE SPEC",
-    "title": "系统架构规格",
-    "subtitle": "低密度几何和 hairline rows 适合正式架构说明、空间规划和研究目录。",
-    "rows": [
-      "输入边界",
-      "处理结构",
-      "接口契约",
-      "交付节奏"
-    ]
+    "eyebrow": "Strategy Brief",
+    "page": "01 / 10",
+    "subtitle": "A minimalist operating view for decisions, constraints, and next-step sequencing.",
+    "title": "Operating Model"
+  },
+  "quality_constraints": {
+    "max_title_lines": 1,
+    "min_font_size": 7,
+    "safe_area": {
+      "height": 460,
+      "width": 884,
+      "x": 38,
+      "y": 40
+    }
+  },
+  "safe_area": {
+    "height": 460,
+    "width": 884,
+    "x": 38,
+    "y": 40
   },
   "semantic_elements": [
     {
+      "bbox": {
+        "height": 64,
+        "width": 410,
+        "x": 38,
+        "y": 246
+      },
       "element_id": "title",
       "kind": "text",
       "role": "title",
-      "source_ref": "canvas_spec.content.title",
-      "bbox": {
-        "x": 56,
-        "y": 70,
-        "width": 760,
-        "height": 132
-      }
+      "source_ref": "canvas_spec.content.title"
     }
   ],
-  "quality_constraints": {
-    "max_title_lines": 3,
-    "min_font_size": 15,
-    "safe_area": {
-      "x": 48,
-      "y": 40,
-      "width": 864,
-      "height": 460
+  "template_id": "architectural-spec",
+  "theme": {
+    "colors": {
+      "background": "#EDE8E0",
+      "panel": "#E2DBD1",
+      "primary": "#8A8178",
+      "accent": "#8A8178",
+      "line": "#B8B0A4",
+      "text": "#1A1A1A",
+      "muted": "#5A5A5A"
+    },
+    "typography": {
+      "font_roles": {
+        "display": "SVGlideDisplay",
+        "body": "SVGlideBody",
+        "label": "SVGlideLabel",
+        "metric": "SVGlideMetric"
+      },
+      "role_tokens": {
+        "display": {
+          "font_role": "display",
+          "source_font": "Playfair Display",
+          "runtime_alias": "SVGlideDisplay",
+          "font_size": 54,
+          "font_weight": 400,
+          "line_height": 0.96,
+          "letter_spacing": 0,
+          "text_transform": "latin_uppercase_only",
+          "max_lines": 3,
+          "alignment": "source_layout_dependent"
+        },
+        "body": {
+          "font_role": "body",
+          "source_font": "Inter",
+          "runtime_alias": "SVGlideBody",
+          "font_size": 20,
+          "font_weight": 400,
+          "line_height": 1.32,
+          "letter_spacing": 0,
+          "text_transform": "preserve_source_case",
+          "max_lines": 5,
+          "alignment": "source_layout_dependent"
+        },
+        "label": {
+          "font_role": "label",
+          "source_font": "Playfair Display",
+          "runtime_alias": "SVGlideLabel",
+          "font_size": 12,
+          "font_weight": 700,
+          "line_height": 1.05,
+          "letter_spacing": 0.08,
+          "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+          "max_lines": 1,
+          "alignment": "source_layout_dependent"
+        },
+        "metric": {
+          "font_role": "metric",
+          "source_font": "Playfair Display",
+          "runtime_alias": "SVGlideMetric",
+          "font_size": 42,
+          "font_weight": 900,
+          "line_height": 0.95,
+          "letter_spacing": 0,
+          "text_transform": "preserve_numbers_and_units",
+          "max_lines": 2,
+          "alignment": "source_layout_dependent"
+        }
+      },
+      "strategy_source": "skills/lark-slides/references/visual-contracts/beautiful/cartesian.architectural-spec.json",
+      "text_style_roles": {
+        "bold": {
+          "source_usage": "source uses heavy display/label weights",
+          "mapped_weight": {
+            "display": 400,
+            "label": 700,
+            "metric": 900
+          },
+          "allowed_roles": [
+            "display",
+            "label",
+            "metric"
+          ]
+        },
+        "italic": {
+          "source_usage": "source uses italic/font-style or italic-family tokens",
+          "mapped_style": "latin_only_when_source_requires_else_normal",
+          "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+          "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+        },
+        "underline": {
+          "source_usage": "source uses underline/text-decoration or hairline emphasis",
+          "mapped_decoration": "native underline only for actual text-decoration source usage",
+          "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+        },
+        "line_through": {
+          "source_usage": "not present in source; default no line-through",
+          "mapped_decoration": "none",
+          "fallback_shape": "none"
+        },
+        "emphasis": {
+          "color_shift": "use source accent color roles only",
+          "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+          "weight_shift": "increase one role step within font_weight_scale",
+          "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+        },
+        "text_decoration_policy": {
+          "underline": {
+            "style": "solid",
+            "color": "currentColor",
+            "thickness": "1px"
+          },
+          "line_through": {
+            "style": "none",
+            "color": "currentColor",
+            "thickness": "0px"
+          }
+        }
+      }
     }
-  }
+  },
+  "theme_id": "cartesian",
+  "version": "svglide-canvas-spec/v1"
 }

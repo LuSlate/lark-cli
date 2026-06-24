@@ -874,27 +874,7 @@ function posterStatPunch(spec) {
   ])
 }
 
-const BEAUTIFUL_TEMPLATE_CONFIGS = {
-  'pixel-orbit-console': { mode: 'console', label: 'ORBIT CONSOLE', listKeys: ['stats', 'actions', 'badges'] },
-  'biennale-programme-poster': { mode: 'programme', label: 'PROGRAMME', listKeys: ['programme'] },
-  'block-frame-grid': { mode: 'block-grid', label: 'BLOCK FRAME', listKeys: ['cards', 'stats'] },
-  'capsule-card-system': { mode: 'capsule', label: 'CAPSULES', listKeys: ['capsules', 'steps'] },
-  'coral-magazine-feature': { mode: 'magazine', label: 'FEATURE', listKeys: ['cards'] },
-  'creative-mode-grid': { mode: 'creative-grid', label: 'CREATIVE MODE', listKeys: ['sections', 'metrics'] },
-  'daisy-workshop-playbook': { mode: 'soft-workshop', label: 'PLAYBOOK', listKeys: ['lessons', 'notes'] },
-  'tritone-editorial-spread': { mode: 'tritone', label: 'TRITONE', listKeys: ['points'] },
-  'emerald-editorial-cover': { mode: 'cover-editorial', label: 'LEADERSHIP', listKeys: ['stats', 'points'] },
-  'grove-organic-brief': { mode: 'organic', label: 'GROVE', listKeys: ['principles', 'metrics'] },
-  'mat-midcentury-board': { mode: 'midcentury', label: 'MAT BOARD', listKeys: ['cards', 'timeline'] },
-  'people-platform-manifesto': { mode: 'manifesto', label: 'PLATFORM', listKeys: ['platforms', 'actions'] },
-  'pink-nocturne-feature': { mode: 'nocturne', label: 'NOCTURNE', listKeys: ['sections'] },
-  'playful-indie-launch': { mode: 'playful', label: 'INDIE LAUNCH', listKeys: ['stats', 'steps'] },
-  'retro-zine-spread': { mode: 'zine', label: 'ZINE', listKeys: ['notes'] },
-  'sticky-workshop-board': { mode: 'sticky', label: 'WORKSHOP', listKeys: ['postits', 'phases'] },
-  'soft-editorial-feature': { mode: 'soft-editorial', label: 'ESSAY', listKeys: ['cards'] },
-  'stencil-field-manual': { mode: 'manual', label: 'FIELD MANUAL', listKeys: ['principles', 'rows'] },
-  'vellum-scholar-brief': { mode: 'scholar', label: 'SCHOLAR BRIEF', listKeys: ['notes', 'stats'] }
-}
+const BEAUTIFUL_TEMPLATE_CONFIGS = {}
 
 function firstConfiguredItems(spec, cfg, fallback = ['Signal', 'Evidence', 'Next move']) {
   return firstList(spec, cfg.listKeys || ['items'], fallback)

@@ -1,0 +1,1432 @@
+{
+  "version": "svglide-beautiful-template-visual-contract/v1",
+  "family_id": "coral",
+  "runtime_template_id": "coral-magazine-feature",
+  "source": {
+    "source_template_html": "beautiful-html-templates/templates/coral/template.html",
+    "source_design_md": "beautiful-html-templates/templates/coral/design.md",
+    "source_template_json": "beautiful-html-templates/templates/coral/template.json",
+    "reference_screenshot": "beautiful-html-templates/screenshots/coral-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/coral-1.png",
+      "beautiful-html-templates/screenshots/coral-4.png",
+      "beautiful-html-templates/screenshots/coral-8.png"
+    ],
+    "absorption_records": [
+      "skills/lark-slides/references/absorptions/beautiful-html-templates/coral.coral-magazine-feature.json"
+    ],
+    "template_json_name": "Coral",
+    "template_json_slug": "coral"
+  },
+  "layout": {
+    "layout_family": "coral_magazine_feature",
+    "density": "medium",
+    "formality": "medium",
+    "layout_rhythm": "coral: medium density, medium formality. Cream and coral on near-black, set in oversized Bebas Neue.",
+    "spacing_rhythm": "Reuse source spacing tokens and grid gaps: {\"pad_y\": \"clamp(40px, 6vh, 80px)\", \"pad_x\": \"clamp(40px, 8vw, 100px)\", \"pad_y_tight\": \"clamp(28px, 4.5vh, 60px)\", \"pad_col\": \"clamp(32px, 4vw, 60px)\", \"gap_grid\": \"32px\", \"gap_md\": \"40px\", \"card_pad\": \"clamp(24px, 3vh, ",
+    "source_layout_classes": [],
+    "variant_ids": [
+      "cover",
+      "agenda",
+      "section_divider",
+      "context_overview",
+      "metric_dashboard",
+      "problem_analysis",
+      "cause_analysis",
+      "comparison",
+      "timeline",
+      "case_evidence",
+      "action_plan",
+      "risk_dependency",
+      "closing"
+    ]
+  },
+  "typography": {
+    "template_json_typography": {
+      "display": "Bebas Neue",
+      "body": "Inter",
+      "style": "tall condensed display sans for shouty headlines + neutral body for everything else"
+    },
+    "design_tokens_typography": {
+      "body": "Inter",
+      "display": "Bebas Neue",
+      "style": "tall condensed display sans for shouty headlines + neutral body for everything else"
+    },
+    "visual_dna_typography_roles": {
+      "body": "Inter",
+      "caption": "small caption -> system-sans-cjk-regular",
+      "display": "Bebas Neue",
+      "label": "compact label -> system-sans-cjk-medium",
+      "metric": "display numeric emphasis -> system-sans-cjk-heavy"
+    },
+    "typography_role": "tall condensed display sans for shouty headlines + neutral body for everything else",
+    "font_policy": {
+      "fallback_stack": "system-sans-cjk",
+      "font_role_map": {
+        "body": "system-sans-cjk-regular",
+        "display": "system-sans-cjk-heavy",
+        "label": "system-sans-cjk-medium",
+        "metric": "system-sans-cjk-heavy",
+        "mono": "system-mono"
+      },
+      "original_families": [
+        "Bebas Neue",
+        "Inter"
+      ]
+    },
+    "cjk_policy": {
+      "body_font_cn": "ZCOOL XiaoWei",
+      "design_intent_font_pairing": [
+        "LXGW WenKai TC",
+        "ZCOOL XiaoWei",
+        "Yozai",
+        "悠哉字体 Yozai",
+        "站酷小薇体 ZCOOL XiaoWei"
+      ],
+      "display_font_cn": "LXGW WenKai TC",
+      "emphasis_policy": "color_or_weight_only",
+      "italic_policy": "color_only_emphasis",
+      "known_degradation": "ZCOOL XiaoWei is a single-weight display face with limited glyph coverage compared to Noto family — exotic or technical Hanzi (rare surnames, classical characters, simplified-only variants outside GB2312) may fall back to system font. For Traditional Chinese decks, swap Yozai for `LXGW WenKai TC` (Google Fonts) which has fuller TC coverage. Bebas Neue's narr",
+      "latin_accent_policy": "latin_only_allowed_when_semantic_annotation",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "mono_font_policy": "latin_only_or_system_mono",
+      "runtime_font_policy": "system_font_only_no_remote_dependency",
+      "runtime_font_stack": [
+        "system-sans-cjk",
+        "system-sans-cjk-heavy",
+        "system-sans-cjk-regular",
+        "system-mono"
+      ],
+      "source_section_heading": "CJK & International Content",
+      "source_section_sha256": "9f0b4053b8aae2e02683ca89d4d6c6613a308fbacb022aa6b901e823aef2703b",
+      "strategy": "replace_family_whole_element"
+    }
+  },
+  "palette": {
+    "template_json_palette": {
+      "coral": "#E85D5D",
+      "coral_dark": "#D44A4A",
+      "cream": "#F5F0E8",
+      "cream_dark": "#E8E0D4",
+      "ink": "#1A1A1A",
+      "gray": "#6B6B6B",
+      "description": "near-black canvas, warm cream paper for content, and a saturated coral accent that carries the entire personality"
+    },
+    "design_token_colors": {
+      "black": "#1A1A1A",
+      "coral": "#E85D5D",
+      "coral_dark": "#D44A4A",
+      "cream": "#F5F0E8",
+      "cream_dark": "#E8E0D4",
+      "gray": "#6B6B6B",
+      "light_gray": "#B0B0B0",
+      "white": "#FFFFFF"
+    },
+    "theme_token_colors": {
+      "accent": "#111111",
+      "background": "#FFF1E8",
+      "danger": "#DC2626",
+      "muted": "#76554A",
+      "panel": "#FFE0D2",
+      "primary": "#E85D3F",
+      "success": "#16A34A",
+      "surface": "#FFFFFF",
+      "text": "#16110F",
+      "warning": "#D97706"
+    },
+    "theme_token_semantic_colors": {
+      "brand.accent": "#111111",
+      "brand.primary": "#E85D3F",
+      "canvas.background": "#FFF1E8",
+      "status.danger": "#DC2626",
+      "status.success": "#16A34A",
+      "status.warning": "#D97706",
+      "surface.default": "#FFFFFF",
+      "surface.panel": "#FFE0D2",
+      "text.default": "#16110F",
+      "text.muted": "#76554A"
+    },
+    "visual_dna_palette_roles": {
+      "accent": "#E85D5D",
+      "background": "#F5F0E8",
+      "border": "#1A1A1A",
+      "muted": "#6B6B6B",
+      "negative": "#E85D5D",
+      "positive": "#E85D5D",
+      "primary": "#1A1A1A",
+      "surface": "#F5F0E8",
+      "text": "#1A1A1A"
+    },
+    "css_color_variables": {}
+  },
+  "decorative": {
+    "decorative_motifs": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "poster blocks",
+      "quote mark",
+      "sticker collage"
+    ],
+    "visual_effects": [
+      {
+        "effect_id": "tinted_card",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: tinted_card."
+      },
+      {
+        "effect_id": "accent_rule",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: accent_rule."
+      },
+      {
+        "effect_id": "soft_shadow",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: soft_shadow."
+      },
+      {
+        "effect_id": "gradient_accent",
+        "lowering_policy": "css_to_satori",
+        "notes": "Derived from beautiful-html-template source signal: gradient_accent."
+      },
+      {
+        "effect_id": "paper_texture",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: paper_texture."
+      },
+      {
+        "effect_id": "bold_border",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: bold_border."
+      }
+    ],
+    "decorative_vocabulary": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "poster blocks",
+      "quote mark",
+      "sticker collage"
+    ],
+    "chrome_rules": [
+      "contact-label",
+      "item-label",
+      "label",
+      "meta-label",
+      "nav-arrow",
+      "nav-arrows",
+      "nav-dots",
+      "number"
+    ],
+    "motif_budget": {
+      "allowed": [
+        "grid",
+        "accent line",
+        "card panels",
+        "paper texture",
+        "poster blocks",
+        "quote mark"
+      ],
+      "density": "medium",
+      "forbidden": [
+        "cross_family_components",
+        "debug guide",
+        "fake_italic",
+        "new_decorative_motif",
+        "new_palette",
+        "random decorative lines",
+        "reference line",
+        "remote font dependency",
+        "remote_font_dependency"
+      ]
+    },
+    "forbidden_mutations": [
+      "new_palette",
+      "cross_family_components",
+      "fake_italic",
+      "new_decorative_motif",
+      "remote_font_dependency"
+    ]
+  },
+  "image": {
+    "strategy": "Preserve source image regions and screenshot-backed composition; runtime generation must use traceable online/approved image assets, not local decorative placeholders.",
+    "reference_screenshot": "beautiful-html-templates/screenshots/coral-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/coral-1.png",
+      "beautiful-html-templates/screenshots/coral-4.png",
+      "beautiful-html-templates/screenshots/coral-8.png"
+    ],
+    "required_assets": [],
+    "image_related_classes": [
+      "member-avatar",
+      "visual-area"
+    ]
+  },
+  "component": {
+    "component_candidates": [
+      "title_block",
+      "section_label",
+      "metric_card",
+      "finding_callout",
+      "evidence_table",
+      "comparison_matrix",
+      "timeline",
+      "process_flow",
+      "image_panel",
+      "logo_strip",
+      "mini_chart",
+      "qualitative_radar",
+      "action_list",
+      "risk_matrix",
+      "architecture_diagram"
+    ],
+    "component_ids": [
+      "title_block",
+      "finding_callout",
+      "metric_card"
+    ],
+    "component_grammar": [
+      "__font_body",
+      "__font_display",
+      "card-icon",
+      "card-stat",
+      "card-text",
+      "card-title",
+      "stat-label",
+      "stat-number"
+    ],
+    "html_component_classes": [
+      "big-statement",
+      "card-icon",
+      "card-stat",
+      "card-text",
+      "card-title",
+      "chart-container",
+      "chart-sidebar",
+      "chart-wrapper",
+      "column-card",
+      "columns-grid",
+      "left-panel",
+      "quote-accent",
+      "quote-author",
+      "quote-left",
+      "quote-right",
+      "quote-role",
+      "quote-text",
+      "right-panel",
+      "stat-label",
+      "stat-number",
+      "team-grid",
+      "timeline-container",
+      "timeline-line",
+      "timeline-points"
+    ],
+    "content_shapes": [
+      "magazine feature",
+      "brand story",
+      "stat callout"
+    ]
+  },
+  "page_type": {
+    "source_slide_count": 10,
+    "supported_page_roles": [
+      "action_plan",
+      "agenda",
+      "business_review",
+      "case_evidence",
+      "cause_analysis",
+      "closing",
+      "comparison",
+      "context_overview",
+      "cover",
+      "metric_overview",
+      "problem_analysis",
+      "risk_dependency",
+      "roadmap",
+      "section",
+      "timeline"
+    ],
+    "layout_variants": [
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "cover"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cover"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cover"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "agenda"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "agenda"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "agenda"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "section-divider"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "section"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "section_divider"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "context-overview"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "context_overview"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "context_overview"
+      },
+      {
+        "component_candidates": [
+          "metric_card",
+          "mini_chart",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "metric-dashboard"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "metric_overview",
+          "business_review"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "metric_dashboard"
+      },
+      {
+        "component_candidates": [
+          "finding_callout",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "problem-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "problem_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "problem_analysis"
+      },
+      {
+        "component_candidates": [
+          "process_flow",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "cause-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cause_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cause_analysis"
+      },
+      {
+        "component_candidates": [
+          "comparison_matrix",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "comparison"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "comparison"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "comparison"
+      },
+      {
+        "component_candidates": [
+          "timeline",
+          "process_flow"
+        ],
+        "layout_intents": [
+          "timeline"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "timeline",
+          "roadmap"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "timeline"
+      },
+      {
+        "component_candidates": [
+          "image_panel",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "case-evidence"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "case_evidence"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "case_evidence"
+      },
+      {
+        "component_candidates": [
+          "action_list",
+          "risk_matrix"
+        ],
+        "layout_intents": [
+          "action-plan"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "action_plan"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "action_plan"
+      },
+      {
+        "component_candidates": [
+          "risk_matrix",
+          "action_list"
+        ],
+        "layout_intents": [
+          "risk-dependency"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "risk_dependency"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "risk_dependency"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "closing"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "closing"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "closing"
+      }
+    ],
+    "required_content": [
+      "title",
+      "cards"
+    ],
+    "optional_content": [
+      "eyebrow",
+      "subtitle",
+      "stat",
+      "quote"
+    ]
+  },
+  "satori": {
+    "runtime": "owned_satori_template",
+    "renderer_id": "artboard_satori.coral-magazine-feature",
+    "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/coral-magazine-feature.mjs",
+    "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/coral-magazine-feature.canvas-spec.json",
+    "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/coral.coral-magazine-feature.json",
+    "renderer_contract": {
+      "external_html_css_js": "forbidden",
+      "forbidden_svg_features": [
+        "filter",
+        "pattern",
+        "foreignObject",
+        "image",
+        "use",
+        "linearGradient",
+        "radialGradient"
+      ],
+      "python_generic_fallback": "forbidden",
+      "runtime": "owned_satori_template"
+    },
+    "constraints": {
+      "external_html_css_js": "forbidden",
+      "generic_fallback_as_production": "forbidden",
+      "production_requires": [
+        "dedicated_renderer",
+        "golden_spec",
+        "fidelity_receipt"
+      ]
+    },
+    "migration_status": "needs_dedicated_renderer",
+    "font_and_typography_constraints": [
+      "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
+      "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+      "letter spacing is preserved for Latin labels and reset/softened for CJK"
+    ]
+  },
+  "do_not_simplify": [
+    "preserve_fonts_palette_grid_slide_classes_decorative_elements",
+    "do_not_recolor_without_explicit_brand_override",
+    "do_not_mix_template_families",
+    "extend_missing_layout_inside_same_family",
+    "do_not_strip_identity_decorations",
+    "new_palette",
+    "cross_family_components",
+    "fake_italic",
+    "new_decorative_motif",
+    "remote_font_dependency",
+    "do_not_replace_family_with_generic_card_shell",
+    "do_not_mark_production_without_renderer_golden_fidelity_receipt",
+    "do_not_strip_identity_decorations",
+    "do_not_recolor_without_explicit_brand_override"
+  ],
+  "extraction_receipt": {
+    "basis": [
+      "template.json",
+      "design.md",
+      "template.html",
+      "reference_screenshot",
+      "beautiful-html-template-families.json"
+    ],
+    "claim_boundary": "visual contract only; not a renderer implementation or fidelity pass",
+    "promotion_status": "needs_review"
+  },
+  "font_strategy": {
+    "source_fonts": [
+      "Bebas Neue",
+      "Inter"
+    ],
+    "slide_native_preferred": [
+      "system-sans-cjk"
+    ],
+    "adobe_or_embedded_fallback": [
+      "Source Sans Pro",
+      "思源黑体"
+    ],
+    "cjk_fallback": "LXGW WenKai TC",
+    "role_mapping": {
+      "display": {
+        "source_font": "Bebas Neue",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideDisplay",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideDisplay"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Bebas Neue 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "body": {
+        "source_font": "Inter",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideBody",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideBody"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Inter 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "label": {
+        "source_font": "Bebas Neue",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideLabel",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideLabel"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Bebas Neue 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      },
+      "metric": {
+        "source_font": "Bebas Neue",
+        "slide_font": "Source Sans Pro",
+        "runtime_alias": "SVGlideMetric",
+        "cjk_font": "思源黑体",
+        "fallback_stack": [
+          "system-sans-cjk",
+          "SVGlideMetric"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Bebas Neue 的语义角色，但运行时优先使用 Slide/系统可用的 Source Sans Pro 与 思源黑体。"
+      }
+    },
+    "forbidden": [
+      "remote_font_runtime_dependency",
+      "google_fonts_as_production_default_without_receipt",
+      "collapse_all_roles_to_unexplained_single_font",
+      "drop_cjk_fallback"
+    ],
+    "mapping_reason": "根据 design.md/template.html/template.json 中的 font-family 与 typography token 提取源字体；运行时按 Slide/系统/Adobe/思源可用字体降级。",
+    "source_evidence": [
+      "beautiful-html-templates/templates/coral/design.md",
+      "beautiful-html-templates/templates/coral/template.html",
+      "beautiful-html-templates/templates/coral/template.json",
+      "beautiful-html-templates/screenshots/coral-1.png"
+    ],
+    "same_role_font_justification": "源模板本身以单一 sans/system family 承担多数字体角色；通过 weight/size/line-height/uppercase 区分 display/body/label/metric。",
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "source_fonts": "css_extracted_from_template_html",
+      "adobe_or_embedded_fallback": "inferred_from_layout",
+      "cjk_fallback": "inferred_from_layout",
+      "role_mapping.metric": "inferred_from_layout",
+      "forbidden": "inferred_from_layout",
+      "slide_native_preferred": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "Inter"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "Bebas Neue"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "source_fonts": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Inter', sans-serif; 'Bebas Neue', sans-serif"
+        }
+      ],
+      "adobe_or_embedded_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Inter', sans-serif; 'Bebas Neue', sans-serif"
+        }
+      ],
+      "cjk_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Inter', sans-serif; 'Bebas Neue', sans-serif"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "Bebas Neue"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Inter', sans-serif; 'Bebas Neue', sans-serif"
+        }
+      ],
+      "slide_native_preferred": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Inter', sans-serif; 'Bebas Neue', sans-serif"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Inter', sans-serif; 'Bebas Neue', sans-serif"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "Bebas Neue"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ]
+    }
+  },
+  "typography_strategy": {
+    "source_typography_tokens": {
+      "font_families": [
+        "Bebas Neue",
+        "Inter"
+      ],
+      "font_size": [
+        "min(120px",
+        "clamp(80px",
+        "clamp(42px",
+        "clamp(40px",
+        "clamp(36px",
+        "clamp(48px",
+        "clamp(28px",
+        "clamp(24px",
+        "min(44px",
+        "min(38px"
+      ],
+      "font_weight": [
+        "400",
+        "300",
+        "700",
+        "600"
+      ],
+      "line_height": [
+        "0.9",
+        "1",
+        "1.1",
+        "1.7",
+        "1.6",
+        "1.5",
+        "1.4",
+        "1.0",
+        "0.95"
+      ],
+      "letter_spacing": [
+        "4px",
+        "12px",
+        "2px",
+        "1px",
+        "3px"
+      ],
+      "text_transform": [
+        "uppercase",
+        "uppercase` on any label/eyebrow/meta when content is Hanzi — Chinese has no case"
+      ],
+      "word_spacing": [],
+      "paragraph_spacing": [
+        "24px",
+        "32px",
+        "28px",
+        "0",
+        "8px",
+        "40px",
+        "12px",
+        "48px",
+        "20px",
+        "4px",
+        "16px",
+        "12px",
+        "16px",
+        "2px",
+        "40px",
+        "20px",
+        "32px",
+        "24px"
+      ],
+      "text_direction": [
+        "column"
+      ],
+      "writing_mode": [],
+      "text_decoration": []
+    },
+    "role_mapping": {
+      "display": {
+        "font_role": "display",
+        "source_font": "Bebas Neue",
+        "runtime_alias": "SVGlideDisplay",
+        "font_size": 88,
+        "font_weight": 900,
+        "line_height": 0.9,
+        "letter_spacing": 0,
+        "text_transform": "latin_uppercase_only",
+        "max_lines": 3,
+        "alignment": "source_layout_dependent"
+      },
+      "body": {
+        "font_role": "body",
+        "source_font": "Inter",
+        "runtime_alias": "SVGlideBody",
+        "font_size": 20,
+        "font_weight": 400,
+        "line_height": 1.32,
+        "letter_spacing": 0,
+        "text_transform": "preserve_source_case",
+        "max_lines": 5,
+        "alignment": "source_layout_dependent"
+      },
+      "label": {
+        "font_role": "label",
+        "source_font": "Bebas Neue",
+        "runtime_alias": "SVGlideLabel",
+        "font_size": 12,
+        "font_weight": 700,
+        "line_height": 1.05,
+        "letter_spacing": 0.08,
+        "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+        "max_lines": 1,
+        "alignment": "source_layout_dependent"
+      },
+      "metric": {
+        "font_role": "metric",
+        "source_font": "Bebas Neue",
+        "runtime_alias": "SVGlideMetric",
+        "font_size": 56,
+        "font_weight": 900,
+        "line_height": 0.95,
+        "letter_spacing": 0,
+        "text_transform": "preserve_numbers_and_units",
+        "max_lines": 2,
+        "alignment": "source_layout_dependent"
+      }
+    },
+    "font_size_scale": {
+      "display": 88,
+      "body": 20,
+      "label": 12,
+      "metric": 56
+    },
+    "font_weight_scale": {
+      "display": 900,
+      "body": 400,
+      "label": 700,
+      "metric": 900
+    },
+    "line_height_scale": {
+      "display": 0.9,
+      "body": 1.32,
+      "label": 1.05,
+      "metric": 0.95
+    },
+    "letter_spacing_scale": {
+      "display": 0,
+      "body": 0,
+      "label": 0.08,
+      "metric": 0
+    },
+    "text_transform_policy": {
+      "display": "latin_uppercase_only",
+      "body": "preserve_source_case",
+      "label": "latin_uppercase_labels_reset_cjk_spacing",
+      "metric": "preserve_numbers_and_units"
+    },
+    "hierarchy_ratio": 4.4,
+    "max_lines": {
+      "display": 3,
+      "body": 5,
+      "label": 1,
+      "metric": 2
+    },
+    "measure": {
+      "display": "0.55-0.78 canvas width",
+      "body": "40-70 characters or CJK equivalent",
+      "label": "short mono labels",
+      "metric": "short numeric/stat blocks"
+    },
+    "alignment": {
+      "primary": "follow source composition",
+      "fallback": "left/top aligned unless source screenshot is centered"
+    },
+    "cjk_typography_adjustment": {
+      "display_font_cn": "LXGW WenKai TC",
+      "body_font_cn": "ZCOOL XiaoWei",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "italic_policy": "color_only_emphasis"
+    },
+    "mapping_reason": "按源模板字号/字重/行高/字距/大小写规则抽象到 960x540 Slide 画布的四个文本角色。",
+    "word_spacing": {
+      "display": 0,
+      "body": 0,
+      "label": 0,
+      "metric": 0
+    },
+    "paragraph_spacing": {
+      "display_after": 0,
+      "body_after": 12,
+      "label_after": 0,
+      "metric_after": 0
+    },
+    "wrapping_policy": {
+      "display": "manual_break_or_balance",
+      "body": "wrap_with_measure",
+      "label": "no_wrap_preferred",
+      "metric": "no_wrap_preferred"
+    },
+    "text_direction": {
+      "default": "column",
+      "cjk": "ltr"
+    },
+    "writing_mode": {
+      "default": "horizontal-tb",
+      "vertical_roles": []
+    },
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "font_size_scale": "css_extracted_from_template_html",
+      "max_lines": "inferred_from_layout",
+      "writing_mode": "absent_use_default",
+      "text_direction": "css_extracted_from_template_html",
+      "alignment": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout",
+      "paragraph_spacing": "css_extracted_from_template_html",
+      "text_transform_policy": "css_extracted_from_template_html",
+      "line_height_scale": "css_extracted_from_template_html",
+      "wrapping_policy": "inferred_from_layout",
+      "font_weight_scale": "css_extracted_from_template_html",
+      "source_typography_tokens": "css_extracted_from_template_html",
+      "word_spacing": "absent_use_default",
+      "role_mapping.metric": "inferred_from_layout",
+      "cjk_typography_adjustment": "inferred_from_layout",
+      "hierarchy_ratio": "inferred_from_layout",
+      "measure": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "letter_spacing_scale": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "Inter"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "Bebas Neue"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "font_size_scale": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font_size_scale",
+          "raw_value": "18px; 12px; min(120px, 9vw, 13vh); 11px; min(44px, 3.5vw, 5.5vh); min(38px, 3vw, 4.8vh); clamp(42px, 7vw, 100px); clamp(15px, 1.4vw, 20px); clamp(100px, 15vw, 200px); clamp(36px, 5vw, 72px); clamp(14px, 1.2vw, 18px); clamp(40px, 6vw, 80px); clamp(48px, 7vw, 96px); clamp(28px, 3vw, 48px); clamp(80px, 15vw, 200px); clamp(28px, 4vw, 56px)"
+        }
+      ],
+      "max_lines": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "text_direction": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.text_direction",
+          "raw_value": "column"
+        }
+      ],
+      "alignment": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "Bebas Neue"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "paragraph_spacing": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.paragraph_spacing",
+          "raw_value": "24px; 32px; 28px; 0; 8px; 40px; 12px; 48px; 20px; 4px; 16px; 12px; 16px; 2px; 40px; 20px; 32px; 24px"
+        }
+      ],
+      "text_transform_policy": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.text_transform_policy",
+          "raw_value": "uppercase` on any label/eyebrow/meta when content is Hanzi — Chinese has no case; uppercase"
+        }
+      ],
+      "line_height_scale": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.line_height_scale",
+          "raw_value": "0.9; 1; 1.0; 1.7; 1.6; 1.1; 1.5; 1.4; 0.95"
+        }
+      ],
+      "wrapping_policy": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "font_weight_scale": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font_weight_scale",
+          "raw_value": "700; 600; 300"
+        }
+      ],
+      "source_typography_tokens": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.source_typography_tokens",
+          "raw_value": "18px; 12px; min(120px, 9vw, 13vh); 11px; min(44px, 3.5vw, 5.5vh); min(38px, 3vw, 4.8vh); clamp(42px, 7vw, 100px); clamp(15px, 1.4vw, 20px); clamp(100px, 15vw, 200px); clamp(36px, 5vw, 72px); clamp(14px, 1.2vw, 18px); clamp(40px, 6vw, 80px); clamp(48px, 7vw, 96px); clamp(28px, 3vw, 48px); clamp(80px, 15vw, 200px); clamp(28px, 4vw, 56px); 700; 600; 300; 0.9; 1; 1.0; 1.7; 1.6; 1.1; 1.5; 1.4; 0.95; 2px; 4px; 3px; 1px; 12px; uppercase` on any label/eyebrow/meta when content is Hanzi — Chinese has no "
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "Bebas Neue"
+        },
+        {
+          "path": "beautiful-html-templates/templates/coral/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "ht-gray: \"#B0B0B0\" white: \"#FFFFFF\" color-aliases: bg: cream ink: black typography: hero-title: fontFamily: \"Bebas Neue, sans-serif\" fontSize: \"min(120px, 9vw, 13vh)\" fontWeight: 400 lineHeight: 0.9 letterSpacing: 4px jumbo-feature: fontFamily: \"Bebas Neue, sans-s"
+        }
+      ],
+      "cjk_typography_adjustment": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "hierarchy_ratio": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "measure": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "letter_spacing_scale": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.letter_spacing_scale",
+          "raw_value": "2px; 4px; 3px; 1px; 12px"
+        }
+      ]
+    }
+  },
+  "text_style_strategy": {
+    "bold": {
+      "source_usage": "source uses heavy display/label weights",
+      "mapped_weight": {
+        "display": 900,
+        "label": 700,
+        "metric": 900
+      },
+      "allowed_roles": [
+        "display",
+        "label",
+        "metric"
+      ]
+    },
+    "italic": {
+      "source_usage": "source uses italic/font-style or italic-family tokens",
+      "mapped_style": "latin_only_when_source_requires_else_normal",
+      "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+      "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+    },
+    "underline": {
+      "source_usage": "source uses underline/text-decoration or hairline emphasis",
+      "mapped_decoration": "native underline only for actual text-decoration source usage",
+      "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+    },
+    "line_through": {
+      "source_usage": "not present in source; default no line-through",
+      "mapped_decoration": "none",
+      "fallback_shape": "none"
+    },
+    "emphasis": {
+      "color_shift": "use source accent color roles only",
+      "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+      "weight_shift": "increase one role step within font_weight_scale",
+      "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+    },
+    "text_decoration_policy": {
+      "underline": {
+        "style": "solid",
+        "color": "currentColor",
+        "thickness": "1px"
+      },
+      "line_through": {
+        "style": "none",
+        "color": "currentColor",
+        "thickness": "0px"
+      }
+    },
+    "forbidden": [
+      "fake_cjk_italic",
+      "drop_source_text_transform",
+      "drop_source_letter_spacing_without_loss_note",
+      "use_cross_family_font_motif",
+      "remote_font_dependency_without_receipt"
+    ],
+    "extraction_confidence": {
+      "text_decoration_policy.line_through.color": "absent_use_default",
+      "text_decoration_policy.underline.color": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.style": "absent_use_default",
+      "italic": "css_extracted_from_template_html",
+      "forbidden": "inferred_from_layout",
+      "emphasis": "inferred_from_layout",
+      "text_decoration_policy.underline.thickness": "css_extracted_from_template_html",
+      "underline": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.thickness": "absent_use_default",
+      "line_through": "absent_use_default",
+      "text_decoration_policy.underline.style": "css_extracted_from_template_html",
+      "bold": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "text_decoration_policy.underline.color": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "for body paragraphs, 600 for meta labels, 700 for section eyebrows. Italic and underline are not used. ### Type Scale | Token | Size | Family | Weight | Use | |---|---|---|---|---| | `{typography.giant-mark}` | clamp(140px, 20vw, 280px) | Bebas Neue | 400 | Oversized decorative quote mark or feat"
+        }
+      ],
+      "italic": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-style",
+          "raw_value": "nance), 400 for body paragraphs, 600 for meta labels, 700 for section eyebrows. Italic and underline are not used. ### Type Scale | Token | Size | Family | Weight | Use | |---|---|---|---|---| | `{typography.giant-mark}` | clamp(140px, 20vw, 280px) | Bebas Neue | 400 | Oversized decorative quote m"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "emphasis": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "idth: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--black); color: var(--black); } .presentation { width: 100%; height: 100%; position: relativ"
+        }
+      ],
+      "text_decoration_policy.underline.thickness": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "for body paragraphs, 600 for meta labels, 700 for section eyebrows. Italic and underline are not used. ### Type Scale | Token | Size | Family | Weight | Use | |---|---|---|---|---| | `{typography.giant-mark}` | clamp(140px, 20vw, 280px) | Bebas Neue | 400 | Oversized decorative quote mark or feat"
+        }
+      ],
+      "underline": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "for body paragraphs, 600 for meta labels, 700 for section eyebrows. Italic and underline are not used. ### Type Scale | Token | Size | Family | Weight | Use | |---|---|---|---|---| | `{typography.giant-mark}` | clamp(140px, 20vw, 280px) | Bebas Neue | 400 | Oversized decorative quote mark or feat"
+        }
+      ],
+      "text_decoration_policy.underline.style": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "for body paragraphs, 600 for meta labels, 700 for section eyebrows. Italic and underline are not used. ### Type Scale | Token | Size | Family | Weight | Use | |---|---|---|---|---| | `{typography.giant-mark}` | clamp(140px, 20vw, 280px) | Bebas Neue | 400 | Oversized decorative quote mark or feat"
+        }
+      ],
+      "bold": [
+        {
+          "path": "beautiful-html-templates/templates/coral/template.html",
+          "selector_or_token": "css.font-weight",
+          "raw_value": "700; 600; 300"
+        }
+      ]
+    }
+  },
+  "loss_notes": [
+    "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
+    "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+    "letter spacing is preserved for Latin labels and reset/softened for CJK"
+  ]
+}

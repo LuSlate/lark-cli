@@ -1,0 +1,46 @@
+{
+  "version": "svglide-artboard-font-manifest/v1",
+  "default_family": "SVGlideDefault",
+  "roles": {
+    "display": {
+      "family": "SVGlideDisplay",
+      "weight": 800,
+      "style": "normal",
+      "candidates": [
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+      ]
+    },
+    "body": {
+      "family": "SVGlideBody",
+      "weight": 400,
+      "style": "normal",
+      "candidates": [
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+      ]
+    },
+    "label": {
+      "family": "SVGlideLabel",
+      "weight": 700,
+      "style": "normal",
+      "candidates": [
+        "/System/Library/Fonts/Supplemental/Verdana.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+      ]
+    },
+    "metric": {
+      "family": "SVGlideMetric",
+      "weight": 900,
+      "style": "normal",
+      "candidates": [
+        "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+      ]
+    }
+  }
+}

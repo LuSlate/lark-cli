@@ -101,6 +101,15 @@ def production_theme_record(theme_id: str) -> dict[str, object]:
     return {
         "id": theme_id,
         "theme_id": theme_id,
+        "colors": {
+            "background": "#FFFFFF",
+            "surface": "#F8FAFC",
+            "panel": "#F8FAFC",
+            "primary": "#2563EB",
+            "accent": "#D946EF",
+            "text": "#111827",
+            "muted": "#64748B",
+        },
         "status": "active",
         "asset_status": "production",
         "quality_tier": "trusted",
@@ -172,6 +181,33 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
 
         self.assertEqual("executive-dashboard", result["selected_template_id"])
         self.assertNotIn("broken-status-only-report", {item["template_id"] for item in result["template_candidates"]})
+
+    def test_selected_theme_is_constrained_by_selected_template_supported_themes(self) -> None:
+        original_template_registry = selector.load_template_registry
+        original_theme_registry = selector.load_theme_registry
+        template = production_template_record("executive-dashboard", score_terms=["business review"])
+        template["supported_theme_ids"] = ["blue-professional"]
+        selector.load_template_registry = lambda: {"templates": [template]}
+        selector.load_theme_registry = lambda: {
+            "themes": [
+                production_theme_record("coral"),
+                production_theme_record("blue-professional"),
+            ]
+        }
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                brief = "产品发布海报，活泼视觉，coral magazine style"
+                prepare_project(root, brief)
+
+                result = selector.select_theme_template(root, brief, top_k=5)
+        finally:
+            selector.load_template_registry = original_template_registry
+            selector.load_theme_registry = original_theme_registry
+
+        self.assertEqual("executive-dashboard", result["selected_template_id"])
+        self.assertEqual("blue-professional", result["selected_theme_id"])
+        self.assertEqual({"blue-professional"}, {item["theme_id"] for item in result["theme_candidates"]})
 
     def test_selector_ranking_records_runtime_contract_signals(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -312,7 +348,8 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
         theme_ids = [item["theme_id"] for item in result["theme_candidates"]]
         self.assertNotIn("intelligence-brief", template_ids)
         self.assertNotIn("poster-stat-punch", template_ids)
-        self.assertIn("stone-architect", theme_ids)
+        self.assertNotIn("stone-architect", theme_ids)
+        self.assertEqual(["blue-professional"], theme_ids)
         self.assertEqual(["executive-dashboard"], template_ids)
 
     def test_evaluation_only_templates_do_not_enter_default_selector_candidates(self) -> None:

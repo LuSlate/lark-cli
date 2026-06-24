@@ -313,7 +313,14 @@ def apply_registry_theme(spec: dict[str, Any], registry: dict[str, Any]) -> dict
     theme_payload = registry.get("theme_payload")
     if isinstance(theme_payload, dict) and isinstance(theme_payload.get("colors"), dict):
         merged = json.loads(json.dumps(spec, ensure_ascii=False))
-        merged["theme"] = theme_payload
+        spec_theme = merged.get("theme") if isinstance(merged.get("theme"), dict) else {}
+        merged_theme = json.loads(json.dumps(theme_payload, ensure_ascii=False))
+        merged_theme.update(spec_theme)
+        if isinstance(theme_payload.get("colors"), dict) and isinstance(spec_theme.get("colors"), dict):
+            merged_colors = json.loads(json.dumps(theme_payload["colors"], ensure_ascii=False))
+            merged_colors.update(spec_theme["colors"])
+            merged_theme["colors"] = merged_colors
+        merged["theme"] = merged_theme
         return merged
     return spec
 
@@ -537,6 +544,9 @@ def compiler_nodes_from_canvas_spec(spec: dict[str, Any]) -> list[dict[str, Any]
     theme = normalize_theme(spec)
     template_id = str(spec.get("template_id") or "unknown-template")
     theme_id = str(spec.get("theme_id") or "unknown-theme")
+    eyebrow_text = content_text(spec, "eyebrow", "").upper()
+    eyebrow_width = 560 if len(eyebrow_text) > 42 else 360
+    eyebrow_font_size = 12 if len(eyebrow_text) > 42 else 15
     nodes: list[dict[str, Any]] = [
         {
             "id": "background",
@@ -564,13 +574,13 @@ def compiler_nodes_from_canvas_spec(spec: dict[str, Any]) -> list[dict[str, Any]
     add_compiler_text_node(
         nodes,
         "eyebrow",
-        content_text(spec, "eyebrow", "").upper(),
+        eyebrow_text,
         x=64,
         y=58,
-        width=360,
+        width=eyebrow_width,
         height=28,
         fill=theme["primary"],
-        font_size=15,
+        font_size=eyebrow_font_size,
         font_weight=800,
         role="eyebrow",
         source_ref="canvas_spec.content.eyebrow",
@@ -617,7 +627,7 @@ def compiler_nodes_from_canvas_spec(spec: dict[str, Any]) -> list[dict[str, Any]
                 "x": x,
                 "y": y,
                 "width": 390,
-                "height": 56,
+                "height": 64,
                 "fill": theme["panel"],
                 "origin": {"type": "template", "id": template_id, "reason": "contract compile content card"},
             }
@@ -627,9 +637,9 @@ def compiler_nodes_from_canvas_spec(spec: dict[str, Any]) -> list[dict[str, Any]
             f"content-{index}",
             value,
             x=x + 16,
-            y=y + 13,
+            y=y + 12,
             width=358,
-            height=34,
+            height=44,
             fill=theme["text"],
             font_size=16,
             font_weight=650,
@@ -993,17 +1003,20 @@ def nodes_from_satori_svg(satori_svg_path: Path) -> list[dict[str, Any]]:
         height = number(bbox.get("height"), 0)
         if kind == "text":
             height = max(height, 24)
-        nodes.append(
-            {
-                "id": node_id,
-                "kind": "text" if kind == "text" else kind,
-                "x": number(bbox.get("x"), 0),
-                "y": number(bbox.get("y"), 0),
-                "width": number(bbox.get("width"), 0),
-                "height": height,
-                "text": observation.get("text") if isinstance(observation.get("text"), str) else None,
-            }
-        )
+        node = {
+            "id": node_id,
+            "kind": "text" if kind == "text" else kind,
+            "x": number(bbox.get("x"), 0),
+            "y": number(bbox.get("y"), 0),
+            "width": number(bbox.get("width"), 0),
+            "height": height,
+            "text": observation.get("text") if isinstance(observation.get("text"), str) else None,
+        }
+        for key in ["fill", "stroke", "stroke_width", "opacity", "font_size", "font_weight", "d"]:
+            value = observation.get(key)
+            if value is not None:
+                node[key] = value
+        nodes.append(node)
     return nodes
 
 
@@ -2288,6 +2301,10 @@ def render_project(project: Path) -> dict[str, Any]:
             "node_version": renderer_metadata.get("node_version"),
             "satori_version": renderer_metadata.get("satori_version"),
             "resvg_version": renderer_metadata.get("resvg_version"),
+            "font_roles": renderer_metadata.get("font_roles") or renderer_metadata.get("font_receipt", {}).get("resolved_roles"),
+            "typography_roles": renderer_metadata.get("typography_roles"),
+            "text_style_roles": renderer_metadata.get("text_style_roles"),
+            "typography_strategy_source": renderer_metadata.get("typography_strategy_source"),
             "font_hashes": font_hashes,
             "renderer": {
                 "name": "satori-resvg-p0",

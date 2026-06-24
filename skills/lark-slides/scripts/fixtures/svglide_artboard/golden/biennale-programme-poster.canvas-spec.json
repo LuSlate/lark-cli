@@ -5,41 +5,40 @@
     "width": 960
   },
   "content": {
-    "date": "JUN 23",
-    "eyebrow": "MUSEUM PROGRAMME",
-    "programme": [
-      "Opening forum",
-      "Artist walk",
-      "Public lecture",
-      "Archive screening"
+    "date": "02.05-\n11.10.2026",
+    "eyebrow": "Annual Survey · Issue No. 04",
+    "notes": [
+      "Aurora Institute for Public Form",
+      "Fourth annual open programme",
+      "A field study of light, matter and atmosphere.",
+      "Six months of exhibitions, residencies and public lectures across three pavilions."
     ],
-    "subtitle": "Curatorial agenda with one yellow signature and clear public programme rhythm.",
-    "title": "Young Artists Biennale",
-    "venue": "North Hall"
+    "page": "01 / 08",
+    "title": "Aurora Programme"
   },
   "quality_constraints": {
     "max_title_lines": 2,
-    "min_font_size": 16,
+    "min_font_size": 7,
     "safe_area": {
       "height": 460,
-      "width": 864,
-      "x": 48,
+      "width": 896,
+      "x": 32,
       "y": 40
     }
   },
   "safe_area": {
     "height": 460,
-    "width": 864,
-    "x": 48,
+    "width": 896,
+    "x": 32,
     "y": 40
   },
   "semantic_elements": [
     {
       "bbox": {
-        "height": 88,
-        "width": 710,
-        "x": 56,
-        "y": 96
+        "height": 180,
+        "width": 560,
+        "x": 36,
+        "y": 166
       },
       "element_id": "title",
       "kind": "text",
@@ -50,13 +49,119 @@
   "template_id": "biennale-programme-poster",
   "theme": {
     "colors": {
-      "accent": "#D8AA00",
-      "background": "#F8E6A0",
-      "muted": "#5F5331",
-      "panel": "#111111",
-      "primary": "#111111",
-      "surface": "#FFF6CC",
-      "text": "#111111"
+      "background": "#E9E5DB",
+      "panel": "#DCD6C4",
+      "primary": "#ECEE78",
+      "accent": "#EFE79A",
+      "text": "#1B2566"
+    },
+    "typography": {
+      "font_roles": {
+        "display": "SVGlideDisplay",
+        "body": "SVGlideBody",
+        "label": "SVGlideLabel",
+        "metric": "SVGlideMetric"
+      },
+      "role_tokens": {
+        "display": {
+          "font_role": "display",
+          "source_font": "Instrument Serif",
+          "runtime_alias": "SVGlideDisplay",
+          "font_size": 88,
+          "font_weight": 400,
+          "line_height": 0.96,
+          "letter_spacing": 0,
+          "text_transform": "latin_uppercase_only",
+          "max_lines": 3,
+          "alignment": "source_layout_dependent"
+        },
+        "body": {
+          "font_role": "body",
+          "source_font": "Archivo",
+          "runtime_alias": "SVGlideBody",
+          "font_size": 20,
+          "font_weight": 400,
+          "line_height": 1.32,
+          "letter_spacing": 0,
+          "text_transform": "preserve_source_case",
+          "max_lines": 5,
+          "alignment": "source_layout_dependent"
+        },
+        "label": {
+          "font_role": "label",
+          "source_font": "JetBrains Mono",
+          "runtime_alias": "SVGlideLabel",
+          "font_size": 12,
+          "font_weight": 700,
+          "line_height": 1.05,
+          "letter_spacing": 0.08,
+          "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+          "max_lines": 1,
+          "alignment": "source_layout_dependent"
+        },
+        "metric": {
+          "font_role": "metric",
+          "source_font": "JetBrains Mono",
+          "runtime_alias": "SVGlideMetric",
+          "font_size": 56,
+          "font_weight": 900,
+          "line_height": 0.95,
+          "letter_spacing": 0,
+          "text_transform": "preserve_numbers_and_units",
+          "max_lines": 2,
+          "alignment": "source_layout_dependent"
+        }
+      },
+      "strategy_source": "skills/lark-slides/references/visual-contracts/beautiful/biennale-yellow.biennale-programme-poster.json",
+      "text_style_roles": {
+        "bold": {
+          "source_usage": "source uses heavy display/label weights",
+          "mapped_weight": {
+            "display": 400,
+            "label": 700,
+            "metric": 900
+          },
+          "allowed_roles": [
+            "display",
+            "label",
+            "metric"
+          ]
+        },
+        "italic": {
+          "source_usage": "source uses italic/font-style or italic-family tokens",
+          "mapped_style": "latin_only_when_source_requires_else_normal",
+          "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+          "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+        },
+        "underline": {
+          "source_usage": "source uses underline/text-decoration or hairline emphasis",
+          "mapped_decoration": "native underline only for actual text-decoration source usage",
+          "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+        },
+        "line_through": {
+          "source_usage": "not present in source; default no line-through",
+          "mapped_decoration": "none",
+          "fallback_shape": "none"
+        },
+        "emphasis": {
+          "color_shift": "use source accent color roles only",
+          "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+          "weight_shift": "increase one role step within font_weight_scale",
+          "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+        },
+        "text_decoration_policy": {
+          "underline": {
+            "style": "solid",
+            "color": "currentColor",
+            "thickness": "1px"
+          },
+          "line_through": {
+            "style": "none",
+            "color": "currentColor",
+            "thickness": "0px"
+          }
+        }
+      }
     }
   },
   "theme_id": "biennale-yellow",

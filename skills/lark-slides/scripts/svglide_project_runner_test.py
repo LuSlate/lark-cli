@@ -1870,6 +1870,136 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             with self.assertRaisesRegex(runner.RunnerError, "diversity_gate hash is stale"):
                 runner.require_quality_gate_current(project_root)
 
+    def test_existing_artboard_quality_gate_missing_snapshot_visual_fidelity_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            artboard_check = project_root / "06-check/artboard-package-check.json"
+            artboard_check.write_text(
+                json.dumps({"status": "passed", "action": "create_live", "summary": {"error_count": 0}}),
+                encoding="utf-8",
+            )
+            gate_path = project_root / "06-check/quality-gate.json"
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            gate["inputs"]["generation_mode"] = "artboard_satori"
+            gate["inputs"]["artboard_package_check"] = "06-check/artboard-package-check.json"
+            gate["checks"].append({"name": "artboard-package-check", "status": "passed"})
+            gate["input_hashes"]["artboard_package_check"] = runner.file_sha256(artboard_check)
+            gate_path.write_text(json.dumps(gate), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "snapshot_visual_fidelity"):
+                runner.require_quality_gate_current(project_root)
+
+    def test_existing_artboard_quality_gate_with_stale_snapshot_visual_fidelity_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            artboard_check = project_root / "06-check/artboard-package-check.json"
+            artboard_check.write_text(
+                json.dumps({"status": "passed", "action": "create_live", "summary": {"error_count": 0}}),
+                encoding="utf-8",
+            )
+            visual_manifest = project_root / "06-check/visual-fidelity/manifest.json"
+            visual_manifest.parent.mkdir(parents=True, exist_ok=True)
+            visual_manifest.write_text(json.dumps({"status": "passed", "version": 1}), encoding="utf-8")
+            gate_path = project_root / "06-check/quality-gate.json"
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            gate["inputs"]["generation_mode"] = "artboard_satori"
+            gate["inputs"]["artboard_package_check"] = "06-check/artboard-package-check.json"
+            gate["inputs"]["snapshot_visual_fidelity"] = "06-check/visual-fidelity/manifest.json"
+            gate["checks"].extend(
+                [
+                    {"name": "artboard-package-check", "status": "passed"},
+                    {"name": "snapshot-visual-fidelity", "status": "passed"},
+                ]
+            )
+            gate["input_hashes"]["artboard_package_check"] = runner.file_sha256(artboard_check)
+            gate["input_hashes"]["snapshot_visual_fidelity"] = runner.file_sha256(visual_manifest)
+            gate_path.write_text(json.dumps(gate), encoding="utf-8")
+            visual_manifest.write_text(json.dumps({"status": "passed", "version": 2}), encoding="utf-8")
+
+            with self.assertRaisesRegex(runner.RunnerError, "snapshot_visual_fidelity hash is stale"):
+                runner.require_quality_gate_current(project_root)
+
+    def test_existing_artboard_quality_gate_with_stale_snapshot_visual_fidelity_artifact_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+            artboard_check = project_root / "06-check/artboard-package-check.json"
+            artboard_check.write_text(
+                json.dumps({"status": "passed", "action": "create_live", "summary": {"error_count": 0}}),
+                encoding="utf-8",
+            )
+            visual_dir = project_root / "06-check/visual-fidelity"
+            visual_dir.mkdir(parents=True, exist_ok=True)
+            slide_png = visual_dir / "page-001.slide-render.png"
+            slide_png.write_bytes(b"slide-render-v1")
+            (visual_dir / "manifest.json").write_text(
+                json.dumps(
+                    {
+                        "slide_render_receipts": ["06-check/visual-fidelity/page-001.slide-render-receipt.json"],
+                        "baseline_render_receipts": [],
+                        "visual_fidelity_receipts": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (visual_dir / "page-001.slide-render-receipt.json").write_text(
+                json.dumps({"slide_render_png": "06-check/visual-fidelity/page-001.slide-render.png"}),
+                encoding="utf-8",
+            )
+            gate_path = project_root / "06-check/quality-gate.json"
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            gate["inputs"]["generation_mode"] = "artboard_satori"
+            gate["inputs"]["artboard_package_check"] = "06-check/artboard-package-check.json"
+            gate["inputs"]["snapshot_visual_fidelity"] = "06-check/visual-fidelity/manifest.json"
+            gate["checks"].extend(
+                [
+                    {"name": "artboard-package-check", "status": "passed"},
+                    {"name": "snapshot-visual-fidelity", "status": "passed"},
+                ]
+            )
+            gate["input_hashes"]["artboard_package_check"] = runner.file_sha256(artboard_check)
+            gate["input_hashes"]["snapshot_visual_fidelity"] = runner.file_sha256(visual_dir / "manifest.json")
+            gate["input_hashes"]["snapshot_visual_fidelity_evidence"] = runner.snapshot_visual_fidelity_evidence_hash(project_root)
+            gate_path.write_text(json.dumps(gate), encoding="utf-8")
+            slide_png.write_bytes(b"slide-render-v2")
+
+            with self.assertRaisesRegex(runner.RunnerError, "snapshot_visual_fidelity evidence is stale"):
+                runner.require_quality_gate_current(project_root)
+
+    def test_snapshot_visual_fidelity_stage_is_ordered_before_quality_gate(self) -> None:
+        self.assertLess(runner.STAGES.index("snapshot_visual_fidelity"), runner.STAGES.index("quality_gate"))
+        self.assertEqual(runner.normalize_stage("snapshot-visual-fidelity"), "snapshot_visual_fidelity")
+
+    def test_direct_svg_snapshot_visual_fidelity_stage_is_skipped_without_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_project(tmpdir)
+
+            receipt = runner.run_stage(project_root, "snapshot_visual_fidelity")
+
+            self.assertEqual(receipt["status"], "passed")
+            self.assertEqual(receipt["skip_reason"], "generation_mode_not_artboard_satori")
+            self.assertFalse((project_root / "06-check/visual-fidelity/manifest.json").exists())
+
+    def test_artboard_quality_gate_requires_snapshot_visual_fidelity_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = self.make_artboard_visual_project(tmpdir)
+            state = runner.load_state(project_root)
+            for stage in [
+                "preflight",
+                "preview_lint",
+                "template_fidelity",
+                "aesthetic_review",
+                "chart_verify",
+                "semantic_review",
+                "runtime_review",
+                "visual_distinctness_review",
+                "theme_adherence",
+            ]:
+                runner.record_stage(state, stage, "passed", project_root / "receipts" / f"{stage}.json")
+            runner.write_state(project_root, state)
+
+            with self.assertRaisesRegex(runner.RunnerError, "snapshot_visual_fidelity"):
+                runner.run_implemented_stage(project_root, "quality_gate", runner.load_state(project_root), profile="preview_only")
+
     def test_dry_run_command_includes_assets_when_present(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = self.make_project(tmpdir)

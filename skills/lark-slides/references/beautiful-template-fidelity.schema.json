@@ -13,7 +13,12 @@
     "score",
     "threshold",
     "metrics",
-    "issues"
+    "issues",
+    "generated_by",
+    "generator_version",
+    "command",
+    "reference_sha256",
+    "render_sha256"
   ],
   "properties": {
     "schema_version": {"const": "svglide-template-fidelity/v1"},
@@ -23,6 +28,24 @@
     "page_type": {"type": "string"},
     "reference_screenshot": {"type": "string", "minLength": 1},
     "render_screenshot": {"type": "string", "minLength": 1},
+    "generated_by": {"const": "beautiful_template_fidelity_check.py"},
+    "generator_version": {"type": "string", "minLength": 1},
+    "command": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "reference_sha256": {
+      "anyOf": [
+        {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        {"type": "null"}
+      ]
+    },
+    "render_sha256": {
+      "anyOf": [
+        {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        {"type": "null"}
+      ]
+    },
     "reference_selection": {
       "type": "object",
       "required": ["rule", "path"],
@@ -34,7 +57,34 @@
     },
     "score": {"type": "number", "minimum": 0, "maximum": 1},
     "threshold": {"type": "number", "minimum": 0, "maximum": 1},
-    "metrics": {"type": "object"},
+    "metrics": {
+      "type": "object",
+      "required": [
+        "color_distribution",
+        "layout_structure",
+        "edge_density",
+        "whitespace",
+        "dominant_region",
+        "color_complexity",
+        "primary_color_alignment",
+        "layout_region",
+        "decorative_density",
+        "typographic_hierarchy"
+      ],
+      "properties": {
+        "color_distribution": {"type": "number", "minimum": 0, "maximum": 1},
+        "layout_structure": {"type": "number", "minimum": 0, "maximum": 1},
+        "edge_density": {"type": "number", "minimum": 0, "maximum": 1},
+        "whitespace": {"type": "number", "minimum": 0, "maximum": 1},
+        "dominant_region": {"type": "number", "minimum": 0, "maximum": 1},
+        "color_complexity": {"type": "number", "minimum": 0, "maximum": 1},
+        "primary_color_alignment": {"type": "number", "minimum": 0, "maximum": 1},
+        "layout_region": {"type": "number", "minimum": 0, "maximum": 1},
+        "decorative_density": {"type": "number", "minimum": 0, "maximum": 1},
+        "typographic_hierarchy": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": true
+    },
     "issues": {
       "type": "array",
       "items": {
@@ -46,6 +96,29 @@
         },
         "additionalProperties": true
       }
+    },
+    "role_consumption": {
+      "type": "object",
+      "required": ["source", "font_roles", "typography_roles", "text_style_roles"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "font_roles": {
+          "type": "object",
+          "required": ["display", "body", "label", "metric"],
+          "additionalProperties": true
+        },
+        "typography_roles": {
+          "type": "object",
+          "required": ["display", "body", "label", "metric"],
+          "additionalProperties": true
+        },
+        "text_style_roles": {
+          "type": "object",
+          "required": ["bold", "italic", "underline", "line_through", "emphasis", "text_decoration_policy"],
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

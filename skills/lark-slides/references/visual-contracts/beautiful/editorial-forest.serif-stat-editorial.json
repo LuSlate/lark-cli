@@ -1,0 +1,1339 @@
+{
+  "version": "svglide-beautiful-template-visual-contract/v1",
+  "family_id": "editorial-forest",
+  "runtime_template_id": "serif-stat-editorial",
+  "source": {
+    "source_template_html": "beautiful-html-templates/templates/editorial-forest/template.html",
+    "source_design_md": "beautiful-html-templates/templates/editorial-forest/design.md",
+    "source_template_json": "beautiful-html-templates/templates/editorial-forest/template.json",
+    "reference_screenshot": "beautiful-html-templates/screenshots/editorial-forest-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/editorial-forest-1.png",
+      "beautiful-html-templates/screenshots/editorial-forest-2.png",
+      "beautiful-html-templates/screenshots/editorial-forest-5.png"
+    ],
+    "absorption_records": [
+      "skills/lark-slides/references/absorptions/beautiful-html-templates/editorial-forest.serif-stat-editorial.json"
+    ],
+    "template_json_name": "Editorial Forest",
+    "template_json_slug": "editorial-forest"
+  },
+  "layout": {
+    "layout_family": null,
+    "density": "medium",
+    "formality": "medium",
+    "layout_rhythm": "editorial-forest: medium density, medium formality. Forest green, dusty pink, and warm cream meet Source Serif 4 in a quiet, intentional quarterly-review deck.",
+    "spacing_rhythm": "Reuse source spacing tokens and grid gaps: {\"slide_pad_default\": \"96px 120px\", \"slide_pad_narrow\": \"100px 120px\", \"slide_pad_wide\": \"100px 140px\", \"slide_pad_statement\": \"130px 160px\", \"grid_gap_cards\": \"28\", \"grid_gap_topics\": \"24\", \"grid_gap_kpi\": \"60\", \"rule_w",
+    "source_layout_classes": [],
+    "variant_ids": [
+      "cover",
+      "agenda",
+      "section_divider",
+      "context_overview",
+      "metric_dashboard",
+      "problem_analysis",
+      "cause_analysis",
+      "comparison",
+      "timeline",
+      "case_evidence",
+      "action_plan",
+      "risk_dependency",
+      "closing"
+    ]
+  },
+  "typography": {
+    "template_json_typography": {
+      "serif": "Source Serif 4",
+      "mono": "JetBrains Mono",
+      "style": "humanist editorial serif with a technical mono for kickers and labels; restrained typographic hierarchy"
+    },
+    "design_tokens_typography": {
+      "mono": "JetBrains Mono",
+      "serif": "Source Serif 4",
+      "style": "humanist editorial serif with a technical mono for kickers and labels; restrained typographic hierarchy"
+    },
+    "visual_dna_typography_roles": {
+      "body": "system-sans-cjk-regular",
+      "caption": "small caption -> system-sans-cjk-regular",
+      "display": "system-sans-cjk-heavy",
+      "label": "compact label -> system-sans-cjk-medium",
+      "metric": "display numeric emphasis -> system-sans-cjk-heavy"
+    },
+    "typography_role": "humanist editorial serif with a technical mono for kickers and labels; restrained typographic hierarchy",
+    "font_policy": {
+      "fallback_stack": "system-sans-cjk",
+      "font_role_map": {
+        "body": "system-sans-cjk-regular",
+        "display": "system-sans-cjk-heavy",
+        "label": "system-sans-cjk-medium",
+        "metric": "system-sans-cjk-heavy",
+        "mono": "system-mono"
+      },
+      "original_families": []
+    },
+    "cjk_policy": {
+      "body_font_cn": "Noto Sans SC",
+      "design_intent_font_pairing": [
+        "Noto Serif SC",
+        "Noto Sans SC",
+        "LXGW WenKai",
+        "LXGW WenKai TC",
+        "LXGW WenKai sits slightly higher than Source Serif",
+        "LXGW WenKai TC is the version served on Google Fonts"
+      ],
+      "display_font_cn": "Noto Serif SC",
+      "emphasis_policy": "color_or_weight_only",
+      "italic_policy": "color_only_emphasis",
+      "known_degradation": "LXGW WenKai's brushwork warmth is its strength at large display sizes, but at body scale (26–32px) the same brushwork reads slightly noisy. The system bumps body to Noto Serif SC (a cleaner Mincho) to avoid this, but the visual handoff between a 96px LXGW WenKai headline and a 30px Noto Serif SC paragraph below it is the system's biggest CJK seam — the two f",
+      "latin_accent_policy": "latin_only_allowed_when_semantic_annotation",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "mono_font_policy": "latin_only_or_system_mono",
+      "runtime_font_policy": "system_font_only_no_remote_dependency",
+      "runtime_font_stack": [
+        "system-sans-cjk",
+        "system-sans-cjk-heavy",
+        "system-sans-cjk-regular",
+        "system-mono"
+      ],
+      "source_section_heading": "CJK & International Content",
+      "source_section_sha256": "1943fb9c543adcddd9fba5dbf6434c94adc112539a47971f5a67ad7a27b68f16",
+      "strategy": "replace_family_whole_element"
+    }
+  },
+  "palette": {
+    "template_json_palette": {
+      "forest_green": "#2e4a2a",
+      "pink": "#e89cb1",
+      "cream": "#efe7d4",
+      "ink": "#1a1a17",
+      "description": "deep forest green, dusty pink, and warm cream paper; quiet tri-tone that pairs a saturated dark with two soft accents"
+    },
+    "design_token_colors": {
+      "cream": "#efe7d4",
+      "cream_2": "#e6dcc4",
+      "green": "#2e4a2a",
+      "green_deep": "#243a21",
+      "green_lite": "#3a5a36",
+      "ink": "#1a1a17",
+      "pink": "#e89cb1",
+      "pink_deep": "#d27e96"
+    },
+    "theme_token_colors": {},
+    "theme_token_semantic_colors": {},
+    "visual_dna_palette_roles": {
+      "accent": "#e89cb1",
+      "background": "#efe7d4",
+      "border": "#1a1a17",
+      "muted": "#2e4a2a",
+      "negative": "#2e4a2a",
+      "positive": "#2e4a2a",
+      "primary": "#1a1a17",
+      "surface": "#efe7d4",
+      "text": "#1a1a17"
+    },
+    "css_color_variables": {
+      "pink": "#e89cb1",
+      "pink_deep": "#d27e96",
+      "ink": "#1a1a17"
+    }
+  },
+  "decorative": {
+    "decorative_motifs": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "window chrome",
+      "poster blocks",
+      "quote mark",
+      "sticker collage"
+    ],
+    "visual_effects": [
+      {
+        "effect_id": "tinted_card",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: tinted_card."
+      },
+      {
+        "effect_id": "accent_rule",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: accent_rule."
+      },
+      {
+        "effect_id": "image_crop",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: image_crop."
+      },
+      {
+        "effect_id": "paper_texture",
+        "lowering_policy": "approximate",
+        "notes": "Derived from beautiful-html-template source signal: paper_texture."
+      },
+      {
+        "effect_id": "window_chrome",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: window_chrome."
+      },
+      {
+        "effect_id": "bold_border",
+        "lowering_policy": "native_svg",
+        "notes": "Derived from beautiful-html-template source signal: bold_border."
+      }
+    ],
+    "decorative_vocabulary": [
+      "grid",
+      "accent line",
+      "card panels",
+      "paper texture",
+      "window chrome",
+      "poster blocks",
+      "quote mark",
+      "sticker collage"
+    ],
+    "chrome_rules": [
+      "eyebrow",
+      "label",
+      "xlabel",
+      "xlabel-row"
+    ],
+    "motif_budget": {},
+    "forbidden_mutations": [
+      "new_palette",
+      "cross_family_components",
+      "fake_italic",
+      "new_decorative_motif",
+      "remote_font_dependency"
+    ]
+  },
+  "image": {
+    "strategy": "Preserve source image regions and screenshot-backed composition; runtime generation must use traceable online/approved image assets, not local decorative placeholders.",
+    "reference_screenshot": "beautiful-html-templates/screenshots/editorial-forest-1.png",
+    "source_screenshots": [
+      "beautiful-html-templates/screenshots/editorial-forest-1.png",
+      "beautiful-html-templates/screenshots/editorial-forest-2.png",
+      "beautiful-html-templates/screenshots/editorial-forest-5.png"
+    ],
+    "required_assets": [],
+    "image_related_classes": [
+      "figure"
+    ]
+  },
+  "component": {
+    "component_candidates": [
+      "title_block",
+      "section_label",
+      "metric_card",
+      "finding_callout",
+      "evidence_table",
+      "comparison_matrix",
+      "timeline",
+      "process_flow",
+      "image_panel",
+      "logo_strip",
+      "mini_chart",
+      "qualitative_radar",
+      "action_list",
+      "risk_matrix",
+      "architecture_diagram"
+    ],
+    "component_ids": [],
+    "component_grammar": [
+      "statement",
+      "stats"
+    ],
+    "html_component_classes": [
+      "agenda-grid",
+      "chart",
+      "grid-cols",
+      "grid-lines",
+      "statement",
+      "stats"
+    ],
+    "content_shapes": []
+  },
+  "page_type": {
+    "source_slide_count": 8,
+    "supported_page_roles": [
+      "action_plan",
+      "agenda",
+      "business_review",
+      "case_evidence",
+      "cause_analysis",
+      "closing",
+      "comparison",
+      "context_overview",
+      "cover",
+      "metric_overview",
+      "problem_analysis",
+      "risk_dependency",
+      "roadmap",
+      "section",
+      "timeline"
+    ],
+    "layout_variants": [
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "cover"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cover"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cover"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "agenda"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "agenda"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "agenda"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "section-divider"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "section"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "section_divider"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "context-overview"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "context_overview"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "context_overview"
+      },
+      {
+        "component_candidates": [
+          "metric_card",
+          "mini_chart",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "metric-dashboard"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "metric_overview",
+          "business_review"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "metric_dashboard"
+      },
+      {
+        "component_candidates": [
+          "finding_callout",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "problem-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "problem_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "problem_analysis"
+      },
+      {
+        "component_candidates": [
+          "process_flow",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "cause-analysis"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "cause_analysis"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "cause_analysis"
+      },
+      {
+        "component_candidates": [
+          "comparison_matrix",
+          "evidence_table"
+        ],
+        "layout_intents": [
+          "comparison"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "comparison"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "comparison"
+      },
+      {
+        "component_candidates": [
+          "timeline",
+          "process_flow"
+        ],
+        "layout_intents": [
+          "timeline"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "timeline",
+          "roadmap"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "timeline"
+      },
+      {
+        "component_candidates": [
+          "image_panel",
+          "finding_callout"
+        ],
+        "layout_intents": [
+          "case-evidence"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "case_evidence"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "case_evidence"
+      },
+      {
+        "component_candidates": [
+          "action_list",
+          "risk_matrix"
+        ],
+        "layout_intents": [
+          "action-plan"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "action_plan"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "action_plan"
+      },
+      {
+        "component_candidates": [
+          "risk_matrix",
+          "action_list"
+        ],
+        "layout_intents": [
+          "risk-dependency"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "risk_dependency"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "risk_dependency"
+      },
+      {
+        "component_candidates": [
+          "title_block",
+          "section_label"
+        ],
+        "layout_intents": [
+          "closing"
+        ],
+        "optional_slots": [
+          "image",
+          "metrics",
+          "evidence",
+          "source_note"
+        ],
+        "page_roles": [
+          "closing"
+        ],
+        "required_slots": [
+          "title",
+          "key_message"
+        ],
+        "variant_id": "closing"
+      }
+    ],
+    "required_content": [],
+    "optional_content": []
+  },
+  "satori": {
+    "runtime": "owned_satori_template",
+    "renderer_id": "artboard_satori.serif-stat-editorial",
+    "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/serif-stat-editorial.mjs",
+    "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/serif-stat-editorial.canvas-spec.json",
+    "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/editorial-forest.serif-stat-editorial.json",
+    "renderer_contract": {},
+    "constraints": {
+      "external_html_css_js": "forbidden",
+      "generic_fallback_as_production": "forbidden",
+      "production_requires": [
+        "dedicated_renderer",
+        "golden_spec",
+        "fidelity_receipt"
+      ]
+    },
+    "migration_status": "needs_dedicated_renderer",
+    "font_and_typography_constraints": [
+      "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+      "letter spacing is preserved for Latin labels and reset/softened for CJK"
+    ]
+  },
+  "do_not_simplify": [
+    "preserve_fonts_palette_grid_slide_classes_decorative_elements",
+    "do_not_recolor_without_explicit_brand_override",
+    "do_not_mix_template_families",
+    "extend_missing_layout_inside_same_family",
+    "do_not_strip_identity_decorations",
+    "new_palette",
+    "cross_family_components",
+    "fake_italic",
+    "new_decorative_motif",
+    "remote_font_dependency",
+    "do_not_replace_family_with_generic_card_shell",
+    "do_not_mark_production_without_renderer_golden_fidelity_receipt",
+    "do_not_strip_identity_decorations",
+    "do_not_recolor_without_explicit_brand_override"
+  ],
+  "extraction_receipt": {
+    "basis": [
+      "template.json",
+      "design.md",
+      "template.html",
+      "reference_screenshot",
+      "beautiful-html-template-families.json"
+    ],
+    "claim_boundary": "visual contract only; not a renderer implementation or fidelity pass",
+    "promotion_status": "needs_review"
+  },
+  "font_strategy": {
+    "source_fonts": [
+      "JetBrains Mono",
+      "Source Serif 4",
+      "Source Serif Pro",
+      "LXGW WenKai TC"
+    ],
+    "slide_native_preferred": [
+      "system-mono",
+      "system-serif-cjk"
+    ],
+    "adobe_or_embedded_fallback": [
+      "Source Code Pro",
+      "Source Serif Pro",
+      "思源等宽",
+      "思源宋体"
+    ],
+    "cjk_fallback": "Noto Serif SC",
+    "role_mapping": {
+      "display": {
+        "source_font": "JetBrains Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideDisplay",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideDisplay"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 JetBrains Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      },
+      "body": {
+        "source_font": "Source Serif 4",
+        "slide_font": "Source Serif Pro",
+        "runtime_alias": "SVGlideBody",
+        "cjk_font": "思源宋体",
+        "fallback_stack": [
+          "system-serif-cjk",
+          "SVGlideBody"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 Source Serif 4 的语义角色，但运行时优先使用 Slide/系统可用的 Source Serif Pro 与 思源宋体。"
+      },
+      "label": {
+        "source_font": "JetBrains Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideLabel",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideLabel"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 JetBrains Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      },
+      "metric": {
+        "source_font": "JetBrains Mono",
+        "slide_font": "Source Code Pro",
+        "runtime_alias": "SVGlideMetric",
+        "cjk_font": "思源等宽",
+        "fallback_stack": [
+          "system-mono",
+          "SVGlideMetric"
+        ],
+        "source_only": false,
+        "requires_download": false,
+        "mapping_reason": "保留 JetBrains Mono 的语义角色，但运行时优先使用 Slide/系统可用的 Source Code Pro 与 思源等宽。"
+      }
+    },
+    "forbidden": [
+      "remote_font_runtime_dependency",
+      "google_fonts_as_production_default_without_receipt",
+      "collapse_all_roles_to_unexplained_single_font",
+      "drop_cjk_fallback"
+    ],
+    "mapping_reason": "根据 design.md/template.html/template.json 中的 font-family 与 typography token 提取源字体；运行时按 Slide/系统/Adobe/思源可用字体降级。",
+    "source_evidence": [
+      "beautiful-html-templates/templates/editorial-forest/design.md",
+      "beautiful-html-templates/templates/editorial-forest/template.html",
+      "beautiful-html-templates/templates/editorial-forest/template.json",
+      "beautiful-html-templates/screenshots/editorial-forest-1.png"
+    ],
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "source_fonts": "css_extracted_from_template_html",
+      "adobe_or_embedded_fallback": "inferred_from_layout",
+      "cjk_fallback": "inferred_from_layout",
+      "role_mapping.metric": "inferred_from_layout",
+      "forbidden": "inferred_from_layout",
+      "slide_native_preferred": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "Source Serif 4"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "JetBrains Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "source_fonts": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Source Serif 4', 'Source Serif Pro', 'LXGW WenKai TC', 'Noto Serif SC', Georgia, serif; var(--serif); var(--mono)"
+        }
+      ],
+      "adobe_or_embedded_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Source Serif 4', 'Source Serif Pro', 'LXGW WenKai TC', 'Noto Serif SC', Georgia, serif; var(--serif); var(--mono)"
+        }
+      ],
+      "cjk_fallback": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Source Serif 4', 'Source Serif Pro', 'LXGW WenKai TC', 'Noto Serif SC', Georgia, serif; var(--serif); var(--mono)"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "JetBrains Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Source Serif 4', 'Source Serif Pro', 'LXGW WenKai TC', 'Noto Serif SC', Georgia, serif; var(--serif); var(--mono)"
+        }
+      ],
+      "slide_native_preferred": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Source Serif 4', 'Source Serif Pro', 'LXGW WenKai TC', 'Noto Serif SC', Georgia, serif; var(--serif); var(--mono)"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-family",
+          "raw_value": "'Source Serif 4', 'Source Serif Pro', 'LXGW WenKai TC', 'Noto Serif SC', Georgia, serif; var(--serif); var(--mono)"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "JetBrains Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ]
+    }
+  },
+  "typography_strategy": {
+    "source_typography_tokens": {
+      "font_families": [
+        "JetBrains Mono",
+        "Source Serif 4",
+        "Source Serif Pro",
+        "LXGW WenKai TC"
+      ],
+      "font_size": [
+        "220",
+        "140",
+        "96",
+        "84",
+        "80",
+        "68",
+        "56",
+        "44",
+        "32",
+        "30"
+      ],
+      "font_weight": [
+        "500",
+        "600",
+        "400"
+      ],
+      "line_height": [
+        "0.92",
+        "1.02",
+        "0.96",
+        "1.0",
+        "0.98",
+        "1.05",
+        "1.32",
+        "1.38",
+        "1.34",
+        "1"
+      ],
+      "letter_spacing": [
+        "-0.02em",
+        "-0.01em",
+        "0.18em",
+        "0.14em",
+        "0.08em",
+        "-0.03em",
+        "0.1em",
+        "0` — or a tiny positive `0.02em` if the headline feels visually packed.",
+        "0.12em",
+        "0"
+      ],
+      "text_transform": [
+        "uppercase",
+        "uppercase` on CJK text.** Chinese has no case",
+        "none"
+      ],
+      "word_spacing": [],
+      "paragraph_spacing": [
+        "32px",
+        "8px",
+        "\"36px\" topBorder: \"2px solid {colors.green",
+        "36px",
+        "40px",
+        "24px",
+        "60px",
+        "14px",
+        "100px",
+        "30px",
+        "8px",
+        "12px",
+        "28px",
+        "16px"
+      ],
+      "text_direction": [
+        "column"
+      ],
+      "writing_mode": [],
+      "text_decoration": []
+    },
+    "role_mapping": {
+      "display": {
+        "font_role": "display",
+        "source_font": "JetBrains Mono",
+        "runtime_alias": "SVGlideDisplay",
+        "font_size": 54,
+        "font_weight": 900,
+        "line_height": 0.9,
+        "letter_spacing": 0,
+        "text_transform": "latin_uppercase_only",
+        "max_lines": 3,
+        "alignment": "source_layout_dependent"
+      },
+      "body": {
+        "font_role": "body",
+        "source_font": "Source Serif 4",
+        "runtime_alias": "SVGlideBody",
+        "font_size": 20,
+        "font_weight": 400,
+        "line_height": 1.32,
+        "letter_spacing": 0,
+        "text_transform": "preserve_source_case",
+        "max_lines": 5,
+        "alignment": "source_layout_dependent"
+      },
+      "label": {
+        "font_role": "label",
+        "source_font": "JetBrains Mono",
+        "runtime_alias": "SVGlideLabel",
+        "font_size": 12,
+        "font_weight": 700,
+        "line_height": 1.05,
+        "letter_spacing": 0.08,
+        "text_transform": "latin_uppercase_labels_reset_cjk_spacing",
+        "max_lines": 1,
+        "alignment": "source_layout_dependent"
+      },
+      "metric": {
+        "font_role": "metric",
+        "source_font": "JetBrains Mono",
+        "runtime_alias": "SVGlideMetric",
+        "font_size": 42,
+        "font_weight": 900,
+        "line_height": 0.95,
+        "letter_spacing": 0,
+        "text_transform": "preserve_numbers_and_units",
+        "max_lines": 2,
+        "alignment": "source_layout_dependent"
+      }
+    },
+    "font_size_scale": {
+      "display": 54,
+      "body": 20,
+      "label": 12,
+      "metric": 42
+    },
+    "font_weight_scale": {
+      "display": 900,
+      "body": 400,
+      "label": 700,
+      "metric": 900
+    },
+    "line_height_scale": {
+      "display": 0.9,
+      "body": 1.32,
+      "label": 1.05,
+      "metric": 0.95
+    },
+    "letter_spacing_scale": {
+      "display": 0,
+      "body": 0,
+      "label": 0.08,
+      "metric": 0
+    },
+    "text_transform_policy": {
+      "display": "latin_uppercase_only",
+      "body": "preserve_source_case",
+      "label": "latin_uppercase_labels_reset_cjk_spacing",
+      "metric": "preserve_numbers_and_units"
+    },
+    "hierarchy_ratio": 2.7,
+    "max_lines": {
+      "display": 3,
+      "body": 5,
+      "label": 1,
+      "metric": 2
+    },
+    "measure": {
+      "display": "0.55-0.78 canvas width",
+      "body": "40-70 characters or CJK equivalent",
+      "label": "short mono labels",
+      "metric": "short numeric/stat blocks"
+    },
+    "alignment": {
+      "primary": "follow source composition",
+      "fallback": "left/top aligned unless source screenshot is centered"
+    },
+    "cjk_typography_adjustment": {
+      "display_font_cn": "Noto Serif SC",
+      "body_font_cn": "Noto Sans SC",
+      "letter_spacing_policy": "reset_letter_spacing_for_cjk_keep_latin_labels",
+      "mixed_run_spacing": "pangu_spacing",
+      "italic_policy": "color_only_emphasis"
+    },
+    "mapping_reason": "按源模板字号/字重/行高/字距/大小写规则抽象到 960x540 Slide 画布的四个文本角色。",
+    "word_spacing": {
+      "display": 0,
+      "body": 0,
+      "label": 0,
+      "metric": 0
+    },
+    "paragraph_spacing": {
+      "display_after": 0,
+      "body_after": 12,
+      "label_after": 0,
+      "metric_after": 0
+    },
+    "wrapping_policy": {
+      "display": "manual_break_or_balance",
+      "body": "wrap_with_measure",
+      "label": "no_wrap_preferred",
+      "metric": "no_wrap_preferred"
+    },
+    "text_direction": {
+      "default": "column",
+      "cjk": "ltr"
+    },
+    "writing_mode": {
+      "default": "horizontal-tb",
+      "vertical_roles": []
+    },
+    "extraction_confidence": {
+      "role_mapping.body": "inferred_from_layout",
+      "role_mapping.display": "inferred_from_layout",
+      "font_size_scale": "css_extracted_from_template_html",
+      "max_lines": "inferred_from_layout",
+      "writing_mode": "absent_use_default",
+      "text_direction": "css_extracted_from_template_html",
+      "alignment": "inferred_from_layout",
+      "role_mapping.label": "inferred_from_layout",
+      "paragraph_spacing": "css_extracted_from_template_html",
+      "text_transform_policy": "css_extracted_from_template_html",
+      "line_height_scale": "css_extracted_from_template_html",
+      "wrapping_policy": "inferred_from_layout",
+      "font_weight_scale": "css_extracted_from_template_html",
+      "source_typography_tokens": "css_extracted_from_template_html",
+      "word_spacing": "absent_use_default",
+      "role_mapping.metric": "inferred_from_layout",
+      "cjk_typography_adjustment": "inferred_from_layout",
+      "hierarchy_ratio": "inferred_from_layout",
+      "measure": "inferred_from_layout",
+      "mapping_reason": "inferred_from_layout",
+      "letter_spacing_scale": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "role_mapping.body": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.body.source_font",
+          "raw_value": "Source Serif 4"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "role_mapping.display": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.display.source_font",
+          "raw_value": "JetBrains Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "font_size_scale": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font_size_scale",
+          "raw_value": "26px; 28px; 220px; 96px; 56px; 84px; 24px; 140px; 44px; 30px; 32px; 68px; 80px; 110px"
+        }
+      ],
+      "max_lines": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "text_direction": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.text_direction",
+          "raw_value": "column"
+        }
+      ],
+      "alignment": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "role_mapping.label": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.label.source_font",
+          "raw_value": "JetBrains Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "paragraph_spacing": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.paragraph_spacing",
+          "raw_value": "32px; 8px; \"36px\" topBorder: \"2px solid {colors.green; 36px; 40px; 24px; 60px; 14px; 100px; 30px; 8px; 12px; 28px; 16px"
+        }
+      ],
+      "text_transform_policy": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.text_transform_policy",
+          "raw_value": "uppercase` on CJK text.** Chinese has no case; uppercase; none"
+        }
+      ],
+      "line_height_scale": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.line_height_scale",
+          "raw_value": "0.92; 0.96; 0.98; 1.32; 1.02; 1; 1.05; 1.38; 1.0; 1.34; 0.94"
+        }
+      ],
+      "wrapping_policy": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "font_weight_scale": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font_weight_scale",
+          "raw_value": "500; 400; 600"
+        }
+      ],
+      "source_typography_tokens": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.source_typography_tokens",
+          "raw_value": "26px; 28px; 220px; 96px; 56px; 84px; 24px; 140px; 44px; 30px; 32px; 68px; 80px; 110px; 500; 400; 600; 0.92; 0.96; 0.98; 1.32; 1.02; 1; 1.05; 1.38; 1.0; 1.34; 0.94; 0` — or a tiny positive `0.02em` if the headline feels visually packed. - **Never `text-transform: uppercase` on CJK text.** Chinese has no case; 0.18em; 0.1em; -0.02em; 0.12em; 0.14em; -0.01em; 0; 0.08em; 0.16em; -0.03em; uppercase` on CJK text.** Chinese has no case; uppercase; none"
+        }
+      ],
+      "role_mapping.metric": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "role_mapping.metric.source_font",
+          "raw_value": "JetBrains Mono"
+        },
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/design.md",
+          "selector_or_token": "design.typography.roles",
+          "raw_value": "pink-deep: \"#d27e96\" cream: \"#efe7d4\" cream-2: \"#e6dcc4\" ink: \"#1a1a17\" typography: display-hero: fontFamily: \"'Source Serif 4', 'Source Serif Pro', Georgia, serif\" fontSize: 220 fontWeight: 500 lineHeight: 0.92 letterSpacing: -0.02em display: fontFamily: \"'Source"
+        }
+      ],
+      "cjk_typography_adjustment": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "hierarchy_ratio": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "measure": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "mapping_reason": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "letter_spacing_scale": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.letter_spacing_scale",
+          "raw_value": "0` — or a tiny positive `0.02em` if the headline feels visually packed. - **Never `text-transform: uppercase` on CJK text.** Chinese has no case; 0.18em; 0.1em; -0.02em; 0.12em; 0.14em; -0.01em; 0; 0.08em; 0.16em; -0.03em"
+        }
+      ]
+    }
+  },
+  "text_style_strategy": {
+    "bold": {
+      "source_usage": "source uses heavy display/label weights",
+      "mapped_weight": {
+        "display": 900,
+        "label": 700,
+        "metric": 900
+      },
+      "allowed_roles": [
+        "display",
+        "label",
+        "metric"
+      ]
+    },
+    "italic": {
+      "source_usage": "source uses italic/font-style or italic-family tokens",
+      "mapped_style": "latin_only_when_source_requires_else_normal",
+      "fallback_when_unavailable": "use color_shift or weight_shift; do not fake CJK italic",
+      "loss_notes": "Satori/Slide may not provide exact Google italic face; record as visual approximation."
+    },
+    "underline": {
+      "source_usage": "source uses underline/text-decoration or hairline emphasis",
+      "mapped_decoration": "native underline only for actual text-decoration source usage",
+      "fallback_shape": "1px-3px rule or border accent when underline font rendering is unavailable"
+    },
+    "line_through": {
+      "source_usage": "not present in source; default no line-through",
+      "mapped_decoration": "none",
+      "fallback_shape": "none"
+    },
+    "emphasis": {
+      "color_shift": "use source accent color roles only",
+      "font_family_switch": "only switch between mapped display/body/label/metric roles from this family",
+      "weight_shift": "increase one role step within font_weight_scale",
+      "style_shift": "italic only when source_usage requires and CJK fallback is safe"
+    },
+    "text_decoration_policy": {
+      "underline": {
+        "style": "solid",
+        "color": "currentColor",
+        "thickness": "1px"
+      },
+      "line_through": {
+        "style": "none",
+        "color": "currentColor",
+        "thickness": "0px"
+      }
+    },
+    "forbidden": [
+      "fake_cjk_italic",
+      "drop_source_text_transform",
+      "drop_source_letter_spacing_without_loss_note",
+      "use_cross_family_font_motif",
+      "remote_font_dependency_without_receipt"
+    ],
+    "extraction_confidence": {
+      "text_decoration_policy.line_through.color": "absent_use_default",
+      "text_decoration_policy.underline.color": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.style": "absent_use_default",
+      "italic": "css_extracted_from_template_html",
+      "forbidden": "inferred_from_layout",
+      "emphasis": "inferred_from_layout",
+      "text_decoration_policy.underline.thickness": "css_extracted_from_template_html",
+      "underline": "css_extracted_from_template_html",
+      "text_decoration_policy.line_through.thickness": "absent_use_default",
+      "line_through": "absent_use_default",
+      "text_decoration_policy.underline.style": "css_extracted_from_template_html",
+      "bold": "css_extracted_from_template_html"
+    },
+    "source_refs": {
+      "text_decoration_policy.underline.color": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "never appears at axis-tick scale. Italics are not used anywhere in the system. Underline is not used. Emphasis is communicated through size and color contrast, not type variants. ## Layout ### Canvas System The system targets a fixed **1920×1080** canvas. Slides are `<section>` elements at exact"
+        }
+      ],
+      "italic": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-style",
+          "raw_value": "mono never appears at headline scale, serif never appears at axis-tick scale. Italics are not used anywhere in the system. Underline is not used. Emphasis is communicated through size and color contrast, not type variants. ## Layout ### Canvas System The system targets a fixed **1920×1080** canv"
+        }
+      ],
+      "forbidden": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "emphasis": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "template.css.typography",
+          "raw_value": "e; } html, body { margin: 0; padding: 0; background: #111; } deck-stage { font-family: var(--serif); color: var(--ink); } section { box-sizing: border-box; width: 1920px; height: 1080px; padding: 96px 120px; background: var(--cream); color: var(--ink); position:"
+        }
+      ],
+      "text_decoration_policy.underline.thickness": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "never appears at axis-tick scale. Italics are not used anywhere in the system. Underline is not used. Emphasis is communicated through size and color contrast, not type variants. ## Layout ### Canvas System The system targets a fixed **1920×1080** canvas. Slides are `<section>` elements at exact"
+        }
+      ],
+      "underline": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "never appears at axis-tick scale. Italics are not used anywhere in the system. Underline is not used. Emphasis is communicated through size and color contrast, not type variants. ## Layout ### Canvas System The system targets a fixed **1920×1080** canvas. Slides are `<section>` elements at exact"
+        }
+      ],
+      "text_decoration_policy.underline.style": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.text-decoration",
+          "raw_value": "never appears at axis-tick scale. Italics are not used anywhere in the system. Underline is not used. Emphasis is communicated through size and color contrast, not type variants. ## Layout ### Canvas System The system targets a fixed **1920×1080** canvas. Slides are `<section>` elements at exact"
+        }
+      ],
+      "bold": [
+        {
+          "path": "beautiful-html-templates/templates/editorial-forest/template.html",
+          "selector_or_token": "css.font-weight",
+          "raw_value": "500; 400; 600"
+        }
+      ]
+    }
+  },
+  "loss_notes": [
+    "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
+    "letter spacing is preserved for Latin labels and reset/softened for CJK"
+  ]
+}

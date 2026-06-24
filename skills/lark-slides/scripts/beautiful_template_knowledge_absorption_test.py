@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import tempfile
@@ -79,17 +80,17 @@ CLOSED_LOOP_SAMPLE_TEMPLATE_FAMILY_TO_ID = {
 REQUIRED_CANDIDATE_MATRIX_FIELDS = {
     "family_id",
     "template_id",
-    "renderer_id",
     "renderer_module",
-    "golden_spec",
     "reference_screenshot",
-    "fidelity_receipt",
     "source_trace",
     "visual_contract",
     "fidelity_gate",
     "promotion_status",
     "default_selectable",
     "blocking_issues",
+    "font_strategy",
+    "typography_strategy",
+    "text_style_strategy",
 }
 PRODUCTION_PROMOTION_STATUSES = {"production"}
 NON_PRODUCTION_PROMOTION_STATUSES = {"needs_review", "experimental", "legacy_debug"}
@@ -132,6 +133,14 @@ def assert_real_evidence_file(test_case: unittest.TestCase, value: object, label
     test_case.assertTrue(path.is_file(), f"{label} must be a file: {path}")
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def assert_real_fidelity_receipt(test_case: unittest.TestCase, receipt_value: object, template_id: str) -> None:
     receipt_path = resolve_evidence_path(receipt_value)
     assert_real_evidence_file(test_case, receipt_value, "fidelity_receipt")
@@ -142,6 +151,15 @@ def assert_real_fidelity_receipt(test_case: unittest.TestCase, receipt_value: ob
     test_case.assertGreaterEqual(payload.get("score", 0), payload.get("threshold", 1))
     assert_real_evidence_file(test_case, payload.get("reference_screenshot"), "fidelity_receipt.reference_screenshot")
     assert_real_evidence_file(test_case, payload.get("render_screenshot") or payload.get("rendered"), "fidelity_receipt.render_screenshot")
+    reference_path = resolve_evidence_path(payload.get("reference_screenshot"))
+    render_path = resolve_evidence_path(payload.get("render_screenshot") or payload.get("rendered"))
+    test_case.assertEqual("beautiful_template_fidelity_check.py", payload.get("generated_by"))
+    test_case.assertIsInstance(payload.get("generator_version"), str)
+    test_case.assertTrue(payload.get("generator_version"))
+    test_case.assertIsInstance(payload.get("command"), list)
+    test_case.assertTrue(payload.get("command"))
+    test_case.assertEqual(file_sha256(reference_path), payload.get("reference_sha256"))
+    test_case.assertEqual(file_sha256(render_path), payload.get("render_sha256"))
 
 
 def family_by_id(registry: dict) -> dict[str, dict]:
@@ -258,6 +276,41 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
                 else:
                     self.assertIn(row["promotion_status"], NON_PRODUCTION_PROMOTION_STATUSES)
                     self.assertTrue(row["blocking_issues"])
+                    if not row.get("renderer_module"):
+                        self.assertFalse(row.get("renderer_id"))
+                        self.assertFalse(row.get("golden_spec"))
+                        self.assertFalse(row.get("fidelity_receipt"))
+                        self.assertEqual("not_run", row["fidelity_gate"].get("status"))
+                        self.assertTrue(row.get("planned_renderer_module"))
+                        self.assertTrue(row.get("planned_golden_spec"))
+                        self.assertTrue(row.get("planned_fidelity_receipt"))
+
+    def test_candidate_matrix_has_34_font_typography_text_style_strategies(self) -> None:
+        rows = load_candidate_matrix()
+        self.assertEqual(34, len(rows))
+        self.assertEqual(34, sum(1 for row in rows if row.get("font_strategy")))
+        self.assertEqual(34, sum(1 for row in rows if row.get("typography_strategy")))
+        self.assertEqual(34, sum(1 for row in rows if row.get("text_style_strategy")))
+
+        font_signatures = {json.dumps(row["font_strategy"]["role_mapping"], sort_keys=True, ensure_ascii=False) for row in rows}
+        typography_signatures = {json.dumps(row["typography_strategy"], sort_keys=True, ensure_ascii=False) for row in rows}
+        self.assertGreater(len(font_signatures), 1)
+        self.assertGreater(len(typography_signatures), 1)
+
+        for row in rows:
+            with self.subTest(family=row["family_id"]):
+                font_strategy = row["font_strategy"]
+                typography_strategy = row["typography_strategy"]
+                text_style_strategy = row["text_style_strategy"]
+                self.assertTrue(font_strategy["source_fonts"])
+                self.assertTrue(font_strategy["slide_native_preferred"])
+                self.assertTrue(font_strategy["adobe_or_embedded_fallback"])
+                self.assertTrue(font_strategy["cjk_fallback"])
+                self.assertEqual({"display", "body", "label", "metric"}, set(font_strategy["role_mapping"]))
+                self.assertEqual({"display", "body", "label", "metric"}, set(typography_strategy["role_mapping"]))
+                self.assertTrue(typography_strategy["cjk_typography_adjustment"])
+                for key in ("bold", "italic", "underline", "emphasis", "forbidden"):
+                    self.assertIn(key, text_style_strategy)
 
     def test_blue_professional_executable_sample_has_production_template_contract(self) -> None:
         row = matrix_by_family()["blue-professional"]
@@ -397,6 +450,20 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
                 }
             )
         )
+
+    def test_runtime_selectable_rejects_stale_fidelity_receipt_hash(self) -> None:
+        registry = beautiful_template_runtime.template_registry()
+        template = next(item for item in registry["templates"] if item["id"] == "executive-dashboard")
+        receipt_path = resolve_evidence_path(template["fidelity_receipt"])
+        stale_receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        stale_receipt["render_sha256"] = "0" * 64
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_receipt = Path(tmpdir) / "stale-template-fidelity.json"
+            tmp_receipt.write_text(json.dumps(stale_receipt, ensure_ascii=False), encoding="utf-8")
+            candidate = dict(template)
+            candidate["fidelity_receipt"] = tmp_receipt.as_posix()
+
+            self.assertFalse(beautiful_template_runtime.is_runtime_selectable(candidate))
 
     def test_issue_codes_freeze_m15_contract(self) -> None:
         codes = all_issue_codes(load_json("beautiful-template-issue-codes.json"))

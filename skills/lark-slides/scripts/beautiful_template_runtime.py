@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -73,6 +74,25 @@ TEMPLATE_IDS = [
     "trend-grid-report",
     "serif-stat-editorial",
     "poster-stat-punch",
+    "coral-magazine-feature",
+    "soft-editorial-feature",
+    "tritone-editorial-spread",
+    "pixel-orbit-console",
+    "biennale-programme-poster",
+    "block-frame-grid",
+    "capsule-card-system",
+    "creative-mode-grid",
+    "daisy-workshop-playbook",
+    "emerald-editorial-cover",
+    "grove-organic-brief",
+    "mat-midcentury-board",
+    "people-platform-manifesto",
+    "pink-nocturne-feature",
+    "playful-indie-launch",
+    "retro-zine-spread",
+    "sticky-workshop-board",
+    "stencil-field-manual",
+    "vellum-scholar-brief",
 ]
 
 LEGACY_TEMPLATE_IDS = frozenset(
@@ -199,6 +219,17 @@ def mapping_asset_ids(family: dict[str, Any]) -> list[str]:
     return [item for item in raw if isinstance(item, str)] if isinstance(raw, list) else []
 
 
+def mapped_runtime_theme_id(family: dict[str, Any]) -> str | None:
+    known_theme_ids = set(LEGACY_THEME_COLORS) | set(promoted_theme_ids())
+    for item in mapping_asset_ids(family):
+        if not item.startswith("theme."):
+            continue
+        candidate = item.removeprefix("theme.").replace("_", "-")
+        if candidate in known_theme_ids:
+            return candidate
+    return None
+
+
 def promoted_theme_ids() -> list[str]:
     return [record["theme_id"] for record in promoted_theme_records()]
 
@@ -207,11 +238,16 @@ def promoted_template_ids() -> list[str]:
     return [record["template_id"] for record in promoted_template_records()]
 
 
+def family_theme_ids() -> list[str]:
+    return sorted({str(family.get("template_id")) for family in families() if str(family.get("template_id") or "").strip()})
+
+
 def all_theme_ids(include_legacy: bool = False) -> list[str]:
     theme_ids = set(PRODUCTION_THEME_IDS)
     theme_ids.update(promoted_theme_ids())
     if include_legacy:
         theme_ids.update(LEGACY_THEME_IDS)
+        theme_ids.update(family_theme_ids())
     return sorted(theme_ids)
 
 
@@ -325,6 +361,33 @@ def _existing_file(value: Any) -> bool:
     return _runtime_path(value).is_file()
 
 
+def _file_sha256(value: Any) -> str | None:
+    path = _runtime_path(value)
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _receipt_hashes_match(receipt_payload: dict[str, Any]) -> bool:
+    reference_screenshot = receipt_payload.get("reference_screenshot")
+    render_screenshot = receipt_payload.get("render_screenshot") or receipt_payload.get("rendered")
+    return (
+        receipt_payload.get("generated_by") == "beautiful_template_fidelity_check.py"
+        and isinstance(receipt_payload.get("generator_version"), str)
+        and bool(receipt_payload.get("generator_version"))
+        and isinstance(receipt_payload.get("command"), list)
+        and bool(receipt_payload.get("command"))
+        and isinstance(receipt_payload.get("reference_sha256"), str)
+        and receipt_payload.get("reference_sha256") == _file_sha256(reference_screenshot)
+        and isinstance(receipt_payload.get("render_sha256"), str)
+        and receipt_payload.get("render_sha256") == _file_sha256(render_screenshot)
+    )
+
+
 def _read_optional_json_file(value: Any) -> dict[str, Any]:
     path = _runtime_path(value)
     if not path.is_file():
@@ -369,6 +432,7 @@ def _has_template_runtime_contract(record: dict[str, Any]) -> bool:
         and score >= threshold
         and _existing_file(receipt_payload.get("reference_screenshot"))
         and _existing_file(receipt_payload.get("render_screenshot") or receipt_payload.get("rendered"))
+        and _receipt_hashes_match(receipt_payload)
         and _non_empty_list(record.get("supported_page_types"))
         and isinstance(record.get("visual_contract"), dict)
         and bool(record.get("visual_contract"))
@@ -558,6 +622,8 @@ def template_promotion_candidate(family: dict[str, Any]) -> dict[str, Any]:
             block("template_token_fidelity_receipt_reference_missing_file", "template fidelity receipt reference_screenshot must exist")
         if not _existing_file(receipt_payload.get("render_screenshot") or receipt_payload.get("rendered")):
             block("template_token_fidelity_receipt_render_missing_file", "template fidelity receipt render_screenshot must exist")
+        if not _receipt_hashes_match(receipt_payload):
+            block("template_token_fidelity_receipt_hash_mismatch", "template fidelity receipt provenance and hashes must match current files")
     if template_token.get("status") != ASSET_STATUS_PRODUCTION:
         block("template_token_not_production", "template_token.status must be production")
     if template_token.get("quality_tier") != QUALITY_TIER_TRUSTED:
@@ -800,6 +866,67 @@ def theme_mode(colors: dict[str, str]) -> str:
     return "dark" if colors["background"].upper() in DARK_BACKGROUND_HEX else "light"
 
 
+def hex_rgb(value: str) -> tuple[int, int, int] | None:
+    text = value.strip()
+    if not text.startswith("#"):
+        return None
+    text = text[1:]
+    if len(text) == 3:
+        text = "".join(part * 2 for part in text)
+    if len(text) != 6:
+        return None
+    try:
+        return (int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16))
+    except ValueError:
+        return None
+
+
+def relative_luminance_hex(value: str) -> float | None:
+    rgb = hex_rgb(value)
+    if rgb is None:
+        return None
+
+    def channel(raw: int) -> float:
+        normalized = raw / 255.0
+        if normalized <= 0.03928:
+            return normalized / 12.92
+        return ((normalized + 0.055) / 1.055) ** 2.4
+
+    red, green, blue = (channel(part) for part in rgb)
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+
+
+def contrast_ratio_hex(foreground: str, background: str) -> float:
+    foreground_luminance = relative_luminance_hex(foreground)
+    background_luminance = relative_luminance_hex(background)
+    if foreground_luminance is None or background_luminance is None:
+        return 0.0
+    lighter = max(foreground_luminance, background_luminance)
+    darker = min(foreground_luminance, background_luminance)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def readable_against(background: str, *, min_ratio: float = 4.5) -> str:
+    dark = "#111827"
+    light = "#F8FAFC"
+    return dark if contrast_ratio_hex(dark, background) >= min_ratio else light
+
+
+def ensure_readable_runtime_colors(colors: dict[str, str]) -> dict[str, str]:
+    fixed = dict(colors)
+    text_backing = fixed.get("panel") or fixed.get("surface") or fixed.get("background") or "#F8FAFC"
+    text_color = fixed.get("text") or readable_against(text_backing)
+    if contrast_ratio_hex(text_color, text_backing) < 4.5:
+        text_color = readable_against(text_backing)
+    fixed["text"] = text_color
+    for role in ("muted", "primary", "accent"):
+        role_color = fixed.get(role) or text_color
+        if contrast_ratio_hex(role_color, text_backing) < 3.0:
+            role_color = text_color
+        fixed[role] = role_color
+    return fixed
+
+
 def _theme_token_colors(theme_token: dict[str, Any]) -> dict[str, str]:
     raw = theme_token.get("colors") if isinstance(theme_token.get("colors"), dict) else {}
     colors = {
@@ -865,27 +992,89 @@ def theme_payload(theme_id: str) -> dict[str, Any]:
     promoted_by_id = {record["theme_id"]: record for record in promoted_theme_records()}
     if theme_id in promoted_by_id:
         return _promoted_theme_payload(promoted_by_id[theme_id])
-    colors = LEGACY_THEME_COLORS[theme_id]
-    supported_template_ids = all_template_ids(include_legacy=theme_id in LEGACY_THEME_IDS)
+    if theme_id in LEGACY_THEME_COLORS:
+        colors = LEGACY_THEME_COLORS[theme_id]
+        supported_template_ids = all_template_ids(include_legacy=theme_id in LEGACY_THEME_IDS)
+        return {
+            "schema_version": "svglide-theme/v1",
+            "theme_id": theme_id,
+            "mode": theme_mode(colors),
+            "colors": {
+                "background": colors["background"],
+                "surface": colors["panel"],
+                "panel": colors["panel"],
+                "primary": colors["primary"],
+                "accent": colors["accent"],
+                "text": colors["text"],
+                "muted": colors["muted"],
+                "success": "#22C55E",
+                "warning": "#F59E0B",
+                "danger": "#EF4444",
+            },
+            "selection_metadata": {
+                "scheme": theme_mode(colors),
+                "mood_tags": [theme_id.replace("-", " ")],
+                "primary_color_bias": [colors["primary"]],
+                "supported_template_ids": supported_template_ids,
+                "brand_affinity": [],
+                "contrast_profile": "normal",
+                "token_override_policy": "restricted",
+            },
+            "template_bindings": {"supported_template_ids": supported_template_ids},
+        }
+    family_by_id = {str(family.get("template_id")): family for family in families() if str(family.get("template_id") or "").strip()}
+    family = family_by_id.get(theme_id)
+    if not family:
+        raise KeyError(theme_id)
+    mapped_theme_id = mapped_runtime_theme_id(family)
+    colors: dict[str, str] = {}
+    if mapped_theme_id:
+        mapped_payload = theme_payload(mapped_theme_id)
+        colors = dict(mapped_payload["colors"])
+    visual_dna = family.get("visual_dna") if isinstance(family.get("visual_dna"), dict) else {}
+    palette_roles = visual_dna.get("palette_roles") if isinstance(visual_dna.get("palette_roles"), dict) else {}
+
+    def color(role: str, fallback: str) -> str:
+        value = palette_roles.get(role)
+        return value if isinstance(value, str) and value.startswith("#") else fallback
+
+    if not colors:
+        colors = {
+            "background": color("background", "#F8FAFC"),
+            "surface": color("surface", color("background", "#F8FAFC")),
+            "panel": color("surface", color("background", "#F8FAFC")),
+            "primary": color("primary", color("accent", "#2563EB")),
+            "accent": color("accent", color("primary", "#2563EB")),
+            "text": color("text", "#111827"),
+            "muted": color("muted", "#64748B"),
+            "success": "#22C55E",
+            "warning": "#F59E0B",
+            "danger": "#EF4444",
+        }
+    colors = ensure_readable_runtime_colors(colors)
+    mapped_templates = [item.removeprefix("template.") for item in mapping_asset_ids(family) if item.startswith("template.")]
+    supported_template_ids = [item for item in mapped_templates if item in set(all_template_ids(include_legacy=True))]
+    if not supported_template_ids:
+        supported_template_ids = all_template_ids(include_legacy=True)
     return {
         "schema_version": "svglide-theme/v1",
         "theme_id": theme_id,
         "mode": theme_mode(colors),
         "colors": {
             "background": colors["background"],
-            "surface": colors["panel"],
+            "surface": colors["surface"],
             "panel": colors["panel"],
             "primary": colors["primary"],
             "accent": colors["accent"],
             "text": colors["text"],
             "muted": colors["muted"],
-            "success": "#22C55E",
-            "warning": "#F59E0B",
-            "danger": "#EF4444",
+            "success": colors["success"],
+            "warning": colors["warning"],
+            "danger": colors["danger"],
         },
         "selection_metadata": {
             "scheme": theme_mode(colors),
-            "mood_tags": [theme_id.replace("-", " ")],
+            "mood_tags": non_empty_string_list(family.get("semantic_fit", {}).get("tones") if isinstance(family.get("semantic_fit"), dict) else None, [theme_id.replace("-", " ")]),
             "primary_color_bias": [colors["primary"]],
             "supported_template_ids": supported_template_ids,
             "brand_affinity": [],
@@ -893,6 +1082,9 @@ def theme_payload(theme_id: str) -> dict[str, Any]:
             "token_override_policy": "restricted",
         },
         "template_bindings": {"supported_template_ids": supported_template_ids},
+        "source_family": theme_id,
+        "source_trace": _theme_source_trace(family, {}),
+        "asset_status": ASSET_STATUS_LEGACY_DEBUG,
     }
 
 

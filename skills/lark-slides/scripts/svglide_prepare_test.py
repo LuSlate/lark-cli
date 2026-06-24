@@ -23,6 +23,18 @@ SIMPLE_SVG = """
 </svg>
 """
 
+TEXT_STYLE_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:slide="https://slides.bytedance.com/ns"
+     slide:role="slide"
+     slide:contract-version="svglide-authoring-contract/v1"
+     width="960" height="540" viewBox="0 0 960 540">
+  <foreignObject slide:role="shape" slide:shape-type="text" slide:id="title" x="80" y="96" width="640" height="72">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:48px;font-weight:800;line-height:1.08;color:#123456">SVGlide</div>
+  </foreignObject>
+</svg>
+"""
+
 
 class SVGlidePrepareTest(unittest.TestCase):
     def make_project(self) -> Path:
@@ -82,6 +94,35 @@ class SVGlidePrepareTest(unittest.TestCase):
         (project / "04-svg" / "contract" / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         return manifest
 
+    def write_render_metadata(self, project: Path) -> None:
+        raw_dir = project / "04-artboard" / "raw"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        (raw_dir / "page-001.render-metadata.json").write_text(
+            json.dumps(
+                {
+                    "font_roles": {
+                        "display": {"family": "Source Sans Pro", "source": "theme.typography.font_roles"},
+                        "body": {"family": "Source Sans Pro", "source": "theme.typography.font_roles"},
+                        "label": {"family": "Source Sans Pro", "source": "theme.typography.font_roles"},
+                        "metric": {"family": "Source Sans Pro", "source": "theme.typography.font_roles"},
+                    },
+                    "typography_roles": {
+                        "display": {"font_size": 48, "font_weight": 800, "line_height": 1.08, "letter_spacing": -0.2},
+                        "body": {"font_size": 20, "font_weight": 400, "line_height": 1.35, "letter_spacing": 0},
+                        "label": {"font_size": 12, "font_weight": 700, "line_height": 1.1, "letter_spacing": 1.2},
+                        "metric": {"font_size": 40, "font_weight": 700, "line_height": 1.0, "letter_spacing": 0},
+                    },
+                    "text_style_roles": {
+                        "display": {
+                            "text_transform_policy": "none",
+                            "text_decoration_policy": {"underline": {"line": "none"}, "line_through": {"line": "none"}},
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
     def test_prepare_copies_source_to_prepared_and_writes_receipt(self) -> None:
         project = self.make_project()
         (project / "04-svg" / "page-001.svg").write_text(SIMPLE_SVG, encoding="utf-8")
@@ -115,6 +156,22 @@ class SVGlidePrepareTest(unittest.TestCase):
         self.assertEqual(receipt["contract_manifest"]["path"], "04-svg/contract/manifest.json")
         self.assertEqual(receipt["contract_manifest"]["status"], "passed")
         self.assertEqual(receipt["contract_manifest"]["pages"][0]["output"], "04-svg/page-001.svg")
+
+    def test_prepare_injects_text_style_manifest_for_artboard_satori(self) -> None:
+        project = self.make_project()
+        self.write_artboard_generator_receipt(project)
+        (project / "04-svg" / "page-001.svg").write_text(TEXT_STYLE_SVG, encoding="utf-8")
+        self.write_contract_manifest(project)
+        self.write_render_metadata(project)
+
+        receipt = svglide_prepare.prepare_project(project)
+
+        prepared = (project / "04-svg" / "prepared" / "page-001.svg").read_text(encoding="utf-8")
+        self.assertIn('id="svglide-text-style-manifest"', prepared)
+        self.assertIn('data-svglide-text-style-id=', prepared)
+        self.assertEqual(receipt["text_style_manifest"]["item_count"], 1)
+        self.assertEqual(receipt["text_style_manifest"]["bound_count"], 1)
+        self.assertEqual(receipt["text_style_manifest"]["loss_count"], 0)
 
     def test_prepare_rejects_stale_contract_manifest_output_hash(self) -> None:
         project = self.make_project()
