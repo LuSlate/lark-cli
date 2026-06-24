@@ -318,7 +318,11 @@ jobs:
         continue-on-error: true
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
       - name: Check dependency licenses
-        run: go run github.com/google/go-licenses/v2@v2.0.1 check ./... --disallowed_types=forbidden,restricted,reciprocal,unknown
+        # --ignore github.com/apache/arrow/go/v17: Arrow is Apache-2.0 overall, but it
+        # vendors c-ares (LicenseRef-C-Ares, ISC-like) inside the module, which the
+        # license classifier reports as "Unknown". Required by sheets +table-put /
+        # +table-get / +workbook-create --dataframe (Arrow IPC ingest).
+        run: go run github.com/google/go-licenses/v2@v2.0.1 check ./... --disallowed_types=forbidden,restricted,reciprocal,unknown --ignore github.com/apache/arrow/go/v17
 
   license-header:
     if: ${{ github.event_name == 'pull_request' }}
