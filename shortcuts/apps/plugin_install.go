@@ -30,7 +30,7 @@ var AppsPluginInstall = common.Shortcut{
 	Command:     "+plugin-install",
 	Description: "Install a plugin package (download, extract, update package.json)",
 	Risk:             "write",
-	ConditionalScopes: []string{"spark:plugin:readonly"},
+	ConditionalScopes: []string{"spark:app:read"},
 	AuthTypes:         []string{"user"},
 	Flags: []common.Flag{
 		{Name: "name", Desc: "plugin key[@version] (e.g. @official-plugins/ai-text-generate@1.0.0); omit to install all declared plugins"},
@@ -41,13 +41,13 @@ var AppsPluginInstall = common.Shortcut{
 		name := strings.TrimSpace(rctx.Str("name"))
 		if name == "" {
 			return common.NewDryRunAPI().
-				POST(apiBasePath+"/plugin/versions/batch_get").
+				POST(apiBasePath+"/plugin/versions/batch_query").
 				Desc("Batch-install all declared plugins from package.json actionPlugins").
 				Set("mode", "batch")
 		}
 		key, version := pluginParseInstallTarget(name)
 		return common.NewDryRunAPI().
-			POST(apiBasePath+"/plugin/versions/batch_get").
+			POST(apiBasePath+"/plugin/versions/batch_query").
 			Desc("Fetch plugin version metadata, then download .tgz package").
 			Set("plugin_key", key).
 			Set("version", version)
@@ -99,7 +99,7 @@ func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectP
 	}
 
 	// Resolve version via API
-	resolvedVersion, downloadURL, approach, err := pluginResolveVersion(ctx, rctx, key, version)
+	resolvedVersion, err := pluginResolveVersion(ctx, rctx, key, version)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectP
 	}
 
 	// Download tgz
-	tgzData, err := pluginDownloadPackage(ctx, rctx, key, resolvedVersion, downloadURL, approach)
+	tgzData, err := pluginDownloadPackage(ctx, rctx, key, resolvedVersion)
 	if err != nil {
 		return err
 	}
@@ -273,125 +273,90 @@ func pluginInstallLocal(rctx *common.RuntimeContext, projectPath, tgzPath string
 	return nil
 }
 
-// pluginResolveVersion calls the batch_get API to resolve download info.
-// Returns resolved version, download URL, download approach ("inner"|"public").
-func pluginResolveVersion(ctx context.Context, rctx *common.RuntimeContext, key, version string) (resolvedVersion, downloadURL, downloadApproach string, err error) {
-	item := map[string]interface{}{"plugin_key": key}
-	if version != "" {
-		item["version"] = version
-	}
+// pluginResolveVersion calls the batch_query API to resolve version info.
+func pluginResolveVersion(ctx context.Context, rctx *common.RuntimeContext, key, version string) (resolvedVersion string, err error) {
+	isLatest := version == "" || version == "latest"
 	body := map[string]interface{}{
-		"items": []interface{}{item},
+		"plugin_keys": []interface{}{key},
+		"latest_only": isLatest,
 	}
 
-	data, err := rctx.CallAPITyped("POST", apiBasePath+"/plugin/versions/batch_get", nil, body)
+	data, err := rctx.CallAPITyped("POST", apiBasePath+"/plugin/versions/batch_query", nil, body)
 	if err != nil {
 		p, ok := errs.ProblemOf(err)
 		if ok && p.Subtype == errs.SubtypeInvalidResponse {
 			p.Message = fmt.Sprintf("plugin registry API is not available (returned non-JSON for %s)", key)
 			p.Hint = "the plugin registry endpoint may not be registered yet; check with the backend team"
-			return "", "", "", err
+			return "", err
 		}
-		return "", "", "", withAppsHint(err, fmt.Sprintf("failed to fetch plugin version for %s; check plugin key spelling and network", key))
+		return "", withAppsHint(err, fmt.Sprintf("failed to fetch plugin version for %s; check plugin key spelling and network", key))
 	}
 
-	versions := pluginExtractVersionInfo(data, key)
-	if len(versions) == 0 {
-		return "", "", "", appsValidationError("no version found for plugin %q", key).
+	// Response: data.items is a flat list of plugin_version objects
+	match := pluginFindVersionInItems(data, key, version)
+	if match == nil {
+		return "", appsValidationError("no version found for plugin %q", key).
 			WithHint("check plugin key and version")
 	}
-
-	first := versions[0]
-	rv, _ := first["version"].(string)
-	dl, _ := first["downloadURL"].(string)
-	approach, _ := first["downloadApproach"].(string)
+	rv, _ := match["plugin_version"].(string)
 	if rv == "" {
-		return "", "", "", appsValidationError("incomplete version info for plugin %q", key).
-			WithHint("API returned version info without version; contact plugin maintainer")
+		return "", appsValidationError("incomplete version info for plugin %q", key).
+			WithHint("API returned version info without plugin_version; contact plugin maintainer")
 	}
-	return rv, dl, approach, nil
+	return rv, nil
 }
 
-// pluginExtractVersionInfo extracts the version list for a key from the
-// batch_get response. Handles both field names: "pluginVersions" (fullstack-cli
-// inner API) and "pluginKeyToVersions" (OpenAPI design).
-func pluginExtractVersionInfo(data map[string]interface{}, key string) []map[string]interface{} {
-	var raw interface{}
-	for _, field := range []string{"pluginVersions", "pluginKeyToVersions", "plugin_key_to_versions"} {
-		if v, ok := data[field]; ok {
-			raw = v
-			break
-		}
-	}
-	m, ok := raw.(map[string]interface{})
+// pluginFindVersionInItems extracts data.items and finds a matching version.
+func pluginFindVersionInItems(data map[string]interface{}, key, version string) map[string]interface{} {
+	raw, ok := data["items"]
 	if !ok {
 		return nil
 	}
-	arr, ok := m[key].([]interface{})
+	arr, ok := raw.([]interface{})
 	if !ok {
 		return nil
 	}
-	out := make([]map[string]interface{}, 0, len(arr))
+	isLatest := version == "" || version == "latest"
 	for _, v := range arr {
-		if vm, ok := v.(map[string]interface{}); ok {
-			out = append(out, vm)
+		item, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		pk, _ := item["plugin_key"].(string)
+		if pk != key {
+			continue
+		}
+		if isLatest {
+			return item
+		}
+		pv, _ := item["plugin_version"].(string)
+		if pv == version {
+			return item
 		}
 	}
-	return out
+	return nil
 }
 
-// pluginDownloadPackage downloads a plugin .tgz using the approach indicated by
-// the batch_get API: "inner" uses an authenticated API call to the plugin
-// package endpoint; "public" does a plain HTTP GET to the download URL.
-// When approach is empty, it infers from the URL shape.
-func pluginDownloadPackage(ctx context.Context, rctx *common.RuntimeContext, key, version, downloadURL, approach string) ([]byte, error) {
-	switch approach {
-	case "inner":
-		apiPath := pluginBuildDownloadPath(key, version)
-		return pluginDownloadViaAPI(ctx, rctx, apiPath)
-	case "public":
-		if downloadURL == "" {
-			return nil, appsValidationError("public download requires a downloadURL for %s@%s", key, version)
-		}
-		return pluginDownloadDirect(downloadURL)
-	default:
-		if downloadURL != "" && strings.HasPrefix(downloadURL, "http") {
-			return pluginDownloadDirect(downloadURL)
-		}
-		apiPath := pluginBuildDownloadPath(key, version)
-		return pluginDownloadViaAPI(ctx, rctx, apiPath)
-	}
-}
+// pluginDownloadPackage downloads a plugin .tgz via the download_package API.
+// The endpoint is POST with JSON body {plugin_key, plugin_version}.
+func pluginDownloadPackage(ctx context.Context, rctx *common.RuntimeContext, key, version string) ([]byte, error) {
+	apiPath := apiBasePath + "/plugin/versions/download_package"
+	body, _ := json.Marshal(map[string]string{
+		"plugin_key":     key,
+		"plugin_version": version,
+	})
 
-// pluginBuildDownloadPath constructs the API path for downloading a plugin
-// package. plugin_key and version are passed as query parameters.
-func pluginBuildDownloadPath(key, version string) string {
-	return fmt.Sprintf("%s/plugin/versions/download_package?plugin_key=%s&version=%s", apiBasePath, key, version)
-}
-
-func pluginDownloadViaAPI(ctx context.Context, rctx *common.RuntimeContext, apiPath string) ([]byte, error) {
 	resp, err := rctx.DoAPIStream(ctx, &larkcore.ApiReq{
-		HttpMethod: http.MethodGet,
+		HttpMethod: http.MethodPost,
 		ApiPath:    apiPath,
+		Body:       bytes.NewReader(body),
 	})
 	if err != nil {
-		return nil, appsFileIOError(err, "download failed: %s", apiPath)
+		return nil, appsFileIOError(err, "download failed for %s@%s", key, version)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return nil, appsFileIOError(fmt.Errorf("HTTP %d", resp.StatusCode), "download failed: %s", apiPath)
-	}
-	return io.ReadAll(resp.Body)
-}
-
-func pluginDownloadDirect(url string) ([]byte, error) {
-	resp, err := http.Get(url) //nolint:gosec,noctx // download URL from trusted API response
-	if err != nil {
-		return nil, appsFileIOError(err, "download failed: %s", common.TruncateStr(url, 120))
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return nil, appsFileIOError(fmt.Errorf("HTTP %d", resp.StatusCode), "download failed")
+		return nil, appsFileIOError(fmt.Errorf("HTTP %d", resp.StatusCode), "download failed for %s@%s", key, version)
 	}
 	return io.ReadAll(resp.Body)
 }

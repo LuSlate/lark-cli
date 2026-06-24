@@ -21,32 +21,30 @@ func TestPluginInstall_SinglePlugin(t *testing.T) {
 
 	factory, stdout, reg := newAppsExecuteFactory(t)
 
-	// Mock batch_get API
+	// Mock batch_query API (new protocol: plugin_keys array, response data.items flat list)
 	reg.Register(&httpmock.Stub{
 		Method: "POST",
-		URL:    "/open-apis/spark/v1/plugin/versions/batch_get",
+		URL:    "/open-apis/spark/v1/plugin/versions/batch_query",
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"pluginKeyToVersions": map[string]interface{}{
-					"@test/my-plugin": []interface{}{
-						map[string]interface{}{
-							"version":     "1.0.0",
-							"downloadURL": "/open-apis/spark/v1/plugins/test/versions/1.0.0/package",
-						},
+				"items": []interface{}{
+					map[string]interface{}{
+						"plugin_key":     "@test/my-plugin",
+						"plugin_version": "1.0.0",
 					},
 				},
 			},
 		},
 	})
 
-	// Mock download API (return a valid tgz with manifest.json + package.json)
+	// Mock download API (POST with JSON body, returns binary tgz)
 	tgzData := buildTestTGZ(t, map[string]string{
 		"manifest.json": `{"actions":[]}`,
 		"package.json":  `{"name":"@test/my-plugin","version":"1.0.0"}`,
 	})
 	reg.Register(&httpmock.Stub{
-		Method:      "GET",
+		Method:      "POST",
 		URL:         "/open-apis/spark/v1/plugin/versions/download_package",
 		RawBody:     tgzData,
 		ContentType: "application/octet-stream",
