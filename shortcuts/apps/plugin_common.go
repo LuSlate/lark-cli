@@ -529,6 +529,18 @@ func pluginGetActionPlugins(pkg map[string]interface{}) map[string]string {
 	return out
 }
 
+// pluginActionPluginVersion returns the installed version of a plugin from
+// actionPlugins. Returns ("", false) if the key is not declared.
+func pluginActionPluginVersion(projectPath, key string) (string, bool) {
+	pkg, err := pluginReadPackageJSON(projectPath)
+	if err != nil {
+		return "", false
+	}
+	declared := pluginGetActionPlugins(pkg)
+	v, ok := declared[key]
+	return v, ok
+}
+
 // pluginSetActionPlugin adds or updates a plugin entry in actionPlugins.
 func pluginSetActionPlugin(pkg map[string]interface{}, key, version string) {
 	m, ok := pkg["actionPlugins"].(map[string]interface{})

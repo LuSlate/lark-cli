@@ -18,7 +18,7 @@ func TestPluginInstanceUpdate_Name(t *testing.T) {
 	writeTestCapJSON(t, capDir, "my-inst.json", map[string]interface{}{
 		"id": "my-inst", "pluginKey": "@test/p", "pluginVersion": "1.0.0",
 		"name": "Old Name", "formValue": map[string]interface{}{"k": "v"},
-		"createdAt": 1000, "createdBy": 0,
+		"createdAt": 1000,
 	})
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
@@ -42,9 +42,6 @@ func TestPluginInstanceUpdate_Name(t *testing.T) {
 	}
 	if cap["pluginKey"] != "@test/p" {
 		t.Errorf("pluginKey should be preserved, got %v", cap["pluginKey"])
-	}
-	if cap["createdBy"] != float64(0) {
-		t.Errorf("createdBy should be preserved, got %v", cap["createdBy"])
 	}
 }
 
@@ -125,7 +122,7 @@ func TestPluginInstanceUpdate_PreservesImmutableFields(t *testing.T) {
 	writeTestCapJSON(t, capDir, "my-inst.json", map[string]interface{}{
 		"id": "my-inst", "pluginKey": "@test/p", "pluginVersion": "1.0.0",
 		"name": "Old", "formValue": map[string]interface{}{},
-		"createdAt": float64(1000000), "createdBy": float64(0),
+		"createdAt": float64(1000000),
 	})
 
 	factory, stdout, _ := newAppsExecuteFactory(t)

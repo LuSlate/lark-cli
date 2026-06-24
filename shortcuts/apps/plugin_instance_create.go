@@ -25,7 +25,7 @@ var AppsPluginInstanceCreate = common.Shortcut{
 	Risk: "write",
 	Flags: []common.Flag{
 		{Name: "id", Desc: "semantic instance id (lowercase + hyphens); auto-derived from plugin key if omitted"},
-		{Name: "plugin", Desc: "plugin key@version (e.g. @official-plugins/ai-text-generate@1.0.0)", Required: true},
+		{Name: "plugin", Desc: "plugin key (e.g. @official-plugins/ai-text-generate); version is resolved from package.json actionPlugins", Required: true},
 		{Name: "name", Desc: "display name for the instance", Required: true},
 		{Name: "description", Desc: "instance description"},
 		{Name: "form-value", Desc: "formValue JSON object", Required: true, Input: []string{common.File, common.Stdin}},
@@ -35,21 +35,25 @@ var AppsPluginInstanceCreate = common.Shortcut{
 		{Name: "force", Type: "bool", Desc: "overwrite existing instance with same id"},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
-		pluginKey, pluginVersion, _ := pluginParseKeyVersion(rctx.Str("plugin"))
+		pluginKey, pluginVersion := pluginParseInstallTarget(rctx.Str("plugin"))
 		id := strings.TrimSpace(rctx.Str("id"))
 		if id == "" {
 			id = pluginDeriveID(pluginKey)
+		}
+		pluginRef := pluginKey
+		if pluginVersion != "" {
+			pluginRef += "@" + pluginVersion
 		}
 		return common.NewDryRunAPI().
 			Desc("Create plugin instance (write capability JSON)").
 			Set("action", "create").
 			Set("id", id).
-			Set("plugin", pluginKey+"@"+pluginVersion).
+			Set("plugin", pluginRef).
 			Set("target", fmt.Sprintf("<capabilities_dir>/%s.json", id))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
-		if _, _, err := pluginParseKeyVersion(rctx.Str("plugin")); err != nil {
-			return err
+		if strings.TrimSpace(rctx.Str("plugin")) == "" {
+			return appsValidationParamError("--plugin", "--plugin is required")
 		}
 		if id := strings.TrimSpace(rctx.Str("id")); id != "" {
 			if err := pluginValidateID(id); err != nil {
@@ -71,14 +75,24 @@ var AppsPluginInstanceCreate = common.Shortcut{
 		return pluginCheckProjectDir(projectPath)
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
-		pluginKey, pluginVersion, err := pluginParseKeyVersion(rctx.Str("plugin"))
-		if err != nil {
-			return err
+		pluginKey, pluginVersion := pluginParseInstallTarget(rctx.Str("plugin"))
+		if pluginKey == "" {
+			return appsValidationParamError("--plugin", "--plugin is required")
 		}
 
 		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
 		if err != nil {
 			return err
+		}
+
+		// Check that the plugin is declared in actionPlugins
+		declaredVersion, ok := pluginActionPluginVersion(projectPath, pluginKey)
+		if !ok {
+			return appsFailedPreconditionError("plugin %q is not installed; no entry in package.json actionPlugins", pluginKey).
+				WithHint("run 'lark-cli apps +plugin-install --name %s' to install first", pluginKey)
+		}
+		if pluginVersion == "" {
+			pluginVersion = declaredVersion
 		}
 
 		warnings, err := pluginCheckInstalledVersion(projectPath, pluginKey, pluginVersion)
@@ -122,7 +136,6 @@ var AppsPluginInstanceCreate = common.Shortcut{
 			"formValue":     formValue,
 			"createdAt":     now,
 			"updatedAt":     now,
-			"createdBy":     0,
 		}
 
 		var paramsSchema interface{}

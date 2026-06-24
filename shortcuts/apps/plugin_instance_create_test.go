@@ -242,6 +242,11 @@ func TestPluginInstanceCreate_AutoCreateCapDir(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(manifestDir, "manifest.json"), []byte(`{}`), 0o644); err != nil { //nolint:forbidigo
 		t.Fatal(err)
 	}
+	writeTestPkgJSON(t, dir, map[string]interface{}{
+		"actionPlugins": map[string]interface{}{
+			pluginKey: "1.0.0",
+		},
+	})
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginInstanceCreate, []string{
@@ -277,5 +282,11 @@ func setupPluginTestProjectWithManifest(t *testing.T, appType, pluginKey string)
 	if err := os.WriteFile(filepath.Join(manifestDir, "manifest.json"), []byte(`{"actions":[]}`), 0o644); err != nil { //nolint:forbidigo
 		t.Fatal(err)
 	}
+	// Register the plugin in actionPlugins so create's actionPlugins check passes
+	writeTestPkgJSON(t, dir, map[string]interface{}{
+		"actionPlugins": map[string]interface{}{
+			pluginKey: "1.0.0",
+		},
+	})
 	return dir
 }
