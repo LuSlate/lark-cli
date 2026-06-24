@@ -584,9 +584,10 @@ func TestAppsDBExecute_PrettyMultiStatementsPartialFailureWithErrorSentinel(t *t
 			t.Errorf("missing %q in pretty output\nfull:\n%s", line, got)
 		}
 	}
-	// DBA 模式（transactional=false）前序语句已 auto-commit 落地，绝不能误报「rolled back」。
-	if strings.Contains(got, "rolled back") {
-		t.Errorf("DBA mode must NOT claim rollback (prior statements persisted); got:\n%s", got)
+	// 非事务（transactional=false）前序语句已逐条 commit 落地，须如实说明「committed and not rolled back」，
+	// 绝不能误报整批回滚。
+	if !strings.Contains(got, "committed and not rolled back") {
+		t.Errorf("non-tx failure must state prior statements committed & not rolled back; got:\n%s", got)
 	}
 	if strings.Contains(got, "statements executed") {
 		t.Errorf("failed run should NOT print success summary; got:\n%s", got)
@@ -596,7 +597,7 @@ func TestAppsDBExecute_PrettyMultiStatementsPartialFailureWithErrorSentinel(t *t
 // TestAppsDBExecute_MultiStatementFailureReturnsTypedError 钉死「多语句失败 → typed errs.APIError」：
 // json 默认不再打 ok:true 假成功，而是返回 typed errs.* 错误（type=api / subtype=server_error、
 // exit=1）。失败位置在 message 的 "(at statement N of M)"，前序是否落地/是否回滚写在 hint。
-// 本例无 BEGIN → auto-commit，前序已落地、未回滚（hint 含 "already applied ... not rolled back"）。
+// 本例无 BEGIN → 前序逐条 commit、未回滚（hint 含 "committed and not rolled back"）。
 func TestAppsDBExecute_MultiStatementFailureReturnsTypedError(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -635,9 +636,9 @@ func TestAppsDBExecute_MultiStatementFailureReturnsTypedError(t *testing.T) {
 	if !strings.Contains(p.Message, "(at statement 2 of 2)") {
 		t.Errorf("message missing statement locator: %q", p.Message)
 	}
-	// 无 BEGIN → auto-commit：前序已落地、未回滚，语义写在 hint。
-	if !strings.Contains(p.Hint, "already applied") || !strings.Contains(p.Hint, "not rolled back") {
-		t.Errorf("hint should state prior statements applied & not rolled back: %q", p.Hint)
+	// 无 BEGIN → 前序逐条 commit、未回滚，语义写在 hint。
+	if !strings.Contains(p.Hint, "committed and not rolled back") {
+		t.Errorf("hint should state prior statements committed & not rolled back: %q", p.Hint)
 	}
 	if output.ExitCodeOf(err) != output.ExitAPI {
 		t.Errorf("exit = %d, want %d (ExitAPI)", output.ExitCodeOf(err), output.ExitAPI)
@@ -672,14 +673,14 @@ func TestAppsDBExecute_SingleErrorReturnsTypedError(t *testing.T) {
 		t.Errorf("message missing locator: %q", p.Message)
 	}
 	// 第一条就失败、无落地 的语义写在 hint。
-	if !strings.Contains(p.Hint, "no statements were applied") {
+	if !strings.Contains(p.Hint, "No statements were applied") {
 		t.Errorf("hint should state nothing applied: %q", p.Hint)
 	}
 }
 
 // TestAppsDBExecute_TransactionFailureRolledBack 钉死「显式事务内失败 → 整批回滚」：
 // 实测后端把 BEGIN 也作为 statement 返回；completed 含未配对 BEGIN → inferRolledBack 判定回滚。
-// 回滚语义现写在 hint（"rolled back ... NO statements persisted"），失败位置在 message。
+// 回滚语义现写在 hint（miaoda 原句 "Transaction rolled back; no changes persisted."），失败位置在 message。
 func TestAppsDBExecute_TransactionFailureRolledBack(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -714,8 +715,8 @@ func TestAppsDBExecute_TransactionFailureRolledBack(t *testing.T) {
 	if !strings.Contains(p.Message, "(at statement 4 of 4)") {
 		t.Errorf("message missing statement locator: %q", p.Message)
 	}
-	// 事务整批回滚 / 前序未落库 的语义写在 hint。
-	if !strings.Contains(p.Hint, "rolled back") || !strings.Contains(p.Hint, "NO statements persisted") {
+	// 事务整批回滚 / 前序未落库 的语义写在 hint（miaoda 原句）。
+	if !strings.Contains(p.Hint, "Transaction rolled back; no changes persisted.") {
 		t.Errorf("hint should state transaction rolled back & nothing persisted: %q", p.Hint)
 	}
 }

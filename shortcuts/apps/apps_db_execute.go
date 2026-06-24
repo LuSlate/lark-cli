@@ -34,8 +34,8 @@ import (
 // 失败语义：server 多语句失败仍返 code:0，把失败语句标成 ERROR 哨兵塞进 result。Execute 检测到哨兵
 // 后升级成 typed errs.APIError（CategoryAPI → exit 1），避免 agent 误判 ok:true 假成功。诊断信息
 // （第几条失败 / 共几条 / 是否整批回滚 / 前序是否落地）写进 message+hint 文案（errs.* 信封扁平、无
-// detail 容器）：失败在用户显式 BEGIN…COMMIT 事务内 → 整批回滚、前序未落库；否则 DBA 模式逐条
-// auto-commit、前序已落地。rolled_back 语义由 inferRolledBack 按 BEGIN/COMMIT 计数推断。
+// detail 容器）：失败在用户显式 BEGIN…COMMIT 事务内 → 整批回滚、前序未落库；否则前序语句已逐条
+// commit、未回滚。rolled_back 语义由 inferRolledBack 按 BEGIN/COMMIT 计数推断。
 //
 // JSON（成功路径）按 SQL 类型归一化 `data`（不透传后端 result 字符串）：
 //   - 单 SELECT → data 是行数组 `[{...}]`（空 → `[]`）
@@ -219,12 +219,13 @@ func findErrorSentinel(stmts []map[string]interface{}) (int, map[string]interfac
 
 // sqlStatementError 把 ERROR 哨兵升级成 typed errs.APIError（CategoryAPI → exit 1）。
 //
-// 多语句失败的全部诊断信息——第几条失败 / 共几条 / 是否整批回滚 / 前序是否落地——都写进
-// message + hint 的人类可读文案（errs.* 信封是扁平字段、不带结构化 detail 容器）：
+// 多语句失败的诊断信息——第几条失败 / 共几条 / 是否整批回滚 / 前序是否落地——都写进
+// message + hint 的人类可读文案（errs.* 信封是扁平字段、不带结构化 detail 容器）。文案对齐
+// miaoda-cli（src/cli/handlers/db/sql.ts、src/api/db/api.ts）：
 //   - message 末尾 "(at statement N of M)" 给出失败位置；
-//   - hint 区分两种语义（由 inferRolledBack 推断，实测后端把 BEGIN/COMMIT 也作为 statement 返回）：
-//     失败仍在用户显式事务内 → 服务端整批回滚、前序未落库（hint: "rolled back ... NO statements persisted"）；
-//     否则 DBA 模式逐条 auto-commit、前序已落地（hint: "statements 1-N already applied ... not rolled back"）。
+//   - hint 由 inferRolledBack 推断（实测后端把 BEGIN/COMMIT 也作为 statement 返回）：
+//     失败仍在用户显式事务内 → 服务端整批回滚，用 miaoda 原句 "Transaction rolled back; no changes persisted."；
+//     否则前序语句已逐条 commit、未回滚（flat 信封无逐句 breakdown，故 hint 简述前序已落地 + 从失败处续跑）。
 func sqlStatementError(stmts []map[string]interface{}, errIdx int, errStmt map[string]interface{}) error {
 	code, msg := parseErrorSentinel(common.GetString(errStmt, "data"))
 	stmtNo := errIdx + 1 // 1-based 给人看
@@ -233,11 +234,11 @@ func sqlStatementError(stmts []map[string]interface{}, errIdx int, errStmt map[s
 	var hint string
 	switch {
 	case inferRolledBack(stmts[:errIdx]):
-		hint = fmt.Sprintf("statement %d failed inside an explicit transaction — it was rolled back and NO statements persisted; fix the SQL and re-run the whole script.", stmtNo)
+		hint = "Transaction rolled back; no changes persisted."
 	case errIdx > 0:
-		hint = fmt.Sprintf("statements 1-%d already applied (DBA mode auto-commits each statement; not rolled back); fix statement %d and re-run only the remaining statements.", errIdx, stmtNo)
+		hint = fmt.Sprintf("Earlier statements were committed and not rolled back; fix statement %d and re-run the remaining statements.", stmtNo)
 	default:
-		hint = "no statements were applied (the first statement failed; nothing to roll back); fix the SQL and re-run."
+		hint = "No statements were applied; fix the SQL and re-run."
 	}
 	return errs.NewAPIError(errs.SubtypeServerError, "%s", fullMsg).WithCode(code).WithHint("%s", hint)
 }
@@ -439,10 +440,10 @@ func renderMultiStatementPretty(w io.Writer, stmts []map[string]interface{}) {
 	}
 	fmt.Fprintln(w)
 	if failedIdx >= 0 {
-		// CLI 永远 DBA 模式（transactional=false），失败语句之前的语句已 auto-commit 落地，
-		// 不存在整批回滚 —— 如实告诉用户，避免整批重跑导致重复写入。
+		// CLI 永远传 transactional=false，失败语句之前的语句已逐条 commit 落地、不会整批回滚——
+		// 如实告诉用户，避免整批重跑导致重复写入。
 		if successCount > 0 {
-			fmt.Fprintf(w, "(statement %d failed; %d statement%s before it already applied — DBA mode auto-commits each)\n",
+			fmt.Fprintf(w, "(statement %d failed; %d statement%s before it committed and not rolled back)\n",
 				failedIdx+1, successCount, plural(int64(successCount)))
 		} else {
 			fmt.Fprintf(w, "(statement %d failed; no statements applied)\n", failedIdx+1)

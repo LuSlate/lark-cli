@@ -32,13 +32,13 @@ lark-cli apps +db-execute --app-id app_xxx --env dev --sql - --yes < /Users/.../
   - 单 DDL → `data = {command}`（如 `{"command":"CREATE_TABLE"}`）。
   - 多语句 → `data` 是元素数组：SELECT 为 `{command:"SELECT", rows:[...]}`，DML 为 `{command, rows_affected}`，DDL 为 `{command}`。
 - pretty 会按 SELECT/DML/DDL 自适应渲染；多语句会逐条显示 Statement 摘要。
-- 失败返回 typed `error`（`type:"api"`、`subtype:"server_error"`、`code`、`message`、`hint`）：失败位置在 `message` 的「(at statement N of M)」；前序是否落地 / 是否整批回滚写在 `hint`——事务内失败「rolled back ... NO statements persisted」，否则 auto-commit「statements 1-N already applied ... not rolled back」。据此决定整段重跑还是只跑剩余语句。
+- 失败返回 typed `error`（`type:"api"`、`subtype:"server_error"`、`code`、`message`、`hint`）：失败位置在 `message` 的「(at statement N of M)」；前序是否落地 / 是否整批回滚写在 `hint`——事务内失败「Transaction rolled back; no changes persisted.」，否则「Earlier statements were committed and not rolled back; fix statement N and re-run the remaining statements.」。据此决定整段重跑还是只跑剩余语句。
 
 ## Agent 规则
 
 - 该命令为 high-risk-write，执行一律需 `--yes`；无 `--yes` 会返回 `confirmation_required` / exit 10。
   - **只读查询、以及不删除/不丢失既有数据且可撤回的语句**：已授权时可直接带 `--yes` 执行。
   - **会删除或丢失既有数据、或难以撤回的语句**：先 `--dry-run` 预览（无需 `--yes`），向用户确认后再带 `--yes` 执行；不要在用户不知情时自动补 `--yes`。
-- 多语句失败时，失败前的语句可能已经 auto-commit。不要整批重跑；按错误 detail/hint 修失败语句，并从剩余语句继续。
+- 多语句失败时，失败前的语句可能已经 commit 落地。不要整批重跑；按错误 message/hint 修失败语句，并从剩余语句继续。
 - 如果需要原子性，让用户在 SQL 内显式写 `BEGIN` / `COMMIT`，不要假设 CLI 会包事务。
 - 不要把数据库连接串从 env 中取出来裸连。
