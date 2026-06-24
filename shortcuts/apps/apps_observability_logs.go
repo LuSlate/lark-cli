@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/larksuite/cli/errs"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -42,7 +41,6 @@ var AppsLogList = common.Shortcut{
 		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
 		{Name: "until", Desc: "end time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
 		{Name: "level", Type: "string_array", Desc: "log level filter; repeatable, one of DEBUG, INFO, WARN, ERROR (case-insensitive)"},
-		{Name: "log-id", Type: "string_array", Desc: "log ID filter; repeatable"},
 		{Name: "trace-id", Type: "string_array", Desc: "trace ID filter; repeatable"},
 		{Name: "keyword", Desc: "keyword filter applied by the log search backend"},
 		{Name: "module", Desc: "module name filter"},
@@ -80,7 +78,7 @@ var AppsLogList = common.Shortcut{
 		}
 		out := normalizeLogSearchResponse(data)
 		rctx.OutFormat(out, nil, func(w io.Writer) {
-			output.PrintTable(w, logListRows(out.Items))
+			appsPrintSchemaTable(w, appsProjectRows(logListRows(out.Items), logSummarySchema), logSummarySchema)
 		})
 		return nil
 	},
@@ -133,7 +131,7 @@ var AppsLogGet = common.Shortcut{
 		log := out.Items[0]
 		enrichLogSourceStack(rctx, appID, log)
 		rctx.OutFormat(log, nil, func(w io.Writer) {
-			output.PrintTable(w, []map[string]interface{}{logSummaryRow(log)})
+			appsPrintSchemaTable(w, appsProjectRows([]map[string]interface{}{logSummaryRow(log)}, logSummarySchema), logSummarySchema)
 		})
 		return nil
 	},
@@ -217,9 +215,6 @@ func buildLogSearchFilter(rctx *common.RuntimeContext) (map[string]interface{}, 
 	if len(levels) > 0 {
 		filter["levels"] = levels
 	}
-	if logIDs := cleanRepeatedStrings(rctx.StrArray("log-id")); len(logIDs) > 0 {
-		filter["log_ids"] = logIDs
-	}
 	if traceIDs := cleanRepeatedStrings(rctx.StrArray("trace-id")); len(traceIDs) > 0 {
 		filter["trace_ids"] = traceIDs
 	}
@@ -302,6 +297,7 @@ func normalizeLogSearchResponse(data map[string]interface{}) logSearchOutput {
 
 func normalizeLogItem(item map[string]interface{}) map[string]interface{} {
 	out := cloneMap(item)
+	normalizeObservabilityAttributes(out)
 	copyFirstAlias(out, item, "log_id", "log_id", "id", "logID", "logId")
 	copyFirstAlias(out, item, "trace_id", "trace_id", "traceID", "traceId")
 	copyFirstAlias(out, item, "timestamp_ns", "timestamp_ns", "timestampNs")
@@ -377,14 +373,38 @@ func logListRows(items []map[string]interface{}) []map[string]interface{} {
 	return rows
 }
 
+var logSummarySchema = appsOutputSchema{
+	Columns: []appsOutputColumn{
+		{Key: "timestamp_ns", Label: "time", Format: appsFormatNS("2006-01-02 15:04:05.000")},
+		{Key: "level"},
+		{Key: "module"},
+		{Key: "user_id"},
+		{Key: "duration_ms", Format: appsFormatDurationMS},
+		{Key: "trace_id"},
+		{Key: "log_id"},
+		{Key: "message"},
+	},
+	Strict: true,
+}
+
 func logSummaryRow(item map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"log_id":       item["log_id"],
 		"level":        firstItemString(item, "level", "severity_text"),
 		"trace_id":     item["trace_id"],
 		"timestamp_ns": item["timestamp_ns"],
+		"module":       firstLogDetailValue(item, "module"),
+		"user_id":      firstLogDetailValue(item, "user_id"),
+		"duration_ms":  firstLogDetailValue(item, "duration_ms"),
 		"message":      firstItemString(item, "message", "body"),
 	}
+}
+
+func firstLogDetailValue(item map[string]interface{}, key string) interface{} {
+	if value, ok := item[key]; ok {
+		return value
+	}
+	return appsAttributeValue(item["attributes"], key)
 }
 
 func firstItemString(item map[string]interface{}, keys ...string) string {

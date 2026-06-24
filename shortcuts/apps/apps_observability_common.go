@@ -75,6 +75,13 @@ func cleanRepeatedStrings(values []string) []string {
 	return out
 }
 
+func normalizeObservabilityAttributes(item map[string]interface{}) {
+	kv := observabilityKVList(item["attributes"])
+	if len(kv) > 0 {
+		item["attributes"] = kv
+	}
+}
+
 func parseAppsTimeRange(sinceName, sinceRaw, untilName, untilRaw string) (time.Time, time.Time, bool, bool, error) {
 	var since, until time.Time
 	var hasSince, hasUntil bool
@@ -185,10 +192,10 @@ func parseAppsRelativeDuration(s string) (time.Duration, bool) {
 	return duration, true
 }
 
-func nsNumber(t time.Time) int64 {
-	return t.UnixNano()
+func nsNumber(t time.Time) string {
+	return strconv.FormatInt(t.UnixNano(), 10)
 }
 
-func secNumber(t time.Time) int64 {
-	return t.Unix()
+func secNumber(t time.Time) string {
+	return strconv.FormatInt(t.Unix(), 10)
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/larksuite/cli/internal/httpmock"
 )
@@ -15,7 +16,7 @@ func TestAppsLogList_DryRunBuildsSearchLogsBody(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsLogList, []string{
 		"+log-list", "--app-id", "app_x", "--level", "error",
-		"--log-id", "LOG1", "--log-id", "LOG2", "--trace-id", "trace-1",
+		"--trace-id", "trace-1",
 		"--keyword", "timeout", "--module", "frontend", "--user-id", "ou_1",
 		"--page", "/home", "--api", "/api/orders", "--min-duration", "200",
 		"--since", "2026-06-23T10:00:00Z", "--until", "2026-06-23T10:01:00Z",
@@ -55,9 +56,19 @@ func TestAppsLogList_DryRunBuildsSearchLogsBody(t *testing.T) {
 			t.Fatalf("filter.%s = %#v, want [%q]", key, filter[key], want)
 		}
 	}
-	if env.API[0].Body["start_timestamp_ns"] != float64(1782208800000000000) ||
-		env.API[0].Body["end_timestamp_ns"] != float64(1782208860000000000) {
+	if env.API[0].Body["start_timestamp_ns"] != "1782208800000000000" ||
+		env.API[0].Body["end_timestamp_ns"] != "1782208860000000000" {
 		t.Fatalf("timestamps = %#v %#v", env.API[0].Body["start_timestamp_ns"], env.API[0].Body["end_timestamp_ns"])
+	}
+}
+
+func TestAppsLogList_DoesNotAcceptLogIDFlag(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	err := runAppsShortcut(t, AppsLogList, []string{
+		"+log-list", "--app-id", "app_x", "--log-id", "LOG1", "--as", "user",
+	}, factory, stdout)
+	if err == nil || !strings.Contains(err.Error(), "unknown flag: --log-id") {
+		t.Fatalf("expected unknown --log-id flag, got %v", err)
 	}
 }
 
@@ -142,6 +153,89 @@ func TestAppsLogList_NormalizesResponseVariantsAndCanonicalLevel(t *testing.T) {
 	item := env.Data.Items[0]
 	if item["level"] != "ERROR" || item["severity_text"] != "ERROR" || item["severityText"] != "ERROR" {
 		t.Fatalf("level fields = %#v", item)
+	}
+}
+
+func TestAppsLogList_NormalizesKVAttributesToObject(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_logs",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"log_items": []interface{}{
+					map[string]interface{}{
+						"log_id": "LOG1",
+						"attributes": []interface{}{
+							map[string]interface{}{"key": "app_env", "value": "runtime"},
+							map[string]interface{}{"key": "duration_ms", "value": "8263"},
+							map[string]interface{}{"key": "module", "value": "gateway"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsLogList, []string{"+log-list", "--app-id", "app_x", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+
+	var env struct {
+		Data struct {
+			Items []map[string]interface{} `json:"items"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, stdout.String())
+	}
+	attrs, ok := env.Data.Items[0]["attributes"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("attributes = %#v, want object", env.Data.Items[0]["attributes"])
+	}
+	if attrs["app_env"] != "runtime" || attrs["duration_ms"] != "8263" || attrs["module"] != "gateway" {
+		t.Fatalf("attributes = %#v", attrs)
+	}
+}
+
+func TestAppsLogGet_PrettyFormatsTimestamp(t *testing.T) {
+	const rawNS = int64(1782209472123456789)
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_logs",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"log_items": []interface{}{
+					map[string]interface{}{
+						"log_id":       "LOG1",
+						"level":        "ERROR",
+						"trace_id":     "trace-1",
+						"timestamp_ns": rawNS,
+						"message":      "boom",
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsLogGet, []string{
+		"+log-get", "--app-id", "app_x", "--log-id", "LOG1", "--format", "pretty", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	wantTime := time.Unix(0, rawNS).Local().Format("2006-01-02 15:04:05.000")
+	if !strings.HasPrefix(got, "time") {
+		t.Fatalf("pretty output should start with time column, got:\n%s", got)
+	}
+	if !strings.Contains(got, wantTime) {
+		t.Fatalf("pretty output missing formatted time %q:\n%s", wantTime, got)
+	}
+	if strings.Contains(got, "timestamp_ns") || strings.Contains(got, "1782209472123456789") {
+		t.Fatalf("pretty output should hide raw timestamp_ns, got:\n%s", got)
 	}
 }
 

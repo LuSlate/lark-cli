@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -70,7 +69,7 @@ var AppsTraceList = common.Shortcut{
 		}
 		out := normalizeTraceSearchResponse(data)
 		rctx.OutFormat(out, nil, func(w io.Writer) {
-			output.PrintTable(w, traceListRows(out.Items))
+			appsPrintSchemaTable(w, appsProjectRows(traceListRows(out.Items), traceSummarySchema), traceSummarySchema)
 		})
 		return nil
 	},
@@ -117,7 +116,7 @@ var AppsTraceGet = common.Shortcut{
 		}
 		trace := normalizeTraceDetail(data)
 		rctx.OutFormat(trace, nil, func(w io.Writer) {
-			output.PrintTable(w, []map[string]interface{}{traceSummaryRow(trace)})
+			appsPrintSchemaTable(w, appsProjectRows([]map[string]interface{}{traceDetailSummary(trace)}, traceSummarySchema), traceSummarySchema)
 		})
 		return nil
 	},
@@ -303,6 +302,7 @@ func aggregateTraceSpanSummaries(spans []map[string]interface{}) []map[string]in
 	indexByTraceID := make(map[string]int, len(spans))
 	ungrouped := make([]map[string]interface{}, 0)
 	for _, span := range spans {
+		span = normalizeTraceSpan(span)
 		traceID := firstTraceString(span, "trace_id", "traceID", "traceId")
 		if traceID == "" {
 			ungrouped = append(ungrouped, normalizeTraceSummary(span))
@@ -550,12 +550,18 @@ func normalizeTraceDetail(data map[string]interface{}) map[string]interface{} {
 			normalized = append(normalized, normalizeTraceSpan(span))
 		}
 		out["spans"] = normalized
+		if firstTraceString(out, "trace_id") == "" {
+			if traceID := firstTraceString(normalized[0], "trace_id"); traceID != "" {
+				out["trace_id"] = traceID
+			}
+		}
 	}
 	return out
 }
 
 func normalizeTraceObject(trace map[string]interface{}) map[string]interface{} {
 	out := cloneMap(trace)
+	normalizeObservabilityAttributes(out)
 	copyFirstAlias(out, trace, "trace_id", "trace_id", "traceID", "traceId")
 	copyFirstAlias(out, trace, "is_break", "is_break", "isBreak")
 	return out
@@ -563,13 +569,21 @@ func normalizeTraceObject(trace map[string]interface{}) map[string]interface{} {
 
 func normalizeTraceSpan(span map[string]interface{}) map[string]interface{} {
 	out := cloneMap(span)
+	normalizeObservabilityAttributes(out)
 	copyFirstAlias(out, span, "trace_id", "trace_id", "traceID", "traceId")
 	copyFirstAlias(out, span, "span_id", "span_id", "spanID", "spanId")
 	copyFirstAlias(out, span, "parent_span_id", "parent_span_id", "parentSpanID", "parentSpanId")
-	copyFirstAlias(out, span, "start_time_ns", "start_time_ns", "startTimeNs")
-	copyFirstAlias(out, span, "end_time_ns", "end_time_ns", "endTimeNs")
+	copyFirstAlias(out, span, "start_time_ns", "start_time_ns", "startTimeNs", "start_time_unix_nano", "startTimeUnixNano")
+	copyFirstAlias(out, span, "end_time_ns", "end_time_ns", "endTimeNs", "end_time_unix_nano", "endTimeUnixNano")
 	copyFirstAlias(out, span, "duration_ms", "duration_ms", "durationMs")
 	copyFirstAlias(out, span, "is_break", "is_break", "isBreak")
+	for _, key := range []string{"duration_ms", "user_id", "status", "module"} {
+		if _, ok := out[key]; !ok {
+			if value := appsAttributeValue(span["attributes"], key); value != nil {
+				out[key] = value
+			}
+		}
+	}
 	return out
 }
 
@@ -581,11 +595,38 @@ func traceListRows(items []map[string]interface{}) []map[string]interface{} {
 	return rows
 }
 
+var traceSummarySchema = appsOutputSchema{
+	Columns: []appsOutputColumn{
+		{Key: "start_time_ns", Label: "start-time", Format: appsFormatNS("2006-01-02 15:04:05.000")},
+		{Key: "root_span", Label: "root-span"},
+		{Key: "user_id", Label: "user-id"},
+		{Key: "duration_ms", Label: "duration", Format: appsFormatDurationMS},
+		{Key: "trace_id", Label: "trace-id"},
+	},
+	Strict: true,
+}
+
+func traceDetailSummary(trace map[string]interface{}) map[string]interface{} {
+	if spans := traceMapSlice(trace["spans"]); len(spans) > 0 {
+		summaries := aggregateTraceSpanSummaries(spans)
+		if len(summaries) > 0 {
+			summary := summaries[0]
+			for _, key := range []string{"trace_id", "is_break"} {
+				if value, ok := trace[key]; ok {
+					summary[key] = value
+				}
+			}
+			return summary
+		}
+	}
+	return traceSummaryRow(trace)
+}
+
 func traceSummaryRow(item map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"trace_id":      item["trace_id"],
 		"start_time_ns": item["start_time_ns"],
-		"root_span":     item["root_span"],
+		"root_span":     firstItemString(item, "root_span", "name", "span_name"),
 		"user_id":       item["user_id"],
 		"duration_ms":   item["duration_ms"],
 		"status":        item["status"],

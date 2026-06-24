@@ -5,7 +5,9 @@ package apps
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/larksuite/cli/internal/httpmock"
 )
@@ -50,8 +52,8 @@ func TestAppsTraceList_DryRunBuildsSearchTracesBody(t *testing.T) {
 	if len(userIDs) != 1 || userIDs[0] != "ou_1" {
 		t.Fatalf("filter.user_ids = %#v", userIDs)
 	}
-	if env.API[0].Body["start_timestamp_ns"] != float64(1782208800000000000) ||
-		env.API[0].Body["end_timestamp_ns"] != float64(1782208860000000000) {
+	if env.API[0].Body["start_timestamp_ns"] != "1782208800000000000" ||
+		env.API[0].Body["end_timestamp_ns"] != "1782208860000000000" {
 		t.Fatalf("timestamps = %#v %#v", env.API[0].Body["start_timestamp_ns"], env.API[0].Body["end_timestamp_ns"])
 	}
 }
@@ -255,6 +257,110 @@ func TestAppsTraceList_AggregatesSpansSourceWithSingleSpanPerTrace(t *testing.T)
 	}
 }
 
+func TestAppsTraceList_PrettyUsesTraceSummaryColumns(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_traces",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"traceItems": []interface{}{
+					map[string]interface{}{
+						"traceID":     "trace-1",
+						"startTimeNs": "1782232472381701316",
+						"rootSpan":    "GET /app/app_x/api/note-records",
+						"userID":      "1846640196867498",
+						"durationMs":  float64(414),
+						"status":      "OK",
+						"spanCount":   float64(4),
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsTraceList, []string{
+		"+trace-list", "--app-id", "app_x", "--format", "pretty", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	if !strings.HasPrefix(got, "start-time") {
+		t.Fatalf("pretty output should start with start-time column, got:\n%s", got)
+	}
+	for _, want := range []string{"root-span", "user-id", "duration", "trace-id", "GET /app/app_x/api/note-records", "414ms"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("pretty output missing %q:\n%s", want, got)
+		}
+	}
+	for _, banned := range []string{"span_count", "span-count", "status", "duration_ms", "root_span", "trace_id"} {
+		if strings.Contains(got, banned) {
+			t.Fatalf("pretty output should not include %q:\n%s", banned, got)
+		}
+	}
+}
+
+func TestAppsTraceGet_PrettySummarizesSpans(t *testing.T) {
+	const rawNS = int64(1782232472381701316)
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/trace",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"is_break": false,
+				"spans": []interface{}{
+					map[string]interface{}{
+						"trace_id":             "trace-1",
+						"name":                 "GET /app/app_x",
+						"span_id":              "root",
+						"parent_span_id":       "",
+						"start_time_unix_nano": "1782232472381701316",
+						"end_time_unix_nano":   "1782232480645457992",
+						"attributes": []interface{}{
+							map[string]interface{}{"key": "duration_ms", "value": "8263.76"},
+							map[string]interface{}{"key": "user_id", "value": "1826968659245100"},
+						},
+					},
+					map[string]interface{}{
+						"trace_id":             "trace-1",
+						"name":                 "child",
+						"span_id":              "child",
+						"parent_span_id":       "root",
+						"start_time_unix_nano": "1782232480448000000",
+						"attributes": []interface{}{
+							map[string]interface{}{"key": "duration_ms", "value": "184.89"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsTraceGet, []string{
+		"+trace-get", "--app-id", "app_x", "--trace-id", "trace-1", "--format", "pretty", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	wantTime := time.Unix(0, rawNS).Local().Format("2006-01-02 15:04:05.000")
+	if !strings.HasPrefix(got, "start-time") {
+		t.Fatalf("pretty output should start with start-time columns, got:\n%s", got)
+	}
+	for _, want := range []string{"root-span", "user-id", "duration", "trace-id", "trace-1", "GET /app/app_x", "1826968659245100", wantTime} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("pretty output missing %q:\n%s", want, got)
+		}
+	}
+	for _, banned := range []string{"start_time_ns", "1782232472381701316", "span_count", "span-count", "status", "duration_ms", "root_span", "trace_id"} {
+		if strings.Contains(got, banned) {
+			t.Fatalf("pretty output should not include %q:\n%s", banned, got)
+		}
+	}
+}
+
 func TestAppsTraceGet_NormalizesTraceDetailCamelFields(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -299,5 +405,49 @@ func TestAppsTraceGet_NormalizesTraceDetailCamelFields(t *testing.T) {
 	span := spans[0].(map[string]interface{})
 	if span["span_id"] != "span-1" || span["parent_span_id"] != "root" || span["trace_id"] != "trace-1" {
 		t.Fatalf("span aliases = %#v", span)
+	}
+}
+
+func TestAppsTraceGet_NormalizesKVAttributesToObject(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/trace",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"spans": []interface{}{
+					map[string]interface{}{
+						"trace_id": "trace-1",
+						"span_id":  "span-1",
+						"attributes": []interface{}{
+							map[string]interface{}{"key": "app_env", "value": "runtime"},
+							map[string]interface{}{"key": "duration_ms", "value": "8263"},
+							map[string]interface{}{"key": "module", "value": "gateway"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsTraceGet, []string{"+trace-get", "--app-id", "app_x", "--trace-id", "trace-1", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+
+	var env struct {
+		Data struct {
+			Spans []map[string]interface{} `json:"spans"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, stdout.String())
+	}
+	attrs, ok := env.Data.Spans[0]["attributes"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("attributes = %#v, want object", env.Data.Spans[0]["attributes"])
+	}
+	if attrs["app_env"] != "runtime" || attrs["duration_ms"] != "8263" || attrs["module"] != "gateway" {
+		t.Fatalf("attributes = %#v", attrs)
 	}
 }

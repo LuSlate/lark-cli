@@ -8,10 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -78,7 +78,10 @@ var AppsMetricQuery = common.Shortcut{
 			HasMore: false,
 		}
 		rctx.OutFormat(out, nil, func(w io.Writer) {
-			output.PrintTable(w, observabilitySeriesRows(out.Items))
+			rows := observabilitySeriesRows(out.Items)
+			sortObservabilityRowsDesc(rows, "timestamp")
+			rows = filterObservabilityRowsWithTime(rows, "timestamp")
+			appsPrintSchemaTable(w, rows, metricSeriesSchema(labels, strings.TrimSpace(strings.ToLower(rctx.Str("metric"))) == "latency"))
 		})
 		return nil
 	},
@@ -137,7 +140,10 @@ var AppsAnalyticsQuery = common.Shortcut{
 			HasMore: false,
 		}
 		rctx.OutFormat(out, nil, func(w io.Writer) {
-			output.PrintTable(w, observabilitySeriesRows(out.Items))
+			rows := observabilitySeriesRows(out.Items)
+			sortObservabilityRowsDesc(rows, "timestamp_ns")
+			rows = filterObservabilityRowsWithTime(rows, "timestamp_ns")
+			appsPrintSchemaTable(w, rows, analyticsSeriesSchema(labels))
 		})
 		return nil
 	},
@@ -173,7 +179,9 @@ func buildMetricQueryBody(rctx *common.RuntimeContext) (map[string]interface{}, 
 		return nil, nil, nil, false, err
 	}
 	downSample := strings.TrimSpace(rctx.Str("down-sample"))
-	if downSample == "" {
+	if !rctx.Changed("down-sample") {
+		downSample = appsMetricDownSampleForRange(since, until)
+	} else if downSample == "" {
 		downSample = defaultAppsMetricDownSample
 	}
 	body := map[string]interface{}{
@@ -187,6 +195,18 @@ func buildMetricQueryBody(rctx *common.RuntimeContext) (map[string]interface{}, 
 		body["filter"] = filter
 	}
 	return body, names, labels, strings.TrimSpace(strings.ToLower(rctx.Str("metric"))) == "requests", nil
+}
+
+func appsMetricDownSampleForRange(since, until time.Time) string {
+	d := until.Sub(since)
+	switch {
+	case d <= 6*time.Hour:
+		return "1m"
+	case d <= 7*24*time.Hour:
+		return "1h"
+	default:
+		return "1d"
+	}
 }
 
 func buildMetricQueryFilter(rctx *common.RuntimeContext) map[string]interface{} {
@@ -370,7 +390,9 @@ func normalizeMetricSeries(data map[string]interface{}, names, labels []string, 
 }
 
 func normalizeAnalyticsSeries(data map[string]interface{}, names, labels []string) []map[string]interface{} {
-	return normalizeObservabilitySeries(data, labels, observabilityNameLabels(names, labels), false, "timestamp_ns")
+	items := normalizeObservabilitySeries(data, labels, observabilityNameLabels(names, labels), false, "timestamp_ns")
+	fillObservabilityZeroesWhenPartiallyPresent(items, labels)
+	return items
 }
 
 func normalizeObservabilitySeries(data map[string]interface{}, labels []string, nameLabels map[string]string, fillZero bool, timeField string) []map[string]interface{} {
@@ -462,6 +484,29 @@ func fillObservabilityZeroes(items []map[string]interface{}, labels []string) {
 			}
 		}
 	}
+}
+
+func fillObservabilityZeroesWhenPartiallyPresent(items []map[string]interface{}, labels []string) {
+	for _, item := range items {
+		values, ok := item["values"].(map[string]interface{})
+		if !ok || !observabilityHasAnyNonNullValue(values) {
+			continue
+		}
+		for _, label := range labels {
+			if value, ok := values[label]; !ok || value == nil {
+				values[label] = 0
+			}
+		}
+	}
+}
+
+func observabilityHasAnyNonNullValue(values map[string]interface{}) bool {
+	for _, value := range values {
+		if value != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func observabilityPointValues(point map[string]interface{}, labels []string, nameLabels map[string]string, fillZero bool) map[string]interface{} {
@@ -686,4 +731,49 @@ func observabilitySeriesRows(items []map[string]interface{}) []map[string]interf
 		rows = append(rows, row)
 	}
 	return rows
+}
+
+func metricSeriesSchema(labels []string, durationValues bool) appsOutputSchema {
+	columns := []appsOutputColumn{
+		{Key: "timestamp", Label: "time", Format: appsFormatSec("2006-01-02 15:04:05")},
+	}
+	for _, label := range labels {
+		col := appsOutputColumn{Key: label}
+		if durationValues {
+			col.Format = appsFormatDurationMS
+		}
+		columns = append(columns, col)
+	}
+	return appsOutputSchema{Columns: columns, Strict: true}
+}
+
+func analyticsSeriesSchema(labels []string) appsOutputSchema {
+	columns := []appsOutputColumn{
+		{Key: "timestamp_ns", Label: "time", Format: appsFormatNS("2006-01-02 15:04:05")},
+	}
+	for _, label := range labels {
+		columns = append(columns, appsOutputColumn{Key: label})
+	}
+	return appsOutputSchema{Columns: columns, Strict: true}
+}
+
+func sortObservabilityRowsDesc(rows []map[string]interface{}, key string) {
+	sort.SliceStable(rows, func(i, j int) bool {
+		left, leftOK := appsInt64Value(rows[i][key])
+		right, rightOK := appsInt64Value(rows[j][key])
+		if !leftOK || !rightOK {
+			return false
+		}
+		return left > right
+	})
+}
+
+func filterObservabilityRowsWithTime(rows []map[string]interface{}, key string) []map[string]interface{} {
+	out := rows[:0]
+	for _, row := range rows {
+		if _, ok := appsInt64Value(row[key]); ok {
+			out = append(out, row)
+		}
+	}
+	return out
 }
