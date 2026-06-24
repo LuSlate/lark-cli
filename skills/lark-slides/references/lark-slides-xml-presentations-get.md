@@ -61,6 +61,7 @@ lark-cli slides xml_presentations get --as user --params '{"xml_presentation_id"
     "xml_presentation": {
       "presentation_id": "slides_example_presentation_id",
       "revision_id": 1,
+      "url": "https://example.feishu.cn/slides/slides_example_presentation_id",
       "content": "<presentation xmlns=\"http://www.larkoffice.com/sml/2.0\" height=\"540\" width=\"960\">...</presentation>"
     }
   },
@@ -74,6 +75,7 @@ lark-cli slides xml_presentations get --as user --params '{"xml_presentation_id"
 |------|------|------|
 | `data.xml_presentation.presentation_id` | string | 演示文稿唯一标识 |
 | `data.xml_presentation.revision_id` | integer | 版本号 |
+| `data.xml_presentation.url` | string | 对应 Slides 的访问地址 |
 | `data.xml_presentation.content` | string | XML 格式的完整内容 |
 
 ## 常见错误

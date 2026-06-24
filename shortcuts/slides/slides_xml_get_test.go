@@ -32,6 +32,7 @@ func TestSlidesXMLGetWritesContentToFileAndSuppressesXML(t *testing.T) {
 				"xml_presentation": map[string]interface{}{
 					"presentation_id": "pres_abc",
 					"revision_id":     7,
+					"url":             "https://example.feishu.cn/slides/pres_abc",
 					"content":         xml,
 				},
 			},
@@ -77,6 +78,9 @@ func TestSlidesXMLGetWritesContentToFileAndSuppressesXML(t *testing.T) {
 	}
 	if data["revision_id"] != float64(7) {
 		t.Fatalf("revision_id = %v, want 7", data["revision_id"])
+	}
+	if data["url"] != "https://example.feishu.cn/slides/pres_abc" {
+		t.Fatalf("url = %v, want presentation URL", data["url"])
 	}
 	if data["size"] != float64(len(xml)) {
 		t.Fatalf("size = %v, want %d", data["size"], len(xml))

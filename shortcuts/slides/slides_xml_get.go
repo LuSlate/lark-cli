@@ -135,6 +135,9 @@ var SlidesXMLGet = common.Shortcut{
 		if revisionID := common.GetFloat(presentation, "revision_id"); revisionID > 0 {
 			out["revision_id"] = int(revisionID)
 		}
+		if url := common.GetString(presentation, "url"); url != "" {
+			out["url"] = url
+		}
 		if runtime.Bool("remove-attr-id") {
 			out["remove_attr_id"] = true
 		}
