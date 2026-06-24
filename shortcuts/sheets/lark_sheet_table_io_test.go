@@ -460,6 +460,11 @@ func TestTablePut_Validation(t *testing.T) {
 			args: []string{"--url", testURL, "--sheets", `{"sheets":[{"name":"S","columns":["a","b"],"data":[["only-one"]]}]}`},
 			want: "column count",
 		},
+		{
+			name: "trailing JSON data after --sheets value rejected",
+			args: []string{"--url", testURL, "--sheets", `{"sheets":[{"name":"S","columns":["a"],"data":[]}]} trailing`},
+			want: "trailing data after JSON value",
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1188,6 +1193,73 @@ func TestTableGet_ExecuteRoundTrip(t *testing.T) {
 	}
 	if r0[2] != float64(259874) {
 		t.Errorf("number = %v, want 259874", r0[2])
+	}
+}
+
+// TestTableGet_DuplicateHeaderRejected covers a fangshuyu-flagged round-trip
+// hole: a sheet with two columns named the same (e.g. `amount, amount`) used
+// to read back successfully — with the dtypes map silently collapsing to a
+// single entry — and then fail on the immediate +table-put write because the
+// writer rejects duplicate column names. Fail fast at read time with an
+// actionable hint to rename or pass --no-header instead.
+func TestTableGet_DuplicateHeaderRejected(t *testing.T) {
+	t.Parallel()
+	structure := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"`+testSheetID+`","sheet_name":"S","row_count":200,"column_count":20,"index":0}]}`)
+	region := toolOutputStub(testToken, "read", `{"current_region":"A1:B2"}`)
+	cells := toolOutputStub(testToken, "read", `{"ranges":[{"cells":[`+
+		`[{"value":"amount"},{"value":"amount"}],`+
+		`[{"value":1},{"value":2}]`+
+		`]}]}`)
+	out, err := runShortcutWithStubs(t, TableGet,
+		[]string{"--url", testURL, "--sheet-name", "S"}, structure, region, cells)
+	if err == nil {
+		t.Fatalf("expected validation error for duplicate header; got nil. out=%s", out)
+	}
+	combined := out + err.Error()
+	if !strings.Contains(combined, "duplicate header column name") {
+		t.Errorf("error should flag duplicate header; got=%s", combined)
+	}
+	if !strings.Contains(combined, "--no-header") {
+		t.Errorf("error should hint about --no-header; got=%s", combined)
+	}
+}
+
+// TestTableGet_SheetIDFallbackBackfillsName covers the fallback path: when
+// get_workbook_structure cannot enumerate the target row (e.g. selector
+// mismatch), the target name was previously left empty — which would later
+// fail the +table-put round-trip because the writer requires a non-empty
+// sheet name. The target should fall back to using the id as the name.
+func TestTableGet_SheetIDFallbackBackfillsName(t *testing.T) {
+	t.Parallel()
+	// Structure has a different sheet — selector mismatch triggers the fallback.
+	structure := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"shtOther","sheet_name":"另一张","row_count":200,"column_count":20,"index":0}]}`)
+	region := toolOutputStub(testToken, "read", `{"current_region":"A1:A2"}`)
+	cells := toolOutputStub(testToken, "read", `{"ranges":[{"cells":[[{"value":"h"}],[{"value":"x"}]]}]}`)
+	out, err := runShortcutWithStubs(t, TableGet,
+		[]string{"--url", testURL, "--sheet-id", testSheetID}, structure, region, cells)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
+	}
+	data := decodeEnvelopeData(t, out)
+	s0, _ := data["sheets"].([]interface{})[0].(map[string]interface{})
+	if s0["name"] != testSheetID {
+		t.Errorf("fallback name = %v, want %q (id used as name)", s0["name"], testSheetID)
+	}
+}
+
+// TestTablePutFullRange_EmptyMatrix covers the dry-run report for the
+// header=false + rows=[] case. Previously totalRows=0 produced an invalid
+// "A1:C0"; the helper now returns an empty range string instead.
+func TestTablePutFullRange_EmptyMatrix(t *testing.T) {
+	t.Parallel()
+	s := &tableSheetSpec{Name: "S", Columns: []tableColumnSpec{{Name: "a"}, {Name: "b"}, {Name: "c"}}, StartCell: "A1"}
+	if got := tablePutFullRange(s, 0); got != "" {
+		t.Errorf("tablePutFullRange(_, 0) = %q, want \"\" (no invalid A1:C0)", got)
+	}
+	// Sanity check: positive totals still produce a real rectangle so we
+	// haven't broken the happy path.
+	if got := tablePutFullRange(s, 2); got != "A1:C2" {
+		t.Errorf("tablePutFullRange(_, 2) = %q, want A1:C2", got)
 	}
 }
 

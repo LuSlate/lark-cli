@@ -6,7 +6,9 @@ package sheets
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"math"
 	"strconv"
 	"strings"
@@ -232,6 +234,21 @@ func typeToDtype(typ string) string {
 	}
 }
 
+// decoderExpectEOF ensures the decoder has nothing left to read after a
+// successful Decode. json.Decoder accepts trailing non-whitespace after the
+// first JSON value (unlike json.Unmarshal), so a payload like `{...} trailing`
+// would silently be treated as the leading object only. Use this after the
+// first Decode to surface the trailing data as a validation error.
+func decoderExpectEOF(dec *json.Decoder) error {
+	var trailing json.RawMessage
+	if err := dec.Decode(&trailing); err == nil {
+		return fmt.Errorf("trailing data after JSON value") //nolint:forbidigo // intermediate error; the caller wraps it into a typed --sheets/--values validation error
+	} else if !errors.Is(err, io.EOF) {
+		return fmt.Errorf("trailing data after JSON value: %w", err) //nolint:forbidigo // intermediate error; the caller wraps it into a typed --sheets/--values validation error
+	}
+	return nil
+}
+
 // parseTablePutPayload reads --sheets (JSON, supports @file / stdin) into a
 // validated payload. UseNumber keeps numeric cells as json.Number so large
 // integers (order IDs, etc.) survive without precision loss or scientific
@@ -251,6 +268,12 @@ func parseTablePutPayload(runtime flagView) (*tablePayload, error) {
 	}
 	if err := dec.Decode(&wire); err != nil {
 		return nil, common.ValidationErrorf("--sheets: invalid JSON: %w", err)
+	}
+	// Reject trailing non-whitespace after the first JSON value: json.Decoder
+	// accepts it silently (unlike json.Unmarshal), so e.g. `--sheets '{...} oops'`
+	// would otherwise pass Validate and surface as confusing downstream errors.
+	if err := decoderExpectEOF(dec); err != nil {
+		return nil, common.ValidationErrorf("--sheets: %v", err).WithCause(err)
 	}
 	p := &tablePayload{Sheets: make([]tableSheetSpec, 0, len(wire.Sheets))}
 	for i := range wire.Sheets {
@@ -579,8 +602,13 @@ func sheetAnchor(s *tableSheetSpec) (anchor string, col0, row0 int, err error) {
 }
 
 // tablePutFullRange is the A1 rectangle the whole matrix (header + data)
-// occupies, for reporting in the result / dry-run.
+// occupies, for reporting in the result / dry-run. Returns "" when there is
+// nothing to write (e.g. header=false with no data rows) — the previous
+// formula would have produced an invalid trailing row like "A1:C0".
 func tablePutFullRange(s *tableSheetSpec, totalRows int) string {
+	if totalRows <= 0 || len(s.Columns) == 0 {
+		return ""
+	}
 	_, col0, row0, err := sheetAnchor(s)
 	if err != nil {
 		return strings.TrimSpace(s.StartCell)
@@ -1124,8 +1152,11 @@ func tableGetTargets(ctx context.Context, runtime *common.RuntimeContext, token 
 		// Single-sheet selector path can degrade gracefully without dimensions
 		// (the probe falls back to the A1 anchor); the whole-workbook path can't
 		// enumerate sheets without the structure, so it must surface the error.
+		// Name doubles as id for --sheet-id so the output spec is never nameless
+		// (an empty name would break +table-get → +table-put round-trip — the
+		// writer requires a non-empty sheet name).
 		if id != "" {
-			return []tableGetSheet{{id: id}}, nil
+			return []tableGetSheet{{id: id, name: id}}, nil
 		}
 		if name != "" {
 			return []tableGetSheet{{name: name}}, nil
@@ -1138,7 +1169,8 @@ func tableGetTargets(ctx context.Context, runtime *common.RuntimeContext, token 
 	// Selector path: find the matching sheet to pick up its dimensions (and
 	// backfill name when only --sheet-id was given). If no row matches, fall
 	// back to a dimensionless target so the read still proceeds via the A1
-	// anchor rather than erroring on a structure/selector mismatch.
+	// anchor rather than erroring on a structure/selector mismatch — same
+	// id-as-name backfill applies so the output spec round-trips.
 	if id != "" || name != "" {
 		for _, r := range raw {
 			sid, sname, rc, cc := tableGetSheetMeta(r)
@@ -1147,7 +1179,7 @@ func tableGetTargets(ctx context.Context, runtime *common.RuntimeContext, token 
 			}
 		}
 		if id != "" {
-			return []tableGetSheet{{id: id}}, nil
+			return []tableGetSheet{{id: id, name: id}}, nil
 		}
 		return []tableGetSheet{{name: name}}, nil
 	}
@@ -1254,10 +1286,25 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 	colTypes := make([]string, ncols)
 	dtypes := make(map[string]interface{}, ncols)
 	formats := map[string]interface{}{}
+	// Duplicate header names break +table-get → +table-put round-trip: the dtypes
+	// map (keyed by name) silently collapses to a single entry and the writer
+	// later rejects the duplicate columns in --sheets validation. Fail fast with
+	// an actionable hint when the source sheet actually has duplicate headers.
+	// noHeader mode is exempt because tableGetColumnName falls back to positional
+	// col<N> names which are always unique.
+	seenNames := map[string]int{}
 	for c := 0; c < ncols; c++ {
 		typ, format := inferColumnType(dataRows, c)
 		colTypes[c] = typ
 		name := tableGetColumnName(headerRow, c, noHeader)
+		if !noHeader {
+			if prev, dup := seenNames[name]; dup {
+				return nil, common.ValidationErrorf(
+					"sheet %q: duplicate header column name %q at columns %d and %d; this would break the +table-get → +table-put round-trip. Rename the headers or pass --no-header to read by position (col1/col2/…).",
+					t.name, name, prev+1, c+1)
+			}
+			seenNames[name] = c
+		}
 		columnNames[c] = name
 		dtypes[name] = typeToDtype(typ)
 		// Only emit a format when the column actually has one and it's not the
