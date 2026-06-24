@@ -48,7 +48,7 @@ var AppsDBEnvDiff = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		stop := rctx.StartSpinner("Diffing dev → main")
+		stop := rctx.StartSpinner("Previewing migration diff (dev → online)")
 		defer stop()
 		data, err := rctx.CallAPITyped("POST", appEnvMigratePath(appID), nil, map[string]interface{}{"dry_run": true})
 		stop()
@@ -97,7 +97,7 @@ var AppsDBEnvMigrate = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		stop := rctx.StartSpinner("Publishing dev → main")
+		stop := rctx.StartSpinner("Applying migration (dev → online)")
 		defer stop()
 		submit, err := rctx.CallAPITyped("POST", appEnvMigratePath(appID), nil, map[string]interface{}{"dry_run": false})
 		if err != nil {

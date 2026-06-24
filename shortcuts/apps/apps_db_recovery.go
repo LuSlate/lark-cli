@@ -102,7 +102,7 @@ var AppsDBRecoveryApply = common.Shortcut{
 			return err
 		}
 		target := rctx.Str("target")
-		stop := rctx.StartSpinner("Restoring database to " + target)
+		stop := rctx.StartSpinner("Restoring database (target: " + target + ")")
 		defer stop()
 		submit, err := rctx.CallAPITyped("POST", appRecoveryPath(appID), nil, map[string]interface{}{"target": target, "dry_run": false})
 		if err != nil {
@@ -155,7 +155,7 @@ var AppsDBRecoveryApply = common.Shortcut{
 
 // runRecoveryPreview 触发 PITR 预览（dry_run=true）拿 preview_request_id，轮询 diff_status 至终态。
 func runRecoveryPreview(rctx *common.RuntimeContext, appID, target string) (map[string]interface{}, error) {
-	stop := rctx.StartSpinner("Previewing recovery to " + target)
+	stop := rctx.StartSpinner("Previewing recovery impact (target: " + target + ")")
 	defer stop()
 	submit, err := rctx.CallAPITyped("POST", appRecoveryPath(appID), nil, map[string]interface{}{"target": target, "dry_run": true})
 	if err != nil {
