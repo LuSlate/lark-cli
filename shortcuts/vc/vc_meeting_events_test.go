@@ -540,7 +540,7 @@ func TestMeetingEvents_ExecuteJSON(t *testing.T) {
 	out := strings.ReplaceAll(stdout.String(), " ", "")
 	out = strings.ReplaceAll(out, "\n", "")
 	for _, want := range []string{
-		`"bot":{"id":"bot_001","name":"DemoBot","participant_type":"bot","role":"bot","is_self":true,"label":"DemoBot[bot,self]"}`,
+		`"identity":{"id":"bot_001","name":"DemoBot","participant_type":"bot","role":"bot","is_self":true,"label":"DemoBot[bot,self]"}`,
 		`"current_roster":[`,
 		`"role":"host"`,
 		`"is_self":true`,
@@ -553,6 +553,41 @@ func TestMeetingEvents_ExecuteJSON(t *testing.T) {
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("json output missing %q: %s", want, stdout.String())
+		}
+	}
+}
+
+func TestMeetingEvents_ExecuteJSON_UserIdentitySkipsBotInfo(t *testing.T) {
+	f, stdout, _, reg := cmdutil.TestFactory(t, defaultConfig())
+	reg.Register(meetingEventsStub([]interface{}{participantJoinedEvent()}, false, ""))
+	reg.Register(meetingDetailRosterStub([]interface{}{
+		map[string]interface{}{"id": "ou_testuser", "user_name": "Current User", "participant_type": "1", "role": "1"},
+		map[string]interface{}{"id": "u1", "user_name": "Alice", "participant_type": "1", "role": "1"},
+	}))
+
+	err := mountAndRun(t, VCMeetingEvents, []string{
+		"+meeting-events",
+		"--meeting-id", "7628568141510692381",
+		"--format", "json",
+		"--as", "user",
+	}, f, stdout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	reg.Verify(t)
+
+	out := strings.ReplaceAll(stdout.String(), " ", "")
+	out = strings.ReplaceAll(out, "\n", "")
+	for _, want := range []string{
+		`"identity":{"id":"ou_testuser","participant_type":"human","role":"user","is_self":true,"label":"ou_testuser[human,user,self]"}`,
+		`"current_roster":[`,
+		`"id":"ou_testuser"`,
+		`"is_self":true`,
+		`"event_type":"participant_joined"`,
+		`"has_more":false`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("user json output missing %q: %s", want, stdout.String())
 		}
 	}
 }
@@ -585,7 +620,7 @@ func TestMeetingEvents_ExecuteRawJSONSkipsBotInfo(t *testing.T) {
 			t.Fatalf("raw json output missing %q: %s", want, stdout.String())
 		}
 	}
-	if strings.Contains(out, `"current_roster"`) || strings.Contains(out, `"bot":`) {
+	if strings.Contains(out, `"current_roster"`) || strings.Contains(out, `"identity":{`) || strings.Contains(out, `"bot":{`) {
 		t.Fatalf("raw json should preserve legacy events envelope without normalized fields: %s", stdout.String())
 	}
 }
@@ -620,6 +655,7 @@ func TestMeetingEvents_ExecuteNDJSONIncludesMetadataRow(t *testing.T) {
 		`"row_type":"metadata"`,
 		`"has_more":true`,
 		`"page_token":"1710000000000000000"`,
+		`"identity":`,
 		`"current_roster":[`,
 	} {
 		if !strings.Contains(lines[1], want) {
@@ -703,7 +739,7 @@ func TestMeetingEvents_ExecutePretty(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"应用身份：Demo Bot [bot,self]",
+		"当前身份：Demo Bot [bot,self]",
 		"当前名单：",
 		"- Demo Bot [bot,self]",
 		"- Alice [human,host]",

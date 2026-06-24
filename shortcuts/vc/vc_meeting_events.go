@@ -16,6 +16,7 @@ import (
 	"unicode"
 
 	"github.com/larksuite/cli/errs"
+	"github.com/larksuite/cli/internal/core"
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
@@ -50,14 +51,14 @@ func toUnixSeconds(input string, hint ...string) (string, error) {
 	return ts, nil
 }
 
-// VCMeetingEvents lists bot meeting events for a meeting.
+// VCMeetingEvents lists meeting events for a meeting.
 var VCMeetingEvents = common.Shortcut{
 	Service:     "vc",
 	Command:     "+meeting-events",
-	Description: "List bot meeting events by meeting ID",
+	Description: "List meeting events by meeting ID",
 	Risk:        "read",
 	Scopes:      []string{"vc:meeting.meetingevent:read"},
-	AuthTypes:   []string{"bot"},
+	AuthTypes:   []string{"user", "bot"},
 	HasFormat:   true,
 	Flags: []common.Flag{
 		{Name: "meeting-id", Required: true, Desc: "meeting ID to query"},
@@ -118,19 +119,19 @@ var VCMeetingEvents = common.Shortcut{
 			return nil
 		}
 		events = compactMeetingEvents(events)
-		botInfo, err := runtime.BotInfo()
+		identity, err := meetingEventsCurrentIdentity(runtime)
 		if err != nil {
-			return errs.NewValidationError(errs.SubtypeInvalidArgument, "fetch bot identity for compact meeting-events output: %v", err).WithParam("--as")
+			return err
 		}
 		currentRoster, err := fetchMeetingEventsCurrentRoster(runtime)
 		if err != nil {
 			return err
 		}
-		outData := buildNormalizedMeetingEvents(data, events, currentRoster, botInfo)
+		outData := buildNormalizedMeetingEvents(data, events, currentRoster, identity)
 		ndjsonData := normalizedMeetingEventRows(outData.Events, map[string]interface{}{
 			"row_type":       "metadata",
 			"meeting":        outData.Meeting,
-			"bot":            outData.Bot,
+			"identity":       outData.Identity,
 			"current_roster": outData.CurrentRoster,
 			"has_more":       outData.HasMore,
 			"page_token":     outData.PageToken,
@@ -156,7 +157,7 @@ var VCMeetingEvents = common.Shortcut{
 
 type normalizedMeetingEventsOutput struct {
 	Meeting       normalizedMeeting        `json:"meeting"`
-	Bot           normalizedIdentity       `json:"bot"`
+	Identity      normalizedIdentity       `json:"identity"`
 	CurrentRoster []normalizedIdentity     `json:"current_roster"`
 	Events        []normalizedMeetingEvent `json:"events"`
 	HasMore       bool                     `json:"has_more"`
@@ -209,9 +210,9 @@ func meetingEventsOutputView(runtime *common.RuntimeContext) (meetingEventsView,
 	}
 }
 
-func buildNormalizedMeetingEvents(data map[string]interface{}, events []interface{}, currentRoster []interface{}, botInfo *common.BotInfo) normalizedMeetingEventsOutput {
+func buildNormalizedMeetingEvents(data map[string]interface{}, events []interface{}, currentRoster []interface{}, identity normalizedIdentity) normalizedMeetingEventsOutput {
 	normalized := normalizedMeetingEventsOutput{
-		Bot:       normalizeBotIdentity(botInfo),
+		Identity:  identity,
 		HasMore:   common.GetBool(data, "has_more"),
 		PageToken: common.GetString(data, "page_token"),
 	}
@@ -224,10 +225,33 @@ func buildNormalizedMeetingEvents(data map[string]interface{}, events []interfac
 		if normalized.Meeting.ID == "" {
 			normalized.Meeting = normalizeMeeting(common.GetMap(payload, "meeting"))
 		}
-		normalized.Events = append(normalized.Events, normalizeMeetingEvent(event, normalized.Bot.ID))
+		normalized.Events = append(normalized.Events, normalizeMeetingEvent(event, normalized.Identity))
 	}
-	normalized.CurrentRoster = normalizeCurrentRoster(currentRoster, normalized.Bot.ID)
+	normalized.CurrentRoster = normalizeCurrentRoster(currentRoster, normalized.Identity)
 	return normalized
+}
+
+func meetingEventsCurrentIdentity(runtime *common.RuntimeContext) (normalizedIdentity, error) {
+	if runtime.As() == core.AsBot {
+		botInfo, err := runtime.BotInfo()
+		if err != nil {
+			return normalizedIdentity{}, errs.NewValidationError(errs.SubtypeInvalidArgument, "fetch bot identity for compact meeting-events output: %v", err).WithParam("--as")
+		}
+		return normalizeBotIdentity(botInfo), nil
+	}
+	userOpenID := strings.TrimSpace(runtime.UserOpenId())
+	if userOpenID == "" {
+		return normalizedIdentity{}, errs.NewValidationError(errs.SubtypeFailedPrecondition, "current user open_id is unavailable for compact meeting-events output").WithParam("--as")
+	}
+	identity := normalizedIdentity{
+		ID:              userOpenID,
+		Name:            strings.TrimSpace(runtime.Config.UserName),
+		ParticipantType: "human",
+		Role:            "user",
+		IsSelf:          true,
+	}
+	identity.Label = identityLabel(identity)
+	return identity, nil
 }
 
 func fetchMeetingEventsCurrentRoster(runtime *common.RuntimeContext) ([]interface{}, error) {
@@ -287,7 +311,7 @@ func normalizeMeeting(meeting map[string]interface{}) normalizedMeeting {
 	return out
 }
 
-func normalizeMeetingEvent(event map[string]interface{}, selfID string) normalizedMeetingEvent {
+func normalizeMeetingEvent(event map[string]interface{}, selfIdentity normalizedIdentity) normalizedMeetingEvent {
 	payload := common.GetMap(event, "payload")
 	rawCopy := cloneStringMap(event)
 	out := normalizedMeetingEvent{
@@ -298,11 +322,11 @@ func normalizeMeetingEvent(event map[string]interface{}, selfID string) normaliz
 		Payload:   payload,
 		Raw:       rawCopy,
 	}
-	out.Actors = eventActors(out.EventType, payload, selfID)
+	out.Actors = eventActors(out.EventType, payload, selfIdentity)
 	return out
 }
 
-func normalizeCurrentRoster(rawRoster []interface{}, selfID string) []normalizedIdentity {
+func normalizeCurrentRoster(rawRoster []interface{}, selfIdentity normalizedIdentity) []normalizedIdentity {
 	roster := make([]normalizedIdentity, 0, len(rawRoster))
 	for _, raw := range rawRoster {
 		item, _ := raw.(map[string]interface{})
@@ -313,12 +337,12 @@ func normalizeCurrentRoster(rawRoster []interface{}, selfID string) []normalized
 		if nested := common.GetMap(item, "participant"); nested != nil {
 			participant = nested
 		}
-		roster = append(roster, normalizeParticipant(participant, selfID))
+		roster = append(roster, normalizeParticipant(participant, selfIdentity))
 	}
 	return roster
 }
 
-func eventActors(eventType string, payload map[string]interface{}, selfID string) []normalizedIdentity {
+func eventActors(eventType string, payload map[string]interface{}, selfIdentity normalizedIdentity) []normalizedIdentity {
 	var actors []normalizedIdentity
 	addFromItems := func(key, participantKey string) {
 		for _, raw := range common.GetSlice(payload, key) {
@@ -327,7 +351,7 @@ func eventActors(eventType string, payload map[string]interface{}, selfID string
 				continue
 			}
 			if participant := common.GetMap(item, participantKey); participant != nil {
-				actors = append(actors, normalizeParticipant(participant, selfID))
+				actors = append(actors, normalizeParticipant(participant, selfIdentity))
 			}
 		}
 	}
@@ -348,19 +372,19 @@ func eventActors(eventType string, payload map[string]interface{}, selfID string
 	return actors
 }
 
-func normalizeParticipant(participant map[string]interface{}, selfID string) normalizedIdentity {
+func normalizeParticipant(participant map[string]interface{}, selfIdentity normalizedIdentity) normalizedIdentity {
 	identity := normalizedIdentity{
 		ID:              common.GetString(participant, "id"),
 		Name:            common.GetString(participant, "user_name"),
 		ParticipantType: normalizeParticipantType(participant),
 		Role:            normalizeRole(participant),
 	}
-	if identity.ID != "" && selfID != "" && identity.ID == selfID {
+	if identity.ID != "" && selfIdentity.ID != "" && identity.ID == selfIdentity.ID {
 		identity.IsSelf = true
-		if identity.ParticipantType == "" || identity.ParticipantType == "human" {
+		if selfIdentity.ParticipantType == "bot" && (identity.ParticipantType == "" || identity.ParticipantType == "human") {
 			identity.ParticipantType = "bot"
 		}
-		if identity.Role == "" || identity.Role == "participant" {
+		if selfIdentity.Role == "bot" && (identity.Role == "" || identity.Role == "participant") {
 			identity.Role = "bot"
 		}
 	}
@@ -483,8 +507,8 @@ func normalizedMeetingEventRows(events []normalizedMeetingEvent, metadata map[st
 }
 
 func renderMeetingEventsCompactPretty(w io.Writer, data normalizedMeetingEventsOutput, timeline meetingTimeline) {
-	if data.Bot.Label != "" {
-		fmt.Fprintf(w, "应用身份：%s\n", escapePrettyText(data.Bot.Label))
+	if data.Identity.Label != "" {
+		fmt.Fprintf(w, "当前身份：%s\n", escapePrettyText(data.Identity.Label))
 	}
 	if len(data.CurrentRoster) > 0 {
 		fmt.Fprintln(w, "当前名单：")

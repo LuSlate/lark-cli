@@ -45,11 +45,11 @@ metadata:
 
 | 场景 | 使用身份 | 关键规则 |
 | ---- | -------- | -------- |
-| 查询当前登录用户正在参加的会议 | `--as user` | 不传 `--user-id`；只用于发现候选会议；读取会中事件时切到应用身份，并确保应用机器人已在会中或曾参会 |
+| 查询当前登录用户正在参加的会议 | `--as user` | 不传 `--user-id`；拿到的 `meeting_id` 后续继续用 `--as user` 读事件 |
 | 查询目标用户且应用机器人也在会中的会议 | `--as bot --user-id <user_open_id>` | `--user-id` 必须是 `ou_...`；拿到的 `meeting_id` 后续继续用 `--as bot` 读事件 |
 | 用户明确要求应用机器人入会/旁听/代参会 | `--as bot` | 这是写操作，会真实产生入会记录；返回的 `meeting.id` 后续继续用 `--as bot` |
 
-硬规则：`+meeting-events` 是应用机器人视角的事件读取契约，后续统一用 `--as bot`。如果 `meeting_id` 来自用户身份发现，必须先确认应用机器人也在会中或按用户确认执行入会，否则事件读取会失败或不可见。
+硬规则：`meeting_id` 从哪种身份路径拿到，后续 `+meeting-events` 就沿用哪种身份，除非用户明确要求切换场景（例如从“仅查询我当前会”改成“让应用机器人入会旁听”）。
 
 ## 核心场景
 
@@ -66,19 +66,19 @@ metadata:
 
 1. 用户要看"会议里正在发生什么"（参会人加入/离开、聊天、转写、屏幕共享）时，用 `+meeting-events`。
 2. 输入是 **`meeting_id`**（长数字 ID），不是 9 位会议号。
-3. 不依赖默认身份。`+meeting-events` 必须显式使用 `--as bot`；`meeting_id` 来自用户身份发现时，只能作为候选输入，读取前必须确认应用机器人也在会中或曾参会。
+3. 不依赖默认身份。`meeting_id` 来自用户身份发现时，继续用 `--as user`；来自应用身份发现或 `+meeting-join` 时，继续用 `--as bot`。身份不一致会导致空结果或权限错误。
 4. **不能做会后复盘**，**不能替代参会人快照查询**。如果会议已结束：
    - 先用 `lark-cli vc +notes --meeting-ids <meeting.id>` 获取会议产物信息。
    - 再根据 `note_display_type`、`note_id`、`minute_token` 和用户意图，按 [`lark-vc`](../lark-vc/SKILL.md) 的产物决策读取正文、逐字稿或妙记。
    - 想看参会人快照：用 `vc meeting get --with-participants`（见 [`lark-vc`](../lark-vc/SKILL.md)）
 5. **默认必须使用** **`--page-all`**，除非用户明确要求“只查一页”，或确实需要控制返回体大小。
-6. 默认 `--view compact` 输出 normalized 契约：`meeting`、`bot`、`current_roster`、`events`、`has_more`、`page_token`，参会人含 `participant_type`、`role`、`is_self` 和可读 `label`。需要兼容旧事件包时用 `--view raw --format json`，raw 不支持 pretty/ndjson。
-7. 输出格式默认优先 `--format pretty`（时间线更易读，并带应用身份与当前名单标签）；需要结构化处理时用 `--format json`；需要流式消费事件时用 `--format ndjson`。
+6. 默认 `--view compact` 输出 normalized 契约：`meeting`、`identity`、`current_roster`、`events`、`has_more`、`page_token`，参会人含 `participant_type`、`role`、`is_self` 和可读 `label`。需要兼容旧事件包时用 `--view raw --format json`，raw 不支持 pretty/ndjson。
+7. 输出格式默认优先 `--format pretty`（时间线更易读，并带当前身份与当前名单标签）；需要结构化处理时用 `--format json`；需要流式消费事件时用 `--format ndjson`。
 8. **必须识别分页信号**：只要响应里出现 `has_more=true`、pretty 里的 `more available`，或返回了非空 `page_token`，就不能把当前结果当作完整事件流；默认应继续分页，或明确告诉用户当前只是部分结果。
 9. 保留响应里的 `page_token`，下次增量拉取直接续，不要从头再拉。
 10. **只要你是基于** **`+meeting-events`** **来回答一场正在进行中的会议内容，就不能直接复用旧结果。** 无论用户是在问“现在/刚刚/最新”的状态，还是让你“总结一下这个会议讲什么”，都必须先重新拉一次当前事件流，确认拿到的是最新信息，再基于最新结果回答。只有在用户明确要求基于某次历史快照继续分析时，才可以复用旧结果。
-11. 用户直接问“这个会议讲了什么 / 现在讲到哪了”且上下文没有明确 `meeting_id` 时，先发现当前会议；如果需要应用机器人读取事件，必须使用应用身份发现或先让应用机器人入会。若返回多个会议，展示候选并让用户选择。
-12. 用户直接提供 **9 位会议号** 并询问会中事件/会议内容时，默认把它当作 active meeting 的筛选条件：先查 active meetings 并匹配 `meeting_no == <9位会议号>`；匹配到唯一会议后取长数字 `meeting_id`，再用 `--as bot` 查事件。只有用户明确要求“入会 / 让应用机器人旁听 / 代我参会”时才改用 `+meeting-join`。
+11. 用户直接问“这个会议讲了什么 / 现在讲到哪了”且上下文没有明确 `meeting_id` 时，先用用户身份发现当前会议；如果用户明确要求应用机器人视角，或上下文已经是应用机器人参会流程，再用应用身份发现。若返回多个会议，展示候选并让用户选择。
+12. 用户直接提供 **9 位会议号** 并询问会中事件/会议内容时，默认把它当作 active meeting 的筛选条件：先按当前身份查 active meetings，并在返回里匹配 `meeting_no == <9位会议号>`；匹配到唯一会议后取长数字 `meeting_id`，再用同一身份查事件。只有用户明确要求“入会 / 让应用机器人旁听 / 代我参会”时才改用 `+meeting-join`。
 
 ### 3. 离开会议（写操作）
 
@@ -90,7 +90,7 @@ metadata:
 ### 4. 获取当前可用的进行中会议 ID（读操作）
 
 1. `+meeting-list-active` 用来发现当前进行中的会议，并拿到后续 `+meeting-events` 需要的长数字 `meeting_id`。
-2. 用户身份：`lark-cli vc +meeting-list-active --as user --format json`，用于发现当前登录用户正在参加的候选会议；后续 `+meeting-events` 仍使用 `--as bot`，并要求应用机器人在会中或曾参会。
+2. 用户身份：`lark-cli vc +meeting-list-active --as user --format json`，用于发现当前登录用户正在参加的会议；后续 `+meeting-events` 继续 `--as user`。
 3. 应用身份：`lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json`，`--user-id` 必须是目标用户 open_id，即 `ou_...`；返回该用户当前正在参加且应用机器人也在会中的会议。它不是全量会议搜索接口。后续 `+meeting-events` 继续 `--as bot`。
 4. 如果返回空，先按当前身份解释：用户身份下表示当前用户没有可见的进行中会议；应用身份下表示没有找到“目标用户在会中且应用机器人也在会中”的当前会。
 5. 如果返回多个会议，不要自动任选一个；按 `meeting_title` / `meeting_no` / `meeting_id` 展示候选，等待用户明确选择后再调用 `+meeting-events`。
@@ -121,11 +121,11 @@ lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
 lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --view compact --format pretty
 ```
 
-如果只是回答当前登录用户所在会议发生了什么，先用用户身份发现候选会议；读取事件仍需要应用机器人视角：
+如果只是回答当前登录用户所在会议发生了什么，使用用户身份一路查：
 
 ```bash
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --view compact --format pretty
 ```
 
 ## Shortcuts
