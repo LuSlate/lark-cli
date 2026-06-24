@@ -638,16 +638,6 @@ func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, 
 		}, nil
 	}
 
-	// Grow the sub-sheet to fit the write block before the first batch.
-	// Without this, writes past the sheet's initial dimensions (typically the
-	// backend default of 200 rows × 20 cols — which also covers
-	// `+workbook-create`'s adopted Sheet1) fail with [900015206] range exceeds
-	// sheet bounds. Best-effort: if reading dims fails the downstream write
-	// will surface the same out-of-bounds error it did before this helper.
-	if err := ensureSheetCapacity(ctx, runtime, token, sheetID, baseRow+len(matrix), col0+ncols); err != nil {
-		return nil, fmt.Errorf("ensuring sheet capacity: %w", err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
-	}
-
 	startCol := columnIndexToLetter(col0)
 	endCol := columnIndexToLetter(col0 + ncols - 1)
 	allowOverwrite := s.AllowOverwrite == nil || *s.AllowOverwrite
@@ -880,91 +870,6 @@ func sheetCreateDims(s *tableSheetSpec) (rows, cols int) {
 		rows = 50000
 	}
 	return rows, cols
-}
-
-// ensureSheetCapacity grows the sub-sheet's row / column count enough to
-// fit a needRows × needCols write block before the next set_cell_range call.
-// Both +table-put writing into an existing sheet *and* +workbook-create's
-// adopted default Sheet1 inherit the backend's 200×20 default — anything
-// past that would error with `[900015206] range exceeds sheet bounds`.
-// Read failures (e.g. mock stubs without `row_count`) silently fall through;
-// the downstream write surfaces the same out-of-bounds error it did before,
-// so the helper can't make things worse. Backend hard ceilings (50000 rows,
-// 200 cols) are honored.
-func ensureSheetCapacity(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, needRows, needCols int) error {
-	if needRows <= 0 && needCols <= 0 {
-		return nil
-	}
-	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_sheet_structure", map[string]interface{}{
-		"excel_id": token,
-		"sheet_id": sheetID,
-	})
-	if err != nil {
-		// best-effort: skip if we can't see current dims (mock without stub,
-		// permissions, transient failure). The write below will still bounce
-		// if the sheet really is too small, so degrading silently here is
-		// fail-open by design.
-		return nil //nolint:nilerr
-	}
-	m, _ := out.(map[string]interface{})
-	// get_sheet_structure reports current dims as the `range` field
-	// (e.g. "A1:T200" → 20 cols × 200 rows). splitCellRef parses the
-	// bottom-right corner into 0-based (col, row).
-	curRows, curCols := 0, 0
-	if rng, _ := m["range"].(string); rng != "" {
-		parts := strings.SplitN(rng, ":", 2)
-		if len(parts) == 2 {
-			if c, r, ok := splitCellRef(parts[1]); ok {
-				curCols = c + 1
-				curRows = r + 1
-			}
-		}
-	}
-	if needRows > curRows && curRows > 0 {
-		target := needRows
-		if target > 50000 {
-			target = 50000
-		}
-		if target > curRows {
-			// position is 1-based and must be ≤ curRows (the backend rejects
-			// "before row N+1" as out-of-range). Inserting before the last
-			// existing row pushes that row down and effectively appends
-			// `count` blank rows — the data writes that follow will overwrite
-			// the existing rows from row 1, so the placement of the inserted
-			// blanks doesn't matter as long as the total dimension grows.
-			input := map[string]interface{}{
-				"excel_id":  token,
-				"sheet_id":  sheetID,
-				"operation": "insert",
-				"position":  strconv.Itoa(curRows),
-				"count":     target - curRows,
-			}
-			if _, err := callTool(ctx, runtime, token, ToolKindWrite, "modify_sheet_structure", input); err != nil {
-				return fmt.Errorf("growing rows %d → %d: %w", curRows, target, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
-			}
-		}
-	}
-	if needCols > curCols && curCols > 0 {
-		target := needCols
-		if target > 200 {
-			target = 200
-		}
-		if target > curCols {
-			// Same 1-based, ≤-current constraint as rows: insert before the
-			// last existing column letter.
-			input := map[string]interface{}{
-				"excel_id":  token,
-				"sheet_id":  sheetID,
-				"operation": "insert",
-				"position":  columnIndexToLetter(curCols - 1),
-				"count":     target - curCols,
-			}
-			if _, err := callTool(ctx, runtime, token, ToolKindWrite, "modify_sheet_structure", input); err != nil {
-				return fmt.Errorf("growing cols %d → %d: %w", curCols, target, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
-			}
-		}
-	}
-	return nil
 }
 
 // gridDims is a sub-sheet's physical grid size (row_count × column_count from

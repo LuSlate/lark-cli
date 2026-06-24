@@ -412,18 +412,15 @@ func TestTablePut_StylesNameMismatchRejected(t *testing.T) {
 func TestTablePut_ExecuteWithStyles(t *testing.T) {
 	t.Parallel()
 	structure := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"`+testSheetID+`","sheet_name":"数据","index":0}]}`)
-	// get_sheet_structure (ensureSheetCapacity) + set_cell_range + merge_cells +
-	// resize_range all hit the same write/read endpoints; mark reusable so the
-	// FIFO stub serves each.
-	dims := toolOutputStub(testToken, "read", `{"range":"A1:T200"}`)
-	dims.Reusable = true
+	// set_cell_range + merge_cells + resize_range all hit the same write endpoint;
+	// mark reusable so the FIFO stub serves each.
 	write := toolOutputStub(testToken, "write", `{"ok":true}`)
 	write.Reusable = true
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL,
 			"--sheets", `{"sheets":[{"name":"数据","columns":["a","b"],"data":[["x","y"]]}]}`,
 			"--styles", `{"styles":[{"name":"数据","cell_styles":[{"range":"A1:B1","font_weight":"bold"}],"cell_merges":[{"range":"A1:B1"}]}]}`},
-		structure, dims, write)
+		structure, write)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
 	}
@@ -1415,13 +1412,11 @@ func TestTablePut_AppendProbesFullGrid(t *testing.T) {
 	structure := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"`+testSheetID+`","sheet_name":"日志","row_count":200,"column_count":20,"index":0}]}`)
 	var anchors []string
 	region := anchorRecorderStub(testToken, `{"current_region":"A1:B10"}`, &anchors)
-	dims := toolOutputStub(testToken, "read", `{"range":"A1:T200"}`) // ensureSheetCapacity
-	dims.Reusable = true
 	write := toolOutputStub(testToken, "write", `{"ok":true}`)
 	out, err := runShortcutWithStubs(t, TablePut,
 		[]string{"--url", testURL, "--sheets",
 			`{"sheets":[{"name":"日志","mode":"append","columns":["时间","值"],"dtypes":{"值":"int64"},"data":[["t1",1]]}]}`},
-		structure, region, dims, write)
+		structure, region, write)
 	if err != nil {
 		t.Fatalf("execute failed: %v\nout=%s", err, out)
 	}
