@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/raw-grid.html",
+    "render_status": "missing_smoke",
+    "sha256": "87221867c254043e20ca653260daa52ccb0f88492fe1fc5595db51edb2d5c87a"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "87221867c254043e20ca653260daa52ccb0f88492fe1fc5595db51edb2d5c87a",
+    "fidelity_receipt": "fee9ac2b5c6d69612a2a082849f1829f5b3c75f2a5c2d29b76657361f4fc04cc",
+    "reference_screenshot": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+    "smoke_receipt": null,
+    "visual_contract": "fb4dc324a40f42349b253e2ad99ad3c5a7bec51e31944a4dc1e9872199441f8a"
+  },
   "family_id": "raw-grid",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/raw-grid.brutalist-matrix.json",
@@ -10,14 +29,23 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
-    "selector_gate_missing"
+    "selector_gate_missing",
+    "source_core_roles_missing"
   ],
+  "missing_roles": [
+    "comparison_or_split",
+    "process_or_timeline"
+  ],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,68 +53,695 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 10,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s2"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s10"
+      ],
+      "pages": [
+        10
+      ]
+    },
+    "comparison_or_split": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "content": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s4",
+        "s5",
+        "s6",
+        "s9"
+      ],
+      "pages": [
+        4,
+        5,
+        6,
+        9
+      ]
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s1"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s3",
+        "s7"
+      ],
+      "pages": [
+        3,
+        7
+      ]
+    },
+    "process_or_timeline": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "quote_or_emphasis": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s8"
+      ],
+      "pages": [
+        8
+      ]
+    }
+  },
   "page_variants": [
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "cover",
       "page_variant_id": "s1",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "role_group": "cover",
       "source_class": "s1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s1 active\">",
+          "selector_or_token": ".s1"
+        }
+      ],
       "source_slide_index": 1
     },
     {
-      "page_role": "closing",
-      "page_variant_id": "s10",
-      "source_class": "s10",
-      "source_slide_index": 10
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "agenda",
       "page_variant_id": "s2",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "agenda",
       "source_class": "s2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s2\">",
+          "selector_or_token": ".s2"
+        }
+      ],
       "source_slide_index": 2
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "s3",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "s3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s3\">",
+          "selector_or_token": ".s3"
+        }
+      ],
       "source_slide_index": 3
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "content",
       "page_variant_id": "s4",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "content",
       "source_class": "s4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s4\">",
+          "selector_or_token": ".s4"
+        }
+      ],
       "source_slide_index": 4
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "content",
       "page_variant_id": "s5",
+      "required_slots": [
+        "subtitle",
+        "timeline"
+      ],
+      "role_group": "content",
       "source_class": "s5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s5\">",
+          "selector_or_token": ".s5"
+        }
+      ],
       "source_slide_index": 5
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "detail",
       "page_variant_id": "s6",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "content",
       "source_class": "s6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s6\">",
+          "selector_or_token": ".s6"
+        }
+      ],
       "source_slide_index": 6
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "s7",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "quote"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "s7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s7\">",
+          "selector_or_token": ".s7"
+        }
+      ],
       "source_slide_index": 7
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "quote_or_emphasis",
       "page_variant_id": "s8",
+      "required_slots": [
+        "metrics",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
       "source_class": "s8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s8\">",
+          "selector_or_token": ".s8"
+        }
+      ],
       "source_slide_index": 8
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "content",
       "page_variant_id": "s9",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "content",
       "source_class": "s9",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s9\">",
+          "selector_or_token": ".s9"
+        }
+      ],
       "source_slide_index": 9
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "s10",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "closing",
+      "source_class": "s10",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s10\">",
+          "selector_or_token": ".s10"
+        }
+      ],
+      "source_slide_index": 10
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "s1",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "role_group": "cover",
+      "source_class": "s1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s1 active\">",
+          "selector_or_token": ".s1"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "s2",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "agenda",
+      "source_class": "s2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s2\">",
+          "selector_or_token": ".s2"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "data_dashboard",
+      "page_variant_id": "s3",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s3\">",
+          "selector_or_token": ".s3"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "content",
+      "page_variant_id": "s4",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "content",
+      "source_class": "s4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s4\">",
+          "selector_or_token": ".s4"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png",
+        "sha256": "5ddc01db338c2f149e6aab55051e55ff9e3d7a3abf166b26c0cdf871ebdb8d82",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "content",
+      "page_variant_id": "s5",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "subtitle",
+        "timeline"
+      ],
+      "role_group": "content",
+      "source_class": "s5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s5\">",
+          "selector_or_token": ".s5"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "detail",
+      "page_variant_id": "s6",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "content",
+      "source_class": "s6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s6\">",
+          "selector_or_token": ".s6"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "data_dashboard",
+      "page_variant_id": "s7",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "quote"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s7\">",
+          "selector_or_token": ".s7"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "s8",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "metrics",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
+      "source_class": "s8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s8\">",
+          "selector_or_token": ".s8"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png",
+        "sha256": "a71de0f79d56fa531ea042480a18c66fc61ab08fbecb7650d74a31d52dc79395",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png"
+      },
+      "source_slide_index": 8
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 9,
+      "page_role": "content",
+      "page_variant_id": "s9",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "content",
+      "source_class": "s9",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s9\">",
+          "selector_or_token": ".s9"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 9
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 10,
+      "page_role": "closing",
+      "page_variant_id": "s10",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "closing",
+      "source_class": "s10",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "raw_value": "<div class=\"slide s10\">",
+          "selector_or_token": ".s10"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+      },
+      "source_slide_index": 10
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/raw-grid-1.png",
   "reference_screenshot_sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
@@ -96,15 +751,480 @@
   "runtime_template_id": "brutalist-matrix",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [
+      "comparison_or_split",
+      "process_or_timeline"
+    ],
+    "page_count": 10,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s2"
+        ],
+        "pages": [
+          2
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s10"
+        ],
+        "pages": [
+          10
+        ]
+      },
+      "comparison_or_split": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "content": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s4",
+          "s5",
+          "s6",
+          "s9"
+        ],
+        "pages": [
+          4,
+          5,
+          6,
+          9
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s1"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s3",
+          "s7"
+        ],
+        "pages": [
+          3,
+          7
+        ]
+      },
+      "process_or_timeline": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "quote_or_emphasis": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s8"
+        ],
+        "pages": [
+          8
+        ]
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "s1",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "items"
+        ],
+        "role_group": "cover",
+        "source_class": "s1",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s1 active\">",
+            "selector_or_token": ".s1"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "s2",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "agenda",
+        "source_class": "s2",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s2\">",
+            "selector_or_token": ".s2"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "data_dashboard",
+        "page_variant_id": "s3",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "s3",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s3\">",
+            "selector_or_token": ".s3"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "content",
+        "page_variant_id": "s4",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "content",
+        "source_class": "s4",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s4\">",
+            "selector_or_token": ".s4"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png",
+          "sha256": "5ddc01db338c2f149e6aab55051e55ff9e3d7a3abf166b26c0cdf871ebdb8d82",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "content",
+        "page_variant_id": "s5",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "subtitle",
+          "timeline"
+        ],
+        "role_group": "content",
+        "source_class": "s5",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s5\">",
+            "selector_or_token": ".s5"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "detail",
+        "page_variant_id": "s6",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "content",
+        "source_class": "s6",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s6\">",
+            "selector_or_token": ".s6"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "data_dashboard",
+        "page_variant_id": "s7",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items",
+          "quote"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "s7",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s7\">",
+            "selector_or_token": ".s7"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "quote_or_emphasis",
+        "page_variant_id": "s8",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "metrics",
+          "quote"
+        ],
+        "role_group": "quote_or_emphasis",
+        "source_class": "s8",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s8\">",
+            "selector_or_token": ".s8"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png",
+          "sha256": "a71de0f79d56fa531ea042480a18c66fc61ab08fbecb7650d74a31d52dc79395",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png"
+        },
+        "source_slide_index": 8
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 9,
+        "page_role": "content",
+        "page_variant_id": "s9",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title"
+        ],
+        "role_group": "content",
+        "source_class": "s9",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s9\">",
+            "selector_or_token": ".s9"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 9
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 10,
+        "page_role": "closing",
+        "page_variant_id": "s10",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "closing",
+        "source_class": "s10",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/raw-grid/template.html",
+            "raw_value": "<div class=\"slide s10\">",
+            "selector_or_token": ".s10"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        },
+        "source_slide_index": 10
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 10,
     "status": "missing"
   },
   "smoke_status": "missing",

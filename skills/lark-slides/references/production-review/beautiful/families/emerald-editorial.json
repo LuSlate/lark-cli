@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/emerald-editorial.html",
+    "render_status": "missing_smoke",
+    "sha256": "e082713ef62b3a90e195a07823726c77e4909aaed1cde7ca7b57b4b888860833"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "e082713ef62b3a90e195a07823726c77e4909aaed1cde7ca7b57b4b888860833",
+    "fidelity_receipt": "7aa06118b44f3dcc6202b56e64ec03134f5487d3e48a25279a9ccfeb09c1c81b",
+    "reference_screenshot": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+    "smoke_receipt": null,
+    "visual_contract": "d1045f952aa4385a33084a25788785509dd62154b8bf18b8c342c9d6a212df98"
+  },
   "family_id": "emerald-editorial",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/emerald-editorial.emerald-editorial-cover.json",
@@ -10,14 +29,23 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
-    "selector_gate_missing"
+    "selector_gate_missing",
+    "source_core_roles_missing"
   ],
+  "missing_roles": [
+    "comparison_or_split",
+    "quote_or_emphasis"
+  ],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,56 +53,571 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 8,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s2"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s8"
+      ],
+      "pages": [
+        8
+      ]
+    },
+    "comparison_or_split": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "content": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s3",
+        "s6"
+      ],
+      "pages": [
+        3,
+        6
+      ]
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s1"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s5",
+        "s7"
+      ],
+      "pages": [
+        5,
+        7
+      ]
+    },
+    "process_or_timeline": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "s4"
+      ],
+      "pages": [
+        4
+      ]
+    },
+    "quote_or_emphasis": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    }
+  },
   "page_variants": [
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "cover",
       "page_variant_id": "s1",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "cover",
       "source_class": "s1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s1\" data-screen-label=\"01 Cover\">",
+          "selector_or_token": ".s1"
+        }
+      ],
       "source_slide_index": 1
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "agenda",
       "page_variant_id": "s2",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "agenda",
       "source_class": "s2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s2\" data-screen-label=\"02 Agenda\">",
+          "selector_or_token": ".s2"
+        }
+      ],
       "source_slide_index": 2
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "detail",
       "page_variant_id": "s3",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "content",
       "source_class": "s3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s3\" data-screen-label=\"03 Section Opener\">",
+          "selector_or_token": ".s3"
+        }
+      ],
       "source_slide_index": 3
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "process_or_timeline",
       "page_variant_id": "s4",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "process_or_timeline",
       "source_class": "s4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s4\" data-screen-label=\"04 Statement And Three\">",
+          "selector_or_token": ".s4"
+        }
+      ],
       "source_slide_index": 4
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "s5",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "s5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s5\" data-screen-label=\"05 Data Study\">",
+          "selector_or_token": ".s5"
+        }
+      ],
       "source_slide_index": 5
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "detail",
       "page_variant_id": "s6",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "content",
       "source_class": "s6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s6\" data-screen-label=\"06 Process Diagram\">",
+          "selector_or_token": ".s6"
+        }
+      ],
       "source_slide_index": 6
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "s7",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "s7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s7\" data-screen-label=\"07 KPI Grid\">",
+          "selector_or_token": ".s7"
+        }
+      ],
       "source_slide_index": 7
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "closing",
       "page_variant_id": "s8",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "closing",
       "source_class": "s8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s8\" data-screen-label=\"08 Closing\">",
+          "selector_or_token": ".s8"
+        }
+      ],
       "source_slide_index": 8
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "s1",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "cover",
+      "source_class": "s1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s1\" data-screen-label=\"01 Cover\">",
+          "selector_or_token": ".s1"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+        "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "s2",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "agenda",
+      "source_class": "s2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s2\" data-screen-label=\"02 Agenda\">",
+          "selector_or_token": ".s2"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+        "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "detail",
+      "page_variant_id": "s3",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "content",
+      "source_class": "s3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s3\" data-screen-label=\"03 Section Opener\">",
+          "selector_or_token": ".s3"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-3.png",
+        "sha256": "ba8aa43b6ec734d12e9f8de3f0285294c6c9b5e0e5f573a3cbe1e54c1082c4f2",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-3.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "process_or_timeline",
+      "page_variant_id": "s4",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "process_or_timeline",
+      "source_class": "s4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s4\" data-screen-label=\"04 Statement And Three\">",
+          "selector_or_token": ".s4"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+        "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "data_dashboard",
+      "page_variant_id": "s5",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s5\" data-screen-label=\"05 Data Study\">",
+          "selector_or_token": ".s5"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+        "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "detail",
+      "page_variant_id": "s6",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "content",
+      "source_class": "s6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s6\" data-screen-label=\"06 Process Diagram\">",
+          "selector_or_token": ".s6"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-6.png",
+        "sha256": "939596b9f796c86456bf05d8e18226de0fba5ee428cf6a86ebf335ca5b2d26e6",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-6.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "data_dashboard",
+      "page_variant_id": "s7",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s7\" data-screen-label=\"07 KPI Grid\">",
+          "selector_or_token": ".s7"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+        "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "closing",
+      "page_variant_id": "s8",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "closing",
+      "source_class": "s8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "raw_value": "<section class=\"slide s8\" data-screen-label=\"08 Closing\">",
+          "selector_or_token": ".s8"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+        "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+      },
+      "source_slide_index": 8
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/emerald-editorial-1.png",
   "reference_screenshot_sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
@@ -84,15 +627,403 @@
   "runtime_template_id": "emerald-editorial-cover",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [
+      "comparison_or_split",
+      "quote_or_emphasis"
+    ],
+    "page_count": 8,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s2"
+        ],
+        "pages": [
+          2
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s8"
+        ],
+        "pages": [
+          8
+        ]
+      },
+      "comparison_or_split": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "content": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s3",
+          "s6"
+        ],
+        "pages": [
+          3,
+          6
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s1"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s5",
+          "s7"
+        ],
+        "pages": [
+          5,
+          7
+        ]
+      },
+      "process_or_timeline": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "s4"
+        ],
+        "pages": [
+          4
+        ]
+      },
+      "quote_or_emphasis": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "s1",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics"
+        ],
+        "role_group": "cover",
+        "source_class": "s1",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s1\" data-screen-label=\"01 Cover\">",
+            "selector_or_token": ".s1"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+          "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "s2",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics"
+        ],
+        "role_group": "agenda",
+        "source_class": "s2",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s2\" data-screen-label=\"02 Agenda\">",
+            "selector_or_token": ".s2"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+          "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "detail",
+        "page_variant_id": "s3",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "content",
+        "source_class": "s3",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s3\" data-screen-label=\"03 Section Opener\">",
+            "selector_or_token": ".s3"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-3.png",
+          "sha256": "ba8aa43b6ec734d12e9f8de3f0285294c6c9b5e0e5f573a3cbe1e54c1082c4f2",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-3.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "process_or_timeline",
+        "page_variant_id": "s4",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "process_or_timeline",
+        "source_class": "s4",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s4\" data-screen-label=\"04 Statement And Three\">",
+            "selector_or_token": ".s4"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+          "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "data_dashboard",
+        "page_variant_id": "s5",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "s5",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s5\" data-screen-label=\"05 Data Study\">",
+            "selector_or_token": ".s5"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+          "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "detail",
+        "page_variant_id": "s6",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "content",
+        "source_class": "s6",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s6\" data-screen-label=\"06 Process Diagram\">",
+            "selector_or_token": ".s6"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-6.png",
+          "sha256": "939596b9f796c86456bf05d8e18226de0fba5ee428cf6a86ebf335ca5b2d26e6",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-6.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "data_dashboard",
+        "page_variant_id": "s7",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "s7",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s7\" data-screen-label=\"07 KPI Grid\">",
+            "selector_or_token": ".s7"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+          "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "closing",
+        "page_variant_id": "s8",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title"
+        ],
+        "role_group": "closing",
+        "source_class": "s8",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+            "raw_value": "<section class=\"slide s8\" data-screen-label=\"08 Closing\">",
+            "selector_or_token": ".s8"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png",
+          "sha256": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/emerald-editorial-1.png"
+        },
+        "source_slide_index": 8
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 8,
     "status": "missing"
   },
   "smoke_status": "missing",

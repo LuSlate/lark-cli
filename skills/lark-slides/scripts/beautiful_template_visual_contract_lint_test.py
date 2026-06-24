@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -27,6 +28,75 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
 
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def optional_sha256(value: object) -> str | None:
+    if isinstance(value, str) and value:
+        path = lint.resolve_path(value)
+        if path.is_file():
+            return file_sha256(path)
+    return None
+
+
+def gallery_family_card_for_row(row: dict[str, object], **overrides: Any) -> dict[str, object]:
+    smoke_receipt: dict[str, object] = {}
+    receipt_ref = row.get("page_family_smoke_receipt")
+    if isinstance(receipt_ref, str) and receipt_ref:
+        receipt_path = lint.resolve_path(receipt_ref)
+        if receipt_path.is_file():
+            smoke_receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    smoke = {
+        "artifact_kind": "page-family-smoke",
+        "status": smoke_receipt.get("status") or "missing",
+        "deck_path": row.get("page_family_smoke_deck"),
+        "deck_sha256": optional_sha256(row.get("page_family_smoke_deck")),
+        "receipt_path": row.get("page_family_smoke_receipt"),
+        "receipt_sha256": optional_sha256(row.get("page_family_smoke_receipt")),
+        "rendered_pages": smoke_receipt.get("rendered_pages"),
+        "page_variant_coverage": smoke_receipt.get("page_variant_coverage") if isinstance(smoke_receipt.get("page_variant_coverage"), dict) else {},
+        "missing_required_roles": smoke_receipt.get("missing_required_roles") if isinstance(smoke_receipt.get("missing_required_roles"), list) else [],
+        "input_hashes": smoke_receipt.get("input_hashes") if isinstance(smoke_receipt.get("input_hashes"), dict) else {},
+    }
+    pages = smoke_receipt.get("pages") if isinstance(smoke_receipt.get("pages"), list) else []
+    contact_sheet_status = "passed" if smoke["status"] == "passed" else "missing_smoke"
+    card: dict[str, object] = {
+        "artifact_kind": "production_review_family_card",
+        "family_id": row.get("family_id"),
+        "runtime_template_id": row.get("runtime_template_id"),
+        "promotion_status": row.get("promotion_status"),
+        "default_selectable": row.get("default_selectable") is True,
+        "known_blockers": [] if row.get("promotion_status") == "production" else ["production_review_pending"],
+        "missing_roles": [],
+        "review_decision": "pending_review",
+        "smoke_status": smoke["status"],
+        "smoke": smoke,
+        "pages": pages,
+        "contact_sheet": {
+            "artifact_kind": "smoke_deck_contact_sheet_review_model",
+            "render_status": contact_sheet_status,
+            "html_path": f"families/{row.get('family_id')}.html",
+            "sha256": "fixture-contact-sheet",
+        },
+    }
+    card.update(overrides)
+    return card
+
+
+def production_review_gallery_manifest_for_row(row: dict[str, object], *, matrix_path: Path, card: dict[str, object] | None = None) -> dict[str, object]:
+    return {
+        "schema_version": "svglide-beautiful-production-review-gallery/v1",
+        "artifact_kind": "production_review_gallery",
+        "not_promotion_receipt": True,
+        "source_matrix": matrix_path.as_posix(),
+        "source_matrix_sha256": file_sha256(matrix_path),
+        "summary": {"candidate_count": 34},
+        "policy": {
+            "gallery_is_review_input_only": True,
+            "does_not_promote_family": True,
+            "promotion_requires_separate_review_receipt": True,
+        },
+        "families": [card or gallery_family_card_for_row(row)],
+    }
 
 
 def production_review_receipt_for_row(row: dict[str, object], *, status: str = "passed") -> dict[str, object]:
@@ -522,6 +592,134 @@ class BeautifulTemplateVisualContractLintTest(unittest.TestCase):
             {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
         )
 
+    def test_lint_blocks_default_selectable_even_when_pending_gallery_exists(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        row.pop("production_review_receipt", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            gallery_path = tmp_path / "manifest.json"
+            row["production_review_gallery_manifest"] = gallery_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+            write_json(gallery_path, production_review_gallery_manifest_for_row(row, matrix_path=matrix_path))
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        self.assertIn(
+            ("candidate_production_review_receipt_missing", row["family_id"], "production_review_receipt"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_lint_blocks_gallery_manifest_as_production_review_receipt(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            gallery_path = tmp_path / "manifest.json"
+            row["production_review_receipt"] = gallery_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+            write_json(gallery_path, production_review_gallery_manifest_for_row(row, matrix_path=matrix_path))
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        self.assertIn(
+            ("candidate_production_review_receipt_is_gallery", row["family_id"], "production_review_receipt"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_lint_blocks_review_gallery_with_cover_only_smoke_evidence(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            deck_path = tmp_path / "cover-deck.json"
+            receipt_path = tmp_path / "cover-receipt.json"
+            gallery_path = tmp_path / "manifest.json"
+            write_json(
+                deck_path,
+                {
+                    "schema_version": "svglide-page-family-smoke-deck/v1",
+                    "pages": [{"page": 1, "page_role": "cover", "page_variant_id": "cover"}],
+                },
+            )
+            write_json(
+                receipt_path,
+                {
+                    "schema_version": "svglide-page-family-smoke/v1",
+                    "status": "passed",
+                    "rendered_pages": 1,
+                    "pages": [{"page": 1, "page_role": "cover", "page_variant_id": "cover"}],
+                    "page_variant_coverage": {"cover": {"covered": True, "pages": [1], "variants": ["cover"]}},
+                    "input_hashes": {"smoke_deck": file_sha256(deck_path)},
+                },
+            )
+            smoke = {
+                "artifact_kind": "page-family-smoke",
+                "status": "passed",
+                "deck_path": deck_path.as_posix(),
+                "deck_sha256": file_sha256(deck_path),
+                "receipt_path": receipt_path.as_posix(),
+                "receipt_sha256": file_sha256(receipt_path),
+                "rendered_pages": 1,
+                "page_variant_coverage": {"cover": {"covered": True, "pages": [1], "variants": ["cover"]}},
+                "missing_required_roles": [],
+                "input_hashes": {"smoke_deck": file_sha256(deck_path)},
+            }
+            row["production_review_gallery_manifest"] = gallery_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+            write_json(
+                gallery_path,
+                production_review_gallery_manifest_for_row(
+                    row,
+                    matrix_path=matrix_path,
+                    card=gallery_family_card_for_row(row, smoke=smoke, smoke_status="passed"),
+                ),
+            )
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        issue_set = {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues}
+        self.assertIn(("candidate_production_review_gallery_smoke_cover_only", row["family_id"], "production_review_gallery.families.smoke.rendered_pages"), issue_set)
+        self.assertIn(("candidate_production_review_gallery_smoke_deck_pages_missing", row["family_id"], "production_review_gallery.families.smoke.deck_path"), issue_set)
+        self.assertIn(("candidate_production_review_gallery_smoke_receipt_pages_missing", row["family_id"], "production_review_gallery.families.smoke.receipt_path"), issue_set)
+
+    def test_lint_blocks_review_gallery_without_deck_or_contact_sheet_evidence(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            gallery_path = tmp_path / "manifest.json"
+            smoke = gallery_family_card_for_row(row)["smoke"]
+            assert isinstance(smoke, dict)
+            smoke["deck_path"] = ""
+            smoke["deck_sha256"] = ""
+            smoke["receipt_path"] = ""
+            smoke["receipt_sha256"] = ""
+            row["production_review_gallery_manifest"] = gallery_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+            write_json(
+                gallery_path,
+                production_review_gallery_manifest_for_row(
+                    row,
+                    matrix_path=matrix_path,
+                    card=gallery_family_card_for_row(row, smoke=smoke, pages=[], contact_sheet={}),
+                ),
+            )
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        issue_set = {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues}
+        self.assertIn(
+            ("candidate_production_review_gallery_smoke_evidence_missing", row["family_id"], "production_review_gallery.families.smoke.deck_path"),
+            issue_set,
+        )
+        self.assertIn(("candidate_production_review_gallery_deck_pages_missing", row["family_id"], "production_review_gallery.families.pages"), issue_set)
+        self.assertIn(("candidate_production_review_gallery_contact_sheet_missing", row["family_id"], "production_review_gallery.families.contact_sheet"), issue_set)
+
     def test_lint_blocks_default_selectable_with_failed_production_review_receipt(self) -> None:
         matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
         row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
@@ -579,6 +777,29 @@ class BeautifulTemplateVisualContractLintTest(unittest.TestCase):
                 if str(item.get("code") or "").startswith("candidate_production_review")
             },
         )
+
+    def test_lint_requires_needs_review_gallery_pending_reason_without_production_receipt(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "needs_review")
+        row.pop("production_review_receipt", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            gallery_path = tmp_path / "manifest.json"
+            row["production_review_gallery_manifest"] = gallery_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+            card = gallery_family_card_for_row(row, known_blockers=[], missing_roles=[], review_decision="approved")
+            smoke = card["smoke"]
+            assert isinstance(smoke, dict)
+            smoke["missing_required_roles"] = []
+            write_json(gallery_path, production_review_gallery_manifest_for_row(row, matrix_path=matrix_path, card=card))
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        issue_set = {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues}
+        self.assertIn(("candidate_review_gallery_decision_invalid", row["family_id"], "production_review_gallery.review_decision"), issue_set)
+        self.assertIn(("candidate_review_gallery_pending_reason_missing", row["family_id"], "production_review_gallery.families.known_blockers"), issue_set)
+        self.assertNotIn(("candidate_production_review_receipt_missing", row["family_id"], "production_review_receipt"), issue_set)
 
 
 if __name__ == "__main__":

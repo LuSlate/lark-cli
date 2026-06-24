@@ -207,6 +207,7 @@ PRODUCTION_REVIEW_REQUIRED_EVIDENCE = (
     "page_family_smoke_receipt",
     "visual_contract_path",
 )
+GALLERY_REVIEW_DECISION_PENDING = {"pending", "pending_review"}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -604,40 +605,168 @@ def _production_review_gallery_path(row: dict[str, Any]) -> Path:
     return PRODUCTION_REVIEW_GALLERY_PATH
 
 
-def validate_pending_production_review_gallery(row: dict[str, Any], *, matrix_path: Path) -> tuple[bool, list[dict[str, str]]]:
+def _gallery_card_missing_roles(card: dict[str, Any]) -> list[str]:
+    roles = card.get("missing_roles")
+    if isinstance(roles, list):
+        return [str(item) for item in roles if str(item)]
+    smoke = card.get("smoke") if isinstance(card.get("smoke"), dict) else {}
+    return [str(item) for item in smoke.get("missing_required_roles", []) if str(item)] if isinstance(smoke.get("missing_required_roles"), list) else []
+
+
+def _gallery_card_blockers(card: dict[str, Any]) -> list[str]:
+    blockers = card.get("known_blockers")
+    return [str(item) for item in blockers if str(item)] if isinstance(blockers, list) else []
+
+
+def _validate_gallery_smoke_evidence(card: dict[str, Any], *, family_id: str, path_prefix: str, code_prefix: str) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    smoke = card.get("smoke") if isinstance(card.get("smoke"), dict) else {}
+    smoke_status = str(smoke.get("status") or card.get("smoke_status") or "")
+    if smoke_status != "passed":
+        return issues
+
+    rendered_pages = smoke.get("rendered_pages")
+    if not isinstance(rendered_pages, int) or rendered_pages <= 1:
+        issues.append(
+            issue(
+                f"{code_prefix}_smoke_cover_only",
+                "production review gallery passed smoke evidence must include more than the cover page",
+                family_id=family_id,
+                path=f"{path_prefix}.smoke.rendered_pages",
+            )
+        )
+
+    deck_path = resolve_path(smoke.get("deck_path"))
+    receipt_path = resolve_path(smoke.get("receipt_path"))
+    for key, resolved in (("deck_path", deck_path), ("receipt_path", receipt_path)):
+        if not is_non_empty(smoke.get(key)) or not resolved.is_file():
+            issues.append(
+                issue(
+                    f"{code_prefix}_smoke_evidence_missing",
+                    "production review gallery passed smoke evidence must include deck and receipt files",
+                    family_id=family_id,
+                    path=f"{path_prefix}.smoke.{key}",
+                )
+            )
+    for key in ("deck_sha256", "receipt_sha256"):
+        if not is_non_empty(smoke.get(key)):
+            issues.append(
+                issue(
+                    f"{code_prefix}_smoke_evidence_missing",
+                    "production review gallery passed smoke evidence must include deck and receipt hashes",
+                    family_id=family_id,
+                    path=f"{path_prefix}.smoke.{key}",
+                )
+            )
+
+    deck = read_json_or_empty(deck_path)
+    deck_pages = deck.get("pages") if isinstance(deck.get("pages"), list) else []
+    if deck_path.is_file() and len(deck_pages) <= 1:
+        issues.append(
+            issue(
+                f"{code_prefix}_smoke_deck_pages_missing",
+                "production review gallery passed smoke deck must include multiple deck pages",
+                family_id=family_id,
+                path=f"{path_prefix}.smoke.deck_path",
+            )
+        )
+
+    receipt = read_json_or_empty(receipt_path)
+    receipt_pages = receipt.get("pages") if isinstance(receipt.get("pages"), list) else []
+    if receipt_path.is_file() and len(receipt_pages) <= 1:
+        issues.append(
+            issue(
+                f"{code_prefix}_smoke_receipt_pages_missing",
+                "production review gallery passed smoke receipt must include page/contact-sheet evidence",
+                family_id=family_id,
+                path=f"{path_prefix}.smoke.receipt_path",
+            )
+        )
+
+    coverage = smoke.get("page_variant_coverage")
+    if not isinstance(coverage, dict) or len(coverage) <= 1 or set(coverage) <= {"cover"}:
+        issues.append(
+            issue(
+                f"{code_prefix}_smoke_coverage_missing",
+                "production review gallery passed smoke evidence must include non-cover page coverage",
+                family_id=family_id,
+                path=f"{path_prefix}.smoke.page_variant_coverage",
+            )
+        )
+    pages = card.get("pages") if isinstance(card.get("pages"), list) else []
+    if len(pages) <= 1:
+        issues.append(
+            issue(
+                f"{code_prefix}_deck_pages_missing",
+                "production review gallery family card must expose multi-page deck review data",
+                family_id=family_id,
+                path=f"{path_prefix}.pages",
+            )
+        )
+    contact_sheet = card.get("contact_sheet") if isinstance(card.get("contact_sheet"), dict) else {}
+    if (
+        contact_sheet.get("artifact_kind") != "smoke_deck_contact_sheet_review_model"
+        or contact_sheet.get("render_status") != "passed"
+    ):
+        issues.append(
+            issue(
+                f"{code_prefix}_contact_sheet_missing",
+                "production review gallery passed smoke evidence must include passed contact sheet review data",
+                family_id=family_id,
+                path=f"{path_prefix}.contact_sheet",
+            )
+        )
+    return issues
+
+
+def _gallery_manifest_and_card(
+    row: dict[str, Any],
+    *,
+    matrix_path: Path,
+    code_prefix: str,
+    path_prefix: str = "production_review_gallery",
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None, list[dict[str, str]]]:
     family_id = str(row.get("family_id") or "")
     runtime_template_id = str(row.get("runtime_template_id") or "")
     manifest_path = _production_review_gallery_path(row)
     issues: list[dict[str, str]] = []
     if not manifest_path.is_file():
-        return False, issues
+        issues.append(
+            issue(
+                f"{code_prefix}_missing",
+                "production review gallery manifest must exist for review-only gallery lint",
+                family_id=family_id,
+                path=path_prefix,
+            )
+        )
+        return None, None, issues
     manifest = read_json_or_empty(manifest_path)
     if not manifest:
         issues.append(
             issue(
-                "candidate_production_review_gallery_invalid",
+                f"{code_prefix}_invalid",
                 "production review gallery manifest must be readable JSON object",
                 family_id=family_id,
-                path="production_review_gallery",
+                path=path_prefix,
             )
         )
-        return False, issues
+        return None, None, issues
     if manifest.get("artifact_kind") != "production_review_gallery" or manifest.get("not_promotion_receipt") is not True:
         issues.append(
             issue(
-                "candidate_production_review_gallery_claim_invalid",
+                f"{code_prefix}_claim_invalid",
                 "production review gallery must be marked as review input only and not a promotion receipt",
                 family_id=family_id,
-                path="production_review_gallery.not_promotion_receipt",
+                path=f"{path_prefix}.not_promotion_receipt",
             )
         )
     if manifest.get("source_matrix_sha256") != file_sha256(matrix_path):
         issues.append(
             issue(
-                "candidate_production_review_gallery_stale",
+                f"{code_prefix}_stale",
                 "production review gallery source_matrix_sha256 must match the current matrix",
                 family_id=family_id,
-                path="production_review_gallery.source_matrix_sha256",
+                path=f"{path_prefix}.source_matrix_sha256",
             )
         )
     families = manifest.get("families") if isinstance(manifest.get("families"), list) else []
@@ -654,41 +783,106 @@ def validate_pending_production_review_gallery(row: dict[str, Any], *, matrix_pa
     if not isinstance(card, dict):
         issues.append(
             issue(
-                "candidate_production_review_gallery_family_missing",
+                f"{code_prefix}_family_missing",
                 "production review gallery must include the production/default family card",
                 family_id=family_id,
-                path="production_review_gallery.families",
+                path=f"{path_prefix}.families",
             )
         )
-        return False, issues
-    if card.get("review_decision") != "pending_review":
+        return manifest, None, issues
+    return manifest, card, issues
+
+
+def _validate_gallery_card_common(
+    row: dict[str, Any],
+    card: dict[str, Any],
+    *,
+    code_prefix: str,
+    path_prefix: str = "production_review_gallery",
+) -> list[dict[str, str]]:
+    family_id = str(row.get("family_id") or "")
+    issues: list[dict[str, str]] = []
+    if card.get("review_decision") not in GALLERY_REVIEW_DECISION_PENDING:
         issues.append(
             issue(
-                "candidate_production_review_gallery_decision_invalid",
+                f"{code_prefix}_decision_invalid",
                 "production review gallery card must remain pending_review until a separate production receipt exists",
                 family_id=family_id,
-                path="production_review_gallery.review_decision",
+                path=f"{path_prefix}.review_decision",
             )
         )
     if card.get("artifact_kind") == "promotion_receipt":
         issues.append(
             issue(
-                "candidate_production_review_gallery_card_claim_invalid",
+                f"{code_prefix}_card_claim_invalid",
                 "production review gallery family card must not be a promotion receipt",
                 family_id=family_id,
-                path="production_review_gallery.families.artifact_kind",
+                path=f"{path_prefix}.families.artifact_kind",
             )
         )
     if card.get("promotion_status") != row.get("promotion_status") or card.get("default_selectable") != (row.get("default_selectable") is True):
         issues.append(
             issue(
-                "candidate_production_review_gallery_status_mismatch",
+                f"{code_prefix}_status_mismatch",
                 "production review gallery card status must match the candidate matrix",
                 family_id=family_id,
-                path="production_review_gallery.families.status",
+                path=f"{path_prefix}.families.status",
             )
         )
+    return issues
+
+
+def validate_pending_production_review_gallery(row: dict[str, Any], *, matrix_path: Path) -> tuple[bool, list[dict[str, str]]]:
+    _, card, issues = _gallery_manifest_and_card(
+        row,
+        matrix_path=matrix_path,
+        code_prefix="candidate_production_review_gallery",
+    )
+    if not isinstance(card, dict):
+        return False, issues
+    issues.extend(
+        _validate_gallery_card_common(
+            row,
+            card,
+            code_prefix="candidate_production_review_gallery",
+        )
+    )
+    issues.extend(
+        _validate_gallery_smoke_evidence(
+            card,
+            family_id=str(row.get("family_id") or ""),
+            path_prefix="production_review_gallery.families",
+            code_prefix="candidate_production_review_gallery",
+        )
+    )
     return not issues, issues
+
+
+def validate_needs_review_gallery_card(row: dict[str, Any], *, matrix_path: Path) -> list[dict[str, str]]:
+    _, card, issues = _gallery_manifest_and_card(
+        row,
+        matrix_path=matrix_path,
+        code_prefix="candidate_review_gallery",
+    )
+    if not isinstance(card, dict):
+        return issues
+    issues.extend(
+        _validate_gallery_card_common(
+            row,
+            card,
+            code_prefix="candidate_review_gallery",
+        )
+    )
+    if not _gallery_card_blockers(card) and not _gallery_card_missing_roles(card):
+        issues.append(
+            issue(
+                "candidate_review_gallery_pending_reason_missing",
+                "needs_review gallery card must retain blockers or missing roles while review_decision is pending",
+                family_id=str(row.get("family_id") or ""),
+                path="production_review_gallery.families.known_blockers",
+            )
+        )
+    return issues
 
 
 def validate_production_review_receipt(row: dict[str, Any], *, matrix_path: Path = MATRIX_PATH) -> list[dict[str, str]]:
@@ -698,9 +892,7 @@ def validate_production_review_receipt(row: dict[str, Any], *, matrix_path: Path
     issues.extend(evidence_issues)
     receipt_ref = row.get("production_review_receipt")
     if not is_non_empty(receipt_ref):
-        gallery_ok, gallery_issues = validate_pending_production_review_gallery(row, matrix_path=matrix_path)
-        if gallery_ok:
-            return issues
+        _, gallery_issues = validate_pending_production_review_gallery(row, matrix_path=matrix_path)
         issues.extend(gallery_issues)
         issues.append(
             issue(
@@ -728,6 +920,16 @@ def validate_production_review_receipt(row: dict[str, Any], *, matrix_path: Path
             issue(
                 "candidate_production_review_receipt_invalid",
                 "production_review_receipt must be readable JSON object",
+                family_id=family_id,
+                path="production_review_receipt",
+            )
+        )
+        return issues
+    if receipt.get("artifact_kind") == "production_review_gallery" or receipt.get("not_promotion_receipt") is True:
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_is_gallery",
+                "production_review_receipt must be a production review receipt, not a review gallery or manifest",
                 family_id=family_id,
                 path="production_review_receipt",
             )
@@ -1162,11 +1364,17 @@ def validate_candidate_matrix(
                 if not resolve_path(row.get(key)).is_file():
                     issues.append(issue("candidate_production_evidence_missing_file", f"production candidate.{key} must exist", family_id=family_id, path=key))
             issues.extend(validate_production_role_consumption(row))
+            if is_non_empty(row.get("production_review_receipt")):
+                _, gallery_issues = validate_pending_production_review_gallery(row, matrix_path=matrix_path)
+                issues.extend(gallery_issues)
             issues.extend(validate_production_review_receipt(row, matrix_path=matrix_path))
             if status not in PRODUCTION_STATUSES or not is_default:
                 issues.append(issue("candidate_production_status_inconsistent", "production candidates must be default selectable and vice versa", family_id=family_id))
-        elif status not in NON_PRODUCTION_STATUSES:
-            issues.append(issue("candidate_promotion_status_invalid", "promotion_status must be production, needs_review, experimental, or legacy_debug", family_id=family_id, path="promotion_status"))
+        else:
+            if status == "needs_review":
+                issues.extend(validate_needs_review_gallery_card(row, matrix_path=matrix_path))
+            if status not in NON_PRODUCTION_STATUSES:
+                issues.append(issue("candidate_promotion_status_invalid", "promotion_status must be production, needs_review, experimental, or legacy_debug", family_id=family_id, path="promotion_status"))
 
         contract_ref = row.get("visual_contract_path") or row.get("visual_contract")
         contract_path, contract = load_contract(contract_ref)

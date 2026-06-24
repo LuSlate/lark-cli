@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/daisy-days.html",
+    "render_status": "missing_smoke",
+    "sha256": "60ae07dae1e5cb86fbefc0ffb62eb9bdf8c371f121793ad9d9e4cee23c993443"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "60ae07dae1e5cb86fbefc0ffb62eb9bdf8c371f121793ad9d9e4cee23c993443",
+    "fidelity_receipt": "926bc15a8016d24e25c00a42eb878578dbb825471d6ba2abc316bf48016ab5bc",
+    "reference_screenshot": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+    "smoke_receipt": null,
+    "visual_contract": "9f481ab2692c478b75690c69edf7a8e55a233e476aadf2d2d3954e7a0ed28a68"
+  },
   "family_id": "daisy-days",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/daisy-days.daisy-workshop-playbook.json",
@@ -10,14 +29,23 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
-    "selector_gate_missing"
+    "selector_gate_missing",
+    "source_core_roles_missing"
   ],
+  "missing_roles": [
+    "comparison_or_split",
+    "closing"
+  ],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,62 +53,640 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 9,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "weekly"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    "closing": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "comparison_or_split": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "content": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "cards",
+        "team",
+        "process"
+      ],
+      "pages": [
+        5,
+        7,
+        8
+      ]
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "welcome"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "chart_bar",
+        "donut"
+      ],
+      "pages": [
+        4,
+        9
+      ]
+    },
+    "process_or_timeline": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "timeline"
+      ],
+      "pages": [
+        3
+      ]
+    },
+    "quote_or_emphasis": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "quote"
+      ],
+      "pages": [
+        6
+      ]
+    }
+  },
   "page_variants": [
     {
-      "page_role": "detail",
-      "page_variant_id": "cards",
-      "source_class": "slide-cards",
-      "source_slide_index": 5
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "cover",
+      "page_variant_id": "welcome",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "cover",
+      "source_class": "slide-welcome",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-welcome\" id=\"slide-2\">",
+          "selector_or_token": ".slide-welcome"
+        }
+      ],
+      "source_slide_index": 1
     },
     {
-      "page_role": "data_dashboard",
-      "page_variant_id": "chart_bar",
-      "source_class": "slide-chart-bar",
-      "source_slide_index": 4
-    },
-    {
-      "page_role": "data_dashboard",
-      "page_variant_id": "donut",
-      "source_class": "slide-donut",
-      "source_slide_index": 9
-    },
-    {
-      "page_role": "content",
-      "page_variant_id": "process",
-      "source_class": "slide-process",
-      "source_slide_index": 8
-    },
-    {
-      "page_role": "quote_or_emphasis",
-      "page_variant_id": "quote",
-      "source_class": "slide-quote",
-      "source_slide_index": 6
-    },
-    {
-      "page_role": "detail",
-      "page_variant_id": "team",
-      "source_class": "slide-team",
-      "source_slide_index": 7
-    },
-    {
-      "page_role": "process_or_timeline",
-      "page_variant_id": "timeline",
-      "source_class": "slide-timeline",
-      "source_slide_index": 3
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "agenda",
       "page_variant_id": "weekly",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "role_group": "agenda",
       "source_class": "slide-weekly",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-weekly\" id=\"slide-3\">",
+          "selector_or_token": ".slide-weekly"
+        }
+      ],
       "source_slide_index": 2
     },
     {
-      "page_role": "cover",
-      "page_variant_id": "welcome",
-      "source_class": "slide-welcome",
-      "source_slide_index": 1
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "process_or_timeline",
+      "page_variant_id": "timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
+      "source_class": "slide-timeline",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-timeline\" id=\"slide-4\">",
+          "selector_or_token": ".slide-timeline"
+        }
+      ],
+      "source_slide_index": 3
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "chart_bar",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-chart-bar",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-chart-bar\" id=\"slide-5\">",
+          "selector_or_token": ".slide-chart-bar"
+        }
+      ],
+      "source_slide_index": 4
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "detail",
+      "page_variant_id": "cards",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "quote"
+      ],
+      "role_group": "content",
+      "source_class": "slide-cards",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-cards\" id=\"slide-6\">",
+          "selector_or_token": ".slide-cards"
+        }
+      ],
+      "source_slide_index": 5
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
+      "source_class": "slide-quote",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-quote\" id=\"slide-7\">",
+          "selector_or_token": ".slide-quote"
+        }
+      ],
+      "source_slide_index": 6
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "detail",
+      "page_variant_id": "team",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "content",
+      "source_class": "slide-team",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-team\" id=\"slide-8\">",
+          "selector_or_token": ".slide-team"
+        }
+      ],
+      "source_slide_index": 7
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "content",
+      "page_variant_id": "process",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "content",
+      "source_class": "slide-process",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-process\" id=\"slide-9\">",
+          "selector_or_token": ".slide-process"
+        }
+      ],
+      "source_slide_index": 8
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "donut",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-donut",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-donut\" id=\"slide-10\">",
+          "selector_or_token": ".slide-donut"
+        }
+      ],
+      "source_slide_index": 9
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "welcome",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "cover",
+      "source_class": "slide-welcome",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-welcome\" id=\"slide-2\">",
+          "selector_or_token": ".slide-welcome"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "weekly",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "role_group": "agenda",
+      "source_class": "slide-weekly",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-weekly\" id=\"slide-3\">",
+          "selector_or_token": ".slide-weekly"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "process_or_timeline",
+      "page_variant_id": "timeline",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
+      "source_class": "slide-timeline",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-timeline\" id=\"slide-4\">",
+          "selector_or_token": ".slide-timeline"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "data_dashboard",
+      "page_variant_id": "chart_bar",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-chart-bar",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-chart-bar\" id=\"slide-5\">",
+          "selector_or_token": ".slide-chart-bar"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-4.png",
+        "sha256": "7b42341596e3a835f5c859e8009e5caffa8953a8608e6257fae82a99e29743dd",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-4.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "detail",
+      "page_variant_id": "cards",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "quote"
+      ],
+      "role_group": "content",
+      "source_class": "slide-cards",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-cards\" id=\"slide-6\">",
+          "selector_or_token": ".slide-cards"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
+      "source_class": "slide-quote",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-quote\" id=\"slide-7\">",
+          "selector_or_token": ".slide-quote"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "detail",
+      "page_variant_id": "team",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "content",
+      "source_class": "slide-team",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-team\" id=\"slide-8\">",
+          "selector_or_token": ".slide-team"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "content",
+      "page_variant_id": "process",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "content",
+      "source_class": "slide-process",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-process\" id=\"slide-9\">",
+          "selector_or_token": ".slide-process"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-8.png",
+        "sha256": "b42224ecf6da8fa3c1a4e021a2c3092cef8f856c2a0ca00b4fbe95d2e52bbbd1",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-8.png"
+      },
+      "source_slide_index": 8
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 9,
+      "page_role": "data_dashboard",
+      "page_variant_id": "donut",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-donut",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "raw_value": "<section class=\"slide slide-donut\" id=\"slide-10\">",
+          "selector_or_token": ".slide-donut"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+        "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+      },
+      "source_slide_index": 9
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/daisy-days-1.png",
   "reference_screenshot_sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
@@ -90,15 +696,445 @@
   "runtime_template_id": "daisy-workshop-playbook",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [
+      "comparison_or_split",
+      "closing"
+    ],
+    "page_count": 9,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "weekly"
+        ],
+        "pages": [
+          2
+        ]
+      },
+      "closing": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "comparison_or_split": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "content": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "cards",
+          "team",
+          "process"
+        ],
+        "pages": [
+          5,
+          7,
+          8
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "welcome"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "chart_bar",
+          "donut"
+        ],
+        "pages": [
+          4,
+          9
+        ]
+      },
+      "process_or_timeline": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "timeline"
+        ],
+        "pages": [
+          3
+        ]
+      },
+      "quote_or_emphasis": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "quote"
+        ],
+        "pages": [
+          6
+        ]
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "welcome",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "cover",
+        "source_class": "slide-welcome",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-welcome\" id=\"slide-2\">",
+            "selector_or_token": ".slide-welcome"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "weekly",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items",
+          "timeline"
+        ],
+        "role_group": "agenda",
+        "source_class": "slide-weekly",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-weekly\" id=\"slide-3\">",
+            "selector_or_token": ".slide-weekly"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "process_or_timeline",
+        "page_variant_id": "timeline",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items",
+          "timeline"
+        ],
+        "role_group": "process_or_timeline",
+        "source_class": "slide-timeline",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-timeline\" id=\"slide-4\">",
+            "selector_or_token": ".slide-timeline"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "data_dashboard",
+        "page_variant_id": "chart_bar",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide-chart-bar",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-chart-bar\" id=\"slide-5\">",
+            "selector_or_token": ".slide-chart-bar"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-4.png",
+          "sha256": "7b42341596e3a835f5c859e8009e5caffa8953a8608e6257fae82a99e29743dd",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-4.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "detail",
+        "page_variant_id": "cards",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items",
+          "quote"
+        ],
+        "role_group": "content",
+        "source_class": "slide-cards",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-cards\" id=\"slide-6\">",
+            "selector_or_token": ".slide-cards"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "quote_or_emphasis",
+        "page_variant_id": "quote",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "subtitle",
+          "quote"
+        ],
+        "role_group": "quote_or_emphasis",
+        "source_class": "slide-quote",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-quote\" id=\"slide-7\">",
+            "selector_or_token": ".slide-quote"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "detail",
+        "page_variant_id": "team",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "content",
+        "source_class": "slide-team",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-team\" id=\"slide-8\">",
+            "selector_or_token": ".slide-team"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "content",
+        "page_variant_id": "process",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "content",
+        "source_class": "slide-process",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-process\" id=\"slide-9\">",
+            "selector_or_token": ".slide-process"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-8.png",
+          "sha256": "b42224ecf6da8fa3c1a4e021a2c3092cef8f856c2a0ca00b4fbe95d2e52bbbd1",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-8.png"
+        },
+        "source_slide_index": 8
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 9,
+        "page_role": "data_dashboard",
+        "page_variant_id": "donut",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide-donut",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/daisy-days/template.html",
+            "raw_value": "<section class=\"slide slide-donut\" id=\"slide-10\">",
+            "selector_or_token": ".slide-donut"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png",
+          "sha256": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/daisy-days-1.png"
+        },
+        "source_slide_index": 9
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 9,
     "status": "missing"
   },
   "smoke_status": "missing",

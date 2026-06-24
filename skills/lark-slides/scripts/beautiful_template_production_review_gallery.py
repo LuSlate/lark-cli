@@ -17,7 +17,43 @@ REFERENCES_DIR = SCRIPT_DIR.parent / "references"
 SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 MATRIX_PATH = REFERENCES_DIR / "beautiful-template-executable-matrix.json"
 DEFAULT_OUTPUT_DIR = REFERENCES_DIR / "production-review" / "beautiful"
-GENERATOR_VERSION = "svglide-beautiful-production-review-gallery/v1"
+DEFAULT_RECEIPT_PATH = REFERENCES_DIR / "receipts" / "production-review" / "beautiful-34-gallery.json"
+GENERATOR_VERSION = "svglide-beautiful-production-review-gallery/v2"
+REVIEW_BATCH_ID = "beautiful-34"
+
+CORE_REVIEW_ROLES = [
+    "cover",
+    "agenda",
+    "content",
+    "data_or_structured",
+    "comparison_or_split",
+    "quote_or_emphasis",
+    "process_or_timeline",
+    "closing",
+]
+
+ROLE_GROUP_ALIASES = {
+    "cover": {"cover", "hero", "opening", "title"},
+    "agenda": {"agenda", "toc", "outline", "chapter", "section"},
+    "content": {"content", "body", "detail", "deep_dive", "case", "context", "overview", "evidence"},
+    "data_or_structured": {
+        "data",
+        "metric",
+        "metrics",
+        "dashboard",
+        "chart",
+        "table",
+        "grid",
+        "financial",
+        "statement",
+        "structured",
+        "stat",
+    },
+    "comparison_or_split": {"comparison", "compare", "split", "vs", "matrix"},
+    "quote_or_emphasis": {"quote", "emphasis", "callout", "manifesto", "statement"},
+    "process_or_timeline": {"process", "timeline", "roadmap", "steps", "flow", "plan"},
+    "closing": {"closing", "close", "summary", "takeaway", "colophon", "cta", "final"},
+}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -71,6 +107,12 @@ def relpath(path: Path | None, base: Path = REPO_ROOT) -> str | None:
         return path.as_posix()
 
 
+def file_uri(path: Path | None) -> str | None:
+    if path is None or not path.exists():
+        return None
+    return path.resolve().as_uri()
+
+
 def matrix_rows() -> list[dict[str, Any]]:
     payload = read_json(MATRIX_PATH)
     rows = payload.get("candidates")
@@ -106,44 +148,107 @@ def _visual_contract(row: dict[str, Any]) -> tuple[dict[str, Any], Path | None]:
     return read_json_optional(path), path
 
 
+def _role_group(page_role: object, variant_id: object) -> str | None:
+    raw_tokens = f"{page_role or ''} {variant_id or ''}".lower().replace("-", "_").replace("/", "_")
+    tokens = {token for token in raw_tokens.split("_") if token}
+    tokens.add(str(page_role or "").lower())
+    tokens.add(str(variant_id or "").lower())
+    if {"split", "compare", "comparison", "vs", "matrix"}.intersection(tokens):
+        return "comparison_or_split"
+    for group, aliases in ROLE_GROUP_ALIASES.items():
+        if aliases.intersection(tokens):
+            return group
+    return None
+
+
+def _variant_sort_key(item: dict[str, Any]) -> tuple[int, str]:
+    index = item.get("source_slide_index")
+    if isinstance(index, int):
+        return index, str(item.get("page_variant_id") or "")
+    return 10_000, str(item.get("page_variant_id") or "")
+
+
 def _variant_records(contract: dict[str, Any], row: dict[str, Any]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
     variants = contract.get("page_variants")
     if isinstance(variants, dict):
-        return [
-            {
-                "page_variant_id": str(variant_id),
-                "page_role": value.get("page_role") if isinstance(value, dict) else None,
-                "source_class": value.get("source_class") if isinstance(value, dict) else None,
-                "source_slide_index": value.get("source_slide_index") if isinstance(value, dict) else None,
-            }
-            for variant_id, value in sorted(variants.items())
-        ]
+        for variant_id, value in variants.items():
+            if not isinstance(value, dict):
+                continue
+            role = value.get("page_role")
+            records.append(
+                {
+                    "page_variant_id": str(variant_id),
+                    "page_role": role,
+                    "role_group": _role_group(role, variant_id),
+                    "source_class": value.get("source_class"),
+                    "source_slide_index": value.get("source_slide_index"),
+                    "required_slots": _as_list(value.get("required_slots")),
+                    "optional_slots": _as_list(value.get("optional_slots")),
+                    "source_refs": _as_list(value.get("source_refs")),
+                    "extraction_confidence": value.get("extraction_confidence"),
+                }
+            )
+        return sorted(records, key=_variant_sort_key)
+
     source_variants = row.get("source_page_variants")
     if isinstance(source_variants, list):
-        return [
-            {
-                "page_variant_id": str(item.get("variant_id") or item.get("page_variant_id") or item.get("source_class")),
-                "page_role": item.get("page_role"),
-                "source_class": item.get("source_class"),
-                "source_slide_index": item.get("source_slide_index"),
-            }
-            for item in source_variants
-            if isinstance(item, dict)
-        ]
+        for index, item in enumerate(source_variants, start=1):
+            if isinstance(item, dict):
+                variant_id = str(item.get("variant_id") or item.get("page_variant_id") or item.get("source_class") or f"page-{index}")
+                role = item.get("page_role")
+                records.append(
+                    {
+                        "page_variant_id": variant_id,
+                        "page_role": role,
+                        "role_group": _role_group(role, variant_id),
+                        "source_class": item.get("source_class"),
+                        "source_slide_index": item.get("source_slide_index") or index,
+                        "required_slots": _as_list(item.get("required_slots")),
+                        "optional_slots": _as_list(item.get("optional_slots")),
+                        "source_refs": _as_list(item.get("source_refs")),
+                        "extraction_confidence": item.get("extraction_confidence"),
+                    }
+                )
+            elif isinstance(item, str):
+                records.append(
+                    {
+                        "page_variant_id": item,
+                        "page_role": item,
+                        "role_group": _role_group(item, item),
+                        "source_class": None,
+                        "source_slide_index": index,
+                        "required_slots": [],
+                        "optional_slots": [],
+                        "source_refs": [],
+                        "extraction_confidence": "matrix_source_page_variants",
+                    }
+                )
+        return sorted(records, key=_variant_sort_key)
+
     page_type = contract.get("page_type")
     layout_variants = page_type.get("layout_variants") if isinstance(page_type, dict) else None
     if isinstance(layout_variants, list):
-        return [
-            {
-                "page_variant_id": str(item.get("variant_id") or item.get("source_class")),
-                "page_role": None,
-                "source_class": item.get("source_class"),
-                "source_slide_index": item.get("source_slide_index"),
-            }
-            for item in layout_variants
-            if isinstance(item, dict)
-        ]
-    return []
+        for index, item in enumerate(layout_variants, start=1):
+            if not isinstance(item, dict):
+                continue
+            variant_id = str(item.get("variant_id") or item.get("source_class") or f"page-{index}")
+            roles = _as_list(item.get("page_roles"))
+            role = roles[0] if roles else variant_id
+            records.append(
+                {
+                    "page_variant_id": variant_id,
+                    "page_role": role,
+                    "role_group": _role_group(role, variant_id),
+                    "source_class": item.get("source_class"),
+                    "source_slide_index": item.get("source_slide_index") or index,
+                    "required_slots": _as_list(item.get("required_slots")),
+                    "optional_slots": _as_list(item.get("optional_slots")),
+                    "source_refs": _as_list(item.get("source_refs")),
+                    "extraction_confidence": item.get("extraction_confidence"),
+                }
+            )
+    return sorted(records, key=_variant_sort_key)
 
 
 def _smoke_summary(row: dict[str, Any]) -> dict[str, Any]:
@@ -164,6 +269,9 @@ def _smoke_summary(row: dict[str, Any]) -> dict[str, Any]:
         "rendered_pages": receipt.get("rendered_pages"),
         "page_variant_coverage": receipt.get("page_variant_coverage") if isinstance(receipt.get("page_variant_coverage"), dict) else {},
         "missing_required_roles": _as_list(receipt.get("missing_required_roles")),
+        "implemented_page_variants": _as_list(receipt.get("implemented_page_variants")),
+        "covered_implemented_page_variants": _as_list(receipt.get("covered_implemented_page_variants")),
+        "missing_implemented_page_variants": _as_list(receipt.get("missing_implemented_page_variants")),
         "input_hashes": _as_dict(receipt.get("input_hashes")),
     }
 
@@ -190,12 +298,118 @@ def _promotion_gate_summary(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _known_blockers(row: dict[str, Any], smoke: dict[str, Any], variant_count: int) -> list[str]:
+def _source_screenshot_for_page(family_id: str, slide_index: object, fallback: object) -> dict[str, Any]:
+    path = None
+    if isinstance(slide_index, int):
+        candidate = SOURCE_ROOT / "screenshots" / f"{family_id}-{slide_index}.png"
+        if candidate.is_file():
+            path = candidate
+    if path is None:
+        path = resolve_path(fallback)
+    return {
+        "path": relpath(path),
+        "uri": file_uri(path),
+        "sha256": optional_sha256(path),
+    }
+
+
+def _page_render_evidence(row: dict[str, Any], variant_id: str, smoke: dict[str, Any]) -> dict[str, Any]:
+    variant_golden = row.get("page_variant_golden_specs")
+    golden_path = None
+    if isinstance(variant_golden, dict):
+        golden_path = resolve_path(variant_golden.get(variant_id))
+    smoke_status = str(smoke.get("status") or "missing")
+    if smoke_status == "passed":
+        status = "passed" if golden_path and golden_path.is_file() else "smoke_passed_without_variant_golden"
+    else:
+        status = "missing_smoke"
+    return {
+        "render_status": status,
+        "golden_spec": relpath(golden_path),
+        "golden_spec_sha256": optional_sha256(golden_path),
+        "smoke_receipt": smoke.get("receipt_path"),
+        "smoke_receipt_sha256": smoke.get("receipt_sha256"),
+    }
+
+
+def _coverage_from_pages(pages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    coverage: dict[str, dict[str, Any]] = {}
+    for role in CORE_REVIEW_ROLES:
+        matching = [page for page in pages if page.get("role_group") == role]
+        coverage[role] = {
+            "covered": bool(matching),
+            "page_variant_ids": [str(page.get("page_variant_id")) for page in matching],
+            "pages": [page.get("page") for page in matching],
+            "missing_reason": None if matching else "source_page_variant_not_extracted_for_role",
+        }
+    return coverage
+
+
+def _source_smoke_deck(row: dict[str, Any], variants: list[dict[str, Any]], smoke: dict[str, Any]) -> dict[str, Any]:
+    family_id = str(row.get("family_id") or "")
+    pages: list[dict[str, Any]] = []
+    for page_number, variant in enumerate(variants, start=1):
+        variant_id = str(variant.get("page_variant_id") or f"page-{page_number}")
+        evidence = _page_render_evidence(row, variant_id, smoke)
+        screenshot = _source_screenshot_for_page(family_id, variant.get("source_slide_index"), row.get("reference_screenshot"))
+        pages.append(
+            {
+                "page": page_number,
+                "page_variant_id": variant_id,
+                "page_role": variant.get("page_role"),
+                "role_group": variant.get("role_group"),
+                "source_class": variant.get("source_class"),
+                "source_slide_index": variant.get("source_slide_index"),
+                "required_slots": _as_list(variant.get("required_slots")),
+                "optional_slots": _as_list(variant.get("optional_slots")),
+                "source_refs": _as_list(variant.get("source_refs")),
+                "source_screenshot": screenshot,
+                "render_status": evidence["render_status"],
+                "render_evidence": evidence,
+            }
+        )
+    coverage = _coverage_from_pages(pages)
+    missing_roles = [role for role, value in coverage.items() if not value["covered"]]
+    return {
+        "artifact_kind": "smoke_deck_review_data",
+        "status": smoke.get("status") or "missing",
+        "source": "visual_contract.page_variants",
+        "source_page_count": len(variants),
+        "page_count": len(pages),
+        "pages": pages,
+        "page_variant_coverage": coverage,
+        "missing_roles": missing_roles,
+        "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    }
+
+
+def _auto_gate_status(row: dict[str, Any], smoke: dict[str, Any], fidelity: dict[str, Any], promotion_gate: dict[str, Any]) -> str:
+    if (
+        smoke.get("status") == "passed"
+        and fidelity.get("status") == "passed"
+        and promotion_gate.get("status") == "passed"
+        and bool(row.get("production_review_receipt"))
+    ):
+        return "passed"
+    return "blocked"
+
+
+def _known_blockers(
+    row: dict[str, Any],
+    smoke: dict[str, Any],
+    variant_count: int,
+    missing_roles: list[str],
+    auto_gate_status: str,
+) -> list[str]:
     blockers = [str(item) for item in _as_list(row.get("blocking_issues")) if str(item)]
     if variant_count <= 0:
         blockers.append("page_variants_missing")
     if smoke.get("status") != "passed":
-        blockers.append("page_family_smoke_missing_or_failed")
+        blockers.extend(["missing_smoke", "page_family_smoke_missing_or_failed"])
+    if missing_roles:
+        blockers.append("source_core_roles_missing")
+    if auto_gate_status != "passed":
+        blockers.append("auto_gate_blocked")
     if row.get("promotion_status") != "production":
         blockers.append("production_review_pending")
     return sorted(set(blockers))
@@ -207,12 +421,24 @@ def _family_review(row: dict[str, Any]) -> dict[str, Any]:
     smoke = _smoke_summary(row)
     fidelity = _fidelity_summary(row)
     promotion_gate = _promotion_gate_summary(row)
+    smoke_deck = _source_smoke_deck(row, variant_records, smoke)
+    coverage = smoke_deck["page_variant_coverage"]
+    missing_roles = smoke_deck["missing_roles"]
     implemented_variants = [str(item) for item in _as_list(row.get("implemented_page_variants")) if str(item)]
     family_id = str(row.get("family_id") or "")
     runtime_template_id = str(row.get("runtime_template_id") or row.get("template_id") or "")
-    blockers = _known_blockers(row, smoke, len(variant_records))
+    auto_gate_status = _auto_gate_status(row, smoke, fidelity, promotion_gate)
+    blockers = _known_blockers(row, smoke, len(variant_records), missing_roles, auto_gate_status)
+    contact_sheet_status = "passed" if smoke.get("status") == "passed" else "missing_smoke"
+    evidence_hashes = {
+        "visual_contract": optional_sha256(contract_path),
+        "reference_screenshot": optional_sha256(resolve_path(row.get("reference_screenshot"))),
+        "smoke_receipt": smoke.get("receipt_sha256"),
+        "fidelity_receipt": fidelity.get("receipt_sha256"),
+    }
     return {
-        "artifact_kind": "production_review_family_card",
+        "artifact_kind": "production_review_family_smoke_deck",
+        "not_promotion_receipt": True,
         "family_id": family_id,
         "runtime_template_id": runtime_template_id,
         "template_id": row.get("template_id"),
@@ -226,12 +452,27 @@ def _family_review(row: dict[str, Any]) -> dict[str, Any]:
         "page_variants": variant_records,
         "implemented_page_variants": implemented_variants,
         "implemented_page_variant_count": len(implemented_variants),
+        "pages": smoke_deck["pages"],
+        "smoke_deck": smoke_deck,
+        "page_variant_coverage": coverage,
+        "missing_roles": missing_roles,
         "smoke_status": smoke["status"],
         "smoke": smoke,
         "fidelity_status": fidelity["status"],
         "fidelity": fidelity,
         "page_family_promotion_gate_status": promotion_gate["status"],
         "page_family_promotion_gate": promotion_gate,
+        "auto_gate_status": auto_gate_status,
+        "human_review_status": "pending",
+        "allowed_human_status": ["pass", "needs_fix", "reject"],
+        "promotion_action": "no_change_until_human_pass",
+        "evidence_hashes": evidence_hashes,
+        "contact_sheet": {
+            "artifact_kind": "smoke_deck_contact_sheet_review_model",
+            "render_status": contact_sheet_status,
+            "html_path": f"families/{family_id}.html",
+            "sha256": None,
+        },
         "known_blockers": blockers,
         "review_decision": "pending_review",
         "review_claim_boundary": "gallery_input_only_not_promotion_receipt",
@@ -243,12 +484,16 @@ def build_gallery_manifest() -> dict[str, Any]:
     families = [_family_review(row) for row in rows]
     counts = matrix_status_counts()
     smoke_status_counts: dict[str, int] = {}
+    auto_gate_counts: dict[str, int] = {}
     for family in families:
-        status = str(family.get("smoke_status") or "missing")
-        smoke_status_counts[status] = smoke_status_counts.get(status, 0) + 1
+        smoke_status = str(family.get("smoke_status") or "missing")
+        smoke_status_counts[smoke_status] = smoke_status_counts.get(smoke_status, 0) + 1
+        auto_status = str(family.get("auto_gate_status") or "blocked")
+        auto_gate_counts[auto_status] = auto_gate_counts.get(auto_status, 0) + 1
     return {
         "schema_version": GENERATOR_VERSION,
         "artifact_kind": "production_review_gallery",
+        "review_batch_id": REVIEW_BATCH_ID,
         "not_promotion_receipt": True,
         "generated_by": "beautiful_template_production_review_gallery.py",
         "source_matrix": relpath(MATRIX_PATH),
@@ -256,19 +501,131 @@ def build_gallery_manifest() -> dict[str, Any]:
         "summary": {
             **counts,
             "smoke_status_counts": smoke_status_counts,
+            "auto_gate_status_counts": auto_gate_counts,
+            "auto_gate_passed_count": auto_gate_counts.get("passed", 0),
+            "auto_gate_blocked_count": auto_gate_counts.get("blocked", 0),
             "review_pending_count": len(families),
             "families_with_implemented_page_variants": sum(
                 1 for family in families if family["implemented_page_variant_count"] > 0
             ),
+            "family_contact_sheet_count": len(families),
         },
         "policy": {
             "gallery_is_review_input_only": True,
             "does_not_modify_matrix": True,
             "does_not_promote_family": True,
             "promotion_requires_separate_review_receipt": True,
+            "human_review_pass_does_not_promote_without_auto_gate": True,
+            "auto_gate_pass_without_human_pass_does_not_promote": True,
         },
         "families": families,
     }
+
+
+def build_gallery_receipt(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    manifest = manifest or build_gallery_manifest()
+    families = []
+    for family in manifest["families"]:
+        families.append(
+            {
+                "family_id": family["family_id"],
+                "runtime_template_id": family["runtime_template_id"],
+                "gallery_url": family["contact_sheet"]["html_path"],
+                "page_variant_coverage": [
+                    role for role, coverage in family["page_variant_coverage"].items() if coverage.get("covered")
+                ],
+                "missing_roles": family["missing_roles"],
+                "auto_gate_status": family["auto_gate_status"],
+                "human_review_status": family["human_review_status"],
+                "allowed_human_status": family["allowed_human_status"],
+                "promotion_action": family["promotion_action"],
+                "review_decision": family["review_decision"],
+                "known_blockers": family["known_blockers"],
+                "evidence_hashes": family["evidence_hashes"],
+            }
+        )
+    return {
+        "schema_version": GENERATOR_VERSION,
+        "artifact_kind": "production_review_gallery_receipt",
+        "review_batch_id": REVIEW_BATCH_ID,
+        "not_promotion_receipt": True,
+        "family_count": len(families),
+        "source_manifest_sha256": None,
+        "summary": manifest["summary"],
+        "policy": manifest["policy"],
+        "families": families,
+    }
+
+
+def _badge(value: object) -> str:
+    text = html.escape(str(value))
+    css = "ok" if str(value) == "passed" else "warn" if str(value) in {"pending", "pending_review"} else "bad"
+    return f'<span class="badge {css}">{text}</span>'
+
+
+def _render_family_html(family: dict[str, Any]) -> str:
+    pages = []
+    for page in family["pages"]:
+        screenshot = page.get("source_screenshot") if isinstance(page.get("source_screenshot"), dict) else {}
+        img = ""
+        if screenshot.get("uri"):
+            img = f'<img src="{html.escape(str(screenshot["uri"]))}" alt="{html.escape(str(page["page_variant_id"]))}" />'
+        pages.append(
+            "<section class=\"page\">"
+            f"<div class=\"thumb\">{img}</div>"
+            f"<h2>{html.escape(str(page['page']))}. {html.escape(str(page['page_variant_id']))}</h2>"
+            f"<p>{html.escape(str(page.get('page_role') or 'unknown'))} / {html.escape(str(page.get('role_group') or 'unmapped'))}</p>"
+            f"<p>{_badge(page.get('render_status'))}</p>"
+            f"<p><code>{html.escape(str(page.get('source_class') or ''))}</code></p>"
+            "</section>"
+        )
+    blockers = ", ".join(family["known_blockers"]) or "none"
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>{html.escape(family['family_id'])} - SVGlide Production Review</title>
+  <style>
+    body {{ margin: 28px; background: #f6f7f9; color: #172033; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+    a {{ color: #1d4ed8; }}
+    header {{ max-width: 1200px; margin-bottom: 20px; }}
+    h1 {{ margin: 0 0 8px; font-size: 28px; }}
+    .warning {{ padding: 10px 12px; border: 1px solid #d9b51d; background: #fff8d6; border-radius: 8px; }}
+    .meta {{ display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 10px; margin: 16px 0; }}
+    .metric {{ background: #fff; border: 1px solid #dfe5ee; border-radius: 8px; padding: 10px; }}
+    .metric strong {{ display: block; font-size: 20px; }}
+    .deck {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }}
+    .page {{ background: #fff; border: 1px solid #dfe5ee; border-radius: 8px; padding: 10px; }}
+    .thumb {{ background: #eef2f7; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 6px; border: 1px solid #d8dee9; }}
+    .thumb img {{ width: 100%; height: 100%; object-fit: contain; }}
+    h2 {{ margin: 10px 0 4px; font-size: 15px; }}
+    p {{ margin: 5px 0; font-size: 12px; color: #536071; }}
+    code {{ word-break: break-all; font-size: 11px; }}
+    .badge {{ display: inline-block; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 700; }}
+    .ok {{ color: #065f46; background: #d1fae5; }}
+    .warn {{ color: #92400e; background: #fef3c7; }}
+    .bad {{ color: #991b1b; background: #fee2e2; }}
+  </style>
+</head>
+<body>
+  <header>
+    <p><a href="../index.html">Back to gallery</a></p>
+    <h1>{html.escape(family['family_id'])}</h1>
+    <div class="warning">Review input only. This contact sheet is not a production promotion receipt.</div>
+    <div class="meta">
+      <div class="metric"><strong>{html.escape(str(family['page_variant_count']))}</strong>source pages</div>
+      <div class="metric"><strong>{html.escape(str(family['auto_gate_status']))}</strong>auto gate</div>
+      <div class="metric"><strong>{html.escape(str(family['smoke_status']))}</strong>smoke</div>
+      <div class="metric"><strong>{html.escape(str(family['fidelity_status']))}</strong>fidelity</div>
+    </div>
+    <p><strong>Known blockers:</strong> {html.escape(blockers)}</p>
+  </header>
+  <main class="deck">
+    {"".join(pages)}
+  </main>
+</body>
+</html>
+"""
 
 
 def _render_html(manifest: dict[str, Any]) -> str:
@@ -276,14 +633,15 @@ def _render_html(manifest: dict[str, Any]) -> str:
     rows = []
     for family in manifest["families"]:
         blocker_text = ", ".join(family["known_blockers"]) or "none"
+        contact = family["contact_sheet"]["html_path"]
         rows.append(
             "<tr>"
-            f"<td><strong>{html.escape(family['family_id'])}</strong><br><small>{html.escape(family['runtime_template_id'])}</small></td>"
+            f"<td><strong><a href=\"{html.escape(contact)}\">{html.escape(family['family_id'])}</a></strong><br><small>{html.escape(family['runtime_template_id'])}</small></td>"
             f"<td>{html.escape(str(family['promotion_status']))}<br><small>default={html.escape(str(family['default_selectable']).lower())}</small></td>"
             f"<td>{family['page_variant_count']} source<br><small>{family['implemented_page_variant_count']} implemented</small></td>"
-            f"<td>{html.escape(str(family['smoke_status']))}<br><small>{html.escape(str(family['smoke'].get('rendered_pages') or ''))} pages</small></td>"
+            f"<td>{_badge(family['auto_gate_status'])}<br><small>human={html.escape(str(family['human_review_status']))}</small></td>"
+            f"<td>{html.escape(str(family['smoke_status']))}<br><small>{html.escape(str(family['smoke'].get('rendered_pages') or ''))} rendered</small></td>"
             f"<td>{html.escape(str(family['fidelity_status']))}</td>"
-            f"<td>{html.escape(str(family['page_family_promotion_gate_status']))}</td>"
             f"<td>{html.escape(blocker_text)}</td>"
             f"<td><code>{html.escape(str(family['visual_contract_path']))}</code><br><code>{html.escape(str(family['reference_screenshot']))}</code></td>"
             "</tr>"
@@ -297,6 +655,7 @@ def _render_html(manifest: dict[str, Any]) -> str:
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #172033; background: #f7f8fb; }
     header { max-width: 1180px; margin-bottom: 24px; }
     h1 { margin: 0 0 8px; font-size: 28px; }
+    a { color: #1d4ed8; text-decoration: none; }
     .warning { background: #fff6d6; border: 1px solid #e7c95b; padding: 12px 14px; border-radius: 8px; }
     .summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
     .metric { background: #fff; border: 1px solid #dbe1ea; border-radius: 8px; padding: 10px 12px; min-width: 150px; }
@@ -306,6 +665,10 @@ def _render_html(manifest: dict[str, Any]) -> str:
     th { background: #eef2f7; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
     code { font-size: 11px; color: #4a5870; word-break: break-all; }
     small { color: #65728a; }
+    .badge { display: inline-block; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+    .ok { color: #065f46; background: #d1fae5; }
+    .warn { color: #92400e; background: #fef3c7; }
+    .bad { color: #991b1b; background: #fee2e2; }
   </style>
 </head>
 <body>
@@ -315,7 +678,7 @@ def _render_html(manifest: dict[str, Any]) -> str:
     <div class="summary">
       <div class="metric"><strong>%(candidate_count)s</strong>candidates</div>
       <div class="metric"><strong>%(production_default)s</strong>production + default</div>
-      <div class="metric"><strong>%(default_count)s</strong>default selectable</div>
+      <div class="metric"><strong>%(auto_passed)s</strong>auto gate passed</div>
       <div class="metric"><strong>%(smoke_counts)s</strong>smoke status counts</div>
     </div>
   </header>
@@ -325,9 +688,9 @@ def _render_html(manifest: dict[str, Any]) -> str:
         <th>Family</th>
         <th>Status</th>
         <th>Variants</th>
+        <th>Review Gate</th>
         <th>Smoke</th>
         <th>Fidelity</th>
-        <th>Gate</th>
         <th>Known Blockers</th>
         <th>Evidence</th>
       </tr>
@@ -341,18 +704,23 @@ def _render_html(manifest: dict[str, Any]) -> str:
 """ % {
         "candidate_count": html.escape(str(summary["candidate_count"])),
         "production_default": html.escape(str(summary["production_default_selectable_count"])),
-        "default_count": html.escape(str(summary["default_selectable_count"])),
+        "auto_passed": html.escape(str(summary["auto_gate_passed_count"])),
         "smoke_counts": html.escape(json.dumps(summary["smoke_status_counts"], sort_keys=True)),
         "rows": "\n".join(rows),
     }
 
 
-def write_gallery_artifacts(output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict[str, Any]:
+def write_gallery_artifacts(output_dir: Path = DEFAULT_OUTPUT_DIR, receipt_path: Path = DEFAULT_RECEIPT_PATH) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     families_dir = output_dir / "families"
     families_dir.mkdir(parents=True, exist_ok=True)
     manifest = build_gallery_manifest()
     for family in manifest["families"]:
+        family_html_path = families_dir / f"{family['family_id']}.html"
+        family_html_path.write_text(_render_family_html(family), encoding="utf-8")
+        family["contact_sheet"]["html_path"] = relpath(family_html_path, output_dir)
+        family["contact_sheet"]["sha256"] = file_sha256(family_html_path)
+        family["evidence_hashes"]["contact_sheet"] = family["contact_sheet"]["sha256"]
         family_path = families_dir / f"{family['family_id']}.json"
         family["review_artifact_path"] = relpath(family_path, output_dir)
         family_path.write_text(json.dumps(family, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -360,26 +728,38 @@ def write_gallery_artifacts(output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict[str, 
     html_path = output_dir / "index.html"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     html_path.write_text(_render_html(manifest), encoding="utf-8")
+    receipt = build_gallery_receipt(manifest)
+    receipt["source_manifest_sha256"] = file_sha256(manifest_path)
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {
         "manifest_path": str(manifest_path),
         "html_path": str(html_path),
+        "receipt_path": str(receipt_path),
         "candidate_count": manifest["summary"]["candidate_count"],
         "production_default_selectable_count": manifest["summary"]["production_default_selectable_count"],
         "default_selectable_count": manifest["summary"]["default_selectable_count"],
+        "auto_gate_passed_count": manifest["summary"]["auto_gate_passed_count"],
     }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
+    parser.add_argument("--receipt-path", default=str(DEFAULT_RECEIPT_PATH))
     parser.add_argument("--stdout", action="store_true", help="print manifest only and do not write artifacts")
+    parser.add_argument("--receipt-stdout", action="store_true", help="print gallery receipt only and do not write artifacts")
     parser.add_argument("--pretty", action="store_true")
     args = parser.parse_args()
     if args.stdout:
         manifest = build_gallery_manifest()
         print(json.dumps(manifest, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))
         return 0
-    result = write_gallery_artifacts(Path(args.output_dir))
+    if args.receipt_stdout:
+        receipt = build_gallery_receipt()
+        print(json.dumps(receipt, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))
+        return 0
+    result = write_gallery_artifacts(Path(args.output_dir), Path(args.receipt_path))
     print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))
     return 0
 

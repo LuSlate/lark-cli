@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/retro-windows.html",
+    "render_status": "missing_smoke",
+    "sha256": "847e69a200f8f595339c4816826ed87853faf0a4fc468a6b0672f6f2946cf8a3"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "847e69a200f8f595339c4816826ed87853faf0a4fc468a6b0672f6f2946cf8a3",
+    "fidelity_receipt": "d9f718418fe0cba65d03c26230b5655764011c1197b9b52cb3ab15b0787cd8b6",
+    "reference_screenshot": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+    "smoke_receipt": null,
+    "visual_contract": "0e791a06d076a86dc292b0ead47827882a4a8698b169d2d8e4424ef220afec0c"
+  },
   "family_id": "retro-windows",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/retro-windows.retro-ui-dashboard.json",
@@ -10,14 +29,24 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
-    "selector_gate_missing"
+    "selector_gate_missing",
+    "source_core_roles_missing"
   ],
+  "missing_roles": [
+    "content",
+    "comparison_or_split",
+    "quote_or_emphasis"
+  ],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,68 +54,713 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 10,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "slide-2"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "slide-10"
+      ],
+      "pages": [
+        10
+      ]
+    },
+    "comparison_or_split": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "content": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "slide-1"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "slide-3",
+        "slide-4",
+        "slide-5",
+        "slide-6",
+        "slide-7",
+        "slide-8"
+      ],
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "process_or_timeline": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "slide-9"
+      ],
+      "pages": [
+        9
+      ]
+    },
+    "quote_or_emphasis": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    }
+  },
   "page_variants": [
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "cover",
       "page_variant_id": "slide-1",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "cover",
       "source_class": "data-slide-1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide active\" id=\"slide-0\">",
+          "selector_or_token": ".data-slide-1"
+        }
+      ],
       "source_slide_index": 1
     },
     {
-      "page_role": "closing",
-      "page_variant_id": "slide-10",
-      "source_class": "data-slide-10",
-      "source_slide_index": 10
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "agenda",
       "page_variant_id": "slide-2",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "agenda",
       "source_class": "data-slide-2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-1\">",
+          "selector_or_token": ".data-slide-2"
+        }
+      ],
       "source_slide_index": 2
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "slide-3",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "data-slide-3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-2\">",
+          "selector_or_token": ".data-slide-3"
+        }
+      ],
       "source_slide_index": 3
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "slide-4",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "data-slide-4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-3\">",
+          "selector_or_token": ".data-slide-4"
+        }
+      ],
       "source_slide_index": 4
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "slide-5",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "data-slide-5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-4\">",
+          "selector_or_token": ".data-slide-5"
+        }
+      ],
       "source_slide_index": 5
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "slide-6",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "data-slide-6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-5\">",
+          "selector_or_token": ".data-slide-6"
+        }
+      ],
       "source_slide_index": 6
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "slide-7",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "data-slide-7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-6\">",
+          "selector_or_token": ".data-slide-7"
+        }
+      ],
       "source_slide_index": 7
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "slide-8",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "data-slide-8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-7\">",
+          "selector_or_token": ".data-slide-8"
+        }
+      ],
       "source_slide_index": 8
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "process_or_timeline",
       "page_variant_id": "slide-9",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
       "source_class": "data-slide-9",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-8\">",
+          "selector_or_token": ".data-slide-9"
+        }
+      ],
       "source_slide_index": 9
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "slide-10",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "closing",
+      "source_class": "data-slide-10",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-9\">",
+          "selector_or_token": ".data-slide-10"
+        }
+      ],
+      "source_slide_index": 10
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "slide-1",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "cover",
+      "source_class": "data-slide-1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide active\" id=\"slide-0\">",
+          "selector_or_token": ".data-slide-1"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "slide-2",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "agenda",
+      "source_class": "data-slide-2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-1\">",
+          "selector_or_token": ".data-slide-2"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "data_dashboard",
+      "page_variant_id": "slide-3",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "data-slide-3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-2\">",
+          "selector_or_token": ".data-slide-3"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "data_dashboard",
+      "page_variant_id": "slide-4",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "data-slide-4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-3\">",
+          "selector_or_token": ".data-slide-4"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-4.png",
+        "sha256": "8ac9cdb2394f13d18dc19d1ec0547b7793f48750be68f16b4c670ad9d2906e44",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-4.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "data_dashboard",
+      "page_variant_id": "slide-5",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "data-slide-5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-4\">",
+          "selector_or_token": ".data-slide-5"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "data_dashboard",
+      "page_variant_id": "slide-6",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "data-slide-6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-5\">",
+          "selector_or_token": ".data-slide-6"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "data_dashboard",
+      "page_variant_id": "slide-7",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "data-slide-7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-6\">",
+          "selector_or_token": ".data-slide-7"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "data_dashboard",
+      "page_variant_id": "slide-8",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "data-slide-8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-7\">",
+          "selector_or_token": ".data-slide-8"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-8.png",
+        "sha256": "a5309fcbbe367627280eabad6f3ee6585d1a1a4be9a460115cbc304a4c6b1b9e",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-8.png"
+      },
+      "source_slide_index": 8
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 9,
+      "page_role": "process_or_timeline",
+      "page_variant_id": "slide-9",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
+      "source_class": "data-slide-9",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-8\">",
+          "selector_or_token": ".data-slide-9"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 9
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 10,
+      "page_role": "closing",
+      "page_variant_id": "slide-10",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "closing",
+      "source_class": "data-slide-10",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/retro-windows/template.html",
+          "raw_value": "<div class=\"slide\" id=\"slide-9\">",
+          "selector_or_token": ".data-slide-10"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+        "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+      },
+      "source_slide_index": 10
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/retro-windows-1.png",
   "reference_screenshot_sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
@@ -96,15 +770,489 @@
   "runtime_template_id": "retro-ui-dashboard",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [
+      "content",
+      "comparison_or_split",
+      "quote_or_emphasis"
+    ],
+    "page_count": 10,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "slide-2"
+        ],
+        "pages": [
+          2
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "slide-10"
+        ],
+        "pages": [
+          10
+        ]
+      },
+      "comparison_or_split": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "content": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "slide-1"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "slide-3",
+          "slide-4",
+          "slide-5",
+          "slide-6",
+          "slide-7",
+          "slide-8"
+        ],
+        "pages": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "process_or_timeline": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "slide-9"
+        ],
+        "pages": [
+          9
+        ]
+      },
+      "quote_or_emphasis": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "slide-1",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "cover",
+        "source_class": "data-slide-1",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide active\" id=\"slide-0\">",
+            "selector_or_token": ".data-slide-1"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "slide-2",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "agenda",
+        "source_class": "data-slide-2",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-1\">",
+            "selector_or_token": ".data-slide-2"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "data_dashboard",
+        "page_variant_id": "slide-3",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "data-slide-3",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-2\">",
+            "selector_or_token": ".data-slide-3"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "data_dashboard",
+        "page_variant_id": "slide-4",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "data-slide-4",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-3\">",
+            "selector_or_token": ".data-slide-4"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-4.png",
+          "sha256": "8ac9cdb2394f13d18dc19d1ec0547b7793f48750be68f16b4c670ad9d2906e44",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-4.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "data_dashboard",
+        "page_variant_id": "slide-5",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "data-slide-5",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-4\">",
+            "selector_or_token": ".data-slide-5"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "data_dashboard",
+        "page_variant_id": "slide-6",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "data-slide-6",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-5\">",
+            "selector_or_token": ".data-slide-6"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "data_dashboard",
+        "page_variant_id": "slide-7",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "data-slide-7",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-6\">",
+            "selector_or_token": ".data-slide-7"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "data_dashboard",
+        "page_variant_id": "slide-8",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items",
+          "timeline"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "data-slide-8",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-7\">",
+            "selector_or_token": ".data-slide-8"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-8.png",
+          "sha256": "a5309fcbbe367627280eabad6f3ee6585d1a1a4be9a460115cbc304a4c6b1b9e",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-8.png"
+        },
+        "source_slide_index": 8
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 9,
+        "page_role": "process_or_timeline",
+        "page_variant_id": "slide-9",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items",
+          "timeline"
+        ],
+        "role_group": "process_or_timeline",
+        "source_class": "data-slide-9",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-8\">",
+            "selector_or_token": ".data-slide-9"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 9
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 10,
+        "page_role": "closing",
+        "page_variant_id": "slide-10",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "closing",
+        "source_class": "data-slide-10",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/retro-windows/template.html",
+            "raw_value": "<div class=\"slide\" id=\"slide-9\">",
+            "selector_or_token": ".data-slide-10"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png",
+          "sha256": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-windows-1.png"
+        },
+        "source_slide_index": 10
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 10,
     "status": "missing"
   },
   "smoke_status": "missing",

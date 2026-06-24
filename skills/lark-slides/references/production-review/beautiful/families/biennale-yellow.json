@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/biennale-yellow.html",
+    "render_status": "missing_smoke",
+    "sha256": "d0b40a3bfc2420a4c9c8b4c9baaf3cdf08c204a8e504d0917f1458a9b90e01e8"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "d0b40a3bfc2420a4c9c8b4c9baaf3cdf08c204a8e504d0917f1458a9b90e01e8",
+    "fidelity_receipt": "27b20213513d6a895ae84c07aea6d784f5acd5a5fcd4b5a6baf0d1868f4a7dfe",
+    "reference_screenshot": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+    "smoke_receipt": null,
+    "visual_contract": "8f04a650927de6641fd356ec3d2107b1421cf9f6579e7af8f7e447b36f99c82b"
+  },
   "family_id": "biennale-yellow",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/biennale-yellow.biennale-programme-poster.json",
@@ -10,14 +29,23 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
-    "selector_gate_missing"
+    "selector_gate_missing",
+    "source_core_roles_missing"
   ],
+  "missing_roles": [
+    "comparison_or_split",
+    "process_or_timeline"
+  ],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,56 +53,555 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 8,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "manifesto",
+        "chapter"
+      ],
+      "pages": [
+        2,
+        4
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "colophon"
+      ],
+      "pages": [
+        8
+      ]
+    },
+    "comparison_or_split": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "content": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "programme"
+      ],
+      "pages": [
+        3
+      ]
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "cover"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "data",
+        "cal"
+      ],
+      "pages": [
+        5,
+        7
+      ]
+    },
+    "process_or_timeline": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "quote_or_emphasis": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "quote"
+      ],
+      "pages": [
+        6
+      ]
+    }
+  },
   "page_variants": [
     {
-      "page_role": "data_dashboard",
-      "page_variant_id": "cal",
-      "source_class": "s-cal",
-      "source_slide_index": 7
-    },
-    {
-      "page_role": "closing",
-      "page_variant_id": "chapter",
-      "source_class": "s-chapter",
-      "source_slide_index": 4
-    },
-    {
-      "page_role": "closing",
-      "page_variant_id": "colophon",
-      "source_class": "s-colophon",
-      "source_slide_index": 8
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "cover",
       "page_variant_id": "cover",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "cover",
       "source_class": "s-cover",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-cover active\">",
+          "selector_or_token": ".s-cover"
+        }
+      ],
       "source_slide_index": 1
     },
     {
-      "page_role": "data_dashboard",
-      "page_variant_id": "data",
-      "source_class": "s-data",
-      "source_slide_index": 5
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "agenda",
       "page_variant_id": "manifesto",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "agenda",
       "source_class": "s-manifesto",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-manifesto\">",
+          "selector_or_token": ".s-manifesto"
+        }
+      ],
       "source_slide_index": 2
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "content",
       "page_variant_id": "programme",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "content",
       "source_class": "s-programme",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-programme\">",
+          "selector_or_token": ".s-programme"
+        }
+      ],
       "source_slide_index": 3
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "chapter",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "agenda",
+      "source_class": "s-chapter",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-chapter\">",
+          "selector_or_token": ".s-chapter"
+        }
+      ],
+      "source_slide_index": 4
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "data",
+      "required_slots": [
+        "metrics",
+        "quote"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s-data",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-data\">",
+          "selector_or_token": ".s-data"
+        }
+      ],
+      "source_slide_index": 5
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "quote_or_emphasis",
       "page_variant_id": "quote",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
       "source_class": "s-quote",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-quote\">",
+          "selector_or_token": ".s-quote"
+        }
+      ],
       "source_slide_index": 6
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "cal",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s-cal",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-cal\">",
+          "selector_or_token": ".s-cal"
+        }
+      ],
+      "source_slide_index": 7
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "colophon",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "closing",
+      "source_class": "s-colophon",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-colophon\">",
+          "selector_or_token": ".s-colophon"
+        }
+      ],
+      "source_slide_index": 8
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "cover",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "cover",
+      "source_class": "s-cover",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-cover active\">",
+          "selector_or_token": ".s-cover"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "manifesto",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "agenda",
+      "source_class": "s-manifesto",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-manifesto\">",
+          "selector_or_token": ".s-manifesto"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "content",
+      "page_variant_id": "programme",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "content",
+      "source_class": "s-programme",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-programme\">",
+          "selector_or_token": ".s-programme"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "closing",
+      "page_variant_id": "chapter",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "agenda",
+      "source_class": "s-chapter",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-chapter\">",
+          "selector_or_token": ".s-chapter"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "data_dashboard",
+      "page_variant_id": "data",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "metrics",
+        "quote"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s-data",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-data\">",
+          "selector_or_token": ".s-data"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png",
+        "sha256": "af3134e5fdf9341f688074e9ef84e0f5904bde831c28cc1624e5c03aa4a9dd77",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
+      "source_class": "s-quote",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-quote\">",
+          "selector_or_token": ".s-quote"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "data_dashboard",
+      "page_variant_id": "cal",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "s-cal",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-cal\">",
+          "selector_or_token": ".s-cal"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "closing",
+      "page_variant_id": "colophon",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "closing",
+      "source_class": "s-colophon",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+          "raw_value": "<section class=\"slide s-colophon\">",
+          "selector_or_token": ".s-colophon"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png",
+        "sha256": "311ddec24da62fb5626d68e9befbb08d4c48c8a042983a92c7638987ae6b39a0",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png"
+      },
+      "source_slide_index": 8
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/biennale-yellow-1.png",
   "reference_screenshot_sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
@@ -84,15 +611,395 @@
   "runtime_template_id": "biennale-programme-poster",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [
+      "comparison_or_split",
+      "process_or_timeline"
+    ],
+    "page_count": 8,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "manifesto",
+          "chapter"
+        ],
+        "pages": [
+          2,
+          4
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "colophon"
+        ],
+        "pages": [
+          8
+        ]
+      },
+      "comparison_or_split": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "content": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "programme"
+        ],
+        "pages": [
+          3
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "cover"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "data",
+          "cal"
+        ],
+        "pages": [
+          5,
+          7
+        ]
+      },
+      "process_or_timeline": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "quote_or_emphasis": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "quote"
+        ],
+        "pages": [
+          6
+        ]
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "cover",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title"
+        ],
+        "role_group": "cover",
+        "source_class": "s-cover",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-cover active\">",
+            "selector_or_token": ".s-cover"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "manifesto",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "subtitle",
+          "quote"
+        ],
+        "role_group": "agenda",
+        "source_class": "s-manifesto",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-manifesto\">",
+            "selector_or_token": ".s-manifesto"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "content",
+        "page_variant_id": "programme",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "content",
+        "source_class": "s-programme",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-programme\">",
+            "selector_or_token": ".s-programme"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "closing",
+        "page_variant_id": "chapter",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "agenda",
+        "source_class": "s-chapter",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-chapter\">",
+            "selector_or_token": ".s-chapter"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "data_dashboard",
+        "page_variant_id": "data",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "metrics",
+          "quote"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "s-data",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-data\">",
+            "selector_or_token": ".s-data"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png",
+          "sha256": "af3134e5fdf9341f688074e9ef84e0f5904bde831c28cc1624e5c03aa4a9dd77",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "quote_or_emphasis",
+        "page_variant_id": "quote",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "subtitle",
+          "quote"
+        ],
+        "role_group": "quote_or_emphasis",
+        "source_class": "s-quote",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-quote\">",
+            "selector_or_token": ".s-quote"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "data_dashboard",
+        "page_variant_id": "cal",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "s-cal",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-cal\">",
+            "selector_or_token": ".s-cal"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "closing",
+        "page_variant_id": "colophon",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title"
+        ],
+        "role_group": "closing",
+        "source_class": "s-colophon",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/biennale-yellow/template.html",
+            "raw_value": "<section class=\"slide s-colophon\">",
+            "selector_or_token": ".s-colophon"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png",
+          "sha256": "311ddec24da62fb5626d68e9befbb08d4c48c8a042983a92c7638987ae6b39a0",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png"
+        },
+        "source_slide_index": 8
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 8,
     "status": "missing"
   },
   "smoke_status": "missing",

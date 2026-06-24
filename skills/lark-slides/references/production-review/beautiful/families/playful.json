@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/playful.html",
+    "render_status": "missing_smoke",
+    "sha256": "8c06c02b5802f957b497d1332e8cb0ab3d3a2c1825f551c946d00c38244aadad"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "8c06c02b5802f957b497d1332e8cb0ab3d3a2c1825f551c946d00c38244aadad",
+    "fidelity_receipt": "e828f367dda5704dca8c804fb833051e8e3888202e9b76169082ac50164873d8",
+    "reference_screenshot": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+    "smoke_receipt": null,
+    "visual_contract": "b16366831a2ff2e7df7e443765c1921e043d096145d73f08073110cb8897791b"
+  },
   "family_id": "playful",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/playful.playful-indie-launch.json",
@@ -10,14 +29,23 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
-    "selector_gate_missing"
+    "selector_gate_missing",
+    "source_core_roles_missing"
   ],
+  "missing_roles": [
+    "comparison_or_split",
+    "quote_or_emphasis"
+  ],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,68 +53,697 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 10,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "agenda"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "closing"
+      ],
+      "pages": [
+        10
+      ]
+    },
+    "comparison_or_split": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    },
+    "content": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "detail",
+        "slide-9"
+      ],
+      "pages": [
+        5,
+        9
+      ]
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "cover"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "data_dashboard",
+        "data_dashboard-4",
+        "data_dashboard-6",
+        "data_dashboard-8"
+      ],
+      "pages": [
+        3,
+        4,
+        6,
+        8
+      ]
+    },
+    "process_or_timeline": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "process_or_timeline"
+      ],
+      "pages": [
+        7
+      ]
+    },
+    "quote_or_emphasis": {
+      "covered": false,
+      "missing_reason": "source_page_variant_not_extracted_for_role",
+      "page_variant_ids": [],
+      "pages": []
+    }
+  },
   "page_variants": [
     {
-      "page_role": "agenda",
-      "page_variant_id": "agenda",
-      "source_class": "slide-2",
-      "source_slide_index": 2
-    },
-    {
-      "page_role": "closing",
-      "page_variant_id": "closing",
-      "source_class": "slide-10",
-      "source_slide_index": 10
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "cover",
       "page_variant_id": "cover",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "cover",
       "source_class": "slide-1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-1 active\" data-index=\"0\">",
+          "selector_or_token": ".slide-1"
+        }
+      ],
       "source_slide_index": 1
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "agenda",
+      "page_variant_id": "agenda",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "timeline"
+      ],
+      "role_group": "agenda",
+      "source_class": "slide-2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-2\" data-index=\"1\">",
+          "selector_or_token": ".slide-2"
+        }
+      ],
+      "source_slide_index": 2
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "data_dashboard",
+      "required_slots": [
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "slide-3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-3\" data-index=\"2\">",
+          "selector_or_token": ".slide-3"
+        }
+      ],
       "source_slide_index": 3
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "data_dashboard-4",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "slide-4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-4\" data-index=\"3\">",
+          "selector_or_token": ".slide-4"
+        }
+      ],
       "source_slide_index": 4
     },
     {
-      "page_role": "data_dashboard",
-      "page_variant_id": "data_dashboard-6",
-      "source_class": "slide-6",
-      "source_slide_index": 6
-    },
-    {
-      "page_role": "data_dashboard",
-      "page_variant_id": "data_dashboard-8",
-      "source_class": "slide-8",
-      "source_slide_index": 8
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "detail",
       "page_variant_id": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "content",
       "source_class": "slide-5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-5\" data-index=\"4\">",
+          "selector_or_token": ".slide-5"
+        }
+      ],
       "source_slide_index": 5
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "data_dashboard-6",
+      "required_slots": [
+        "title",
+        "metrics",
+        "timeline"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-6\" data-index=\"5\">",
+          "selector_or_token": ".slide-6"
+        }
+      ],
+      "source_slide_index": 6
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "process_or_timeline",
       "page_variant_id": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
       "source_class": "slide-7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-7\" data-index=\"6\">",
+          "selector_or_token": ".slide-7"
+        }
+      ],
       "source_slide_index": 7
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "data_dashboard-8",
+      "required_slots": [
+        "title",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-8\" data-index=\"7\">",
+          "selector_or_token": ".slide-8"
+        }
+      ],
+      "source_slide_index": 8
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "content",
       "page_variant_id": "slide-9",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "role_group": "content",
       "source_class": "slide-9",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-9\" data-index=\"8\">",
+          "selector_or_token": ".slide-9"
+        }
+      ],
       "source_slide_index": 9
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "closing",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "closing",
+      "source_class": "slide-10",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-10\" data-index=\"9\">",
+          "selector_or_token": ".slide-10"
+        }
+      ],
+      "source_slide_index": 10
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "cover",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "cover",
+      "source_class": "slide-1",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-1 active\" data-index=\"0\">",
+          "selector_or_token": ".slide-1"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "agenda",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "timeline"
+      ],
+      "role_group": "agenda",
+      "source_class": "slide-2",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-2\" data-index=\"1\">",
+          "selector_or_token": ".slide-2"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "data_dashboard",
+      "page_variant_id": "data_dashboard",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-3",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-3\" data-index=\"2\">",
+          "selector_or_token": ".slide-3"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "data_dashboard",
+      "page_variant_id": "data_dashboard-4",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-4",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-4\" data-index=\"3\">",
+          "selector_or_token": ".slide-4"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "detail",
+      "page_variant_id": "detail",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "content",
+      "source_class": "slide-5",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-5\" data-index=\"4\">",
+          "selector_or_token": ".slide-5"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "data_dashboard",
+      "page_variant_id": "data_dashboard-6",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics",
+        "timeline"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-6",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-6\" data-index=\"5\">",
+          "selector_or_token": ".slide-6"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png",
+        "sha256": "b4c66f765e8b741bbe4262dd4854b48ab501981ec2b528a0ddc6a5c35742818b",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "process_or_timeline",
+      "page_variant_id": "process_or_timeline",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
+      "source_class": "slide-7",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-7\" data-index=\"6\">",
+          "selector_or_token": ".slide-7"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "data_dashboard",
+      "page_variant_id": "data_dashboard-8",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide-8",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-8\" data-index=\"7\">",
+          "selector_or_token": ".slide-8"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png",
+        "sha256": "98ea41ea3c16781085dd5e3824c31bc398fadc4063a72d8cdf23dab8d26b22e3",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png"
+      },
+      "source_slide_index": 8
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 9,
+      "page_role": "content",
+      "page_variant_id": "slide-9",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "role_group": "content",
+      "source_class": "slide-9",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-9\" data-index=\"8\">",
+          "selector_or_token": ".slide-9"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 9
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 10,
+      "page_role": "closing",
+      "page_variant_id": "closing",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "closing",
+      "source_class": "slide-10",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/playful/template.html",
+          "raw_value": "<div class=\"slide slide-10\" data-index=\"9\">",
+          "selector_or_token": ".slide-10"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+      },
+      "source_slide_index": 10
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/playful-1.png",
   "reference_screenshot_sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
@@ -96,15 +753,481 @@
   "runtime_template_id": "playful-indie-launch",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [
+      "comparison_or_split",
+      "quote_or_emphasis"
+    ],
+    "page_count": 10,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "agenda"
+        ],
+        "pages": [
+          2
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "closing"
+        ],
+        "pages": [
+          10
+        ]
+      },
+      "comparison_or_split": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      },
+      "content": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "detail",
+          "slide-9"
+        ],
+        "pages": [
+          5,
+          9
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "cover"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "data_dashboard",
+          "data_dashboard-4",
+          "data_dashboard-6",
+          "data_dashboard-8"
+        ],
+        "pages": [
+          3,
+          4,
+          6,
+          8
+        ]
+      },
+      "process_or_timeline": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "process_or_timeline"
+        ],
+        "pages": [
+          7
+        ]
+      },
+      "quote_or_emphasis": {
+        "covered": false,
+        "missing_reason": "source_page_variant_not_extracted_for_role",
+        "page_variant_ids": [],
+        "pages": []
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "cover",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "cover",
+        "source_class": "slide-1",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-1 active\" data-index=\"0\">",
+            "selector_or_token": ".slide-1"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "agenda",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items",
+          "timeline"
+        ],
+        "role_group": "agenda",
+        "source_class": "slide-2",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-2\" data-index=\"1\">",
+            "selector_or_token": ".slide-2"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "data_dashboard",
+        "page_variant_id": "data_dashboard",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide-3",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-3\" data-index=\"2\">",
+            "selector_or_token": ".slide-3"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "data_dashboard",
+        "page_variant_id": "data_dashboard-4",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide-4",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-4\" data-index=\"3\">",
+            "selector_or_token": ".slide-4"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "detail",
+        "page_variant_id": "detail",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "content",
+        "source_class": "slide-5",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-5\" data-index=\"4\">",
+            "selector_or_token": ".slide-5"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "data_dashboard",
+        "page_variant_id": "data_dashboard-6",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics",
+          "timeline"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide-6",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-6\" data-index=\"5\">",
+            "selector_or_token": ".slide-6"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png",
+          "sha256": "b4c66f765e8b741bbe4262dd4854b48ab501981ec2b528a0ddc6a5c35742818b",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "process_or_timeline",
+        "page_variant_id": "process_or_timeline",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "timeline"
+        ],
+        "role_group": "process_or_timeline",
+        "source_class": "slide-7",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-7\" data-index=\"6\">",
+            "selector_or_token": ".slide-7"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "data_dashboard",
+        "page_variant_id": "data_dashboard-8",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide-8",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-8\" data-index=\"7\">",
+            "selector_or_token": ".slide-8"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png",
+          "sha256": "98ea41ea3c16781085dd5e3824c31bc398fadc4063a72d8cdf23dab8d26b22e3",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png"
+        },
+        "source_slide_index": 8
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 9,
+        "page_role": "content",
+        "page_variant_id": "slide-9",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "items"
+        ],
+        "role_group": "content",
+        "source_class": "slide-9",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-9\" data-index=\"8\">",
+            "selector_or_token": ".slide-9"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 9
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 10,
+        "page_role": "closing",
+        "page_variant_id": "closing",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "closing",
+        "source_class": "slide-10",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/playful/template.html",
+            "raw_value": "<div class=\"slide slide-10\" data-index=\"9\">",
+            "selector_or_token": ".slide-10"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        },
+        "source_slide_index": 10
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 10,
     "status": "missing"
   },
   "smoke_status": "missing",

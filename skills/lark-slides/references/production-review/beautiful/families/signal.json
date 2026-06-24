@@ -1,6 +1,25 @@
 {
-  "artifact_kind": "production_review_family_card",
+  "allowed_human_status": [
+    "pass",
+    "needs_fix",
+    "reject"
+  ],
+  "artifact_kind": "production_review_family_smoke_deck",
+  "auto_gate_status": "blocked",
+  "contact_sheet": {
+    "artifact_kind": "smoke_deck_contact_sheet_review_model",
+    "html_path": "families/signal.html",
+    "render_status": "missing_smoke",
+    "sha256": "ab533fc6ac798c710cc537d93a18e247830e183fa813ce2a5ee08a582272c1e1"
+  },
   "default_selectable": false,
+  "evidence_hashes": {
+    "contact_sheet": "ab533fc6ac798c710cc537d93a18e247830e183fa813ce2a5ee08a582272c1e1",
+    "fidelity_receipt": "f33e1fed9d3fe80ed000386d4649be14d1120ea455b57d33b8d97a87d2769231",
+    "reference_screenshot": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+    "smoke_receipt": null,
+    "visual_contract": "6d637f0f69f55293ff9a7ff5db337872b9626ae039c22e46a341929f45e7660f"
+  },
   "family_id": "signal",
   "fidelity": {
     "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/signal.intelligence-brief.json",
@@ -10,14 +29,19 @@
     "threshold": 0.72
   },
   "fidelity_status": "passed",
+  "human_review_status": "pending",
   "implemented_page_variant_count": 0,
   "implemented_page_variants": [],
   "known_blockers": [
+    "auto_gate_blocked",
+    "missing_smoke",
     "page_family_smoke_missing_or_failed",
     "production_review_pending",
     "quality_gate_integration_pending",
     "selector_gate_missing"
   ],
+  "missing_roles": [],
+  "not_promotion_receipt": true,
   "page_family_promotion_gate": {
     "claim_boundary": null,
     "required_evidence": [],
@@ -25,116 +49,1201 @@
   },
   "page_family_promotion_gate_status": "missing",
   "page_variant_count": 18,
+  "page_variant_coverage": {
+    "agenda": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "chapter"
+      ],
+      "pages": [
+        2
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "dense",
+        "end"
+      ],
+      "pages": [
+        10,
+        12
+      ]
+    },
+    "comparison_or_split": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "split",
+        "compare"
+      ],
+      "pages": [
+        4,
+        8
+      ]
+    },
+    "content": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "list",
+        "diagram",
+        "pyramid"
+      ],
+      "pages": [
+        7,
+        14,
+        16
+      ]
+    },
+    "cover": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "cover"
+      ],
+      "pages": [
+        1
+      ]
+    },
+    "data_or_structured": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "statement",
+        "stats",
+        "editorial",
+        "statement-11",
+        "chart",
+        "pie",
+        "cycle"
+      ],
+      "pages": [
+        3,
+        5,
+        9,
+        11,
+        13,
+        15,
+        18
+      ]
+    },
+    "process_or_timeline": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "vtimeline"
+      ],
+      "pages": [
+        17
+      ]
+    },
+    "quote_or_emphasis": {
+      "covered": true,
+      "missing_reason": null,
+      "page_variant_ids": [
+        "quote"
+      ],
+      "pages": [
+        6
+      ]
+    }
+  },
   "page_variants": [
     {
-      "page_role": "agenda",
-      "page_variant_id": "chapter",
-      "source_class": "slide--chapter",
-      "source_slide_index": 2
-    },
-    {
-      "page_role": "data_dashboard",
-      "page_variant_id": "chart",
-      "source_class": "slide--chart",
-      "source_slide_index": 13
-    },
-    {
-      "page_role": "data_dashboard",
-      "page_variant_id": "compare",
-      "source_class": "slide--compare",
-      "source_slide_index": 8
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "cover",
       "page_variant_id": "cover",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "cover",
       "source_class": "slide--cover",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--cover\">",
+          "selector_or_token": ".slide--cover"
+        }
+      ],
       "source_slide_index": 1
     },
     {
-      "page_role": "data_dashboard",
-      "page_variant_id": "cycle",
-      "source_class": "slide--cycle",
-      "source_slide_index": 18
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "agenda",
+      "page_variant_id": "chapter",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "agenda",
+      "source_class": "slide--chapter",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--chapter\">",
+          "selector_or_token": ".slide--chapter"
+        }
+      ],
+      "source_slide_index": 2
     },
     {
-      "page_role": "closing",
-      "page_variant_id": "dense",
-      "source_class": "slide--dense",
-      "source_slide_index": 10
-    },
-    {
-      "page_role": "content",
-      "page_variant_id": "diagram",
-      "source_class": "slide--diagram",
-      "source_slide_index": 14
-    },
-    {
-      "page_role": "data_dashboard",
-      "page_variant_id": "editorial",
-      "source_class": "slide--editorial",
-      "source_slide_index": 9
-    },
-    {
-      "page_role": "closing",
-      "page_variant_id": "end",
-      "source_class": "slide--end",
-      "source_slide_index": 12
-    },
-    {
-      "page_role": "content",
-      "page_variant_id": "list",
-      "source_class": "slide--list",
-      "source_slide_index": 7
-    },
-    {
-      "page_role": "data_dashboard",
-      "page_variant_id": "pie",
-      "source_class": "slide--pie",
-      "source_slide_index": 15
-    },
-    {
-      "page_role": "content",
-      "page_variant_id": "pyramid",
-      "source_class": "slide--pyramid",
-      "source_slide_index": 16
-    },
-    {
-      "page_role": "quote_or_emphasis",
-      "page_variant_id": "quote",
-      "source_class": "slide--quote",
-      "source_slide_index": 6
-    },
-    {
-      "page_role": "content_split",
-      "page_variant_id": "split",
-      "source_class": "slide--split",
-      "source_slide_index": 4
-    },
-    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "statement",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "slide--statement",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--statement\">",
+          "selector_or_token": ".slide--statement"
+        }
+      ],
       "source_slide_index": 3
     },
     {
-      "page_role": "data_dashboard",
-      "page_variant_id": "statement-11",
-      "source_class": "slide--statement",
-      "source_slide_index": 11
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "content_split",
+      "page_variant_id": "split",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "comparison_or_split",
+      "source_class": "slide--split",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide light slide--split\">",
+          "selector_or_token": ".slide--split"
+        }
+      ],
+      "source_slide_index": 4
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "data_dashboard",
       "page_variant_id": "stats",
+      "required_slots": [
+        "title",
+        "metrics",
+        "items",
+        "quote"
+      ],
+      "role_group": "data_or_structured",
       "source_class": "slide--stats",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--stats\">",
+          "selector_or_token": ".slide--stats"
+        }
+      ],
       "source_slide_index": 5
     },
     {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
+      "source_class": "slide--quote",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--quote\">",
+          "selector_or_token": ".slide--quote"
+        }
+      ],
+      "source_slide_index": 6
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "content",
+      "page_variant_id": "list",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "content",
+      "source_class": "slide--list",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide light slide--list\">",
+          "selector_or_token": ".slide--list"
+        }
+      ],
+      "source_slide_index": 7
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "compare",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "comparison_or_split",
+      "source_class": "slide--compare",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--compare\">",
+          "selector_or_token": ".slide--compare"
+        }
+      ],
+      "source_slide_index": 8
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "editorial",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--editorial",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--editorial\">",
+          "selector_or_token": ".slide--editorial"
+        }
+      ],
+      "source_slide_index": 9
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "dense",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "closing",
+      "source_class": "slide--dense",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--dense\">",
+          "selector_or_token": ".slide--dense"
+        }
+      ],
+      "source_slide_index": 10
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "statement-11",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--statement",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--statement\">",
+          "selector_or_token": ".slide--statement"
+        }
+      ],
+      "source_slide_index": 11
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "closing",
+      "page_variant_id": "end",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "closing",
+      "source_class": "slide--end",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--end\">",
+          "selector_or_token": ".slide--end"
+        }
+      ],
+      "source_slide_index": 12
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "chart",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--chart",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide slide--chart dark\">",
+          "selector_or_token": ".slide--chart"
+        }
+      ],
+      "source_slide_index": 13
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "content",
+      "page_variant_id": "diagram",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "content",
+      "source_class": "slide--diagram",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide slide--diagram light\">",
+          "selector_or_token": ".slide--diagram"
+        }
+      ],
+      "source_slide_index": 14
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "pie",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--pie",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--pie\">",
+          "selector_or_token": ".slide--pie"
+        }
+      ],
+      "source_slide_index": 15
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "content",
+      "page_variant_id": "pyramid",
+      "required_slots": [
+        "title",
+        "timeline"
+      ],
+      "role_group": "content",
+      "source_class": "slide--pyramid",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--pyramid\">",
+          "selector_or_token": ".slide--pyramid"
+        }
+      ],
+      "source_slide_index": 16
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
       "page_role": "process_or_timeline",
       "page_variant_id": "vtimeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
       "source_class": "slide--vtimeline",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--vtimeline\">",
+          "selector_or_token": ".slide--vtimeline"
+        }
+      ],
       "source_slide_index": 17
+    },
+    {
+      "extraction_confidence": "inferred_from_layout",
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page_role": "data_dashboard",
+      "page_variant_id": "cycle",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--cycle",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--cycle\">",
+          "selector_or_token": ".slide--cycle"
+        }
+      ],
+      "source_slide_index": 18
     }
   ],
+  "pages": [
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "cover",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "cover",
+      "source_class": "slide--cover",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--cover\">",
+          "selector_or_token": ".slide--cover"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 1
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "chapter",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "agenda",
+      "source_class": "slide--chapter",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--chapter\">",
+          "selector_or_token": ".slide--chapter"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 2
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 3,
+      "page_role": "data_dashboard",
+      "page_variant_id": "statement",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--statement",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--statement\">",
+          "selector_or_token": ".slide--statement"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 3
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 4,
+      "page_role": "content_split",
+      "page_variant_id": "split",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "comparison_or_split",
+      "source_class": "slide--split",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide light slide--split\">",
+          "selector_or_token": ".slide--split"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 4
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 5,
+      "page_role": "data_dashboard",
+      "page_variant_id": "stats",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics",
+        "items",
+        "quote"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--stats",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--stats\">",
+          "selector_or_token": ".slide--stats"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 5
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 6,
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "role_group": "quote_or_emphasis",
+      "source_class": "slide--quote",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--quote\">",
+          "selector_or_token": ".slide--quote"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 6
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 7,
+      "page_role": "content",
+      "page_variant_id": "list",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "content",
+      "source_class": "slide--list",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide light slide--list\">",
+          "selector_or_token": ".slide--list"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 7
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 8,
+      "page_role": "data_dashboard",
+      "page_variant_id": "compare",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "role_group": "comparison_or_split",
+      "source_class": "slide--compare",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--compare\">",
+          "selector_or_token": ".slide--compare"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-8.png",
+        "sha256": "74a1a77340c889837c447dea11b93f1315002a5a487d899cc47b44f23a5ac89e",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-8.png"
+      },
+      "source_slide_index": 8
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 9,
+      "page_role": "data_dashboard",
+      "page_variant_id": "editorial",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--editorial",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--editorial\">",
+          "selector_or_token": ".slide--editorial"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 9
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 10,
+      "page_role": "closing",
+      "page_variant_id": "dense",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "closing",
+      "source_class": "slide--dense",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--dense\">",
+          "selector_or_token": ".slide--dense"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 10
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 11,
+      "page_role": "data_dashboard",
+      "page_variant_id": "statement-11",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--statement",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--statement\">",
+          "selector_or_token": ".slide--statement"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 11
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 12,
+      "page_role": "closing",
+      "page_variant_id": "end",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "role_group": "closing",
+      "source_class": "slide--end",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--end\">",
+          "selector_or_token": ".slide--end"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 12
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 13,
+      "page_role": "data_dashboard",
+      "page_variant_id": "chart",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--chart",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide slide--chart dark\">",
+          "selector_or_token": ".slide--chart"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 13
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 14,
+      "page_role": "content",
+      "page_variant_id": "diagram",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title"
+      ],
+      "role_group": "content",
+      "source_class": "slide--diagram",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide slide--diagram light\">",
+          "selector_or_token": ".slide--diagram"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 14
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 15,
+      "page_role": "data_dashboard",
+      "page_variant_id": "pie",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--pie",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--pie\">",
+          "selector_or_token": ".slide--pie"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 15
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 16,
+      "page_role": "content",
+      "page_variant_id": "pyramid",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "timeline"
+      ],
+      "role_group": "content",
+      "source_class": "slide--pyramid",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--pyramid\">",
+          "selector_or_token": ".slide--pyramid"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 16
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 17,
+      "page_role": "process_or_timeline",
+      "page_variant_id": "vtimeline",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "timeline"
+      ],
+      "role_group": "process_or_timeline",
+      "source_class": "slide--vtimeline",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--vtimeline\">",
+          "selector_or_token": ".slide--vtimeline"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+        "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+      },
+      "source_slide_index": 17
+    },
+    {
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "page": 18,
+      "page_role": "data_dashboard",
+      "page_variant_id": "cycle",
+      "render_evidence": {
+        "golden_spec": null,
+        "golden_spec_sha256": null,
+        "render_status": "missing_smoke",
+        "smoke_receipt": null,
+        "smoke_receipt_sha256": null
+      },
+      "render_status": "missing_smoke",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "role_group": "data_or_structured",
+      "source_class": "slide--cycle",
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/signal/template.html",
+          "raw_value": "<section class=\"slide dark slide--cycle\">",
+          "selector_or_token": ".slide--cycle"
+        }
+      ],
+      "source_screenshot": {
+        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-18.png",
+        "sha256": "48c13db3339f4bb7c1b2d636c8222ff084722a66aebe7b230448c8dc6f29fb75",
+        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-18.png"
+      },
+      "source_slide_index": 18
+    }
+  ],
+  "promotion_action": "no_change_until_human_pass",
   "promotion_status": "needs_review",
   "reference_screenshot": "beautiful-html-templates/screenshots/signal-1.png",
   "reference_screenshot_sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
@@ -144,15 +1253,792 @@
   "runtime_template_id": "intelligence-brief",
   "smoke": {
     "artifact_kind": "page-family-smoke",
+    "covered_implemented_page_variants": [],
     "deck_path": null,
     "deck_sha256": null,
     "degraded": null,
+    "implemented_page_variants": [],
     "input_hashes": {},
+    "missing_implemented_page_variants": [],
     "missing_required_roles": [],
     "page_variant_coverage": {},
     "receipt_path": null,
     "receipt_sha256": null,
     "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_deck": {
+    "artifact_kind": "smoke_deck_review_data",
+    "claim_boundary": "source-derived review deck; only passed smoke/fidelity/review receipt can promote a family",
+    "missing_roles": [],
+    "page_count": 18,
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "chapter"
+        ],
+        "pages": [
+          2
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "dense",
+          "end"
+        ],
+        "pages": [
+          10,
+          12
+        ]
+      },
+      "comparison_or_split": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "split",
+          "compare"
+        ],
+        "pages": [
+          4,
+          8
+        ]
+      },
+      "content": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "list",
+          "diagram",
+          "pyramid"
+        ],
+        "pages": [
+          7,
+          14,
+          16
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "cover"
+        ],
+        "pages": [
+          1
+        ]
+      },
+      "data_or_structured": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "statement",
+          "stats",
+          "editorial",
+          "statement-11",
+          "chart",
+          "pie",
+          "cycle"
+        ],
+        "pages": [
+          3,
+          5,
+          9,
+          11,
+          13,
+          15,
+          18
+        ]
+      },
+      "process_or_timeline": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "vtimeline"
+        ],
+        "pages": [
+          17
+        ]
+      },
+      "quote_or_emphasis": {
+        "covered": true,
+        "missing_reason": null,
+        "page_variant_ids": [
+          "quote"
+        ],
+        "pages": [
+          6
+        ]
+      }
+    },
+    "pages": [
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 1,
+        "page_role": "cover",
+        "page_variant_id": "cover",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "cover",
+        "source_class": "slide--cover",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--cover\">",
+            "selector_or_token": ".slide--cover"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 1
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 2,
+        "page_role": "agenda",
+        "page_variant_id": "chapter",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "agenda",
+        "source_class": "slide--chapter",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--chapter\">",
+            "selector_or_token": ".slide--chapter"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 2
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 3,
+        "page_role": "data_dashboard",
+        "page_variant_id": "statement",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--statement",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--statement\">",
+            "selector_or_token": ".slide--statement"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 3
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 4,
+        "page_role": "content_split",
+        "page_variant_id": "split",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "comparison_or_split",
+        "source_class": "slide--split",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide light slide--split\">",
+            "selector_or_token": ".slide--split"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 4
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 5,
+        "page_role": "data_dashboard",
+        "page_variant_id": "stats",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics",
+          "items",
+          "quote"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--stats",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--stats\">",
+            "selector_or_token": ".slide--stats"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 5
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 6,
+        "page_role": "quote_or_emphasis",
+        "page_variant_id": "quote",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "subtitle",
+          "quote"
+        ],
+        "role_group": "quote_or_emphasis",
+        "source_class": "slide--quote",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--quote\">",
+            "selector_or_token": ".slide--quote"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 6
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 7,
+        "page_role": "content",
+        "page_variant_id": "list",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "content",
+        "source_class": "slide--list",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide light slide--list\">",
+            "selector_or_token": ".slide--list"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 7
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 8,
+        "page_role": "data_dashboard",
+        "page_variant_id": "compare",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "items"
+        ],
+        "role_group": "comparison_or_split",
+        "source_class": "slide--compare",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--compare\">",
+            "selector_or_token": ".slide--compare"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-8.png",
+          "sha256": "74a1a77340c889837c447dea11b93f1315002a5a487d899cc47b44f23a5ac89e",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-8.png"
+        },
+        "source_slide_index": 8
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 9,
+        "page_role": "data_dashboard",
+        "page_variant_id": "editorial",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--editorial",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--editorial\">",
+            "selector_or_token": ".slide--editorial"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 9
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 10,
+        "page_role": "closing",
+        "page_variant_id": "dense",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "closing",
+        "source_class": "slide--dense",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--dense\">",
+            "selector_or_token": ".slide--dense"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 10
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 11,
+        "page_role": "data_dashboard",
+        "page_variant_id": "statement-11",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--statement",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--statement\">",
+            "selector_or_token": ".slide--statement"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 11
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 12,
+        "page_role": "closing",
+        "page_variant_id": "end",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle"
+        ],
+        "role_group": "closing",
+        "source_class": "slide--end",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--end\">",
+            "selector_or_token": ".slide--end"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 12
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 13,
+        "page_role": "data_dashboard",
+        "page_variant_id": "chart",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--chart",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide slide--chart dark\">",
+            "selector_or_token": ".slide--chart"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 13
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 14,
+        "page_role": "content",
+        "page_variant_id": "diagram",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title"
+        ],
+        "role_group": "content",
+        "source_class": "slide--diagram",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide slide--diagram light\">",
+            "selector_or_token": ".slide--diagram"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 14
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 15,
+        "page_role": "data_dashboard",
+        "page_variant_id": "pie",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--pie",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--pie\">",
+            "selector_or_token": ".slide--pie"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 15
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 16,
+        "page_role": "content",
+        "page_variant_id": "pyramid",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "timeline"
+        ],
+        "role_group": "content",
+        "source_class": "slide--pyramid",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--pyramid\">",
+            "selector_or_token": ".slide--pyramid"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 16
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 17,
+        "page_role": "process_or_timeline",
+        "page_variant_id": "vtimeline",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "subtitle",
+          "metrics",
+          "timeline"
+        ],
+        "role_group": "process_or_timeline",
+        "source_class": "slide--vtimeline",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--vtimeline\">",
+            "selector_or_token": ".slide--vtimeline"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png",
+          "sha256": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-1.png"
+        },
+        "source_slide_index": 17
+      },
+      {
+        "optional_slots": [
+          "eyebrow",
+          "decoration"
+        ],
+        "page": 18,
+        "page_role": "data_dashboard",
+        "page_variant_id": "cycle",
+        "render_evidence": {
+          "golden_spec": null,
+          "golden_spec_sha256": null,
+          "render_status": "missing_smoke",
+          "smoke_receipt": null,
+          "smoke_receipt_sha256": null
+        },
+        "render_status": "missing_smoke",
+        "required_slots": [
+          "title",
+          "metrics"
+        ],
+        "role_group": "data_or_structured",
+        "source_class": "slide--cycle",
+        "source_refs": [
+          {
+            "path": "beautiful-html-templates/templates/signal/template.html",
+            "raw_value": "<section class=\"slide dark slide--cycle\">",
+            "selector_or_token": ".slide--cycle"
+          }
+        ],
+        "source_screenshot": {
+          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-18.png",
+          "sha256": "48c13db3339f4bb7c1b2d636c8222ff084722a66aebe7b230448c8dc6f29fb75",
+          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/signal-18.png"
+        },
+        "source_slide_index": 18
+      }
+    ],
+    "source": "visual_contract.page_variants",
+    "source_page_count": 18,
     "status": "missing"
   },
   "smoke_status": "missing",

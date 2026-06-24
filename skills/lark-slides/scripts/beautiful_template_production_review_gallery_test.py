@@ -24,6 +24,10 @@ REQUIRED_FAMILY_FIELDS = {
     "page_variant_count",
     "implemented_page_variants",
     "smoke_status",
+    "smoke_deck",
+    "pages",
+    "contact_sheet",
+    "not_promotion_receipt",
 }
 
 
@@ -39,6 +43,8 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         family_ids = set()
         for family in manifest["families"]:
             self.assertTrue(REQUIRED_FAMILY_FIELDS.issubset(family), family)
+            self.assertEqual("production_review_family_smoke_deck", family["artifact_kind"])
+            self.assertTrue(family["not_promotion_receipt"])
             self.assertTrue(family["family_id"])
             self.assertTrue(family["runtime_template_id"])
             self.assertTrue(family["visual_contract_path"])
@@ -48,6 +54,13 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
             self.assertGreater(family["page_variant_count"], 0)
             self.assertIsInstance(family["implemented_page_variants"], list)
             self.assertIn(family["smoke_status"], {"passed", "failed", "missing"})
+            self.assertEqual("smoke_deck_review_data", family["smoke_deck"]["artifact_kind"])
+            self.assertIn(family["smoke_deck"]["status"], {"passed", "failed", "missing"})
+            self.assertIsInstance(family["pages"], list)
+            self.assertGreater(len(family["pages"]), 0)
+            self.assertGreaterEqual(len(family["pages"]), family["page_variant_count"])
+            self.assertEqual("smoke_deck_contact_sheet_review_model", family["contact_sheet"]["artifact_kind"])
+            self.assertIn(family["contact_sheet"]["render_status"], {"passed", "failed", "missing_smoke"})
             self.assertIn(family["review_decision"], {"pending_review"})
             family_ids.add(family["family_id"])
 
@@ -62,6 +75,13 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         self.assertTrue(blue["default_selectable"])
         self.assertEqual("passed", blue["smoke_status"])
         self.assertEqual("page-family-smoke", blue["smoke"]["artifact_kind"])
+        self.assertEqual("passed", blue["smoke_deck"]["status"])
+        self.assertEqual(10, blue["smoke_deck"]["page_count"])
+        self.assertEqual(10, len(blue["pages"]))
+        self.assertEqual("passed", blue["contact_sheet"]["render_status"])
+        self.assertEqual([], blue["missing_roles"])
+        split_page = next(page for page in blue["pages"] if page["page_variant_id"] == "split")
+        self.assertEqual("comparison_or_split", split_page["role_group"])
         self.assertTrue(blue["smoke"]["receipt_path"])
         self.assertTrue(blue["smoke"]["receipt_sha256"])
         self.assertGreaterEqual(blue["page_variant_count"], 10)
@@ -75,6 +95,10 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         self.assertEqual("needs_review", candidate["promotion_status"])
         self.assertFalse(candidate["default_selectable"])
         self.assertEqual("missing", candidate["smoke_status"])
+        self.assertEqual("missing", candidate["smoke_deck"]["status"])
+        self.assertEqual("missing_smoke", candidate["contact_sheet"]["render_status"])
+        self.assertTrue(all(page["render_status"] == "missing_smoke" for page in candidate["pages"]))
+        self.assertIn("missing_smoke", candidate["known_blockers"])
         self.assertIn("production_review_pending", candidate["known_blockers"])
 
     def test_write_artifacts_keeps_production_default_counts_unchanged(self) -> None:
