@@ -540,7 +540,7 @@ func transformDryRunFn(op string, withPasteType, _ bool) func(context.Context, *
 
 func transformExecuteFn(op string, withPasteType, _ bool) func(context.Context, *common.RuntimeContext) error {
 	return func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
