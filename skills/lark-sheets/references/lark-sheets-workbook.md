@@ -229,6 +229,13 @@ python prepare.py | lark-cli sheets +workbook-create --title "交易" --datafram
 
 `--sheets` 协议与 `+table-put` 完全同构（字段含义见 lark-sheets-write-cells 的 `+table-put`，大 payload 走 stdin / `@file`）；`--dataframe` 是同一份 typed 数据的二进制 wire（Arrow IPC，详见同 reference 的 `+table-put` 段落的 `--dataframe` 小节），按 producer 已有的 API 选——pandas 走 `--dataframe`，多子表 / 手拼 JSON 走 `--sheets`。关键差异：**新建工作簿的默认子表会被复用为第一个子表**（重命名后承载数据），不会残留空 `Sheet1`；其余子表按需新建。它把 `+table-put` 单独做不到的"建表 + typed 写入"合到一条命令，是「pandas 算完直接落地一张带真日期的新表」的首选。回读校验用 `+table-get`（与 `--sheets` 同构、可 round-trip；pandas 用户也可走 `--dataframe-out` 直拿 Arrow 文件）。
 
+> 💡 pandas DataFrame 走 `--sheets` 时直接 `from sheets_df import df_to_sheet`（[`scripts/sheets_df.py`](../scripts/sheets_df.py)，与 `+table-put` 共用同一份 helper），多子表场景 helper 优势更明显：
+> ```python
+> payload = {"sheets": [df_to_sheet(income, "Income Statement"),
+>                       df_to_sheet(balance, "Balance Sheet"),
+>                       df_to_sheet(cashflow, "Cash Flow")]}
+> ```
+
 `--styles` 可在建表写入时同时写视觉处理。它和 `--sheets` 一样只有一种外层写法：顶层对象里放 `styles` 数组；数组每项对应一个子表，含 `name`，并按能力拆成四类可选数组：
 
 - `cell_styles`：像 `+cells-set-style`，用 A1 单元格 `range` 加扁平样式字段（`font_weight` / `background_color` / `horizontal_alignment` / `vertical_alignment` / `number_format` 等）和可选 `border_styles`；这些样式会随内容在同一次写入里一并应用。完整字段跑 `+workbook-create --print-schema --flag-name styles`。

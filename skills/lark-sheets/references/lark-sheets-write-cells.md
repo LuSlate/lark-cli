@@ -506,17 +506,12 @@ lark-cli sheets +table-put --spreadsheet-token "<token>" --sheets @payload.json
 
 每个 sheet 还可带 `"allow_overwrite": false`（遇非空拒写、保护原数据）、`"header": false`（只写数据不写表头）。完整字段跑 `+table-put --print-schema --flag-name sheets`。
 
-#### DataFrame → 协议（5 行 helper）
+#### DataFrame → 协议（用 `df_to_sheet` helper）
 
-pandas 的 `df.to_json(orient="split", date_format="iso")` 一步完成所有清洗（NaN→null、Timestamp→ISO 字符串、numpy 标量→原生数字），helper 只要把 dtypes 拼上去——5 行覆盖单 / 多 sheet：
+pandas 的 `df.to_json(orient="split", date_format="iso")` 一步完成所有清洗（NaN→null、Timestamp→ISO 字符串、numpy 标量→原生数字），把 dtypes 拼上即可。本 skill 把这段 5 行 helper 打包成可 import 的 [`scripts/sheets_df.py`](../scripts/sheets_df.py)（含 `df_to_sheet` 和 `sheet_to_df`，写入 / 读回成对）：
 
 ```python
-import json
-def df_to_sheet(df, name, formats=None):
-    return {"name": name,
-            **json.loads(df.to_json(orient="split", date_format="iso")),
-            "dtypes": df.dtypes.astype(str).to_dict(),
-            **({"formats": formats} if formats else {})}
+from sheets_df import df_to_sheet
 
 # 单 sheet（显式 format 覆盖默认显示）
 payload = {"sheets": [df_to_sheet(df, "销售", {"营收": "#,##0.00", "毛利率": "0.0%"})]}

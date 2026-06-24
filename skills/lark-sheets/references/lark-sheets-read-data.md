@@ -187,14 +187,12 @@ lark-cli sheets +table-get --url "<表URL>"
 lark-cli sheets +table-get --url "<表URL>" --sheet-name "销售"
 ```
 
-#### 输出 → DataFrame（2 行 helper）
+#### 输出 → DataFrame（用 `sheet_to_df` helper）
 
-输出形状对齐 pandas split：`columns` 是列名数组、`data` 是二维数据、`dtypes` 是 `{列名: pandas_dtype_str}` 映射。直接喂给 `pd.DataFrame(...).astype(...)` 就能一次性还原所有列类型（不必逐列 `to_datetime` / `to_numeric`），写入侧 `df_to_sheet` 的镜像 helper：
+输出形状对齐 pandas split：`columns` 是列名数组、`data` 是二维数据、`dtypes` 是 `{列名: pandas_dtype_str}` 映射。直接喂给 `pd.DataFrame(...).astype(...)` 就能一次性还原所有列类型（不必逐列 `to_datetime` / `to_numeric`）。本 skill 把这段 2 行 helper 打包成可 import 的 [`scripts/sheets_df.py`](../scripts/sheets_df.py)（含 `df_to_sheet` 和 `sheet_to_df`，写入 / 读回成对）：
 
 ```python
-import pandas as pd
-def sheet_to_df(sheet):
-    return pd.DataFrame(sheet["data"], columns=sheet["columns"]).astype(sheet["dtypes"])
+from sheets_df import sheet_to_df
 
 # 单 sheet
 df = sheet_to_df(out["data"]["sheets"][0])
@@ -236,10 +234,12 @@ df = pd.read_feather(io.BytesIO(res.stdout))
 
 #### round-trip：读 → 改 → 写回（写读对偶）
 
-`sheet_to_df` 和 write-cells reference 里的 `df_to_sheet` 是一对镜像 helper，round-trip 三段读 / 改 / 写各一行：
+`sheet_to_df` 和 `df_to_sheet` 一对镜像 helper（[`scripts/sheets_df.py`](../scripts/sheets_df.py)）让 round-trip 三段读 / 改 / 写各一行：
 
 ```python
 import json, subprocess
+from sheets_df import df_to_sheet, sheet_to_df
+
 # 1. 读
 out = json.loads(subprocess.check_output(
     ["lark-cli","sheets","+table-get","--url",URL,"--sheet-name","销售"]))
