@@ -43,14 +43,15 @@ var AppsPluginInstall = common.Shortcut{
 			return common.NewDryRunAPI().
 				POST(apiBasePath+"/plugin/versions/batch_query").
 				Desc("Batch-install all declared plugins from package.json actionPlugins").
-				Set("mode", "batch")
+				Set("request_body", `{"plugin_keys": [<from actionPlugins>], "latest_only": false}`)
 		}
 		key, version := pluginParseInstallTarget(name)
+		isLatest := version == "" || version == "latest"
 		return common.NewDryRunAPI().
 			POST(apiBasePath+"/plugin/versions/batch_query").
-			Desc("Fetch plugin version metadata, then download .tgz package").
-			Set("plugin_key", key).
-			Set("version", version)
+			Desc("Query plugin version, then POST /plugin/versions/download_package to download .tgz").
+			Set("request_body", fmt.Sprintf(`{"plugin_keys": ["%s"], "latest_only": %v}`, key, isLatest)).
+			Set("download_body", fmt.Sprintf(`{"plugin_key": "%s", "plugin_version": "%s"}`, key, version))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
