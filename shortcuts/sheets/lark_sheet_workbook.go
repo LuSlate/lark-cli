@@ -637,6 +637,13 @@ var WorkbookCreate = common.Shortcut{
 		// Mirrors +table-put's dry-run against a placeholder token.
 		payload, sheetStyles, _ := workbookCreateData(runtime)
 		if payload == nil {
+			// Style-only payload with no cell-rectangle extent (e.g. only
+			// row_sizes or col_sizes). No set_cell_range to render, but the
+			// visual ops (merges / row+col sizes) still run in Execute, so
+			// they should show up in the dry-run plan too.
+			if styles := sheetStyles.styleFor(0); styles != nil {
+				appendWorkbookCreateVisualOpsDryRun(dry, "<new-token>", "", valuesSheetName, styles)
+			}
 			return dry
 		}
 		for i := range payload.Sheets {
@@ -696,6 +703,20 @@ var WorkbookCreate = common.Shortcut{
 				return workbookCreatedButFillFailed(token, "initial fill failed", err)
 			}
 			result["sheets"] = written
+		} else if styles := sheetStyles.styleFor(0); styles != nil {
+			// Style-only payloads (e.g. --styles with only row_sizes or col_sizes
+			// and no --values/--sheets) don't write any cells but still need their
+			// visual ops applied — otherwise the merges/sizes would be silently
+			// dropped. workbookCreateStyleDimensions can't expand a row-only or
+			// column-only range into a cell rectangle, so the no-data branch lives
+			// here.
+			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
+			if err != nil {
+				return workbookCreatedButFillFailed(token, "resolving its default sheet for the write failed", err)
+			}
+			if err := applyWorkbookCreateVisualOps(ctx, runtime, token, firstSheetID, styles); err != nil {
+				return workbookCreatedButFillFailed(token, "applying visual styles failed", err)
+			}
 		}
 		runtime.Out(result, nil)
 		return nil
@@ -844,6 +865,11 @@ func parseValuesRows(runtime flagView) ([][]interface{}, error) {
 	var v interface{}
 	if err := dec.Decode(&v); err != nil {
 		return nil, common.ValidationErrorf("--values: invalid JSON: %v", err)
+	}
+	// Reject trailing non-whitespace after the first JSON value: see
+	// decoderExpectEOF in lark_sheet_table_io.go for the rationale.
+	if err := decoderExpectEOF(dec); err != nil {
+		return nil, common.ValidationErrorf("--values: %v", err).WithCause(err)
 	}
 	arr, ok := v.([]interface{})
 	if !ok {
@@ -1286,13 +1312,13 @@ func workbookCreateStyleDimensions(styles *workbookCreateStylePayload, baseCol, 
 	if styles == nil {
 		return 0, 0
 	}
-	for _, op := range styles.CellStyles {
-		startCol, startRow, endCol, endRow, err := workbookCreateStyleRangeBounds(op.Range)
+	expandCellRange := func(rng string) {
+		startCol, startRow, endCol, endRow, err := workbookCreateStyleRangeBounds(rng)
 		if err != nil {
-			continue
+			return
 		}
 		if startCol < baseCol || startRow < baseRow {
-			continue
+			return
 		}
 		if endCol-baseCol+1 > cols {
 			cols = endCol - baseCol + 1
@@ -1300,6 +1326,40 @@ func workbookCreateStyleDimensions(styles *workbookCreateStylePayload, baseCol, 
 		if endRow-baseRow+1 > rows {
 			rows = endRow - baseRow + 1
 		}
+	}
+	expandRowRange := func(rng string) {
+		dim, _, endIdx, err := parseA1Range(rng)
+		if err != nil || dim != "row" || endIdx < baseRow {
+			return
+		}
+		if endIdx-baseRow+1 > rows {
+			rows = endIdx - baseRow + 1
+		}
+	}
+	expandColRange := func(rng string) {
+		dim, _, endIdx, err := parseA1Range(rng)
+		if err != nil || dim != "column" || endIdx < baseCol {
+			return
+		}
+		if endIdx-baseCol+1 > cols {
+			cols = endIdx - baseCol + 1
+		}
+	}
+	for _, op := range styles.CellStyles {
+		expandCellRange(op.Range)
+	}
+	// cell_merges / row_sizes / col_sizes also contribute to the write extent —
+	// without this, a style-only payload (e.g. just cell_merges) would compute
+	// extent 0 and the Execute path would skip writeTypedSheets entirely,
+	// silently dropping the visual ops.
+	for _, op := range styles.CellMerges {
+		expandCellRange(op.Range)
+	}
+	for _, op := range styles.RowSizes {
+		expandRowRange(op.Range)
+	}
+	for _, op := range styles.ColSizes {
+		expandColRange(op.Range)
 	}
 	return rows, cols
 }

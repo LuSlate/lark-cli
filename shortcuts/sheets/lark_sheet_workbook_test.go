@@ -394,6 +394,56 @@ func TestWorkbookCreate_DryRun(t *testing.T) {
 			t.Errorf("horizontal_alignment occurrences = %d, want 4 in 2x2 range; cells=%s", got, raw)
 		}
 	})
+	t.Run("style-only payload (cell_merges) still fills and emits merge_cells", func(t *testing.T) {
+		t.Parallel()
+		// Previously workbookCreateStyleDimensions only counted cell_styles, so a
+		// payload with only cell_merges would compute extent 0; Execute then
+		// skipped writeTypedSheets entirely and the visual ops were silently
+		// dropped. The dry-run plan must include the create + fill + merge_cells.
+		calls := parseDryRunAPI(t, WorkbookCreate, []string{
+			"--title", "X",
+			"--styles", `{"styles":[{"name":"Sheet1","cell_merges":[{"range":"A1:B1"}]}]}`,
+		})
+		if len(calls) < 3 {
+			t.Fatalf("api calls = %d, want >=3 (create + fill + merge_cells); calls=%#v", len(calls), calls)
+		}
+		// Walk every body and look for the merge_cells tool name in the input JSON.
+		sawMerge := false
+		for _, c := range calls {
+			body, _ := c.(map[string]interface{})["body"].(map[string]interface{})
+			if body == nil {
+				continue
+			}
+			if toolName, _ := body["tool_name"].(string); toolName == "merge_cells" {
+				sawMerge = true
+				break
+			}
+		}
+		if !sawMerge {
+			t.Errorf("merge_cells tool call missing from dry-run plan; calls=%#v", calls)
+		}
+	})
+	t.Run("style-only payload (col_sizes) still fills and emits resize_range", func(t *testing.T) {
+		t.Parallel()
+		calls := parseDryRunAPI(t, WorkbookCreate, []string{
+			"--title", "X",
+			"--styles", `{"styles":[{"name":"Sheet1","col_sizes":[{"range":"A:C","type":"pixel","size":120}]}]}`,
+		})
+		sawResize := false
+		for _, c := range calls {
+			body, _ := c.(map[string]interface{})["body"].(map[string]interface{})
+			if body == nil {
+				continue
+			}
+			if toolName, _ := body["tool_name"].(string); toolName == "resize_range" {
+				sawResize = true
+				break
+			}
+		}
+		if !sawResize {
+			t.Errorf("resize_range tool call missing from dry-run plan; calls=%#v", calls)
+		}
+	})
 	t.Run("overlapping cell_styles deep-merge fields, no cross-cell pollution", func(t *testing.T) {
 		t.Parallel()
 		calls := parseDryRunAPI(t, WorkbookCreate, []string{
@@ -440,6 +490,7 @@ func TestWorkbookCreate_DataValidation(t *testing.T) {
 		{"border bad style enum", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","border_styles":{"bottom":{"style":"NONSENSE"}}}]}]}`}, `style "NONSENSE" is invalid`},
 		{"border invalid side", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","border_styles":{"diagonal":{"style":"solid"}}}]}]}`}, "not a valid side"},
 		{"border bad weight", []string{"--title", "X", "--values", `[["a"]]`, "--styles", `{"styles":[{"name":"Sheet1","cell_styles":[{"range":"A1","border_styles":{"top":{"weight":"xxl"}}}]}]}`}, `weight "xxl" is invalid`},
+		{"--values trailing JSON rejected", []string{"--title", "X", "--values", `[["a"]] trailing`}, "trailing data after JSON value"},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
