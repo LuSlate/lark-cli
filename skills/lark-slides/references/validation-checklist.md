@@ -1,6 +1,6 @@
 # Validation Checklist
 
-创建或大幅改写演示文稿后，必须做一次显式验证。目标是发现空白页、XML 损坏、内容截断、明显溢出、弱视觉层级和未验证输出。
+创建或大幅改写演示文稿后，必须做一次显式验证。目标是发现空白页、XML 损坏、内容截断、异常换行、明显溢出、弱视觉层级和未验证输出。
 
 小型已有页编辑也要做对应范围的验证：至少读取被改页面或全文 XML，确认目标元素已更新且未破坏周边结构。
 
@@ -37,7 +37,8 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 通过标准：
 
 - `summary.error_count == 0`。任何 error 都必须先修复再交付。
-- 当前工具只检查 XML well-formed 和文本元素之间的明显重叠；它不检查越界、文本高度不足、图文压盖、表格/图表压盖或底部拥挤。
+- 对异常换行、文本框高度不足等 wrap quality warning，默认也应修复后再交付；仅当它是普通正文的自然换行且用户明确允许时，才可在验证记录中说明豁免原因。
+- 当前工具检查 XML well-formed、文本元素之间的明显重叠，以及部分规则化异常换行；它不检查越界、图文压盖、表格/图表压盖或底部拥挤。
 - 该工具不能替代页数核对、关键内容核对或真实视觉验收。
 
 常见 code 的处理方向：
@@ -46,6 +47,11 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 |------|------|----------|
 | `xml_not_well_formed` | XML 语法错误或文本未转义 | 修复标签闭合、属性引号、`&` / `<` / `>` 转义 |
 | `bbox_overlap` | 文本元素的估算绘制区域明显重叠 | 拉开文本坐标、缩小文本框/字号，或改成明确的分栏/分组结构 |
+| `text_word_split` / `text_phrase_split` | 中文词语或高频短语被异常拆行 | 增宽文本框、降低字号、改写短语或调整换行点，避免把词语/短语拆开 |
+| `text_orphan_line` | 最后一行只有极短中文尾巴 | 增宽文本框、缩小字号或重排文本，让尾行形成可读短句 |
+| `text_unnecessary_wrap` | 短标题或强调文本本应单行却换行 | 增宽文本框或缩小字号，优先保持单行 |
+| `text_center_wrapped` | 非封面/金句场景的多行文本居中 | 改为左对齐，或调整为真正的封面/金句元素 |
+| `text_box_too_short` | 文本框高度低于字号所需高度 | 增加文本框高度、降低字号或减少文本量 |
 
 ## Optional Screenshot Upgrade
 
@@ -98,6 +104,7 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 优先修复这些明显风险：
 
 - 正文或标签框高度不足，文本很可能被截断。
+- 标题、标签、卡片标题或强调文本出现异常换行，例如拆词、拆短语、短尾行或本应单行却换行。
 - 多个主体元素在同一区域重叠，而不是有意叠加背景。
 - 重要内容越过画布边界，或贴近底部超过 `y=500`。
 - 高密度页使用单个长 bullet list，没有分栏、表格或分组。
