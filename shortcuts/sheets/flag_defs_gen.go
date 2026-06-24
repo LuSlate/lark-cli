@@ -957,7 +957,7 @@ var flagDefs = map[string]commandDef{
 			{Name: "spreadsheet-token", Kind: "public", Type: "string", Required: "xor", Desc: "Spreadsheet token (XOR with `--url`)"},
 			{Name: "file-extension", Kind: "own", Type: "string", Required: "optional", Desc: "Export file format; `csv` mode requires `--sheet-id`", Default: "xlsx", Enum: []string{"xlsx", "csv"}},
 			{Name: "sheet-id", Kind: "own", Type: "string", Required: "optional", Desc: "Required only in csv mode: which sheet to export as CSV. This is a `+workbook-export`-specific flag, unrelated to the common four-tuple sheet locator (this shortcut does not accept the common sheet locator)"},
-			{Name: "output-path", Kind: "own", Type: "string", Required: "optional", Desc: "Local save path; export is triggered but not downloaded when omitted"},
+			{Name: "output-path", Kind: "own", Type: "string", Required: "optional", Desc: "Local save path. When omitted, **only the export task is triggered + polled, the file is NOT downloaded** (returns file_token / status so a later step can resume the download). Pass a concrete path (e.g. `./out.xlsx`) or a directory (`.` keeps the server-provided filename) to download. Note: the equivalent `lark-cli drive +export --doc-type sheet` uses three separate flags (`--output-dir` / `--file-name` / `--overwrite`) and defaults to downloading into the current directory; this wrapper collapses them into a single `--output-path` for ergonomics but defaults to no-download — fall back to `drive +export` if the split flag set fits better."},
 			{Name: "dry-run", Kind: "system", Type: "bool", Required: "optional"},
 		},
 	},

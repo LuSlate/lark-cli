@@ -600,7 +600,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Local save path; export is triggered but not downloaded when omitted"
+        "desc": "Local save path. When omitted, **only the export task is triggered + polled, the file is NOT downloaded** (returns file_token / status so a later step can resume the download). Pass a concrete path (e.g. `./out.xlsx`) or a directory (`.` keeps the server-provided filename) to download. Note: the equivalent `lark-cli drive +export --doc-type sheet` uses three separate flags (`--output-dir` / `--file-name` / `--overwrite`) and defaults to downloading into the current directory; this wrapper collapses them into a single `--output-path` for ergonomics but defaults to no-download — fall back to `drive +export` if the split flag set fits better."
       },
       {
         "name": "dry-run",
