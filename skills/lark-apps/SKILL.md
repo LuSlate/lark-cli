@@ -29,7 +29,7 @@ metadata:
 | 设置或查看运行时可见范围 | `+access-scope-set`, `+access-scope-get` | 对应 access-scope reference |
 | 云端 Agent 生成/迭代应用（开发方式已定为云端后） | `+session-create` -> `+chat` -> `+session-get` | [`lark-apps-cloud-dev.md`](references/lark-apps-cloud-dev.md) |
 | 查看某次会话某一轮（turn）的回复消息（含仍在生成中的本轮）/ 导出上一轮模型回复（"这一轮回复了什么""上一轮的回复""导出某轮消息"） | 先 `+session-get`（取 `latest_turn.turn_id`）-> `+session-messages-list --turn-id <id>`（仅 user 身份；分页用 `--page-token`） | [`lark-apps-session-messages-list.md`](references/lark-apps-session-messages-list.md) |
-| 插件集成 — 用户要实现以下能力时必须走插件链路：AI生文/AI生图/AI翻译/AI摘要/AI分类/图片理解/图片识别/图片抠图/图片对比/图生图/语音识别/语音合成/文档解析/网页抓取/文本转JSON/搜索摘要；或提到 Plugin/PluginInstance/Capability/插件安装/卸载/创建实例 | 读 [`lark-apps-plugin.md`](references/lark-apps-plugin.md)（插件选择 + CRUD 路由），按需读 [`lark-apps-plugin-crud.md`](references/lark-apps-plugin-crud.md)（Schema + 链路）和 [`lark-apps-plugin-call.md`](references/lark-apps-plugin-call.md)（调用代码） | [`lark-apps-plugin.md`](references/lark-apps-plugin.md) |
+| 插件集成 — 用户要实现以下能力时必须走插件链路：AI生文/AI生图/AI翻译/AI摘要/AI分类/图片理解/图片识别/图片抠图/图片对比/图生图/语音识别/语音合成/文档解析/网页抓取/文本转JSON/搜索摘要；或提到 Plugin/PluginInstance/Capability/插件安装/卸载/创建实例 | **⚠️ 涉及插件则 [`lark-apps-plugin.md`](references/lark-apps-plugin.md) 必读**（含可用插件目录 17 个 + 用户意图→插件选择表 + 命令速查 + 铁律），不读则不知道哪些能力可用。创建/更新实例时必读 [`lark-apps-plugin-crud.md`](references/lark-apps-plugin-crud.md)（Schema 规则 + 链路），写调用代码时必读 [`lark-apps-plugin-call.md`](references/lark-apps-plugin-call.md)（Client/Server 决策 + call/callStream 写法） | [`lark-apps-plugin.md`](references/lark-apps-plugin.md) |
 
 ## 选择开发路径（进意图路由前先判这步）
 
