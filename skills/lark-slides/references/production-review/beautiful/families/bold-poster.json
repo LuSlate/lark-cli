@@ -1,0 +1,114 @@
+{
+  "artifact_kind": "production_review_family_card",
+  "default_selectable": false,
+  "family_id": "bold-poster",
+  "fidelity": {
+    "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/bold-poster.poster-stat-punch.json",
+    "receipt_sha256": "5cb7f128615cbb801b3e66df177a5c1d61b3339c92cba3a04b9db00aadce0635",
+    "score": 0.9499,
+    "status": "passed",
+    "threshold": 0.72
+  },
+  "fidelity_status": "passed",
+  "implemented_page_variant_count": 0,
+  "implemented_page_variants": [],
+  "known_blockers": [
+    "page_family_smoke_missing_or_failed",
+    "production_review_pending",
+    "quality_gate_integration_pending",
+    "selector_gate_missing"
+  ],
+  "page_family_promotion_gate": {
+    "claim_boundary": null,
+    "required_evidence": [],
+    "status": "missing"
+  },
+  "page_family_promotion_gate_status": "missing",
+  "page_variant_count": 10,
+  "page_variants": [
+    {
+      "page_role": "closing",
+      "page_variant_id": "close",
+      "source_class": "slide-close",
+      "source_slide_index": 10
+    },
+    {
+      "page_role": "content",
+      "page_variant_id": "financial",
+      "source_class": "slide-financial",
+      "source_slide_index": 4
+    },
+    {
+      "page_role": "data_dashboard",
+      "page_variant_id": "global",
+      "source_class": "slide-global",
+      "source_slide_index": 9
+    },
+    {
+      "page_role": "cover",
+      "page_variant_id": "hero",
+      "source_class": "slide-hero",
+      "source_slide_index": 1
+    },
+    {
+      "page_role": "data_dashboard",
+      "page_variant_id": "pillars",
+      "source_class": "slide-pillars",
+      "source_slide_index": 8
+    },
+    {
+      "page_role": "agenda",
+      "page_variant_id": "red",
+      "source_class": "slide-red",
+      "source_slide_index": 2
+    },
+    {
+      "page_role": "process_or_timeline",
+      "page_variant_id": "roadmap",
+      "source_class": "slide-roadmap",
+      "source_slide_index": 7
+    },
+    {
+      "page_role": "process_or_timeline",
+      "page_variant_id": "services",
+      "source_class": "slide-services",
+      "source_slide_index": 6
+    },
+    {
+      "page_role": "data_dashboard",
+      "page_variant_id": "stat",
+      "source_class": "slide-stat",
+      "source_slide_index": 5
+    },
+    {
+      "page_role": "detail",
+      "page_variant_id": "summary",
+      "source_class": "slide-summary",
+      "source_slide_index": 3
+    }
+  ],
+  "promotion_status": "needs_review",
+  "reference_screenshot": "beautiful-html-templates/screenshots/bold-poster-1.png",
+  "reference_screenshot_sha256": "95a9351619463053bda29bdf472702ed4bc650a4510fa6b3cfcc34d5e3ba79b1",
+  "review_artifact_path": "families/bold-poster.json",
+  "review_claim_boundary": "gallery_input_only_not_promotion_receipt",
+  "review_decision": "pending_review",
+  "runtime_template_id": "poster-stat-punch",
+  "smoke": {
+    "artifact_kind": "page-family-smoke",
+    "deck_path": null,
+    "deck_sha256": null,
+    "degraded": null,
+    "input_hashes": {},
+    "missing_required_roles": [],
+    "page_variant_coverage": {},
+    "receipt_path": null,
+    "receipt_sha256": null,
+    "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_status": "missing",
+  "template_id": "poster-stat-punch",
+  "visual_contract_path": "skills/lark-slides/references/visual-contracts/beautiful/bold-poster.poster-stat-punch.json",
+  "visual_contract_sha256": "7c8e40b48896fddcfa1d4340d2842c8f749f551aeec9d60c43daa0a50dbf2b7e"
+}

@@ -6,7 +6,7 @@
   "selected_family_id": "blue-professional",
   "selected_template_id": "executive-dashboard",
   "selected_theme_id": "blue-professional",
-  "rendered_pages": 9,
+  "rendered_pages": 10,
   "production_minimum_roles": [
     "cover",
     "agenda",
@@ -41,26 +41,31 @@
     },
     {
       "page": 5,
+      "page_role": "data",
+      "page_variant_id": "bars"
+    },
+    {
+      "page": 6,
       "page_role": "comparison",
       "page_variant_id": "split"
     },
     {
-      "page": 6,
+      "page": 7,
       "page_role": "quote",
       "page_variant_id": "quote"
     },
     {
-      "page": 7,
+      "page": 8,
       "page_role": "process",
       "page_variant_id": "timeline"
     },
     {
-      "page": 8,
+      "page": 9,
       "page_role": "detail",
       "page_variant_id": "detail"
     },
     {
-      "page": 9,
+      "page": 10,
       "page_role": "closing",
       "page_variant_id": "closing"
     }
@@ -96,16 +101,18 @@
     "data": {
       "covered": true,
       "pages": [
-        4
+        4,
+        5
       ],
       "variants": [
+        "bars",
         "metrics"
       ]
     },
     "comparison": {
       "covered": true,
       "pages": [
-        5
+        6
       ],
       "variants": [
         "split"
@@ -114,7 +121,7 @@
     "quote": {
       "covered": true,
       "pages": [
-        6
+        7
       ],
       "variants": [
         "quote"
@@ -123,7 +130,7 @@
     "process": {
       "covered": true,
       "pages": [
-        7
+        8
       ],
       "variants": [
         "timeline"
@@ -132,7 +139,7 @@
     "detail": {
       "covered": true,
       "pages": [
-        8
+        9
       ],
       "variants": [
         "detail"
@@ -141,7 +148,7 @@
     "closing": {
       "covered": true,
       "pages": [
-        9
+        10
       ],
       "variants": [
         "closing"
@@ -149,6 +156,32 @@
     }
   },
   "missing_required_roles": [],
+  "implemented_page_variants": [
+    "cover",
+    "agenda",
+    "metrics",
+    "dashboard",
+    "split",
+    "bars",
+    "quote",
+    "timeline",
+    "detail",
+    "closing"
+  ],
+  "covered_implemented_page_variants": [
+    "cover",
+    "agenda",
+    "metrics",
+    "dashboard",
+    "split",
+    "bars",
+    "quote",
+    "timeline",
+    "detail",
+    "closing"
+  ],
+  "missing_implemented_page_variants": [],
+  "unimplemented_page_variants": [],
   "reuse_count": 0,
   "variant_reuse_reasons": [],
   "degraded": false,
@@ -170,7 +203,7 @@
     "smoke_deck": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json"
   },
   "input_hashes": {
-    "smoke_deck": "87a953bd4f4232701b4e7baea9de20a23ab50e7f8fa7efc7221525b605c7e432",
+    "smoke_deck": "ad000e304afc4306e6e7eaaa3c8b624af09a28e80731b35a6d5862e90ee6abd0",
     "golden_spec.cover": "3dd3e57c24acaf47d17d9c658c7b905514362fba86231be5a6d16827c1665573",
     "golden_spec.agenda": "360dd0c6f8aa8a7446a1221abea6d29eb97bff41b13f17b0589a96896aa4f9d2",
     "golden_spec.metrics": "71b17aca5f64aaa653b4fdba9da63a56520b81f37dc3af15c9d096e103d5582b",
@@ -205,7 +238,9 @@
   "summary": {
     "error_count": 0,
     "warning_count": 0,
-    "page_count": 9,
-    "covered_role_count": 9
+    "page_count": 10,
+    "covered_role_count": 9,
+    "implemented_variant_count": 10,
+    "covered_implemented_variant_count": 10
   }
 }

@@ -19,10 +19,11 @@
     {"page": 2, "page_role": "agenda", "page_variant_id": "agenda", "title": "Discussion Map"},
     {"page": 3, "page_role": "content", "page_variant_id": "dashboard", "title": "Operating Context"},
     {"page": 4, "page_role": "data", "page_variant_id": "metrics", "title": "Metric Dashboard"},
-    {"page": 5, "page_role": "comparison", "page_variant_id": "split", "title": "Option Comparison"},
-    {"page": 6, "page_role": "quote", "page_variant_id": "quote", "title": "Leadership Signal"},
-    {"page": 7, "page_role": "process", "page_variant_id": "timeline", "title": "Execution Timeline"},
-    {"page": 8, "page_role": "detail", "page_variant_id": "detail", "title": "Deep Dive"},
-    {"page": 9, "page_role": "closing", "page_variant_id": "closing", "title": "Decision Close"}
+    {"page": 5, "page_role": "data", "page_variant_id": "bars", "title": "Performance Bars"},
+    {"page": 6, "page_role": "comparison", "page_variant_id": "split", "title": "Option Comparison"},
+    {"page": 7, "page_role": "quote", "page_variant_id": "quote", "title": "Leadership Signal"},
+    {"page": 8, "page_role": "process", "page_variant_id": "timeline", "title": "Execution Timeline"},
+    {"page": 9, "page_role": "detail", "page_variant_id": "detail", "title": "Deep Dive"},
+    {"page": 10, "page_role": "closing", "page_variant_id": "closing", "title": "Decision Close"}
   ]
 }

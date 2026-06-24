@@ -43,8 +43,9 @@ def write_selected_beautiful_page_family_plan(project: Path) -> None:
     roles = [
         ("cover", "cover"),
         ("agenda", "agenda"),
-        ("content", "content"),
+        ("content", "dashboard"),
         ("data", "metrics"),
+        ("data", "bars"),
         ("comparison", "split"),
         ("quote", "quote"),
         ("process", "timeline"),

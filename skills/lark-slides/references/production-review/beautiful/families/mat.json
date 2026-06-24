@@ -1,0 +1,108 @@
+{
+  "artifact_kind": "production_review_family_card",
+  "default_selectable": false,
+  "family_id": "mat",
+  "fidelity": {
+    "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/mat.mat-midcentury-board.json",
+    "receipt_sha256": "e1e95e38f4ea8124a378b7de4a0eb81593f192811ea42e7b31085ed84410cf34",
+    "score": 0.8843,
+    "status": "passed",
+    "threshold": 0.72
+  },
+  "fidelity_status": "passed",
+  "implemented_page_variant_count": 0,
+  "implemented_page_variants": [],
+  "known_blockers": [
+    "page_family_smoke_missing_or_failed",
+    "production_review_pending",
+    "quality_gate_integration_pending",
+    "selector_gate_missing"
+  ],
+  "page_family_promotion_gate": {
+    "claim_boundary": null,
+    "required_evidence": [],
+    "status": "missing"
+  },
+  "page_family_promotion_gate_status": "missing",
+  "page_variant_count": 9,
+  "page_variants": [
+    {
+      "page_role": "data_dashboard",
+      "page_variant_id": "chart",
+      "source_class": "slide--chart",
+      "source_slide_index": 8
+    },
+    {
+      "page_role": "content",
+      "page_variant_id": "compare",
+      "source_class": "slide--compare",
+      "source_slide_index": 7
+    },
+    {
+      "page_role": "cover",
+      "page_variant_id": "cover",
+      "source_class": "slide--cover",
+      "source_slide_index": 1
+    },
+    {
+      "page_role": "content",
+      "page_variant_id": "end",
+      "source_class": "slide--end",
+      "source_slide_index": 9
+    },
+    {
+      "page_role": "content",
+      "page_variant_id": "list",
+      "source_class": "slide--list",
+      "source_slide_index": 6
+    },
+    {
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "source_class": "slide--quote",
+      "source_slide_index": 5
+    },
+    {
+      "page_role": "content_split",
+      "page_variant_id": "split",
+      "source_class": "slide--split",
+      "source_slide_index": 3
+    },
+    {
+      "page_role": "agenda",
+      "page_variant_id": "statement",
+      "source_class": "slide--statement",
+      "source_slide_index": 2
+    },
+    {
+      "page_role": "data_dashboard",
+      "page_variant_id": "stats",
+      "source_class": "slide--stats",
+      "source_slide_index": 4
+    }
+  ],
+  "promotion_status": "needs_review",
+  "reference_screenshot": "beautiful-html-templates/screenshots/mat-1.png",
+  "reference_screenshot_sha256": "acac0ac30af8fbb206adfb6810573c72d3ca96b00293f9f850fdeefed1ae11dc",
+  "review_artifact_path": "families/mat.json",
+  "review_claim_boundary": "gallery_input_only_not_promotion_receipt",
+  "review_decision": "pending_review",
+  "runtime_template_id": "mat-midcentury-board",
+  "smoke": {
+    "artifact_kind": "page-family-smoke",
+    "deck_path": null,
+    "deck_sha256": null,
+    "degraded": null,
+    "input_hashes": {},
+    "missing_required_roles": [],
+    "page_variant_coverage": {},
+    "receipt_path": null,
+    "receipt_sha256": null,
+    "rendered_pages": null,
+    "status": "missing"
+  },
+  "smoke_status": "missing",
+  "template_id": "mat-midcentury-board",
+  "visual_contract_path": "skills/lark-slides/references/visual-contracts/beautiful/mat.mat-midcentury-board.json",
+  "visual_contract_sha256": "22f9899bfa852ac964a8e42a4178cc2898ff113d1e97da9584d0674d721e2319"
+}

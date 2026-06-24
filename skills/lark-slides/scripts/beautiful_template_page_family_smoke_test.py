@@ -56,8 +56,9 @@ class BeautifulTemplatePageFamilySmokeTest(unittest.TestCase):
             roles = [
                 ("cover", "cover"),
                 ("agenda", "agenda"),
-                ("content", "content"),
+                ("content", "dashboard"),
                 ("data", "metrics"),
+                ("data", "bars"),
                 ("comparison", "split"),
                 ("quote", "quote"),
                 ("process", "timeline"),
@@ -73,14 +74,44 @@ class BeautifulTemplatePageFamilySmokeTest(unittest.TestCase):
         self.assertEqual(receipt["selected_family_id"], "blue-professional")
         self.assertEqual(receipt["selected_template_id"], "executive-dashboard")
         self.assertEqual(receipt["selected_theme_id"], "blue-professional")
-        self.assertEqual(receipt["rendered_pages"], 9)
+        self.assertEqual(receipt["rendered_pages"], 10)
         self.assertEqual(receipt["missing_required_roles"], [])
+        self.assertEqual(receipt["missing_implemented_page_variants"], [])
+        self.assertEqual(receipt["unimplemented_page_variants"], [])
+        self.assertIn("bars", receipt["implemented_page_variants"])
+        self.assertIn("bars", receipt["covered_implemented_page_variants"])
         self.assertFalse(receipt["degraded"])
         self.assertEqual(set(receipt["page_variant_coverage"]), set(smoke.PRODUCTION_MINIMUM_ROLES))
         self.assertIn("slide_plan", receipt["input_hashes"])
         self.assertEqual(receipt["generated_by"], "beautiful_template_page_family_smoke.py")
         self.assertIsInstance(receipt["command"], list)
         self.assertIsInstance(receipt["provenance"], dict)
+
+    def test_blue_professional_smoke_requires_every_implemented_variant(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            roles = [
+                ("cover", "cover"),
+                ("agenda", "agenda"),
+                ("content", "dashboard"),
+                ("data", "metrics"),
+                ("comparison", "split"),
+                ("quote", "quote"),
+                ("process", "timeline"),
+                ("detail", "detail"),
+                ("closing", "closing"),
+            ]
+            write_smoke_plan(project, roles)
+
+            receipt = smoke.check_project_page_family_smoke(project)
+
+        self.assertEqual(receipt["status"], "failed")
+        self.assertTrue(receipt["degraded"])
+        self.assertIn("bars", receipt["missing_implemented_page_variants"])
+        self.assertIn(
+            "implemented_variant_missing",
+            {item["code"] for item in receipt["artifact_issues"]},
+        )
 
     def test_missing_required_role_degrades_and_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

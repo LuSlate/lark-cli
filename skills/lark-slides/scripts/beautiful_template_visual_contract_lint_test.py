@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sys
 import tempfile
 import unittest
@@ -22,6 +23,46 @@ REFERENCES_DIR = SCRIPT_DIR.parent / "references"
 def write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def production_review_receipt_for_row(row: dict[str, object], *, status: str = "passed") -> dict[str, object]:
+    evidence = {
+        "renderer_module": row.get("renderer_module"),
+        "golden_spec": row.get("golden_spec"),
+        "fidelity_receipt": row.get("fidelity_receipt"),
+        "page_family_smoke_deck": row.get("page_family_smoke_deck"),
+        "page_family_smoke_receipt": row.get("page_family_smoke_receipt"),
+        "visual_contract_path": row.get("visual_contract_path"),
+    }
+    golden_specs = row.get("page_variant_golden_specs")
+    if isinstance(golden_specs, dict):
+        evidence["page_variant_golden_specs"] = golden_specs
+    input_hashes: dict[str, str] = {}
+    for key, raw_path in evidence.items():
+        if isinstance(raw_path, str) and raw_path:
+            input_hashes[key] = file_sha256(lint.resolve_path(raw_path))
+        elif isinstance(raw_path, dict):
+            for variant_id, variant_path in raw_path.items():
+                input_hashes[f"{key}.{variant_id}"] = file_sha256(lint.resolve_path(variant_path))
+    return {
+        "version": "svglide-beautiful-production-review/v1",
+        "family_id": row.get("family_id"),
+        "runtime_template_id": row.get("runtime_template_id"),
+        "status": status,
+        "review_type": "production_promotion",
+        "review_decision": {
+            "allow_production": status == "passed",
+            "allow_default_selectable": status == "passed",
+        },
+        "required_evidence": evidence,
+        "input_hashes": input_hashes,
+        "scope": "production review receipt fixture for lint tests",
+        "claim_boundary": "human/production review evidence only; does not replace fidelity or page-family smoke",
+    }
 
 
 def minimal_page_family_contract() -> dict[str, object]:
@@ -196,6 +237,28 @@ class BeautifulTemplateVisualContractLintTest(unittest.TestCase):
 
         self.assertIn(
             ("page_family_smoke_receipt_input_hashes_missing", row["family_id"], "page_family_smoke_receipt.input_hashes"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_strict_page_family_matrix_lint_blocks_smoke_receipt_missing_implemented_variant(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        receipt = json.loads(lint.resolve_path(row["page_family_smoke_receipt"]).read_text(encoding="utf-8"))
+        receipt["pages"] = [
+            page for page in receipt["pages"] if page.get("page_variant_id") != "bars"
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            receipt_path = tmp_path / "smoke.json"
+            write_json(receipt_path, receipt)
+            row["page_family_smoke_receipt"] = receipt_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path, page_family_mode="strict")
+
+        self.assertIn(
+            ("page_family_smoke_receipt_missing_implemented_variant", row["family_id"], "page_family_smoke_receipt.pages.bars"),
             {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
         )
 
@@ -442,6 +505,79 @@ class BeautifulTemplateVisualContractLintTest(unittest.TestCase):
         self.assertIn(
             ("candidate_production_fidelity_role_consumption_missing", family, "fidelity_receipt.role_consumption"),
             {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_lint_blocks_default_selectable_without_production_review_receipt(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        row.pop("production_review_receipt", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            matrix_path = Path(tmp) / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        self.assertIn(
+            ("candidate_production_review_receipt_missing", row["family_id"], "production_review_receipt"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_lint_blocks_default_selectable_with_failed_production_review_receipt(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        receipt = production_review_receipt_for_row(row, status="failed")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            receipt_path = tmp_path / "production-review.json"
+            write_json(receipt_path, receipt)
+            row["production_review_receipt"] = receipt_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        self.assertIn(
+            ("candidate_production_review_receipt_not_passed", row["family_id"], "production_review_receipt.status"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_lint_blocks_default_selectable_with_stale_production_review_receipt(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        receipt = production_review_receipt_for_row(row)
+        receipt["input_hashes"]["renderer_module"] = "stale"
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            receipt_path = tmp_path / "production-review.json"
+            write_json(receipt_path, receipt)
+            row["production_review_receipt"] = receipt_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        self.assertIn(
+            ("candidate_production_review_receipt_stale", row["family_id"], "production_review_receipt.input_hashes.renderer_module"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_lint_does_not_require_production_review_receipt_for_needs_review_family(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "needs_review")
+        row.pop("production_review_receipt", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            matrix_path = Path(tmp) / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path)
+
+        self.assertNotIn(
+            row["family_id"],
+            {
+                item.get("family_id")
+                for item in issues
+                if str(item.get("code") or "").startswith("candidate_production_review")
+            },
         )
 
 

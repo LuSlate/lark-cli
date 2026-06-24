@@ -81,6 +81,12 @@ def _as_text(value: Any) -> str | None:
     return None
 
 
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
 def _collect_selection_values(payload: dict[str, Any]) -> tuple[set[str], set[str], set[str]]:
     family_ids: set[str] = set()
     template_ids: set[str] = set()
@@ -267,6 +273,21 @@ def check_project_page_family_smoke(
     missing_required_roles = [role for role in PRODUCTION_MINIMUM_ROLES if not role_pages[role]]
     variants = [page.get("page_variant_id") for page in pages if page.get("page_variant_id")]
     variant_counts = Counter(str(variant) for variant in variants)
+    implemented_page_variants = _string_list(selected.get("implemented_page_variants"))
+    implemented_variant_set = set(implemented_page_variants)
+    covered_implemented_page_variants = [
+        variant_id for variant_id in implemented_page_variants if variant_counts.get(variant_id, 0) > 0
+    ]
+    missing_implemented_page_variants = [
+        variant_id for variant_id in implemented_page_variants if variant_counts.get(variant_id, 0) == 0
+    ]
+    unimplemented_page_variants = sorted(
+        {
+            str(variant)
+            for variant in variants
+            if implemented_variant_set and str(variant) not in implemented_variant_set
+        }
+    )
     reuse_count = sum(count - 1 for count in variant_counts.values() if count > 1)
     variant_reuse_reasons = [
         {"page_variant_id": variant, "reuse_count": count, "reason": "duplicate_variant_in_smoke_deck"}
@@ -282,6 +303,20 @@ def check_project_page_family_smoke(
         {"code": "required_role_missing", "message": f"missing required page-family role: {role}"}
         for role in missing_required_roles
     )
+    artifact_issues.extend(
+        {
+            "code": "implemented_variant_missing",
+            "message": f"missing implemented page-family variant: {variant_id}",
+        }
+        for variant_id in missing_implemented_page_variants
+    )
+    artifact_issues.extend(
+        {
+            "code": "unimplemented_variant_used",
+            "message": f"smoke deck uses unimplemented page-family variant: {variant_id}",
+        }
+        for variant_id in unimplemented_page_variants
+    )
     input_paths = {
         "slide_plan": Path("02-plan/slide_plan.json"),
         "generator_receipt": Path("receipts/generate_svg.json"),
@@ -291,6 +326,10 @@ def check_project_page_family_smoke(
     }
     if family_id:
         input_paths["smoke_deck"] = Path(relpath(SMOKE_DECK_DIR / f"{family_id}.json", project))
+    golden_specs = selected.get("page_variant_golden_specs") if isinstance(selected.get("page_variant_golden_specs"), dict) else {}
+    for variant_id, raw_path in sorted(golden_specs.items()):
+        if isinstance(variant_id, str) and isinstance(raw_path, str) and raw_path:
+            input_paths[f"golden_spec.{variant_id}"] = Path(raw_path)
     input_hashes = {
         key: (file_sha256(project / rel) if (project / rel).is_file() else file_sha256(Path(rel)) if Path(rel).is_file() else None)
         for key, rel in input_paths.items()
@@ -309,6 +348,10 @@ def check_project_page_family_smoke(
         "production_minimum_roles": PRODUCTION_MINIMUM_ROLES,
         "page_variant_coverage": page_variant_coverage,
         "missing_required_roles": missing_required_roles,
+        "implemented_page_variants": implemented_page_variants,
+        "covered_implemented_page_variants": covered_implemented_page_variants,
+        "missing_implemented_page_variants": missing_implemented_page_variants,
+        "unimplemented_page_variants": unimplemented_page_variants,
         "reuse_count": reuse_count,
         "variant_reuse_reasons": variant_reuse_reasons,
         "degraded": degraded,
@@ -330,6 +373,8 @@ def check_project_page_family_smoke(
             "warning_count": reuse_count,
             "page_count": len(pages),
             "covered_role_count": len(PRODUCTION_MINIMUM_ROLES) - len(missing_required_roles),
+            "implemented_variant_count": len(implemented_page_variants),
+            "covered_implemented_variant_count": len(covered_implemented_page_variants),
         },
     }
 

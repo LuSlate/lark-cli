@@ -10,6 +10,7 @@
       "visual_contract",
       "selector_gate",
       "quality_gate",
+      "production_review_receipt",
       "visual_contract_path"
     ]
   },
@@ -3349,6 +3350,18 @@
       },
       "page_family_smoke_deck": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json",
       "page_family_smoke_receipt": "skills/lark-slides/references/receipts/page-family-smoke/blue-professional.executive-dashboard.json",
+      "page_family_smoke": {
+        "status": "passed",
+        "rendered_pages": 10,
+        "implemented_page_variant_count": 10,
+        "covered_implemented_page_variant_count": 10,
+        "missing_implemented_page_variants": [],
+        "unimplemented_page_variants": [],
+        "smoke_deck": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json",
+        "smoke_receipt": "skills/lark-slides/references/receipts/page-family-smoke/blue-professional.executive-dashboard.json",
+        "claim_boundary": "blue-professional page-family smoke evidence only; does not promote other families"
+      },
+      "production_review_receipt": "skills/lark-slides/references/receipts/production-review/blue-professional.executive-dashboard.json",
       "page_family_promotion_gate": {
         "status": "passed",
         "required_evidence": [

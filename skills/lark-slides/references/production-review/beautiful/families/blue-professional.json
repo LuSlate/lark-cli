@@ -1,0 +1,222 @@
+{
+  "artifact_kind": "production_review_family_card",
+  "default_selectable": true,
+  "family_id": "blue-professional",
+  "fidelity": {
+    "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json",
+    "receipt_sha256": "f6a4a0a015c09f14cb9e987f69734cbb05a06e79bba9c9b1ba2ca16ed6bc597a",
+    "score": 0.9855,
+    "status": "passed",
+    "threshold": 0.72
+  },
+  "fidelity_status": "passed",
+  "implemented_page_variant_count": 10,
+  "implemented_page_variants": [
+    "cover",
+    "agenda",
+    "metrics",
+    "dashboard",
+    "split",
+    "bars",
+    "quote",
+    "timeline",
+    "detail",
+    "closing"
+  ],
+  "known_blockers": [],
+  "page_family_promotion_gate": {
+    "claim_boundary": "page-family role/variant smoke evidence plus blue-professional dedicated renderer sample; does not promote other families",
+    "required_evidence": [
+      "page_variants",
+      "renderer_dispatch",
+      "golden_specs",
+      "smoke_deck_receipt",
+      "quality_gate"
+    ],
+    "status": "passed"
+  },
+  "page_family_promotion_gate_status": "passed",
+  "page_variant_count": 10,
+  "page_variants": [
+    {
+      "page_role": "agenda",
+      "page_variant_id": "agenda",
+      "source_class": "layout-agenda",
+      "source_slide_index": 2
+    },
+    {
+      "page_role": "data_chart",
+      "page_variant_id": "bars",
+      "source_class": "layout-bars",
+      "source_slide_index": 6
+    },
+    {
+      "page_role": "closing",
+      "page_variant_id": "closing",
+      "source_class": "layout-closing",
+      "source_slide_index": 10
+    },
+    {
+      "page_role": "cover",
+      "page_variant_id": "cover",
+      "source_class": "layout-cover",
+      "source_slide_index": 1
+    },
+    {
+      "page_role": "data_dashboard",
+      "page_variant_id": "dashboard",
+      "source_class": "layout-dashboard",
+      "source_slide_index": 4
+    },
+    {
+      "page_role": "detail",
+      "page_variant_id": "detail",
+      "source_class": "layout-detail",
+      "source_slide_index": 9
+    },
+    {
+      "page_role": "data_metrics",
+      "page_variant_id": "metrics",
+      "source_class": "layout-metrics",
+      "source_slide_index": 3
+    },
+    {
+      "page_role": "quote_or_emphasis",
+      "page_variant_id": "quote",
+      "source_class": "layout-quote",
+      "source_slide_index": 7
+    },
+    {
+      "page_role": "content_split",
+      "page_variant_id": "split",
+      "source_class": "layout-split",
+      "source_slide_index": 5
+    },
+    {
+      "page_role": "process_or_timeline",
+      "page_variant_id": "timeline",
+      "source_class": "layout-timeline",
+      "source_slide_index": 8
+    }
+  ],
+  "promotion_status": "production",
+  "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
+  "reference_screenshot_sha256": "0f08aefe70cb14ca7f3126ecc2f34319ca8f281ecdf81c6d6486ea93b2236f8c",
+  "review_artifact_path": "families/blue-professional.json",
+  "review_claim_boundary": "gallery_input_only_not_promotion_receipt",
+  "review_decision": "pending_review",
+  "runtime_template_id": "executive-dashboard",
+  "smoke": {
+    "artifact_kind": "page-family-smoke",
+    "deck_path": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json",
+    "deck_sha256": "ad000e304afc4306e6e7eaaa3c8b624af09a28e80731b35a6d5862e90ee6abd0",
+    "degraded": false,
+    "input_hashes": {
+      "golden_spec.agenda": "360dd0c6f8aa8a7446a1221abea6d29eb97bff41b13f17b0589a96896aa4f9d2",
+      "golden_spec.bars": "8f6bc2850326d4a0fbd489d83586694201b2d12eab75c5c959d17e81ff602952",
+      "golden_spec.closing": "3103fc98e5ce67c299f6e1d5fc6adae6c1bbb1cd76cefb83c606b8be3ae837ee",
+      "golden_spec.cover": "3dd3e57c24acaf47d17d9c658c7b905514362fba86231be5a6d16827c1665573",
+      "golden_spec.dashboard": "9fdeaf7d2187a61b62803350eefac26dff135782ad3f93b06707b71e679bdb8b",
+      "golden_spec.detail": "a5168f94a81d44d9e945de36120bf024ab64acc250dd6f54448552ebfd691fb3",
+      "golden_spec.metrics": "71b17aca5f64aaa653b4fdba9da63a56520b81f37dc3af15c9d096e103d5582b",
+      "golden_spec.quote": "2044ecea4449cb20761ff47516f17dfa2db0a2f99130ff8aac4a731588b4a717",
+      "golden_spec.split": "a085125effb6489dd3d8737a280fa2debd638e286a6a47efb9b85e520a99e92e",
+      "golden_spec.timeline": "e35a0efffd07c38e8319e2f986053df474ad513416556eca32b5177401145e8c",
+      "smoke_deck": "ad000e304afc4306e6e7eaaa3c8b624af09a28e80731b35a6d5862e90ee6abd0"
+    },
+    "missing_required_roles": [],
+    "page_variant_coverage": {
+      "agenda": {
+        "covered": true,
+        "pages": [
+          2
+        ],
+        "variants": [
+          "agenda"
+        ]
+      },
+      "closing": {
+        "covered": true,
+        "pages": [
+          10
+        ],
+        "variants": [
+          "closing"
+        ]
+      },
+      "comparison": {
+        "covered": true,
+        "pages": [
+          6
+        ],
+        "variants": [
+          "split"
+        ]
+      },
+      "content": {
+        "covered": true,
+        "pages": [
+          3
+        ],
+        "variants": [
+          "dashboard"
+        ]
+      },
+      "cover": {
+        "covered": true,
+        "pages": [
+          1
+        ],
+        "variants": [
+          "cover"
+        ]
+      },
+      "data": {
+        "covered": true,
+        "pages": [
+          4,
+          5
+        ],
+        "variants": [
+          "bars",
+          "metrics"
+        ]
+      },
+      "detail": {
+        "covered": true,
+        "pages": [
+          9
+        ],
+        "variants": [
+          "detail"
+        ]
+      },
+      "process": {
+        "covered": true,
+        "pages": [
+          8
+        ],
+        "variants": [
+          "timeline"
+        ]
+      },
+      "quote": {
+        "covered": true,
+        "pages": [
+          7
+        ],
+        "variants": [
+          "quote"
+        ]
+      }
+    },
+    "receipt_path": "skills/lark-slides/references/receipts/page-family-smoke/blue-professional.executive-dashboard.json",
+    "receipt_sha256": "ae3cfa9a3ba970c0f4d6903148d7291375019dd3d12a8c3619599c5520742804",
+    "rendered_pages": 10,
+    "status": "passed"
+  },
+  "smoke_status": "passed",
+  "template_id": "executive-dashboard",
+  "visual_contract_path": "skills/lark-slides/references/visual-contracts/beautiful/blue-professional.executive-dashboard.json",
+  "visual_contract_sha256": "1e1f13157126fdd67f9ce274df5b81419ea29e91e976890f8c099188c2af5a84"
+}

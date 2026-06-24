@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import argparse
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,7 @@ REFERENCES_DIR = SCRIPT_DIR.parent / "references"
 SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 MATRIX_PATH = REFERENCES_DIR / "beautiful-template-executable-matrix.json"
 FAMILIES_PATH = REFERENCES_DIR / "beautiful-html-template-families.json"
+PRODUCTION_REVIEW_GALLERY_PATH = REFERENCES_DIR / "production-review" / "beautiful" / "manifest.json"
 
 REQUIRED_MATRIX_FIELDS = {
     "family_id",
@@ -196,6 +198,15 @@ PAGE_VARIANT_REQUIRED_FIELDS = {
     "source_refs",
     "extraction_confidence",
 }
+PRODUCTION_REVIEW_REQUIRED_EVIDENCE = (
+    "renderer_module",
+    "golden_spec",
+    "page_variant_golden_specs",
+    "fidelity_receipt",
+    "page_family_smoke_deck",
+    "page_family_smoke_receipt",
+    "visual_contract_path",
+)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -210,6 +221,10 @@ def read_json_or_empty(path: Path) -> dict[str, Any]:
         return read_json(path)
     except (OSError, json.JSONDecodeError, ValueError):
         return {}
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def resolve_path(value: object) -> Path:
@@ -230,6 +245,12 @@ def is_non_empty(value: object) -> bool:
     if isinstance(value, (dict, list)):
         return bool(value)
     return value is not None
+
+
+def string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
 
 
 def source_paths_for_family(family: dict[str, Any]) -> dict[str, str]:
@@ -480,6 +501,33 @@ def validate_page_family_candidate(row: dict[str, Any]) -> list[dict[str, str]]:
             issues.append(issue("page_family_smoke_receipt_input_hashes_missing", "page_family_smoke_receipt must include non-empty input_hashes", family_id=family_id, path="page_family_smoke_receipt.input_hashes"))
         if not isinstance(receipt.get("provenance"), dict) or not receipt.get("provenance"):
             issues.append(issue("page_family_smoke_receipt_provenance_missing", "page_family_smoke_receipt must include provenance", family_id=family_id, path="page_family_smoke_receipt.provenance"))
+        implemented_variants = string_list(row.get("implemented_page_variants"))
+        if implemented_variants:
+            pages = receipt.get("pages") if isinstance(receipt.get("pages"), list) else []
+            receipt_variants = {
+                str(page.get("page_variant_id")).strip()
+                for page in pages
+                if isinstance(page, dict) and is_non_empty(page.get("page_variant_id"))
+            }
+            for variant_id in implemented_variants:
+                if variant_id not in receipt_variants:
+                    issues.append(
+                        issue(
+                            "page_family_smoke_receipt_missing_implemented_variant",
+                            "page_family_smoke_receipt pages must cover every implemented page variant",
+                            family_id=family_id,
+                            path=f"page_family_smoke_receipt.pages.{variant_id}",
+                        )
+                    )
+            for variant_id in sorted(receipt_variants - set(implemented_variants)):
+                issues.append(
+                    issue(
+                        "page_family_smoke_receipt_uses_unimplemented_variant",
+                        "page_family_smoke_receipt pages must not use variants outside implemented_page_variants",
+                        family_id=family_id,
+                        path=f"page_family_smoke_receipt.pages.{variant_id}",
+                    )
+                )
     if isinstance(golden_specs, dict):
         for variant_id, raw_path in sorted(golden_specs.items()):
             if not is_non_empty(raw_path) or not resolve_path(raw_path).is_file():
@@ -507,6 +555,290 @@ def validate_page_family_candidate(row: dict[str, Any]) -> list[dict[str, str]]:
                     "production/default selectable beautiful family must have page-family smoke evidence or an explicit migration block",
                     family_id=family_id,
                     path="page_family_smoke_receipt",
+                )
+            )
+    return issues
+
+
+def production_review_expected_evidence(row: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    family_id = str(row.get("family_id") or "")
+    evidence: dict[str, Any] = {}
+    issues: list[dict[str, str]] = []
+    for key in PRODUCTION_REVIEW_REQUIRED_EVIDENCE:
+        value = row.get(key)
+        if not is_non_empty(value):
+            issues.append(
+                issue(
+                    "candidate_production_review_evidence_missing",
+                    f"production review requires {key}",
+                    family_id=family_id,
+                    path=key,
+                )
+            )
+            continue
+        evidence[key] = value
+    return evidence, issues
+
+
+def production_review_expected_hashes(evidence: dict[str, Any]) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for key, value in sorted(evidence.items()):
+        if isinstance(value, str):
+            path = resolve_path(value)
+            if path.is_file():
+                hashes[key] = file_sha256(path)
+        elif isinstance(value, dict):
+            for nested_key, nested_value in sorted(value.items()):
+                path = resolve_path(nested_value)
+                if path.is_file():
+                    hashes[f"{key}.{nested_key}"] = file_sha256(path)
+    return hashes
+
+
+def _production_review_gallery_path(row: dict[str, Any]) -> Path:
+    gallery = row.get("production_review_gallery")
+    if isinstance(gallery, dict) and is_non_empty(gallery.get("manifest_path")):
+        return resolve_path(gallery.get("manifest_path"))
+    if is_non_empty(row.get("production_review_gallery_manifest")):
+        return resolve_path(row.get("production_review_gallery_manifest"))
+    return PRODUCTION_REVIEW_GALLERY_PATH
+
+
+def validate_pending_production_review_gallery(row: dict[str, Any], *, matrix_path: Path) -> tuple[bool, list[dict[str, str]]]:
+    family_id = str(row.get("family_id") or "")
+    runtime_template_id = str(row.get("runtime_template_id") or "")
+    manifest_path = _production_review_gallery_path(row)
+    issues: list[dict[str, str]] = []
+    if not manifest_path.is_file():
+        return False, issues
+    manifest = read_json_or_empty(manifest_path)
+    if not manifest:
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_invalid",
+                "production review gallery manifest must be readable JSON object",
+                family_id=family_id,
+                path="production_review_gallery",
+            )
+        )
+        return False, issues
+    if manifest.get("artifact_kind") != "production_review_gallery" or manifest.get("not_promotion_receipt") is not True:
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_claim_invalid",
+                "production review gallery must be marked as review input only and not a promotion receipt",
+                family_id=family_id,
+                path="production_review_gallery.not_promotion_receipt",
+            )
+        )
+    if manifest.get("source_matrix_sha256") != file_sha256(matrix_path):
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_stale",
+                "production review gallery source_matrix_sha256 must match the current matrix",
+                family_id=family_id,
+                path="production_review_gallery.source_matrix_sha256",
+            )
+        )
+    families = manifest.get("families") if isinstance(manifest.get("families"), list) else []
+    card = next(
+        (
+            item
+            for item in families
+            if isinstance(item, dict)
+            and item.get("family_id") == family_id
+            and item.get("runtime_template_id") == runtime_template_id
+        ),
+        None,
+    )
+    if not isinstance(card, dict):
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_family_missing",
+                "production review gallery must include the production/default family card",
+                family_id=family_id,
+                path="production_review_gallery.families",
+            )
+        )
+        return False, issues
+    if card.get("review_decision") != "pending_review":
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_decision_invalid",
+                "production review gallery card must remain pending_review until a separate production receipt exists",
+                family_id=family_id,
+                path="production_review_gallery.review_decision",
+            )
+        )
+    if card.get("artifact_kind") == "promotion_receipt":
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_card_claim_invalid",
+                "production review gallery family card must not be a promotion receipt",
+                family_id=family_id,
+                path="production_review_gallery.families.artifact_kind",
+            )
+        )
+    if card.get("promotion_status") != row.get("promotion_status") or card.get("default_selectable") != (row.get("default_selectable") is True):
+        issues.append(
+            issue(
+                "candidate_production_review_gallery_status_mismatch",
+                "production review gallery card status must match the candidate matrix",
+                family_id=family_id,
+                path="production_review_gallery.families.status",
+            )
+        )
+    return not issues, issues
+
+
+def validate_production_review_receipt(row: dict[str, Any], *, matrix_path: Path = MATRIX_PATH) -> list[dict[str, str]]:
+    family_id = str(row.get("family_id") or "")
+    issues: list[dict[str, str]] = []
+    evidence, evidence_issues = production_review_expected_evidence(row)
+    issues.extend(evidence_issues)
+    receipt_ref = row.get("production_review_receipt")
+    if not is_non_empty(receipt_ref):
+        gallery_ok, gallery_issues = validate_pending_production_review_gallery(row, matrix_path=matrix_path)
+        if gallery_ok:
+            return issues
+        issues.extend(gallery_issues)
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_missing",
+                "production/default selectable beautiful family must have a production review receipt",
+                family_id=family_id,
+                path="production_review_receipt",
+            )
+        )
+        return issues
+    receipt_path = resolve_path(receipt_ref)
+    if not receipt_path.is_file():
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_missing_file",
+                "production_review_receipt must point to an existing receipt",
+                family_id=family_id,
+                path="production_review_receipt",
+            )
+        )
+        return issues
+    receipt = read_json_or_empty(receipt_path)
+    if not receipt:
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_invalid",
+                "production_review_receipt must be readable JSON object",
+                family_id=family_id,
+                path="production_review_receipt",
+            )
+        )
+        return issues
+    if receipt.get("status") != "passed":
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_not_passed",
+                "production_review_receipt.status must be passed",
+                family_id=family_id,
+                path="production_review_receipt.status",
+            )
+        )
+    if receipt.get("family_id") != row.get("family_id"):
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_family_mismatch",
+                "production_review_receipt.family_id must match candidate",
+                family_id=family_id,
+                path="production_review_receipt.family_id",
+            )
+        )
+    if receipt.get("runtime_template_id") != row.get("runtime_template_id"):
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_template_mismatch",
+                "production_review_receipt.runtime_template_id must match candidate",
+                family_id=family_id,
+                path="production_review_receipt.runtime_template_id",
+            )
+        )
+    if receipt.get("review_type") != "production_promotion":
+        issues.append(
+            issue(
+                "candidate_production_review_receipt_type_invalid",
+                "production_review_receipt.review_type must be production_promotion",
+                family_id=family_id,
+                path="production_review_receipt.review_type",
+            )
+        )
+    decision = receipt.get("review_decision") if isinstance(receipt.get("review_decision"), dict) else {}
+    if decision.get("allow_production") is not True or decision.get("allow_default_selectable") is not True:
+        issues.append(
+            issue(
+                "candidate_production_review_decision_invalid",
+                "production_review_receipt.review_decision must explicitly allow production and default selectable",
+                family_id=family_id,
+                path="production_review_receipt.review_decision",
+            )
+        )
+    claim_boundary = str(receipt.get("claim_boundary") or "").lower()
+    if "does not replace" not in claim_boundary or "fidelity" not in claim_boundary:
+        issues.append(
+            issue(
+                "candidate_production_review_claim_boundary_invalid",
+                "production_review_receipt must state it does not replace fidelity",
+                family_id=family_id,
+                path="production_review_receipt.claim_boundary",
+            )
+        )
+    receipt_evidence = receipt.get("required_evidence")
+    if not isinstance(receipt_evidence, dict):
+        issues.append(
+            issue(
+                "candidate_production_review_required_evidence_missing",
+                "production_review_receipt.required_evidence must be an object",
+                family_id=family_id,
+                path="production_review_receipt.required_evidence",
+            )
+        )
+        receipt_evidence = {}
+    for key, expected_value in sorted(evidence.items()):
+        if receipt_evidence.get(key) != expected_value:
+            issues.append(
+                issue(
+                    "candidate_production_review_required_evidence_mismatch",
+                    "production_review_receipt.required_evidence must match candidate matrix evidence",
+                    family_id=family_id,
+                    path=f"production_review_receipt.required_evidence.{key}",
+                )
+            )
+    input_hashes = receipt.get("input_hashes")
+    if not isinstance(input_hashes, dict) or not input_hashes:
+        issues.append(
+            issue(
+                "candidate_production_review_input_hashes_missing",
+                "production_review_receipt.input_hashes must be a non-empty object",
+                family_id=family_id,
+                path="production_review_receipt.input_hashes",
+            )
+        )
+        input_hashes = {}
+    for key, expected_hash in sorted(production_review_expected_hashes(evidence).items()):
+        actual_hash = input_hashes.get(key)
+        if not is_non_empty(actual_hash):
+            issues.append(
+                issue(
+                    "candidate_production_review_input_hash_missing",
+                    "production_review_receipt.input_hashes must include every evidence file",
+                    family_id=family_id,
+                    path=f"production_review_receipt.input_hashes.{key}",
+                )
+            )
+        elif actual_hash != expected_hash:
+            issues.append(
+                issue(
+                    "candidate_production_review_receipt_stale",
+                    "production_review_receipt.input_hashes must match current evidence files",
+                    family_id=family_id,
+                    path=f"production_review_receipt.input_hashes.{key}",
                 )
             )
     return issues
@@ -830,6 +1162,7 @@ def validate_candidate_matrix(
                 if not resolve_path(row.get(key)).is_file():
                     issues.append(issue("candidate_production_evidence_missing_file", f"production candidate.{key} must exist", family_id=family_id, path=key))
             issues.extend(validate_production_role_consumption(row))
+            issues.extend(validate_production_review_receipt(row, matrix_path=matrix_path))
             if status not in PRODUCTION_STATUSES or not is_default:
                 issues.append(issue("candidate_production_status_inconsistent", "production candidates must be default selectable and vice versa", family_id=family_id))
         elif status not in NON_PRODUCTION_STATUSES:
