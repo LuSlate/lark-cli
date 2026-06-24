@@ -5,6 +5,7 @@ package drive
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -1098,5 +1099,39 @@ func TestDriveTaskResultExportIncludesReadyFlags(t *testing.T) {
 	}
 	if !bytes.Contains(stdout.Bytes(), []byte(`"job_status_label": "processing"`)) {
 		t.Fatalf("stdout missing job_status_label: %s", stdout.String())
+	}
+}
+
+// TestWrapExportContextErr verifies the export poll loop's typed wrapping for
+// context cancellation / deadline. Previously the poll loop returned ctx.Err()
+// directly so an untyped context.Canceled would escape as a plain string at
+// the command layer, bypassing the typed-error contract.
+func TestWrapExportContextErr(t *testing.T) {
+	if err := wrapExportContextErr(nil); err != nil {
+		t.Errorf("wrapExportContextErr(nil) = %v, want nil", err)
+	}
+
+	cancelled := wrapExportContextErr(context.Canceled)
+	var netErrCancel *errs.NetworkError
+	if !errors.As(cancelled, &netErrCancel) {
+		t.Fatalf("wrapExportContextErr(Canceled) = %T, want *errs.NetworkError", cancelled)
+	}
+	if netErrCancel.Subtype != errs.SubtypeNetworkTransport {
+		t.Errorf("Canceled subtype = %q, want %q", netErrCancel.Subtype, errs.SubtypeNetworkTransport)
+	}
+	if !errors.Is(cancelled, context.Canceled) {
+		t.Error("wrapExportContextErr should preserve context.Canceled via errors.Is")
+	}
+
+	deadline := wrapExportContextErr(context.DeadlineExceeded)
+	var netErrDeadline *errs.NetworkError
+	if !errors.As(deadline, &netErrDeadline) {
+		t.Fatalf("wrapExportContextErr(DeadlineExceeded) = %T, want *errs.NetworkError", deadline)
+	}
+	if netErrDeadline.Subtype != errs.SubtypeNetworkTimeout {
+		t.Errorf("DeadlineExceeded subtype = %q, want %q", netErrDeadline.Subtype, errs.SubtypeNetworkTimeout)
+	}
+	if !errors.Is(deadline, context.DeadlineExceeded) {
+		t.Error("wrapExportContextErr should preserve context.DeadlineExceeded via errors.Is")
 	}
 }

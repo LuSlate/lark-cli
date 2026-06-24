@@ -5,6 +5,7 @@ package drive
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,24 @@ import (
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
+
+// wrapExportContextErr converts a context cancellation / deadline error into a
+// typed errs.NetworkError so the cobra layer sees a typed envelope (with cause
+// preserved for errors.Is) instead of an untyped context.Canceled /
+// context.DeadlineExceeded escaping as a plain string. CR-flagged hole on the
+// poll loop: returning ctx.Err() directly bypassed the typed-error contract.
+func wrapExportContextErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	subtype := errs.SubtypeNetworkTransport
+	msg := "drive +export polling cancelled: %s"
+	if errors.Is(err, context.DeadlineExceeded) {
+		subtype = errs.SubtypeNetworkTimeout
+		msg = "drive +export polling deadline exceeded: %s"
+	}
+	return errs.NewNetworkError(subtype, msg, err).WithCause(err)
+}
 
 // DriveExport exports Drive-native documents to local files and falls back to
 // a follow-up command when the async export task does not finish in time.
@@ -226,12 +245,12 @@ func RunExport(ctx context.Context, runtime *common.RuntimeContext, p ExportPara
 		if attempt > 1 {
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return wrapExportContextErr(ctx.Err())
 			case <-time.After(driveExportPollInterval):
 			}
 		}
 		if err := ctx.Err(); err != nil {
-			return err
+			return wrapExportContextErr(err)
 		}
 
 		status, err := getDriveExportStatus(runtime, spec.Token, ticket)
