@@ -49,7 +49,7 @@ lark-cli vc +meeting-events --as <same_identity> --meeting-id <id> --page-size 2
 - `+search` 结果中的 `id`
 
 **不要**把 9 位会议号（`--meeting-number`）传给这个命令。
-如果 `meeting_id` 来自 `+meeting-list-active --as user`，后续 `+meeting-events` 继续使用 `--as user`。如果返回多个会议，先让用户选择具体 `meeting_id`。
+如果 `meeting_id` 来自 `+meeting-list-active`，后续 `+meeting-events` 必须沿用同一身份；如果返回多个会议，先让用户选择具体 `meeting_id`。
 
 如果用户提供的是 9 位会议号且没有明确要求应用机器人入会，先按当前场景身份查 active meetings 并按 `meeting_no` 匹配。匹配到唯一项后，取该项的长数字 `meeting_id`，再用同一身份调用本命令；匹配失败时不要自动入会，除非用户明确说“入会 / 让应用机器人旁听 / 代我参会”。
 
