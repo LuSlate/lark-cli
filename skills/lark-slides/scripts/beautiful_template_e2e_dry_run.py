@@ -201,6 +201,17 @@ def run_case(case_id: str, query: str, out_dir: Path, include_images: bool) -> d
         "svg_files": [{"page": index + 1, "path": f"page-{index + 1:03d}.svg"} for index in range(10)],
         "slides": slides,
     }
+    for key in [
+        "deck_recipe_selection",
+        "style_pack_selection",
+        "density_mode_selection",
+        "component_variant_selection",
+        "image_treatment_selection",
+        "style_lock",
+        "selection_metadata",
+    ]:
+        if key in matched_plan:
+            plan[key] = matched_plan[key]
     plan_path = case_dir / "slide_plan.json"
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     preview_html = "<!doctype html><html><body>" + "\n".join(f'<img src="page-{index + 1:03d}.svg" />' for index in range(10)) + "</body></html>\n"
@@ -244,7 +255,7 @@ def run_case(case_id: str, query: str, out_dir: Path, include_images: bool) -> d
 
 def run_all(out_dir: Path = DEFAULT_OUT_DIR) -> dict[str, Any]:
     receipts = [
-        run_case("internal-review", "internal business review for management with metrics evidence and action plan", out_dir, include_images=False),
+        run_case("internal-review", "内部业务复盘报告，面向管理层，包含经营指标、证据和行动计划", out_dir, include_images=False),
         run_case("zhipu-minimax", "Zhipu and MiniMax product comparison with company identity and real image slots", out_dir, include_images=True),
     ]
     summary = {

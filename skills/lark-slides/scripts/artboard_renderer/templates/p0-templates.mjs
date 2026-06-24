@@ -1,4 +1,5 @@
 import { Badge, Chip, StatCard, Subtitle, TextBlock, Title, box } from '../components/primitives.mjs'
+import { renderBeautifulTemplate } from './beautiful/index.mjs'
 
 const CANVAS = { width: 960, height: 540 }
 const DEFAULT_FONT_FAMILY = 'SVGlideDefault'
@@ -1043,8 +1044,9 @@ export function renderTree(spec) {
   if (spec.template_id === 'risk-alert') return riskAlert(spec)
   if (spec.template_id === 'roadmap-lanes') return roadmapLanes(spec)
   if (spec.template_id === 'architecture-blueprint') return architectureBlueprint(spec)
+  const beautifulTree = renderBeautifulTemplate(spec)
+  if (beautifulTree) return beautifulTree
   if (spec.template_id === 'dense-panel-grid') return densePanelGrid(spec)
-  if (spec.template_id === 'executive-dashboard') return executiveDashboard(spec)
   if (spec.template_id === 'editorial-quote-chart') return editorialQuoteChart(spec)
   if (spec.template_id === 'ledger-briefing') return ledgerBriefing(spec)
   if (spec.template_id === 'intelligence-brief') return intelligenceBrief(spec)
@@ -1058,6 +1060,9 @@ export function renderTree(spec) {
   if (spec.template_id === 'trend-grid-report') return trendGridReport(spec)
   if (spec.template_id === 'serif-stat-editorial') return serifStatEditorial(spec)
   if (spec.template_id === 'poster-stat-punch') return posterStatPunch(spec)
-  if (BEAUTIFUL_TEMPLATE_CONFIGS[spec.template_id]) return beautifulTemplate(spec, BEAUTIFUL_TEMPLATE_CONFIGS[spec.template_id])
+  const debugFallbackConfig = BEAUTIFUL_TEMPLATE_CONFIGS[spec.template_id]
+  if (debugFallbackConfig && (spec.selection_scope === 'debug' || spec.selection_scope === 'fixture' || spec.debug === true)) {
+    return beautifulTemplate(spec, debugFallbackConfig)
+  }
   throw new Error(`unsupported template_id for Satori adapter: ${spec.template_id}`)
 }

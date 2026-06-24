@@ -21,7 +21,9 @@ import svg_preflight
 import beautiful_template_runtime
 
 
-REFERENCES_DIR = Path(__file__).resolve().parent.parent / "references"
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[2]
+REFERENCES_DIR = SCRIPT_DIR.parent / "references"
 SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 REQUIRED_M15_CODES = {
     "cross_family_layout_mix",
@@ -35,31 +37,111 @@ REQUIRED_M15_CODES = {
     "missing_screenshot_benchmark_role",
 }
 REQUIRED_BENCHMARK_ROLES = {"cover_reference", "mid_deck_reference", "late_deck_reference"}
-PROMOTED_TEMPLATE_FAMILY_TO_ID = {
+BEAUTIFUL_FAMILY_TO_RUNTIME_TEMPLATE_ID = {
     "8-bit-orbit": "pixel-orbit-console",
     "biennale-yellow": "biennale-programme-poster",
     "block-frame": "block-frame-grid",
+    "blue-professional": "executive-dashboard",
+    "bold-poster": "poster-stat-punch",
+    "broadside": "editorial-quote-chart",
     "capsule": "capsule-card-system",
+    "cartesian": "architectural-spec",
+    "cobalt-grid": "trend-grid-report",
     "coral": "coral-magazine-feature",
     "creative-mode": "creative-mode-grid",
     "daisy-days": "daisy-workshop-playbook",
+    "editorial-forest": "serif-stat-editorial",
     "editorial-tri-tone": "tritone-editorial-spread",
     "emerald-editorial": "emerald-editorial-cover",
     "grove": "grove-organic-brief",
+    "long-table": "printed-program",
     "mat": "mat-midcentury-board",
+    "monochrome": "ledger-briefing",
+    "neo-grid-bold": "dense-panel-grid",
     "peoples-platform": "people-platform-manifesto",
+    "pin-and-paper": "annotated-field-board",
     "pink-script": "pink-nocturne-feature",
     "playful": "playful-indie-launch",
+    "raw-grid": "brutalist-matrix",
+    "retro-windows": "retro-ui-dashboard",
     "retro-zine": "retro-zine-spread",
+    "sakura-chroma": "product-ribbon",
     "scatterbrain": "sticky-workshop-board",
+    "signal": "intelligence-brief",
     "soft-editorial": "soft-editorial-feature",
     "stencil-tablet": "stencil-field-manual",
+    "studio": "type-mass-poster",
     "vellum": "vellum-scholar-brief",
 }
+CLOSED_LOOP_SAMPLE_TEMPLATE_FAMILY_TO_ID = {
+    "blue-professional": "executive-dashboard",
+}
+REQUIRED_CANDIDATE_MATRIX_FIELDS = {
+    "family_id",
+    "template_id",
+    "renderer_id",
+    "renderer_module",
+    "golden_spec",
+    "reference_screenshot",
+    "fidelity_receipt",
+    "source_trace",
+    "visual_contract",
+    "fidelity_gate",
+    "promotion_status",
+    "default_selectable",
+    "blocking_issues",
+}
+PRODUCTION_PROMOTION_STATUSES = {"production"}
+NON_PRODUCTION_PROMOTION_STATUSES = {"needs_review", "experimental", "legacy_debug"}
 
 
 def load_json(name: str) -> dict:
     return json.loads((REFERENCES_DIR / name).read_text(encoding="utf-8"))
+
+
+def load_candidate_matrix() -> list[dict[str, object]]:
+    path = REFERENCES_DIR / "beautiful-template-executable-matrix.json"
+    if not path.exists():
+        raise AssertionError(f"candidate matrix missing: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    rows = payload.get("candidates") if isinstance(payload, dict) else payload
+    if not isinstance(rows, list):
+        raise AssertionError("beautiful-template-executable-matrix.json must be a list or {candidates: [...]}")
+    return [row for row in rows if isinstance(row, dict)]
+
+
+def matrix_by_family() -> dict[str, dict[str, object]]:
+    return {str(row.get("family_id")): row for row in load_candidate_matrix()}
+
+
+def resolve_evidence_path(value: object) -> Path:
+    raw = str(value or "")
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    if raw.startswith(f"{SOURCE_ROOT.name}/"):
+        return SOURCE_ROOT.parent / raw
+    if raw.startswith("screenshots/") or raw.startswith("templates/"):
+        return SOURCE_ROOT / raw
+    return REPO_ROOT / raw
+
+
+def assert_real_evidence_file(test_case: unittest.TestCase, value: object, label: str) -> None:
+    path = resolve_evidence_path(value)
+    test_case.assertTrue(path.exists(), f"{label} must exist: {path}")
+    test_case.assertTrue(path.is_file(), f"{label} must be a file: {path}")
+
+
+def assert_real_fidelity_receipt(test_case: unittest.TestCase, receipt_value: object, template_id: str) -> None:
+    receipt_path = resolve_evidence_path(receipt_value)
+    assert_real_evidence_file(test_case, receipt_value, "fidelity_receipt")
+    payload = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt_template_id = payload.get("selected_template_id") or payload.get("template_id")
+    test_case.assertEqual("passed", payload.get("status"))
+    test_case.assertEqual(template_id, receipt_template_id)
+    test_case.assertGreaterEqual(payload.get("score", 0), payload.get("threshold", 1))
+    assert_real_evidence_file(test_case, payload.get("reference_screenshot"), "fidelity_receipt.reference_screenshot")
+    assert_real_evidence_file(test_case, payload.get("render_screenshot") or payload.get("rendered"), "fidelity_receipt.render_screenshot")
 
 
 def family_by_id(registry: dict) -> dict[str, dict]:
@@ -126,42 +208,131 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
         for family_id in ["synthetic-source-only"]:
             self.assertNotIn(family_id, source_families)
 
-    def test_promoted_template_families_pass_template_gate(self) -> None:
+    def test_default_selectable_template_families_pass_executable_evidence_gate(self) -> None:
         registry = load_json("beautiful-html-template-families.json")
-        families_by_id = family_by_id(registry)
-        records = {item["source_family"]: item for item in beautiful_template_runtime.promoted_template_records()}
-
-        for family_id, template_id in PROMOTED_TEMPLATE_FAMILY_TO_ID.items():
-            with self.subTest(family=family_id):
-                family = families_by_id[family_id]
+        families = family_by_id(registry)
+        for row in load_candidate_matrix():
+            if row.get("default_selectable") is not True:
+                continue
+            family = families[str(row["family_id"])]
+            token = family.get("template_token") if isinstance(family.get("template_token"), dict) else {}
+            with self.subTest(family=family["template_id"]):
                 candidate = beautiful_template_runtime.template_promotion_candidate(family)
                 self.assertEqual("passed", candidate["promotion_gate"]["status"], candidate["promotion_gate"]["issues"])
-                self.assertEqual(template_id, candidate["template_id"])
-                self.assertEqual("production", candidate["status"])
-                self.assertEqual("trusted", candidate["quality_tier"])
+                self.assertEqual("production", candidate["selection_scope"])
                 self.assertTrue(candidate["default_selectable"])
-                self.assertIn(f"template.{template_id}", family["svglide_mapping"]["svglide_asset_ids"])
-                self.assertIn(family_id, records)
+                self.assertEqual(row["template_id"], token.get("template_id"))
+                self.assertEqual("passed", token.get("fidelity_gate", {}).get("status"))
+                self.assertTrue(token.get("visual_contract"))
+                assert_real_evidence_file(self, token.get("renderer_module"), "renderer_module")
+                assert_real_evidence_file(self, token.get("golden_spec"), "golden_spec")
+                assert_real_fidelity_receipt(self, token.get("fidelity_receipt") or token.get("fidelity_gate", {}).get("receipt_path"), row["template_id"])
 
-    def test_promoted_templates_enter_default_registry_with_family_theme_binding(self) -> None:
+    def test_candidate_matrix_has_all_34_beautiful_families(self) -> None:
+        registry = load_json("beautiful-html-template-families.json")
+        self.assertEqual(34, len(registry["families"]))
+        rows = matrix_by_family()
+
+        self.assertEqual(set(BEAUTIFUL_FAMILY_TO_RUNTIME_TEMPLATE_ID), set(rows))
+        self.assertEqual(34, len(rows))
+        for family_id, template_id in BEAUTIFUL_FAMILY_TO_RUNTIME_TEMPLATE_ID.items():
+            with self.subTest(family=family_id):
+                row = rows[family_id]
+                self.assertFalse(REQUIRED_CANDIDATE_MATRIX_FIELDS - set(row), row)
+                self.assertEqual(template_id, row["template_id"])
+                self.assertIsInstance(row["blocking_issues"], list)
+                self.assertIn(row["promotion_status"], PRODUCTION_PROMOTION_STATUSES | NON_PRODUCTION_PROMOTION_STATUSES)
+                if row.get("default_selectable") is True:
+                    self.assertIn(row["promotion_status"], PRODUCTION_PROMOTION_STATUSES)
+                    self.assertTrue(row["renderer_id"])
+                    self.assertTrue(row["renderer_module"])
+                    self.assertTrue(row["golden_spec"])
+                    self.assertTrue(row["reference_screenshot"])
+                    self.assertTrue(row["source_trace"])
+                    self.assertEqual("passed", row["fidelity_gate"].get("status"))
+                    self.assertTrue(row["visual_contract"])
+                    assert_real_evidence_file(self, row["renderer_module"], "renderer_module")
+                    assert_real_evidence_file(self, row["golden_spec"], "golden_spec")
+                    assert_real_evidence_file(self, row["reference_screenshot"], "reference_screenshot")
+                    assert_real_evidence_file(self, row["fidelity_receipt"], "fidelity_receipt")
+                else:
+                    self.assertIn(row["promotion_status"], NON_PRODUCTION_PROMOTION_STATUSES)
+                    self.assertTrue(row["blocking_issues"])
+
+    def test_blue_professional_executable_sample_has_production_template_contract(self) -> None:
+        row = matrix_by_family()["blue-professional"]
+        self.assertEqual(CLOSED_LOOP_SAMPLE_TEMPLATE_FAMILY_TO_ID["blue-professional"], row["template_id"])
+        self.assertEqual("production", row["promotion_status"])
+        self.assertTrue(row["default_selectable"])
+        self.assertEqual("passed", row["fidelity_gate"].get("status"))
+        self.assertTrue(row["visual_contract"])
+        assert_real_evidence_file(self, row["renderer_module"], "renderer_module")
+        assert_real_evidence_file(self, row["golden_spec"], "golden_spec")
+        assert_real_evidence_file(self, row["reference_screenshot"], "reference_screenshot")
+        assert_real_fidelity_receipt(self, row["fidelity_receipt"], row["template_id"])
+
+    def test_template_gate_requires_executable_and_fidelity_contract(self) -> None:
+        family = dict(family_by_id(load_json("beautiful-html-template-families.json"))["blue-professional"])
+        family["svglide_mapping"] = {"svglide_asset_ids": ["theme.blue-professional", "template.executive-dashboard"]}
+        token = {
+            "template_id": "executive-dashboard",
+            "status": "production",
+            "quality_tier": "trusted",
+            "default_selectable": True,
+            "selection_scope": "production",
+            "renderer_id": "artboard_satori.executive-dashboard",
+            "layout_family": "dashboard",
+            "required_content": ["title"],
+            "content_shapes": ["dashboard"],
+            "max_items": {"stats": 6},
+            "text_budget": {"title": 32},
+            "source_trace": [{"source": "beautiful-html-templates/templates/blue-professional/template.html"}],
+        }
+        for key in ("renderer_module", "supported_page_types", "visual_contract", "fidelity_gate"):
+            token.pop(key, None)
+        token["renderer_executable"] = False
+        family["template_token"] = token
+
+        candidate = beautiful_template_runtime.template_promotion_candidate(family)
+
+        self.assertEqual("blocked", candidate["promotion_gate"]["status"])
+        codes = {issue["code"] for issue in candidate["promotion_gate"]["issues"]}
+        self.assertIn("missing_template_token_renderer_module", codes)
+        self.assertIn("missing_template_token_supported_page_types", codes)
+        self.assertIn("missing_template_token_visual_contract", codes)
+        self.assertIn("template_token_renderer_not_executable", codes)
+        self.assertIn("template_token_fidelity_gate_not_passed", codes)
+
+    def test_default_template_registry_contains_only_evidence_backed_templates(self) -> None:
         registry = beautiful_template_runtime.template_registry()
-        templates = {item["id"]: item for item in registry["templates"]}
+        default_templates = [
+            item
+            for item in registry["templates"]
+            if item.get("asset_status") == "production"
+            and item.get("quality_tier") == "trusted"
+            and item.get("selection_scope") == "production"
+            and item.get("default_selectable") is True
+        ]
 
-        for family_id, template_id in PROMOTED_TEMPLATE_FAMILY_TO_ID.items():
-            with self.subTest(template=template_id):
-                self.assertIn(template_id, templates)
-                template = templates[template_id]
-                self.assertEqual("production", template["asset_status"])
-                self.assertEqual("trusted", template["quality_tier"])
-                self.assertTrue(template["default_selectable"])
-                self.assertEqual(family_id, template["source_template_id"])
-                self.assertEqual("svglide_absorbed", template["claim_level"])
-                self.assertEqual([family_id], template["supported_theme_ids"])
+        self.assertLessEqual(len(default_templates), len(BEAUTIFUL_FAMILY_TO_RUNTIME_TEMPLATE_ID))
+        for template in default_templates:
+            with self.subTest(template=template["id"]):
+                self.assertNotEqual("source_inventory_only", template.get("claim_level"))
                 self.assertTrue(template.get("source_trace"))
-                self.assertEqual(f"artboard_satori.{template_id}", template["renderer_id"])
-                self.assertTrue(template["selection_metadata"]["best_for"])
-                self.assertTrue(template["selection_metadata"]["avoid_for"])
-                self.assertTrue(template["selection_metadata"]["visual_signature"])
+                self.assertTrue(template.get("selection_metadata", {}).get("best_for"))
+                self.assertTrue(template.get("selection_metadata", {}).get("avoid_for"))
+                self.assertTrue(template.get("selection_metadata", {}).get("visual_signature"))
+                self.assertEqual("passed", template.get("promotion_gate", {}).get("status"))
+                self.assertTrue(template.get("supported_page_types"))
+                self.assertTrue(template.get("visual_contract"))
+                self.assertEqual("passed", template.get("fidelity_gate", {}).get("status"))
+                assert_real_evidence_file(self, template.get("renderer_module"), "renderer_module")
+                assert_real_evidence_file(self, template.get("golden_spec"), "golden_spec")
+                assert_real_fidelity_receipt(
+                    self,
+                    template.get("fidelity_receipt") or template.get("fidelity_gate", {}).get("receipt_path"),
+                    template["id"],
+                )
 
     def test_source_inventory_only_without_template_token_cannot_promote_template(self) -> None:
         family = {
@@ -191,14 +362,38 @@ class BeautifulTemplateKnowledgeAbsorptionTest(unittest.TestCase):
                 }
             )
         )
-        self.assertTrue(
+        self.assertFalse(
             beautiful_template_runtime.is_runtime_selectable(
                 {
+                    "id": "missing-executable",
                     "status": "active",
                     "asset_status": "production",
                     "quality_tier": "trusted",
                     "default_selectable": True,
                     "selection_scope": "production",
+                    "renderer_id": "artboard_satori.missing-executable",
+                    "selection_metadata": {"content_shapes": ["report"]},
+                }
+            )
+        )
+        self.assertTrue(
+            beautiful_template_runtime.is_runtime_selectable(
+                {
+                    "id": "executive-dashboard",
+                    "status": "active",
+                    "asset_status": "production",
+                    "quality_tier": "trusted",
+                    "default_selectable": True,
+                    "selection_scope": "production",
+                    "renderer_id": "artboard_satori.executive-dashboard",
+                    "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/executive-dashboard.mjs",
+                    "renderer_executable": True,
+                    "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json",
+                    "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json",
+                    "supported_page_types": ["cover", "content"],
+                    "visual_contract": {"motifs": ["report grid"]},
+                    "fidelity_gate": {"status": "passed", "score": 0.9},
+                    "selection_metadata": {"content_shapes": ["report"]},
                 }
             )
         )

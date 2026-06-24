@@ -105,6 +105,73 @@ def validate_template_metadata(template: dict[str, Any]) -> list[dict[str, Any]]
                     path="promotion_gate.status",
                 )
             )
+        if not isinstance(template.get("renderer_module"), str) or not template.get("renderer_module").strip():
+            issues.append(
+                issue(
+                    "template_renderer_module_missing",
+                    "production/default-selectable template requires renderer_module",
+                    item_id=template_id,
+                    path="renderer_module",
+                )
+            )
+        if template.get("renderer_executable") is not True:
+            issues.append(
+                issue(
+                    "template_renderer_not_executable",
+                    "production/default-selectable template requires renderer_executable=true",
+                    item_id=template_id,
+                    path="renderer_executable",
+                )
+            )
+        if not isinstance(template.get("golden_spec"), str) or not template.get("golden_spec").strip():
+            issues.append(
+                issue(
+                    "template_golden_spec_missing",
+                    "production/default-selectable template requires golden_spec",
+                    item_id=template_id,
+                    path="golden_spec",
+                )
+            )
+        fidelity_gate = template.get("fidelity_gate")
+        receipt = template.get("fidelity_receipt")
+        if isinstance(fidelity_gate, dict) and not receipt:
+            receipt = fidelity_gate.get("receipt_path")
+        if not isinstance(receipt, str) or not receipt.strip():
+            issues.append(
+                issue(
+                    "template_fidelity_receipt_missing",
+                    "production/default-selectable template requires fidelity receipt",
+                    item_id=template_id,
+                    path="fidelity_receipt",
+                )
+            )
+        if not non_empty_string_list(template.get("supported_page_types")):
+            issues.append(
+                issue(
+                    "template_supported_page_types_missing",
+                    "production/default-selectable template requires supported_page_types",
+                    item_id=template_id,
+                    path="supported_page_types",
+                )
+            )
+        if not isinstance(template.get("visual_contract"), dict) or not template.get("visual_contract"):
+            issues.append(
+                issue(
+                    "template_visual_contract_missing",
+                    "production/default-selectable template requires visual_contract",
+                    item_id=template_id,
+                    path="visual_contract",
+                )
+            )
+        if not isinstance(fidelity_gate, dict) or fidelity_gate.get("status") != "passed":
+            issues.append(
+                issue(
+                    "template_fidelity_gate_not_passed",
+                    "production/default-selectable template requires fidelity_gate.status=passed",
+                    item_id=template_id,
+                    path="fidelity_gate.status",
+                )
+            )
     if not isinstance(metadata, dict):
         issues.append(issue("selection_metadata_missing", "active template requires selection_metadata", item_id=template_id))
         return issues

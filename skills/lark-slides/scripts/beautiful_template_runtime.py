@@ -12,6 +12,8 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REFERENCES_DIR = SCRIPT_DIR.parent / "references"
+REPO_ROOT = SCRIPT_DIR.parents[2]
+SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 FAMILIES_PATH = REFERENCES_DIR / "beautiful-html-template-families.json"
 BRAND_PALETTE_PATH = REFERENCES_DIR / "svglide-brand-palette-registry.json"
 
@@ -214,9 +216,9 @@ def all_theme_ids(include_legacy: bool = False) -> list[str]:
 
 
 def all_template_ids(include_legacy: bool = False) -> list[str]:
-    template_ids = set(PRODUCTION_TEMPLATE_IDS)
-    template_ids.update(promoted_template_ids())
+    template_ids = set(promoted_template_ids())
     if include_legacy:
+        template_ids.update(PRODUCTION_TEMPLATE_IDS)
         template_ids.update(LEGACY_TEMPLATE_IDS)
     return sorted(template_ids)
 
@@ -233,7 +235,15 @@ def is_runtime_selectable(record: dict[str, Any], *, include_legacy_debug: bool 
         and record.get("selection_scope") == "production"
         and record.get("default_selectable") is True
     ):
+        if _record_kind(record) == "template":
+            return _has_template_runtime_contract(record)
         return True
+    if _record_kind(record) == "template" and (
+        record.get("asset_status") == ASSET_STATUS_PRODUCTION
+        or record.get("quality_tier") == QUALITY_TIER_TRUSTED
+        or record.get("selection_scope") == "production"
+    ):
+        return False
     status = record.get("status")
     if status == ASSET_STATUS_LEGACY_DEBUG:
         return include_legacy_debug
@@ -297,6 +307,74 @@ def _non_empty_dict(value: Any) -> dict[str, Any]:
 
 def _non_empty_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) and value else []
+
+
+def _runtime_path(value: Any) -> Path:
+    raw = str(value or "")
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    if raw.startswith(f"{SOURCE_ROOT.name}/"):
+        return SOURCE_ROOT.parent / raw
+    if raw.startswith("screenshots/") or raw.startswith("templates/"):
+        return SOURCE_ROOT / raw
+    return REPO_ROOT / raw
+
+
+def _existing_file(value: Any) -> bool:
+    return _runtime_path(value).is_file()
+
+
+def _read_optional_json_file(value: Any) -> dict[str, Any]:
+    path = _runtime_path(value)
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _record_kind(record: dict[str, Any]) -> str:
+    if "palette_id" in record:
+        return "palette"
+    if "theme_id" in record and "colors" in record:
+        return "theme"
+    return "template"
+
+
+def _has_template_runtime_contract(record: dict[str, Any]) -> bool:
+    fidelity_gate = record.get("fidelity_gate")
+    receipt = record.get("fidelity_receipt")
+    if isinstance(fidelity_gate, dict) and not receipt:
+        receipt = fidelity_gate.get("receipt_path")
+    receipt_payload = _read_optional_json_file(receipt)
+    receipt_template_id = receipt_payload.get("selected_template_id") or receipt_payload.get("template_id")
+    score = receipt_payload.get("score")
+    threshold = receipt_payload.get("threshold", 0.72)
+    return (
+        isinstance(record.get("renderer_module"), str)
+        and bool(str(record.get("renderer_module")).strip())
+        and _existing_file(record.get("renderer_module"))
+        and record.get("renderer_executable") is True
+        and isinstance(record.get("golden_spec"), str)
+        and bool(str(record.get("golden_spec")).strip())
+        and _existing_file(record.get("golden_spec"))
+        and _existing_file(receipt)
+        and receipt_payload.get("status") == "passed"
+        and receipt_template_id == record.get("id")
+        and isinstance(score, (int, float))
+        and isinstance(threshold, (int, float))
+        and score >= threshold
+        and _existing_file(receipt_payload.get("reference_screenshot"))
+        and _existing_file(receipt_payload.get("render_screenshot") or receipt_payload.get("rendered"))
+        and _non_empty_list(record.get("supported_page_types"))
+        and isinstance(record.get("visual_contract"), dict)
+        and bool(record.get("visual_contract"))
+        and isinstance(fidelity_gate, dict)
+        and fidelity_gate.get("status") == "passed"
+    )
 
 
 def _theme_source_trace(family: dict[str, Any], theme_token: dict[str, Any]) -> list[dict[str, Any]]:
@@ -441,6 +519,45 @@ def template_promotion_candidate(family: dict[str, Any]) -> dict[str, Any]:
     for key in ("renderer_id", "layout_family", "required_content", "content_shapes", "max_items", "text_budget", "source_trace"):
         if not template_token.get(key):
             block(f"missing_template_token_{key}", f"template_token.{key} is required")
+    if not template_token.get("renderer_module"):
+        block("missing_template_token_renderer_module", "template_token.renderer_module is required")
+    elif not _existing_file(template_token.get("renderer_module")):
+        block("template_token_renderer_module_missing_file", "template_token.renderer_module must point to an existing file")
+    if template_token.get("renderer_executable") is not True:
+        block("template_token_renderer_not_executable", "template_token.renderer_executable must be true")
+    if not template_token.get("golden_spec"):
+        block("missing_template_token_golden_spec", "template_token.golden_spec is required")
+    elif not _existing_file(template_token.get("golden_spec")):
+        block("template_token_golden_spec_missing_file", "template_token.golden_spec must point to an existing file")
+    if not _non_empty_list(template_token.get("supported_page_types")):
+        block("missing_template_token_supported_page_types", "template_token.supported_page_types is required")
+    if not isinstance(template_token.get("visual_contract"), dict) or not template_token.get("visual_contract"):
+        block("missing_template_token_visual_contract", "template_token.visual_contract is required")
+    fidelity_gate = template_token.get("fidelity_gate")
+    fidelity_receipt = template_token.get("fidelity_receipt")
+    if isinstance(fidelity_gate, dict) and not fidelity_receipt:
+        fidelity_receipt = fidelity_gate.get("receipt_path")
+    if not isinstance(fidelity_gate, dict) or fidelity_gate.get("status") != "passed":
+        block("template_token_fidelity_gate_not_passed", "template_token.fidelity_gate.status must be passed")
+    if not fidelity_receipt:
+        block("missing_template_token_fidelity_receipt", "template_token fidelity receipt is required")
+    elif not _existing_file(fidelity_receipt):
+        block("template_token_fidelity_receipt_missing_file", "template_token fidelity receipt must point to an existing file")
+    else:
+        receipt_payload = _read_optional_json_file(fidelity_receipt)
+        receipt_template_id = receipt_payload.get("selected_template_id") or receipt_payload.get("template_id")
+        score = receipt_payload.get("score")
+        threshold = receipt_payload.get("threshold", 0.72)
+        if receipt_payload.get("status") != "passed":
+            block("template_token_fidelity_receipt_not_passed", "template fidelity receipt status must be passed")
+        if receipt_template_id != template_id:
+            block("template_token_fidelity_receipt_template_mismatch", "template fidelity receipt template_id must match template_token.template_id")
+        if not isinstance(score, (int, float)) or not isinstance(threshold, (int, float)) or score < threshold:
+            block("template_token_fidelity_receipt_score_below_threshold", "template fidelity receipt score must meet threshold")
+        if not _existing_file(receipt_payload.get("reference_screenshot")):
+            block("template_token_fidelity_receipt_reference_missing_file", "template fidelity receipt reference_screenshot must exist")
+        if not _existing_file(receipt_payload.get("render_screenshot") or receipt_payload.get("rendered")):
+            block("template_token_fidelity_receipt_render_missing_file", "template fidelity receipt render_screenshot must exist")
     if template_token.get("status") != ASSET_STATUS_PRODUCTION:
         block("template_token_not_production", "template_token.status must be production")
     if template_token.get("quality_tier") != QUALITY_TIER_TRUSTED:
@@ -574,6 +691,13 @@ def _promoted_template_payload(record: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": template_id,
         "renderer_id": str(token.get("renderer_id") or f"artboard_satori.{template_id}"),
+        "renderer_module": token.get("renderer_module"),
+        "renderer_executable": token.get("renderer_executable") is True,
+        "golden_spec": token.get("golden_spec"),
+        "fidelity_receipt": token.get("fidelity_receipt") or (token.get("fidelity_gate") or {}).get("receipt_path"),
+        "fidelity_gate": token.get("fidelity_gate") if isinstance(token.get("fidelity_gate"), dict) else {},
+        "supported_page_types": non_empty_string_list(token.get("supported_page_types"), []),
+        "visual_contract": token.get("visual_contract") if isinstance(token.get("visual_contract"), dict) else {},
         "layout_family": str(token.get("layout_family") or template_id.replace("-", "_")),
         "required_content": non_empty_string_list(token.get("required_content"), ["title"]),
         "optional_content": non_empty_string_list(token.get("optional_content"), ["eyebrow", "subtitle"]),
@@ -622,7 +746,7 @@ def template_registry(include_legacy: bool = False) -> dict[str, Any]:
             records.append(_promoted_template_payload(promoted_by_id[template_id]))
             continue
         family = family_by_asset.get(template_id)
-        asset_status = ASSET_STATUS_LEGACY_DEBUG if template_id in LEGACY_TEMPLATE_IDS else ASSET_STATUS_PRODUCTION
+        asset_status = ASSET_STATUS_LEGACY_DEBUG
         semantic_fit = family.get("semantic_fit") if isinstance(family, dict) and isinstance(family.get("semantic_fit"), dict) else {}
         visual_dna = family.get("visual_dna") if isinstance(family, dict) and isinstance(family.get("visual_dna"), dict) else {}
         best_for = non_empty_string_list(semantic_fit.get("best_for"), [template_id.replace("-", " ")])
@@ -785,6 +909,7 @@ def theme_registry(include_legacy: bool = False) -> dict[str, Any]:
         asset_status = _asset_status_for_theme(theme_id, payload)
         record = {
             "id": theme_id,
+            "theme_id": theme_id,
             "colors": payload["colors"],
             "selection_metadata": payload["selection_metadata"],
             "template_bindings": payload["template_bindings"],

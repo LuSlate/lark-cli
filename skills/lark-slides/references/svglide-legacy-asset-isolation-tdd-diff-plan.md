@@ -71,6 +71,9 @@
 | Coordinator / Integrator | 拆任务、合并 diff、跑最终测试 | 集成分支、最终报告 | 不直接绕过失败测试 |
 | Runtime Registry Executor | `beautiful_template_runtime.py`、runtime registry tests | production/legacy registry 隔离；按 promotion 结果输出 registry | 不决定哪些 family 可以升一档，不改 selector 逻辑 |
 | Theme Promotion Executor | `beautiful-html-template-families.json`、theme 抽象和 promotion tests | 二档 absorbed family 转一档 production theme；维护 promotion gate | 不把 source_inventory_only 直接升 production，不绕过 theme token/视觉证据要求 |
+| Beautiful Template Renderer Executor | `artboard_renderer/templates/beautiful/`、`render.mjs`、artboard renderer tests | 把 beautiful template 从 registry 元数据升级为 dedicated executable renderer | 不把通用 `beautifulTemplate()` fallback 标为 production，不改 slide server |
+| Template Fidelity Executor | `beautiful_template_fidelity_check.py`、golden/fidelity tests | 建立 screenshot-level fidelity gate 和 receipt | 不用“文件存在/能渲染”替代视觉相似度，不绕开 reference screenshot |
+| Font Runtime Executor | `artboard_renderer/font-manifest.json`、typography components、renderer tests | 建立 display/body/label/metric 字体角色 | 不把所有 role 映射回同一个 `SVGlideDefault` |
 | Semantic & Selector Executor | `svglide_semantic_asset_matcher.py`、`svglide_theme_template_selector.py` | 语义触发和模板选择修复 | 不改 JSON registry |
 | Data Registry Executor | `svglide-layout-archetypes.json`、image/chart strategy JSON | baseline 条目降级、catch-all 拆分 | 不改 Python selector |
 | Quality Gate Executor | `svglide_quality_gate.py`、review/gate 脚本 | legacy/fallback 阻断规则 | 不改生成器实现 |
@@ -86,6 +89,9 @@ Wave 0: 锁定计划和基线
 Wave 1: Red tests 并行
   Runtime Registry Executor
   Theme Promotion Executor
+  Beautiful Template Renderer Executor
+  Template Fidelity Executor
+  Font Runtime Executor
   Semantic & Selector Executor
   Data Registry Executor
   Quality Gate Executor
@@ -93,6 +99,9 @@ Wave 1: Red tests 并行
 Wave 2: Green implementation 并行
   Runtime Registry Executor 修改 runtime registry
   Theme Promotion Executor 补齐二档转一档 theme 抽象
+  Beautiful Template Renderer Executor 拆 dedicated renderer 并降级通用 fallback
+  Template Fidelity Executor 接入 screenshot fidelity gate
+  Font Runtime Executor 接入字体角色
   Semantic & Selector Executor 修改 matcher/selector
   Data Registry Executor 修改 JSON registry
   Quality Gate Executor 修改 gate/review
@@ -1030,9 +1039,450 @@ python3 -m unittest \
 必须证明 legacy 不在默认 selection result 里。
 ```
 
+### M9. Beautiful Template 可执行化与 Fidelity Gate
+
+目标：在完成 legacy 隔离后，继续解决 beautiful 模板“已吸收但未高保真可执行”的问题。最终 production 默认链路必须从“可选元数据”升级为“可执行 renderer + golden fixture + screenshot fidelity receipt”。
+
+当前事实：
+
+```text
+beautiful 原始模板：34 套
+CLI absorbed family：34 套
+当前 runtime selectable template：34 套 = 19 个 promoted beautiful template + 15 个静态 production template
+当前风险：15 个静态 production template 已可选，但缺少 executable/fidelity contract
+当前 dedicated high-fidelity renderer：不足，仍主要依赖 p0-templates.mjs 简化重画或通用 fallback
+```
+
+目标状态：
+
+```text
+34 套 beautiful 原始模板
+-> 34 套全部进入 candidate/evaluation matrix，明确 family_id -> template_id -> renderer_id -> renderer_module -> golden_spec -> reference_screenshot -> promotion_status
+-> 只有通过 dedicated renderer + golden fixture + screenshot fidelity pass + visual_contract + selector/gate 接入的模板才进入 production/default selectable
+-> 未通过 gate 的模板保持 experimental / needs_review / legacy_debug，不能默认可选
+-> default_selectable_count 不做数量承诺，可以小于 34
+-> 每套 production/default_selectable template 必须有 reference screenshot fidelity receipt
+-> selector 只选择通过 executable + fidelity contract 的模板
+```
+
+M9 执行顺序：
+
+```text
+Step 1: 先建立 34/34 candidate registry / evaluation matrix。
+Step 2: 再做 1 套闭环样板，例如 blue-professional -> executive-dashboard。
+Step 3: 样板跑通 dedicated renderer、golden fixture、screenshot fidelity receipt、selector、quality_gate。
+Step 4: 再逐套扩展其他 family。
+Step 5: 未完成 fidelity 的模板保持 needs_review / experimental / legacy_debug，并过滤出默认链路。
+```
+
+#### M9.1 收紧 production template 定义
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | candidate registry 必须有 34 个 family，不等于 default registry 必须有 34 个 production template |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | 每个 default_selectable template 必须包含真实存在的 `renderer_module`、`golden_spec`、`fidelity_receipt`、`visual_contract`、`fidelity_gate.status=passed` |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | 历史 promoted/static production-like template 如果缺 executable/fidelity contract，不能被 selector 默认选择 |
+| `skills/lark-slides/scripts/svglide_selection_metadata_lint_test.py` | `status=production/trusted` 不能单独代表 runtime selectable |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_runtime.py` | `template_promotion_candidate()` 增加 executable contract 校验 |
+| `skills/lark-slides/scripts/beautiful_template_runtime.py` | `is_runtime_selectable()` 增加 `renderer_module`、`fidelity_gate`、`supported_page_types`、`visual_contract` 判断 |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py \
+  skills/lark-slides/scripts/svglide_selection_metadata_lint_test.py
+```
+
+防偏移审查点：
+
+```text
+不能通过降低测试断言让旧数据继续伪装 production。
+debug/fixture-only 资产可以保留，但必须不能进入默认选择面。
+不得把 34 套 family 批量改成 default_selectable=true 来通过测试。
+不得为了让测试过而硬补 renderer_module / fidelity_gate / template_token 字段；字段必须对应真实文件和 receipt 证据。
+独立审查者必须把“硬补字段伪装 production/default_selectable”列为 P0 阻断项。
+```
+
+#### M9.2 拆掉通用 beautiful fallback 的 production 权限
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | production beautiful template 不得只走 `beautifulTemplate(spec, cfg)` 通用 fallback |
+| `skills/lark-slides/scripts/svglide_artboard_renderer_test.py` | production template 缺 dedicated renderer 时必须失败 |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/artboard_renderer/templates/p0-templates.mjs` | `BEAUTIFUL_TEMPLATE_CONFIGS` 仅保留为 debug/fixture fallback |
+| `skills/lark-slides/scripts/artboard_renderer/render.mjs` | `renderTree()` 优先查 dedicated beautiful renderer；production 缺 renderer 直接 fail |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/index.mjs` | 新增 dedicated beautiful renderer registry |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/<template-id>.mjs` | 每套 production template 一个 renderer module |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/svglide_artboard_renderer_test.py \
+  skills/lark-slides/scripts/svglide_artboard_template_golden_test.py
+```
+
+防偏移审查点：
+
+```text
+不能把历史 promoted/default-like 模板继续挂在同一个 beautifulTemplate() 大函数上并宣称 production。
+新 renderer module 至少要表达该模板独有布局、motif、字体角色和图片槽位。
+```
+
+#### M9.3 建立 34 套评估矩阵，并先完成 1 套闭环样板
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | 34 个 beautiful family 都必须出现在 evaluation matrix 中 |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | evaluation matrix 必须显式记录 `family_id -> template_id -> renderer_module -> golden_spec -> reference_screenshot -> promotion_status` |
+| `skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py` | `blue-professional -> executive-dashboard` 必须先完成 production 闭环样板 |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | production 样板 template 必须有 golden fixture |
+| `skills/lark-slides/scripts/svglide_artboard_renderer_test.py` | production 样板 template 必须有 dedicated renderer module |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/references/beautiful-template-executable-matrix.json` | 新增 34 套评估矩阵 |
+| `skills/lark-slides/references/beautiful-html-template-families.json` | 只在闭环通过的 family 上补 production token；未通过的不得硬补 production 字段 |
+| `skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json` | 确认或补齐 `blue-professional -> executive-dashboard` 样板 golden spec |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/executive-dashboard.mjs` | 新增或迁移样板 dedicated renderer |
+
+必须在 matrix 中显式列出的 family 清单：
+
+```text
+8-bit-orbit
+biennale-yellow
+block-frame
+blue-professional
+bold-poster
+broadside
+capsule
+cartesian
+cobalt-grid
+coral
+creative-mode
+daisy-days
+editorial-tri-tone
+emerald-editorial
+editorial-forest
+grove
+long-table
+mat
+monochrome
+neo-grid-bold
+peoples-platform
+pin-and-paper
+pink-script
+playful
+raw-grid
+retro-windows
+retro-zine
+sakura-chroma
+scatterbrain
+signal
+soft-editorial
+stencil-tablet
+studio
+vellum
+```
+
+matrix 每行必须包含：
+
+```text
+family_id
+template_id
+renderer_id
+renderer_module
+golden_spec
+reference_screenshot
+fidelity_receipt
+source_trace
+visual_contract
+fidelity_gate
+promotion_status = production | experimental | needs_review | legacy_debug
+default_selectable
+blocking_issues
+```
+
+production 行额外必须满足：
+
+```text
+status=production
+quality_tier=trusted
+default_selectable=true
+selection_scope=production
+supported_page_types 非空
+visual_contract 非空
+fidelity_gate.status=passed
+renderer_executable=true
+renderer_module 文件真实存在
+golden_spec 文件真实存在
+reference_screenshot 文件真实存在
+fidelity_receipt 文件真实存在，且引用同一 reference screenshot
+```
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/beautiful_template_knowledge_absorption_test.py \
+  skills/lark-slides/scripts/beautiful_template_matcher_test.py \
+  skills/lark-slides/scripts/svglide_artboard_template_golden_test.py
+```
+
+防偏移审查点：
+
+```text
+不能把 34 套全部批量标记为 production/default_selectable。
+不能只补 JSON 字段而没有 renderer/golden/fidelity 证据。
+每套模板必须绑定 source screenshot evidence；缺证据只能 needs_review，不能 production。
+blue-professional 样板通过前，不得批量 promotion 其余 family。
+candidate_count == 34；default_selectable_count 不强制等于 34。
+```
+
+#### M9.4 加入 screenshot-level fidelity gate
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_fidelity_check_test.py` | 空白图、通用卡片图、reference screenshot 缺失、结构相似度低于阈值必须 fail |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | golden render 必须产出 template fidelity receipt |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/beautiful_template_fidelity_check.py` | 新增结构型 fidelity checker |
+| `skills/lark-slides/references/beautiful-template-fidelity.schema.json` | 新增 receipt schema |
+| `skills/lark-slides/scripts/svglide_artboard_template_golden_test.py` | golden render 后写 `06-check/template-fidelity.json` 和 `receipts/template-fidelity.json` |
+
+fidelity 检查不追求像素完美，但必须覆盖：
+
+```text
+主色面积比例
+标题 bbox 区域
+色块/边框/大图区域分布
+留白比例
+边缘密度
+pHash 或颜色直方图相似度
+```
+
+最小可执行阈值：
+
+```json
+{
+  "viewport": {"width": 960, "height": 540},
+  "normalization": ["resize_960x540", "strip_alpha_to_white", "quantize_16_color_bins"],
+  "weights": {
+    "color_histogram": 0.25,
+    "edge_density": 0.2,
+    "layout_regions": 0.25,
+    "text_bbox": 0.2,
+    "whitespace_ratio": 0.1
+  },
+  "pass_threshold": 0.72,
+  "warn_threshold": 0.62
+}
+```
+
+reference screenshot 选择规则：
+
+```text
+每个 family 至少选择 1 张 cover/hero 截图作为 production gate reference。
+如果 family 有 content / grid / closing 三类截图，则 matrix 中分别记录 reference role。
+首轮 blue-professional 样板使用 beautiful-html-templates/screenshots/blue-professional-1.png。
+所有 reference 路径必须来自 source_trace 或 beautiful-html-template-families.json 的 source_screenshots。
+```
+
+归一化命令必须可复跑：
+
+```bash
+python3 skills/lark-slides/scripts/beautiful_template_fidelity_check.py \
+  --rendered <rendered.png> \
+  --reference <reference.png> \
+  --template-id <template-id> \
+  --out 06-check/template-fidelity.json
+```
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/beautiful_template_fidelity_check_test.py \
+  skills/lark-slides/scripts/svglide_artboard_template_golden_test.py
+```
+
+防偏移审查点：
+
+```text
+fidelity gate 不能只检查文件存在。
+阈值必须能阻断明显不像原图的简化重画。
+receipt 必须包含 reference screenshot、render output、score 和 fail reason。
+```
+
+#### M9.5 升级 Satori 字体系统
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_artboard_renderer_test.py` | renderer 至少注册 `body`、`display`、`label`、`metric` 四类字体角色 |
+| `skills/lark-slides/scripts/svglide_artboard_renderer_test.py` | `theme.typography.font_roles` 能影响 renderer receipt |
+| `skills/lark-slides/scripts/svglide_artboard_renderer_test.py` | production beautiful renderer 不能只依赖单一 `SVGlideDefault` |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/artboard_renderer/render.mjs` | 新增 `loadFonts()`，支持多字体、多 weight，并输出 `font_receipt` |
+| `skills/lark-slides/scripts/artboard_renderer/font-manifest.json` | 新增字体角色 manifest |
+| `skills/lark-slides/scripts/artboard_renderer/components/typography.mjs` | 新增 `fontRole()` 等 helper |
+| `skills/lark-slides/scripts/artboard_renderer/templates/p0-templates.mjs` | 移除 production 路径中的全局硬编码单字体 |
+| `skills/lark-slides/scripts/artboard_renderer/templates/beautiful/*.mjs` | 使用 `fontRole("display")`、`fontRole("body")`、`fontRole("label")`、`fontRole("metric")` |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/svglide_artboard_renderer_test.py
+```
+
+防偏移审查点：
+
+```text
+不能为了通过测试把所有 role 映射到同一个 font face。
+CJK fallback 必须明确，不能牺牲中文可读性。
+```
+
+#### M9.6 selector 只选真正可执行模板
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_theme_template_selector_test.py` | selector 不返回缺 renderer/fidelity 的模板 |
+| `skills/lark-slides/scripts/svglide_theme_template_selector_test.py` | “内部复盘报告”能命中 `blue-professional` 或同类 business/report 模板 |
+| `skills/lark-slides/scripts/svglide_theme_template_selector_test.py` | 图片素材不足时避开强图片模板 |
+| `skills/lark-slides/scripts/svglide_recipe_selector_test.py` | production profile 不允许选择 debug fallback |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_theme_template_selector.py` | ranking 增加 `renderer_executable`、`fidelity_score`、`page_type_support`、`asset_slot_satisfied`、`avoid_generic_fallback` |
+| `skills/lark-slides/scripts/svglide_recipe_selector.py` | recipe 不得把 production 请求路由到 fixture/debug renderer |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/svglide_theme_template_selector_test.py \
+  skills/lark-slides/scripts/svglide_recipe_selector_test.py
+```
+
+防偏移审查点：
+
+```text
+语义匹配不能压过可执行性。
+缺图片时不能选择强依赖 hero image 的模板。
+production 请求不能路由到 fixture/debug renderer。
+```
+
+#### M9.7 visual_dna 变成硬约束
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svg_preflight_test.py` | 标题面积过小、主视觉区域缺失、装饰线穿过文字必须 fail |
+| `skills/lark-slides/scripts/svglide_runtime_review_test.py` | 全页卡片同质化、模板 motif 超预算必须 fail |
+| `skills/lark-slides/scripts/svglide_visual_acceptance_test.py` | visual contract 不满足时不能 deliverable pass |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/svg_preflight.py` | 新增 `title_bbox_contract`、`hero_region_contract`、`forbidden_decoration_overlap` |
+| `skills/lark-slides/scripts/svglide_runtime_review.py` | 新增 `motif_budget`、`min_visual_hierarchy_delta`、`max_generic_component_ratio` |
+| `skills/lark-slides/scripts/svglide_visual_acceptance.py` | 将 visual contract issue 接入 deliverable pass |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/svg_preflight_test.py \
+  skills/lark-slides/scripts/svglide_runtime_review_test.py \
+  skills/lark-slides/scripts/svglide_visual_acceptance_test.py
+```
+
+防偏移审查点：
+
+```text
+visual_dna 不能只是描述字段，必须能阻断不符合模板视觉契约的输出。
+禁止用“通过 aesthetic_review”替代具体 contract。
+```
+
+#### M9.8 runner 接入 template fidelity / adherence gate
+
+Red diff：
+
+| 文件 | 新增测试 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_project_runner_test.py` | `quality_gate` 前必须出现 `template_fidelity` 或 `template_adherence` receipt |
+| `skills/lark-slides/scripts/svglide_quality_gate_test.py` | production profile 缺少 template fidelity/adherence receipt 必须 fail |
+| `skills/lark-slides/scripts/svglide_quality_gate_test.py` | debug profile 跳过时必须声明 claim boundary |
+
+Green diff：
+
+| 文件 | 修改 |
+| --- | --- |
+| `skills/lark-slides/scripts/svglide_project_runner.py` | 在 `preview_lint -> aesthetic_review` 之间插入 `template_fidelity / template_adherence` |
+| `skills/lark-slides/scripts/svglide_quality_gate.py` | quality gate 读取 `06-check/template-fidelity.json` 和 `receipts/template-fidelity.json` |
+| `skills/lark-slides/scripts/svglide_project_runner.py` | 补 `STAGES`、stage alias、implemented stage、stale invalidation 和 receipt path |
+| `skills/lark-slides/scripts/svglide_quality_gate.py` | production profile 将 template fidelity/adherence 纳入 required check |
+
+验证命令：
+
+```bash
+python3 -m unittest \
+  skills/lark-slides/scripts/svglide_project_runner_test.py \
+  skills/lark-slides/scripts/svglide_quality_gate_test.py
+
+python3 skills/lark-slides/scripts/svglide_project_runner.py \
+  run <fixture-project> \
+  --until quality_gate \
+  --profile production
+```
+
+防偏移审查点：
+
+```text
+不能只在 standalone test 里跑 fidelity，真实 runner 必须接入。
+没有 fidelity/adherence receipt 时，不能宣称 high-quality / upper-bound visual。
+```
+
 ## 6. 最小提交边界
 
-建议拆成 4 个 commit，方便回滚。
+建议拆成 6 个 commit，方便回滚。
 
 | Commit | 范围 | 说明 |
 | --- | --- | --- |
@@ -1040,6 +1490,8 @@ python3 -m unittest \
 | 2 | M3 + M4 | semantic matcher 和 template selector 修复 |
 | 3 | M5 + M6 | JSON registry 降级和 quality gate 阻断 |
 | 4 | M7 + M8 | fixture/debug 兼容和 E2E 回归 |
+| 5 | M9.1 + M9.2 + M9.3 + M9.4 | beautiful template production contract、blue-professional 样板闭环、34 套 evaluation matrix、fidelity gate |
+| 6 | M9.5 + M9.6 + M9.7 + M9.8 | 字体系统、executable-only selector、visual_dna 硬约束、runner gate 接入 |
 
 每个 commit 必须满足：
 
@@ -1061,8 +1513,11 @@ python3 -m unittest \
   skills/lark-slides/scripts/svglide_brand_palette_resolver_test.py \
   skills/lark-slides/scripts/svglide_semantic_asset_matcher_test.py \
   skills/lark-slides/scripts/svglide_theme_template_selector_test.py \
+  skills/lark-slides/scripts/svglide_recipe_selector_test.py \
   skills/lark-slides/scripts/svglide_template_admission_test.py \
   skills/lark-slides/scripts/svglide_selection_metadata_lint_test.py \
+  skills/lark-slides/scripts/svglide_artboard_renderer_test.py \
+  skills/lark-slides/scripts/svglide_artboard_template_golden_test.py \
   skills/lark-slides/scripts/svglide_quality_gate_test.py
 ```
 
@@ -1071,10 +1526,14 @@ python3 -m unittest \
 ```bash
 python3 -m unittest \
   skills/lark-slides/scripts/beautiful_template_e2e_dry_run_test.py \
+  skills/lark-slides/scripts/beautiful_template_fidelity_check_test.py \
   skills/lark-slides/scripts/svglide_generation_benchmark_test.py \
+  skills/lark-slides/scripts/svg_preflight_test.py \
+  skills/lark-slides/scripts/svglide_runtime_review_test.py \
   skills/lark-slides/scripts/svglide_visual_acceptance_test.py \
   skills/lark-slides/scripts/svglide_strategy_review_test.py \
   skills/lark-slides/scripts/svglide_selection_review_test.py \
+  skills/lark-slides/scripts/svglide_project_runner_test.py \
   skills/lark-slides/scripts/svglide_golden_suite_test.py
 ```
 
@@ -1098,6 +1557,13 @@ go test ./shortcuts/slides
 0 fixture-only chart success claim
 0 naked “链路” architecture trigger
 0 stable fallback high-quality success claim
+34 beautiful family 有 evaluation matrix 行和明确 promotion_status
+所有 default_selectable production template 都有 dedicated renderer module
+所有 default_selectable production template 都有 golden canvas spec
+所有 default_selectable production template 都有真实 screenshot fidelity receipt
+所有 default_selectable production template 都有 visual_contract，且与 template_id/source screenshot 绑定
+0 production beautiful template 走通用 beautifulTemplate() fallback
+template fidelity/adherence receipt 是 production quality gate 的前置条件
 ```
 
 debug/fixture 生成允许：

@@ -101,6 +101,8 @@ def infer_brief_signals(brief: str, evidence: dict[str, Any] | None = None) -> d
     entities = brand_resolver.extract_brand_entities(brief, evidence)
     if entities:
         signals["brand_entities"] = [entity["brand_id"] for entity in entities]
+    if isinstance(evidence, dict) and isinstance(evidence.get("available_assets"), list):
+        signals["available_assets"] = [str(item) for item in evidence["available_assets"] if str(item).strip()]
     return signals
 
 
@@ -386,6 +388,24 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
     if promoted_boost:
         score += promoted_boost
         scored["matched_signals"].extend(promoted_matches)
+    required_assets = list_value(metadata.get("required_assets"))
+    available_assets = set(list_value(signals.get("available_assets")))
+    missing_assets = [item for item in required_assets if item not in available_assets]
+    if missing_assets:
+        score -= 40 * len(missing_assets)
+        for asset in missing_assets:
+            scored["rejection_reasons"].append(f"asset_slot_missing:{asset}")
+        scored["asset_slot_satisfied"] = "missing"
+    else:
+        scored["asset_slot_satisfied"] = "satisfied"
+    fidelity_gate = template.get("fidelity_gate") if isinstance(template.get("fidelity_gate"), dict) else {}
+    if template.get("renderer_executable") is True and fidelity_gate.get("status") == "passed" and isinstance(template.get("visual_contract"), dict):
+        score += 10
+        scored["matched_signals"].append("runtime_contract:executable_fidelity")
+    supported_page_types = list_value(template.get("supported_page_types"))
+    scored["page_type_support"] = "supported" if supported_page_types else "unknown"
+    if isinstance(fidelity_gate.get("score"), (int, float)):
+        scored["fidelity_score"] = fidelity_gate.get("score")
     scored["score"] = score
     scored["template_id"] = template_id
     for key in [
@@ -395,6 +415,13 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
         "quality_tier",
         "default_selectable",
         "selection_scope",
+        "renderer_module",
+        "renderer_executable",
+        "supported_page_types",
+        "visual_contract",
+        "fidelity_gate",
+        "fidelity_receipt",
+        "golden_spec",
         "promotion_gate",
         "source_trace",
         "family_usage_policy_summary",

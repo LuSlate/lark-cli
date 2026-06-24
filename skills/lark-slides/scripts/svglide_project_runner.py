@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import svglide_asset_injector
+import beautiful_template_fidelity_check
 import svglide_schema
 import svglide_stage_invalidation
 
@@ -56,6 +57,7 @@ STAGES = [
     "preview",
     "preflight",
     "preview_lint",
+    "template_fidelity",
     "aesthetic_review",
     "chart_verify",
     "semantic_review",
@@ -105,6 +107,7 @@ STAGE_ALIASES = {
     "generate": "generate_svg",
     "generate-svg": "generate_svg",
     "preview-lint": "preview_lint",
+    "template-fidelity": "template_fidelity",
     "quality-gate": "quality_gate",
     "dry-run": "dry_run",
     "visual-acceptance": "visual_acceptance",
@@ -157,6 +160,7 @@ IMPLEMENTED_STAGES = {
     "preview",
     "preflight",
     "preview_lint",
+    "template_fidelity",
     "aesthetic_review",
     "chart_verify",
     "semantic_review",
@@ -1245,6 +1249,120 @@ def design_selection_path(project_root: Path) -> Path:
 
 def recipe_routing_receipt_path(project_root: Path) -> Path:
     return project_root / "02-plan" / "recipe-routing-receipt.json"
+
+
+def selected_template_for_fidelity(project_root: Path) -> tuple[str | None, int]:
+    plan = read_json_optional(plan_path(project_root))
+    for index, slide in enumerate(plan.get("slides", []) if isinstance(plan.get("slides"), list) else [], start=1):
+        if not isinstance(slide, dict):
+            continue
+        for source in (slide.get("canvas_spec"), slide):
+            if not isinstance(source, dict):
+                continue
+            template_id = source.get("selected_template_id") or source.get("template_id")
+            if isinstance(template_id, str) and template_id.strip():
+                return template_id.strip(), int(slide.get("page") or index)
+    for key in ("selected_template_id", "template_id"):
+        value = plan.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip(), 1
+    return None, 1
+
+
+def template_fidelity_path(raw: object) -> Path:
+    value = str(raw or "")
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    source_root = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
+    if value.startswith(f"{source_root.name}/"):
+        return source_root.parent / value
+    if value.startswith("screenshots/") or value.startswith("templates/"):
+        return source_root / value
+    return repo_root() / value
+
+
+def reference_screenshot_for_template(template_id: str) -> Path | None:
+    matrix_path = SCRIPT_DIR.parent / "references" / "beautiful-template-executable-matrix.json"
+    payload = read_json_optional(matrix_path)
+    rows = payload.get("candidates") if isinstance(payload.get("candidates"), list) else []
+    for row in rows:
+        if isinstance(row, dict) and row.get("template_id") == template_id and row.get("reference_screenshot"):
+            return template_fidelity_path(row["reference_screenshot"])
+    return None
+
+
+def rendered_png_for_template_fidelity(project_root: Path, page: int) -> Path:
+    candidates = [
+        project_root / f"04-artboard/raw/page-{page:03d}.visual.png",
+        project_root / f"04-svg/artboard/raw/page-{page:03d}.satori.png",
+        project_root / f"04-artboard/raw/page-{page:03d}.png",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+def run_template_fidelity_stage(project_root: Path, state: dict[str, Any], *, profile: str) -> dict[str, Any]:
+    started_at = now_iso()
+    started_perf = time.perf_counter()
+    template_id, page = selected_template_for_fidelity(project_root)
+    strict = profile in {"production", "production_live"}
+    rendered = rendered_png_for_template_fidelity(project_root, page)
+    reference = reference_screenshot_for_template(template_id) if template_id else None
+    issues: list[dict[str, str]] = []
+    if not template_id:
+        issues.append({"code": "template_fidelity_template_missing", "message": "no selected template_id found in slide_plan"})
+    if template_id and not rendered.exists():
+        issues.append({"code": "template_fidelity_render_missing", "message": f"render screenshot missing: {rendered}"})
+    if template_id and (reference is None or not reference.exists()):
+        issues.append({"code": "template_fidelity_reference_missing", "message": f"reference screenshot missing for template_id {template_id}"})
+
+    if issues:
+        receipt_status = "failed" if strict and template_id else "skipped"
+        payload: dict[str, Any] = {
+            "schema_version": "svglide-template-fidelity/v1",
+            "stage": "template_fidelity",
+            "status": receipt_status,
+            "template_id": template_id,
+            "selected_template_id": template_id,
+            "page": page,
+            "reference_screenshot": str(reference) if reference else None,
+            "render_screenshot": str(rendered),
+            "score": 0.0,
+            "threshold": beautiful_template_fidelity_check.default_profile()["thresholds"]["overall_min"],
+            "issues": issues,
+            "claim_boundary": "template fidelity was skipped; this run cannot support high-quality beautiful-template claims",
+        }
+    else:
+        payload = beautiful_template_fidelity_check.check_template_fidelity(
+            render_screenshot=rendered,
+            reference_screenshot=reference,
+            template_id=str(template_id),
+            page_type="default",
+        )
+        payload["selected_template_id"] = template_id
+        payload["page"] = page
+
+    write_json(project_root / "06-check/template-fidelity.json", payload)
+    write_json(project_root / "receipts/template-fidelity.json", payload)
+    stage_status = "failed" if payload.get("status") == "failed" and strict else "passed"
+    receipt = complete_stage(
+        project_root,
+        state,
+        "template_fidelity",
+        stage_status,
+        started_at=started_at,
+        inputs=["02-plan/slide_plan.json", "04-artboard/raw", "05-preview/preview.html"],
+        outputs=["06-check/template-fidelity.json", "receipts/template-fidelity.json"],
+        command=["python3", (SCRIPT_DIR / "beautiful_template_fidelity_check.py").as_posix(), "--project", project_root.as_posix()],
+        error={"issues": issues_from_payload(payload), "message": "template fidelity failed"} if stage_status == "failed" else None,
+        wall_time_seconds=time.perf_counter() - started_perf,
+    )
+    if stage_status == "failed":
+        raise RunnerError("stage 'template_fidelity' failed")
+    return receipt
 
 
 def project_prompt(project_root: Path) -> str:
@@ -3078,6 +3196,9 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=["05-preview/preview.html"],
             outputs=["06-check/preview-lint.json"],
         )
+    if stage == "template_fidelity":
+        require_stage_passed(state, "preview_lint")
+        return run_template_fidelity_stage(project_root, state, profile=profile)
     if stage == "aesthetic_review":
         require_stage_passed(state, "preview_lint")
         return run_script_stage(
@@ -3163,6 +3284,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             require_stage_passed(state, "diversity_gate")
         require_stage_passed(state, "preflight")
         require_stage_passed(state, "preview_lint")
+        require_stage_passed(state, "template_fidelity")
         require_stage_passed(state, "aesthetic_review")
         require_stage_passed(state, "chart_verify")
         require_stage_passed(state, "semantic_review")
@@ -3177,6 +3299,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             inputs=[
                 "06-check/preflight.json",
                 "06-check/preview-lint.json",
+                "06-check/template-fidelity.json",
                 "06-check/aesthetic-review.json",
                 "06-check/chart-verify.json",
                 "06-check/semantic-review.json",

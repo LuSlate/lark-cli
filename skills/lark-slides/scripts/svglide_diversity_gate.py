@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import beautiful_template_runtime
+
 
 PLAN_PATH = Path("02-plan/slide_plan.json")
 DESIGN_SELECTION_PATH = Path("02-plan/selection-metadata.json")
@@ -250,6 +252,15 @@ def compare_recent(project: Path, signature: dict[str, Any], *, history_limit: i
     return comparisons, issues
 
 
+def production_default_template_count() -> int:
+    registry = beautiful_template_runtime.template_registry()
+    return sum(
+        1
+        for item in registry.get("templates", [])
+        if isinstance(item, dict) and beautiful_template_runtime.is_runtime_selectable(item)
+    )
+
+
 def run_diversity_gate(project: Path, *, history_limit: int = DEFAULT_HISTORY_LIMIT) -> dict[str, Any]:
     project = project.resolve()
     started_at = now_iso()
@@ -258,9 +269,14 @@ def run_diversity_gate(project: Path, *, history_limit: int = DEFAULT_HISTORY_LI
     signature = plan_signature(plan, design_selection)
     issues = validate_current_plan(plan, design_selection, signature)
     comparisons, comparison_issues = compare_recent(project, signature, history_limit=history_limit)
-    issues.extend(comparison_issues)
+    warnings: list[dict[str, str]] = []
+    single_template_mode = production_default_template_count() <= 1
+    if single_template_mode:
+        warnings.extend(comparison_issues)
+    else:
+        issues.extend(comparison_issues)
     status = "passed" if not issues else "failed"
-    return {
+    result = {
         "schema_version": "svglide-diversity-gate/v1",
         "stage": "diversity_gate",
         "status": status,
@@ -277,12 +293,17 @@ def run_diversity_gate(project: Path, *, history_limit: int = DEFAULT_HISTORY_LI
         "comparisons": comparisons,
         "summary": {
             "error_count": len(issues),
+            "warning_count": len(warnings),
             "comparison_count": len(comparisons),
             "combo_count": len(signature.get("combos") if isinstance(signature.get("combos"), list) else []),
         },
         "issues": issues,
+        "warnings": warnings,
         "output_path": OUTPUT_PATH.as_posix(),
     }
+    if single_template_mode and warnings:
+        result["claim_boundary"] = "diversity history reuse was downgraded because the production/default template pool has only one executable fidelity-passed template"
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:

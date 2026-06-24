@@ -21,6 +21,41 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def write_selected_template_plan(project: Path, template_id: str = "cover-hero") -> None:
+    write_json(
+        project / "02-plan/slide_plan.json",
+        {
+            "language": "zh-CN",
+            "theme_id": "dark-clarity",
+            "slides": [{"page": 1, "title": "测试", "canvas_spec": {"template_id": template_id}}],
+        },
+    )
+
+
+def write_template_fidelity_receipt(
+    project: Path,
+    *,
+    status: str = "passed",
+    template_id: str = "cover-hero",
+    selected_template_id: str = "cover-hero",
+    score: float = 0.91,
+) -> None:
+    payload = {
+        "schema_version": "svglide-template-fidelity/v1",
+        "stage": "template_fidelity",
+        "status": status,
+        "template_id": template_id,
+        "selected_template_id": selected_template_id,
+        "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
+        "rendered": "04-svg/page-001.svg",
+        "score": score,
+        "threshold": 0.72,
+        "issues": [] if status == "passed" else [{"code": "structure_similarity_below_threshold"}],
+    }
+    write_json(project / "06-check/template-fidelity.json", payload)
+    write_json(project / "receipts/template-fidelity.json", payload)
+
+
 def write_passing_semantic_review(project: Path) -> None:
     (project / "02-plan").mkdir(parents=True, exist_ok=True)
     (project / "source").mkdir(parents=True, exist_ok=True)
@@ -690,6 +725,120 @@ class SVGlideQualityGateTest(unittest.TestCase):
         checks = {check["name"]: check for check in result["checks"]}
         self.assertEqual(checks["theme-template-selection-review"]["status"], "missing")
         self.assertIn("theme_template_selection_review", result["inputs"])
+
+    def test_production_quality_gate_fails_when_selected_template_lacks_fidelity_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            for rel in ["06-check/template-fidelity.json", "receipts/template-fidelity.json"]:
+                path = project / rel
+                if path.exists():
+                    path.unlink()
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        self.assertIn("template-fidelity", checks)
+        template_check = checks["template-fidelity"]
+        self.assertEqual(template_check["status"], "missing")
+        self.assertIn("template_fidelity", result["inputs"])
+        self.assertIn("template_fidelity_missing", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_receipt_failed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="failed", template_id="cover-hero", selected_template_id="cover-hero", score=0.4)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        self.assertIn("template-fidelity", checks)
+        template_check = checks["template-fidelity"]
+        self.assertEqual(template_check["status"], "failed")
+        self.assertIn("template_fidelity_failed", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_receipt_template_mismatches(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="other-template", selected_template_id="other-template", score=0.91)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        self.assertIn("template-fidelity", checks)
+        template_check = checks["template-fidelity"]
+        self.assertEqual(template_check["status"], "failed")
+        self.assertIn("template_fidelity_template_mismatch", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_receipt_points_to_missing_render(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+            receipt_path = project / "06-check/template-fidelity.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["rendered"] = "04-svg/missing-page.svg"
+            write_json(receipt_path, receipt)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        template_check = checks["template-fidelity"]
+        self.assertEqual(template_check["status"], "failed")
+        self.assertIn("template_fidelity_render_file_missing", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_fails_when_template_fidelity_score_missing_or_non_numeric(self) -> None:
+        for score_value in [None, "0.91"]:
+            with self.subTest(score_value=score_value):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    project = Path(tmpdir)
+                    write_selected_template_plan(project, "cover-hero")
+                    self.write_minimal_passing_project(project)
+                    write_template_fidelity_receipt(project, status="passed", template_id="cover-hero", selected_template_id="cover-hero", score=0.91)
+                    receipt_path = project / "06-check/template-fidelity.json"
+                    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                    if score_value is None:
+                        receipt.pop("score", None)
+                    else:
+                        receipt["score"] = score_value
+                    write_json(receipt_path, receipt)
+
+                    result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+                self.assertEqual(result["status"], "failed")
+                checks = {check["name"]: check for check in result["checks"]}
+                template_check = checks["template-fidelity"]
+                self.assertIn("template_fidelity_score_invalid", {item["code"] for item in template_check["issues"]})
+
+    def test_debug_quality_gate_template_fidelity_skip_declares_claim_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_template_plan(project, "cover-hero")
+            self.write_minimal_passing_project(project)
+            for rel in ["06-check/template-fidelity.json", "receipts/template-fidelity.json"]:
+                path = project / rel
+                if path.exists():
+                    path.unlink()
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="debug")
+
+        self.assertEqual(result["status"], "passed")
+        checks = {check["name"]: check for check in result["checks"]}
+        self.assertIn("template-fidelity", checks)
+        template_check = checks["template-fidelity"]
+        self.assertEqual(template_check["status"], "skipped")
+        self.assertIn("claim_boundary", template_check)
+        self.assertIn("cannot support high-quality", template_check["claim_boundary"])
 
     def test_quality_gate_fails_when_production_receipt_uses_legacy_asset(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { renderTree } from './templates/p0-templates.mjs'
+import { REQUIRED_FONT_ROLES, fontRoleAliasesFromTheme, fontRolesFromTheme } from './components/typography.mjs'
 
 const SATORI_VERSION = '0.26.0'
 const RESVG_VERSION = '2.6.2'
@@ -26,9 +27,14 @@ async function pathExists(candidate) {
   }
 }
 
-async function resolveFontPath() {
+async function resolveFontPath(candidates = DEFAULT_FONT_CANDIDATES) {
   if (process.env.SVGLIDE_SATORI_FONT_PATH) {
     return process.env.SVGLIDE_SATORI_FONT_PATH
+  }
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      return candidate
+    }
   }
   for (const candidate of DEFAULT_FONT_CANDIDATES) {
     if (await pathExists(candidate)) {
@@ -38,6 +44,61 @@ async function resolveFontPath() {
   throw new Error(
     'no usable Satori font found; set SVGLIDE_SATORI_FONT_PATH to a .ttf/.otf font available on this machine'
   )
+}
+
+async function readFontManifest() {
+  const manifestUrl = new URL('./font-manifest.json', import.meta.url)
+  return JSON.parse(await fs.readFile(manifestUrl, 'utf8'))
+}
+
+async function loadFonts(spec = {}) {
+  const manifest = await readFontManifest()
+  const manifestRoles = manifest.roles || {}
+  const themeRoles = fontRolesFromTheme(spec)
+  const requestedRoles = fontRoleAliasesFromTheme(spec)
+  const fonts = []
+  const seen = new Set()
+  const resolvedRoles = {}
+
+  async function addFont({ family, weight = 400, style = 'normal', candidates = DEFAULT_FONT_CANDIDATES, role = null, source = 'manifest' }) {
+    const fontPath = await resolveFontPath(candidates)
+    const key = `${family}:${weight}:${style}:${fontPath}`
+    if (!seen.has(key)) {
+      const data = await fs.readFile(fontPath)
+      fonts.push({ name: family, data, weight, style, path: fontPath })
+      seen.add(key)
+    }
+    if (role) {
+      resolvedRoles[role] = { family, weight, style, path: fontPath, source }
+    }
+  }
+
+  await addFont({ family: manifest.default_family || DEFAULT_FONT_FAMILY, weight: 400, source: 'default' })
+  for (const role of REQUIRED_FONT_ROLES) {
+    const manifestRole = manifestRoles[role] || {}
+    const themeRole = themeRoles[role] || {}
+    await addFont({
+      family: themeRole.family || manifestRole.family || DEFAULT_FONT_FAMILY,
+      weight: typeof manifestRole.weight === 'number' ? manifestRole.weight : 400,
+      style: manifestRole.style || 'normal',
+      candidates: Array.isArray(manifestRole.candidates) ? manifestRole.candidates : DEFAULT_FONT_CANDIDATES,
+      role,
+      source: requestedRoles[role] ? 'theme.typography.font_roles' : 'manifest'
+    })
+  }
+
+  return {
+    fonts,
+    primaryFont: fonts[0],
+    receipt: {
+      version: 'svglide-artboard-font-receipt/v1',
+      default_family: manifest.default_family || DEFAULT_FONT_FAMILY,
+      requested_roles: requestedRoles,
+      resolved_roles: resolvedRoles,
+      font_count: fonts.length,
+      font_paths: Array.from(new Set(fonts.map((font) => font.path)))
+    }
+  }
 }
 
 async function loadFont() {
@@ -73,10 +134,10 @@ async function loadResvg() {
 async function checkRuntime() {
   await loadSatori()
   const Resvg = await loadResvg()
-  const font = await loadFont()
+  const fontBundle = await loadFonts({})
   const probe = '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect width="4" height="4" fill="#000"/></svg>'
   new Resvg(probe).render().asPng()
-  console.log(JSON.stringify({ ok: true, renderer: 'satori-resvg', satori_version: SATORI_VERSION, resvg_version: RESVG_VERSION, font_path: font.path }))
+  console.log(JSON.stringify({ ok: true, renderer: 'satori-resvg', satori_version: SATORI_VERSION, resvg_version: RESVG_VERSION, font_path: fontBundle.primaryFont.path, font_receipt: fontBundle.receipt }))
 }
 
 function serializeObservation(node) {
@@ -112,13 +173,13 @@ async function main() {
   const satori = await loadSatori()
   const Resvg = await loadResvg()
   const spec = JSON.parse(await fs.readFile(inputPath, 'utf8'))
-  const font = await loadFont()
+  const fontBundle = await loadFonts(spec)
   const observations = []
   const svg = await satori(renderTree(spec), {
     width: 960,
     height: 540,
     embedFont: false,
-    fonts: [font],
+    fonts: fontBundle.fonts,
     onNodeDetected: (node) => {
       observations.push(serializeObservation(node))
     }
@@ -143,7 +204,9 @@ async function main() {
           node_version: process.version,
           satori_version: SATORI_VERSION,
           resvg_version: RESVG_VERSION,
-          font_path: font.path,
+          font_path: fontBundle.primaryFont.path,
+          font_paths: fontBundle.receipt.font_paths,
+          font_receipt: fontBundle.receipt,
           png_bytes: pngBytes ? pngBytes.length : null
         },
         null,

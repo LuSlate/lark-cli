@@ -4823,6 +4823,98 @@
         ]
       },
       "template_id": "blue-professional",
+      "template_token": {
+        "audience_tags": [
+          "executive",
+          "management",
+          "internal"
+        ],
+        "content_shapes": [
+          "executive dashboard",
+          "business review",
+          "metric evidence",
+          "action plan"
+        ],
+        "default_selectable": true,
+        "fidelity_gate": {
+          "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json",
+          "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
+          "score": 0.9842,
+          "status": "passed",
+          "threshold": 0.72
+        },
+        "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json",
+        "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json",
+        "layout_family": "executive_dashboard",
+        "max_items": {
+          "actions": 3,
+          "metrics": 4,
+          "sections": 4
+        },
+        "optional_content": [
+          "eyebrow",
+          "subtitle",
+          "actions",
+          "side_title"
+        ],
+        "quality_tier": "trusted",
+        "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
+        "renderer_executable": true,
+        "renderer_id": "artboard_satori.executive-dashboard",
+        "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/executive-dashboard.mjs",
+        "required_content": [
+          "title",
+          "metrics"
+        ],
+        "selection_scope": "production",
+        "source_trace": [
+          {
+            "evidence": "template html",
+            "source": "beautiful-html-templates/templates/blue-professional/template.html"
+          },
+          {
+            "evidence": "cover reference",
+            "source": "beautiful-html-templates/screenshots/blue-professional-1.png"
+          },
+          {
+            "evidence": "template fidelity receipt",
+            "source": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json"
+          }
+        ],
+        "status": "production",
+        "supported_page_types": [
+          "cover",
+          "content",
+          "report"
+        ],
+        "template_id": "executive-dashboard",
+          "text_budget": {
+            "actions": 28,
+            "metrics": 24,
+            "subtitle": 140,
+            "title": 48
+          },
+        "visual_contract": {
+          "forbidden": [
+            "random decorative lines",
+            "cyber glow",
+            "baseline blueprint nodes"
+          ],
+          "layout_regions": [
+            "accent_rule",
+            "title",
+            "subtitle",
+            "footer",
+            "right_panel"
+          ],
+          "motifs": [
+            "left-aligned executive cover",
+            "blue accent rule",
+            "cream canvas",
+            "right slanted neutral panel"
+          ]
+        }
+      },
       "theme_token": {
         "avoid_when": [
           "playful poster",

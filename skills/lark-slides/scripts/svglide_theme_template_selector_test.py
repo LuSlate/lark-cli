@@ -16,7 +16,7 @@ import svglide_theme_template_selector as selector
 import beautiful_template_runtime
 
 
-PROMOTED_SELECTOR_CASES = [
+EVALUATION_SELECTOR_CASES = [
     ("pixel-orbit-console", "retro gaming hackathon demo deck with pixel stats, console dashboard, cyberpunk developer tools"),
     ("biennale-programme-poster", "museum exhibition annual programme deck for young artists biennale with calendar ledger and curatorial notes"),
     ("block-frame-grid", "indie SaaS launch deck with block cards, feature grid, activation metrics and confident pop graphic voice"),
@@ -49,6 +49,75 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
 
+def production_template_record(template_id: str, *, score_terms: list[str], required_assets: list[str] | None = None, executable: bool = True) -> dict[str, object]:
+    record: dict[str, object] = {
+        "id": template_id,
+        "renderer_id": f"artboard_satori.{template_id}",
+        "required_content": ["title"],
+        "asset_status": "production",
+        "quality_tier": "trusted",
+        "default_selectable": True,
+        "selection_scope": "production",
+        "status": "active",
+        "claim_level": "svglide_absorbed",
+        "source_template_id": f"{template_id}-family",
+        "promotion_gate": {"status": "passed", "issues": [], "required_evidence": ["template_token"]},
+        "selection_metadata": {
+            "best_for": score_terms,
+            "avoid_for": [],
+            "occasion_tags": score_terms,
+            "tone_tags": ["analytical", "professional"],
+            "industry_tags": ["business"],
+            "density": "medium-high",
+            "formality": "high",
+            "content_shapes": score_terms,
+            "audience_tags": ["internal"],
+            "visual_signature": score_terms,
+            "required_assets": required_assets or [],
+            "decorative_elements": ["grid"],
+        },
+    }
+    if executable:
+        record.update(
+            {
+                "renderer_module": "skills/lark-slides/scripts/artboard_renderer/templates/beautiful/executive-dashboard.mjs",
+                "renderer_executable": True,
+                "golden_spec": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.canvas-spec.json",
+                "fidelity_receipt": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json",
+                "supported_page_types": ["cover", "content", "report"],
+                "visual_contract": {"motifs": ["grid"], "layout": "report"},
+                "fidelity_gate": {
+                    "status": "passed",
+                    "score": 0.91,
+                    "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
+                    "receipt_path": "skills/lark-slides/references/receipts/template-fidelity/blue-professional.executive-dashboard.json",
+                },
+            }
+        )
+    return record
+
+
+def production_theme_record(theme_id: str) -> dict[str, object]:
+    return {
+        "id": theme_id,
+        "theme_id": theme_id,
+        "status": "active",
+        "asset_status": "production",
+        "quality_tier": "trusted",
+        "default_selectable": True,
+        "selection_scope": "production",
+        "selection_metadata": {
+            "scheme": "light",
+            "mood_tags": ["professional", "analytical"],
+            "primary_color_bias": ["#1E2BFA"],
+            "supported_template_ids": ["valid-executive-report", "text-report"],
+            "brand_affinity": [],
+            "contrast_profile": "high readability",
+            "token_override_policy": "restricted",
+        },
+    }
+
+
 class ThemeTemplateSelectorTest(unittest.TestCase):
     def test_internal_review_selects_business_dashboard_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -59,9 +128,95 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
             result = selector.select_theme_template(root, brief, top_k=5)
 
         template_ids = [item["template_id"] for item in result["template_candidates"]]
-        self.assertTrue({"executive-dashboard", "metric-dashboard", "trend-grid-report"}.intersection(template_ids))
+        self.assertIn("executive-dashboard", template_ids)
         self.assertTrue(result["theme_candidates"])
         self.assertIn(result["confidence"], {"high", "medium", "low"})
+
+    def test_internal_review_report_selects_executable_fidelity_passed_template(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            brief = "内部复盘报告，给管理层阅读，包含指标、问题、原因和行动项"
+            prepare_project(root, brief)
+
+            result = selector.select_theme_template(root, brief, top_k=5)
+
+        selected = result["template_candidates"][0]
+        self.assertTrue(selected.get("renderer_executable"))
+        self.assertEqual("passed", selected.get("fidelity_gate", {}).get("status"))
+        self.assertTrue(selected.get("visual_contract"))
+
+    def test_selector_filters_templates_missing_renderer_or_fidelity_contract(self) -> None:
+        original_template_registry = selector.load_template_registry
+        original_theme_registry = selector.load_theme_registry
+        selector.load_template_registry = lambda: {
+            "templates": [
+                production_template_record(
+                    "broken-status-only-report",
+                    score_terms=["internal review", "business review", "dashboard", "metrics"],
+                    executable=False,
+                ),
+                production_template_record("executive-dashboard", score_terms=["business review"]),
+            ]
+        }
+        selector.load_theme_registry = lambda: {"themes": [production_theme_record("business-theme")]}
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                brief = "内部业务复盘报告，管理层 dashboard metrics"
+                prepare_project(root, brief)
+
+                result = selector.select_theme_template(root, brief, top_k=3)
+        finally:
+            selector.load_template_registry = original_template_registry
+            selector.load_theme_registry = original_theme_registry
+
+        self.assertEqual("executive-dashboard", result["selected_template_id"])
+        self.assertNotIn("broken-status-only-report", {item["template_id"] for item in result["template_candidates"]})
+
+    def test_selector_ranking_records_runtime_contract_signals(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            brief = "内部复盘报告，给管理层阅读，包含指标和行动项"
+            prepare_project(root, brief)
+
+            result = selector.select_theme_template(root, brief, top_k=5)
+
+        selected = result["template_candidates"][0]
+        self.assertTrue(selected.get("renderer_executable"))
+        self.assertGreaterEqual(selected.get("fidelity_score", 0), 0.8)
+        self.assertEqual("supported", selected.get("page_type_support"))
+        self.assertEqual("satisfied", selected.get("asset_slot_satisfied"))
+        self.assertTrue(any(str(signal).startswith("runtime_contract:") for signal in selected["matched_signals"]))
+
+    def test_missing_image_assets_downranks_image_required_templates(self) -> None:
+        original_template_registry = selector.load_template_registry
+        original_theme_registry = selector.load_theme_registry
+        selector.load_template_registry = lambda: {
+            "templates": [
+                production_template_record(
+                    "image-heavy-report",
+                    score_terms=["internal review", "business review", "dashboard", "metrics"],
+                    required_assets=["hero_image"],
+                ),
+                production_template_record("executive-dashboard", score_terms=["business review"]),
+            ]
+        }
+        selector.load_theme_registry = lambda: {"themes": [production_theme_record("business-theme")]}
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                brief = "内部业务复盘报告，无图片素材，只有文字、指标和行动项"
+                prepare_project(root, brief)
+
+                result = selector.select_theme_template(root, brief, top_k=3, evidence={"available_assets": []})
+        finally:
+            selector.load_template_registry = original_template_registry
+            selector.load_theme_registry = original_theme_registry
+
+        self.assertEqual("executive-dashboard", result["selected_template_id"])
+        candidate_ids = {item["template_id"] for item in result["template_candidates"]}
+        self.assertIn("executive-dashboard", candidate_ids)
+        self.assertNotIn("image-heavy-report", candidate_ids)
 
     def test_zhipu_minimax_respects_selected_palette_and_brand_affinity(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -88,8 +243,9 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
 
             result = selector.select_theme_template(root, brief, top_k=5)
 
-        template_ids = [item["template_id"] for item in result["template_candidates"]]
-        self.assertTrue({"comparison-cards", "brutalist-matrix"}.intersection(template_ids))
+        template_ids = {item["template_id"] for item in result["template_candidates"]}
+        self.assertEqual({"executive-dashboard"}, template_ids)
+        self.assertNotIn("brutalist-matrix", template_ids)
 
     def test_workbuddy_generation_chain_review_does_not_select_architecture_blueprint(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -119,7 +275,9 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
 
             result = selector.select_theme_template(root, brief, top_k=5)
 
-        self.assertEqual(result["selected_template_id"], "architectural-spec")
+        self.assertEqual(result["selected_template_id"], "executive-dashboard")
+        template_ids = {item["template_id"] for item in result["template_candidates"]}
+        self.assertNotIn("architectural-spec", template_ids)
 
     def test_output_is_stable_for_unknown_topic(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -152,30 +310,31 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
 
         template_ids = [item["template_id"] for item in result["template_candidates"]]
         theme_ids = [item["theme_id"] for item in result["theme_candidates"]]
-        self.assertIn("intelligence-brief", template_ids)
-        self.assertIn("poster-stat-punch", template_ids)
+        self.assertNotIn("intelligence-brief", template_ids)
+        self.assertNotIn("poster-stat-punch", template_ids)
         self.assertIn("stone-architect", theme_ids)
-        declared = [item for item in result["template_candidates"] if item["template_id"] == "poster-stat-punch"][0]
-        self.assertIn("plan_declared", declared["matched_signals"])
+        self.assertEqual(["executive-dashboard"], template_ids)
 
-    def test_promoted_templates_match_clear_reference_scenarios(self) -> None:
-        for expected_template_id, brief in PROMOTED_SELECTOR_CASES:
+    def test_evaluation_only_templates_do_not_enter_default_selector_candidates(self) -> None:
+        matrix = json.loads((Path(__file__).resolve().parent.parent / "references/beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        evaluation_only_ids = {
+            row["template_id"]
+            for row in matrix["candidates"]
+            if row.get("default_selectable") is not True
+        }
+        self.assertTrue(evaluation_only_ids)
+
+        for expected_template_id, brief in EVALUATION_SELECTOR_CASES:
             with self.subTest(expected_template_id=expected_template_id):
                 with tempfile.TemporaryDirectory() as tmpdir:
                     root = Path(tmpdir)
                     prepare_project(root, brief)
                     result = selector.select_theme_template(root, brief, top_k=8)
 
-                self.assertEqual(result["selected_template_id"], expected_template_id)
-                candidate = next(
-                    item for item in result["template_candidates"] if item["template_id"] == expected_template_id
-                )
-                self.assertEqual(candidate["promotion_gate"]["status"], "passed")
-                self.assertIn("source_trace", candidate)
-                self.assertTrue(
-                    any(str(signal).startswith("promoted_template_semantic:") for signal in candidate["matched_signals"]),
-                    candidate["matched_signals"],
-                )
+                candidate_ids = {item["template_id"] for item in result["template_candidates"]}
+                if expected_template_id in evaluation_only_ids:
+                    self.assertNotEqual(result["selected_template_id"], expected_template_id)
+                    self.assertNotIn(expected_template_id, candidate_ids)
 
     def test_write_selection_writes_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -220,9 +379,10 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
                     root = Path(tmpdir)
                     prepare_project(root, brief)
                     result = selector.select_theme_template(root, brief, top_k=5)
-                self.assertIn(result["selected_template_id"], expected)
+                self.assertEqual(result["selected_template_id"], "executive-dashboard")
                 candidate_ids = {item["template_id"] for item in result["template_candidates"]}
-                self.assertTrue(candidate_ids.intersection(expected), f"{name} candidates={sorted(candidate_ids)} expected={sorted(expected)}")
+                self.assertEqual({"executive-dashboard"}, candidate_ids)
+                self.assertFalse(candidate_ids.intersection(expected - {"executive-dashboard"}), f"{name} candidates={sorted(candidate_ids)} expected={sorted(expected)}")
 
 
 if __name__ == "__main__":

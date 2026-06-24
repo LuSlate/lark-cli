@@ -17,6 +17,9 @@ import svglide_schema
 import svglide_semantic_map_ir
 
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[2]
+SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 CHECK_DIR = Path("06-check")
 QUALITY_GATE_NAME = "quality-gate.json"
 PREPARED_SVG_DIR = Path("04-svg/prepared")
@@ -60,6 +63,7 @@ SELECTION_CHECKS = [
 ]
 ARTBOARD_PACKAGE_CHECK = ("artboard-package-check", CHECK_DIR / "artboard-package-check.json")
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
+TEMPLATE_FIDELITY_CHECK = ("template-fidelity", CHECK_DIR / "template-fidelity.json")
 OPTIONAL_CHECKS = []
 PASS_ACTION = "create_live"
 FAIL_ACTIONS = {"repair_and_rerun", "failed", "fail"}
@@ -651,6 +655,44 @@ def plan_declares_selection(project: Path) -> bool:
     return False
 
 
+def selected_template_ids(project: Path) -> set[str]:
+    payload = read_json_optional(project, PLAN_PATH)
+    ids: set[str] = set()
+    if not isinstance(payload, dict):
+        return ids
+    for key in ("selected_template_id", "template_id"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            ids.add(value)
+    slides = payload.get("slides")
+    if isinstance(slides, list):
+        for slide in slides:
+            if not isinstance(slide, dict):
+                continue
+            for source in (slide, slide.get("canvas_spec")):
+                if not isinstance(source, dict):
+                    continue
+                value = source.get("template_id") or source.get("selected_template_id")
+                if isinstance(value, str) and value:
+                    ids.add(value)
+    return ids
+
+
+def resolve_template_fidelity_evidence_path(project: Path, value: Any) -> Path:
+    raw = str(value or "")
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    if raw.startswith(f"{SOURCE_ROOT.name}/"):
+        return SOURCE_ROOT.parent / raw
+    if raw.startswith("screenshots/") or raw.startswith("templates/"):
+        return SOURCE_ROOT / raw
+    project_path = project / raw
+    if project_path.exists():
+        return project_path
+    return REPO_ROOT / raw
+
+
 def semantic_review_freshness_issues(project: Path, payload: dict[str, Any]) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     if payload.get("status") != "passed":
@@ -970,6 +1012,70 @@ def load_generator_receipt(project: Path, *, profile: str) -> dict[str, Any]:
     return check
 
 
+def load_template_fidelity_check(project: Path, *, profile: str) -> dict[str, Any]:
+    name, rel = TEMPLATE_FIDELITY_CHECK
+    path = project / rel
+    selected = selected_template_ids(project)
+    required = profile in STRICT_PROFILES and bool(selected)
+    check: dict[str, Any] = {
+        "name": name,
+        "path": rel.as_posix(),
+        "required": required,
+        "status": "missing" if not path.exists() else "failed",
+        "error_count": None,
+        "action": None,
+        "waivers": [],
+        "issues": [],
+    }
+    if not path.exists():
+        if required:
+            check["issues"].append(issue("template_fidelity_missing", "production profile requires template fidelity receipt"))
+        else:
+            check["status"] = "skipped"
+            check["claim_boundary"] = "template fidelity was skipped; this run cannot support high-quality beautiful-template claims"
+        return check
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        check["issues"].append(issue("template_fidelity_invalid_json", f"could not read template fidelity JSON: {error}"))
+        check["error_count"] = len(check["issues"])
+        return check
+
+    receipt_template = payload.get("selected_template_id") or payload.get("template_id")
+    if not required and payload.get("status") == "skipped":
+        check["status"] = "skipped"
+        check["claim_boundary"] = payload.get("claim_boundary") or "template fidelity was skipped; this run cannot support high-quality beautiful-template claims"
+        check["error_count"] = 0
+        return check
+    if payload.get("status") != "passed":
+        check["issues"].append(issue("template_fidelity_failed", "template fidelity receipt status must be passed"))
+    score = payload.get("score")
+    threshold = payload.get("threshold", 0.72)
+    if not isinstance(score, (int, float)) or not isinstance(threshold, (int, float)):
+        check["issues"].append(issue("template_fidelity_score_invalid", "template fidelity receipt must include numeric score and threshold"))
+    elif score < threshold:
+        check["issues"].append(issue("template_fidelity_score_below_threshold", "template fidelity score is below threshold"))
+    if selected and isinstance(receipt_template, str) and receipt_template not in selected:
+        check["issues"].append(issue("template_fidelity_template_mismatch", "template fidelity receipt template_id does not match selected template"))
+    if not isinstance(receipt_template, str) or not receipt_template:
+        check["issues"].append(issue("template_fidelity_template_missing", "template fidelity receipt must include template_id"))
+    reference_screenshot = payload.get("reference_screenshot")
+    render_screenshot = payload.get("render_screenshot") or payload.get("rendered")
+    if not reference_screenshot:
+        check["issues"].append(issue("template_fidelity_reference_missing", "template fidelity receipt must include reference_screenshot"))
+    elif not resolve_template_fidelity_evidence_path(project, reference_screenshot).is_file():
+        check["issues"].append(issue("template_fidelity_reference_file_missing", "template fidelity receipt reference_screenshot must exist"))
+    if not render_screenshot:
+        check["issues"].append(issue("template_fidelity_render_missing", "template fidelity receipt must include render_screenshot"))
+    elif not resolve_template_fidelity_evidence_path(project, render_screenshot).is_file():
+        check["issues"].append(issue("template_fidelity_render_file_missing", "template fidelity receipt render_screenshot must exist"))
+
+    check["error_count"] = len(check["issues"])
+    check["action"] = PASS_ACTION if not check["issues"] else "repair_and_rerun"
+    check["status"] = "failed" if check["issues"] else "passed"
+    return check
+
+
 def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: str) -> dict[str, Any]:
     path = project / rel
     check: dict[str, Any] = {
@@ -1103,6 +1209,8 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
     checks.extend(load_check(project, name, rel, required=True, profile=profile) for name, rel in THEME_REQUIRED_CHECKS)
     selection_checks_required = plan_declares_selection(project) or any((project / rel).exists() for _, rel in SELECTION_CHECKS)
     checks.extend(load_check(project, name, rel, required=selection_checks_required, profile=profile) for name, rel in SELECTION_CHECKS)
+    template_fidelity_required = profile in STRICT_PROFILES and bool(selected_template_ids(project))
+    checks.append(load_template_fidelity_check(project, profile=profile))
     generation_mode = generator_generation_mode(project)
     conditional_checks: list[tuple[str, Path]] = []
     if generation_mode == "artboard_satori":
@@ -1135,10 +1243,20 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
         for item in SELECTION_CHECKS
         if selection_checks_required or (project / item[1]).exists()
     ]
-    input_checks = REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + active_selection_checks + conditional_checks + ([CHART_VERIFY_CHECK] if chart_required else []) + OPTIONAL_CHECKS
+    input_checks = (
+        REQUIRED_CHECKS
+        + THEME_REQUIRED_CHECKS
+        + active_selection_checks
+        + [TEMPLATE_FIDELITY_CHECK]
+        + conditional_checks
+        + ([CHART_VERIFY_CHECK] if chart_required else [])
+        + OPTIONAL_CHECKS
+    )
     required_input_names = {item[0] for item in REQUIRED_CHECKS + THEME_REQUIRED_CHECKS + conditional_checks}
     if selection_checks_required:
         required_input_names.update(item[0] for item in SELECTION_CHECKS)
+    if template_fidelity_required:
+        required_input_names.add(TEMPLATE_FIDELITY_CHECK[0])
     result = {
         "version": "svglide-quality-gate/v1",
         "project": str(project),

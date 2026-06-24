@@ -1,0 +1,30 @@
+{
+  "schema_version": "svglide-template-fidelity/v1",
+  "stage": "template_fidelity",
+  "status": "passed",
+  "template_id": "executive-dashboard",
+  "selected_template_id": "executive-dashboard",
+  "source_family": "blue-professional",
+  "page_type": "cover",
+  "reference_screenshot": "beautiful-html-templates/screenshots/blue-professional-1.png",
+  "render_screenshot": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/executive-dashboard.preview.png",
+  "reference_selection": {
+    "rule": "matrix_cover_reference",
+    "path": "beautiful-html-templates/screenshots/blue-professional-1.png"
+  },
+  "score": 0.9842,
+  "threshold": 0.72,
+  "metrics": {
+    "color_distribution": 0.9851,
+    "layout_structure": 0.9684,
+    "edge_density": 0.9946,
+    "whitespace": 1.0,
+    "dominant_region": 0.9846
+  },
+  "visual_contract": {
+    "motifs": ["left-aligned executive cover", "blue accent rule", "cream canvas", "right slanted neutral panel"],
+    "layout_regions": ["accent_rule", "title", "subtitle", "footer", "right_panel"],
+    "forbidden": ["random decorative lines", "cyber glow", "baseline blueprint nodes"]
+  },
+  "issues": []
+}

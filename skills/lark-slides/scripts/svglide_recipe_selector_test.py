@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import svglide_recipe_selector as selector
+import beautiful_template_runtime
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -117,6 +118,20 @@ class SVGlideRecipeSelectorTest(unittest.TestCase):
                 self.assertFalse(any(item in blob for item in FORBIDDEN_BASELINES))
                 self.assertEqual(result["status"], "failed")
                 self.assertEqual(result["action"], "fail_closed")
+
+    def test_production_selection_never_returns_debug_or_non_executable_template_family(self) -> None:
+        result = selector.select_design_assets("内部业务复盘，管理层阅读，有指标、问题、原因、后续动作")
+        selected = result["template_family_selection"]["selected_template_id"]
+        families = {family["template_id"]: family for family in beautiful_template_runtime.families()}
+
+        candidate = beautiful_template_runtime.template_promotion_candidate(families[selected])
+
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual("passed", candidate["promotion_gate"]["status"], candidate["promotion_gate"]["issues"])
+        self.assertEqual("production", candidate["selection_scope"])
+        self.assertTrue(candidate["default_selectable"])
+        self.assertEqual("passed", candidate["template_token"]["fidelity_gate"]["status"])
+        self.assertTrue(candidate["template_token"]["renderer_module"])
 
     def test_style_lock_is_deck_level_and_auditable(self) -> None:
         result = selector.select_design_assets("豆包 App 竞品分析，关注产品能力、用户场景和真实产品截图")

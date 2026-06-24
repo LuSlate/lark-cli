@@ -14,6 +14,29 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import svglide_selection_metadata_lint as lint
 
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[2]
+SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
+
+
+def resolve_evidence_path(value: object) -> Path:
+    raw = str(value or "")
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    if raw.startswith(f"{SOURCE_ROOT.name}/"):
+        return SOURCE_ROOT.parent / raw
+    if raw.startswith("screenshots/") or raw.startswith("templates/"):
+        return SOURCE_ROOT / raw
+    return REPO_ROOT / raw
+
+
+def assert_real_evidence_file(test_case: unittest.TestCase, value: object, label: str) -> None:
+    path = resolve_evidence_path(value)
+    test_case.assertTrue(path.exists(), f"{label} must exist: {path}")
+    test_case.assertTrue(path.is_file(), f"{label} must be a file: {path}")
+
+
 def template_metadata() -> dict[str, object]:
     return {
         "best_for": ["internal review"],
@@ -140,6 +163,49 @@ class SelectionMetadataLintTest(unittest.TestCase):
 
         self.assertIn("template_promotion_gate_not_passed", missing_gate_codes)
         self.assertIn("template_promotion_gate_not_passed", blocked_gate_codes)
+
+    def test_production_trusted_template_still_requires_runtime_executable_contract(self) -> None:
+        record = {
+            "id": "fake-status-only-template",
+            "status": "active",
+            "asset_status": "production",
+            "quality_tier": "trusted",
+            "default_selectable": True,
+            "selection_scope": "production",
+            "claim_level": "svglide_absorbed",
+            "source_template_id": "fake-family",
+            "renderer_id": "artboard_satori.fake-status-only-template",
+            "selection_metadata": template_metadata(),
+            "promotion_gate": {"status": "passed", "issues": []},
+        }
+
+        issues = lint.validate_template_metadata(record)
+
+        codes = {item["code"] for item in issues}
+        self.assertIn("template_renderer_module_missing", codes)
+        self.assertIn("template_supported_page_types_missing", codes)
+        self.assertIn("template_visual_contract_missing", codes)
+        self.assertIn("template_fidelity_gate_not_passed", codes)
+
+    def test_real_default_template_registry_contains_only_executable_fidelity_passed_templates(self) -> None:
+        registry = lint.beautiful_template_runtime.template_registry()
+        templates = lint.active_templates(registry)
+
+        for template in templates:
+            with self.subTest(template=template["id"]):
+                self.assertFalse(lint.validate_template_metadata(template))
+                self.assertTrue(template.get("renderer_module"))
+                self.assertTrue(template.get("renderer_executable"))
+                self.assertEqual("passed", template.get("fidelity_gate", {}).get("status"))
+                self.assertTrue(template.get("supported_page_types"))
+                self.assertTrue(template.get("visual_contract"))
+                assert_real_evidence_file(self, template.get("renderer_module"), "renderer_module")
+                assert_real_evidence_file(self, template.get("golden_spec"), "golden_spec")
+                assert_real_evidence_file(
+                    self,
+                    template.get("fidelity_receipt") or template.get("fidelity_gate", {}).get("receipt_path"),
+                    "fidelity_receipt",
+                )
 
     def test_theme_rejects_invalid_scheme_and_override_policy(self) -> None:
         metadata = theme_metadata()

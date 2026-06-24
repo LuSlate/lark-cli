@@ -128,7 +128,7 @@ class SVGlideDiversityGateTest(unittest.TestCase):
         self.assertEqual(result["status"], "failed")
         self.assertIn("slide_palette_drift", {item["code"] for item in result["issues"]})
 
-    def test_fails_recent_combo_reuse_too_high(self) -> None:
+    def test_warns_recent_combo_reuse_when_only_one_production_template_is_available(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             previous = root / "previous"
@@ -138,8 +138,9 @@ class SVGlideDiversityGateTest(unittest.TestCase):
 
             result = gate.run_diversity_gate(current)
 
-        self.assertEqual(result["status"], "failed")
-        self.assertIn("diversity_combo_reuse_too_high", {item["code"] for item in result["issues"]})
+        self.assertEqual(result["status"], "passed")
+        self.assertIn("diversity_combo_reuse_too_high", {item["code"] for item in result["warnings"]})
+        self.assertIn("claim_boundary", result)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -67,6 +68,138 @@ def canvas_spec() -> dict[str, object]:
 
 
 class SVGlideArtboardRendererTest(unittest.TestCase):
+    def test_production_beautiful_renderer_missing_dedicated_module_fails_closed(self) -> None:
+        scripts_dir = Path(__file__).resolve().parent
+        renderer_dir = scripts_dir / "artboard_renderer"
+        sample_template_id = "executive-dashboard"
+        script = """
+import { renderTree } from './templates/p0-templates.mjs'
+import { beautifulRendererContract, dedicatedBeautifulRendererIds } from './templates/beautiful/index.mjs'
+
+const sampleTemplateId = process.argv[1]
+const registeredIds = dedicatedBeautifulRendererIds()
+if (!registeredIds.includes(sampleTemplateId)) {
+  console.error(JSON.stringify({ missingSample: sampleTemplateId, registeredIds }))
+  process.exit(1)
+}
+const contract = beautifulRendererContract(sampleTemplateId)
+if (contract?.status !== 'production' || contract?.renderer_stage !== 'closed_loop_sample') {
+  console.error(JSON.stringify({ badContract: contract }))
+  process.exit(2)
+}
+
+try {
+  renderTree({
+    template_id: '__missing_production_beautiful_template__',
+    template_status: 'production',
+    selection_scope: 'production',
+    theme: { colors: { background: '#fff', panel: '#f8fafc', primary: '#111', accent: '#555', text: '#111', muted: '#555' } },
+    content: { title: 'Missing renderer should fail' }
+  })
+} catch (error) {
+  const message = String(error?.message || error)
+  if (message.includes('missing dedicated beautiful renderer')) {
+    console.log(JSON.stringify({ registeredIds, message }))
+    process.exit(0)
+  }
+  console.error(message)
+  process.exit(3)
+}
+console.error('production beautiful template rendered without a dedicated renderer')
+process.exit(4)
+"""
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", script, sample_template_id],
+            cwd=renderer_dir,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_renderer_font_manifest_registers_required_roles(self) -> None:
+        renderer_dir = Path(__file__).resolve().parent / "artboard_renderer"
+        manifest = json.loads((renderer_dir / "font-manifest.json").read_text(encoding="utf-8"))
+        roles = manifest.get("roles")
+        self.assertIsInstance(roles, dict)
+        required_roles = {"display", "body", "label", "metric"}
+        self.assertTrue(required_roles.issubset(roles))
+        families = {roles[role]["family"] for role in required_roles}
+        self.assertGreaterEqual(len(families), 2)
+        for role in required_roles:
+            record = roles[role]
+            self.assertIsInstance(record.get("family"), str)
+            self.assertIsInstance(record.get("weight"), int)
+            self.assertTrue(record.get("candidates"))
+        typography = (renderer_dir / "components/typography.mjs").read_text(encoding="utf-8")
+        for helper in ["fontRole", "withFontRole", "fontRolesFromTheme"]:
+            self.assertIn(f"export function {helper}", typography)
+
+    def test_theme_font_roles_are_reflected_in_renderer_metadata(self) -> None:
+        renderer_dir = Path(__file__).resolve().parent / "artboard_renderer"
+        spec = canvas_spec()
+        spec["template_id"] = "executive-dashboard"
+        spec["theme_id"] = "blue-professional"
+        spec["theme"] = {
+            "colors": {
+                "background": "#101018",
+                "panel": "#171727",
+                "surface": "#202036",
+                "primary": "#7DF9FF",
+                "accent": "#F8E16C",
+                "text": "#F8FAFC",
+                "muted": "#B7C4D8",
+            },
+            "typography": {
+                "font_roles": {
+                    "display": "SVGlideDisplayOverride",
+                    "body": "SVGlideBodyOverride",
+                    "label": "SVGlideLabelOverride",
+                    "metric": "SVGlideMetricOverride",
+                }
+            },
+        }
+        spec["content"] = {
+            "eyebrow": "FONT ROLES",
+            "title": "Renderer roles",
+            "subtitle": "Theme role aliases must be auditable.",
+            "stats": ["Display", "Body", "Label", "Metric"],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            input_path = tmp / "canvas-spec.json"
+            output_path = tmp / "out.svg"
+            png_path = tmp / "out.png"
+            metadata_path = tmp / "metadata.json"
+            observations_path = tmp / "observations.json"
+            write_json(input_path, spec)
+            result = subprocess.run(
+                [
+                    "node",
+                    (renderer_dir / "render.mjs").as_posix(),
+                    input_path.as_posix(),
+                    output_path.as_posix(),
+                    png_path.as_posix(),
+                    metadata_path.as_posix(),
+                    observations_path.as_posix(),
+                ],
+                cwd=renderer_dir,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            font_receipt = metadata.get("font_receipt")
+            self.assertIsInstance(font_receipt, dict)
+            requested_roles = font_receipt.get("requested_roles")
+            self.assertEqual(requested_roles["display"], "SVGlideDisplayOverride")
+            resolved_roles = font_receipt.get("resolved_roles")
+            self.assertEqual(set(resolved_roles), {"display", "body", "label", "metric"})
+            self.assertEqual(resolved_roles["display"]["family"], "SVGlideDisplayOverride")
+            self.assertGreaterEqual(len({resolved_roles[role]["family"] for role in resolved_roles}), 2)
+
     def test_compiler_nodes_do_not_synthesize_template_eyebrow(self) -> None:
         spec = canvas_spec()
         spec["template_id"] = "comparison-cards"
@@ -146,7 +279,12 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
         self.assertGreaterEqual(len(active_templates), 15)
         self.assertTrue(required_template_ids.issubset(set(active_templates)))
         for template in active_templates.values():
-            self.assertTrue(set(theme_ids).issubset(set(template["supported_theme_ids"])))
+            supported_theme_ids = set(template["supported_theme_ids"])
+            if template.get("selection_scope") == "production":
+                self.assertTrue(supported_theme_ids)
+                self.assertTrue(supported_theme_ids.issubset(set(theme_ids)))
+            else:
+                self.assertTrue(set(theme_ids).issubset(supported_theme_ids))
 
         components = (renderer_dir / "components/primitives.mjs").read_text(encoding="utf-8")
         for export_name in ["Title", "Subtitle", "Chip", "StatCard", "ImageFrame"]:
@@ -222,7 +360,7 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
             result = artboard.render_project(project)
 
             self.assertEqual(result["status"], "passed")
-            self.assertEqual(result["max_workers"], 4)
+            self.assertEqual(result["max_workers"], min(4, len(active_template_ids)))
             self.assertEqual(len(result["artboard_receipts"]), len(active_template_ids))
             self.assertTrue((project / "05-preview/contact-sheet.png").exists())
             self.assertTrue((project / "04-artboard/raw/manifest.json").exists())
@@ -237,12 +375,26 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
 
     def test_p1_template_uses_real_satori_source_not_python_generic(self) -> None:
         spec = canvas_spec()
-        spec["template_id"] = "intelligence-brief"
+        spec["template_id"] = "executive-dashboard"
+        spec["theme_id"] = "blue-professional"
+        spec["theme"] = {
+            "colors": {
+                "background": "#FDFAE7",
+                "panel": "#FFFFFF",
+                "surface": "#F5F7FF",
+                "primary": "#1E2BFA",
+                "accent": "#1E2BFA",
+                "text": "#111111",
+                "muted": "#6B6B6B",
+                "border": "#D4D8FE",
+            }
+        }
         spec["content"] = {
-            "eyebrow": "PRIVATE BRIEF",
+            "eyebrow": "BUSINESS REVIEW",
             "title": "智谱和 MiniMax",
             "subtitle": "用户预览链路不应注入无来源参考线。",
-            "points": ["主题非 baseline", "模板非 baseline", "本地预览"],
+            "metrics": ["主题非 baseline", "模板非 baseline", "本地预览", "无旧装饰"],
+            "actions": ["确认来源", "跑通预览", "检查质量门"],
         }
 
         with self.assertRaisesRegex(artboard.ArtboardError, "Python generic fallback is not allowed"):
@@ -280,8 +432,9 @@ class SVGlideArtboardRendererTest(unittest.TestCase):
 
     def test_p1_template_fails_closed_when_node_satori_is_disabled(self) -> None:
         spec = canvas_spec()
-        spec["template_id"] = "intelligence-brief"
-        spec["content"] = {"title": "No Python Generic", "subtitle": "P1 must not fall back", "points": ["A", "B", "C"]}
+        spec["template_id"] = "executive-dashboard"
+        spec["theme_id"] = "blue-professional"
+        spec["content"] = {"title": "No Python Generic", "subtitle": "P1 must not fall back", "metrics": ["A", "B", "C", "D"]}
         old_value = os.environ.get("SVGLIDE_ARTBOARD_USE_NODE_SATORI")
         os.environ["SVGLIDE_ARTBOARD_USE_NODE_SATORI"] = "0"
         try:

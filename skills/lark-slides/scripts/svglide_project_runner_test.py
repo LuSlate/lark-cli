@@ -544,6 +544,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
                         "preview",
                         "preflight",
                         "preview_lint",
+                        "template_fidelity",
                         "aesthetic_review",
                         "chart_verify",
                         "semantic_review",
@@ -782,6 +783,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertEqual(runner.normalize_stage("generate-svg"), "generate_svg")
         self.assertEqual(runner.normalize_stage("quality-gate"), "quality_gate")
         self.assertEqual(runner.normalize_stage("preview-lint"), "preview_lint")
+        self.assertEqual(runner.normalize_stage("template-fidelity"), "template_fidelity")
         self.assertEqual(runner.normalize_stage("dry-run"), "dry_run")
         self.assertEqual(runner.normalize_stage("visual-acceptance"), "visual_acceptance")
         self.assertEqual(runner.normalize_stage("visual-acceptance-gate"), "visual_acceptance")
@@ -809,6 +811,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("assets", dry_run)
         self.assertIn("generate_svg", dry_run)
         self.assertIn("aesthetic_review", dry_run)
+        self.assertIn("template_fidelity", dry_run)
         self.assertIn("chart_verify", dry_run)
         self.assertIn("semantic_review", dry_run)
         self.assertIn("runtime_review", dry_run)
@@ -819,6 +822,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         self.assertIn("generation_benchmark", dry_run)
         self.assertIn("dry_run", dry_run)
         self.assertLess(dry_run.index("quality_gate"), dry_run.index("generation_benchmark"))
+        self.assertLess(dry_run.index("preview_lint"), dry_run.index("template_fidelity"))
+        self.assertLess(dry_run.index("template_fidelity"), dry_run.index("aesthetic_review"))
         self.assertLess(dry_run.index("generation_benchmark"), dry_run.index("dry_run"))
         self.assertNotIn("visual_acceptance", dry_run)
         self.assertNotIn("ppe_proof", dry_run)
@@ -881,6 +886,7 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertIn("diversity_gate", called_stages)
             self.assertIn("theme_validate", called_stages)
             self.assertIn("package_check", called_stages)
+            self.assertIn("template_fidelity", called_stages)
             self.assertIn("theme_adherence", called_stages)
             self.assertLess(called_stages.index("source"), called_stages.index("select_style"))
             self.assertLess(called_stages.index("select_style"), called_stages.index("plan"))
@@ -890,6 +896,8 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertLess(called_stages.index("selection_review"), called_stages.index("plan_bundle_review"))
             self.assertNotIn("confirm_plan", called_stages)
             self.assertLess(called_stages.index("plan_bundle_review"), called_stages.index("package_check"))
+            self.assertLess(called_stages.index("preview_lint"), called_stages.index("template_fidelity"))
+            self.assertLess(called_stages.index("template_fidelity"), called_stages.index("aesthetic_review"))
             self.assertLess(called_stages.index("chart_verify"), called_stages.index("semantic_review"))
             self.assertLess(called_stages.index("semantic_review"), called_stages.index("quality_gate"))
             self.assertLess(called_stages.index("runtime_review"), called_stages.index("visual_distinctness_review"))
