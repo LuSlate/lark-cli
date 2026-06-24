@@ -39,8 +39,8 @@ var AppsLogList = common.Shortcut{
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online logs should be searched", Required: true},
 		{Name: "env", Default: defaultAppsLogEnv, Desc: "observability environment; only online is supported"},
-		{Name: "since", Desc: "start time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339"},
-		{Name: "until", Desc: "end time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339"},
+		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
+		{Name: "until", Desc: "end time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
 		{Name: "level", Type: "string_array", Desc: "log level filter; repeatable, one of DEBUG, INFO, WARN, ERROR (case-insensitive)"},
 		{Name: "log-id", Type: "string_array", Desc: "log ID filter; repeatable"},
 		{Name: "trace-id", Type: "string_array", Desc: "trace ID filter; repeatable"},
@@ -165,7 +165,7 @@ func buildLogSearchBody(rctx *common.RuntimeContext) (map[string]interface{}, er
 		return nil, err
 	}
 	body := map[string]interface{}{
-		"app_env": env,
+		"app_env": appsObservabilityBackendEnv,
 		"limit":   rctx.Int("page-size"),
 	}
 	if token := strings.TrimSpace(rctx.Str("page-token")); token != "" {
@@ -186,7 +186,7 @@ func buildLogSearchBody(rctx *common.RuntimeContext) (map[string]interface{}, er
 
 func buildLogGetSearchBody(rctx *common.RuntimeContext) map[string]interface{} {
 	return map[string]interface{}{
-		"app_env": defaultAppsLogEnv,
+		"app_env": appsObservabilityBackendEnv,
 		"limit":   1,
 		"filter": map[string]interface{}{
 			"log_ids": []string{strings.TrimSpace(rctx.Str("log-id"))},

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/larksuite/cli/errs"
-	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -31,8 +30,6 @@ var AppsEnvVarList = common.Shortcut{
 		{Name: "app-id", Desc: "app ID", Required: true},
 		{Name: "env", Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
 		{Name: "include-values", Type: "bool", Desc: "include environment variable values"},
-		{Name: "page-size", Type: "int", Default: "50", Desc: "page size"},
-		{Name: "page-token", Desc: "pagination cursor from previous response"},
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		if _, err := requireAppID(rctx.Str("app-id")); err != nil {
@@ -41,17 +38,14 @@ var AppsEnvVarList = common.Shortcut{
 		if err := validateEnvVarEnv(envVarEnv(rctx)); err != nil {
 			return err
 		}
-		if err := validateAppsPageSize(rctx.Int("page-size")); err != nil {
-			return err
-		}
 		return nil
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		appID, _ := requireAppID(rctx.Str("app-id"))
 		return common.NewDryRunAPI().
-			GET(envVarCollectionPath(appID)).
+			POST(envVarCollectionPath(appID)).
 			Desc("List app environment variables").
-			Params(buildEnvVarListParams(rctx))
+			Body(buildEnvVarListBody(rctx))
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		appID, err := requireAppID(rctx.Str("app-id"))
@@ -59,7 +53,7 @@ var AppsEnvVarList = common.Shortcut{
 			return err
 		}
 		includeValues := rctx.Bool("include-values")
-		data, err := rctx.CallAPITyped("GET", envVarCollectionPath(appID), buildEnvVarListParams(rctx), nil)
+		data, err := rctx.CallAPITyped("POST", envVarCollectionPath(appID), nil, buildEnvVarListBody(rctx))
 		if err != nil {
 			return withAppsHint(err, appIDListHint)
 		}
@@ -106,9 +100,10 @@ var AppsEnvVarSet = common.Shortcut{
 		appID, _ := requireAppID(rctx.Str("app-id"))
 		key, _ := requireEnvVarKey(rctx.Str("key"))
 		return common.NewDryRunAPI().
-			PUT(envVarKeyPath(appID, key)).
+			POST(envVarCreateOrUpdatePath(appID)).
 			Desc("Set app environment variable").
 			Body(map[string]interface{}{
+				"key":   key,
 				"env":   envVarEnv(rctx),
 				"value": "<redacted>",
 			})
@@ -130,17 +125,22 @@ var AppsEnvVarSet = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		_, err = rctx.CallAPITyped("PUT", envVarKeyPath(appID, key), nil, map[string]interface{}{
+		data, err := rctx.CallAPITyped("POST", envVarCreateOrUpdatePath(appID), nil, map[string]interface{}{
+			"key":   key,
 			"env":   env,
 			"value": rctx.Str("value"),
 		})
 		if err != nil {
 			return withAppsHint(err, appIDListHint)
 		}
+		action := envVarStringAny(data, "action")
+		if action == "" {
+			action = "set"
+		}
 		rctx.OutFormat(map[string]interface{}{
 			"key":    key,
 			"env":    env,
-			"action": "set",
+			"action": action,
 		}, nil, nil)
 		return nil
 	},
@@ -177,7 +177,7 @@ var AppsEnvVarDelete = common.Shortcut{
 		appID, _ := requireAppID(rctx.Str("app-id"))
 		keys, _ := requireEnvVarKeys(rctx.StrArray("key"))
 		return common.NewDryRunAPI().
-			DELETE(envVarCollectionPath(appID)).
+			POST(envVarDeletePath(appID)).
 			Desc("Delete app environment variables").
 			Body(buildEnvVarDeleteBody(envVarEnv(rctx), keys))
 	},
@@ -191,13 +191,17 @@ var AppsEnvVarDelete = common.Shortcut{
 			return err
 		}
 		env := envVarEnv(rctx)
-		_, err = rctx.CallAPITyped("DELETE", envVarCollectionPath(appID), nil, buildEnvVarDeleteBody(env, keys))
+		data, err := rctx.CallAPITyped("POST", envVarDeletePath(appID), nil, buildEnvVarDeleteBody(env, keys))
 		if err != nil {
 			return withAppsHint(err, appIDListHint)
 		}
+		deletedKeys := envVarStringSliceAny(data, "deleted_keys", "deletedKeys")
+		if len(deletedKeys) == 0 {
+			deletedKeys = keys
+		}
 		rctx.OutFormat(map[string]interface{}{
 			"env":          env,
-			"deleted_keys": keys,
+			"deleted_keys": deletedKeys,
 		}, nil, nil)
 		return nil
 	},
@@ -215,20 +219,18 @@ func envVarCollectionPath(appID string) string {
 	return appScopedPath(appID, "env_vars")
 }
 
-func envVarKeyPath(appID, key string) string {
-	return envVarCollectionPath(appID) + "/" + validate.EncodePathSegment(strings.TrimSpace(key))
+func envVarCreateOrUpdatePath(appID string) string {
+	return appScopedPath(appID, "create_or_update_env_var")
 }
 
-func buildEnvVarListParams(rctx *common.RuntimeContext) map[string]interface{} {
-	params := map[string]interface{}{
-		"env":            envVarEnv(rctx),
-		"include_values": rctx.Bool("include-values"),
-		"page_size":      rctx.Int("page-size"),
+func envVarDeletePath(appID string) string {
+	return appScopedPath(appID, "delete_env_vars")
+}
+
+func buildEnvVarListBody(rctx *common.RuntimeContext) map[string]interface{} {
+	return map[string]interface{}{
+		"env": envVarEnv(rctx),
 	}
-	if token := strings.TrimSpace(rctx.Str("page-token")); token != "" {
-		params["page_token"] = token
-	}
-	return params
 }
 
 func buildEnvVarDeleteBody(env string, keys []string) map[string]interface{} {
@@ -288,6 +290,9 @@ func envVarItemsRaw(data map[string]interface{}) interface{} {
 	if raw := data["env_vars"]; raw != nil {
 		return raw
 	}
+	if raw := data["envVars"]; raw != nil {
+		return raw
+	}
 	return data["items"]
 }
 
@@ -341,6 +346,26 @@ func envVarStringAny(data map[string]interface{}, keys ...string) string {
 		}
 	}
 	return ""
+}
+
+func envVarStringSliceAny(data map[string]interface{}, keys ...string) []string {
+	for _, key := range keys {
+		switch raw := data[key].(type) {
+		case []string:
+			return append([]string(nil), raw...)
+		case []interface{}:
+			out := make([]string, 0, len(raw))
+			for _, item := range raw {
+				if value, ok := item.(string); ok {
+					out = append(out, value)
+				}
+			}
+			if len(out) > 0 {
+				return out
+			}
+		}
+	}
+	return nil
 }
 
 func envVarBoolAny(data map[string]interface{}, keys ...string) bool {

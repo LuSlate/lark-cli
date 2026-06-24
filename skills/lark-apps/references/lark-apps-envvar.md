@@ -8,6 +8,8 @@
 
 `+envvar-list` 默认查 dev，且默认不返回 value。只有显式传 `--include-values` 后，响应中才可能出现变量值；不要在公开日志里展示带值输出。
 
+接口契约：list 使用 `POST env_vars`；set 使用 `POST create_or_update_env_var`；delete 使用 `POST delete_env_vars`。`--include-values` 只控制 CLI 输出是否展示 value，不作为服务端查询参数发送。
+
 ```bash
 lark-cli apps +envvar-list --app-id <app_id>
 lark-cli apps +envvar-list --app-id <app_id> --env online

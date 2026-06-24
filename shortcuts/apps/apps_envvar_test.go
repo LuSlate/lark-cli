@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -14,18 +15,17 @@ import (
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
-func assertEnvVarQuery(t *testing.T, req *http.Request, want map[string]string, absent ...string) {
+func assertEnvVarBody(t *testing.T, req *http.Request, want map[string]interface{}) {
 	t.Helper()
-	query := req.URL.Query()
-	for key, value := range want {
-		if got := query.Get(key); got != value {
-			t.Fatalf("query %s = %q, want %q (raw query %q)", key, got, value, req.URL.RawQuery)
-		}
+	if req.URL.RawQuery != "" {
+		t.Fatalf("query should be empty, got %q", req.URL.RawQuery)
 	}
-	for _, key := range absent {
-		if _, ok := query[key]; ok {
-			t.Fatalf("query %s should be absent (raw query %q)", key, req.URL.RawQuery)
-		}
+	var got map[string]interface{}
+	if err := json.NewDecoder(req.Body).Decode(&got); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("body = %#v, want %#v", got, want)
 	}
 }
 
@@ -62,23 +62,17 @@ func requireEnvVarValidationProblem(t *testing.T, err error, param string) {
 func TestAppsEnvVarList_DefaultsToDevAndHidesValues(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		OnMatch: func(req *http.Request) {
-			assertEnvVarQuery(t, req, map[string]string{
-				"env":            "dev",
-				"include_values": "false",
-				"page_size":      "50",
-			}, "page_token")
+			assertEnvVarBody(t, req, map[string]interface{}{"env": "dev"})
 		},
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"env_vars": []interface{}{
+				"envVars": []interface{}{
 					map[string]interface{}{"key": "SECRET_TOKEN", "value": "super-secret", "env": "dev"},
 				},
-				"next_page_token": "",
-				"has_more":        false,
 			},
 		},
 	})
@@ -109,44 +103,29 @@ func TestAppsEnvVarList_DefaultsToDevAndHidesValues(t *testing.T) {
 func TestAppsEnvVarList_IncludeValuesAllowsValues(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		OnMatch: func(req *http.Request) {
-			assertEnvVarQuery(t, req, map[string]string{
-				"env":            "online",
-				"include_values": "true",
-				"page_size":      "20",
-				"page_token":     "cursor-1",
-			})
+			assertEnvVarBody(t, req, map[string]interface{}{"env": "online"})
 		},
 		Body: map[string]interface{}{
 			"code": 0,
 			"data": map[string]interface{}{
-				"items": []interface{}{
+				"envVars": []interface{}{
 					map[string]interface{}{"key": "SECRET_TOKEN", "value": "super-secret", "env": "online"},
 				},
-				"nextPageToken": "cursor-2",
-				"hasMore":       true,
 			},
 		},
 	})
 
 	if err := runAppsShortcut(t, AppsEnvVarList,
-		[]string{"+envvar-list", "--app-id", "app_x", "--env", "online", "--include-values",
-			"--page-size", "20", "--page-token", "cursor-1", "--as", "user"}, factory, stdout); err != nil {
+		[]string{"+envvar-list", "--app-id", "app_x", "--env", "online", "--include-values", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("execute err=%v", err)
 	}
 
 	got := stdout.String()
 	if !strings.Contains(got, "super-secret") {
 		t.Fatalf("stdout should include values when requested: %s", got)
-	}
-	data := decodeEnvVarEnvelopeData(t, got)
-	if data["page_token"] != "cursor-2" {
-		t.Fatalf("page_token = %v, want cursor-2", data["page_token"])
-	}
-	if data["has_more"] != true {
-		t.Fatalf("has_more = %v, want true", data["has_more"])
 	}
 }
 
@@ -177,7 +156,7 @@ func TestAppsEnvVarSet_OnlineDryRunDoesNotRequireYes(t *testing.T) {
 	if strings.Contains(got, "super-secret") {
 		t.Fatalf("dry-run must redact value: %s", got)
 	}
-	for _, want := range []string{`"method": "PUT"`, `/open-apis/spark/v1/apps/app_x/env_vars/SECRET_TOKEN`} {
+	for _, want := range []string{`"method": "POST"`, `/open-apis/spark/v1/apps/app_x/create_or_update_env_var`} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("dry-run missing %q: %s", want, got)
 		}
@@ -190,17 +169,17 @@ func TestAppsEnvVarSet_OnlineDryRunDoesNotRequireYes(t *testing.T) {
 	if err := json.Unmarshal([]byte(got), &dryRun); err != nil {
 		t.Fatalf("decode dry-run: %v\n%s", err, got)
 	}
-	if len(dryRun.API) != 1 || dryRun.API[0].Body["value"] != "<redacted>" {
-		t.Fatalf("dry-run body value = %#v, want <redacted>", dryRun.API)
+	if len(dryRun.API) != 1 || dryRun.API[0].Body["value"] != "<redacted>" || dryRun.API[0].Body["key"] != "SECRET_TOKEN" {
+		t.Fatalf("dry-run body = %#v, want redacted value and key", dryRun.API)
 	}
 }
 
 func TestAppsEnvVarSet_ExecutesWithYesAndDoesNotEchoValue(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	stub := &httpmock.Stub{
-		Method: "PUT",
-		URL:    "/open-apis/spark/v1/apps/app_x/env_vars/SECRET_TOKEN",
-		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{}},
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/create_or_update_env_var",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"action": "updated"}},
 	}
 	reg.Register(stub)
 
@@ -214,14 +193,14 @@ func TestAppsEnvVarSet_ExecutesWithYesAndDoesNotEchoValue(t *testing.T) {
 	if err := json.Unmarshal(stub.CapturedBody, &sent); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
-	if sent["env"] != "online" || sent["value"] != "super-secret" {
+	if sent["key"] != "SECRET_TOKEN" || sent["env"] != "online" || sent["value"] != "super-secret" {
 		t.Fatalf("body = %#v, want real online value", sent)
 	}
 	got := stdout.String()
 	if strings.Contains(got, "super-secret") || strings.Contains(got, `"value"`) {
 		t.Fatalf("stdout must not echo value: %s", got)
 	}
-	for _, want := range []string{`"key": "SECRET_TOKEN"`, `"env": "online"`, `"action": "set"`} {
+	for _, want := range []string{`"key": "SECRET_TOKEN"`, `"env": "online"`, `"action": "updated"`} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("stdout missing %q: %s", want, got)
 		}
@@ -237,9 +216,9 @@ func TestAppsEnvVarDelete_IsHighRiskWrite(t *testing.T) {
 func TestAppsEnvVarDelete_BuildsDeleteBodyWithKeys(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	stub := &httpmock.Stub{
-		Method: "DELETE",
-		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
-		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{}},
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/delete_env_vars",
+		Body:   map[string]interface{}{"code": 0, "data": map[string]interface{}{"deleted_keys": []interface{}{"SECRET_ONE", "SECRET_TWO"}}},
 	}
 	reg.Register(stub)
 
@@ -287,7 +266,7 @@ func TestAppsEnvVarDelete_OnlineDryRunDoesNotRequireYes(t *testing.T) {
 	if err := json.Unmarshal([]byte(got), &dryRun); err != nil {
 		t.Fatalf("decode dry-run: %v\n%s", err, got)
 	}
-	if len(dryRun.API) != 1 || dryRun.API[0].Method != "DELETE" || dryRun.API[0].URL != "/open-apis/spark/v1/apps/app_x/env_vars" {
+	if len(dryRun.API) != 1 || dryRun.API[0].Method != "POST" || dryRun.API[0].URL != "/open-apis/spark/v1/apps/app_x/delete_env_vars" {
 		t.Fatalf("dry-run api = %#v", dryRun.API)
 	}
 	if dryRun.API[0].Body["env"] != "online" {

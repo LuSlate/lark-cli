@@ -35,7 +35,7 @@ func TestAppsTraceList_DryRunBuildsSearchTracesBody(t *testing.T) {
 	if env.API[0].Method != "POST" || env.API[0].URL != "/open-apis/spark/v1/apps/app_x/search_traces" {
 		t.Fatalf("method/url = %s %s", env.API[0].Method, env.API[0].URL)
 	}
-	if env.API[0].Body["app_env"] != "online" || env.API[0].Body["limit"] != float64(10) {
+	if env.API[0].Body["app_env"] != "runtime" || env.API[0].Body["limit"] != float64(10) {
 		t.Fatalf("body = %#v", env.API[0].Body)
 	}
 	filter := env.API[0].Body["filter"].(map[string]interface{})
@@ -84,7 +84,7 @@ func TestAppsTraceGet_DryRunBuildsGetTraceBody(t *testing.T) {
 	if env.API[0].Method != "POST" || env.API[0].URL != "/open-apis/spark/v1/apps/app_x/trace" {
 		t.Fatalf("method/url = %s %s", env.API[0].Method, env.API[0].URL)
 	}
-	if env.API[0].Body["app_env"] != "online" || env.API[0].Body["trace_id"] != "trace-1" {
+	if env.API[0].Body["app_env"] != "runtime" || env.API[0].Body["trace_id"] != "trace-1" {
 		t.Fatalf("body = %#v", env.API[0].Body)
 	}
 }

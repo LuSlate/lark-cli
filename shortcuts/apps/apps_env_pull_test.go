@@ -256,7 +256,7 @@ func TestBuildEnvPullSuccessDataSuppressesEnvKeysAndValues(t *testing.T) {
 	}
 }
 
-func TestAppsEnvPull_DryRunUsesGetQueryAndResolvedEnvFile(t *testing.T) {
+func TestAppsEnvPull_DryRunUsesPostBodyAndResolvedEnvFile(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 
@@ -267,14 +267,14 @@ func TestAppsEnvPull_DryRunUsesGetQueryAndResolvedEnvFile(t *testing.T) {
 	}
 
 	got := stdout.String()
-	if !strings.Contains(got, `"method": "GET"`) {
-		t.Fatalf("dry-run must use GET: %s", got)
+	if !strings.Contains(got, `"method": "POST"`) {
+		t.Fatalf("dry-run must use POST: %s", got)
 	}
 	if !strings.Contains(got, `/open-apis/spark/v1/apps/app_x/env_vars`) {
 		t.Fatalf("dry-run missing endpoint: %s", got)
 	}
-	if !strings.Contains(got, `"env": "dev"`) || !strings.Contains(got, `"include_values": true`) {
-		t.Fatalf("dry-run must include env=dev and include_values=true params: %s", got)
+	if !strings.Contains(got, `"env": "dev"`) || strings.Contains(got, `"include_values"`) {
+		t.Fatalf("dry-run must include only env=dev in the request body: %s", got)
 	}
 	if !strings.Contains(got, filepath.Join(projectDir, ".env.local")) {
 		t.Fatalf("dry-run must include resolved env file path: %s", got)
@@ -285,13 +285,10 @@ func TestAppsEnvPull_PrettyOutput_WithDatabaseLine(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		OnMatch: func(req *http.Request) {
-			assertEnvVarQuery(t, req, map[string]string{
-				"env":            "dev",
-				"include_values": "true",
-			})
+			assertEnvVarBody(t, req, map[string]interface{}{"env": "dev"})
 		},
 		Body: map[string]interface{}{
 			"code": 0,
@@ -336,7 +333,7 @@ func TestAppsEnvPull_JSONOutput_UsesSummaryFieldsOnly(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -380,7 +377,7 @@ func TestAppsEnvPull_MalformedPayloadSkipsInvalidEntries(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -429,7 +426,7 @@ func TestAppsEnvPull_WritesCanonicalEnvFile(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -498,7 +495,7 @@ func TestAppsEnvPull_JSONOutputOmitsDatabaseLineText(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -534,7 +531,7 @@ func TestAppsEnvPull_ExecuteUsesNestedDataEnvVars(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -564,7 +561,7 @@ func TestAppsEnvPull_ExecuteUsesArrayEnvVars(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -610,7 +607,7 @@ func TestAppsEnvPull_JSONOutputCanBeDecoded(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -657,7 +654,7 @@ func TestAppsEnvPull_PrettyOutputWithoutDatabaseLine(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -716,7 +713,7 @@ func TestAppsEnvPull_DatabaseExtrasWithoutExpiresAtDoesNotFail(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -832,7 +829,7 @@ func TestAppsEnvPull_InjectsForceDBBranchWhenAbsent(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -866,7 +863,7 @@ func TestAppsEnvPull_InjectsForceDBBranchAlongsideArrayEnvVars(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -896,7 +893,7 @@ func TestAppsEnvPull_ForceDBBranchOverwritesExistingLocalValue(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,
@@ -939,7 +936,7 @@ func TestAppsEnvPull_ForceDBBranchInjectedEvenWhenUpstreamReturnsEmptyMap(t *tes
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	projectDir := t.TempDir()
 	reg.Register(&httpmock.Stub{
-		Method: "GET",
+		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		Body: map[string]interface{}{
 			"code": 0,

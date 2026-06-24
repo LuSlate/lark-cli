@@ -43,8 +43,8 @@ var AppsMetricQuery = common.Shortcut{
 		{Name: "env", Default: defaultAppsMetricEnv, Desc: "observability environment; only online is supported"},
 		{Name: "metric", Desc: "metric family to query", Required: true, Enum: []string{"requests", "latency", "cpu", "memory"}},
 		{Name: "series", Desc: "metric series within the family, such as total/error or p50/p99"},
-		{Name: "since", Desc: "start time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
-		{Name: "until", Desc: "end time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339; defaults to now"},
+		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
+		{Name: "until", Desc: "end time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339; defaults to now"},
 		{Name: "page", Type: "string_array", Desc: "frontend page or route filter; repeatable"},
 		{Name: "api", Type: "string_array", Desc: "API path/name filter; repeatable"},
 		{Name: "down-sample", Default: defaultAppsMetricDownSample, Desc: "metric down-sample interval", Enum: []string{"1m", "1h", "1d"}},
@@ -102,8 +102,8 @@ var AppsAnalyticsQuery = common.Shortcut{
 		{Name: "env", Default: defaultAppsAnalyticsEnv, Desc: "observability environment; only online is supported"},
 		{Name: "analytics", Desc: "analytics family to query", Required: true, Enum: []string{"users", "page-view"}},
 		{Name: "series", Desc: "analytics series within the family, such as active-users or desktop-view"},
-		{Name: "since", Desc: "start time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
-		{Name: "until", Desc: "end time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339; defaults to now"},
+		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
+		{Name: "until", Desc: "end time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339; defaults to now"},
 		{Name: "page", Desc: "frontend page or route filter"},
 		{Name: "device-type", Desc: "device type filter", Enum: []string{"desktop", "mobile"}},
 		{Name: "granularity", Default: defaultAppsAnalyticsGranular, Desc: "analytics aggregation granularity", Enum: []string{"day", "week", "month"}},
@@ -228,6 +228,7 @@ func buildAnalyticsQueryBody(rctx *common.RuntimeContext) (map[string]interface{
 		"start_timestamp_ns":    nsNumber(since),
 		"end_timestamp_ns":      nsNumber(until),
 		"time_aggregation_unit": aggregation,
+		"need_pack_lack_point":  false,
 	}
 	if len(filter) > 0 {
 		body["filter"] = filter

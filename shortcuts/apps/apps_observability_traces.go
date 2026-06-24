@@ -39,8 +39,8 @@ var AppsTraceList = common.Shortcut{
 		{Name: "trace-id", Type: "string_array", Desc: "trace ID filter; repeatable"},
 		{Name: "root-span", Desc: "root span keyword filter applied by the trace search backend"},
 		{Name: "user-id", Desc: "end user ID filter"},
-		{Name: "since", Desc: "start time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339"},
-		{Name: "until", Desc: "end time, relative duration (30s, 5m, 2h, 3d, 1w), local date/time, or RFC3339"},
+		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
+		{Name: "until", Desc: "end time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
 		{Name: "page-size", Type: "int", Default: fmt.Sprintf("%d", defaultAppsPageSize), Desc: "page size, 1..100"},
 		{Name: "page-token", Desc: "pagination cursor from a previous trace search response"},
 	},
@@ -149,7 +149,7 @@ func buildTraceSearchBody(rctx *common.RuntimeContext) (map[string]interface{}, 
 		return nil, err
 	}
 	body := map[string]interface{}{
-		"app_env": env,
+		"app_env": appsObservabilityBackendEnv,
 		"limit":   rctx.Int("page-size"),
 	}
 	if token := strings.TrimSpace(rctx.Str("page-token")); token != "" {
@@ -165,12 +165,8 @@ func buildTraceSearchBody(rctx *common.RuntimeContext) (map[string]interface{}, 
 }
 
 func buildTraceGetBody(rctx *common.RuntimeContext) map[string]interface{} {
-	env := strings.TrimSpace(rctx.Str("env"))
-	if env == "" {
-		env = defaultAppsTraceEnv
-	}
 	return map[string]interface{}{
-		"app_env":  env,
+		"app_env":  appsObservabilityBackendEnv,
 		"trace_id": strings.TrimSpace(rctx.Str("trace-id")),
 	}
 }

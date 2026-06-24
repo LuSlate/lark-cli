@@ -62,9 +62,9 @@ var AppsEnvPull = common.Shortcut{
 		projectPath, envFile, _ := resolveEnvPullTarget(strings.TrimSpace(rctx.Str("project-path")))
 		appID := strings.TrimSpace(rctx.Str("app-id"))
 		return common.NewDryRunAPI().
-			GET(fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))).
+			POST(fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))).
 			Desc("Pull app startup env vars into the local .env.local file").
-			Params(map[string]interface{}{"env": "dev", "include_values": true}).
+			Body(map[string]interface{}{"env": "dev"}).
 			Set("project_path", projectPath).
 			Set("env_file", envFile)
 	},
@@ -82,7 +82,7 @@ var AppsEnvPull = common.Shortcut{
 		}
 
 		path := fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))
-		data, err := rctx.CallAPITyped("GET", path, map[string]interface{}{"env": "dev", "include_values": true}, nil)
+		data, err := rctx.CallAPITyped("POST", path, nil, map[string]interface{}{"env": "dev"})
 		if err != nil {
 			return withAppsHint(err, "verify --app-id is correct and you have access to the app; list your apps with `lark-cli apps +list`")
 		}
@@ -152,12 +152,18 @@ func checkEnvPullTarget(envFile string) error {
 func extractEnvPullVars(data map[string]interface{}) (map[string]string, envPullDatabaseInfo, []string, error) {
 	raw := data["env_vars"]
 	if raw == nil {
+		raw = data["envVars"]
+	}
+	if raw == nil {
 		if nested, ok := data["data"].(map[string]interface{}); ok {
 			raw = nested["env_vars"]
+			if raw == nil {
+				raw = nested["envVars"]
+			}
 		}
 	}
 	if raw == nil {
-		return nil, envPullDatabaseInfo{}, nil, errs.NewInternalError(errs.SubtypeInvalidResponse, "response field env_vars must be an object or array of key/value entries")
+		return nil, envPullDatabaseInfo{}, nil, errs.NewInternalError(errs.SubtypeInvalidResponse, "response field env_vars/envVars must be an object or array of key/value entries")
 	}
 
 	var skippedKeys []string
@@ -204,7 +210,7 @@ func extractEnvPullVars(data map[string]interface{}) (map[string]string, envPull
 		}
 		return out, info, skippedKeys, nil
 	default:
-		return nil, envPullDatabaseInfo{}, nil, errs.NewInternalError(errs.SubtypeInvalidResponse, "response field env_vars must be an object or array of key/value entries")
+		return nil, envPullDatabaseInfo{}, nil, errs.NewInternalError(errs.SubtypeInvalidResponse, "response field env_vars/envVars must be an object or array of key/value entries")
 	}
 }
 

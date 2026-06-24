@@ -94,6 +94,8 @@ func TestParseAppsTimeAcceptsSupportedInputs(t *testing.T) {
 		{raw: "30s", want: now.Add(-30 * time.Second)},
 		{raw: "5m", want: now.Add(-5 * time.Minute)},
 		{raw: "2h", want: now.Add(-2 * time.Hour)},
+		{raw: "1.5h", want: now.Add(-90 * time.Minute)},
+		{raw: "0.5d", want: now.Add(-12 * time.Hour)},
 		{raw: "3d", want: now.Add(-72 * time.Hour)},
 		{raw: "1w", want: now.Add(-7 * 24 * time.Hour)},
 		{raw: "2026-06-23", want: time.Date(2026, 6, 23, 0, 0, 0, 0, time.Local)},

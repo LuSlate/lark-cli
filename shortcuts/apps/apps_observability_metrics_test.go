@@ -260,6 +260,12 @@ func TestAppsAnalyticsQuery_DryRunUsesNanoseconds(t *testing.T) {
 	if _, ok := body["analytics_types"]; ok {
 		t.Fatalf("analytics OpenAPI body should use metric_types, not analytics_types: %#v", body)
 	}
+	if body["need_pack_lack_point"] != false {
+		t.Fatalf("need_pack_lack_point = %#v, want false", body["need_pack_lack_point"])
+	}
+	if _, ok := body["group_by"]; ok {
+		t.Fatalf("group_by is intentionally unsupported for now: %#v", body)
+	}
 	if metricTypes, ok := body["metric_types"].([]interface{}); !ok || len(metricTypes) != 3 {
 		t.Fatalf("metric_types = %#v", body["metric_types"])
 	}

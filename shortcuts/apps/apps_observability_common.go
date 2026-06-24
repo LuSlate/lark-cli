@@ -14,6 +14,10 @@ import (
 const (
 	defaultAppsPageSize = 50
 	maxAppsPageSize     = 100
+
+	// The CLI exposes the user-facing online environment, while the
+	// observability backend stores online app runtime telemetry under runtime.
+	appsObservabilityBackendEnv = "runtime"
 )
 
 func appScopedPath(appID, suffix string) string {
@@ -30,7 +34,7 @@ func validateObservabilityEnv(env string) error {
 	case "", "online":
 		return nil
 	default:
-		return appsValidationParamError("--env", "observability commands only support --env online (got %q)", env).
+		return appsValidationParamError("--env", "observability commands only support online (got %q)", env).
 			WithHint("only online is supported; omit --env to use the default online environment")
 	}
 }
@@ -117,7 +121,7 @@ func parseAppsTimeFlag(param, raw string, now time.Time) (time.Time, error) {
 			return t, nil
 		}
 	}
-	return time.Time{}, appsValidationParamError(param, "invalid %s %q: expected relative duration (30s, 5m, 2h, 3d, 1w), YYYY-MM-DD, local YYYY-MM-DDTHH:mm:ss(.SSS), or RFC3339", param, raw)
+	return time.Time{}, appsValidationParamError(param, "invalid %s %q: expected relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), YYYY-MM-DD, local YYYY-MM-DDTHH:mm:ss(.SSS), or RFC3339", param, raw)
 }
 
 func parseAppsRelativeDuration(s string) (time.Duration, bool) {
@@ -127,12 +131,31 @@ func parseAppsRelativeDuration(s string) (time.Duration, bool) {
 	}
 	unit := s[len(s)-1]
 	number := s[:len(s)-1]
+	if number == "" {
+		return 0, false
+	}
+	seenDot := false
+	seenFractionDigit := false
 	for i := 0; i < len(number); i++ {
-		if number[i] < '0' || number[i] > '9' {
+		ch := number[i]
+		if ch == '.' {
+			if seenDot || i == 0 {
+				return 0, false
+			}
+			seenDot = true
+			continue
+		}
+		if ch < '0' || ch > '9' {
 			return 0, false
 		}
+		if seenDot {
+			seenFractionDigit = true
+		}
 	}
-	n, err := strconv.ParseInt(number, 10, 64)
+	if seenDot && !seenFractionDigit {
+		return 0, false
+	}
+	n, err := strconv.ParseFloat(number, 64)
 	if err != nil || n <= 0 {
 		return 0, false
 	}
@@ -152,10 +175,14 @@ func parseAppsRelativeDuration(s string) (time.Duration, bool) {
 		return 0, false
 	}
 	const maxDuration = time.Duration(1<<63 - 1)
-	if n > int64(maxDuration)/int64(unitDuration) {
+	if n > float64(maxDuration)/float64(unitDuration) {
 		return 0, false
 	}
-	return time.Duration(n) * unitDuration, true
+	duration := time.Duration(n * float64(unitDuration))
+	if duration <= 0 {
+		return 0, false
+	}
+	return duration, true
 }
 
 func nsNumber(t time.Time) int64 {

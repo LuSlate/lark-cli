@@ -37,7 +37,7 @@ func TestAppsLogList_DryRunBuildsSearchLogsBody(t *testing.T) {
 	if env.API[0].Method != "POST" || env.API[0].URL != "/open-apis/spark/v1/apps/app_x/search_logs" {
 		t.Fatalf("method/url = %s %s", env.API[0].Method, env.API[0].URL)
 	}
-	if env.API[0].Body["app_env"] != "online" || env.API[0].Body["limit"] != float64(20) {
+	if env.API[0].Body["app_env"] != "runtime" || env.API[0].Body["limit"] != float64(20) {
 		t.Fatalf("body = %#v", env.API[0].Body)
 	}
 	filter := env.API[0].Body["filter"].(map[string]interface{})
@@ -91,6 +91,9 @@ func TestAppsLogGet_SearchesByLogIDLimitOne(t *testing.T) {
 	}
 	if sent["limit"] != float64(1) {
 		t.Fatalf("limit = %v, want 1", sent["limit"])
+	}
+	if sent["app_env"] != "runtime" {
+		t.Fatalf("app_env = %v, want runtime", sent["app_env"])
 	}
 }
 
