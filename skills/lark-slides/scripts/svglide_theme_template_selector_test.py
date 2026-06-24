@@ -154,6 +154,38 @@ class ThemeTemplateSelectorTest(unittest.TestCase):
         self.assertEqual("passed", selected.get("fidelity_gate", {}).get("status"))
         self.assertTrue(selected.get("visual_contract"))
 
+    def test_selection_outputs_page_family_contract(self) -> None:
+        original_template_registry = selector.load_template_registry
+        original_theme_registry = selector.load_theme_registry
+        template = production_template_record("executive-dashboard", score_terms=["business review", "dashboard"])
+        template["source_family"] = "blue-professional"
+        template["supported_page_variants"] = ["cover", "metrics", "closing"]
+        template["variant_usage_policy"] = {"singletons": ["cover", "closing"], "repeatable": ["metrics"]}
+        selector.load_template_registry = lambda: {"templates": [template]}
+        selector.load_theme_registry = lambda: {"themes": [production_theme_record("blue-professional")]}
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                brief = "内部业务复盘 dashboard metrics"
+                prepare_project(root, brief)
+
+                result = selector.select_theme_template(root, brief, top_k=3)
+        finally:
+            selector.load_template_registry = original_template_registry
+            selector.load_theme_registry = original_theme_registry
+
+        self.assertEqual("executive-dashboard", result["selected_template_id"])
+        self.assertEqual("blue-professional", result["selected_family_id"])
+        self.assertEqual(
+            {
+                "family_id": "blue-professional",
+                "runtime_template_id": "executive-dashboard",
+                "supported_page_variants": ["cover", "metrics", "closing"],
+                "variant_usage_policy": {"singletons": ["cover", "closing"], "repeatable": ["metrics"]},
+            },
+            result["selected_page_family"],
+        )
+
     def test_selector_filters_templates_missing_renderer_or_fidelity_contract(self) -> None:
         original_template_registry = selector.load_template_registry
         original_theme_registry = selector.load_theme_registry

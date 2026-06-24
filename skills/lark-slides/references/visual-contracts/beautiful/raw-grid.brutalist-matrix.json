@@ -1347,5 +1347,251 @@
   "loss_notes": [
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 10,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "data_dashboard",
+      "content",
+      "detail",
+      "quote_or_emphasis",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "s1": {
+      "source_class": "s1",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s1",
+          "raw_value": "<div class=\"slide s1 active\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s2": {
+      "source_class": "s2",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s2",
+          "raw_value": "<div class=\"slide s2\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s3": {
+      "source_class": "s3",
+      "source_slide_index": 3,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s3",
+          "raw_value": "<div class=\"slide s3\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s4": {
+      "source_class": "s4",
+      "source_slide_index": 4,
+      "page_role": "content",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s4",
+          "raw_value": "<div class=\"slide s4\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s5": {
+      "source_class": "s5",
+      "source_slide_index": 5,
+      "page_role": "content",
+      "required_slots": [
+        "subtitle",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s5",
+          "raw_value": "<div class=\"slide s5\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s6": {
+      "source_class": "s6",
+      "source_slide_index": 6,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s6",
+          "raw_value": "<div class=\"slide s6\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s7": {
+      "source_class": "s7",
+      "source_slide_index": 7,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s7",
+          "raw_value": "<div class=\"slide s7\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s8": {
+      "source_class": "s8",
+      "source_slide_index": 8,
+      "page_role": "quote_or_emphasis",
+      "required_slots": [
+        "metrics",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s8",
+          "raw_value": "<div class=\"slide s8\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s9": {
+      "source_class": "s9",
+      "source_slide_index": 9,
+      "page_role": "content",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s9",
+          "raw_value": "<div class=\"slide s9\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s10": {
+      "source_class": "s10",
+      "source_slide_index": 10,
+      "page_role": "closing",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/raw-grid/template.html",
+          "selector_or_token": ".s10",
+          "raw_value": "<div class=\"slide s10\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/raw-grid/template.html",
+    "source_design_md": "beautiful-html-templates/templates/raw-grid/design.md",
+    "source_template_json": "beautiful-html-templates/templates/raw-grid/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

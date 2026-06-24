@@ -21,6 +21,13 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def write_png(path: Path, color: tuple[int, int, int] = (255, 255, 255)) -> None:
+    from PIL import Image
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (4, 4), color).save(path)
+
+
 def write_selected_template_plan(project: Path, template_id: str = "cover-hero") -> None:
     write_json(
         project / "02-plan/slide_plan.json",
@@ -28,6 +35,45 @@ def write_selected_template_plan(project: Path, template_id: str = "cover-hero")
             "language": "zh-CN",
             "theme_id": "dark-clarity",
             "slides": [{"page": 1, "title": "测试", "canvas_spec": {"template_id": template_id}}],
+        },
+    )
+
+
+def write_selected_beautiful_page_family_plan(project: Path) -> None:
+    roles = [
+        ("cover", "cover"),
+        ("agenda", "agenda"),
+        ("content", "content"),
+        ("data", "metrics"),
+        ("comparison", "split"),
+        ("quote", "quote"),
+        ("process", "timeline"),
+        ("detail", "detail"),
+        ("closing", "closing"),
+    ]
+    write_json(
+        project / "02-plan/slide_plan.json",
+        {
+            "language": "zh-CN",
+            "theme_id": "blue-professional",
+            "selected_family_id": "blue-professional",
+            "selected_template_id": "executive-dashboard",
+            "selected_theme_id": "blue-professional",
+            "slides": [
+                {
+                    "page": index,
+                    "title": f"{role} page",
+                    "page_role": role,
+                    "canvas_spec": {
+                        "family_id": "blue-professional",
+                        "template_id": "executive-dashboard",
+                        "theme_id": "blue-professional",
+                        "page_role": role,
+                        "page_variant_id": variant_id,
+                    },
+                }
+                for index, (role, variant_id) in enumerate(roles, start=1)
+            ],
         },
     )
 
@@ -109,6 +155,25 @@ def write_template_fidelity_receipt(
     }
     write_json(project / "06-check/template-fidelity.json", payload)
     write_json(project / "receipts/template-fidelity.json", payload)
+
+
+def write_page_family_smoke_receipt(
+    project: Path,
+    *,
+    status: str = "passed",
+    degraded: bool = False,
+    stale: bool = False,
+) -> None:
+    import beautiful_template_page_family_smoke
+
+    payload = beautiful_template_page_family_smoke.check_project_page_family_smoke(project)
+    payload["status"] = status
+    payload["degraded"] = degraded
+    payload["summary"]["error_count"] = 1 if status != "passed" or degraded else 0
+    if stale:
+        payload["input_hashes"]["slide_plan"] = "stale"
+    write_json(project / "06-check/page-family-smoke.json", payload)
+    write_json(project / "receipts/page-family-smoke.json", payload)
 
 
 def write_passing_semantic_review(project: Path) -> None:
@@ -677,93 +742,122 @@ def attach_passing_snapshot_visual_fidelity(project: Path) -> None:
     visual_dir = project / "06-check/visual-fidelity"
     visual_dir.mkdir(parents=True, exist_ok=True)
     (project / "06-check/readback").mkdir(parents=True, exist_ok=True)
-    baseline_png = visual_dir / "page-001.cli-baseline.png"
-    slide_render_png = visual_dir / "page-001.slide-render.png"
-    snapshot_json = project / "06-check/readback/page-001.snapshot.json"
-    equivalence_receipt = visual_dir / "page-001.renderer-equivalence-receipt.json"
-    baseline_png.write_bytes(b"cli-baseline-png")
-    slide_render_png.write_bytes(b"slide-render-png")
-    write_json(snapshot_json, {"blocks": [{"id": "title", "type": "shape"}]})
-    write_json(
-        equivalence_receipt,
-        {
-            "schema_version": "svglide-snapshot-renderer-equivalence/v1",
-            "status": "passed",
-            "slide_render_model_compatible": True,
-            "renderer_scope": "slide_snapshot_renderer",
-            "evidence": "unit-test-production-equivalent-renderer",
-        },
-    )
+    prepared_dir = project / "04-svg/prepared"
+    prepared_dir.mkdir(parents=True, exist_ok=True)
+    for page in (1, 2):
+        prepared = prepared_dir / f"page-{page:03d}.svg"
+        if not prepared.exists():
+            prepared.write_text("<svg></svg>", encoding="utf-8")
     write_json(
         visual_dir / "manifest.json",
         {
             "schema_version": "svglide-snapshot-visual-fidelity-manifest/v1",
-            "prepared_svgs": ["04-svg/prepared/page-001.svg"],
-            "baseline_render_receipts": ["06-check/visual-fidelity/page-001.baseline-render-receipt.json"],
-            "slide_render_receipts": ["06-check/visual-fidelity/page-001.slide-render-receipt.json"],
-            "visual_fidelity_receipts": ["06-check/visual-fidelity/page-001.visual-fidelity-receipt.json"],
-        },
-    )
-    write_json(
-        visual_dir / "page-001.baseline-render-receipt.json",
-        {
-            "artifact_type": "cli_prepared_svg_baseline",
-            "prepared_svg": "04-svg/prepared/page-001.svg",
-            "prepared_svg_sha256": svglide_quality_gate.file_sha256(project / "04-svg/prepared/page-001.svg"),
-            "baseline_png": "06-check/visual-fidelity/page-001.cli-baseline.png",
-            "baseline_png_sha256": svglide_quality_gate.file_sha256(baseline_png),
-            "rasterizer": "browser",
-            "rasterizer_version": "test",
-            "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
-            "font_manifest_sha256": "sha256:" + "1" * 64,
-            "created_at": "2026-06-24T00:00:00Z",
-        },
-    )
-    write_json(
-        visual_dir / "page-001.slide-render-receipt.json",
-        {
-            "artifact_type": "slide_snapshot_render",
-            "snapshot_json": "06-check/readback/page-001.snapshot.json",
-            "snapshot_json_sha256": svglide_quality_gate.file_sha256(snapshot_json),
-            "slide_render_png": "06-check/visual-fidelity/page-001.slide-render.png",
-            "slide_render_png_sha256": svglide_quality_gate.file_sha256(slide_render_png),
-            "render_source": "snapshot_renderer",
-            "render_source_version": "test",
-            "renderer_equivalence_receipt": "06-check/visual-fidelity/page-001.renderer-equivalence-receipt.json",
-            "renderer_equivalence_receipt_sha256": svglide_quality_gate.file_sha256(equivalence_receipt),
-            "capture_method": "automated",
-            "capture_command": "python3 render_snapshot.py",
-            "presentation_id": "presentation-fixture",
-            "revision_id": "revision-fixture",
-            "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
-            "created_at": "2026-06-24T00:00:00Z",
-        },
-    )
-    write_json(
-        visual_dir / "page-001.visual-fidelity-receipt.json",
-        {
-            "status": "passed",
-            "visual_fidelity_status": "passed",
-            "metrics": {
-                "pixel_diff_ratio": 0.0,
-                "text_region_diff_ratio": 0.0,
-                "bbox_shift_px": 0,
-                "line_count_match": True,
-                "dominant_text_color_match": True,
-                "phash_distance": 0,
-            },
-            "text_regions": [
-                {
-                    "text_style_id": "txt_001",
-                    "content_hash": "sha256:" + "2" * 64,
-                    "svg_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
-                    "snapshot_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
-                    "bbox_shift_px": 0,
-                    "text_region_status": "passed",
-                }
+            "prepared_svgs": ["04-svg/prepared/page-001.svg", "04-svg/prepared/page-002.svg"],
+            "baseline_render_receipts": [
+                "06-check/visual-fidelity/page-001.baseline-render-receipt.json",
+                "06-check/visual-fidelity/page-002.baseline-render-receipt.json",
+            ],
+            "slide_render_receipts": [
+                "06-check/visual-fidelity/page-001.slide-render-receipt.json",
+                "06-check/visual-fidelity/page-002.slide-render-receipt.json",
+            ],
+            "visual_fidelity_receipts": [
+                "06-check/visual-fidelity/page-001.visual-fidelity-receipt.json",
+                "06-check/visual-fidelity/page-002.visual-fidelity-receipt.json",
             ],
         },
     )
+    for page in (1, 2):
+        page_name = f"page-{page:03d}"
+        baseline_png = visual_dir / f"{page_name}.cli-baseline.png"
+        slide_render_png = visual_dir / f"{page_name}.slide-render.png"
+        snapshot_json = project / f"06-check/readback/{page_name}.snapshot.json"
+        equivalence_receipt = visual_dir / f"{page_name}.renderer-equivalence-receipt.json"
+        write_png(baseline_png, color=(page, page, page))
+        write_png(slide_render_png, color=(page, page, page))
+        write_json(snapshot_json, {"blocks": [{"id": "title", "type": "shape"}], "page": page})
+        write_json(
+            equivalence_receipt,
+            {
+                "schema_version": "svglide-snapshot-renderer-equivalence/v1",
+                "status": "passed",
+                "slide_render_model_compatible": True,
+                "renderer_scope": "slide_snapshot_renderer",
+                "evidence": "unit-test-production-equivalent-renderer",
+            },
+        )
+        write_json(
+            visual_dir / f"{page_name}.baseline-render-receipt.json",
+            {
+                "artifact_type": "cli_prepared_svg_baseline",
+                "prepared_svg": f"04-svg/prepared/{page_name}.svg",
+                "prepared_svg_sha256": svglide_quality_gate.file_sha256(project / f"04-svg/prepared/{page_name}.svg"),
+                "baseline_png": f"06-check/visual-fidelity/{page_name}.cli-baseline.png",
+                "baseline_png_sha256": svglide_quality_gate.file_sha256(baseline_png),
+                "rasterizer": "browser",
+                "rasterizer_version": "test",
+                "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                "font_manifest_sha256": "sha256:" + "1" * 64,
+                "created_at": "2026-06-24T00:00:00Z",
+            },
+        )
+        write_json(
+            visual_dir / f"{page_name}.slide-render-receipt.json",
+            {
+                "artifact_type": "slide_snapshot_render",
+                "snapshot_json": f"06-check/readback/{page_name}.snapshot.json",
+                "snapshot_json_sha256": svglide_quality_gate.file_sha256(snapshot_json),
+                "slide_render_png": f"06-check/visual-fidelity/{page_name}.slide-render.png",
+                "slide_render_png_sha256": svglide_quality_gate.file_sha256(slide_render_png),
+                "render_source": "snapshot_renderer",
+                "render_source_version": "test",
+                "renderer_equivalence_receipt": f"06-check/visual-fidelity/{page_name}.renderer-equivalence-receipt.json",
+                "renderer_equivalence_receipt_sha256": svglide_quality_gate.file_sha256(equivalence_receipt),
+                "capture_method": "automated",
+                "capture_command": "python3 render_snapshot.py",
+                "presentation_id": "presentation-fixture",
+                "revision_id": "revision-fixture",
+                "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                "created_at": "2026-06-24T00:00:00Z",
+            },
+        )
+        write_json(
+            visual_dir / f"{page_name}.visual-fidelity-receipt.json",
+            {
+                "status": "passed",
+                "visual_fidelity_status": "passed",
+                "metrics": {
+                    "pixel_diff_ratio": 0.0,
+                    "text_region_diff_ratio": 0.0,
+                    "bbox_shift_px": 0,
+                    "line_count_match": True,
+                    "dominant_text_color_match": True,
+                    "phash_distance": 0,
+                },
+                "text_regions": [
+                    {
+                        "text_style_id": f"txt_{page:03d}",
+                        "content_hash": "sha256:" + "2" * 64,
+                        "svg_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                        "snapshot_bbox": {"x": 80, "y": 80, "width": 720, "height": 72},
+                        "bbox_shift_px": 0,
+                        "text_region_status": "passed",
+                    }
+                ],
+            },
+        )
+    prepared_files = svglide_quality_gate.prepared_file_hashes(project)
+    for rel in [
+        "06-check/semantic-review.json",
+        "06-check/theme-adherence.json",
+        "06-check/chart-verify.json",
+    ]:
+        receipt_path = project / rel
+        if not receipt_path.exists():
+            continue
+        payload = json.loads(receipt_path.read_text(encoding="utf-8"))
+        payload["prepared_files"] = prepared_files
+        write_json(receipt_path, payload)
 
 
 def refresh_artboard_node_layout_hashes(project: Path) -> None:
@@ -893,6 +987,51 @@ class SVGlideQualityGateTest(unittest.TestCase):
         self.assertEqual(template_check["status"], "missing")
         self.assertIn("template_fidelity", result["inputs"])
         self.assertIn("template_fidelity_missing", {item["code"] for item in template_check["issues"]})
+
+    def test_production_quality_gate_requires_page_family_smoke_for_beautiful_default_family(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_beautiful_page_family_plan(project)
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, template_id="executive-dashboard", selected_template_id="executive-dashboard")
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        checks = {check["name"]: check for check in result["checks"]}
+        self.assertIn("page-family-smoke", checks)
+        self.assertEqual(checks["page-family-smoke"]["status"], "missing")
+        self.assertIn("page_family_smoke", result["inputs"])
+        self.assertIn("page_family_smoke_missing", {item["code"] for item in checks["page-family-smoke"]["issues"]})
+
+    def test_production_quality_gate_rejects_degraded_page_family_smoke(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_beautiful_page_family_plan(project)
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, template_id="executive-dashboard", selected_template_id="executive-dashboard")
+            write_page_family_smoke_receipt(project, degraded=True)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        smoke_check = {check["name"]: check for check in result["checks"]}["page-family-smoke"]
+        self.assertEqual(smoke_check["status"], "failed")
+        self.assertIn("page_family_smoke_degraded", {item["code"] for item in smoke_check["issues"]})
+
+    def test_production_quality_gate_rejects_stale_page_family_smoke_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_selected_beautiful_page_family_plan(project)
+            self.write_minimal_passing_project(project)
+            write_template_fidelity_receipt(project, template_id="executive-dashboard", selected_template_id="executive-dashboard")
+            write_page_family_smoke_receipt(project, stale=True)
+
+            result = svglide_quality_gate.run_quality_gate(project, profile="production")
+
+        self.assertEqual(result["status"], "failed")
+        smoke_check = {check["name"]: check for check in result["checks"]}["page-family-smoke"]
+        self.assertIn("page_family_smoke_input_hash_stale", {item["code"] for item in smoke_check["issues"]})
 
     def test_production_quality_gate_fails_when_template_fidelity_receipt_failed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1204,19 +1343,25 @@ class SVGlideQualityGateTest(unittest.TestCase):
     def test_quality_gate_artboard_satori_requires_snapshot_visual_fidelity(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)
+            write_selected_beautiful_page_family_plan(project)
             write_json(project / "06-check/preflight.json", {"summary": {"error_count": 0, "warning_count": 1}})
             write_json(project / "06-check/preview-lint.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
             write_json(project / "06-check/aesthetic-review.json", {"summary": {"error_count": 0, "warning_count": 0}, "action": "create_live"})
             write_passing_semantic_review(project)
+            write_template_fidelity_receipt(project, template_id="executive-dashboard", selected_template_id="executive-dashboard")
             attach_passing_artboard_receipt(project)
+            write_page_family_smoke_receipt(project)
 
             result = svglide_quality_gate.run_quality_gate(project)
 
             self.assertEqual(result["status"], "failed")
             visual_check = [check for check in result["checks"] if check["name"] == "snapshot-visual-fidelity"][0]
             self.assertEqual(visual_check["status"], "failed")
+            smoke_check = [check for check in result["checks"] if check["name"] == "page-family-smoke"][0]
+            self.assertEqual(smoke_check["status"], "passed")
             self.assertEqual(visual_check["action"], "structure_only_partial")
             self.assertIn("snapshot_visual_fidelity", result["inputs"])
+            self.assertIn("page_family_smoke", result["inputs"])
             self.assertIn("visual_fidelity_manifest_missing", {issue["code"] for issue in visual_check["issues"]})
 
     def test_quality_gate_artboard_satori_allows_precreate_partial_visual_fidelity(self) -> None:
@@ -1231,7 +1376,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
             baseline_png = visual_dir / "page-001.cli-baseline.png"
             equivalence_receipt = visual_dir / "page-001.renderer-equivalence-receipt.json"
             visual_dir.mkdir(parents=True, exist_ok=True)
-            baseline_png.write_bytes(b"cli-baseline-png")
+            write_png(baseline_png)
             write_json(
                 equivalence_receipt,
                 {
@@ -1263,6 +1408,7 @@ class SVGlideQualityGateTest(unittest.TestCase):
                     "rasterizer": "resvg",
                     "rasterizer_version": "test",
                     "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                    "font_manifest_sha256": "sha256:" + "1" * 64,
                 },
             )
             write_json(
@@ -1279,6 +1425,8 @@ class SVGlideQualityGateTest(unittest.TestCase):
                     "renderer_equivalence_receipt_sha256": svglide_quality_gate.file_sha256(equivalence_receipt),
                     "capture_method": "automated",
                     "capture_command": "python3 skills/lark-slides/scripts/svglide_snapshot_visual_fidelity.py",
+                    "presentation_id": "not_available_before_live_create",
+                    "revision_id": "not_available_before_live_create",
                     "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
                 },
             )

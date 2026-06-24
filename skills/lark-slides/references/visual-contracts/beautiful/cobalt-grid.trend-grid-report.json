@@ -1365,5 +1365,204 @@
   "loss_notes": [
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 8,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "data_dashboard",
+      "content",
+      "quote_or_emphasis"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "cover": {
+      "source_class": "s-cover",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-cover",
+          "raw_value": "<section class=\"slide s-cover hairlines active\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "manifesto": {
+      "source_class": "s-manifesto",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-manifesto",
+          "raw_value": "<section class=\"slide s-manifesto hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "index": {
+      "source_class": "s-index",
+      "source_slide_index": 3,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-index",
+          "raw_value": "<section class=\"slide s-index hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "chapter": {
+      "source_class": "s-chapter",
+      "source_slide_index": 4,
+      "page_role": "content",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-chapter",
+          "raw_value": "<section class=\"slide s-chapter hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "data": {
+      "source_class": "s-data",
+      "source_slide_index": 5,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "metrics",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-data",
+          "raw_value": "<section class=\"slide s-data hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "quote": {
+      "source_class": "s-quote",
+      "source_slide_index": 6,
+      "page_role": "quote_or_emphasis",
+      "required_slots": [
+        "subtitle",
+        "items",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-quote",
+          "raw_value": "<section class=\"slide s-quote hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "table": {
+      "source_class": "s-table",
+      "source_slide_index": 7,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-table",
+          "raw_value": "<section class=\"slide s-table hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "colophon": {
+      "source_class": "s-colophon",
+      "source_slide_index": 8,
+      "page_role": "content",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cobalt-grid/template.html",
+          "selector_or_token": ".s-colophon",
+          "raw_value": "<section class=\"slide s-colophon hairlines\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/cobalt-grid/template.html",
+    "source_design_md": "beautiful-html-templates/templates/cobalt-grid/design.md",
+    "source_template_json": "beautiful-html-templates/templates/cobalt-grid/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

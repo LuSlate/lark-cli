@@ -30,6 +30,9 @@
           "key_message": {"type": "string", "minLength": 1},
           "template_id": {"type": "string", "minLength": 1},
           "theme_id": {"type": "string", "minLength": 1},
+          "family_id": {"type": "string", "minLength": 1},
+          "page_role": {"type": "string", "minLength": 1},
+          "page_variant_id": {"type": "string", "minLength": 1},
           "content_requirements": {"type": "object", "additionalProperties": true},
           "visual_role": {"type": "string", "minLength": 1},
           "source_policy": {"type": "string", "minLength": 1}

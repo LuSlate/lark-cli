@@ -1444,5 +1444,301 @@
   "loss_notes": [
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 12,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "data_dashboard",
+      "content_split",
+      "quote_or_emphasis",
+      "content",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "cover": {
+      "source_class": "slide--cover",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--cover",
+          "raw_value": "<section class=\"slide dark slide--cover\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "chapter": {
+      "source_class": "slide--chapter",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--chapter",
+          "raw_value": "<section class=\"slide dark slide--chapter\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "statement": {
+      "source_class": "slide--statement",
+      "source_slide_index": 3,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--statement",
+          "raw_value": "<section class=\"slide dark slide--statement\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "split": {
+      "source_class": "slide--split",
+      "source_slide_index": 4,
+      "page_role": "content_split",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--split",
+          "raw_value": "<section class=\"slide light slide--split\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "stats": {
+      "source_class": "slide--stats",
+      "source_slide_index": 5,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--stats",
+          "raw_value": "<section class=\"slide dark slide--stats\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "list": {
+      "source_class": "slide--list",
+      "source_slide_index": 6,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--list",
+          "raw_value": "<section class=\"slide light slide--list\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "quote": {
+      "source_class": "slide--quote",
+      "source_slide_index": 7,
+      "page_role": "quote_or_emphasis",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--quote",
+          "raw_value": "<section class=\"slide dark slide--quote\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "compare": {
+      "source_class": "slide--compare",
+      "source_slide_index": 8,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--compare",
+          "raw_value": "<section class=\"slide light slide--compare\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "chapter-9": {
+      "source_class": "slide--chapter",
+      "source_slide_index": 9,
+      "page_role": "content",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--chapter",
+          "raw_value": "<section class=\"slide dark slide--chapter\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "statement-10": {
+      "source_class": "slide--statement",
+      "source_slide_index": 10,
+      "page_role": "closing",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--statement",
+          "raw_value": "<section class=\"slide light slide--statement\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "chart": {
+      "source_class": "slide--chart",
+      "source_slide_index": 11,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--chart",
+          "raw_value": "<section class=\"slide dark slide--chart\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "end": {
+      "source_class": "slide--end",
+      "source_slide_index": 12,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/grove/template.html",
+          "selector_or_token": ".slide--end",
+          "raw_value": "<section class=\"slide dark slide--end\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/grove/template.html",
+    "source_design_md": "beautiful-html-templates/templates/grove/design.md",
+    "source_template_json": "beautiful-html-templates/templates/grove/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

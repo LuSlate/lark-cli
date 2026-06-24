@@ -20,6 +20,7 @@ from typing import Any
 
 import svglide_asset_injector
 import beautiful_template_fidelity_check
+import beautiful_template_page_family_smoke
 import svglide_schema
 import svglide_stage_invalidation
 import svglide_snapshot_visual_fidelity
@@ -1261,7 +1262,7 @@ def recipe_routing_receipt_path(project_root: Path) -> Path:
     return project_root / "02-plan" / "recipe-routing-receipt.json"
 
 
-def selected_template_for_fidelity(project_root: Path) -> tuple[str | None, int]:
+def selected_template_for_fidelity(project_root: Path) -> tuple[str | None, int, str]:
     plan = read_json_optional(plan_path(project_root))
     for index, slide in enumerate(plan.get("slides", []) if isinstance(plan.get("slides"), list) else [], start=1):
         if not isinstance(slide, dict):
@@ -1271,12 +1272,20 @@ def selected_template_for_fidelity(project_root: Path) -> tuple[str | None, int]
                 continue
             template_id = source.get("selected_template_id") or source.get("template_id")
             if isinstance(template_id, str) and template_id.strip():
-                return template_id.strip(), int(slide.get("page") or index)
+                page_type = (
+                    source.get("page_variant_id")
+                    or source.get("page_role")
+                    or slide.get("page_variant_id")
+                    or slide.get("page_role")
+                    or slide.get("page_type")
+                    or "default"
+                )
+                return template_id.strip(), int(slide.get("page") or index), str(page_type or "default")
     for key in ("selected_template_id", "template_id"):
         value = plan.get(key)
         if isinstance(value, str) and value.strip():
-            return value.strip(), 1
-    return None, 1
+            return value.strip(), 1, str(plan.get("page_variant_id") or plan.get("page_role") or plan.get("page_type") or "default")
+    return None, 1, "default"
 
 
 def template_fidelity_path(raw: object) -> Path:
@@ -1334,7 +1343,7 @@ def role_consumption_for_template_fidelity(project_root: Path, template_id: str 
 def run_template_fidelity_stage(project_root: Path, state: dict[str, Any], *, profile: str) -> dict[str, Any]:
     started_at = now_iso()
     started_perf = time.perf_counter()
-    template_id, page = selected_template_for_fidelity(project_root)
+    template_id, page, page_type = selected_template_for_fidelity(project_root)
     strict = profile in {"production", "production_live"}
     rendered = rendered_png_for_template_fidelity(project_root, page)
     reference = reference_screenshot_for_template(template_id) if template_id else None
@@ -1367,15 +1376,47 @@ def run_template_fidelity_stage(project_root: Path, state: dict[str, Any], *, pr
             render_screenshot=rendered,
             reference_screenshot=reference,
             template_id=str(template_id),
-            page_type="default",
+            page_type=page_type or "default",
             role_consumption=role_consumption_for_template_fidelity(project_root, template_id, page),
         )
         payload["selected_template_id"] = template_id
         payload["page"] = page
 
+    smoke_selected = beautiful_template_page_family_smoke.selected_beautiful_production_family(project_root)
+    smoke_fixture = beautiful_template_page_family_smoke.explicit_page_family_smoke_fixture(project_root)
+    smoke_payload = None
+    if smoke_selected or smoke_fixture:
+        smoke_payload = beautiful_template_page_family_smoke.check_project_page_family_smoke(
+            project_root,
+            selected_family=smoke_selected.get("selected_family_id") if smoke_selected else None,
+            selected_template=smoke_selected.get("selected_template_id") if smoke_selected else None,
+            selected_theme=smoke_selected.get("selected_theme_id") if smoke_selected else None,
+            command=["python3", (SCRIPT_DIR / "beautiful_template_page_family_smoke.py").as_posix(), project_root.as_posix()],
+        )
+        write_json(project_root / beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL, smoke_payload)
+        write_json(project_root / beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_RECEIPT_REL, smoke_payload)
+        payload["page_family_smoke_ref"] = beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL.as_posix()
+        payload["page_variant_coverage"] = smoke_payload.get("page_variant_coverage")
+        payload["pages"] = smoke_payload.get("pages")
+        payload["scope"] = "page_family" if smoke_payload.get("status") == "passed" else payload.get("scope", "single_page")
+        payload["selected_family_id"] = smoke_payload.get("selected_family_id")
+        payload["selected_theme_id"] = smoke_payload.get("selected_theme_id")
+        if smoke_payload.get("status") != "passed":
+            payload.setdefault("issues", []).extend(smoke_payload.get("artifact_issues") or [])
+
     write_json(project_root / "06-check/template-fidelity.json", payload)
     write_json(project_root / "receipts/template-fidelity.json", payload)
     stage_status = "failed" if payload.get("status") == "failed" and strict else "passed"
+    if smoke_payload and smoke_payload.get("status") != "passed" and strict:
+        stage_status = "failed"
+    stage_outputs = ["06-check/template-fidelity.json", "receipts/template-fidelity.json"]
+    if smoke_payload:
+        stage_outputs.extend(
+            [
+                beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL.as_posix(),
+                beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_RECEIPT_REL.as_posix(),
+            ]
+        )
     receipt = complete_stage(
         project_root,
         state,
@@ -1383,7 +1424,7 @@ def run_template_fidelity_stage(project_root: Path, state: dict[str, Any], *, pr
         stage_status,
         started_at=started_at,
         inputs=["02-plan/slide_plan.json", "04-artboard/raw", "05-preview/preview.html"],
-        outputs=["06-check/template-fidelity.json", "receipts/template-fidelity.json"],
+        outputs=stage_outputs,
         command=["python3", (SCRIPT_DIR / "beautiful_template_fidelity_check.py").as_posix(), "--project", project_root.as_posix()],
         error={"issues": issues_from_payload(payload), "message": "template fidelity failed"} if stage_status == "failed" else None,
         wall_time_seconds=time.perf_counter() - started_perf,
@@ -1476,6 +1517,102 @@ def selection_gate_required(project_root: Path, state: dict[str, Any]) -> bool:
     )
 
 
+def page_family_variant_ids(value: Any) -> list[str]:
+    variants: list[str] = []
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, str) and item.strip():
+                variants.append(item.strip())
+            elif isinstance(item, dict):
+                raw = item.get("page_variant_id") or item.get("variant_id") or item.get("id")
+                if isinstance(raw, str) and raw.strip():
+                    variants.append(raw.strip())
+    elif isinstance(value, dict):
+        variants.extend(str(key) for key in value if str(key).strip())
+    return list(dict.fromkeys(variants))
+
+
+def page_family_variant_matches_role(variant: Any, role: str) -> bool:
+    if not isinstance(variant, dict):
+        return False
+    roles = variant.get("page_roles") or variant.get("roles")
+    if isinstance(roles, list) and role in {str(item) for item in roles}:
+        return True
+    raw = variant.get("page_role") or variant.get("role")
+    return isinstance(raw, str) and raw == role
+
+
+def choose_page_variant_id(selected_page_family: dict[str, Any], role: str, index: int) -> tuple[str | None, str]:
+    variants_raw = selected_page_family.get("supported_page_variants")
+    variants = page_family_variant_ids(variants_raw)
+    if not variants:
+        return None, "no_supported_page_variants"
+    if isinstance(variants_raw, list):
+        for item in variants_raw:
+            raw = None
+            if isinstance(item, str):
+                raw = item
+            elif isinstance(item, dict):
+                raw = item.get("page_variant_id") or item.get("variant_id") or item.get("id")
+            if isinstance(raw, str) and raw in variants and (raw == role or page_family_variant_matches_role(item, role)):
+                return raw, "role_match"
+    if role in variants:
+        return role, "role_match"
+    return variants[index % len(variants)], "fallback_same_family_variant"
+
+
+def apply_page_family_selection_to_plan(plan: dict[str, Any], selection: dict[str, Any]) -> bool:
+    selected_page_family = selection.get("selected_page_family")
+    if not isinstance(selected_page_family, dict):
+        return False
+    family_id = selected_page_family.get("family_id") or selection.get("selected_family_id")
+    if not isinstance(family_id, str) or not family_id.strip():
+        return False
+    slides = plan.get("slides")
+    if not isinstance(slides, list):
+        return False
+    changed = False
+    allocations: list[dict[str, Any]] = []
+    for index, slide in enumerate(slides):
+        if not isinstance(slide, dict):
+            continue
+        spec = slide.get("canvas_spec")
+        if not isinstance(spec, dict):
+            continue
+        role = slide.get("page_role") or slide.get("page_type") or slide.get("role") or spec.get("page_role") or "content"
+        role = str(role)
+        variant_id, reason = choose_page_variant_id(selected_page_family, role, index)
+        if spec.get("family_id") != family_id:
+            spec["family_id"] = family_id
+            changed = True
+        if spec.get("page_role") != role:
+            spec["page_role"] = role
+            changed = True
+        if variant_id and not spec.get("page_variant_id"):
+            spec["page_variant_id"] = variant_id
+            changed = True
+        allocations.append(
+            {
+                "page": slide.get("page") or index + 1,
+                "page_role": role,
+                "page_variant_id": spec.get("page_variant_id"),
+                "reason": reason,
+            }
+        )
+    if allocations:
+        trace = {
+            "selection_ref": "02-plan/theme-template-selection.json",
+            "family_id": family_id,
+            "requested_slide_count": len(allocations),
+            "supported_variant_count": len(page_family_variant_ids(selected_page_family.get("supported_page_variants"))),
+            "allocations": allocations,
+        }
+        if plan.get("variant_allocation_trace") != trace:
+            plan["variant_allocation_trace"] = trace
+            changed = True
+    return changed
+
+
 def apply_selection_receipts_to_plan(project_root: Path, plan: dict[str, Any]) -> bool:
     palette_path = palette_selection_path(project_root)
     selection_path = theme_template_selection_path(project_root)
@@ -1497,6 +1634,8 @@ def apply_selection_receipts_to_plan(project_root: Path, plan: dict[str, Any]) -
         changed = True
     if plan.get("selection_receipt") != "02-plan/theme-template-selection.json":
         plan["selection_receipt"] = "02-plan/theme-template-selection.json"
+        changed = True
+    if apply_page_family_selection_to_plan(plan, selection):
         changed = True
     if design_path.exists():
         try:
@@ -2473,6 +2612,16 @@ def require_quality_gate_current(project_root: Path) -> dict[str, Any]:
             raise RunnerError("quality gate snapshot_visual_fidelity hash is stale; rerun quality_gate")
         if input_hashes.get("snapshot_visual_fidelity_evidence") != snapshot_visual_fidelity_evidence_hash(project_root):
             raise RunnerError("quality gate snapshot_visual_fidelity evidence is stale; rerun quality_gate")
+    if gate.get("profile") in {"production", "production_live", "local_real_preview"} and beautiful_template_page_family_smoke.selected_beautiful_production_family(project_root):
+        if inputs.get(beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_INPUT_KEY) != beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL.as_posix():
+            raise RunnerError("quality gate is missing page_family_smoke input; rerun template_fidelity and quality_gate")
+        if "page-family-smoke" not in check_names:
+            raise RunnerError("quality gate is missing page-family-smoke check; rerun quality_gate")
+        if input_hashes.get(beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_INPUT_KEY) != optional_project_file_hash(
+            project_root,
+            beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL.as_posix(),
+        ):
+            raise RunnerError("quality gate page_family_smoke hash is stale; rerun quality_gate")
     return gate
 
 
@@ -2495,6 +2644,30 @@ def require_generation_benchmark_current(project_root: Path, *, profile: str) ->
     if not timing_cache or not isinstance(timing_cache.get("hit_count"), int) or not isinstance(timing_cache.get("miss_count"), int):
         raise RunnerError("timing report cache telemetry is missing; rerun generation_benchmark")
     return benchmark
+
+
+def quality_gate_stage_inputs(project_root: Path, *, profile: str = "production") -> list[str]:
+    inputs = [
+        "06-check/preflight.json",
+        "06-check/preview-lint.json",
+        "06-check/template-fidelity.json",
+        "06-check/aesthetic-review.json",
+        "06-check/chart-verify.json",
+        "06-check/semantic-review.json",
+        "06-check/runtime-review.json",
+        "06-check/visual-distinctness.json",
+        "06-check/theme-validate.json",
+        "06-check/theme-adherence.json",
+        "06-check/palette-review.json",
+        "06-check/theme-template-selection-review.json",
+        "06-check/plan-bundle-review.json",
+        "06-check/diversity-gate.json",
+        "06-check/visual-fidelity/manifest.json",
+        "receipts/generate_svg.json",
+    ]
+    if profile in {"production", "production_live", "local_real_preview"} and beautiful_template_page_family_smoke.selected_beautiful_production_family(project_root):
+        inputs.append(beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL.as_posix())
+    return inputs
 
 
 def require_visual_acceptance_current(project_root: Path) -> dict[str, Any]:
@@ -3360,24 +3533,7 @@ def run_implemented_stage(project_root: Path, stage: str, state: dict[str, Any],
             state,
             stage,
             ["python3", (SCRIPT_DIR / "svglide_quality_gate.py").as_posix(), project_root.as_posix(), "--profile", profile, "--pretty"],
-            inputs=[
-                "06-check/preflight.json",
-                "06-check/preview-lint.json",
-                "06-check/template-fidelity.json",
-                "06-check/aesthetic-review.json",
-                "06-check/chart-verify.json",
-                "06-check/semantic-review.json",
-                "06-check/runtime-review.json",
-                "06-check/visual-distinctness.json",
-                "06-check/theme-validate.json",
-                "06-check/theme-adherence.json",
-                "06-check/palette-review.json",
-                "06-check/theme-template-selection-review.json",
-                "06-check/plan-bundle-review.json",
-                "06-check/diversity-gate.json",
-                "06-check/visual-fidelity/manifest.json",
-                "receipts/generate_svg.json",
-            ],
+            inputs=quality_gate_stage_inputs(project_root, profile=profile),
             outputs=["06-check/quality-gate.json"],
         )
     if stage == "generation_benchmark":

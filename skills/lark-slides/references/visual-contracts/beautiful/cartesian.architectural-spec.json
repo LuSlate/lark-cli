@@ -1338,5 +1338,233 @@
   "loss_notes": [
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 9,
+    "core_page_roles": [
+      "agenda",
+      "data_dashboard",
+      "content",
+      "process_or_timeline",
+      "detail",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "agenda": {
+      "source_class": "slide-agenda",
+      "source_slide_index": 1,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-agenda",
+          "raw_value": "<div class=\"slide slide-agenda\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "statement": {
+      "source_class": "slide-statement",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "metrics",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-statement",
+          "raw_value": "<div class=\"slide slide-statement\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "barchart": {
+      "source_class": "slide-barchart",
+      "source_slide_index": 3,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-barchart",
+          "raw_value": "<div class=\"slide slide-barchart\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "twocol": {
+      "source_class": "slide-twocol",
+      "source_slide_index": 4,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-twocol",
+          "raw_value": "<div class=\"slide slide-twocol\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "cards": {
+      "source_class": "slide-cards",
+      "source_slide_index": 5,
+      "page_role": "content",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-cards",
+          "raw_value": "<div class=\"slide slide-cards\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "linechart": {
+      "source_class": "slide-linechart",
+      "source_slide_index": 6,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-linechart",
+          "raw_value": "<div class=\"slide slide-linechart\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "timeline": {
+      "source_class": "slide-timeline",
+      "source_slide_index": 7,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-timeline",
+          "raw_value": "<div class=\"slide slide-timeline\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "team": {
+      "source_class": "slide-team",
+      "source_slide_index": 8,
+      "page_role": "detail",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-team",
+          "raw_value": "<div class=\"slide slide-team\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "closing": {
+      "source_class": "slide-closing",
+      "source_slide_index": 9,
+      "page_role": "closing",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/cartesian/template.html",
+          "selector_or_token": ".slide-closing",
+          "raw_value": "<div class=\"slide slide-closing\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/cartesian/template.html",
+    "source_design_md": "beautiful-html-templates/templates/cartesian/design.md",
+    "source_template_json": "beautiful-html-templates/templates/cartesian/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

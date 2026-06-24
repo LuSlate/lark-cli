@@ -21,6 +21,13 @@ def write_bytes(path: Path, content: bytes) -> None:
     path.write_bytes(content)
 
 
+def write_png(path: Path, color: tuple[int, int, int] = (255, 255, 255)) -> None:
+    from PIL import Image
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (4, 4), color).save(path)
+
+
 def file_sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -44,90 +51,100 @@ def load_fidelity_gate() -> Any:
         ) from error
 
 
-def build_minimal_visual_fidelity_project(project: Path) -> None:
+def build_minimal_visual_fidelity_project(project: Path, *, page_count: int = 2) -> None:
+    baseline_receipts = []
+    slide_receipts = []
+    visual_receipts = []
+    for page in range(1, page_count + 1):
+        page_name = f"page-{page:03d}"
+        baseline_receipts.append(f"06-check/visual-fidelity/{page_name}.baseline-render-receipt.json")
+        slide_receipts.append(f"06-check/visual-fidelity/{page_name}.slide-render-receipt.json")
+        visual_receipts.append(f"06-check/visual-fidelity/{page_name}.visual-fidelity-receipt.json")
     write_json(
         project / "06-check/visual-fidelity/manifest.json",
         {
             "schema_version": "svglide-snapshot-visual-fidelity-manifest/v1",
-            "prepared_svgs": ["04-svg/prepared/page-001.svg"],
-            "baseline_render_receipts": ["06-check/visual-fidelity/page-001.baseline-render-receipt.json"],
-            "slide_render_receipts": ["06-check/visual-fidelity/page-001.slide-render-receipt.json"],
-            "visual_fidelity_receipts": ["06-check/visual-fidelity/page-001.visual-fidelity-receipt.json"],
+            "prepared_svgs": [f"04-svg/prepared/page-{page:03d}.svg" for page in range(1, page_count + 1)],
+            "baseline_render_receipts": baseline_receipts,
+            "slide_render_receipts": slide_receipts,
+            "visual_fidelity_receipts": visual_receipts,
         },
     )
-    write_bytes(project / "04-svg/prepared/page-001.svg", b"<svg></svg>")
-    write_bytes(project / "06-check/visual-fidelity/page-001.cli-baseline.png", b"baseline-png")
-    write_bytes(project / "06-check/visual-fidelity/page-001.slide-render.png", b"slide-render-png")
-    write_json(project / "06-check/readback/page-001.snapshot.json", {"blocks": []})
-    write_json(
-        project / "06-check/visual-fidelity/page-001.renderer-equivalence-receipt.json",
-        {
-            "schema_version": "svglide-snapshot-renderer-equivalence/v1",
-            "status": "passed",
-            "slide_render_model_compatible": True,
-            "renderer_scope": "slide_snapshot_renderer",
-            "evidence": "unit-test-production-equivalent-renderer",
-        },
-    )
-    write_json(
-        project / "06-check/visual-fidelity/page-001.baseline-render-receipt.json",
-        {
-            "artifact_type": "cli_prepared_svg_baseline",
-            "prepared_svg": "04-svg/prepared/page-001.svg",
-            "prepared_svg_sha256": file_sha256(project / "04-svg/prepared/page-001.svg"),
-            "baseline_png": "06-check/visual-fidelity/page-001.cli-baseline.png",
-            "baseline_png_sha256": file_sha256(project / "06-check/visual-fidelity/page-001.cli-baseline.png"),
-            "rasterizer": "browser",
-            "rasterizer_version": "test",
-            "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
-            "font_manifest_sha256": "sha256:" + "3" * 64,
-            "created_at": "2026-06-24T00:00:00Z",
-        },
-    )
-    write_json(
-        project / "06-check/visual-fidelity/page-001.slide-render-receipt.json",
-        {
-            "artifact_type": "slide_snapshot_render",
-            "snapshot_json": "06-check/readback/page-001.snapshot.json",
-            "snapshot_json_sha256": file_sha256(project / "06-check/readback/page-001.snapshot.json"),
-            "slide_render_png": "06-check/visual-fidelity/page-001.slide-render.png",
-            "slide_render_png_sha256": file_sha256(project / "06-check/visual-fidelity/page-001.slide-render.png"),
-            "render_source": "snapshot_renderer",
-            "render_source_version": "test",
-            "renderer_equivalence_receipt": "06-check/visual-fidelity/page-001.renderer-equivalence-receipt.json",
-            "renderer_equivalence_receipt_sha256": file_sha256(project / "06-check/visual-fidelity/page-001.renderer-equivalence-receipt.json"),
-            "capture_method": "automated",
-            "capture_command": "python3 render.py",
-            "presentation_id": "presentation-fixture",
-            "revision_id": "revision-fixture",
-            "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
-            "created_at": "2026-06-24T00:00:00Z",
-        },
-    )
-    write_json(
-        project / "06-check/visual-fidelity/page-001.visual-fidelity-receipt.json",
-        {
-            "status": "passed",
-            "visual_fidelity_status": "passed",
-            "metrics": {
-                "pixel_diff_ratio": 0.0,
-                "text_region_diff_ratio": 0.0,
-                "bbox_shift_px": 0,
-                "line_count_match": True,
-                "dominant_text_color_match": True,
-                "phash_distance": 0,
+    for page in range(1, page_count + 1):
+        page_name = f"page-{page:03d}"
+        write_bytes(project / f"04-svg/prepared/{page_name}.svg", f"<svg>{page}</svg>".encode("utf-8"))
+        write_png(project / f"06-check/visual-fidelity/{page_name}.cli-baseline.png", color=(page, page, page))
+        write_png(project / f"06-check/visual-fidelity/{page_name}.slide-render.png", color=(page, page, page))
+        write_json(project / f"06-check/readback/{page_name}.snapshot.json", {"blocks": [], "page": page})
+        write_json(
+            project / f"06-check/visual-fidelity/{page_name}.renderer-equivalence-receipt.json",
+            {
+                "schema_version": "svglide-snapshot-renderer-equivalence/v1",
+                "status": "passed",
+                "slide_render_model_compatible": True,
+                "renderer_scope": "slide_snapshot_renderer",
+                "evidence": "unit-test-production-equivalent-renderer",
             },
-            "text_regions": [
-                {
-                    "text_style_id": "txt_001",
-                    "content_hash": "sha256:" + "6" * 64,
-                    "svg_bbox": {"x": 120, "y": 80, "width": 720, "height": 72},
-                    "snapshot_bbox": {"x": 120, "y": 80, "width": 720, "height": 72},
-                    "text_region_status": "passed",
-                }
-            ],
-        },
-    )
+        )
+        write_json(
+            project / f"06-check/visual-fidelity/{page_name}.baseline-render-receipt.json",
+            {
+                "artifact_type": "cli_prepared_svg_baseline",
+                "prepared_svg": f"04-svg/prepared/{page_name}.svg",
+                "prepared_svg_sha256": file_sha256(project / f"04-svg/prepared/{page_name}.svg"),
+                "baseline_png": f"06-check/visual-fidelity/{page_name}.cli-baseline.png",
+                "baseline_png_sha256": file_sha256(project / f"06-check/visual-fidelity/{page_name}.cli-baseline.png"),
+                "rasterizer": "browser",
+                "rasterizer_version": "test",
+                "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                "font_manifest_sha256": "sha256:" + "3" * 64,
+                "created_at": "2026-06-24T00:00:00Z",
+            },
+        )
+        write_json(
+            project / f"06-check/visual-fidelity/{page_name}.slide-render-receipt.json",
+            {
+                "artifact_type": "slide_snapshot_render",
+                "snapshot_json": f"06-check/readback/{page_name}.snapshot.json",
+                "snapshot_json_sha256": file_sha256(project / f"06-check/readback/{page_name}.snapshot.json"),
+                "slide_render_png": f"06-check/visual-fidelity/{page_name}.slide-render.png",
+                "slide_render_png_sha256": file_sha256(project / f"06-check/visual-fidelity/{page_name}.slide-render.png"),
+                "render_source": "snapshot_renderer",
+                "render_source_version": "test",
+                "renderer_equivalence_receipt": f"06-check/visual-fidelity/{page_name}.renderer-equivalence-receipt.json",
+                "renderer_equivalence_receipt_sha256": file_sha256(project / f"06-check/visual-fidelity/{page_name}.renderer-equivalence-receipt.json"),
+                "capture_method": "automated",
+                "capture_command": "python3 render.py",
+                "presentation_id": "presentation-fixture",
+                "revision_id": "revision-fixture",
+                "viewport": {"width": 1280, "height": 720, "device_scale_factor": 1},
+                "created_at": "2026-06-24T00:00:00Z",
+            },
+        )
+        write_json(
+            project / f"06-check/visual-fidelity/{page_name}.visual-fidelity-receipt.json",
+            {
+                "status": "passed",
+                "visual_fidelity_status": "passed",
+                "metrics": {
+                    "pixel_diff_ratio": 0.0,
+                    "text_region_diff_ratio": 0.0,
+                    "bbox_shift_px": 0,
+                    "line_count_match": True,
+                    "dominant_text_color_match": True,
+                    "phash_distance": 0,
+                },
+                "text_regions": [
+                    {
+                        "text_style_id": f"txt_{page:03d}",
+                        "content_hash": "sha256:" + "6" * 64,
+                        "svg_bbox": {"x": 120, "y": 80, "width": 720, "height": 72},
+                        "snapshot_bbox": {"x": 120, "y": 80, "width": 720, "height": 72},
+                        "text_region_status": "passed",
+                    }
+                ],
+            },
+        )
 
 
 def build_renderable_visual_fidelity_project(project: Path) -> None:
@@ -173,6 +190,19 @@ class SVGlideSnapshotVisualFidelityTest(unittest.TestCase):
 
             self.assertEqual(result["status"], "passed")
             self.assertEqual(issue_codes(result), set())
+            self.assertEqual(result["summary"]["slide_render_png_available_count"], 2)
+            self.assertEqual(result["summary"]["visual_fidelity_passed_count"], 2)
+
+    def test_single_slide_render_png_does_not_close_m8(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project, page_count=1)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("slide_render_png_available_count_lt_2", issue_codes(result))
+            self.assertEqual(result["summary"]["slide_render_png_available_count"], 1)
 
     def test_missing_baseline_render_receipt_fails_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -258,6 +288,66 @@ class SVGlideSnapshotVisualFidelityTest(unittest.TestCase):
 
             self.assertEqual(result["status"], "failed")
             self.assertIn("slide_render_png_hash_mismatch", issue_codes(result))
+
+    def test_hash_current_but_invalid_png_fails_visual_fidelity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project)
+            png_path = project / "06-check/visual-fidelity/page-001.slide-render.png"
+            png_path.write_bytes(b"not-a-decodable-png")
+            receipt_path = project / "06-check/visual-fidelity/page-001.slide-render-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["slide_render_png_sha256"] = file_sha256(png_path)
+            write_json(receipt_path, receipt)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("slide_render_png_invalid", issue_codes(result))
+
+    def test_manifest_requires_per_fixture_identity_alignment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project)
+            receipt_path = project / "06-check/visual-fidelity/page-002.baseline-render-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["prepared_svg"] = "04-svg/prepared/page-001.svg"
+            receipt["prepared_svg_sha256"] = file_sha256(project / "04-svg/prepared/page-001.svg")
+            write_json(receipt_path, receipt)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("baseline_prepared_svg_page_mismatch", issue_codes(result))
+
+    def test_manifest_requires_baseline_png_identity_alignment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project)
+            receipt_path = project / "06-check/visual-fidelity/page-002.baseline-render-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["baseline_png"] = "06-check/visual-fidelity/page-001.cli-baseline.png"
+            receipt["baseline_png_sha256"] = file_sha256(project / "06-check/visual-fidelity/page-001.cli-baseline.png")
+            write_json(receipt_path, receipt)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("baseline_png_page_mismatch", issue_codes(result))
+
+    def test_manifest_rejects_duplicate_fixture_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project)
+            manifest_path = project / "06-check/visual-fidelity/manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["prepared_svgs"] = ["04-svg/prepared/page-001.svg", "04-svg/prepared/page-001.svg"]
+            write_json(manifest_path, manifest)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertIn("prepared_svg_duplicate_page", issue_codes(result))
 
     def test_not_measured_does_not_pass_visual_fidelity(self) -> None:
         receipt = {
@@ -346,6 +436,39 @@ class SVGlideSnapshotVisualFidelityTest(unittest.TestCase):
 
         self.assertTrue({"capture_method_missing", "capture_command_missing", "revision_missing"} <= {issue["code"] for issue in issues})
 
+    def test_baseline_receipt_requires_visual_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project)
+            receipt_path = project / "06-check/visual-fidelity/page-001.baseline-render-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt.pop("font_manifest_sha256", None)
+            receipt.pop("rasterizer_version", None)
+            write_json(receipt_path, receipt)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertTrue({"font_manifest_sha256_missing", "rasterizer_version_missing"} <= issue_codes(result))
+
+    def test_slide_render_receipt_requires_source_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            build_minimal_visual_fidelity_project(project)
+            receipt_path = project / "06-check/visual-fidelity/page-001.slide-render-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            for key in ("render_source_version", "capture_command", "presentation_id", "revision_id"):
+                receipt.pop(key, None)
+            write_json(receipt_path, receipt)
+
+            result = load_fidelity_gate().run_visual_fidelity(project)
+
+            self.assertEqual(result["status"], "failed")
+            self.assertTrue(
+                {"render_source_version_missing", "capture_command_missing", "presentation_id_missing", "revision_missing"}
+                <= issue_codes(result)
+            )
+
     def test_snapshot_renderer_without_equivalence_receipt_cannot_pass(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "project"
@@ -387,6 +510,29 @@ class SVGlideSnapshotVisualFidelityTest(unittest.TestCase):
         metrics = {
             "pixel_diff_ratio": 0.42,
             "text_region_diff_ratio": 0.58,
+            "phash_distance": 2,
+            "bbox_shift_px": 0,
+            "line_count_match": True,
+            "dominant_text_color_match": True,
+            "text_regions": [
+                {
+                    "text_style_id": "txt_001",
+                    "content_hash": "sha256:" + "3" * 64,
+                    "bbox_shift_px": 0,
+                    "text_region_status": "passed",
+                }
+            ],
+        }
+
+        result = load_fidelity_gate().evaluate_visual_diff_metrics(metrics)
+
+        self.assertFalse(result["visual_fidelity_passed"])
+        self.assertTrue({"pixel_diff_exceeds_threshold", "text_region_diff_exceeds_threshold"} <= set(result["blocked_reasons"]))
+
+    def test_first_tier_visual_thresholds_block_regressions(self) -> None:
+        metrics = {
+            "pixel_diff_ratio": 0.09,
+            "text_region_diff_ratio": 0.13,
             "phash_distance": 2,
             "bbox_shift_px": 0,
             "line_count_match": True,

@@ -19,8 +19,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SNAPSHOT_RENDERER_VERSION = "svglide-snapshot-renderer/v1"
 BASELINE_RENDERER_VERSION = "@resvg/resvg-js@2.6.2"
 DEFAULT_VIEWPORT = {"width": 1280, "height": 720, "device_scale_factor": 1}
-MAX_PIXEL_DIFF_RATIO = 0.30
-MAX_TEXT_REGION_DIFF_RATIO = 0.40
+MAX_PIXEL_DIFF_RATIO = 0.08
+MAX_TEXT_REGION_DIFF_RATIO = 0.12
 MAX_BBOX_SHIFT_PX = 6
 MAX_PHASH_DISTANCE = 12
 MIN_SSIM = 0.82
@@ -44,6 +44,9 @@ PRECREATE_PARTIAL_ISSUE_CODES = {
     "slide_render_png_unavailable",
     "visual_fidelity_metrics_missing",
     "text_regions_missing",
+    "prepared_svg_count_lt_2",
+    "snapshot_json_count_mismatch",
+    "slide_render_png_available_count_lt_2",
 }
 PRECREATE_HARD_FAILURE_CODES = {
     "visual_fidelity_manifest_missing",
@@ -96,6 +99,15 @@ def file_sha256(path: Path) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def default_font_manifest_sha256() -> str:
+    payload = {
+        "font_source": "renderer_default",
+        "rasterizer": "resvg",
+        "rasterizer_version": BASELINE_RENDERER_VERSION,
+    }
+    return "sha256:" + hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def parse_float(value: Any, default: float = 0.0) -> float:
@@ -494,6 +506,7 @@ def generate_visual_fidelity_artifacts(project: Path) -> dict[str, Any]:
                 "rasterizer": "resvg",
                 "rasterizer_version": BASELINE_RENDERER_VERSION,
                 "viewport": viewport,
+                "font_manifest_sha256": default_font_manifest_sha256(),
                 "created_at": now_iso(),
             }
         except Exception as error:  # pragma: no cover - defensive diagnostics for missing native renderer
@@ -507,6 +520,7 @@ def generate_visual_fidelity_artifacts(project: Path) -> dict[str, Any]:
                 "rasterizer": "resvg",
                 "rasterizer_version": BASELINE_RENDERER_VERSION,
                 "viewport": viewport,
+                "font_manifest_sha256": default_font_manifest_sha256(),
                 "status": "failed",
                 "created_at": now_iso(),
             }
@@ -538,6 +552,8 @@ def generate_visual_fidelity_artifacts(project: Path) -> dict[str, Any]:
                     "renderer_equivalence_receipt_sha256": file_sha256(equivalence_receipt_path),
                     "capture_method": "automated",
                     "capture_command": "python3 skills/lark-slides/scripts/svglide_snapshot_visual_fidelity.py",
+                    "presentation_id": "not_available_local_snapshot_renderer",
+                    "revision_id": "not_available_local_snapshot_renderer",
                     "viewport": viewport,
                     "created_at": now_iso(),
                 },
@@ -583,6 +599,8 @@ def generate_visual_fidelity_artifacts(project: Path) -> dict[str, Any]:
             "renderer_equivalence_receipt_sha256": file_sha256(equivalence_receipt_path),
             "capture_method": "automated",
             "capture_command": "python3 skills/lark-slides/scripts/svglide_snapshot_visual_fidelity.py",
+            "presentation_id": "not_available_local_snapshot_renderer",
+            "revision_id": "not_available_local_snapshot_renderer",
             "viewport": snapshot_viewport,
             "created_at": now_iso(),
             "renderer_capabilities": {
@@ -652,6 +670,26 @@ def validate_artifact_hash(
         issues.append(issue(mismatch_code, f"{hash_key} does not match {rel_path}", rel_path))
 
 
+def png_artifact_is_decodable(path: Path) -> bool:
+    try:
+        from PIL import Image
+
+        with Image.open(path) as image:
+            image.verify()
+        return True
+    except Exception:
+        return False
+
+
+def validate_png_artifact(project: Path, receipt: dict[str, Any], path_key: str, invalid_code: str, issues: list[dict[str, str]]) -> None:
+    rel_path = receipt.get(path_key)
+    if not isinstance(rel_path, str) or not rel_path:
+        return
+    artifact = project / rel_path
+    if artifact.exists() and not png_artifact_is_decodable(artifact):
+        issues.append(issue(invalid_code, f"{path_key} must point to a decodable PNG", rel_path))
+
+
 def validate_slide_render_receipt(receipt: dict[str, Any]) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     render_source = receipt.get("render_source")
@@ -660,6 +698,11 @@ def validate_slide_render_receipt(receipt: dict[str, Any]) -> list[dict[str, str
     for key in ("snapshot_json", "snapshot_json_sha256", "slide_render_png", "slide_render_png_sha256", "viewport"):
         if not receipt.get(key):
             issues.append(issue(f"{key}_missing", f"{key} is required"))
+    for key in ("render_source_version", "capture_command", "presentation_id"):
+        if not receipt.get(key):
+            issues.append(issue(f"{key}_missing", f"{key} is required"))
+    if not (receipt.get("revision_id") or receipt.get("revision")):
+        issues.append(issue("revision_missing", "revision_id or revision is required"))
     if render_source == "editor_screenshot":
         if receipt.get("capture_method") != "automated":
             issues.append(issue("capture_method_missing", "editor screenshot must be automated"))
@@ -667,6 +710,14 @@ def validate_slide_render_receipt(receipt: dict[str, Any]) -> list[dict[str, str
             issues.append(issue("capture_command_missing", "editor screenshot capture command is required"))
         if not (receipt.get("revision_id") or receipt.get("revision")):
             issues.append(issue("revision_missing", "editor screenshot revision is required"))
+    return issues
+
+
+def validate_baseline_render_receipt(receipt: dict[str, Any]) -> list[dict[str, str]]:
+    issues: list[dict[str, str]] = []
+    for key in ("rasterizer", "rasterizer_version", "viewport", "font_manifest_sha256"):
+        if not receipt.get(key):
+            issues.append(issue(f"{key}_missing", f"{key} is required"))
     return issues
 
 
@@ -766,6 +817,43 @@ def _require_file(project: Path, rel_path: str, code: str, issues: list[dict[str
     return True
 
 
+def page_name_from_path(value: Any, suffix: str | None = None) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    name = Path(value).name
+    if suffix and name.endswith(suffix):
+        return name[: -len(suffix)]
+    return Path(name).stem
+
+
+def duplicate_page_names(values: list[str]) -> set[str]:
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for value in values:
+        if value in seen:
+            duplicates.add(value)
+        seen.add(value)
+    return duplicates
+
+
+def artifact_hash_is_current(project: Path, receipt: dict[str, Any], path_key: str, hash_key: str) -> bool:
+    rel_path = receipt.get(path_key)
+    if not isinstance(rel_path, str) or not rel_path:
+        return False
+    artifact = project / rel_path
+    if not artifact.exists():
+        return False
+    return hash_matches(receipt.get(hash_key), file_sha256(artifact))
+
+
+def png_artifact_hash_is_current_and_decodable(project: Path, receipt: dict[str, Any], path_key: str, hash_key: str) -> bool:
+    rel_path = receipt.get(path_key)
+    if not isinstance(rel_path, str) or not rel_path:
+        return False
+    artifact = project / rel_path
+    return artifact_hash_is_current(project, receipt, path_key, hash_key) and png_artifact_is_decodable(artifact)
+
+
 def visual_fidelity_evidence_files(project: Path) -> list[str]:
     manifest_rel = "06-check/visual-fidelity/manifest.json"
     manifest_path = project / manifest_rel
@@ -818,42 +906,130 @@ def visual_fidelity_evidence_hash(project: Path) -> str:
 def run_visual_fidelity(project: Path) -> dict[str, Any]:
     manifest_path = project / "06-check/visual-fidelity/manifest.json"
     if not manifest_path.exists():
-        return {"status": "failed", "issues": [issue("visual_fidelity_manifest_missing", "visual fidelity manifest is missing")]}
+        return {
+            "status": "failed",
+            "issues": [issue("visual_fidelity_manifest_missing", "visual fidelity manifest is missing")],
+            "summary": {
+                "prepared_svg_count": 0,
+                "baseline_png_count": 0,
+                "snapshot_json_count": 0,
+                "visual_fidelity_receipt_count": 0,
+                "slide_render_png_available_count": 0,
+                "visual_fidelity_passed_count": 0,
+                "not_measured_count": 0,
+            },
+        }
     manifest = read_json(manifest_path)
     issues: list[dict[str, str]] = []
+    prepared_svgs = manifest.get("prepared_svgs") if isinstance(manifest.get("prepared_svgs"), list) else []
     baseline_receipts = manifest.get("baseline_render_receipts") or []
     slide_receipts = manifest.get("slide_render_receipts") or []
     visual_receipts = manifest.get("visual_fidelity_receipts") or []
+    prepared_pages = [page for page in (page_name_from_path(item) for item in prepared_svgs) if page]
+    expected_pages = set(prepared_pages)
+    for page in sorted(duplicate_page_names(prepared_pages)):
+        issues.append(issue("prepared_svg_duplicate_page", f"prepared SVG page is duplicated: {page}"))
+    summary = {
+        "prepared_svg_count": len(prepared_svgs),
+        "baseline_png_count": 0,
+        "snapshot_json_count": 0,
+        "visual_fidelity_receipt_count": 0,
+        "slide_render_png_available_count": 0,
+        "visual_fidelity_passed_count": 0,
+        "not_measured_count": 0,
+    }
     if not baseline_receipts:
         issues.append(issue("baseline_render_receipts_empty", "baseline_render_receipts must not be empty"))
     if not slide_receipts:
         issues.append(issue("slide_render_receipts_empty", "slide_render_receipts must not be empty"))
     if not visual_receipts:
         issues.append(issue("visual_fidelity_receipts_empty", "visual_fidelity_receipts must not be empty"))
+    baseline_pages: list[str] = []
     for rel_path in baseline_receipts:
         if _require_file(project, str(rel_path), "baseline_render_receipt_missing", issues):
             receipt = read_json(project / str(rel_path))
+            receipt_page = page_name_from_path(str(rel_path), ".baseline-render-receipt.json")
+            if receipt_page:
+                baseline_pages.append(receipt_page)
+            prepared_page = page_name_from_path(receipt.get("prepared_svg"))
+            baseline_png_page = page_name_from_path(receipt.get("baseline_png"), ".cli-baseline.png")
+            if receipt_page and prepared_page and receipt_page != prepared_page:
+                issues.append(issue("baseline_prepared_svg_page_mismatch", f"baseline receipt page {receipt_page} points to prepared SVG page {prepared_page}", str(rel_path)))
+            if receipt_page and baseline_png_page and receipt_page != baseline_png_page:
+                issues.append(issue("baseline_png_page_mismatch", f"baseline receipt page {receipt_page} points to baseline PNG page {baseline_png_page}", str(rel_path)))
+            issues.extend(validate_baseline_render_receipt(receipt))
             validate_artifact_hash(project, receipt, "baseline_png", "baseline_png_sha256", "baseline_png_missing", "baseline_png_sha256_missing", "baseline_png_hash_mismatch", issues)
+            validate_png_artifact(project, receipt, "baseline_png", "baseline_png_invalid", issues)
             validate_artifact_hash(project, receipt, "prepared_svg", "prepared_svg_sha256", "prepared_svg_missing", "prepared_svg_sha256_missing", "prepared_svg_hash_mismatch", issues)
+            if png_artifact_hash_is_current_and_decodable(project, receipt, "baseline_png", "baseline_png_sha256"):
+                summary["baseline_png_count"] += 1
+    for page in sorted(duplicate_page_names(baseline_pages)):
+        issues.append(issue("baseline_receipt_duplicate_page", f"baseline receipt page is duplicated: {page}"))
+    if set(baseline_pages) != expected_pages:
+        issues.append(issue("baseline_receipt_page_set_mismatch", "baseline receipt pages must match prepared SVG pages"))
+    slide_pages: list[str] = []
     for rel_path in slide_receipts:
         if _require_file(project, str(rel_path), "slide_render_receipt_missing", issues):
             receipt = read_json(project / str(rel_path))
+            receipt_page = page_name_from_path(str(rel_path), ".slide-render-receipt.json")
+            if receipt_page:
+                slide_pages.append(receipt_page)
+            snapshot_page = page_name_from_path(receipt.get("snapshot_json"), ".snapshot.json")
+            slide_png_page = page_name_from_path(receipt.get("slide_render_png"), ".slide-render.png")
+            if receipt_page and snapshot_page and receipt_page != snapshot_page:
+                issues.append(issue("slide_render_snapshot_page_mismatch", f"slide render receipt page {receipt_page} points to snapshot page {snapshot_page}", str(rel_path)))
+            if receipt_page and slide_png_page and receipt_page != slide_png_page:
+                issues.append(issue("slide_render_png_page_mismatch", f"slide render receipt page {receipt_page} points to PNG page {slide_png_page}", str(rel_path)))
             issues.extend(validate_slide_render_receipt(receipt))
             validate_artifact_hash(project, receipt, "slide_render_png", "slide_render_png_sha256", "slide_render_png_missing", "slide_render_png_sha256_missing", "slide_render_png_hash_mismatch", issues)
+            validate_png_artifact(project, receipt, "slide_render_png", "slide_render_png_invalid", issues)
             validate_artifact_hash(project, receipt, "snapshot_json", "snapshot_json_sha256", "snapshot_json_missing", "snapshot_json_sha256_missing", "snapshot_json_hash_mismatch", issues)
             issues.extend(validate_snapshot_renderer_equivalence(project, receipt))
+            if png_artifact_hash_is_current_and_decodable(project, receipt, "slide_render_png", "slide_render_png_sha256"):
+                summary["slide_render_png_available_count"] += 1
+            if artifact_hash_is_current(project, receipt, "snapshot_json", "snapshot_json_sha256"):
+                summary["snapshot_json_count"] += 1
+    for page in sorted(duplicate_page_names(slide_pages)):
+        issues.append(issue("slide_render_receipt_duplicate_page", f"slide render receipt page is duplicated: {page}"))
+    if set(slide_pages) != expected_pages:
+        issues.append(issue("slide_render_receipt_page_set_mismatch", "slide render receipt pages must match prepared SVG pages"))
+    visual_pages: list[str] = []
     for rel_path in visual_receipts:
         if _require_file(project, str(rel_path), "visual_fidelity_receipt_missing", issues):
+            receipt_page = page_name_from_path(str(rel_path), ".visual-fidelity-receipt.json")
+            if receipt_page:
+                visual_pages.append(receipt_page)
+            summary["visual_fidelity_receipt_count"] += 1
             receipt = read_json(project / str(rel_path))
             receipt_evaluation = evaluate_visual_fidelity_receipt(receipt)
             issues.extend(issue(code, code, str(rel_path)) for code in receipt_evaluation["blocked_reasons"])
+            if receipt.get("visual_fidelity_status") == "not_measured" or receipt.get("status") == "not_measured":
+                summary["not_measured_count"] += 1
             metrics = dict(receipt.get("metrics") or {})
             metrics["text_regions"] = receipt.get("text_regions") or metrics.get("text_regions") or []
             if not metrics["text_regions"]:
                 issues.append(issue("text_regions_missing", "text_regions must not be empty", str(rel_path)))
             evaluation = evaluate_visual_diff_metrics(metrics)
             issues.extend(issue(code, code, str(rel_path)) for code in evaluation["blocked_reasons"])
-    return {"status": "failed" if issues else "passed", "issues": issues}
+            if receipt_evaluation["visual_fidelity_passed"] and evaluation["visual_fidelity_passed"] and metrics["text_regions"]:
+                summary["visual_fidelity_passed_count"] += 1
+    for page in sorted(duplicate_page_names(visual_pages)):
+        issues.append(issue("visual_fidelity_receipt_duplicate_page", f"visual fidelity receipt page is duplicated: {page}"))
+    if set(visual_pages) != expected_pages:
+        issues.append(issue("visual_fidelity_receipt_page_set_mismatch", "visual fidelity receipt pages must match prepared SVG pages"))
+    if summary["prepared_svg_count"] < 2:
+        issues.append(issue("prepared_svg_count_lt_2", "M8 requires at least two prepared SVG fixtures"))
+    if summary["baseline_png_count"] != summary["prepared_svg_count"]:
+        issues.append(issue("baseline_png_count_mismatch", "baseline PNG count must match prepared SVG count"))
+    if summary["snapshot_json_count"] != summary["prepared_svg_count"]:
+        issues.append(issue("snapshot_json_count_mismatch", "snapshot JSON count must match prepared SVG count"))
+    if summary["visual_fidelity_receipt_count"] != summary["prepared_svg_count"]:
+        issues.append(issue("visual_fidelity_receipt_count_mismatch", "visual fidelity receipt count must match prepared SVG count"))
+    if summary["slide_render_png_available_count"] < 2:
+        issues.append(issue("slide_render_png_available_count_lt_2", "M8 requires at least two available Slide render PNGs"))
+    if summary["visual_fidelity_passed_count"] != summary["slide_render_png_available_count"]:
+        issues.append(issue("visual_fidelity_passed_count_mismatch", "passed visual fidelity count must match available Slide render PNG count"))
+    return {"status": "failed" if issues else "passed", "issues": issues, "summary": summary}
 
 
 def run_precreate_visual_fidelity(project: Path) -> dict[str, Any]:

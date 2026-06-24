@@ -601,6 +601,107 @@ process.exit(4)
             with self.assertRaisesRegex(artboard.ArtboardError, "canvas_spec_theme_unknown"):
                 artboard.render_project(project)
 
+    def write_page_family_registry(self, project: Path, *, visual_contract_path: str | None = None) -> None:
+        template = next(
+            item
+            for item in beautiful_template_runtime.template_registry()["templates"]
+            if item.get("id") == "executive-dashboard"
+        )
+        template = dict(template)
+        template["source_family"] = "blue-professional"
+        template["family_id"] = "blue-professional"
+        template["visual_contract"] = {"path": visual_contract_path or "missing-contract.json"}
+        template["visual_contract_path"] = visual_contract_path or "missing-contract.json"
+        for key in ("implemented_page_variants", "supported_page_variants", "page_family", "page_variants"):
+            template.pop(key, None)
+        theme = next(
+            item
+            for item in beautiful_template_runtime.theme_registry()["themes"]
+            if item.get("id") == "blue-professional"
+        )
+        write_json(project / "02-plan/template-registry.json", {"templates": [template]})
+        write_json(project / "02-plan/theme-registry.json", {"themes": [theme]})
+        write_json(
+            project / "02-plan/theme-template-selection.json",
+            {
+                "selected_family_id": "blue-professional",
+                "selected_template_id": "executive-dashboard",
+                "selected_page_family": {
+                    "family_id": "blue-professional",
+                    "runtime_template_id": "executive-dashboard",
+                    "supported_page_variants": ["cover", "metrics"],
+                    "variant_usage_policy": {"singletons": ["cover"], "repeatable": ["metrics"]},
+                },
+            },
+        )
+
+    def page_family_spec(self) -> dict[str, object]:
+        spec = canvas_spec()
+        spec["template_id"] = "executive-dashboard"
+        spec["theme_id"] = "blue-professional"
+        spec["family_id"] = "blue-professional"
+        spec["page_role"] = "cover"
+        spec["theme"] = {
+            "colors": {
+                "background": "#FDFAE7",
+                "panel": "#FFFFFF",
+                "surface": "#F5F7FF",
+                "primary": "#1E2BFA",
+                "accent": "#1E2BFA",
+                "text": "#111111",
+                "muted": "#6B6B6B",
+            }
+        }
+        spec["content"] = {"title": "Family Cover", "subtitle": "Variant validation", "metrics": ["A", "B"]}
+        return spec
+
+    def test_registry_binding_requires_page_variant_from_full_visual_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            contract_rel = "contracts/blue-professional.json"
+            write_json(
+                project / contract_rel,
+                {
+                    "family_id": "blue-professional",
+                    "runtime_template_id": "executive-dashboard",
+                    "page_variants": {
+                        "cover": {"page_roles": ["cover"]},
+                        "metrics": {"page_roles": ["content"]},
+                    },
+                },
+            )
+            self.write_page_family_registry(project, visual_contract_path=contract_rel)
+            spec = self.page_family_spec()
+
+            issues, binding = artboard.validate_registry_bindings(project, spec, page=1)
+
+            self.assertIn("canvas_spec_page_variant_missing", {item["code"] for item in issues})
+            self.assertEqual(["cover", "metrics"], binding["page_variant_binding"]["supported_page_variants"])
+            self.assertEqual(contract_rel, binding["page_variant_binding"]["visual_contract_path"])
+
+    def test_registry_binding_rejects_unknown_variant_and_family_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            contract_rel = "contracts/blue-professional.json"
+            write_json(
+                project / contract_rel,
+                {
+                    "family_id": "blue-professional",
+                    "runtime_template_id": "executive-dashboard",
+                    "page_variants": {"cover": {"page_roles": ["cover"]}},
+                },
+            )
+            self.write_page_family_registry(project, visual_contract_path=contract_rel)
+            spec = self.page_family_spec()
+            spec["family_id"] = "wrong-family"
+            spec["page_variant_id"] = "unknown"
+
+            issues, _ = artboard.validate_registry_bindings(project, spec, page=1)
+
+            codes = {item["code"] for item in issues}
+            self.assertIn("canvas_spec_page_variant_unsupported", codes)
+            self.assertIn("canvas_spec_family_template_mismatch", codes)
+
     def test_render_project_rejects_missing_required_content_and_card_overflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project = Path(tmpdir)

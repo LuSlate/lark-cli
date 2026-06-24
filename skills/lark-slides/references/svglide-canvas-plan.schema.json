@@ -67,7 +67,12 @@
           "canvas_spec": {
             "type": "object",
             "required": ["version", "canvas", "safe_area", "template_id", "theme_id", "theme", "content", "semantic_elements", "quality_constraints"],
-            "additionalProperties": true
+            "additionalProperties": true,
+            "properties": {
+              "family_id": {"type": "string", "minLength": 1},
+              "page_role": {"type": "string", "minLength": 1},
+              "page_variant_id": {"type": "string", "minLength": 1}
+            }
           }
         },
         "additionalProperties": true

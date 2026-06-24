@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 from typing import Any
 
@@ -183,6 +184,18 @@ ALLOWED_RUNTIME_FONTS = {
 }
 PRODUCTION_STATUSES = {"production"}
 NON_PRODUCTION_STATUSES = {"needs_review", "experimental", "legacy_debug"}
+PAGE_FAMILY_REQUIRED_FIELDS = {
+    "source_slide_count",
+    "core_page_roles",
+    "production_minimum_roles",
+}
+PAGE_VARIANT_REQUIRED_FIELDS = {
+    "source_class",
+    "page_role",
+    "required_slots",
+    "source_refs",
+    "extraction_confidence",
+}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -190,6 +203,13 @@ def read_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"expected JSON object: {path}")
     return payload
+
+
+def read_json_or_empty(path: Path) -> dict[str, Any]:
+    try:
+        return read_json(path)
+    except (OSError, json.JSONDecodeError, ValueError):
+        return {}
 
 
 def resolve_path(value: object) -> Path:
@@ -343,6 +363,152 @@ def validate_contract(contract: dict[str, Any], row: dict[str, Any]) -> list[dic
         if not is_non_empty(value):
             issues.append(issue("contract_required_section_missing", f"contract.{section} is required", family_id=family_id, path=section))
     issues.extend(validate_strategies(contract, family_id=family_id, path_prefix="contract"))
+    return issues
+
+
+def validate_page_family_contract(contract: dict[str, Any], *, family_id: str = "") -> list[dict[str, str]]:
+    family = family_id or str(contract.get("family_id") or "")
+    issues: list[dict[str, str]] = []
+    page_family = contract.get("page_family")
+    if not isinstance(page_family, dict) or not page_family:
+        issues.append(issue("contract_page_family_missing", "contract.page_family is required", family_id=family, path="page_family"))
+        page_family = {}
+    for key in sorted(PAGE_FAMILY_REQUIRED_FIELDS):
+        if not is_non_empty(page_family.get(key)):
+            issues.append(
+                issue(
+                    "page_family_required_field_missing",
+                    f"contract.page_family.{key} is required",
+                    family_id=family,
+                    path=f"page_family.{key}",
+                )
+            )
+    if page_family.get("source_slide_count") is not None and not isinstance(page_family.get("source_slide_count"), int):
+        issues.append(issue("page_family_source_slide_count_invalid", "page_family.source_slide_count must be an integer", family_id=family, path="page_family.source_slide_count"))
+    for key in ("core_page_roles", "production_minimum_roles"):
+        value = page_family.get(key)
+        if value is not None and (not isinstance(value, list) or not all(is_non_empty(item) for item in value)):
+            issues.append(issue("page_family_roles_invalid", f"page_family.{key} must be a non-empty string array", family_id=family, path=f"page_family.{key}"))
+
+    page_variants = contract.get("page_variants")
+    if not isinstance(page_variants, dict) or not page_variants:
+        issues.append(issue("contract_page_variants_missing", "contract.page_variants is required", family_id=family, path="page_variants"))
+        return issues
+    for variant_id, variant in sorted(page_variants.items()):
+        path_prefix = f"page_variants.{variant_id}"
+        if not isinstance(variant, dict):
+            issues.append(issue("page_variant_invalid", "page variant must be an object", family_id=family, path=path_prefix))
+            continue
+        for key in sorted(PAGE_VARIANT_REQUIRED_FIELDS):
+            if not is_non_empty(variant.get(key)):
+                issues.append(
+                    issue(
+                        "page_variant_required_field_missing",
+                        f"{path_prefix}.{key} is required",
+                        family_id=family,
+                        path=f"{path_prefix}.{key}",
+                    )
+                )
+        required_slots = variant.get("required_slots")
+        if required_slots is not None and (not isinstance(required_slots, list) or not all(is_non_empty(item) for item in required_slots)):
+            issues.append(issue("page_variant_required_slots_invalid", "required_slots must be a non-empty string array", family_id=family, path=f"{path_prefix}.required_slots"))
+        confidence = variant.get("extraction_confidence")
+        if confidence is not None and confidence not in EXTRACTION_CONFIDENCE_VALUES:
+            issues.append(issue("page_variant_extraction_confidence_invalid", "page variant extraction_confidence is invalid", family_id=family, path=f"{path_prefix}.extraction_confidence"))
+        refs = variant.get("source_refs")
+        if refs is not None:
+            if not isinstance(refs, list) or not refs:
+                issues.append(issue("page_variant_source_refs_invalid", "source_refs must be a non-empty array", family_id=family, path=f"{path_prefix}.source_refs"))
+            else:
+                for index, ref in enumerate(refs):
+                    ref_path = f"{path_prefix}.source_refs[{index}]"
+                    if not isinstance(ref, dict):
+                        issues.append(issue("page_variant_source_ref_invalid", "source_refs entries must be objects", family_id=family, path=ref_path))
+                        continue
+                    for key in ("path", "selector_or_token", "raw_value"):
+                        if not is_non_empty(ref.get(key)):
+                            issues.append(issue("page_variant_source_ref_field_missing", f"source_refs entries must include {key}", family_id=family, path=f"{ref_path}.{key}"))
+                    if is_non_empty(ref.get("path")) and not resolve_path(ref.get("path")).is_file():
+                        issues.append(issue("page_variant_source_ref_missing_file", "source_refs.path must point to an existing source file", family_id=family, path=f"{ref_path}.path"))
+    declared_count = page_family.get("source_slide_count")
+    if isinstance(declared_count, int) and declared_count != len(page_variants):
+        issues.append(
+            issue(
+                "page_family_variant_count_mismatch",
+                "page_family.source_slide_count must match extracted page_variants count",
+                family_id=family,
+                path="page_family.source_slide_count",
+            )
+        )
+    return issues
+
+
+def validate_page_family_candidate(row: dict[str, Any]) -> list[dict[str, str]]:
+    family_id = str(row.get("family_id") or "")
+    issues: list[dict[str, str]] = []
+    status = str(row.get("promotion_status") or "")
+    is_default = row.get("default_selectable") is True
+    gate = row.get("page_family_promotion_gate") if isinstance(row.get("page_family_promotion_gate"), dict) else {}
+    migration_block = row.get("migration_block") if isinstance(row.get("migration_block"), dict) else {}
+    smoke_receipt = row.get("page_family_smoke_receipt")
+    smoke_deck = row.get("page_family_smoke_deck")
+    golden_specs = row.get("page_variant_golden_specs")
+    has_smoke_receipt = is_non_empty(smoke_receipt)
+    has_smoke_deck = is_non_empty(smoke_deck)
+
+    if has_smoke_deck and not resolve_path(smoke_deck).is_file():
+        issues.append(
+            issue(
+                "page_family_smoke_deck_missing_file",
+                "page_family_smoke_deck must point to an existing smoke deck",
+                family_id=family_id,
+                path="page_family_smoke_deck",
+            )
+        )
+    if has_smoke_receipt and not resolve_path(smoke_receipt).is_file():
+        issues.append(
+            issue(
+                "page_family_smoke_receipt_missing_file",
+                "page_family_smoke_receipt must point to an existing receipt",
+                family_id=family_id,
+                path="page_family_smoke_receipt",
+            )
+        )
+    elif has_smoke_receipt:
+        receipt = read_json_or_empty(resolve_path(smoke_receipt))
+        if not isinstance(receipt.get("input_hashes"), dict) or not receipt.get("input_hashes"):
+            issues.append(issue("page_family_smoke_receipt_input_hashes_missing", "page_family_smoke_receipt must include non-empty input_hashes", family_id=family_id, path="page_family_smoke_receipt.input_hashes"))
+        if not isinstance(receipt.get("provenance"), dict) or not receipt.get("provenance"):
+            issues.append(issue("page_family_smoke_receipt_provenance_missing", "page_family_smoke_receipt must include provenance", family_id=family_id, path="page_family_smoke_receipt.provenance"))
+    if isinstance(golden_specs, dict):
+        for variant_id, raw_path in sorted(golden_specs.items()):
+            if not is_non_empty(raw_path) or not resolve_path(raw_path).is_file():
+                issues.append(issue("page_variant_golden_spec_missing_file", "page_variant_golden_specs entries must point to existing golden specs", family_id=family_id, path=f"page_variant_golden_specs.{variant_id}"))
+    if gate.get("status") == "passed":
+        if not has_smoke_receipt:
+            issues.append(issue("page_family_gate_passed_without_smoke", "passed page_family_promotion_gate requires page_family_smoke_receipt", family_id=family_id, path="page_family_smoke_receipt"))
+        if not has_smoke_deck:
+            issues.append(issue("page_family_gate_passed_without_smoke_deck", "passed page_family_promotion_gate requires page_family_smoke_deck", family_id=family_id, path="page_family_smoke_deck"))
+        if not is_non_empty(row.get("implemented_page_variants")):
+            issues.append(issue("page_family_gate_passed_without_implemented_variants", "passed page_family_promotion_gate requires implemented_page_variants", family_id=family_id, path="implemented_page_variants"))
+        if not isinstance(golden_specs, dict) or not golden_specs:
+            issues.append(issue("page_family_gate_passed_without_golden_specs", "passed page_family_promotion_gate requires page_variant_golden_specs", family_id=family_id, path="page_variant_golden_specs"))
+        else:
+            for variant_id in row.get("implemented_page_variants", []) if isinstance(row.get("implemented_page_variants"), list) else []:
+                if variant_id not in golden_specs:
+                    issues.append(issue("page_family_gate_passed_variant_without_golden_spec", "every implemented page variant must have a golden spec", family_id=family_id, path=f"page_variant_golden_specs.{variant_id}"))
+
+    if status in PRODUCTION_STATUSES or is_default:
+        is_migration_blocked = gate.get("status") == "migration_blocked" or migration_block.get("page_family_smoke_missing") is True
+        if not has_smoke_receipt and not is_migration_blocked:
+            issues.append(
+                issue(
+                    "production_page_family_smoke_missing",
+                    "production/default selectable beautiful family must have page-family smoke evidence or an explicit migration block",
+                    family_id=family_id,
+                    path="page_family_smoke_receipt",
+                )
+            )
     return issues
 
 
@@ -581,6 +747,7 @@ def validate_candidate_matrix(
     *,
     matrix_path: Path = MATRIX_PATH,
     families_path: Path = FAMILIES_PATH,
+    page_family_mode: str = "deferred",
 ) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     rows = matrix_rows(matrix_path)
@@ -681,6 +848,8 @@ def validate_candidate_matrix(
             )
         else:
             issues.extend(validate_contract(contract, row))
+            if page_family_mode == "strict" or is_non_empty(contract.get("page_family")) or is_non_empty(contract.get("page_variants")):
+                issues.extend(validate_page_family_contract(contract, family_id=family_id))
             for strategy_key in ("font_strategy", "typography_strategy", "text_style_strategy"):
                 if row.get(strategy_key) != contract.get(strategy_key):
                     issues.append(
@@ -704,6 +873,8 @@ def validate_candidate_matrix(
             issues.append(issue("source_text_transform_mapping_missing", "source text-transform usage must be recorded", family_id=family_id, path="typography_strategy.text_transform_policy"))
         if flags["letter_spacing"] and not is_non_empty(typography.get("letter_spacing_scale")):
             issues.append(issue("source_letter_spacing_mapping_missing", "source letter-spacing usage must be recorded", family_id=family_id, path="typography_strategy.letter_spacing_scale"))
+        if page_family_mode == "strict" or any(is_non_empty(row.get(key)) for key in ("page_family_smoke_receipt", "page_family_promotion_gate", "migration_block", "implemented_page_variants")):
+            issues.extend(validate_page_family_candidate(row))
     font_signatures = {_strategy_signature(row.get("font_strategy", {}).get("role_mapping", {})) for row in rows if isinstance(row.get("font_strategy"), dict)}
     typography_signatures = {_strategy_signature(row.get("typography_strategy", {})) for row in rows if isinstance(row.get("typography_strategy"), dict)}
     if len(rows) == 34 and len(font_signatures) <= 1:
@@ -714,7 +885,10 @@ def validate_candidate_matrix(
 
 
 def main() -> int:
-    issues = validate_candidate_matrix()
+    parser = argparse.ArgumentParser(description="Lint beautiful template visual contracts and executable matrix.")
+    parser.add_argument("--page-family-strict", action="store_true", help="also require page-family contract and production smoke evidence")
+    args = parser.parse_args()
+    issues = validate_candidate_matrix(page_family_mode="strict" if args.page_family_strict else "deferred")
     print(json.dumps({"status": "passed" if not issues else "failed", "issues": issues}, ensure_ascii=False, indent=2))
     return 1 if issues else 0
 

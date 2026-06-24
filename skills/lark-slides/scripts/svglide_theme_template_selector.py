@@ -418,12 +418,19 @@ def score_template(signals: dict[str, Any], template: dict[str, Any], *, brief: 
         "renderer_module",
         "renderer_executable",
         "supported_page_types",
+        "supported_page_variants",
+        "implemented_page_variants",
+        "variant_usage_policy",
+        "page_variant_usage_policy",
         "visual_contract",
+        "visual_contract_path",
         "fidelity_gate",
         "fidelity_receipt",
         "golden_spec",
         "promotion_gate",
         "source_trace",
+        "source_family",
+        "family_id",
         "supported_theme_ids",
         "family_usage_policy_summary",
         "cjk_policy_summary",
@@ -574,6 +581,55 @@ def theme_candidates_for_selected_template(themes: list[dict[str, Any]], selecte
     return constrained or themes
 
 
+def infer_family_id(template: dict[str, Any] | None) -> str | None:
+    if not isinstance(template, dict):
+        return None
+    for key in ("family_id", "source_family", "source_template_id"):
+        value = template.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def page_variant_ids(value: Any) -> list[str]:
+    variants: list[str] = []
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, str) and item.strip():
+                variants.append(item.strip())
+            elif isinstance(item, dict):
+                raw = item.get("page_variant_id") or item.get("variant_id") or item.get("id")
+                if isinstance(raw, str) and raw.strip():
+                    variants.append(raw.strip())
+    elif isinstance(value, dict):
+        variants.extend(str(key) for key in value if str(key).strip())
+    return list(dict.fromkeys(variants))
+
+
+def selected_page_family(template: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(template, dict):
+        return None
+    family_id = infer_family_id(template)
+    runtime_template_id = template.get("template_id") or template.get("id")
+    if not isinstance(family_id, str) or not isinstance(runtime_template_id, str):
+        return None
+    variants = (
+        page_variant_ids(template.get("implemented_page_variants"))
+        or page_variant_ids(template.get("supported_page_variants"))
+        or page_variant_ids((template.get("visual_contract") or {}).get("page_variants") if isinstance(template.get("visual_contract"), dict) else None)
+        or list_value(template.get("supported_page_types"))
+    )
+    result: dict[str, Any] = {
+        "family_id": family_id,
+        "runtime_template_id": runtime_template_id,
+        "supported_page_variants": variants,
+    }
+    usage = template.get("variant_usage_policy") or template.get("page_variant_usage_policy")
+    if isinstance(usage, dict):
+        result["variant_usage_policy"] = usage
+    return result
+
+
 def select_theme_template(project_root: Path, brief: str, *, top_k: int = 5, evidence: dict[str, Any] | None = None) -> dict[str, Any]:
     palette_selection = load_palette_selection(project_root)
     plan = load_plan_if_present(project_root)
@@ -609,7 +665,8 @@ def select_theme_template(project_root: Path, brief: str, *, top_k: int = 5, evi
         id_key="theme_id",
         top_k=top_k,
     )
-    return {
+    selected_family = selected_page_family(selected_template)
+    result = {
         "schema_version": SCHEMA_VERSION,
         "stage": "theme_template_selection",
         "created_at": now_iso(),
@@ -627,6 +684,10 @@ def select_theme_template(project_root: Path, brief: str, *, top_k: int = 5, evi
         "deterministic_seed": fallback_seed,
         "brand_resolution": palette_selection.get("brand_resolution"),
     }
+    if selected_family:
+        result["selected_family_id"] = selected_family["family_id"]
+        result["selected_page_family"] = selected_family
+    return result
 
 
 def write_selection(project_root: Path, selection: dict[str, Any]) -> Path:

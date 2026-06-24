@@ -1342,5 +1342,244 @@
     "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 10,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "detail",
+      "content",
+      "data_dashboard",
+      "process_or_timeline",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "hero": {
+      "source_class": "slide-hero",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-hero",
+          "raw_value": "<div class=\"slide slide-hero active\" data-index=\"0\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "red": {
+      "source_class": "slide-red",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-red",
+          "raw_value": "<div class=\"slide slide-red\" data-index=\"1\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "summary": {
+      "source_class": "slide-summary",
+      "source_slide_index": 3,
+      "page_role": "detail",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-summary",
+          "raw_value": "<div class=\"slide slide-summary\" data-index=\"2\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "financial": {
+      "source_class": "slide-financial",
+      "source_slide_index": 4,
+      "page_role": "content",
+      "required_slots": [
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-financial",
+          "raw_value": "<div class=\"slide slide-financial\" data-index=\"3\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "stat": {
+      "source_class": "slide-stat",
+      "source_slide_index": 5,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-stat",
+          "raw_value": "<div class=\"slide slide-stat\" data-index=\"4\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "services": {
+      "source_class": "slide-services",
+      "source_slide_index": 6,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-services",
+          "raw_value": "<div class=\"slide slide-services\" data-index=\"5\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "roadmap": {
+      "source_class": "slide-roadmap",
+      "source_slide_index": 7,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-roadmap",
+          "raw_value": "<div class=\"slide slide-roadmap\" data-index=\"6\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "pillars": {
+      "source_class": "slide-pillars",
+      "source_slide_index": 8,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-pillars",
+          "raw_value": "<div class=\"slide slide-pillars\" data-index=\"7\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "global": {
+      "source_class": "slide-global",
+      "source_slide_index": 9,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-global",
+          "raw_value": "<div class=\"slide slide-global\" data-index=\"8\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "close": {
+      "source_class": "slide-close",
+      "source_slide_index": 10,
+      "page_role": "closing",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/bold-poster/template.html",
+          "selector_or_token": ".slide-close",
+          "raw_value": "<div class=\"slide slide-close\" data-index=\"9\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/bold-poster/template.html",
+    "source_design_md": "beautiful-html-templates/templates/bold-poster/design.md",
+    "source_template_json": "beautiful-html-templates/templates/bold-poster/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

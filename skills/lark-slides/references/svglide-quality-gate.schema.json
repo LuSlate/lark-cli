@@ -3,13 +3,22 @@
   "$id": "https://larksuite.local/svglide-quality-gate.schema.json",
   "title": "SVGlide quality gate receipt",
   "type": "object",
-  "required": ["version", "status", "profile", "inputs", "prepared_files", "summary", "checks"],
+  "required": ["version", "status", "profile", "inputs", "input_hashes", "prepared_files", "summary", "checks"],
   "additionalProperties": true,
   "properties": {
     "version": {"const": "svglide-quality-gate/v1"},
     "status": {"enum": ["passed", "failed", "passed_with_waiver"]},
     "profile": {"type": "string", "minLength": 1},
     "inputs": {"type": "object"},
+    "input_hashes": {
+      "type": "object",
+      "additionalProperties": {"type": ["string", "null"]},
+      "properties": {
+        "page_family_smoke": {"type": ["string", "null"]},
+        "snapshot_visual_fidelity": {"type": ["string", "null"]},
+        "snapshot_visual_fidelity_evidence": {"type": ["string", "null"]}
+      }
+    },
     "prepared_files": {
       "type": "array",
       "items": {

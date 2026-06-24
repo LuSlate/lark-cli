@@ -9,13 +9,24 @@ from pathlib import Path
 
 THEME = {
     "colors": {
-        "background": "#F8F8F4",
+        "background": "#FDFAE7",
         "panel": "#FFFFFF",
-        "primary": "#BE123C",
-        "accent": "#111111",
+        "surface": "#F5F7FF",
+        "primary": "#1E2BFA",
+        "accent": "#1E2BFA",
         "text": "#111111",
-        "muted": "#666666",
+        "muted": "#6B6B6B",
     }
+}
+
+PRODUCTION_FAMILY_ID = "blue-professional"
+PRODUCTION_TEMPLATE_ID = "executive-dashboard"
+PRODUCTION_THEME_ID = "blue-professional"
+PRODUCTION_PAGE_VARIANTS = ["cover", "agenda", "metrics", "dashboard", "split", "bars", "quote", "timeline", "detail", "closing"]
+PAGE_VARIANT_BY_PAGE_TYPE = {
+    "cover": "cover",
+    "content": "dashboard",
+    "closing": "closing",
 }
 
 LOADED_RULE_SET = [
@@ -49,15 +60,22 @@ def canvas_spec_for(
     content: dict[str, object],
     semantic_role: str = "title",
     theme: dict[str, object] | None = None,
+    page_role: str = "cover",
+    page_variant_id: str = "cover",
 ) -> dict[str, object]:
+    normalized_content = dict(content)
+    normalized_content.setdefault("metrics", ["Starlink", "Launch", "Risk"])
     return {
         "version": "svglide-canvas-spec/v1",
         "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
         "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
-        "template_id": template_id,
-        "theme_id": "swiss-red",
+        "template_id": PRODUCTION_TEMPLATE_ID,
+        "theme_id": PRODUCTION_THEME_ID,
+        "family_id": PRODUCTION_FAMILY_ID,
+        "page_role": page_role,
+        "page_variant_id": page_variant_id,
         "theme": theme or THEME,
-        "content": content,
+        "content": normalized_content,
         "semantic_elements": [
             {
                 "element_id": "title",
@@ -655,6 +673,15 @@ def slide_source_refs() -> list[str]:
     return ["item-001", "item-002", "item-003"]
 
 
+def page_role_for(slide: dict[str, object]) -> str:
+    return str(slide.get("page_type") or slide.get("role") or "content")
+
+
+def page_variant_for(slide: dict[str, object]) -> str:
+    page_role = page_role_for(slide)
+    return PAGE_VARIANT_BY_PAGE_TYPE.get(page_role, "dashboard")
+
+
 def source_plan(profile: dict[str, object]) -> dict[str, object]:
     return {
         "schema_version": "svglide-source-plan/v1",
@@ -679,7 +706,7 @@ def deck_plan(profile: dict[str, object]) -> dict[str, object]:
         "target_slide_count": 3,
         "narrative_arc": profile["narrative_arc"],
         "theme_direction": {
-            "preferred_theme_ids": ["swiss-red"],
+            "preferred_theme_ids": [PRODUCTION_THEME_ID],
             "visual_identity": profile["visual_identity"],
             "tone": profile["tone"],
         },
@@ -696,7 +723,7 @@ def deck_plan(profile: dict[str, object]) -> dict[str, object]:
                 "key_message": slide["key_message"],
                 "content_goal": slide["content_goal"],
                 "visual_goal": slide["visual_goal"],
-                "allowed_template_ids": [slide["template_id"]],
+                "allowed_template_ids": [PRODUCTION_TEMPLATE_ID],
             }
             for slide in slides
         ],
@@ -713,11 +740,15 @@ def slide_plan(profile: dict[str, object]) -> dict[str, object]:
                 "page": slide["page"],
                 "title": slide["title"],
                 "key_message": slide["key_message"],
-                "template_id": slide["template_id"],
-                "theme_id": "swiss-red",
+                "template_id": PRODUCTION_TEMPLATE_ID,
+                "theme_id": PRODUCTION_THEME_ID,
+                "family_id": PRODUCTION_FAMILY_ID,
+                "page_role": page_role_for(slide),
+                "page_variant_id": page_variant_for(slide),
                 "content_requirements": {
                     **slide["content_requirements"],
                     "title": slide["title"],
+                    "metrics": slide["content_requirements"].get("metrics") or ["Starlink", "Launch", "Risk"],
                 },
                 "visual_role": slide["visual_role"],
                 "source_policy": profile["source_policy"],
@@ -742,9 +773,35 @@ def canvas_plan(profile: dict[str, object]) -> dict[str, object]:
         "template_family_selection": {
             "enabled": True,
             "source": "beautiful-html-template-families",
-            "selected_template_id": "blue-professional",
-            "candidate_template_ids": ["blue-professional", "signal", "cobalt-grid"],
+            "selected_family_id": PRODUCTION_FAMILY_ID,
+            "selected_template_id": PRODUCTION_TEMPLATE_ID,
+            "selected_theme_id": PRODUCTION_THEME_ID,
+            "candidate_family_ids": [PRODUCTION_FAMILY_ID],
+            "candidate_template_ids": [PRODUCTION_TEMPLATE_ID],
+            "selected_page_family": {
+                "family_id": PRODUCTION_FAMILY_ID,
+                "runtime_template_id": PRODUCTION_TEMPLATE_ID,
+                "supported_page_variants": PRODUCTION_PAGE_VARIANTS,
+                "variant_usage_policy": {
+                    "singletons": ["cover", "agenda", "closing"],
+                    "repeatable": ["metrics", "dashboard", "split", "bars", "quote", "timeline", "detail"],
+                },
+            },
             "selection_reason": profile["theme_reason"],
+        },
+        "variant_allocation_trace": {
+            "requested_slide_count": len(slides),
+            "source_variant_count": len(PRODUCTION_PAGE_VARIANTS),
+            "selected_family_id": PRODUCTION_FAMILY_ID,
+            "allocated_variants": [
+                {
+                    "page": slide["page"],
+                    "page_role": page_role_for(slide),
+                    "page_variant_id": page_variant_for(slide),
+                    "allocation_reason": "fixture maps requested page role to the selected beautiful page family",
+                }
+                for slide in slides
+            ],
         },
         "visual_identity": {
             "theme_archetype": profile["visual_dna"]["theme_archetype"],
@@ -797,9 +854,11 @@ def canvas_slide(slide: dict[str, object], profile: dict[str, object]) -> dict[s
         "key_message": slide["key_message"],
         "body_points": slide["body_points"],
         "source_refs": slide_source_refs(),
-        "renderer_id": slide["renderer_id"],
-        "layout_family": slide["layout_family"],
-        "template_variant": str(slide["template_id"]).replace("-", "_"),
+        "page_role": page_role_for(slide),
+        "page_variant_id": page_variant_for(slide),
+        "renderer_id": f"artboard_satori.{PRODUCTION_TEMPLATE_ID}",
+        "layout_family": page_variant_for(slide),
+        "template_variant": page_variant_for(slide),
         "semantic_blocks": [
             {"block_id": "title", "type": "title", "content": slide["title"]},
             {"block_id": "message", "type": "finding", "content": slide["key_message"]},
@@ -813,7 +872,13 @@ def canvas_slide(slide: dict[str, object], profile: dict[str, object]) -> dict[s
         "content_density_contract": slide["content_density_contract"],
         "risk_flags": [],
         "source_policy": profile["source_policy"],
-        "canvas_spec": canvas_spec_for(slide["template_id"], content, theme=profile["theme"]),
+        "canvas_spec": canvas_spec_for(
+            str(slide["template_id"]),
+            content,
+            theme=profile["theme"],
+            page_role=page_role_for(slide),
+            page_variant_id=page_variant_for(slide),
+        ),
     }
     if "chart_contract" in slide:
         payload["chart_contract"] = slide["chart_contract"]

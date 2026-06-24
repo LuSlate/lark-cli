@@ -15,6 +15,8 @@
     "image",
     "component",
     "page_type",
+    "page_family",
+    "page_variants",
     "satori",
     "font_strategy",
     "typography_strategy",
@@ -69,6 +71,113 @@
     "page_type": {
       "type": "object",
       "minProperties": 1
+    },
+    "page_family": {
+      "type": "object",
+      "required": [
+        "source_slide_count",
+        "core_page_roles",
+        "production_minimum_roles"
+      ],
+      "properties": {
+        "source_slide_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "core_page_roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "production_minimum_roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "page_variants": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "source_class",
+          "page_role",
+          "required_slots",
+          "source_refs",
+          "extraction_confidence"
+        ],
+        "properties": {
+          "source_class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_slide_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required_slots": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "optional_slots": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reference_screenshot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["path", "selector_or_token", "raw_value"],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "selector_or_token": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "raw_value": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "extraction_confidence": {
+            "enum": [
+              "direct_from_design_md",
+              "css_extracted_from_template_html",
+              "inferred_from_layout",
+              "absent_use_default"
+            ]
+          }
+        }
+      }
     },
     "satori": {
       "type": "object",

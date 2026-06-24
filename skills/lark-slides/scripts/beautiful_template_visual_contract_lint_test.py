@@ -24,9 +24,42 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def minimal_page_family_contract() -> dict[str, object]:
+    return {
+        "family_id": "blue-professional",
+        "runtime_template_id": "executive-dashboard",
+        "page_family": {
+            "source_slide_count": 1,
+            "core_page_roles": ["cover"],
+            "production_minimum_roles": ["cover"],
+        },
+        "page_variants": {
+            "cover": {
+                "source_class": "layout-cover",
+                "source_slide_index": 1,
+                "page_role": "cover",
+                "required_slots": ["title"],
+                "source_refs": [
+                    {
+                        "path": "beautiful-html-templates/templates/blue-professional/template.html",
+                        "selector_or_token": ".layout-cover",
+                        "raw_value": "class=\"slide layout-cover active\"",
+                    }
+                ],
+                "extraction_confidence": "css_extracted_from_template_html",
+            }
+        },
+    }
+
+
 class BeautifulTemplateVisualContractLintTest(unittest.TestCase):
     def test_real_matrix_covers_34_families_with_source_paths_and_contracts(self) -> None:
         issues = lint.validate_candidate_matrix()
+
+        self.assertEqual([], issues)
+
+    def test_real_matrix_strict_page_family_contracts_and_production_smoke_boundaries(self) -> None:
+        issues = lint.validate_candidate_matrix(page_family_mode="strict")
 
         self.assertEqual([], issues)
 
@@ -68,6 +101,101 @@ class BeautifulTemplateVisualContractLintTest(unittest.TestCase):
 
         self.assertIn(
             ("contract_required_section_missing", family, "typography"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_page_family_contract_lint_rejects_missing_page_family(self) -> None:
+        contract = minimal_page_family_contract()
+        contract.pop("page_family")
+
+        issues = lint.validate_page_family_contract(contract, family_id="blue-professional")
+
+        self.assertIn(
+            ("contract_page_family_missing", "blue-professional", "page_family"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_page_family_contract_lint_rejects_missing_page_variants(self) -> None:
+        contract = minimal_page_family_contract()
+        contract.pop("page_variants")
+
+        issues = lint.validate_page_family_contract(contract, family_id="blue-professional")
+
+        self.assertIn(
+            ("contract_page_variants_missing", "blue-professional", "page_variants"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_page_family_contract_lint_rejects_variant_without_source_refs_or_confidence(self) -> None:
+        contract = minimal_page_family_contract()
+        variant = contract["page_variants"]["cover"]  # type: ignore[index]
+        variant.pop("source_refs")  # type: ignore[attr-defined]
+        variant.pop("extraction_confidence")  # type: ignore[attr-defined]
+
+        issues = lint.validate_page_family_contract(contract, family_id="blue-professional")
+
+        issue_set = {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues}
+        self.assertIn(("page_variant_required_field_missing", "blue-professional", "page_variants.cover.source_refs"), issue_set)
+        self.assertIn(("page_variant_required_field_missing", "blue-professional", "page_variants.cover.extraction_confidence"), issue_set)
+
+    def test_page_family_contract_lint_accepts_blue_professional_10_variant_fixture(self) -> None:
+        report_path = REFERENCES_DIR / "visual-contracts/beautiful/_fixtures/blue-professional-page-family.fixture.json"
+        contract = json.loads(report_path.read_text(encoding="utf-8"))
+
+        issues = lint.validate_page_family_contract(contract, family_id="blue-professional")
+
+        self.assertEqual([], issues)
+        self.assertEqual(10, len(contract["page_variants"]))
+
+    def test_strict_page_family_matrix_lint_blocks_production_without_smoke_or_migration_block(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        row.pop("page_family_smoke_receipt", None)
+        row.pop("page_family_promotion_gate", None)
+        row.pop("migration_block", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            matrix_path = Path(tmp) / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path, page_family_mode="strict")
+
+        self.assertIn(
+            ("production_page_family_smoke_missing", row["family_id"], "page_family_smoke_receipt"),
+            {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
+        )
+
+    def test_strict_page_family_matrix_lint_blocks_gate_without_golden_specs_or_smoke_deck(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        row.pop("page_variant_golden_specs", None)
+        row.pop("page_family_smoke_deck", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            matrix_path = Path(tmp) / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path, page_family_mode="strict")
+
+        issue_set = {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues}
+        self.assertIn(("page_family_gate_passed_without_smoke_deck", row["family_id"], "page_family_smoke_deck"), issue_set)
+        self.assertIn(("page_family_gate_passed_without_golden_specs", row["family_id"], "page_variant_golden_specs"), issue_set)
+
+    def test_strict_page_family_matrix_lint_blocks_smoke_receipt_without_input_hashes(self) -> None:
+        matrix = json.loads((REFERENCES_DIR / "beautiful-template-executable-matrix.json").read_text(encoding="utf-8"))
+        row = next(item for item in matrix["candidates"] if item["promotion_status"] == "production")
+        receipt = json.loads(lint.resolve_path(row["page_family_smoke_receipt"]).read_text(encoding="utf-8"))
+        receipt["input_hashes"] = {}
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            receipt_path = tmp_path / "smoke.json"
+            write_json(receipt_path, receipt)
+            row["page_family_smoke_receipt"] = receipt_path.as_posix()
+            matrix_path = tmp_path / "matrix.json"
+            write_json(matrix_path, matrix)
+
+            issues = lint.validate_candidate_matrix(matrix_path=matrix_path, page_family_mode="strict")
+
+        self.assertIn(
+            ("page_family_smoke_receipt_input_hashes_missing", row["family_id"], "page_family_smoke_receipt.input_hashes"),
             {(item.get("code"), item.get("family_id"), item.get("path")) for item in issues},
         )
 

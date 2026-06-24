@@ -797,7 +797,27 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "slide-1",
+        "slide-10",
+        "slide-2",
+        "slide-3",
+        "slide-4",
+        "slide-5",
+        "slide-6",
+        "slide-7",
+        "slide-8",
+        "slide-9"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/8-bit-orbit/template.html",
+        "source_design_md": "beautiful-html-templates/templates/8-bit-orbit/design.md",
+        "source_template_json": "beautiful-html-templates/templates/8-bit-orbit/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "biennale-yellow",
@@ -1618,7 +1638,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "cal",
+        "chapter",
+        "colophon",
+        "cover",
+        "data",
+        "manifesto",
+        "programme",
+        "quote"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/biennale-yellow/template.html",
+        "source_design_md": "beautiful-html-templates/templates/biennale-yellow/design.md",
+        "source_template_json": "beautiful-html-templates/templates/biennale-yellow/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "block-frame",
@@ -2434,7 +2472,27 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "agenda",
+        "closing",
+        "cover",
+        "data_dashboard",
+        "data_dashboard-4",
+        "data_dashboard-8",
+        "process_or_timeline",
+        "process_or_timeline-7",
+        "process_or_timeline-9",
+        "quote_or_emphasis"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/block-frame/template.html",
+        "source_design_md": "beautiful-html-templates/templates/block-frame/design.md",
+        "source_template_json": "beautiful-html-templates/templates/block-frame/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "blue-professional",
@@ -3244,7 +3302,64 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "agenda",
+        "bars",
+        "closing",
+        "cover",
+        "dashboard",
+        "detail",
+        "metrics",
+        "quote",
+        "split",
+        "timeline"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/blue-professional/template.html",
+        "source_design_md": "beautiful-html-templates/templates/blue-professional/design.md",
+        "source_template_json": "beautiful-html-templates/templates/blue-professional/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      },
+      "implemented_page_variants": [
+        "cover",
+        "agenda",
+        "metrics",
+        "dashboard",
+        "split",
+        "bars",
+        "quote",
+        "timeline",
+        "detail",
+        "closing"
+      ],
+      "page_variant_golden_specs": {
+        "cover": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.cover.canvas-spec.json",
+        "agenda": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.agenda.canvas-spec.json",
+        "metrics": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.metrics.canvas-spec.json",
+        "dashboard": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.dashboard.canvas-spec.json",
+        "split": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.split.canvas-spec.json",
+        "bars": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.bars.canvas-spec.json",
+        "quote": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.quote.canvas-spec.json",
+        "timeline": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.timeline.canvas-spec.json",
+        "detail": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.detail.canvas-spec.json",
+        "closing": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.closing.canvas-spec.json"
+      },
+      "page_family_smoke_deck": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json",
+      "page_family_smoke_receipt": "skills/lark-slides/references/receipts/page-family-smoke/blue-professional.executive-dashboard.json",
+      "page_family_promotion_gate": {
+        "status": "passed",
+        "required_evidence": [
+          "page_variants",
+          "renderer_dispatch",
+          "golden_specs",
+          "smoke_deck_receipt",
+          "quality_gate"
+        ],
+        "claim_boundary": "page-family role/variant smoke evidence plus blue-professional dedicated renderer sample; does not promote other families"
+      }
     },
     {
       "family_id": "bold-poster",
@@ -4062,7 +4177,27 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "close",
+        "financial",
+        "global",
+        "hero",
+        "pillars",
+        "red",
+        "roadmap",
+        "services",
+        "stat",
+        "summary"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/bold-poster/template.html",
+        "source_design_md": "beautiful-html-templates/templates/bold-poster/design.md",
+        "source_template_json": "beautiful-html-templates/templates/bold-poster/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "broadside",
@@ -4884,7 +5019,33 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 16,
+      "source_page_variants": [
+        "chapter",
+        "chart",
+        "compare",
+        "cover",
+        "cycle",
+        "diagram",
+        "end",
+        "fadelist",
+        "list",
+        "pie",
+        "pyramid",
+        "quote",
+        "split",
+        "statement",
+        "stats",
+        "vtimeline"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/broadside/template.html",
+        "source_design_md": "beautiful-html-templates/templates/broadside/design.md",
+        "source_template_json": "beautiful-html-templates/templates/broadside/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "capsule",
@@ -5693,7 +5854,27 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "agenda",
+        "closing",
+        "cover",
+        "data_dashboard",
+        "data_dashboard-4",
+        "data_dashboard-7",
+        "process_or_timeline",
+        "quote_or_emphasis",
+        "slide-8",
+        "slide-9"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/capsule/template.html",
+        "source_design_md": "beautiful-html-templates/templates/capsule/design.md",
+        "source_template_json": "beautiful-html-templates/templates/capsule/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "cartesian",
@@ -6488,7 +6669,26 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 9,
+      "source_page_variants": [
+        "agenda",
+        "barchart",
+        "cards",
+        "closing",
+        "linechart",
+        "statement",
+        "team",
+        "timeline",
+        "twocol"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/cartesian/template.html",
+        "source_design_md": "beautiful-html-templates/templates/cartesian/design.md",
+        "source_template_json": "beautiful-html-templates/templates/cartesian/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "cobalt-grid",
@@ -7321,7 +7521,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "chapter",
+        "colophon",
+        "cover",
+        "data",
+        "index",
+        "manifesto",
+        "quote",
+        "table"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/cobalt-grid/template.html",
+        "source_design_md": "beautiful-html-templates/templates/cobalt-grid/design.md",
+        "source_template_json": "beautiful-html-templates/templates/cobalt-grid/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "coral",
@@ -8129,7 +8347,27 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "agenda",
+        "closing",
+        "cover",
+        "data_dashboard",
+        "data_dashboard-6",
+        "detail",
+        "detail-9",
+        "process_or_timeline",
+        "process_or_timeline-8",
+        "quote_or_emphasis"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/coral/template.html",
+        "source_design_md": "beautiful-html-templates/templates/coral/design.md",
+        "source_template_json": "beautiful-html-templates/templates/coral/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "creative-mode",
@@ -8906,7 +9144,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s8"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/creative-mode/template.html",
+        "source_design_md": "beautiful-html-templates/templates/creative-mode/design.md",
+        "source_template_json": "beautiful-html-templates/templates/creative-mode/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "daisy-days",
@@ -9708,7 +9964,26 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 9,
+      "source_page_variants": [
+        "cards",
+        "chart_bar",
+        "donut",
+        "process",
+        "quote",
+        "team",
+        "timeline",
+        "weekly",
+        "welcome"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/daisy-days/template.html",
+        "source_design_md": "beautiful-html-templates/templates/daisy-days/design.md",
+        "source_template_json": "beautiful-html-templates/templates/daisy-days/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "editorial-forest",
@@ -10519,7 +10794,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "agenda",
+        "cover",
+        "data",
+        "framework",
+        "statement",
+        "stats",
+        "summary",
+        "two_col"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/editorial-forest/template.html",
+        "source_design_md": "beautiful-html-templates/templates/editorial-forest/design.md",
+        "source_template_json": "beautiful-html-templates/templates/editorial-forest/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "editorial-tri-tone",
@@ -11318,7 +11611,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "chart",
+        "closer",
+        "cover",
+        "grid",
+        "manifesto",
+        "quote",
+        "stat",
+        "timeline"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/editorial-tri-tone/template.html",
+        "source_design_md": "beautiful-html-templates/templates/editorial-tri-tone/design.md",
+        "source_template_json": "beautiful-html-templates/templates/editorial-tri-tone/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "emerald-editorial",
@@ -12139,7 +12450,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s8"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/emerald-editorial/template.html",
+        "source_design_md": "beautiful-html-templates/templates/emerald-editorial/design.md",
+        "source_template_json": "beautiful-html-templates/templates/emerald-editorial/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "grove",
@@ -12953,7 +13282,29 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 12,
+      "source_page_variants": [
+        "chapter",
+        "chapter-9",
+        "chart",
+        "compare",
+        "cover",
+        "end",
+        "list",
+        "quote",
+        "split",
+        "statement",
+        "statement-10",
+        "stats"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/grove/template.html",
+        "source_design_md": "beautiful-html-templates/templates/grove/design.md",
+        "source_template_json": "beautiful-html-templates/templates/grove/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "long-table",
@@ -13769,7 +14120,25 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "cal",
+        "closing",
+        "cover",
+        "featured",
+        "index",
+        "manifesto",
+        "menu",
+        "quote"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/long-table/template.html",
+        "source_design_md": "beautiful-html-templates/templates/long-table/design.md",
+        "source_template_json": "beautiful-html-templates/templates/long-table/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "mat",
@@ -14579,7 +14948,26 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 9,
+      "source_page_variants": [
+        "chart",
+        "compare",
+        "cover",
+        "end",
+        "list",
+        "quote",
+        "split",
+        "statement",
+        "stats"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/mat/template.html",
+        "source_design_md": "beautiful-html-templates/templates/mat/design.md",
+        "source_template_json": "beautiful-html-templates/templates/mat/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "monochrome",
@@ -15412,7 +15800,33 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 16,
+      "source_page_variants": [
+        "chapter",
+        "chart",
+        "compare",
+        "cover",
+        "cycle",
+        "dense",
+        "diagram",
+        "end",
+        "list",
+        "pie",
+        "pyramid",
+        "quote",
+        "split",
+        "statement",
+        "stats",
+        "vtimeline"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/monochrome/template.html",
+        "source_design_md": "beautiful-html-templates/templates/monochrome/design.md",
+        "source_template_json": "beautiful-html-templates/templates/monochrome/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "neo-grid-bold",
@@ -16228,7 +16642,29 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 12,
+      "source_page_variants": [
+        "chart",
+        "chart2",
+        "consult",
+        "cover",
+        "cta",
+        "features",
+        "matrix2",
+        "process2",
+        "quote",
+        "section",
+        "stats",
+        "toc"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/neo-grid-bold/template.html",
+        "source_design_md": "beautiful-html-templates/templates/neo-grid-bold/design.md",
+        "source_template_json": "beautiful-html-templates/templates/neo-grid-bold/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "peoples-platform",
@@ -17034,7 +17470,27 @@
       "loss_notes": [
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "close",
+        "compare",
+        "cover",
+        "manifesto",
+        "pillars",
+        "platform",
+        "quote",
+        "stat",
+        "timeline",
+        "toc"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/peoples-platform/template.html",
+        "source_design_md": "beautiful-html-templates/templates/peoples-platform/design.md",
+        "source_template_json": "beautiful-html-templates/templates/peoples-platform/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "pin-and-paper",
@@ -17846,7 +18302,28 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 11,
+      "source_page_variants": [
+        "agenda",
+        "chart",
+        "cover",
+        "cta",
+        "matrix",
+        "notes",
+        "notice",
+        "process",
+        "quote",
+        "sec",
+        "stats"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/pin-and-paper/template.html",
+        "source_design_md": "beautiful-html-templates/templates/pin-and-paper/design.md",
+        "source_template_json": "beautiful-html-templates/templates/pin-and-paper/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "pink-script",
@@ -18658,7 +19135,26 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 9,
+      "source_page_variants": [
+        "chart",
+        "cover",
+        "cta",
+        "matrix",
+        "process",
+        "quote",
+        "section",
+        "stats",
+        "toc"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/pink-script/template.html",
+        "source_design_md": "beautiful-html-templates/templates/pink-script/design.md",
+        "source_template_json": "beautiful-html-templates/templates/pink-script/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "playful",
@@ -19458,7 +19954,27 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "agenda",
+        "closing",
+        "cover",
+        "data_dashboard",
+        "data_dashboard-4",
+        "data_dashboard-6",
+        "data_dashboard-8",
+        "detail",
+        "process_or_timeline",
+        "slide-9"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/playful/template.html",
+        "source_design_md": "beautiful-html-templates/templates/playful/design.md",
+        "source_template_json": "beautiful-html-templates/templates/playful/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "raw-grid",
@@ -20264,7 +20780,27 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "s1",
+        "s10",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s8",
+        "s9"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/raw-grid/template.html",
+        "source_design_md": "beautiful-html-templates/templates/raw-grid/design.md",
+        "source_template_json": "beautiful-html-templates/templates/raw-grid/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "retro-windows",
@@ -21073,7 +21609,27 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "slide-1",
+        "slide-10",
+        "slide-2",
+        "slide-3",
+        "slide-4",
+        "slide-5",
+        "slide-6",
+        "slide-7",
+        "slide-8",
+        "slide-9"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/retro-windows/template.html",
+        "source_design_md": "beautiful-html-templates/templates/retro-windows/design.md",
+        "source_template_json": "beautiful-html-templates/templates/retro-windows/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "retro-zine",
@@ -21888,7 +22444,27 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 10,
+      "source_page_variants": [
+        "closing",
+        "collage",
+        "editorial",
+        "grid",
+        "hero",
+        "numbers",
+        "rsvp",
+        "split",
+        "statement",
+        "visual"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/retro-zine/template.html",
+        "source_design_md": "beautiful-html-templates/templates/retro-zine/design.md",
+        "source_template_json": "beautiful-html-templates/templates/retro-zine/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "sakura-chroma",
@@ -22712,7 +23288,25 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "cal",
+        "catalogue",
+        "colophon",
+        "cover",
+        "data",
+        "manifesto",
+        "quote",
+        "stripe"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/sakura-chroma/template.html",
+        "source_design_md": "beautiful-html-templates/templates/sakura-chroma/design.md",
+        "source_template_json": "beautiful-html-templates/templates/sakura-chroma/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "scatterbrain",
@@ -23513,7 +24107,25 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 8,
+      "source_page_variants": [
+        "slide-1",
+        "slide-2",
+        "slide-3",
+        "slide-4",
+        "slide-5",
+        "slide-6",
+        "slide-7",
+        "slide-8"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/scatterbrain/template.html",
+        "source_design_md": "beautiful-html-templates/templates/scatterbrain/design.md",
+        "source_template_json": "beautiful-html-templates/templates/scatterbrain/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "signal",
@@ -24342,7 +24954,35 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 18,
+      "source_page_variants": [
+        "chapter",
+        "chart",
+        "compare",
+        "cover",
+        "cycle",
+        "dense",
+        "diagram",
+        "editorial",
+        "end",
+        "list",
+        "pie",
+        "pyramid",
+        "quote",
+        "split",
+        "statement",
+        "statement-11",
+        "stats",
+        "vtimeline"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/signal/template.html",
+        "source_design_md": "beautiful-html-templates/templates/signal/design.md",
+        "source_template_json": "beautiful-html-templates/templates/signal/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "soft-editorial",
@@ -25156,7 +25796,29 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 12,
+      "source_page_variants": [
+        "chart",
+        "closer",
+        "consult",
+        "cover",
+        "foreword",
+        "insights",
+        "matrix",
+        "method",
+        "next",
+        "numbers",
+        "process",
+        "quote"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/soft-editorial/template.html",
+        "source_design_md": "beautiful-html-templates/templates/soft-editorial/design.md",
+        "source_template_json": "beautiful-html-templates/templates/soft-editorial/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "stencil-tablet",
@@ -25972,7 +26634,28 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 11,
+      "source_page_variants": [
+        "agenda",
+        "chart",
+        "consult",
+        "cover",
+        "cta",
+        "matrix",
+        "princ",
+        "process",
+        "quote",
+        "sec",
+        "stats"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/stencil-tablet/template.html",
+        "source_design_md": "beautiful-html-templates/templates/stencil-tablet/design.md",
+        "source_template_json": "beautiful-html-templates/templates/stencil-tablet/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "studio",
@@ -26779,7 +27462,29 @@
         "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 12,
+      "source_page_variants": [
+        "chapter",
+        "chapter-9",
+        "chart",
+        "compare",
+        "cover",
+        "end",
+        "list",
+        "quote",
+        "split",
+        "statement",
+        "statement-10",
+        "stats"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/studio/template.html",
+        "source_design_md": "beautiful-html-templates/templates/studio/design.md",
+        "source_template_json": "beautiful-html-templates/templates/studio/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     },
     {
       "family_id": "vellum",
@@ -27588,7 +28293,26 @@
       "loss_notes": [
         "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
         "letter spacing is preserved for Latin labels and reset/softened for CJK"
-      ]
+      ],
+      "page_variant_count": 9,
+      "source_page_variants": [
+        "chart",
+        "compare",
+        "cover",
+        "end",
+        "list",
+        "quote",
+        "statement",
+        "stats",
+        "text"
+      ],
+      "page_family_source": {
+        "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+        "source_template_html": "beautiful-html-templates/templates/vellum/template.html",
+        "source_design_md": "beautiful-html-templates/templates/vellum/design.md",
+        "source_template_json": "beautiful-html-templates/templates/vellum/template.json",
+        "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+      }
     }
   ]
 }

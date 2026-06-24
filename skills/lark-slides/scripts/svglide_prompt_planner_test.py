@@ -110,8 +110,8 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                         "target_slide_count": 1,
                         "narrative_arc": ["提出问题", "建立框架", "收束判断"],
                         "theme_direction": {
-                            "preferred_theme_ids": ["swiss-red"],
-                            "visual_identity": "深色航天资本市场信号",
+                            "preferred_theme_ids": ["blue-professional"],
+                            "visual_identity": "克制商务分析与资本市场信号",
                             "tone": "审慎、分析型、可追溯",
                         },
                         "constraints": {
@@ -142,8 +142,11 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                                 "page": 1,
                                 "title": "SpaceX IPO 分析框架",
                                 "key_message": "IPO 价值判断取决于 Starlink、发射业务与风险折价。",
+                                "page_role": "cover",
+                                "page_variant_id": "cover",
                                 "template_id": "executive-dashboard",
-                                "theme_id": "swiss-red",
+                                "theme_id": "blue-professional",
+                                "family_id": "blue-professional",
                                 "content_requirements": {
                                     "eyebrow": "SPACE CAPITAL MARKET",
                                     "subtitle": "把未确认 IPO 传闻转成可审查的投资分析框架。",
@@ -161,8 +164,11 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                         "canvas": {"width": 960, "height": 540, "viewBox": "0 0 960 540"},
                         "safe_area": {"x": 48, "y": 40, "width": 864, "height": 460},
                         "template_id": "executive-dashboard",
-                        "theme_id": "swiss-red",
-                        "theme": {"colors": {"background": "#F8F8F4", "panel": "#FFFFFF", "primary": "#BE123C", "accent": "#111111", "text": "#111111", "muted": "#666666"}},
+                        "theme_id": "blue-professional",
+                        "family_id": "blue-professional",
+                        "page_role": "cover",
+                        "page_variant_id": "cover",
+                        "theme": {"colors": {"background": "#FDFAE7", "panel": "#FFFFFF", "surface": "#F5F7FF", "primary": "#1E2BFA", "accent": "#1E2BFA", "text": "#111111", "muted": "#6B6B6B"}},
                         "content": {"eyebrow": "SPACE CAPITAL MARKET", "title": "SpaceX IPO 分析框架", "subtitle": "把未确认 IPO 传闻转成可审查的投资分析框架。", "chips": ["Starlink", "Launch", "Risk"]},
                         "semantic_elements": [
                             {"element_id": "title", "kind": "text", "role": "title", "source_ref": "canvas_spec.content.title", "bbox": {"x": 84, "y": 142, "width": 628, "height": 142}}
@@ -179,9 +185,24 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                         "template_family_selection": {
                             "enabled": True,
                             "source": "beautiful-html-template-families",
-                            "selected_template_id": "blue-professional",
-                            "candidate_template_ids": ["blue-professional", "signal", "cobalt-grid"],
+                            "selected_family_id": "blue-professional",
+                            "selected_template_id": "executive-dashboard",
+                            "selected_theme_id": "blue-professional",
+                            "candidate_family_ids": ["blue-professional", "signal", "cobalt-grid"],
+                            "candidate_template_ids": ["executive-dashboard"],
+                            "selected_page_family": {
+                                "family_id": "blue-professional",
+                                "runtime_template_id": "executive-dashboard",
+                                "supported_page_variants": ["cover", "agenda", "metrics", "dashboard", "split", "bars", "quote", "timeline", "detail", "closing"],
+                                "variant_usage_policy": {"singletons": ["cover", "agenda", "closing"], "repeatable": ["metrics", "dashboard", "split", "bars", "quote", "timeline", "detail"]},
+                            },
                             "selection_reason": "SpaceX IPO 分析适合正式分析型 family。",
+                        },
+                        "variant_allocation_trace": {
+                            "requested_slide_count": 1,
+                            "source_variant_count": 10,
+                            "selected_family_id": "blue-professional",
+                            "allocated_variants": [{"page": 1, "page_role": "cover", "page_variant_id": "cover", "allocation_reason": "single cover slide uses family cover variant"}],
                         },
                         "loaded_rule_set": [
                             "skills/lark-slides/references/svglide-canvas-spec.schema.json",
@@ -205,6 +226,8 @@ class SVGlidePromptPlannerTest(unittest.TestCase):
                                 "page": 1,
                                 "title": "SpaceX IPO 分析框架",
                                 "key_message": "IPO 价值判断取决于 Starlink、发射业务与风险折价。",
+                                "page_role": "cover",
+                                "page_variant_id": "cover",
                                 "renderer_id": "artboard_satori.executive-dashboard",
                                 "layout_family": "cover",
                                 "template_variant": "cover",

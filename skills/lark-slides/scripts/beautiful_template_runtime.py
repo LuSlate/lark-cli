@@ -17,6 +17,7 @@ REPO_ROOT = SCRIPT_DIR.parents[2]
 SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 FAMILIES_PATH = REFERENCES_DIR / "beautiful-html-template-families.json"
 BRAND_PALETTE_PATH = REFERENCES_DIR / "svglide-brand-palette-registry.json"
+EXECUTABLE_MATRIX_PATH = REFERENCES_DIR / "beautiful-template-executable-matrix.json"
 
 LEGACY_THEME_COLORS: dict[str, dict[str, str]] = {
     "acid-studio": {"background": "#1C1C1C", "panel": "#242422", "primary": "#F5D200", "accent": "#F0CC00", "text": "#F5D200", "muted": "#9A860C"},
@@ -184,6 +185,76 @@ def family_registry(path: Path = FAMILIES_PATH) -> dict[str, Any]:
 def families(path: Path = FAMILIES_PATH) -> list[dict[str, Any]]:
     raw = family_registry(path).get("families")
     return [item for item in raw if isinstance(item, dict)] if isinstance(raw, list) else []
+
+
+def executable_matrix_candidates(path: Path = EXECUTABLE_MATRIX_PATH) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    payload = read_json(path)
+    raw = payload.get("candidates") or payload.get("templates")
+    return [item for item in raw if isinstance(item, dict)] if isinstance(raw, list) else []
+
+
+def executable_matrix_by_runtime_template_id(path: Path = EXECUTABLE_MATRIX_PATH) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    for row in executable_matrix_candidates(path):
+        template_id = str(row.get("runtime_template_id") or row.get("template_id") or "").strip()
+        if template_id:
+            records[template_id] = row
+    return records
+
+
+def _copy_if_present(target: dict[str, Any], source: dict[str, Any], key: str) -> None:
+    value = source.get(key)
+    if value not in (None, "", [], {}):
+        target[key] = value
+
+
+def _matrix_execution_metadata(row: dict[str, Any]) -> dict[str, Any]:
+    metadata: dict[str, Any] = {}
+    for key in (
+        "family_id",
+        "renderer_id",
+        "renderer_module",
+        "golden_spec",
+        "reference_screenshot",
+        "fidelity_receipt",
+        "fidelity_gate",
+        "visual_contract",
+        "visual_contract_path",
+        "font_strategy",
+        "typography_strategy",
+        "text_style_strategy",
+        "source_trace",
+        "planned_renderer_module",
+        "planned_golden_spec",
+        "page_family",
+        "page_variants",
+        "implemented_page_variants",
+        "supported_page_variants",
+        "page_family_smoke_deck",
+        "page_family_smoke_receipt",
+        "page_family_promotion_gate",
+    ):
+        _copy_if_present(metadata, row, key)
+    family_id = row.get("family_id")
+    if isinstance(family_id, str) and family_id.strip():
+        metadata.setdefault("source_family", family_id.strip())
+        metadata.setdefault("source_template_id", family_id.strip())
+    visual_contract = metadata.get("visual_contract")
+    if isinstance(visual_contract, dict) and visual_contract.get("path") and not metadata.get("visual_contract_path"):
+        metadata["visual_contract_path"] = visual_contract["path"]
+    return metadata
+
+
+def merge_executable_matrix_metadata(record: dict[str, Any], row: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(row, dict):
+        return record
+    for key, value in _matrix_execution_metadata(row).items():
+        if key == "source_trace" and record.get("source_trace"):
+            continue
+        record[key] = value
+    return record
 
 
 def runtime_asset_metadata(asset_status: str) -> dict[str, Any]:
@@ -764,6 +835,8 @@ def _promoted_template_payload(record: dict[str, Any]) -> dict[str, Any]:
         "fidelity_gate": token.get("fidelity_gate") if isinstance(token.get("fidelity_gate"), dict) else {},
         "supported_page_types": non_empty_string_list(token.get("supported_page_types"), []),
         "visual_contract": token.get("visual_contract") if isinstance(token.get("visual_contract"), dict) else {},
+        "visual_contract_path": record.get("visual_contract_path")
+        or ((token.get("visual_contract") if isinstance(token.get("visual_contract"), dict) else {}).get("path")),
         "layout_family": str(token.get("layout_family") or template_id.replace("-", "_")),
         "required_content": non_empty_string_list(token.get("required_content"), ["title"]),
         "optional_content": non_empty_string_list(token.get("optional_content"), ["eyebrow", "subtitle"]),
@@ -807,9 +880,11 @@ def template_registry(include_legacy: bool = False) -> dict[str, Any]:
             if isinstance(raw, str) and raw.startswith("template."):
                 family_by_asset[raw.removeprefix("template.")] = family
     promoted_by_id = {record["template_id"]: record for record in promoted_template_records()}
+    matrix_by_template_id = executable_matrix_by_runtime_template_id()
     for template_id in all_template_ids(include_legacy=include_legacy):
         if template_id in promoted_by_id:
-            records.append(_promoted_template_payload(promoted_by_id[template_id]))
+            record = _promoted_template_payload(promoted_by_id[template_id])
+            records.append(merge_executable_matrix_metadata(record, matrix_by_template_id.get(template_id)))
             continue
         family = family_by_asset.get(template_id)
         asset_status = ASSET_STATUS_LEGACY_DEBUG
@@ -858,6 +933,7 @@ def template_registry(include_legacy: bool = False) -> dict[str, Any]:
                 }
             )
         record.update(TEMPLATE_OVERRIDES.get(template_id, {}))
+        merge_executable_matrix_metadata(record, matrix_by_template_id.get(template_id))
         records.append(record)
     return {"version": "svglide-template-registry/generated-from-beautiful-family-v1", "include_legacy_debug": include_legacy, "templates": records}
 

@@ -1365,5 +1365,277 @@
     "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 11,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "process_or_timeline",
+      "content",
+      "quote_or_emphasis"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "cover": {
+      "source_class": "s-cover",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-cover",
+          "raw_value": "<section class=\"slide s-cover\" data-screen-label=\"01 Cover\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "agenda": {
+      "source_class": "s-agenda",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-agenda",
+          "raw_value": "<section class=\"slide s-agenda\" data-screen-label=\"02 Agenda\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "notes": {
+      "source_class": "s-notes",
+      "source_slide_index": 3,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-notes",
+          "raw_value": "<section class=\"slide s-notes\" data-screen-label=\"03 Principles\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "sec": {
+      "source_class": "s-sec",
+      "source_slide_index": 4,
+      "page_role": "content",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-sec",
+          "raw_value": "<section class=\"slide s-sec ink\" data-screen-label=\"04 Section · Direction\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "notice": {
+      "source_class": "s-notice",
+      "source_slide_index": 5,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-notice",
+          "raw_value": "<section class=\"slide s-notice\" data-screen-label=\"05 Findings · Detail\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "chart": {
+      "source_class": "s-chart",
+      "source_slide_index": 6,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-chart",
+          "raw_value": "<section class=\"slide s-chart ink\" data-screen-label=\"06 Retention Curve\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "process": {
+      "source_class": "s-process",
+      "source_slide_index": 7,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-process",
+          "raw_value": "<section class=\"slide s-process\" data-screen-label=\"07 Process\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "matrix": {
+      "source_class": "s-matrix",
+      "source_slide_index": 8,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "metrics",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-matrix",
+          "raw_value": "<section class=\"slide s-matrix\" data-screen-label=\"08 Comparison\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "stats": {
+      "source_class": "s-stats",
+      "source_slide_index": 9,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "quote",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-stats",
+          "raw_value": "<section class=\"slide s-stats\" data-screen-label=\"09 In Numbers\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "quote": {
+      "source_class": "s-quote",
+      "source_slide_index": 10,
+      "page_role": "quote_or_emphasis",
+      "required_slots": [
+        "quote",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-quote",
+          "raw_value": "<section class=\"slide s-quote\" data-screen-label=\"10 Voice\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "cta": {
+      "source_class": "s-cta",
+      "source_slide_index": 11,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/pin-and-paper/template.html",
+          "selector_or_token": ".s-cta",
+          "raw_value": "<section class=\"slide s-cta\" data-screen-label=\"11 Next\" data-om-validate=\"false\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/pin-and-paper/template.html",
+    "source_design_md": "beautiful-html-templates/templates/pin-and-paper/design.md",
+    "source_template_json": "beautiful-html-templates/templates/pin-and-paper/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

@@ -258,6 +258,97 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
         plan["slides"] = [first_slide]
         (project_root / "02-plan/slide_plan.json").write_text(json.dumps(plan), encoding="utf-8")
 
+    def test_template_fidelity_stage_uses_page_variant_id_as_page_type(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            (project_root / "02-plan").mkdir(parents=True)
+            (project_root / "04-artboard/raw").mkdir(parents=True)
+            (project_root / "02-plan/slide_plan.json").write_text(
+                json.dumps(
+                    {
+                        "slides": [
+                            {
+                                "page": 1,
+                                "canvas_spec": {
+                                    "template_id": "cover-hero",
+                                    "theme_id": "dark-clarity",
+                                    "page_variant_id": "metrics",
+                                },
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            rendered = project_root / "04-artboard/raw/page-001.visual.png"
+            rendered.write_bytes(b"render")
+            reference = project_root / "reference.png"
+            reference.write_bytes(b"reference")
+            captured: dict[str, object] = {}
+            original_reference = runner.reference_screenshot_for_template
+            original_check = runner.beautiful_template_fidelity_check.check_template_fidelity
+
+            def fake_check_template_fidelity(**kwargs: object) -> dict[str, object]:
+                captured.update(kwargs)
+                return {
+                    "schema_version": "svglide-template-fidelity/v1",
+                    "stage": "template_fidelity",
+                    "status": "passed",
+                    "template_id": kwargs["template_id"],
+                    "page_type": kwargs["page_type"],
+                    "reference_screenshot": str(kwargs["reference_screenshot"]),
+                    "render_screenshot": str(kwargs["render_screenshot"]),
+                    "score": 1,
+                    "threshold": 0.72,
+                    "metrics": {key: 1 for key in runner.beautiful_template_fidelity_check.REQUIRED_METRIC_KEYS},
+                    "issues": [],
+                    "generated_by": "beautiful_template_fidelity_check.py",
+                    "generator_version": "test",
+                    "command": ["test"],
+                }
+
+            try:
+                runner.reference_screenshot_for_template = lambda _template_id: reference
+                runner.beautiful_template_fidelity_check.check_template_fidelity = fake_check_template_fidelity
+
+                runner.run_template_fidelity_stage(project_root, {"stages": {}}, profile="production")
+            finally:
+                runner.reference_screenshot_for_template = original_reference
+                runner.beautiful_template_fidelity_check.check_template_fidelity = original_check
+
+            self.assertEqual(captured["page_type"], "metrics")
+            receipt = json.loads((project_root / "06-check/template-fidelity.json").read_text(encoding="utf-8"))
+            self.assertEqual(receipt["page_type"], "metrics")
+
+    def test_quality_gate_stage_inputs_include_page_family_smoke_for_beautiful_default_family(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            (project_root / "02-plan").mkdir(parents=True)
+            (project_root / "02-plan/slide_plan.json").write_text(
+                json.dumps(
+                    {
+                        "selected_family_id": "blue-professional",
+                        "selected_template_id": "executive-dashboard",
+                        "slides": [
+                            {
+                                "page": 1,
+                                "canvas_spec": {
+                                    "family_id": "blue-professional",
+                                    "template_id": "executive-dashboard",
+                                    "theme_id": "blue-professional",
+                                },
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            inputs = runner.quality_gate_stage_inputs(project_root)
+
+        self.assertIn("06-check/template-fidelity.json", inputs)
+        self.assertIn("06-check/page-family-smoke.json", inputs)
+
     def write_selection_ready_plan(self, project_root: Path, brief: str) -> None:
         self.write_plan(project_root)
         plan = json.loads((project_root / "02-plan/slide_plan.json").read_text(encoding="utf-8"))
@@ -724,6 +815,59 @@ class SVGlideProjectRunnerTest(unittest.TestCase):
             self.assertEqual(plan["style_lock"], selection_metadata["style_lock"])
             plan_receipt = json.loads((project_root / "receipts/plan.json").read_text(encoding="utf-8"))
             self.assertTrue(plan_receipt["design_asset_selection_applied"])
+
+    def test_apply_selection_receipts_writes_page_family_fields_to_canvas_specs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            plan = {
+                "generation_mode": "artboard_satori",
+                "slides": [
+                    {
+                        "page": 1,
+                        "page_type": "cover",
+                        "canvas_spec": {"template_id": "executive-dashboard", "content": {"title": "Cover"}},
+                    },
+                    {
+                        "page": 2,
+                        "page_type": "content",
+                        "canvas_spec": {"template_id": "executive-dashboard", "content": {"title": "Metrics"}},
+                    },
+                    {
+                        "page": 3,
+                        "page_type": "closing",
+                        "canvas_spec": {"template_id": "executive-dashboard", "content": {"title": "Close"}},
+                    },
+                ],
+            }
+            (project_root / "02-plan").mkdir(parents=True, exist_ok=True)
+            (project_root / "02-plan/slide_plan.json").write_text(json.dumps(plan), encoding="utf-8")
+            (project_root / "02-plan/palette-selection.json").write_text(json.dumps({"selected_palette_id": "p1"}), encoding="utf-8")
+            (project_root / "02-plan/theme-template-selection.json").write_text(
+                json.dumps(
+                    {
+                        "selected_template_id": "executive-dashboard",
+                        "selected_theme_id": "blue-professional",
+                        "selected_family_id": "blue-professional",
+                        "selected_page_family": {
+                            "family_id": "blue-professional",
+                            "runtime_template_id": "executive-dashboard",
+                            "supported_page_variants": ["cover", "metrics", "closing"],
+                            "variant_usage_policy": {"singletons": ["cover", "closing"], "repeatable": ["metrics"]},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            changed = runner.apply_selection_receipts_to_plan(project_root, plan)
+
+            self.assertTrue(changed)
+            specs = [slide["canvas_spec"] for slide in plan["slides"]]
+            self.assertEqual(["blue-professional", "blue-professional", "blue-professional"], [spec["family_id"] for spec in specs])
+            self.assertEqual(["cover", "content", "closing"], [spec["page_role"] for spec in specs])
+            self.assertEqual(["cover", "metrics", "closing"], [spec["page_variant_id"] for spec in specs])
+            self.assertEqual("02-plan/theme-template-selection.json", plan["variant_allocation_trace"]["selection_ref"])
+            self.assertEqual(3, plan["variant_allocation_trace"]["requested_slide_count"])
 
     def write_ppe_input(self, project_root: Path) -> None:
         rule_file = "skills/lark-slides/references/ppe-pure-svg.whistle.js"

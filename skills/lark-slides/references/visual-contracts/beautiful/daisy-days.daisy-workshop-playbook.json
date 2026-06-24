@@ -1417,5 +1417,233 @@
   "loss_notes": [
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 9,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "process_or_timeline",
+      "data_dashboard",
+      "detail",
+      "quote_or_emphasis",
+      "content"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "welcome": {
+      "source_class": "slide-welcome",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-welcome",
+          "raw_value": "<section class=\"slide slide-welcome\" id=\"slide-2\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "weekly": {
+      "source_class": "slide-weekly",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-weekly",
+          "raw_value": "<section class=\"slide slide-weekly\" id=\"slide-3\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "timeline": {
+      "source_class": "slide-timeline",
+      "source_slide_index": 3,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-timeline",
+          "raw_value": "<section class=\"slide slide-timeline\" id=\"slide-4\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "chart_bar": {
+      "source_class": "slide-chart-bar",
+      "source_slide_index": 4,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-chart-bar",
+          "raw_value": "<section class=\"slide slide-chart-bar\" id=\"slide-5\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "cards": {
+      "source_class": "slide-cards",
+      "source_slide_index": 5,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-cards",
+          "raw_value": "<section class=\"slide slide-cards\" id=\"slide-6\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "quote": {
+      "source_class": "slide-quote",
+      "source_slide_index": 6,
+      "page_role": "quote_or_emphasis",
+      "required_slots": [
+        "subtitle",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-quote",
+          "raw_value": "<section class=\"slide slide-quote\" id=\"slide-7\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "team": {
+      "source_class": "slide-team",
+      "source_slide_index": 7,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-team",
+          "raw_value": "<section class=\"slide slide-team\" id=\"slide-8\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "process": {
+      "source_class": "slide-process",
+      "source_slide_index": 8,
+      "page_role": "content",
+      "required_slots": [
+        "title",
+        "subtitle"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-process",
+          "raw_value": "<section class=\"slide slide-process\" id=\"slide-9\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "donut": {
+      "source_class": "slide-donut",
+      "source_slide_index": 9,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/daisy-days/template.html",
+          "selector_or_token": ".slide-donut",
+          "raw_value": "<section class=\"slide slide-donut\" id=\"slide-10\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/daisy-days/template.html",
+    "source_design_md": "beautiful-html-templates/templates/daisy-days/design.md",
+    "source_template_json": "beautiful-html-templates/templates/daisy-days/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

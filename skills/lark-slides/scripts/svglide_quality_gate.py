@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import svglide_node_layout_drift
+import beautiful_template_page_family_smoke
 import svglide_schema
 import svglide_semantic_map_ir
 import svglide_snapshot_visual_fidelity
@@ -66,6 +67,11 @@ ARTBOARD_PACKAGE_CHECK = ("artboard-package-check", CHECK_DIR / "artboard-packag
 CHART_VERIFY_CHECK = ("chart-verify", CHECK_DIR / "chart-verify.json")
 TEMPLATE_FIDELITY_CHECK = ("template-fidelity", CHECK_DIR / "template-fidelity.json")
 SNAPSHOT_VISUAL_FIDELITY_CHECK = ("snapshot-visual-fidelity", CHECK_DIR / "visual-fidelity/manifest.json")
+PAGE_FAMILY_SMOKE_CHECK = (
+    beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_CHECK_NAME,
+    beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_REL,
+)
+PAGE_FAMILY_SMOKE_INPUT_KEY = beautiful_template_page_family_smoke.PAGE_FAMILY_SMOKE_INPUT_KEY
 REQUIRED_TEMPLATE_FIDELITY_METRICS = {
     "color_distribution",
     "layout_structure",
@@ -1169,6 +1175,99 @@ def load_template_fidelity_check(project: Path, *, profile: str) -> dict[str, An
     return check
 
 
+def _page_family_smoke_input_hash(project: Path, raw: Any) -> str | None:
+    if not isinstance(raw, str) or not raw:
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = project / path
+    return file_sha256(path) if path.is_file() else None
+
+
+def load_page_family_smoke_check(project: Path, *, required: bool, profile: str) -> dict[str, Any]:
+    name, rel = PAGE_FAMILY_SMOKE_CHECK
+    path = project / rel
+    check: dict[str, Any] = {
+        "name": name,
+        "path": rel.as_posix(),
+        "required": required,
+        "status": "missing" if not path.exists() else "failed",
+        "error_count": None,
+        "action": None,
+        "waivers": [],
+        "issues": [],
+    }
+    if not path.exists():
+        if required:
+            check["issues"].append(issue("page_family_smoke_missing", "production beautiful family requires page-family smoke receipt"))
+        else:
+            check["status"] = "skipped"
+        return check
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        check["issues"].append(issue("page_family_smoke_invalid_json", f"could not read page-family smoke JSON: {error}"))
+        check["error_count"] = len(check["issues"])
+        return check
+
+    selected = beautiful_template_page_family_smoke.selected_beautiful_production_family(project)
+    if required and not selected:
+        check["issues"].append(issue("page_family_smoke_selection_missing", "could not resolve selected production beautiful family"))
+    if payload.get("status") != "passed":
+        check["issues"].append(issue("page_family_smoke_failed", "page-family smoke receipt status must be passed"))
+    if payload.get("scope") != "page_family":
+        check["issues"].append(issue("page_family_smoke_scope_invalid", "page-family smoke receipt scope must be page_family"))
+    if payload.get("degraded") is True:
+        check["issues"].append(issue("page_family_smoke_degraded", "degraded page-family smoke receipt cannot pass production gate"))
+    if selected:
+        if payload.get("selected_family_id") != selected.get("selected_family_id"):
+            check["issues"].append(issue("page_family_smoke_family_mismatch", "page-family smoke selected_family_id does not match selected family"))
+        if payload.get("selected_template_id") != selected.get("selected_template_id"):
+            check["issues"].append(issue("page_family_smoke_template_mismatch", "page-family smoke selected_template_id does not match selected template"))
+    minimum_roles = payload.get("production_minimum_roles")
+    if not isinstance(minimum_roles, list) or not minimum_roles:
+        minimum_roles = beautiful_template_page_family_smoke.PRODUCTION_MINIMUM_ROLES
+    coverage = payload.get("page_variant_coverage") if isinstance(payload.get("page_variant_coverage"), dict) else {}
+    missing_roles = [
+        role
+        for role in minimum_roles
+        if not isinstance(role, str) or not isinstance(coverage.get(role), dict) or coverage[role].get("covered") is not True
+    ]
+    missing_roles.extend(role for role in payload.get("missing_required_roles", []) if isinstance(role, str))
+    if missing_roles:
+        check["issues"].append(issue("page_family_smoke_role_coverage_incomplete", "page-family smoke missing required role coverage: " + ", ".join(sorted(set(missing_roles)))))
+    pages = payload.get("pages")
+    if required and not isinstance(pages, list):
+        check["issues"].append(issue("page_family_smoke_pages_missing", "page-family smoke receipt must include pages[]"))
+    input_hashes = payload.get("input_hashes")
+    if not isinstance(input_hashes, dict) or not input_hashes:
+        check["issues"].append(issue("page_family_smoke_input_hash_missing", "page-family smoke receipt must include input_hashes"))
+    else:
+        inputs = payload.get("inputs") if isinstance(payload.get("inputs"), dict) else {}
+        required_hash_inputs = {
+            "slide_plan": "02-plan/slide_plan.json",
+            "generator_receipt": "receipts/generate_svg.json",
+            "template_fidelity": "06-check/template-fidelity.json",
+            "smoke_deck": None,
+        }
+        for key, default_rel in required_hash_inputs.items():
+            raw_path = inputs.get(key) or default_rel
+            if raw_path is None:
+                continue
+            actual_hash = _page_family_smoke_input_hash(project, raw_path)
+            if actual_hash is None:
+                check["issues"].append(issue("page_family_smoke_input_missing", f"page-family smoke input is missing: {key}"))
+            elif input_hashes.get(key) != actual_hash:
+                check["issues"].append(issue("page_family_smoke_input_hash_stale", f"page-family smoke input hash is stale: {key}"))
+    artifact_issues = payload.get("artifact_issues")
+    if isinstance(artifact_issues, list) and artifact_issues:
+        check["issues"].append(issue("page_family_smoke_artifact_issues", "page-family smoke receipt must not contain artifact issues"))
+    check["error_count"] = len(check["issues"])
+    check["action"] = PASS_ACTION if not check["issues"] else "repair_and_rerun"
+    check["status"] = "failed" if check["issues"] else "passed"
+    return check
+
+
 def load_check(project: Path, name: str, rel: Path, *, required: bool, profile: str) -> dict[str, Any]:
     path = project / rel
     check: dict[str, Any] = {
@@ -1358,6 +1457,10 @@ def run_quality_gate(project: Path, *, profile: str = PRODUCTION_PROFILE) -> dic
         conditional_checks.append(SNAPSHOT_VISUAL_FIDELITY_CHECK)
         checks.append(load_check(project, *ARTBOARD_PACKAGE_CHECK, required=True, profile=profile))
         checks.append(load_snapshot_visual_fidelity_check(project, required=True))
+    page_family_smoke_required = profile in STRICT_PROFILES and beautiful_template_page_family_smoke.selected_beautiful_production_family(project) is not None
+    if page_family_smoke_required:
+        conditional_checks.append(PAGE_FAMILY_SMOKE_CHECK)
+        checks.append(load_page_family_smoke_check(project, required=True, profile=profile))
     chart_required = plan_requires_chart_verify(project)
     if chart_required is None:
         checks.append(

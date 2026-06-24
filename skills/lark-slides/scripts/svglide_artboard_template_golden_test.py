@@ -252,6 +252,19 @@ LAYOUT_FAMILIES = [
     "closing",
 ]
 
+BLUE_PROFESSIONAL_PAGE_VARIANTS = [
+    "cover",
+    "agenda",
+    "metrics",
+    "dashboard",
+    "split",
+    "bars",
+    "quote",
+    "timeline",
+    "detail",
+    "closing",
+]
+
 REQUIRED_TYPOGRAPHY_ROLES = {"display", "body", "label", "metric"}
 REQUIRED_ROLE_TOKEN_FIELDS = {"font_weight", "line_height", "letter_spacing", "text_transform"}
 REQUIRED_TEXT_STYLE_ROLE_FIELDS = {"bold", "italic", "underline", "line_through", "emphasis", "text_decoration_policy"}
@@ -503,6 +516,65 @@ class ArtboardTemplateGoldenTest(unittest.TestCase):
                 text=True,
             )
             self.assertEqual(preview_lint.returncode, 0, preview_lint.stdout + preview_lint.stderr)
+
+    def test_blue_professional_page_family_variants_render_and_record_variant_metadata(self) -> None:
+        scripts_dir = Path(__file__).resolve().parent
+        golden_dir = scripts_dir / "fixtures/svglide_artboard/golden"
+        slides = []
+        for page, variant_id in enumerate(BLUE_PROFESSIONAL_PAGE_VARIANTS, start=1):
+            spec_path = golden_dir / f"blue-professional.{variant_id}.canvas-spec.json"
+            self.assertTrue(spec_path.exists(), f"missing page-family fixture: {spec_path}")
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            self.assertEqual(spec["template_id"], "executive-dashboard")
+            self.assertEqual(spec["family_id"], "blue-professional")
+            self.assertEqual(spec["page_variant_id"], variant_id)
+            self.assertTrue(spec.get("page_role"))
+            slides.append(
+                {
+                    "page": page,
+                    "title": spec["content"]["title"],
+                    "page_type": spec["page_role"],
+                    "renderer_id": "artboard_satori.executive-dashboard",
+                    "layout_family": "executive_dashboard",
+                    "visual_recipe": f"blue-professional {variant_id} canvas",
+                    "content_density_contract": "page-family variant fixture",
+                    "canvas_spec": spec,
+                }
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project = Path(tmpdir)
+            write_legacy_fixture_registries(project)
+            write_json(project / "02-plan/slide_plan.json", {"generation_mode": "artboard_satori", "slides": slides})
+            result = artboard.render_project(project)
+            self.assertEqual(result["status"], "passed")
+            self.assertEqual(len(result["artboard_receipts"]), len(BLUE_PROFESSIONAL_PAGE_VARIANTS))
+            layout_signatures = set()
+            for page, variant_id in enumerate(BLUE_PROFESSIONAL_PAGE_VARIANTS, start=1):
+                receipt = json.loads((project / f"04-svg/artboard/page-{page:03d}.receipt.json").read_text(encoding="utf-8"))
+                metadata = json.loads((project / receipt["render_metadata"]).read_text(encoding="utf-8"))
+                self.assertEqual(receipt["template_id"], "executive-dashboard")
+                self.assertEqual(receipt["family_id"], "blue-professional")
+                self.assertEqual(receipt["page_role"], slides[page - 1]["page_type"])
+                self.assertEqual(receipt["page_variant_id"], variant_id)
+                self.assertEqual(metadata["family_id"], "blue-professional")
+                self.assertEqual(metadata["page_role"], slides[page - 1]["page_type"])
+                self.assertEqual(metadata["page_variant_id"], variant_id)
+                assert_receipt_consumes_font_and_typography_roles(self, receipt)
+                layout_map = json.loads((project / receipt["node_layout_map"]).read_text(encoding="utf-8"))
+                boxes = [
+                    (
+                        node.get("kind"),
+                        node.get("x"),
+                        node.get("y"),
+                        node.get("width"),
+                        node.get("height"),
+                    )
+                    for node in layout_map.get("nodes", [])
+                    if isinstance(node, dict)
+                ]
+                layout_signatures.add(json.dumps(boxes[:8], sort_keys=True))
+            self.assertGreaterEqual(len(layout_signatures), 6)
 
 
 if __name__ == "__main__":

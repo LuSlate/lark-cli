@@ -1,0 +1,120 @@
+{
+  "family_id": "blue-professional",
+  "runtime_template_id": "executive-dashboard",
+  "page_family": {
+    "source_slide_count": 10,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "data_metrics",
+      "data_dashboard",
+      "content_split",
+      "data_chart",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "detail",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "cover": {
+      "source_class": "layout-cover",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": ["title", "subtitle"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-cover", "raw_value": "class=\"slide layout-cover active\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "agenda": {
+      "source_class": "layout-agenda",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": ["title", "items"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-agenda", "raw_value": "class=\"slide layout-agenda\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "metrics": {
+      "source_class": "layout-metrics",
+      "source_slide_index": 3,
+      "page_role": "data_metrics",
+      "required_slots": ["title", "metrics"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-metrics", "raw_value": "class=\"slide layout-metrics\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "dashboard": {
+      "source_class": "layout-dashboard",
+      "source_slide_index": 4,
+      "page_role": "data_dashboard",
+      "required_slots": ["title", "metrics"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-dashboard", "raw_value": "class=\"slide layout-dashboard\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "split": {
+      "source_class": "layout-split",
+      "source_slide_index": 5,
+      "page_role": "content_split",
+      "required_slots": ["title", "items"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-split", "raw_value": "class=\"slide layout-split\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "bars": {
+      "source_class": "layout-bars",
+      "source_slide_index": 6,
+      "page_role": "data_chart",
+      "required_slots": ["title", "metrics"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-bars", "raw_value": "class=\"slide layout-bars\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "quote": {
+      "source_class": "layout-quote",
+      "source_slide_index": 7,
+      "page_role": "quote_or_emphasis",
+      "required_slots": ["quote"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-quote", "raw_value": "class=\"slide layout-quote\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "timeline": {
+      "source_class": "layout-timeline",
+      "source_slide_index": 8,
+      "page_role": "process_or_timeline",
+      "required_slots": ["title", "timeline"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-timeline", "raw_value": "class=\"slide layout-timeline\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "detail": {
+      "source_class": "layout-detail",
+      "source_slide_index": 9,
+      "page_role": "detail",
+      "required_slots": ["title", "items"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-detail", "raw_value": "class=\"slide layout-detail\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    },
+    "closing": {
+      "source_class": "layout-closing",
+      "source_slide_index": 10,
+      "page_role": "closing",
+      "required_slots": ["title", "subtitle"],
+      "optional_slots": ["eyebrow", "decoration"],
+      "source_refs": [{"path": "beautiful-html-templates/templates/blue-professional/template.html", "selector_or_token": ".layout-closing", "raw_value": "class=\"slide layout-closing\""}],
+      "extraction_confidence": "css_extracted_from_template_html"
+    }
+  }
+}

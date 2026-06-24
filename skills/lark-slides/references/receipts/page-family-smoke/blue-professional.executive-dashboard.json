@@ -1,0 +1,211 @@
+{
+  "schema_version": "svglide-page-family-smoke/v1",
+  "stage": "template_fidelity",
+  "scope": "page_family",
+  "status": "passed",
+  "selected_family_id": "blue-professional",
+  "selected_template_id": "executive-dashboard",
+  "selected_theme_id": "blue-professional",
+  "rendered_pages": 9,
+  "production_minimum_roles": [
+    "cover",
+    "agenda",
+    "content",
+    "data",
+    "comparison",
+    "quote",
+    "process",
+    "detail",
+    "closing"
+  ],
+  "pages": [
+    {
+      "page": 1,
+      "page_role": "cover",
+      "page_variant_id": "cover"
+    },
+    {
+      "page": 2,
+      "page_role": "agenda",
+      "page_variant_id": "agenda"
+    },
+    {
+      "page": 3,
+      "page_role": "content",
+      "page_variant_id": "dashboard"
+    },
+    {
+      "page": 4,
+      "page_role": "data",
+      "page_variant_id": "metrics"
+    },
+    {
+      "page": 5,
+      "page_role": "comparison",
+      "page_variant_id": "split"
+    },
+    {
+      "page": 6,
+      "page_role": "quote",
+      "page_variant_id": "quote"
+    },
+    {
+      "page": 7,
+      "page_role": "process",
+      "page_variant_id": "timeline"
+    },
+    {
+      "page": 8,
+      "page_role": "detail",
+      "page_variant_id": "detail"
+    },
+    {
+      "page": 9,
+      "page_role": "closing",
+      "page_variant_id": "closing"
+    }
+  ],
+  "page_variant_coverage": {
+    "cover": {
+      "covered": true,
+      "pages": [
+        1
+      ],
+      "variants": [
+        "cover"
+      ]
+    },
+    "agenda": {
+      "covered": true,
+      "pages": [
+        2
+      ],
+      "variants": [
+        "agenda"
+      ]
+    },
+    "content": {
+      "covered": true,
+      "pages": [
+        3
+      ],
+      "variants": [
+        "dashboard"
+      ]
+    },
+    "data": {
+      "covered": true,
+      "pages": [
+        4
+      ],
+      "variants": [
+        "metrics"
+      ]
+    },
+    "comparison": {
+      "covered": true,
+      "pages": [
+        5
+      ],
+      "variants": [
+        "split"
+      ]
+    },
+    "quote": {
+      "covered": true,
+      "pages": [
+        6
+      ],
+      "variants": [
+        "quote"
+      ]
+    },
+    "process": {
+      "covered": true,
+      "pages": [
+        7
+      ],
+      "variants": [
+        "timeline"
+      ]
+    },
+    "detail": {
+      "covered": true,
+      "pages": [
+        8
+      ],
+      "variants": [
+        "detail"
+      ]
+    },
+    "closing": {
+      "covered": true,
+      "pages": [
+        9
+      ],
+      "variants": [
+        "closing"
+      ]
+    }
+  },
+  "missing_required_roles": [],
+  "reuse_count": 0,
+  "variant_reuse_reasons": [],
+  "degraded": false,
+  "visual_distinctness_summary": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "theme_consistency_summary": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "artifact_issues": [],
+  "inputs": {
+    "slide_plan": "02-plan/slide_plan.json",
+    "generator_receipt": "receipts/generate_svg.json",
+    "template_fidelity": "06-check/template-fidelity.json",
+    "smoke_deck": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json"
+  },
+  "input_hashes": {
+    "smoke_deck": "87a953bd4f4232701b4e7baea9de20a23ab50e7f8fa7efc7221525b605c7e432",
+    "golden_spec.cover": "3dd3e57c24acaf47d17d9c658c7b905514362fba86231be5a6d16827c1665573",
+    "golden_spec.agenda": "360dd0c6f8aa8a7446a1221abea6d29eb97bff41b13f17b0589a96896aa4f9d2",
+    "golden_spec.metrics": "71b17aca5f64aaa653b4fdba9da63a56520b81f37dc3af15c9d096e103d5582b",
+    "golden_spec.dashboard": "9fdeaf7d2187a61b62803350eefac26dff135782ad3f93b06707b71e679bdb8b",
+    "golden_spec.split": "a085125effb6489dd3d8737a280fa2debd638e286a6a47efb9b85e520a99e92e",
+    "golden_spec.bars": "8f6bc2850326d4a0fbd489d83586694201b2d12eab75c5c959d17e81ff602952",
+    "golden_spec.quote": "2044ecea4449cb20761ff47516f17dfa2db0a2f99130ff8aac4a731588b4a717",
+    "golden_spec.timeline": "e35a0efffd07c38e8319e2f986053df474ad513416556eca32b5177401145e8c",
+    "golden_spec.detail": "a5168f94a81d44d9e945de36120bf024ab64acc250dd6f54448552ebfd691fb3",
+    "golden_spec.closing": "3103fc98e5ce67c299f6e1d5fc6adae6c1bbb1cd76cefb83c606b8be3ae837ee"
+  },
+  "generated_by": "beautiful_template_page_family_smoke.py",
+  "generator_version": "svglide-page-family-smoke/v1",
+  "command": [],
+  "provenance": {
+    "matrix": "skills/lark-slides/references/beautiful-template-executable-matrix.json",
+    "smoke_deck": "skills/lark-slides/references/page-family-smoke-decks/blue-professional.json",
+    "golden_specs": {
+      "cover": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.cover.canvas-spec.json",
+      "agenda": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.agenda.canvas-spec.json",
+      "metrics": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.metrics.canvas-spec.json",
+      "dashboard": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.dashboard.canvas-spec.json",
+      "split": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.split.canvas-spec.json",
+      "bars": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.bars.canvas-spec.json",
+      "quote": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.quote.canvas-spec.json",
+      "timeline": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.timeline.canvas-spec.json",
+      "detail": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.detail.canvas-spec.json",
+      "closing": "skills/lark-slides/scripts/fixtures/svglide_artboard/golden/blue-professional.closing.canvas-spec.json"
+    },
+    "claim_boundary": "reference smoke receipt hashes repo smoke deck and golden specs; project-level quality gate still requires current per-project page-family smoke receipt"
+  },
+  "summary": {
+    "error_count": 0,
+    "warning_count": 0,
+    "page_count": 9,
+    "covered_role_count": 9
+  }
+}

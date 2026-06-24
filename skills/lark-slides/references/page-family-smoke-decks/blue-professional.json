@@ -1,0 +1,28 @@
+{
+  "schema_version": "svglide-page-family-smoke-deck/v1",
+  "family_id": "blue-professional",
+  "template_id": "executive-dashboard",
+  "theme_id": "blue-professional",
+  "production_minimum_roles": [
+    "cover",
+    "agenda",
+    "content",
+    "data",
+    "comparison",
+    "quote",
+    "process",
+    "detail",
+    "closing"
+  ],
+  "pages": [
+    {"page": 1, "page_role": "cover", "page_variant_id": "cover", "title": "Executive Summary"},
+    {"page": 2, "page_role": "agenda", "page_variant_id": "agenda", "title": "Discussion Map"},
+    {"page": 3, "page_role": "content", "page_variant_id": "dashboard", "title": "Operating Context"},
+    {"page": 4, "page_role": "data", "page_variant_id": "metrics", "title": "Metric Dashboard"},
+    {"page": 5, "page_role": "comparison", "page_variant_id": "split", "title": "Option Comparison"},
+    {"page": 6, "page_role": "quote", "page_variant_id": "quote", "title": "Leadership Signal"},
+    {"page": 7, "page_role": "process", "page_variant_id": "timeline", "title": "Execution Timeline"},
+    {"page": 8, "page_role": "detail", "page_variant_id": "detail", "title": "Deep Dive"},
+    {"page": 9, "page_role": "closing", "page_variant_id": "closing", "title": "Decision Close"}
+  ]
+}

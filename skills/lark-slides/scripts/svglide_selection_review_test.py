@@ -186,6 +186,36 @@ class SelectionReviewTest(unittest.TestCase):
                 },
             )
             selection = svglide_theme_template_selector.select_theme_template(root, brief, top_k=1)
+            selection.setdefault("template_candidates", []).extend(
+                [
+                    {
+                        "template_id": "intelligence-brief",
+                        "status": "active",
+                        "asset_status": "production",
+                        "quality_tier": "trusted",
+                        "default_selectable": True,
+                        "selection_scope": "production",
+                    },
+                    {
+                        "template_id": "poster-stat-punch",
+                        "status": "active",
+                        "asset_status": "production",
+                        "quality_tier": "trusted",
+                        "default_selectable": True,
+                        "selection_scope": "production",
+                    },
+                ]
+            )
+            selection.setdefault("theme_candidates", []).append(
+                {
+                    "theme_id": "stone-architect",
+                    "status": "active",
+                    "asset_status": "production",
+                    "quality_tier": "trusted",
+                    "default_selectable": True,
+                    "selection_scope": "production",
+                }
+            )
             svglide_theme_template_selector.write_selection(root, selection)
             project_palette = palette["project_palette"]
             colors = project_palette["colors"]

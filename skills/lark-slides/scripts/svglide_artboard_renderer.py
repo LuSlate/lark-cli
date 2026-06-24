@@ -146,6 +146,12 @@ def read_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def read_json_if_exists(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return read_json(path)
+
+
 def file_sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -193,6 +199,91 @@ def registry_record_by_id(payload: dict[str, Any], key: str) -> dict[str, dict[s
             if isinstance(item, dict) and isinstance(item.get("id"), str):
                 result[item["id"]] = item
     return result
+
+
+def load_page_family_selection(project: Path) -> dict[str, Any]:
+    selected: dict[str, Any] = {}
+    for rel in [Path("02-plan/theme-template-selection.json"), Path("02-plan/selection-metadata.json")]:
+        payload = read_json_if_exists(project / rel)
+        if isinstance(payload.get("selected_page_family"), dict):
+            selected.update(payload["selected_page_family"])
+        template_selection = payload.get("template_family_selection")
+        if isinstance(template_selection, dict) and isinstance(template_selection.get("selected_page_family"), dict):
+            selected.update(template_selection["selected_page_family"])
+    return selected
+
+
+def resolve_registry_artifact_path(project: Path, raw_path: str) -> Path:
+    raw = Path(raw_path)
+    if raw.is_absolute():
+        return raw
+    project_candidate = (project / raw).resolve()
+    if project_candidate.exists():
+        return project_candidate
+    return (SCRIPT_DIR.parents[2] / raw).resolve()
+
+
+def load_full_visual_contract(project: Path, template_record: dict[str, Any] | None) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not isinstance(template_record, dict):
+        return {}, {"degraded": True, "fallback_reason": "template_record_missing"}
+    summary = template_record.get("visual_contract") if isinstance(template_record.get("visual_contract"), dict) else {}
+    raw_path = template_record.get("visual_contract_path") or summary.get("path")
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        return {}, {"degraded": True, "fallback_reason": "visual_contract_path_missing"}
+    contract_path = resolve_registry_artifact_path(project, raw_path)
+    payload = read_json_if_exists(contract_path)
+    if not payload:
+        return {}, {"degraded": True, "fallback_reason": "visual_contract_missing", "visual_contract_path": raw_path}
+    return payload, {"degraded": False, "visual_contract_path": raw_path}
+
+
+def page_variant_ids(value: Any) -> list[str]:
+    variants: list[str] = []
+    if isinstance(value, dict):
+        variants.extend(str(key) for key in value if str(key).strip())
+    elif isinstance(value, list):
+        for item in value:
+            if isinstance(item, str) and item.strip():
+                variants.append(item.strip())
+            elif isinstance(item, dict):
+                raw = item.get("page_variant_id") or item.get("variant_id") or item.get("id")
+                if isinstance(raw, str) and raw.strip():
+                    variants.append(raw.strip())
+    return list(dict.fromkeys(variants))
+
+
+def resolve_supported_page_variants(
+    template_record: dict[str, Any] | None,
+    selected_page_family: dict[str, Any] | None = None,
+    visual_contract: dict[str, Any] | None = None,
+) -> list[str]:
+    variants: list[str] = []
+    if isinstance(template_record, dict):
+        variants.extend(page_variant_ids(template_record.get("implemented_page_variants")))
+        variants.extend(page_variant_ids(template_record.get("supported_page_variants")))
+    if isinstance(selected_page_family, dict):
+        variants.extend(page_variant_ids(selected_page_family.get("supported_page_variants")))
+    if isinstance(visual_contract, dict):
+        variants.extend(page_variant_ids(visual_contract.get("page_variants")))
+        page_type = visual_contract.get("page_type")
+        if isinstance(page_type, dict):
+            variants.extend(page_variant_ids(page_type.get("layout_variants")))
+    return sorted({item for item in variants if isinstance(item, str) and item})
+
+
+def production_default_selectable(template_record: dict[str, Any] | None) -> bool:
+    if not isinstance(template_record, dict):
+        return False
+    return (
+        template_record.get("asset_status") == "production"
+        and template_record.get("quality_tier") == "trusted"
+        and template_record.get("selection_scope") == "production"
+        and template_record.get("default_selectable") is True
+    )
+
+
+def template_record_requires_page_variant(template_record: dict[str, Any] | None, supported_page_variants: list[str]) -> bool:
+    return production_default_selectable(template_record) and bool(supported_page_variants)
 
 
 def load_template_registry(project: Path) -> tuple[Path, dict[str, Any], dict[str, dict[str, Any]]]:
@@ -252,6 +343,9 @@ def validate_registry_bindings(project: Path, spec: dict[str, Any], *, page: int
     theme_path, theme_payload, themes = load_theme_registry(project)
     template_id = spec.get("template_id")
     theme_id = spec.get("theme_id")
+    family_id = spec.get("family_id")
+    page_role = spec.get("page_role")
+    page_variant_id = spec.get("page_variant_id")
     template_record = templates.get(template_id) if isinstance(template_id, str) else None
     theme_record = themes.get(theme_id) if isinstance(theme_id, str) else None
     theme_file: Path | None = None
@@ -296,6 +390,36 @@ def validate_registry_bindings(project: Path, spec: dict[str, Any], *, page: int
                     if isinstance(item, str) and len(item.strip()) > max_chars:
                         suffix = f"[{index}]" if isinstance(value, list) else ""
                         issues.append({"code": "canvas_spec_text_budget_exceeded", "message": f"page {page} content.{key}{suffix} exceeds text_budget {max_chars}"})
+    selected_page_family = load_page_family_selection(project)
+    page_family_requested = bool(
+        family_id
+        or page_role
+        or page_variant_id
+        or selected_page_family.get("family_id")
+        or selected_page_family.get("supported_page_variants")
+    )
+    visual_contract, contract_load = load_full_visual_contract(project, template_record) if page_family_requested else ({}, {"degraded": False})
+    supported_page_variants = resolve_supported_page_variants(template_record, selected_page_family, visual_contract)
+    record_family = None
+    if isinstance(template_record, dict):
+        record_family = template_record.get("source_family") or template_record.get("family_id") or template_record.get("source_template_id")
+    if page_family_requested and template_record_requires_page_variant(template_record, supported_page_variants) and not page_variant_id:
+        issues.append({"code": "canvas_spec_page_variant_missing", "message": f"page {page} canvas_spec.page_variant_id is required for template_id {template_id!r}"})
+    if page_variant_id and supported_page_variants and page_variant_id not in supported_page_variants:
+        issues.append({"code": "canvas_spec_page_variant_unsupported", "message": f"page {page} page_variant_id {page_variant_id!r} is not supported by family {family_id!r}"})
+    if isinstance(family_id, str) and isinstance(record_family, str) and family_id != record_family:
+        issues.append({"code": "canvas_spec_family_template_mismatch", "message": f"page {page} family_id {family_id!r} does not match template family {record_family!r}"})
+    if page_family_requested and contract_load.get("degraded") and production_default_selectable(template_record):
+        issues.append({"code": "canvas_spec_visual_contract_missing", "message": str(contract_load.get("fallback_reason") or "visual_contract_missing")})
+    page_variant_binding = {
+        "family_id": family_id,
+        "page_role": page_role,
+        "page_variant_id": page_variant_id,
+        "selected_family_id": selected_page_family.get("family_id"),
+        "template_family_id": record_family,
+        "supported_page_variants": supported_page_variants,
+        **contract_load,
+    }
     registry = {
         "template_registry_path": repo_relpath(template_path) if not template_path.is_relative_to(project) else relpath(template_path, project),
         "template_registry_sha256": template_registry_hash(template_path),
@@ -305,6 +429,7 @@ def validate_registry_bindings(project: Path, spec: dict[str, Any], *, page: int
         "template_record": template_record,
         "theme_record": theme_record,
         "theme_payload": theme_payload_for_id,
+        "page_variant_binding": page_variant_binding,
     }
     return issues, registry
 
@@ -416,6 +541,10 @@ def validate_canvas_spec(spec: dict[str, Any], *, page: int) -> list[dict[str, s
         issues.append({"code": "canvas_spec_template_unsupported", "message": f"page {page} template_id {template_id!r} is not supported by the artboard renderer"})
     if not isinstance(spec.get("theme_id"), str) or not spec.get("theme_id"):
         issues.append({"code": "canvas_spec_theme_id_missing", "message": f"page {page} canvas_spec.theme_id is required"})
+    for key in ("family_id", "page_role", "page_variant_id"):
+        value = spec.get(key)
+        if value is not None and (not isinstance(value, str) or not value.strip()):
+            issues.append({"code": f"canvas_spec_{key}_invalid", "message": f"page {page} canvas_spec.{key} must be a non-empty string when present"})
     if not isinstance(spec.get("theme"), dict):
         issues.append({"code": "canvas_spec_theme_missing", "message": f"page {page} canvas_spec.theme is required for schema compatibility"})
     content = spec.get("content")
@@ -2167,9 +2296,13 @@ def render_project(project: Path) -> dict[str, Any]:
                 "page": index,
                 "template_id": spec.get("template_id"),
                 "theme_id": spec.get("theme_id"),
+                "family_id": spec.get("family_id"),
+                "page_role": spec.get("page_role"),
+                "page_variant_id": spec.get("page_variant_id"),
                 "canvas_spec_sha256": json_sha256(spec),
                 "template_registry_sha256": registry_summary.get("template_registry_sha256"),
                 "theme_registry_sha256": registry_summary.get("theme_registry_sha256"),
+                "page_variant_binding": registry_summary.get("page_variant_binding"),
                 "error_count": len(page_issues),
             }
         )
@@ -2179,6 +2312,7 @@ def render_project(project: Path) -> dict[str, Any]:
         "theme_registry": registry_summaries[0].get("theme_registry_path") if registry_summaries else None,
         "theme_registry_sha256": registry_summaries[0].get("theme_registry_sha256") if registry_summaries else None,
         "theme_files": registry_summaries[0].get("theme_files") if registry_summaries else [],
+        "page_variant_bindings": [item.get("page_variant_binding") for item in registry_summaries if isinstance(item.get("page_variant_binding"), dict)],
     }
     canvas_validate = write_canvas_spec_validate(project, validation_pages, validation_issues, registry_summary_for_receipt)
     if validation_issues:
@@ -2210,6 +2344,15 @@ def render_project(project: Path) -> dict[str, Any]:
             layout_nodes = nodes_from_satori_svg(satori_path)
             semantic_nodes = compiler_nodes_from_canvas_spec(spec)
             renderer_metadata = read_json(metadata_path)
+            renderer_metadata.update(
+                {
+                    "family_id": spec.get("family_id"),
+                    "page_role": spec.get("page_role"),
+                    "page_variant_id": spec.get("page_variant_id"),
+                    "page_variant_binding": registry_summary.get("page_variant_binding"),
+                }
+            )
+            write_json(metadata_path, renderer_metadata)
             satori_preview = validate_satori_preview_svg(satori_svg, strict=False)
             semantic_source = "SatoriSVG"
             extraction_strategy = "canvas_spec_compiler_nodes_with_satori_preview"
@@ -2226,7 +2369,17 @@ def render_project(project: Path) -> dict[str, Any]:
             canvas_template_path.write_text(canvas_template_svg, encoding="utf-8")
             satori_svg = canvas_template_svg
             satori_preview = validate_satori_preview_svg(satori_svg, strict=True)
-            metadata_path.write_text(json.dumps({"node_version": None, "satori_version": None, "resvg_version": None, "font_path": None}, indent=2) + "\n", encoding="utf-8")
+            renderer_metadata = {
+                "node_version": None,
+                "satori_version": None,
+                "resvg_version": None,
+                "font_path": None,
+                "family_id": spec.get("family_id"),
+                "page_role": spec.get("page_role"),
+                "page_variant_id": spec.get("page_variant_id"),
+                "page_variant_binding": registry_summary.get("page_variant_binding"),
+            }
+            write_json(metadata_path, renderer_metadata)
             write_json(node_observations_path, {"version": "svglide-node-observations/v1", "observation_source": "rendered_satori_svg_parse", "nodes": []})
             layout_nodes = nodes
             semantic_nodes = nodes
@@ -2293,6 +2446,11 @@ def render_project(project: Path) -> dict[str, Any]:
             "canvas_spec_sha256": json_sha256(spec),
             "template_id": spec.get("template_id"),
             "theme_id": spec.get("theme_id"),
+            "family_id": spec.get("family_id"),
+            "page_role": spec.get("page_role"),
+            "page_variant_id": spec.get("page_variant_id"),
+            "page_variant_binding": registry_summary.get("page_variant_binding"),
+            "renderer_variant_id": renderer_metadata.get("renderer_variant_id") or spec.get("renderer_variant_id") or spec.get("page_variant_id") or spec.get("page_role"),
             "template_registry": registry_summary.get("template_registry_path"),
             "template_registry_sha256": registry_summary.get("template_registry_sha256"),
             "theme_registry": registry_summary.get("theme_registry_path"),
@@ -2342,6 +2500,10 @@ def render_project(project: Path) -> dict[str, Any]:
                 "page": index,
                 "template_id": spec.get("template_id"),
                 "theme_id": spec.get("theme_id"),
+                "family_id": spec.get("family_id"),
+                "page_role": spec.get("page_role"),
+                "page_variant_id": spec.get("page_variant_id"),
+                "page_variant_binding": registry_summary.get("page_variant_binding"),
                 "canvas_spec_sha256": json_sha256(spec),
                 "satori_svg": relpath(satori_path, project),
                 "satori_svg_sha256": file_sha256(satori_path),

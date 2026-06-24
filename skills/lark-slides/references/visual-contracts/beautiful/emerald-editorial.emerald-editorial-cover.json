@@ -1426,5 +1426,207 @@
   "loss_notes": [
     "italic is source-aware but CJK fake italic is forbidden; use color/weight fallback when unavailable",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 8,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "detail",
+      "process_or_timeline",
+      "data_dashboard",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "s1": {
+      "source_class": "s1",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s1",
+          "raw_value": "<section class=\"slide s1\" data-screen-label=\"01 Cover\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s2": {
+      "source_class": "s2",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s2",
+          "raw_value": "<section class=\"slide s2\" data-screen-label=\"02 Agenda\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s3": {
+      "source_class": "s3",
+      "source_slide_index": 3,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s3",
+          "raw_value": "<section class=\"slide s3\" data-screen-label=\"03 Section Opener\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s4": {
+      "source_class": "s4",
+      "source_slide_index": 4,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s4",
+          "raw_value": "<section class=\"slide s4\" data-screen-label=\"04 Statement And Three\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s5": {
+      "source_class": "s5",
+      "source_slide_index": 5,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s5",
+          "raw_value": "<section class=\"slide s5\" data-screen-label=\"05 Data Study\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s6": {
+      "source_class": "s6",
+      "source_slide_index": 6,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s6",
+          "raw_value": "<section class=\"slide s6\" data-screen-label=\"06 Process Diagram\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s7": {
+      "source_class": "s7",
+      "source_slide_index": 7,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s7",
+          "raw_value": "<section class=\"slide s7\" data-screen-label=\"07 KPI Grid\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "s8": {
+      "source_class": "s8",
+      "source_slide_index": 8,
+      "page_role": "closing",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/emerald-editorial/template.html",
+          "selector_or_token": ".s8",
+          "raw_value": "<section class=\"slide s8\" data-screen-label=\"08 Closing\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/emerald-editorial/template.html",
+    "source_design_md": "beautiful-html-templates/templates/emerald-editorial/design.md",
+    "source_template_json": "beautiful-html-templates/templates/emerald-editorial/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }

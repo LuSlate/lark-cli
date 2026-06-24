@@ -1415,5 +1415,248 @@
   "loss_notes": [
     "distinctive display face may be approximated by Slide/Source/思源 fonts; preserve weight/size/case first",
     "letter spacing is preserved for Latin labels and reset/softened for CJK"
-  ]
+  ],
+  "page_family": {
+    "source_slide_count": 10,
+    "core_page_roles": [
+      "cover",
+      "agenda",
+      "data_dashboard",
+      "detail",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ],
+    "production_minimum_roles": [
+      "cover",
+      "agenda",
+      "content",
+      "data",
+      "quote_or_emphasis",
+      "process_or_timeline",
+      "closing"
+    ]
+  },
+  "page_variants": {
+    "cover": {
+      "source_class": "s-cover",
+      "source_slide_index": 1,
+      "page_role": "cover",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-cover",
+          "raw_value": "<section class=\"s-cover grain\" data-screen-label=\"01 Cover\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "toc": {
+      "source_class": "s-toc",
+      "source_slide_index": 2,
+      "page_role": "agenda",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-toc",
+          "raw_value": "<section class=\"s-toc grain\" data-screen-label=\"02 Contents\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "manifesto": {
+      "source_class": "s-manifesto",
+      "source_slide_index": 3,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-manifesto",
+          "raw_value": "<section class=\"s-manifesto grain\" data-screen-label=\"03 Big Idea\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "pillars": {
+      "source_class": "s-pillars",
+      "source_slide_index": 4,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-pillars",
+          "raw_value": "<section class=\"s-pillars grain\" data-screen-label=\"04 Pillars\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "stat": {
+      "source_class": "s-stat",
+      "source_slide_index": 5,
+      "page_role": "data_dashboard",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-stat",
+          "raw_value": "<section class=\"s-stat grain\" data-screen-label=\"05 Stat\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "platform": {
+      "source_class": "s-platform",
+      "source_slide_index": 6,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "items",
+        "quote"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-platform",
+          "raw_value": "<section class=\"s-platform grain\" data-screen-label=\"06 Plan\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "quote": {
+      "source_class": "s-quote",
+      "source_slide_index": 7,
+      "page_role": "quote_or_emphasis",
+      "required_slots": [
+        "quote",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-quote",
+          "raw_value": "<section class=\"s-quote grain\" data-screen-label=\"07 Quote\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "timeline": {
+      "source_class": "s-timeline",
+      "source_slide_index": 8,
+      "page_role": "process_or_timeline",
+      "required_slots": [
+        "title",
+        "subtitle",
+        "metrics",
+        "items",
+        "timeline"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-timeline",
+          "raw_value": "<section class=\"s-timeline grain\" data-screen-label=\"08 Roadmap\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "compare": {
+      "source_class": "s-compare",
+      "source_slide_index": 9,
+      "page_role": "detail",
+      "required_slots": [
+        "title",
+        "items"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-compare",
+          "raw_value": "<section class=\"s-compare grain\" data-screen-label=\"09 Compare\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    },
+    "close": {
+      "source_class": "s-close",
+      "source_slide_index": 10,
+      "page_role": "closing",
+      "required_slots": [
+        "title"
+      ],
+      "optional_slots": [
+        "eyebrow",
+        "decoration"
+      ],
+      "source_refs": [
+        {
+          "path": "beautiful-html-templates/templates/peoples-platform/template.html",
+          "selector_or_token": ".s-close",
+          "raw_value": "<section class=\"s-close grain\" data-screen-label=\"10 Close\">"
+        }
+      ],
+      "extraction_confidence": "inferred_from_layout"
+    }
+  },
+  "page_family_source": {
+    "extractor": "skills/lark-slides/scripts/beautiful_template_page_family_extract.py",
+    "source_template_html": "beautiful-html-templates/templates/peoples-platform/template.html",
+    "source_design_md": "beautiful-html-templates/templates/peoples-platform/design.md",
+    "source_template_json": "beautiful-html-templates/templates/peoples-platform/template.json",
+    "claim_boundary": "source extraction only; does not imply renderer, fidelity, quality gate, or production/default selectable status"
+  }
 }
