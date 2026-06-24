@@ -17,6 +17,10 @@ class XmlTextOverlapLintError(Exception):
     pass
 
 
+TITLE_LIKE_TEXT_TYPES = {"title", "headline", "sub-headline", "card_title", "callout"}
+CENTER_ALLOWED_TEXT_TYPES = {"title", "quote", "hero"}
+
+
 def fail(message: str) -> None:
     raise XmlTextOverlapLintError(message)
 
@@ -71,8 +75,47 @@ def strip_xml(value: str) -> str:
     return re.sub(r"\s+", " ", stripped).strip()
 
 
+def collapse_space(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def chinese_char_count(value: str) -> int:
+    return len(re.findall(r"[\u4e00-\u9fff]", value))
+
+
+def chinese_text(value: str) -> str:
+    return "".join(re.findall(r"[\u4e00-\u9fff]", value))
+
+
 def xml_local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1] if tag.startswith("{") else tag
+
+
+def extract_content_lines(content_xml: str) -> list[str]:
+    try:
+        root = ET.fromstring(f"<root>{content_xml}</root>")
+    except ET.ParseError:
+        text = strip_xml(content_xml)
+        return [text] if text else []
+
+    lines: list[str] = []
+    for content_node in root.iter():
+        if xml_local_name(content_node.tag) != "content":
+            continue
+        paragraph_lines: list[str] = []
+        for node in content_node.iter():
+            if xml_local_name(node.tag) != "p":
+                continue
+            line = collapse_space("".join(node.itertext()))
+            if line:
+                paragraph_lines.append(line)
+        if paragraph_lines:
+            lines.extend(paragraph_lines)
+        else:
+            line = collapse_space("".join(content_node.itertext()))
+            if line:
+                lines.append(line)
+    return lines
 
 
 def extract_error_context(xml: str, line: int | None, column: int | None, radius: int = 40) -> str | None:
@@ -139,18 +182,23 @@ def extract_elements(slide_xml: str) -> list[dict[str, Any]]:
         height = extract_numeric_attribute(attrs, "height")
         if all(value is not None for value in [x, y, width, height]):
             font_size = float(extract_attribute(content, "fontSize") or extract_attribute(attrs, "fontSize") or 16)
+            lines = extract_content_lines(content)
+            raw_text = "\n".join(lines)
             elements.append(
                 {
                     "id": f"shape-{len(elements) + 1}",
                     "kind": "shape",
                     "type": extract_attribute(attrs, "type") or "shape",
                     "textType": extract_attribute(content, "textType"),
+                    "textAlign": extract_attribute(content, "textAlign") or extract_attribute(attrs, "textAlign"),
                     "x": x,
                     "y": y,
                     "width": width,
                     "height": height,
                     "fontSize": font_size,
                     "text": strip_xml(content),
+                    "rawText": raw_text,
+                    "lines": lines,
                 }
             )
 
@@ -294,9 +342,222 @@ def should_flag_overlap(left: dict[str, Any], right: dict[str, Any]) -> bool:
     return False
 
 
+def estimate_text_width(text: str, font_size: float) -> float:
+    width = 0.0
+    for char in text:
+        if re.match(r"[\u4e00-\u9fff]", char):
+            width += font_size
+        elif char.isspace():
+            width += font_size * 0.32
+        else:
+            width += font_size * 0.55
+    return width
+
+
+def estimated_rendered_line_count(element: dict[str, Any]) -> int:
+    return len(estimate_rendered_lines(element))
+
+
+def estimate_rendered_lines(element: dict[str, Any]) -> list[str]:
+    lines = [line for line in element.get("lines", []) if line]
+    if not lines:
+        return []
+    font_size = float(element.get("fontSize") or 16)
+    usable_width = max(float(element["width"]) - 6, 1)
+    rendered_lines: list[str] = []
+    for line in lines:
+        current = ""
+        current_width = 0.0
+        for char in line:
+            char_width = estimate_text_width(char, font_size)
+            if current and current_width + char_width > usable_width:
+                rendered_lines.append(current)
+                current = char
+                current_width = char_width
+                continue
+            current += char
+            current_width += char_width
+        if current:
+            rendered_lines.append(current)
+    return rendered_lines
+
+
+def has_insufficient_height_for_estimated_wrap(element: dict[str, Any], estimated_line_count: int) -> bool:
+    if estimated_line_count < 2:
+        return False
+    font_size = float(element.get("fontSize") or 16)
+    required_height = estimated_line_count * font_size * 1.12
+    return float(element["height"]) < required_height
+
+
+def has_too_short_text_box(element: dict[str, Any]) -> bool:
+    text = element.get("text") or ""
+    if chinese_char_count(text) < 6:
+        return False
+    font_size = float(element.get("fontSize") or 16)
+    return float(element["height"]) < font_size * 0.95
+
+
+def is_slash_separated_short_label(text: str) -> bool:
+    if "/" not in text:
+        return False
+    parts = [part.strip() for part in text.split("/") if part.strip()]
+    if len(parts) < 2:
+        return False
+    return chinese_char_count(text) <= 14 and all(chinese_char_count(part) <= 4 for part in parts)
+
+
+def is_short_display_text_auto_wrapped(element: dict[str, Any], rendered_lines: list[str]) -> bool:
+    if len(element.get("lines", [])) != 1 or len(rendered_lines) != 2:
+        return False
+    if element.get("textType") in {"title", "caption"}:
+        return False
+    text = element.get("text") or ""
+    chinese_count = chinese_char_count(text)
+    if not (4 <= chinese_count <= 20):
+        return False
+    font_size = float(element.get("fontSize") or 16)
+    if font_size < 20:
+        return False
+    if not has_insufficient_height_for_estimated_wrap(element, len(rendered_lines)):
+        return False
+    return chinese_count / max(len(text), 1) >= 0.6
+
+
+def build_wrap_issue(
+    code: str,
+    element: dict[str, Any],
+    message: str,
+    reason: str,
+) -> dict[str, Any]:
+    return {
+        "level": "warning",
+        "code": code,
+        "element": element["id"],
+        "message": message,
+        "reason": reason,
+        "repair": {
+            "prefer_single_line": True,
+            "allow_font_shrink": True,
+            "max_shrink_ratio": 0.9,
+            "avoid_center_align": True,
+        },
+    }
+
+
+def is_probable_cover_center_title(element: dict[str, Any]) -> bool:
+    text_type = element.get("textType")
+    if text_type == "quote":
+        return True
+    if text_type not in CENTER_ALLOWED_TEXT_TYPES:
+        return False
+    return element["x"] >= 120 and element["y"] >= 150 and element["width"] >= 300 and element["height"] >= 80
+
+
+def lint_wrap_quality(element: dict[str, Any]) -> list[dict[str, Any]]:
+    if not is_text_element(element) or not has_text_content(element):
+        return []
+
+    lines = [line for line in element.get("lines", []) if line]
+    rendered_lines = estimate_rendered_lines(element)
+    estimated_line_count = len(rendered_lines)
+    if len(lines) < 2 and estimated_line_count < 2 and not has_too_short_text_box(element):
+        return []
+
+    issues: list[dict[str, Any]] = []
+    raw_text = element.get("rawText") or "\n".join(lines)
+    joined_chinese = chinese_text("".join(lines))
+    joined_chinese_count = chinese_char_count(joined_chinese)
+    font_size = float(element.get("fontSize") or 16)
+
+    last_line_chinese_count = chinese_char_count(lines[-1])
+    previous_text_chinese_count = chinese_char_count("".join(lines[:-1]))
+    if (
+        len(lines) == 2
+        and 1 <= last_line_chinese_count <= 3
+        and previous_text_chinese_count >= 10
+    ):
+        issues.append(
+            build_wrap_issue(
+                "text_orphan_line",
+                element,
+                f"Last line is very short: {lines[-1]}",
+                "最后一行是过短尾行",
+            )
+        )
+
+    if has_too_short_text_box(element):
+        issues.append(
+            build_wrap_issue(
+                "text_box_too_short",
+                element,
+                f"Text box height is too short for font size: height={element['height']}, fontSize={font_size:g}",
+                "文本框高度低于字号所需高度，渲染后容易截断或压缩显示",
+            )
+        )
+
+    text_type = element.get("textType")
+    estimated_single_line_width = joined_chinese_count * font_size * 0.62
+    if (
+        text_type in TITLE_LIKE_TEXT_TYPES
+        and len(lines) >= 2
+        and 1 <= joined_chinese_count <= 20
+        and font_size >= 20
+        and font_size < 40
+        and chinese_char_count("".join(lines)) == len("".join(lines))
+        and element["width"] >= estimated_single_line_width
+    ):
+        issues.append(
+            build_wrap_issue(
+                "text_unnecessary_wrap",
+                element,
+                f"Short title-like text wraps unnecessarily: {joined_chinese}",
+                "短标题或强调文本不超过 20 个中文字符却出现换行",
+            )
+        )
+
+    if is_short_display_text_auto_wrapped(element, rendered_lines):
+        issues.append(
+            build_wrap_issue(
+                "text_unnecessary_wrap",
+                element,
+                f"Short display text is likely to wrap in a one-line box: {strip_xml(raw_text)}",
+                "短展示文本被放入过窄且只够一行高度的文本框，渲染后容易异常换行",
+            )
+        )
+
+    if (
+        (element.get("textAlign") or "").lower() == "center"
+        and (
+            (len(lines) >= 2 and font_size >= 22)
+            or (
+                len(lines) == 1
+                and joined_chinese_count >= 8
+                and has_insufficient_height_for_estimated_wrap(element, estimated_line_count)
+            )
+        )
+        and text_type not in {"title", "sub-headline", "quote", "hero"}
+        and not is_probable_cover_center_title(element)
+        and not is_slash_separated_short_label(raw_text)
+    ):
+        issues.append(
+            build_wrap_issue(
+                "text_center_wrapped",
+                element,
+                f"Centered multi-line text is hard to scan: {strip_xml(raw_text)}",
+                "非封面、非金句场景的多行文本使用居中对齐",
+            )
+        )
+
+    return issues
+
+
 def lint_slide(slide_xml: str, slide_number: int) -> dict[str, Any]:
     elements = extract_elements(slide_xml)
     issues: list[dict[str, Any]] = []
+
+    for element in elements:
+        issues.extend(lint_wrap_quality(element))
 
     for index, left in enumerate(elements):
         for right in elements[index + 1 :]:
