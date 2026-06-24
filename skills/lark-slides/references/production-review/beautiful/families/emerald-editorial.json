@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/emerald-editorial.html",
     "render_status": "missing_smoke",
-    "sha256": "e082713ef62b3a90e195a07823726c77e4909aaed1cde7ca7b57b4b888860833"
+    "sha256": "ae8042a321313b12a03e9b25379c89544421c4a9e8886b08f87990638f02d7da"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "e082713ef62b3a90e195a07823726c77e4909aaed1cde7ca7b57b4b888860833",
+    "contact_sheet": "ae8042a321313b12a03e9b25379c89544421c4a9e8886b08f87990638f02d7da",
     "fidelity_receipt": "7aa06118b44f3dcc6202b56e64ec03134f5487d3e48a25279a9ccfeb09c1c81b",
     "reference_screenshot": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
     "smoke_receipt": null,

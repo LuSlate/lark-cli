@@ -13,11 +13,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/8-bit-orbit.html",
         "render_status": "missing_smoke",
-        "sha256": "86070d51ad2d5f1cef0438e4d5505c160c16f3f5b701a0ef17a950f13f520f19"
+        "sha256": "6700d6ce17310762eeb43dec97eee6a0c706da5ab7082cdf6c0d0dda83a2453d"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "86070d51ad2d5f1cef0438e4d5505c160c16f3f5b701a0ef17a950f13f520f19",
+        "contact_sheet": "6700d6ce17310762eeb43dec97eee6a0c706da5ab7082cdf6c0d0dda83a2453d",
         "fidelity_receipt": "31bab9cafb1fabb4453980f01a8255d16c9a79e1f882d01585b319dee779d556",
         "reference_screenshot": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
         "smoke_receipt": null,
@@ -1256,11 +1256,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/biennale-yellow.html",
         "render_status": "missing_smoke",
-        "sha256": "d0b40a3bfc2420a4c9c8b4c9baaf3cdf08c204a8e504d0917f1458a9b90e01e8"
+        "sha256": "1c72a9c2b36088f74069f44fc0226aff8002f0b3507243531da6edf96ae4aff7"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "d0b40a3bfc2420a4c9c8b4c9baaf3cdf08c204a8e504d0917f1458a9b90e01e8",
+        "contact_sheet": "1c72a9c2b36088f74069f44fc0226aff8002f0b3507243531da6edf96ae4aff7",
         "fidelity_receipt": "27b20213513d6a895ae84c07aea6d784f5acd5a5fcd4b5a6baf0d1868f4a7dfe",
         "reference_screenshot": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
         "smoke_receipt": null,
@@ -2265,11 +2265,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/block-frame.html",
         "render_status": "missing_smoke",
-        "sha256": "e1eebb164177c32de707e461d85253b10fd4789cddd64ec87f390779f2b69802"
+        "sha256": "cfd16fda1c5b8104b5e6f3c990b3fc2d2b829f79deaea3dae5cb1157444ea9e6"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "e1eebb164177c32de707e461d85253b10fd4789cddd64ec87f390779f2b69802",
+        "contact_sheet": "cfd16fda1c5b8104b5e6f3c990b3fc2d2b829f79deaea3dae5cb1157444ea9e6",
         "fidelity_receipt": "e35a3eb5441b55568413e926f2275e9593c0b01d95a4345337995c995ffffd95",
         "reference_screenshot": "3fd1774d38f1bfbda05df46fc7f2b98a1780de45ced4d71f4925136bbf2460a0",
         "smoke_receipt": null,
@@ -3514,11 +3514,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/blue-professional.html",
         "render_status": "passed",
-        "sha256": "28d5646879b9daf6f8841e968e2337c2dceb316feea8bd83ae416ae65f54a7d2"
+        "sha256": "315b18dd7cd44f6cb18061c82b58a74a54c88ca797b93232011edb322653e51b"
       },
       "default_selectable": true,
       "evidence_hashes": {
-        "contact_sheet": "28d5646879b9daf6f8841e968e2337c2dceb316feea8bd83ae416ae65f54a7d2",
+        "contact_sheet": "315b18dd7cd44f6cb18061c82b58a74a54c88ca797b93232011edb322653e51b",
         "fidelity_receipt": "f6a4a0a015c09f14cb9e987f69734cbb05a06e79bba9c9b1ba2ca16ed6bc597a",
         "reference_screenshot": "0f08aefe70cb14ca7f3126ecc2f34319ca8f281ecdf81c6d6486ea93b2236f8c",
         "smoke_receipt": "ae3cfa9a3ba970c0f4d6903148d7291375019dd3d12a8c3619599c5520742804",
@@ -4889,11 +4889,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/bold-poster.html",
         "render_status": "missing_smoke",
-        "sha256": "55b5c1c1fb0a11183ee0779e02f4a374cb989adceb4e3999f754dcf815f2e161"
+        "sha256": "17a715b8c3cab33d9e80c8abbbd902fa00ae702f63a86ad87fa0bdeb68913433"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "55b5c1c1fb0a11183ee0779e02f4a374cb989adceb4e3999f754dcf815f2e161",
+        "contact_sheet": "17a715b8c3cab33d9e80c8abbbd902fa00ae702f63a86ad87fa0bdeb68913433",
         "fidelity_receipt": "5cb7f128615cbb801b3e66df177a5c1d61b3339c92cba3a04b9db00aadce0635",
         "reference_screenshot": "95a9351619463053bda29bdf472702ed4bc650a4510fa6b3cfcc34d5e3ba79b1",
         "smoke_receipt": null,
@@ -6102,11 +6102,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/broadside.html",
         "render_status": "missing_smoke",
-        "sha256": "3f823b2d1e5a98af40443c0f04c5180e2d40c0ae8dab5a5b5c81f80494298822"
+        "sha256": "db1ffb89fb710b18e5e23c50bd04a5c500bea3a9602bc7148def1cd9b712572c"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "3f823b2d1e5a98af40443c0f04c5180e2d40c0ae8dab5a5b5c81f80494298822",
+        "contact_sheet": "db1ffb89fb710b18e5e23c50bd04a5c500bea3a9602bc7148def1cd9b712572c",
         "fidelity_receipt": "fd3c0b8d0ae82ecad0cbeb13974361d5bf8f9e76083619edf5a88d77b0b5f664",
         "reference_screenshot": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
         "smoke_receipt": null,
@@ -7935,11 +7935,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/capsule.html",
         "render_status": "missing_smoke",
-        "sha256": "35b0d6c1d01dd97448bcf50981754d1f0155439b4431efeeaa2b9d4208f7378f"
+        "sha256": "b89c818def92fdd5638e4d0c343bdfd8a1ae201087c5701f9740e66d21d41636"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "35b0d6c1d01dd97448bcf50981754d1f0155439b4431efeeaa2b9d4208f7378f",
+        "contact_sheet": "b89c818def92fdd5638e4d0c343bdfd8a1ae201087c5701f9740e66d21d41636",
         "fidelity_receipt": "38ef8db0e9fdaf4d3c4f83f3b9ab1a2c956661315784c6090c301faac93f2f8c",
         "reference_screenshot": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
         "smoke_receipt": null,
@@ -9162,11 +9162,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/cartesian.html",
         "render_status": "missing_smoke",
-        "sha256": "c1f6795edcce9b5f104edd8f19b1674ceee66b19b905b330f20f1328fde6baa4"
+        "sha256": "3a68f9f0984b0c0dcd526bfb1bd7deec743e293c739d09529d31ec8dc31c548d"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "c1f6795edcce9b5f104edd8f19b1674ceee66b19b905b330f20f1328fde6baa4",
+        "contact_sheet": "3a68f9f0984b0c0dcd526bfb1bd7deec743e293c739d09529d31ec8dc31c548d",
         "fidelity_receipt": "d7bec45b7684b8ab2e98755e76624fffdf5048fd864aa64d7092aeb6aba3a62d",
         "reference_screenshot": "59af0f5ee20b85f07ada82a1d6bb8ab5e69b81bb08b5abf2a7520eca4934e93e",
         "smoke_receipt": null,
@@ -10307,11 +10307,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/cobalt-grid.html",
         "render_status": "missing_smoke",
-        "sha256": "f9970bf563b9fc18a08f6617c1a1769cbc8cebd4ec98dcf042c1be12398c8f46"
+        "sha256": "4fd837a9e9c7fc3da874f451915c9942f7c35b2f179f07986e2523c8fb0e2e9f"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "f9970bf563b9fc18a08f6617c1a1769cbc8cebd4ec98dcf042c1be12398c8f46",
+        "contact_sheet": "4fd837a9e9c7fc3da874f451915c9942f7c35b2f179f07986e2523c8fb0e2e9f",
         "fidelity_receipt": "fd2b394777733364723f20d0d732a346f93edba0a748628ce9a1e5596726cb02",
         "reference_screenshot": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
         "smoke_receipt": null,
@@ -11332,11 +11332,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/coral.html",
         "render_status": "missing_smoke",
-        "sha256": "402b5732bbb22f8145a73ec00176e0653a5f2744245bf10ec9ea757f8b6c1e70"
+        "sha256": "b47a477b472ff5e219ff685d2fd247587ea389cdbd726d2276ffabbbfebf5403"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "402b5732bbb22f8145a73ec00176e0653a5f2744245bf10ec9ea757f8b6c1e70",
+        "contact_sheet": "b47a477b472ff5e219ff685d2fd247587ea389cdbd726d2276ffabbbfebf5403",
         "fidelity_receipt": "dd795f5b763b8b5769e173a07ba63f2a2da2345fefaf96cb48989b7a5ba4ef2c",
         "reference_screenshot": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
         "smoke_receipt": null,
@@ -12559,11 +12559,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/creative-mode.html",
         "render_status": "missing_smoke",
-        "sha256": "224db100187b471bfeb2b4d38360dc8efa283251be6ebf174da10d74700b080e"
+        "sha256": "d25bb924c36879bf68e1282a46c1818b201962ec80ad0d845a1b2bef6d5b2292"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "224db100187b471bfeb2b4d38360dc8efa283251be6ebf174da10d74700b080e",
+        "contact_sheet": "d25bb924c36879bf68e1282a46c1818b201962ec80ad0d845a1b2bef6d5b2292",
         "fidelity_receipt": "51de4317d40671c7a4ba0868cacfa3c86ca2de0d14eecb8d07177f6c53506acf",
         "reference_screenshot": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
         "smoke_receipt": null,
@@ -13571,11 +13571,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/daisy-days.html",
         "render_status": "missing_smoke",
-        "sha256": "60ae07dae1e5cb86fbefc0ffb62eb9bdf8c371f121793ad9d9e4cee23c993443"
+        "sha256": "4df7e9d7a65b8e6749d3e487481302defbcfb6d0efd98fc00bb5afc6921e20cc"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "60ae07dae1e5cb86fbefc0ffb62eb9bdf8c371f121793ad9d9e4cee23c993443",
+        "contact_sheet": "4df7e9d7a65b8e6749d3e487481302defbcfb6d0efd98fc00bb5afc6921e20cc",
         "fidelity_receipt": "926bc15a8016d24e25c00a42eb878578dbb825471d6ba2abc316bf48016ab5bc",
         "reference_screenshot": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
         "smoke_receipt": null,
@@ -14715,11 +14715,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/editorial-forest.html",
         "render_status": "missing_smoke",
-        "sha256": "6966fb4b3014525f5b221bd6ad46a06c7f98b2046882f23d9a96c35876453e30"
+        "sha256": "a72d3845093b54b819d538e7549951871fe1cb07d991b6eb84b48b2a398c653f"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "6966fb4b3014525f5b221bd6ad46a06c7f98b2046882f23d9a96c35876453e30",
+        "contact_sheet": "a72d3845093b54b819d538e7549951871fe1cb07d991b6eb84b48b2a398c653f",
         "fidelity_receipt": "64abadb7a840271a45d482c1f3a7e8f4e75909ac007ef2c13d4ac0f77c77fdaf",
         "reference_screenshot": "a081f3b16a3dd72dd16d9fdfcf30aa61cf66c79c865189eb380d22bd425c2a1c",
         "smoke_receipt": null,
@@ -15732,11 +15732,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/editorial-tri-tone.html",
         "render_status": "missing_smoke",
-        "sha256": "ba27daa57e94914e24e341b6a8ae1d7434dfb715f5bc6a54643173865839fb10"
+        "sha256": "dfa4ea5c54fbd6428d4c98cba1707e4e7a6fa3f11b74dc8879c25305b20ca07f"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "ba27daa57e94914e24e341b6a8ae1d7434dfb715f5bc6a54643173865839fb10",
+        "contact_sheet": "dfa4ea5c54fbd6428d4c98cba1707e4e7a6fa3f11b74dc8879c25305b20ca07f",
         "fidelity_receipt": "5bf44805d7dc674b07da8f0ac8f0a749bfc78893371e921567db82e5bf3a251b",
         "reference_screenshot": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
         "smoke_receipt": null,
@@ -16765,11 +16765,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/emerald-editorial.html",
         "render_status": "missing_smoke",
-        "sha256": "e082713ef62b3a90e195a07823726c77e4909aaed1cde7ca7b57b4b888860833"
+        "sha256": "ae8042a321313b12a03e9b25379c89544421c4a9e8886b08f87990638f02d7da"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "e082713ef62b3a90e195a07823726c77e4909aaed1cde7ca7b57b4b888860833",
+        "contact_sheet": "ae8042a321313b12a03e9b25379c89544421c4a9e8886b08f87990638f02d7da",
         "fidelity_receipt": "7aa06118b44f3dcc6202b56e64ec03134f5487d3e48a25279a9ccfeb09c1c81b",
         "reference_screenshot": "fda35bb4c4810369a5c5bccd70cbcd9d474691027c79a0d94ebf59dbf673c150",
         "smoke_receipt": null,
@@ -17798,11 +17798,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/grove.html",
         "render_status": "missing_smoke",
-        "sha256": "35333c79ea1ad148e7763b55a6d5886dae6c077cd65c49430a954e69d5997eb7"
+        "sha256": "da6b1ce28c3ae75ea17159bc4a656369fc659bdbfcff3b953aa9ac3ca4c74e28"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "35333c79ea1ad148e7763b55a6d5886dae6c077cd65c49430a954e69d5997eb7",
+        "contact_sheet": "da6b1ce28c3ae75ea17159bc4a656369fc659bdbfcff3b953aa9ac3ca4c74e28",
         "fidelity_receipt": "72a5d983bb922049b536f086eedb89d0e3a7959b72480aab5fcfce63842d7455",
         "reference_screenshot": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
         "smoke_receipt": null,
@@ -19256,11 +19256,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/long-table.html",
         "render_status": "missing_smoke",
-        "sha256": "03eff66d27ff955a40c9ff4fda6f840251594bcaa9698d1452cc3527118a7317"
+        "sha256": "451fb96587eb1e8dad65a4e7e34a40c7f81ce178256f9e61f72fb57090c4c61a"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "03eff66d27ff955a40c9ff4fda6f840251594bcaa9698d1452cc3527118a7317",
+        "contact_sheet": "451fb96587eb1e8dad65a4e7e34a40c7f81ce178256f9e61f72fb57090c4c61a",
         "fidelity_receipt": "96948f5547801870efb639d755ee4b944114cd0925c3fd03f6d15cafe935119e",
         "reference_screenshot": "79f7956399971a6038c6b98ba7850b8d232c593bafb1c484c7127e5d3fd60bba",
         "smoke_receipt": null,
@@ -20277,11 +20277,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/mat.html",
         "render_status": "missing_smoke",
-        "sha256": "80cc3f0b8990075017711519795bc91a6a73eb5e748ec350fcf1dbbec092738f"
+        "sha256": "45c1a37544d752c06e326d5789a8ad1a51ba2a7926e27db048490526898423b4"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "80cc3f0b8990075017711519795bc91a6a73eb5e748ec350fcf1dbbec092738f",
+        "contact_sheet": "45c1a37544d752c06e326d5789a8ad1a51ba2a7926e27db048490526898423b4",
         "fidelity_receipt": "e1e95e38f4ea8124a378b7de4a0eb81593f192811ea42e7b31085ed84410cf34",
         "reference_screenshot": "acac0ac30af8fbb206adfb6810573c72d3ca96b00293f9f850fdeefed1ae11dc",
         "smoke_receipt": null,
@@ -21421,11 +21421,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/monochrome.html",
         "render_status": "missing_smoke",
-        "sha256": "98ff05a96dc1ba8c6d1567cdc05e07d956cf6c4d8acb8ff95ec73df343d9e6d7"
+        "sha256": "3d2584d894dc76b41f1abd78da0a0dba991a1b9cbc6e63672bb9cb45f75418a1"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "98ff05a96dc1ba8c6d1567cdc05e07d956cf6c4d8acb8ff95ec73df343d9e6d7",
+        "contact_sheet": "3d2584d894dc76b41f1abd78da0a0dba991a1b9cbc6e63672bb9cb45f75418a1",
         "fidelity_receipt": "7fd4a1a4f9929a0add47861c0f489f80b3cfe4dd9e91dc13014ec264811c78c5",
         "reference_screenshot": "bac6b00bf1d0b3c97b19d2a0c45edf44af5cbf369f2cf3ebe78a207a7b6b8c7b",
         "smoke_receipt": null,
@@ -23264,11 +23264,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/neo-grid-bold.html",
         "render_status": "missing_smoke",
-        "sha256": "ceebdd152351e3d9124f365de2ea46b5b03bd90f8ca532d7f99f79bc29cfd95d"
+        "sha256": "dfdb0c6be0e75f49ecd5d5a782eff136bb25cc679bfbfd17540b9aa47d14356e"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "ceebdd152351e3d9124f365de2ea46b5b03bd90f8ca532d7f99f79bc29cfd95d",
+        "contact_sheet": "dfdb0c6be0e75f49ecd5d5a782eff136bb25cc679bfbfd17540b9aa47d14356e",
         "fidelity_receipt": "9d0ced3d64a642e028edf86ff6457c36def39175b3079fff6a4c97b645803228",
         "reference_screenshot": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
         "smoke_receipt": null,
@@ -24692,11 +24692,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/peoples-platform.html",
         "render_status": "missing_smoke",
-        "sha256": "6cde51c31f47436c3b5b6db4fbaccb4181b795fb84213c6a1e0ace77cd88eb66"
+        "sha256": "35f74a4093000ea952bfbfef2a211fd0d47f6c926ecbc6cb6fc95a07f3946acf"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "6cde51c31f47436c3b5b6db4fbaccb4181b795fb84213c6a1e0ace77cd88eb66",
+        "contact_sheet": "35f74a4093000ea952bfbfef2a211fd0d47f6c926ecbc6cb6fc95a07f3946acf",
         "fidelity_receipt": "679368f5526815a2cb311d583f0f86871000639c85643e6b47099ab91566d5cc",
         "reference_screenshot": "9a0c40acaa0fb9c058745cbd16c875f9b7a0417d46c6c37dede388e32cf52d25",
         "smoke_receipt": null,
@@ -25918,11 +25918,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/pin-and-paper.html",
         "render_status": "missing_smoke",
-        "sha256": "d3300e5df932d79e82fd0853a9af8c252aa090d1e1df988d77b4d1045ca63002"
+        "sha256": "063652158d00662045c6a94a70a8e7ae36f00aabf3ea5216463e7f8c6564256a"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "d3300e5df932d79e82fd0853a9af8c252aa090d1e1df988d77b4d1045ca63002",
+        "contact_sheet": "063652158d00662045c6a94a70a8e7ae36f00aabf3ea5216463e7f8c6564256a",
         "fidelity_receipt": "b6aa5696947e5fc7fcd633c340cea26e983956f97a0a54b72eb035818d6a3d76",
         "reference_screenshot": "35ff94a10d71d18318fa11e1c95fb6a32e2b1801ffff24ccc8e0f36afe187387",
         "smoke_receipt": null,
@@ -27274,11 +27274,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/pink-script.html",
         "render_status": "missing_smoke",
-        "sha256": "b0b78d2776184009efaedb026d3c5dc4528a29f8fba7d7b6c5da4618fbd42497"
+        "sha256": "be97ade117aa12ee9ffcd562c2e2f905076db7c4ba21ebbc3efa92b4aa0890ae"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "b0b78d2776184009efaedb026d3c5dc4528a29f8fba7d7b6c5da4618fbd42497",
+        "contact_sheet": "be97ade117aa12ee9ffcd562c2e2f905076db7c4ba21ebbc3efa92b4aa0890ae",
         "fidelity_receipt": "ff075c2947f7c09785c47c57f68d995722873676d91251a822747e0b096b88bf",
         "reference_screenshot": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
         "smoke_receipt": null,
@@ -28400,11 +28400,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/playful.html",
         "render_status": "missing_smoke",
-        "sha256": "8c06c02b5802f957b497d1332e8cb0ab3d3a2c1825f551c946d00c38244aadad"
+        "sha256": "dce30937bc181379275aeb74ef278b312b7cbceea99f2e2522aaefe6d6f16878"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "8c06c02b5802f957b497d1332e8cb0ab3d3a2c1825f551c946d00c38244aadad",
+        "contact_sheet": "dce30937bc181379275aeb74ef278b312b7cbceea99f2e2522aaefe6d6f16878",
         "fidelity_receipt": "e828f367dda5704dca8c804fb833051e8e3888202e9b76169082ac50164873d8",
         "reference_screenshot": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
         "smoke_receipt": null,
@@ -29637,11 +29637,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/raw-grid.html",
         "render_status": "missing_smoke",
-        "sha256": "87221867c254043e20ca653260daa52ccb0f88492fe1fc5595db51edb2d5c87a"
+        "sha256": "0fc408b566d5f90530b8afb2e380258a3d6013f7ed2089e4b53921eb49d97c57"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "87221867c254043e20ca653260daa52ccb0f88492fe1fc5595db51edb2d5c87a",
+        "contact_sheet": "0fc408b566d5f90530b8afb2e380258a3d6013f7ed2089e4b53921eb49d97c57",
         "fidelity_receipt": "fee9ac2b5c6d69612a2a082849f1829f5b3c75f2a5c2d29b76657361f4fc04cc",
         "reference_screenshot": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
         "smoke_receipt": null,
@@ -30871,11 +30871,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/retro-windows.html",
         "render_status": "missing_smoke",
-        "sha256": "847e69a200f8f595339c4816826ed87853faf0a4fc468a6b0672f6f2946cf8a3"
+        "sha256": "599e3dad5711c9a858067f8ce03036d104d9b8a01cc12c9eef04e7efd5550437"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "847e69a200f8f595339c4816826ed87853faf0a4fc468a6b0672f6f2946cf8a3",
+        "contact_sheet": "599e3dad5711c9a858067f8ce03036d104d9b8a01cc12c9eef04e7efd5550437",
         "fidelity_receipt": "d9f718418fe0cba65d03c26230b5655764011c1197b9b52cb3ab15b0787cd8b6",
         "reference_screenshot": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
         "smoke_receipt": null,
@@ -32133,11 +32133,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/retro-zine.html",
         "render_status": "missing_smoke",
-        "sha256": "5328e4b636054dbd363032e7fdb7fea6f0b31eb39d87215ffb4badae2fe02a97"
+        "sha256": "2461333873da620b3c97e88c9ad80c1814ed28433cbc211c781f4999b1a62833"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "5328e4b636054dbd363032e7fdb7fea6f0b31eb39d87215ffb4badae2fe02a97",
+        "contact_sheet": "2461333873da620b3c97e88c9ad80c1814ed28433cbc211c781f4999b1a62833",
         "fidelity_receipt": "70330ed527a665653b1934d49e3ad5f14e2f4f866de429f38615ca98f18657ba",
         "reference_screenshot": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
         "smoke_receipt": null,
@@ -33343,11 +33343,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/sakura-chroma.html",
         "render_status": "missing_smoke",
-        "sha256": "2f4e9111d34cafd0344975f49c5a1d13c3ab8732ac520107a9d0f060b0486108"
+        "sha256": "fd7eb1ddf9e58fcdabc02eb17dd814491227a3ac00a735bfd8b4d7065c482bcf"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "2f4e9111d34cafd0344975f49c5a1d13c3ab8732ac520107a9d0f060b0486108",
+        "contact_sheet": "fd7eb1ddf9e58fcdabc02eb17dd814491227a3ac00a735bfd8b4d7065c482bcf",
         "fidelity_receipt": "01ed753670341664ee282238d30060766dba929200e59bb279b31497ec8af736",
         "reference_screenshot": "92bae8fc25051d0dbbb648f931befbfb653cbc331e876ea5e5aaf76afbad0733",
         "smoke_receipt": null,
@@ -34344,11 +34344,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/scatterbrain.html",
         "render_status": "missing_smoke",
-        "sha256": "4cf01462c6953780cc59a29d83f051278e5315763f9365240abc3138c204eca2"
+        "sha256": "5a5157baf391062f4ed34e0bde225c820785e216e69b9e7af3d7c460ffdb0c80"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "4cf01462c6953780cc59a29d83f051278e5315763f9365240abc3138c204eca2",
+        "contact_sheet": "5a5157baf391062f4ed34e0bde225c820785e216e69b9e7af3d7c460ffdb0c80",
         "fidelity_receipt": "8f986c32012e5a26fff7d1e4b2c73fb73db59885a7bb3f8ba7fc7f1f0cfd927f",
         "reference_screenshot": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
         "smoke_receipt": null,
@@ -35389,11 +35389,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/signal.html",
         "render_status": "missing_smoke",
-        "sha256": "ab533fc6ac798c710cc537d93a18e247830e183fa813ce2a5ee08a582272c1e1"
+        "sha256": "c00894a3fff05448914443bf4fec131fcd6ca87b0ed2aabce5a9f239f3e4082a"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "ab533fc6ac798c710cc537d93a18e247830e183fa813ce2a5ee08a582272c1e1",
+        "contact_sheet": "c00894a3fff05448914443bf4fec131fcd6ca87b0ed2aabce5a9f239f3e4082a",
         "fidelity_receipt": "f33e1fed9d3fe80ed000386d4649be14d1120ea455b57d33b8d97a87d2769231",
         "reference_screenshot": "ca5487dc68264f209951400c5edddb93c4ae1fc7174b88c2b3dc54a82e0be64a",
         "smoke_receipt": null,
@@ -37437,11 +37437,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/soft-editorial.html",
         "render_status": "missing_smoke",
-        "sha256": "64eec701c1883f956200f4c07c18bb893e15272505132a612b554a942026bcee"
+        "sha256": "f377bd08e444ba86e0ebb24b2b6fb6147a292402479d5854424ad483450e6aa3"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "64eec701c1883f956200f4c07c18bb893e15272505132a612b554a942026bcee",
+        "contact_sheet": "f377bd08e444ba86e0ebb24b2b6fb6147a292402479d5854424ad483450e6aa3",
         "fidelity_receipt": "a7543b7f841153c3dd8d182b0c43d5d3688dc128b4da2f392cb41ee20d275ff3",
         "reference_screenshot": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
         "smoke_receipt": null,
@@ -38856,11 +38856,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/stencil-tablet.html",
         "render_status": "missing_smoke",
-        "sha256": "761d7d2063337a41bb0058766d75ed1d470584c07569ea68930e42ec37d2630a"
+        "sha256": "ca62bc4d64abeff11aafb248051fe51438501c1f6c3b486a414fc05d1c05c4c8"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "761d7d2063337a41bb0058766d75ed1d470584c07569ea68930e42ec37d2630a",
+        "contact_sheet": "ca62bc4d64abeff11aafb248051fe51438501c1f6c3b486a414fc05d1c05c4c8",
         "fidelity_receipt": "bf32692b17d20d5a20c9c87ac02226c93739131b38f83c7f3b452a14451128fd",
         "reference_screenshot": "b8321134113e99f90a0e17e44e326ab25e64f3735150dd82269e0b2daabaaa2b",
         "smoke_receipt": null,
@@ -40215,11 +40215,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/studio.html",
         "render_status": "missing_smoke",
-        "sha256": "2e5c78fc922e036219c15f98dc9608883d9013cda1c3e1b0f9f31d5d0bb8bbd6"
+        "sha256": "d05050e509a7940a4893fbda99624438c1130317d811140d6337fdecb6357b94"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "2e5c78fc922e036219c15f98dc9608883d9013cda1c3e1b0f9f31d5d0bb8bbd6",
+        "contact_sheet": "d05050e509a7940a4893fbda99624438c1130317d811140d6337fdecb6357b94",
         "fidelity_receipt": "95baeec998aed196a738e4491cc7cab3ad34dbca2c3d5e96a94943f62075f60c",
         "reference_screenshot": "0d7c0646a85c56b4b26e09f0cf8a0b658fe0b1cf36be38255900fd259d0c42d4",
         "smoke_receipt": null,
@@ -41649,11 +41649,11 @@
         "artifact_kind": "smoke_deck_contact_sheet_review_model",
         "html_path": "families/vellum.html",
         "render_status": "missing_smoke",
-        "sha256": "d1cba07fdba73ba6d0b49076d091f1fba3e299f86f44d1bab7d2c2836b26551f"
+        "sha256": "ceadac634245686ba842f84a704d927fb688127f0c14b60eece6d7daa3805c10"
       },
       "default_selectable": false,
       "evidence_hashes": {
-        "contact_sheet": "d1cba07fdba73ba6d0b49076d091f1fba3e299f86f44d1bab7d2c2836b26551f",
+        "contact_sheet": "ceadac634245686ba842f84a704d927fb688127f0c14b60eece6d7daa3805c10",
         "fidelity_receipt": "3152f66c029a0f4be72c43d417b2aec470b483239a8070136e5b87993e57ae68",
         "reference_screenshot": "8c99c96677fec3c94235098b8fe36b9beeefd31ebfd173989f0ce358d91c4b73",
         "smoke_receipt": null,

@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/vellum.html",
     "render_status": "missing_smoke",
-    "sha256": "d1cba07fdba73ba6d0b49076d091f1fba3e299f86f44d1bab7d2c2836b26551f"
+    "sha256": "ceadac634245686ba842f84a704d927fb688127f0c14b60eece6d7daa3805c10"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "d1cba07fdba73ba6d0b49076d091f1fba3e299f86f44d1bab7d2c2836b26551f",
+    "contact_sheet": "ceadac634245686ba842f84a704d927fb688127f0c14b60eece6d7daa3805c10",
     "fidelity_receipt": "3152f66c029a0f4be72c43d417b2aec470b483239a8070136e5b87993e57ae68",
     "reference_screenshot": "8c99c96677fec3c94235098b8fe36b9beeefd31ebfd173989f0ce358d91c4b73",
     "smoke_receipt": null,

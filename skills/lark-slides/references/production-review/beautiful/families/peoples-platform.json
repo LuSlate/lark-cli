@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/peoples-platform.html",
     "render_status": "missing_smoke",
-    "sha256": "6cde51c31f47436c3b5b6db4fbaccb4181b795fb84213c6a1e0ace77cd88eb66"
+    "sha256": "35f74a4093000ea952bfbfef2a211fd0d47f6c926ecbc6cb6fc95a07f3946acf"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "6cde51c31f47436c3b5b6db4fbaccb4181b795fb84213c6a1e0ace77cd88eb66",
+    "contact_sheet": "35f74a4093000ea952bfbfef2a211fd0d47f6c926ecbc6cb6fc95a07f3946acf",
     "fidelity_receipt": "679368f5526815a2cb311d583f0f86871000639c85643e6b47099ab91566d5cc",
     "reference_screenshot": "9a0c40acaa0fb9c058745cbd16c875f9b7a0417d46c6c37dede388e32cf52d25",
     "smoke_receipt": null,

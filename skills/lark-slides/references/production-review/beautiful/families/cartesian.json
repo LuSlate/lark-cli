@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/cartesian.html",
     "render_status": "missing_smoke",
-    "sha256": "c1f6795edcce9b5f104edd8f19b1674ceee66b19b905b330f20f1328fde6baa4"
+    "sha256": "3a68f9f0984b0c0dcd526bfb1bd7deec743e293c739d09529d31ec8dc31c548d"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "c1f6795edcce9b5f104edd8f19b1674ceee66b19b905b330f20f1328fde6baa4",
+    "contact_sheet": "3a68f9f0984b0c0dcd526bfb1bd7deec743e293c739d09529d31ec8dc31c548d",
     "fidelity_receipt": "d7bec45b7684b8ab2e98755e76624fffdf5048fd864aa64d7092aeb6aba3a62d",
     "reference_screenshot": "59af0f5ee20b85f07ada82a1d6bb8ab5e69b81bb08b5abf2a7520eca4934e93e",
     "smoke_receipt": null,

@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/pin-and-paper.html",
     "render_status": "missing_smoke",
-    "sha256": "d3300e5df932d79e82fd0853a9af8c252aa090d1e1df988d77b4d1045ca63002"
+    "sha256": "063652158d00662045c6a94a70a8e7ae36f00aabf3ea5216463e7f8c6564256a"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "d3300e5df932d79e82fd0853a9af8c252aa090d1e1df988d77b4d1045ca63002",
+    "contact_sheet": "063652158d00662045c6a94a70a8e7ae36f00aabf3ea5216463e7f8c6564256a",
     "fidelity_receipt": "b6aa5696947e5fc7fcd633c340cea26e983956f97a0a54b72eb035818d6a3d76",
     "reference_screenshot": "35ff94a10d71d18318fa11e1c95fb6a32e2b1801ffff24ccc8e0f36afe187387",
     "smoke_receipt": null,

@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/stencil-tablet.html",
     "render_status": "missing_smoke",
-    "sha256": "761d7d2063337a41bb0058766d75ed1d470584c07569ea68930e42ec37d2630a"
+    "sha256": "ca62bc4d64abeff11aafb248051fe51438501c1f6c3b486a414fc05d1c05c4c8"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "761d7d2063337a41bb0058766d75ed1d470584c07569ea68930e42ec37d2630a",
+    "contact_sheet": "ca62bc4d64abeff11aafb248051fe51438501c1f6c3b486a414fc05d1c05c4c8",
     "fidelity_receipt": "bf32692b17d20d5a20c9c87ac02226c93739131b38f83c7f3b452a14451128fd",
     "reference_screenshot": "b8321134113e99f90a0e17e44e326ab25e64f3735150dd82269e0b2daabaaa2b",
     "smoke_receipt": null,

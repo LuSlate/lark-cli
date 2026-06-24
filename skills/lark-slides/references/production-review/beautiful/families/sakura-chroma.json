@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/sakura-chroma.html",
     "render_status": "missing_smoke",
-    "sha256": "2f4e9111d34cafd0344975f49c5a1d13c3ab8732ac520107a9d0f060b0486108"
+    "sha256": "fd7eb1ddf9e58fcdabc02eb17dd814491227a3ac00a735bfd8b4d7065c482bcf"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "2f4e9111d34cafd0344975f49c5a1d13c3ab8732ac520107a9d0f060b0486108",
+    "contact_sheet": "fd7eb1ddf9e58fcdabc02eb17dd814491227a3ac00a735bfd8b4d7065c482bcf",
     "fidelity_receipt": "01ed753670341664ee282238d30060766dba929200e59bb279b31497ec8af736",
     "reference_screenshot": "92bae8fc25051d0dbbb648f931befbfb653cbc331e876ea5e5aaf76afbad0733",
     "smoke_receipt": null,

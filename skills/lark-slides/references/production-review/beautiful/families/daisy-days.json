@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/daisy-days.html",
     "render_status": "missing_smoke",
-    "sha256": "60ae07dae1e5cb86fbefc0ffb62eb9bdf8c371f121793ad9d9e4cee23c993443"
+    "sha256": "4df7e9d7a65b8e6749d3e487481302defbcfb6d0efd98fc00bb5afc6921e20cc"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "60ae07dae1e5cb86fbefc0ffb62eb9bdf8c371f121793ad9d9e4cee23c993443",
+    "contact_sheet": "4df7e9d7a65b8e6749d3e487481302defbcfb6d0efd98fc00bb5afc6921e20cc",
     "fidelity_receipt": "926bc15a8016d24e25c00a42eb878578dbb825471d6ba2abc316bf48016ab5bc",
     "reference_screenshot": "65f6615ff2ec51a3d4a77573c2a53471b356724a58bd33dffdb55ed69ab2b73b",
     "smoke_receipt": null,

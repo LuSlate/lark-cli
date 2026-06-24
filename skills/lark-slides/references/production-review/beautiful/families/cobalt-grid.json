@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/cobalt-grid.html",
     "render_status": "missing_smoke",
-    "sha256": "f9970bf563b9fc18a08f6617c1a1769cbc8cebd4ec98dcf042c1be12398c8f46"
+    "sha256": "4fd837a9e9c7fc3da874f451915c9942f7c35b2f179f07986e2523c8fb0e2e9f"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "f9970bf563b9fc18a08f6617c1a1769cbc8cebd4ec98dcf042c1be12398c8f46",
+    "contact_sheet": "4fd837a9e9c7fc3da874f451915c9942f7c35b2f179f07986e2523c8fb0e2e9f",
     "fidelity_receipt": "fd2b394777733364723f20d0d732a346f93edba0a748628ce9a1e5596726cb02",
     "reference_screenshot": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
     "smoke_receipt": null,

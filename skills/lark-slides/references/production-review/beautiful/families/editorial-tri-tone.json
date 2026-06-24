@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/editorial-tri-tone.html",
     "render_status": "missing_smoke",
-    "sha256": "ba27daa57e94914e24e341b6a8ae1d7434dfb715f5bc6a54643173865839fb10"
+    "sha256": "dfa4ea5c54fbd6428d4c98cba1707e4e7a6fa3f11b74dc8879c25305b20ca07f"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "ba27daa57e94914e24e341b6a8ae1d7434dfb715f5bc6a54643173865839fb10",
+    "contact_sheet": "dfa4ea5c54fbd6428d4c98cba1707e4e7a6fa3f11b74dc8879c25305b20ca07f",
     "fidelity_receipt": "5bf44805d7dc674b07da8f0ac8f0a749bfc78893371e921567db82e5bf3a251b",
     "reference_screenshot": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
     "smoke_receipt": null,

@@ -104,7 +104,7 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
     def test_write_artifacts_keeps_production_default_counts_unchanged(self) -> None:
         before = gallery.matrix_status_counts()
         with tempfile.TemporaryDirectory() as tmpdir:
-            result = gallery.write_gallery_artifacts(Path(tmpdir))
+            result = gallery.write_gallery_artifacts(Path(tmpdir), Path(tmpdir) / "receipt.json")
             manifest_path = Path(result["manifest_path"])
             html_path = Path(result["html_path"])
 
@@ -118,6 +118,26 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         self.assertEqual(before["default_selectable_count"], manifest["summary"]["default_selectable_count"])
         self.assertEqual(34, manifest["summary"]["candidate_count"])
         self.assertTrue(manifest["not_promotion_receipt"])
+
+    def test_rendered_html_is_human_review_entrypoint_not_promotion_action(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = gallery.write_gallery_artifacts(Path(tmpdir), Path(tmpdir) / "receipt.json")
+            output_dir = Path(tmpdir)
+
+            index_html = Path(result["html_path"]).read_text(encoding="utf-8")
+            family_html = (output_dir / "families" / "blue-professional.html").read_text(encoding="utf-8")
+
+        for page_html in (index_html, family_html):
+            self.assertIn('data-review-status="pass"', page_html)
+            self.assertIn('data-review-status="needs_fix"', page_html)
+            self.assertIn('data-review-status="reject"', page_html)
+            self.assertIn("human_review_status=pending", page_html)
+            self.assertIn("promotion_action=no_change_until_human_pass", page_html)
+            self.assertIn("beautiful-production-review-decisions-v1", page_html)
+            self.assertIn("review-decisions-json", page_html)
+            self.assertIn("does not automatically modify production/default", page_html)
+            self.assertIn("skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json", page_html)
+            self.assertIn("apply script", page_html)
 
 
 if __name__ == "__main__":

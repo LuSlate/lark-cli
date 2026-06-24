@@ -20,6 +20,11 @@ DEFAULT_OUTPUT_DIR = REFERENCES_DIR / "production-review" / "beautiful"
 DEFAULT_RECEIPT_PATH = REFERENCES_DIR / "receipts" / "production-review" / "beautiful-34-gallery.json"
 GENERATOR_VERSION = "svglide-beautiful-production-review-gallery/v2"
 REVIEW_BATCH_ID = "beautiful-34"
+HUMAN_REVIEW_STATUS = "pending"
+PROMOTION_ACTION = "no_change_until_human_pass"
+REVIEW_STATUSES = ("pass", "needs_fix", "reject")
+REVIEW_STORAGE_KEY = "beautiful-production-review-decisions-v1"
+REVIEW_DECISIONS_SCHEMA_VERSION = "svglide-beautiful-human-review-decisions/v1"
 
 CORE_REVIEW_ROLES = [
     "cover",
@@ -463,9 +468,9 @@ def _family_review(row: dict[str, Any]) -> dict[str, Any]:
         "page_family_promotion_gate_status": promotion_gate["status"],
         "page_family_promotion_gate": promotion_gate,
         "auto_gate_status": auto_gate_status,
-        "human_review_status": "pending",
-        "allowed_human_status": ["pass", "needs_fix", "reject"],
-        "promotion_action": "no_change_until_human_pass",
+        "human_review_status": HUMAN_REVIEW_STATUS,
+        "allowed_human_status": list(REVIEW_STATUSES),
+        "promotion_action": PROMOTION_ACTION,
         "evidence_hashes": evidence_hashes,
         "contact_sheet": {
             "artifact_kind": "smoke_deck_contact_sheet_review_model",
@@ -563,6 +568,189 @@ def _badge(value: object) -> str:
     return f'<span class="badge {css}">{text}</span>'
 
 
+def _review_receipt_relpath() -> str:
+    return relpath(DEFAULT_RECEIPT_PATH) or DEFAULT_RECEIPT_PATH.as_posix()
+
+
+def _review_decision_template(family: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "family_id": family["family_id"],
+        "runtime_template_id": family["runtime_template_id"],
+        "review_status": "pass | needs_fix | reject",
+        "human_review_status_before_selection": HUMAN_REVIEW_STATUS,
+        "promotion_action": PROMOTION_ACTION,
+        "source_gallery_receipt_path": _review_receipt_relpath(),
+        "notes": "",
+    }
+
+
+def _review_controls_html(family: dict[str, Any], *, include_snippet: bool = False) -> str:
+    family_id = str(family["family_id"])
+    safe_family_id = html.escape(family_id, quote=True)
+    buttons = "".join(
+        f'<button type="button" data-family-id="{safe_family_id}" data-review-status="{html.escape(status, quote=True)}">{html.escape(status)}</button>'
+        for status in REVIEW_STATUSES
+    )
+    snippet = ""
+    if include_snippet:
+        template = json.dumps(_review_decision_template(family), ensure_ascii=False, indent=2, sort_keys=True)
+        snippet = (
+            '<details class="decision-template">'
+            "<summary>Copyable decision JSON fragment</summary>"
+            f"<pre>{html.escape(template)}</pre>"
+            "</details>"
+        )
+    return (
+        f'<div class="review-control" data-review-control-for="{safe_family_id}">'
+        f'<div class="decision-buttons">{buttons}</div>'
+        f'<div class="review-current">Selected: <strong data-review-current-for="{safe_family_id}">pending</strong></div>'
+        f'<label class="notes-label">Notes <input type="text" data-review-notes-for="{safe_family_id}" placeholder="optional apply-script context" /></label>'
+        f"{snippet}"
+        "</div>"
+    )
+
+
+def _review_handoff_html() -> str:
+    receipt_path = _review_receipt_relpath()
+    command = f"python <apply-script> --gallery-receipt {receipt_path} --decisions <exported-decisions.json>"
+    return f"""<section class="review-handoff">
+    <h2>Human Review Export</h2>
+    <div class="warning">This local UI does not automatically modify production/default. It only stores browser-local decisions and exports JSON for a separate apply script.</div>
+    <p><code>human_review_status={html.escape(HUMAN_REVIEW_STATUS)}</code> <code>promotion_action={html.escape(PROMOTION_ACTION)}</code></p>
+    <p>Machine-readable gallery receipt: <code>{html.escape(receipt_path)}</code></p>
+    <p>Apply script input: save this textarea as decisions JSON, then pass it to the apply script, for example <code>{html.escape(command)}</code>.</p>
+    <textarea id="review-decisions-json" readonly spellcheck="false"></textarea>
+  </section>
+"""
+
+
+def _review_script_html() -> str:
+    receipt_path = _review_receipt_relpath()
+    return """  <script>
+    (function () {
+      var storageKey = %(storage_key)s;
+      var schemaVersion = %(schema_version)s;
+      var reviewBatchId = %(review_batch_id)s;
+      var receiptPath = %(receipt_path)s;
+      var pendingHumanReviewStatus = %(pending_status)s;
+      var promotionAction = %(promotion_action)s;
+
+      function readState() {
+        try {
+          var parsed = JSON.parse(localStorage.getItem(storageKey) || "{}");
+          if (parsed && typeof parsed === "object" && parsed.decisions && typeof parsed.decisions === "object") {
+            return parsed;
+          }
+        } catch (error) {
+          // Ignore malformed local state and rebuild below.
+        }
+        return { decisions: {} };
+      }
+
+      function writeState(state) {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      }
+
+      function buildExport(state) {
+        var decisions = Object.keys(state.decisions || {}).sort().map(function (familyId) {
+          return state.decisions[familyId];
+        });
+        return {
+          schema_version: schemaVersion,
+          artifact_kind: "beautiful_template_human_review_decisions",
+          review_batch_id: reviewBatchId,
+          source_gallery_receipt_path: receiptPath,
+          not_promotion_receipt: true,
+          policy: {
+            does_not_automatically_modify_production_default: true,
+            apply_script_must_validate_gallery_receipt: true
+          },
+          decisions: decisions
+        };
+      }
+
+      function render(state) {
+        document.querySelectorAll("[data-review-current-for]").forEach(function (node) {
+          var familyId = node.getAttribute("data-review-current-for");
+          var decision = state.decisions[familyId];
+          node.textContent = decision ? decision.review_status : "pending";
+        });
+        document.querySelectorAll("[data-review-status]").forEach(function (button) {
+          var familyId = button.getAttribute("data-family-id");
+          var status = button.getAttribute("data-review-status");
+          var decision = state.decisions[familyId];
+          button.classList.toggle("selected", Boolean(decision && decision.review_status === status));
+        });
+        document.querySelectorAll("[data-review-notes-for]").forEach(function (input) {
+          var familyId = input.getAttribute("data-review-notes-for");
+          var decision = state.decisions[familyId];
+          if (decision && input.value !== decision.notes) {
+            input.value = decision.notes || "";
+          }
+        });
+        var textarea = document.getElementById("review-decisions-json");
+        if (textarea) {
+          textarea.value = JSON.stringify(buildExport(state), null, 2);
+        }
+      }
+
+      document.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-review-status]");
+        if (!button) {
+          return;
+        }
+        var state = readState();
+        var familyId = button.getAttribute("data-family-id");
+        var status = button.getAttribute("data-review-status");
+        var existing = state.decisions[familyId] || {};
+        state.decisions[familyId] = {
+          family_id: familyId,
+          review_status: status,
+          human_review_status_before_selection: pendingHumanReviewStatus,
+          promotion_action: promotionAction,
+          source_gallery_receipt_path: receiptPath,
+          notes: existing.notes || "",
+          updated_at: new Date().toISOString()
+        };
+        writeState(state);
+        render(state);
+      });
+
+      document.addEventListener("input", function (event) {
+        var input = event.target.closest("[data-review-notes-for]");
+        if (!input) {
+          return;
+        }
+        var state = readState();
+        var familyId = input.getAttribute("data-review-notes-for");
+        var existing = state.decisions[familyId] || {
+          family_id: familyId,
+          review_status: "needs_fix",
+          human_review_status_before_selection: pendingHumanReviewStatus,
+          promotion_action: promotionAction,
+          source_gallery_receipt_path: receiptPath,
+          updated_at: new Date().toISOString()
+        };
+        existing.notes = input.value;
+        existing.updated_at = new Date().toISOString();
+        state.decisions[familyId] = existing;
+        writeState(state);
+        render(state);
+      });
+
+      render(readState());
+    })();
+  </script>
+""" % {
+        "storage_key": json.dumps(REVIEW_STORAGE_KEY),
+        "schema_version": json.dumps(REVIEW_DECISIONS_SCHEMA_VERSION),
+        "review_batch_id": json.dumps(REVIEW_BATCH_ID),
+        "receipt_path": json.dumps(receipt_path),
+        "pending_status": json.dumps(HUMAN_REVIEW_STATUS),
+        "promotion_action": json.dumps(PROMOTION_ACTION),
+    }
+
+
 def _render_family_html(family: dict[str, Any]) -> str:
     pages = []
     for page in family["pages"]:
@@ -601,28 +789,45 @@ def _render_family_html(family: dict[str, Any]) -> str:
     h2 {{ margin: 10px 0 4px; font-size: 15px; }}
     p {{ margin: 5px 0; font-size: 12px; color: #536071; }}
     code {{ word-break: break-all; font-size: 11px; }}
+    button {{ cursor: pointer; border: 1px solid #b8c2d2; background: #fff; color: #172033; border-radius: 6px; padding: 6px 9px; font-weight: 700; }}
+    button.selected {{ border-color: #1d4ed8; background: #dbeafe; color: #1e3a8a; }}
     .badge {{ display: inline-block; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 700; }}
     .ok {{ color: #065f46; background: #d1fae5; }}
     .warn {{ color: #92400e; background: #fef3c7; }}
     .bad {{ color: #991b1b; background: #fee2e2; }}
+    .review-panel, .review-handoff {{ background: #fff; border: 1px solid #dfe5ee; border-radius: 8px; padding: 14px; margin: 16px 0; }}
+    .decision-buttons {{ display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }}
+    .review-current {{ font-size: 12px; color: #536071; margin-bottom: 8px; }}
+    .notes-label {{ display: block; color: #536071; font-size: 12px; }}
+    .notes-label input {{ margin-left: 8px; min-width: min(520px, 80vw); padding: 6px 8px; border: 1px solid #c7d0df; border-radius: 6px; }}
+    .decision-template {{ margin-top: 10px; }}
+    pre, textarea {{ width: 100%; box-sizing: border-box; border: 1px solid #c7d0df; border-radius: 6px; background: #f8fafc; color: #172033; }}
+    pre {{ overflow: auto; padding: 10px; font-size: 12px; }}
+    textarea {{ min-height: 180px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }}
   </style>
 </head>
 <body>
   <header>
     <p><a href="../index.html">Back to gallery</a></p>
     <h1>{html.escape(family['family_id'])}</h1>
-    <div class="warning">Review input only. This contact sheet is not a production promotion receipt.</div>
+    <div class="warning">Review input only. This contact sheet is not a production promotion receipt and does not automatically modify production/default.</div>
     <div class="meta">
       <div class="metric"><strong>{html.escape(str(family['page_variant_count']))}</strong>source pages</div>
       <div class="metric"><strong>{html.escape(str(family['auto_gate_status']))}</strong>auto gate</div>
       <div class="metric"><strong>{html.escape(str(family['smoke_status']))}</strong>smoke</div>
       <div class="metric"><strong>{html.escape(str(family['fidelity_status']))}</strong>fidelity</div>
     </div>
+    <div class="review-panel">
+      <h2>Human decision</h2>
+      {_review_controls_html(family, include_snippet=True)}
+    </div>
     <p><strong>Known blockers:</strong> {html.escape(blockers)}</p>
   </header>
+  {_review_handoff_html()}
   <main class="deck">
     {"".join(pages)}
   </main>
+{_review_script_html()}
 </body>
 </html>
 """
@@ -639,10 +844,11 @@ def _render_html(manifest: dict[str, Any]) -> str:
             f"<td><strong><a href=\"{html.escape(contact)}\">{html.escape(family['family_id'])}</a></strong><br><small>{html.escape(family['runtime_template_id'])}</small></td>"
             f"<td>{html.escape(str(family['promotion_status']))}<br><small>default={html.escape(str(family['default_selectable']).lower())}</small></td>"
             f"<td>{family['page_variant_count']} source<br><small>{family['implemented_page_variant_count']} implemented</small></td>"
-            f"<td>{_badge(family['auto_gate_status'])}<br><small>human={html.escape(str(family['human_review_status']))}</small></td>"
+            f"<td>{_badge(family['auto_gate_status'])}<br><small>human_review_status={html.escape(str(family['human_review_status']))}</small><br><small>promotion_action={html.escape(str(family['promotion_action']))}</small></td>"
             f"<td>{html.escape(str(family['smoke_status']))}<br><small>{html.escape(str(family['smoke'].get('rendered_pages') or ''))} rendered</small></td>"
             f"<td>{html.escape(str(family['fidelity_status']))}</td>"
             f"<td>{html.escape(blocker_text)}</td>"
+            f"<td>{_review_controls_html(family)}</td>"
             f"<td><code>{html.escape(str(family['visual_contract_path']))}</code><br><code>{html.escape(str(family['reference_screenshot']))}</code></td>"
             "</tr>"
         )
@@ -660,11 +866,19 @@ def _render_html(manifest: dict[str, Any]) -> str:
     .summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
     .metric { background: #fff; border: 1px solid #dbe1ea; border-radius: 8px; padding: 10px 12px; min-width: 150px; }
     .metric strong { display: block; font-size: 22px; }
+    button { cursor: pointer; border: 1px solid #b8c2d2; background: #fff; color: #172033; border-radius: 6px; padding: 6px 9px; font-weight: 700; }
+    button.selected { border-color: #1d4ed8; background: #dbeafe; color: #1e3a8a; }
     table { border-collapse: collapse; width: 100%%; background: #fff; border: 1px solid #dbe1ea; }
     th, td { border-bottom: 1px solid #e5e9f0; padding: 10px; text-align: left; vertical-align: top; font-size: 13px; }
     th { background: #eef2f7; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
     code { font-size: 11px; color: #4a5870; word-break: break-all; }
     small { color: #65728a; }
+    .decision-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .review-current { font-size: 12px; color: #536071; margin-bottom: 8px; }
+    .notes-label { display: block; color: #536071; font-size: 12px; }
+    .notes-label input { width: min(220px, 80vw); padding: 6px 8px; border: 1px solid #c7d0df; border-radius: 6px; }
+    .review-handoff { background: #fff; border: 1px solid #dbe1ea; border-radius: 8px; padding: 14px; margin: 18px 0; max-width: 1180px; }
+    textarea { width: 100%%; min-height: 180px; box-sizing: border-box; border: 1px solid #c7d0df; border-radius: 6px; background: #f8fafc; color: #172033; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
     .badge { display: inline-block; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
     .ok { color: #065f46; background: #d1fae5; }
     .warn { color: #92400e; background: #fef3c7; }
@@ -674,7 +888,7 @@ def _render_html(manifest: dict[str, Any]) -> str:
 <body>
   <header>
     <h1>SVGlide Beautiful Production Review Gallery</h1>
-    <div class="warning">This gallery is review input only. It is not a promotion receipt and does not change production/default_selectable status.</div>
+    <div class="warning">This gallery is review input only. It is not a promotion receipt, does not change production/default_selectable status, and does not automatically modify production/default.</div>
     <div class="summary">
       <div class="metric"><strong>%(candidate_count)s</strong>candidates</div>
       <div class="metric"><strong>%(production_default)s</strong>production + default</div>
@@ -682,6 +896,7 @@ def _render_html(manifest: dict[str, Any]) -> str:
       <div class="metric"><strong>%(smoke_counts)s</strong>smoke status counts</div>
     </div>
   </header>
+  %(handoff)s
   <table>
     <thead>
       <tr>
@@ -692,6 +907,7 @@ def _render_html(manifest: dict[str, Any]) -> str:
         <th>Smoke</th>
         <th>Fidelity</th>
         <th>Known Blockers</th>
+        <th>Human Decision</th>
         <th>Evidence</th>
       </tr>
     </thead>
@@ -699,6 +915,7 @@ def _render_html(manifest: dict[str, Any]) -> str:
       %(rows)s
     </tbody>
   </table>
+%(script)s
 </body>
 </html>
 """ % {
@@ -706,7 +923,9 @@ def _render_html(manifest: dict[str, Any]) -> str:
         "production_default": html.escape(str(summary["production_default_selectable_count"])),
         "auto_passed": html.escape(str(summary["auto_gate_passed_count"])),
         "smoke_counts": html.escape(json.dumps(summary["smoke_status_counts"], sort_keys=True)),
+        "handoff": _review_handoff_html(),
         "rows": "\n".join(rows),
+        "script": _review_script_html(),
     }
 
 
@@ -743,12 +962,33 @@ def write_gallery_artifacts(output_dir: Path = DEFAULT_OUTPUT_DIR, receipt_path:
     }
 
 
+def write_gallery_html_artifacts(output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    families_dir = output_dir / "families"
+    families_dir.mkdir(parents=True, exist_ok=True)
+    manifest = build_gallery_manifest()
+    for family in manifest["families"]:
+        family_html_path = families_dir / f"{family['family_id']}.html"
+        family_html_path.write_text(_render_family_html(family), encoding="utf-8")
+    html_path = output_dir / "index.html"
+    html_path.write_text(_render_html(manifest), encoding="utf-8")
+    return {
+        "html_path": str(html_path),
+        "family_html_count": len(manifest["families"]),
+        "candidate_count": manifest["summary"]["candidate_count"],
+        "production_default_selectable_count": manifest["summary"]["production_default_selectable_count"],
+        "default_selectable_count": manifest["summary"]["default_selectable_count"],
+        "auto_gate_passed_count": manifest["summary"]["auto_gate_passed_count"],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--receipt-path", default=str(DEFAULT_RECEIPT_PATH))
     parser.add_argument("--stdout", action="store_true", help="print manifest only and do not write artifacts")
     parser.add_argument("--receipt-stdout", action="store_true", help="print gallery receipt only and do not write artifacts")
+    parser.add_argument("--html-only", action="store_true", help="write index/family HTML only and leave manifest/receipt JSON unchanged")
     parser.add_argument("--pretty", action="store_true")
     args = parser.parse_args()
     if args.stdout:
@@ -758,6 +998,10 @@ def main() -> int:
     if args.receipt_stdout:
         receipt = build_gallery_receipt()
         print(json.dumps(receipt, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))
+        return 0
+    if args.html_only:
+        result = write_gallery_html_artifacts(Path(args.output_dir))
+        print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))
         return 0
     result = write_gallery_artifacts(Path(args.output_dir), Path(args.receipt_path))
     print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None, sort_keys=True))

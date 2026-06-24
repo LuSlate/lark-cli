@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/blue-professional.html",
     "render_status": "passed",
-    "sha256": "28d5646879b9daf6f8841e968e2337c2dceb316feea8bd83ae416ae65f54a7d2"
+    "sha256": "315b18dd7cd44f6cb18061c82b58a74a54c88ca797b93232011edb322653e51b"
   },
   "default_selectable": true,
   "evidence_hashes": {
-    "contact_sheet": "28d5646879b9daf6f8841e968e2337c2dceb316feea8bd83ae416ae65f54a7d2",
+    "contact_sheet": "315b18dd7cd44f6cb18061c82b58a74a54c88ca797b93232011edb322653e51b",
     "fidelity_receipt": "f6a4a0a015c09f14cb9e987f69734cbb05a06e79bba9c9b1ba2ca16ed6bc597a",
     "reference_screenshot": "0f08aefe70cb14ca7f3126ecc2f34319ca8f281ecdf81c6d6486ea93b2236f8c",
     "smoke_receipt": "ae3cfa9a3ba970c0f4d6903148d7291375019dd3d12a8c3619599c5520742804",

@@ -19,27 +19,175 @@
     h2 { margin: 10px 0 4px; font-size: 15px; }
     p { margin: 5px 0; font-size: 12px; color: #536071; }
     code { word-break: break-all; font-size: 11px; }
+    button { cursor: pointer; border: 1px solid #b8c2d2; background: #fff; color: #172033; border-radius: 6px; padding: 6px 9px; font-weight: 700; }
+    button.selected { border-color: #1d4ed8; background: #dbeafe; color: #1e3a8a; }
     .badge { display: inline-block; border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
     .ok { color: #065f46; background: #d1fae5; }
     .warn { color: #92400e; background: #fef3c7; }
     .bad { color: #991b1b; background: #fee2e2; }
+    .review-panel, .review-handoff { background: #fff; border: 1px solid #dfe5ee; border-radius: 8px; padding: 14px; margin: 16px 0; }
+    .decision-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .review-current { font-size: 12px; color: #536071; margin-bottom: 8px; }
+    .notes-label { display: block; color: #536071; font-size: 12px; }
+    .notes-label input { margin-left: 8px; min-width: min(520px, 80vw); padding: 6px 8px; border: 1px solid #c7d0df; border-radius: 6px; }
+    .decision-template { margin-top: 10px; }
+    pre, textarea { width: 100%; box-sizing: border-box; border: 1px solid #c7d0df; border-radius: 6px; background: #f8fafc; color: #172033; }
+    pre { overflow: auto; padding: 10px; font-size: 12px; }
+    textarea { min-height: 180px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
   </style>
 </head>
 <body>
   <header>
     <p><a href="../index.html">Back to gallery</a></p>
     <h1>cartesian</h1>
-    <div class="warning">Review input only. This contact sheet is not a production promotion receipt.</div>
+    <div class="warning">Review input only. This contact sheet is not a production promotion receipt and does not automatically modify production/default.</div>
     <div class="meta">
       <div class="metric"><strong>9</strong>source pages</div>
       <div class="metric"><strong>blocked</strong>auto gate</div>
       <div class="metric"><strong>missing</strong>smoke</div>
       <div class="metric"><strong>passed</strong>fidelity</div>
     </div>
+    <div class="review-panel">
+      <h2>Human decision</h2>
+      <div class="review-control" data-review-control-for="cartesian"><div class="decision-buttons"><button type="button" data-family-id="cartesian" data-review-status="pass">pass</button><button type="button" data-family-id="cartesian" data-review-status="needs_fix">needs_fix</button><button type="button" data-family-id="cartesian" data-review-status="reject">reject</button></div><div class="review-current">Selected: <strong data-review-current-for="cartesian">pending</strong></div><label class="notes-label">Notes <input type="text" data-review-notes-for="cartesian" placeholder="optional apply-script context" /></label><details class="decision-template"><summary>Copyable decision JSON fragment</summary><pre>{
+  &quot;family_id&quot;: &quot;cartesian&quot;,
+  &quot;human_review_status_before_selection&quot;: &quot;pending&quot;,
+  &quot;notes&quot;: &quot;&quot;,
+  &quot;promotion_action&quot;: &quot;no_change_until_human_pass&quot;,
+  &quot;review_status&quot;: &quot;pass | needs_fix | reject&quot;,
+  &quot;runtime_template_id&quot;: &quot;architectural-spec&quot;,
+  &quot;source_gallery_receipt_path&quot;: &quot;skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json&quot;
+}</pre></details></div>
+    </div>
     <p><strong>Known blockers:</strong> auto_gate_blocked, missing_smoke, page_family_smoke_missing_or_failed, production_review_pending, quality_gate_integration_pending, selector_gate_missing, source_core_roles_missing</p>
   </header>
+  <section class="review-handoff">
+    <h2>Human Review Export</h2>
+    <div class="warning">This local UI does not automatically modify production/default. It only stores browser-local decisions and exports JSON for a separate apply script.</div>
+    <p><code>human_review_status=pending</code> <code>promotion_action=no_change_until_human_pass</code></p>
+    <p>Machine-readable gallery receipt: <code>skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json</code></p>
+    <p>Apply script input: save this textarea as decisions JSON, then pass it to the apply script, for example <code>python &lt;apply-script&gt; --gallery-receipt skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json --decisions &lt;exported-decisions.json&gt;</code>.</p>
+    <textarea id="review-decisions-json" readonly spellcheck="false"></textarea>
+  </section>
+
   <main class="deck">
     <section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="agenda" /></div><h2>1. agenda</h2><p>agenda / agenda</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-agenda</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="statement" /></div><h2>2. statement</h2><p>agenda / agenda</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-statement</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="barchart" /></div><h2>3. barchart</h2><p>data_dashboard / data_or_structured</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-barchart</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-4.png" alt="twocol" /></div><h2>4. twocol</h2><p>data_dashboard / data_or_structured</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-twocol</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="cards" /></div><h2>5. cards</h2><p>content / content</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-cards</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="linechart" /></div><h2>6. linechart</h2><p>data_dashboard / data_or_structured</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-linechart</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="timeline" /></div><h2>7. timeline</h2><p>process_or_timeline / process_or_timeline</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-timeline</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-8.png" alt="team" /></div><h2>8. team</h2><p>detail / content</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-team</code></p></section><section class="page"><div class="thumb"><img src="file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cartesian-1.png" alt="closing" /></div><h2>9. closing</h2><p>closing / closing</p><p><span class="badge bad">missing_smoke</span></p><p><code>slide-closing</code></p></section>
   </main>
+  <script>
+    (function () {
+      var storageKey = "beautiful-production-review-decisions-v1";
+      var schemaVersion = "svglide-beautiful-human-review-decisions/v1";
+      var reviewBatchId = "beautiful-34";
+      var receiptPath = "skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json";
+      var pendingHumanReviewStatus = "pending";
+      var promotionAction = "no_change_until_human_pass";
+
+      function readState() {
+        try {
+          var parsed = JSON.parse(localStorage.getItem(storageKey) || "{}");
+          if (parsed && typeof parsed === "object" && parsed.decisions && typeof parsed.decisions === "object") {
+            return parsed;
+          }
+        } catch (error) {
+          // Ignore malformed local state and rebuild below.
+        }
+        return { decisions: {} };
+      }
+
+      function writeState(state) {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      }
+
+      function buildExport(state) {
+        var decisions = Object.keys(state.decisions || {}).sort().map(function (familyId) {
+          return state.decisions[familyId];
+        });
+        return {
+          schema_version: schemaVersion,
+          artifact_kind: "beautiful_template_human_review_decisions",
+          review_batch_id: reviewBatchId,
+          source_gallery_receipt_path: receiptPath,
+          not_promotion_receipt: true,
+          policy: {
+            does_not_automatically_modify_production_default: true,
+            apply_script_must_validate_gallery_receipt: true
+          },
+          decisions: decisions
+        };
+      }
+
+      function render(state) {
+        document.querySelectorAll("[data-review-current-for]").forEach(function (node) {
+          var familyId = node.getAttribute("data-review-current-for");
+          var decision = state.decisions[familyId];
+          node.textContent = decision ? decision.review_status : "pending";
+        });
+        document.querySelectorAll("[data-review-status]").forEach(function (button) {
+          var familyId = button.getAttribute("data-family-id");
+          var status = button.getAttribute("data-review-status");
+          var decision = state.decisions[familyId];
+          button.classList.toggle("selected", Boolean(decision && decision.review_status === status));
+        });
+        document.querySelectorAll("[data-review-notes-for]").forEach(function (input) {
+          var familyId = input.getAttribute("data-review-notes-for");
+          var decision = state.decisions[familyId];
+          if (decision && input.value !== decision.notes) {
+            input.value = decision.notes || "";
+          }
+        });
+        var textarea = document.getElementById("review-decisions-json");
+        if (textarea) {
+          textarea.value = JSON.stringify(buildExport(state), null, 2);
+        }
+      }
+
+      document.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-review-status]");
+        if (!button) {
+          return;
+        }
+        var state = readState();
+        var familyId = button.getAttribute("data-family-id");
+        var status = button.getAttribute("data-review-status");
+        var existing = state.decisions[familyId] || {};
+        state.decisions[familyId] = {
+          family_id: familyId,
+          review_status: status,
+          human_review_status_before_selection: pendingHumanReviewStatus,
+          promotion_action: promotionAction,
+          source_gallery_receipt_path: receiptPath,
+          notes: existing.notes || "",
+          updated_at: new Date().toISOString()
+        };
+        writeState(state);
+        render(state);
+      });
+
+      document.addEventListener("input", function (event) {
+        var input = event.target.closest("[data-review-notes-for]");
+        if (!input) {
+          return;
+        }
+        var state = readState();
+        var familyId = input.getAttribute("data-review-notes-for");
+        var existing = state.decisions[familyId] || {
+          family_id: familyId,
+          review_status: "needs_fix",
+          human_review_status_before_selection: pendingHumanReviewStatus,
+          promotion_action: promotionAction,
+          source_gallery_receipt_path: receiptPath,
+          updated_at: new Date().toISOString()
+        };
+        existing.notes = input.value;
+        existing.updated_at = new Date().toISOString();
+        state.decisions[familyId] = existing;
+        writeState(state);
+        render(state);
+      });
+
+      render(readState());
+    })();
+  </script>
+
 </body>
 </html>

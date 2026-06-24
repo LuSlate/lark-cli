@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/broadside.html",
     "render_status": "missing_smoke",
-    "sha256": "3f823b2d1e5a98af40443c0f04c5180e2d40c0ae8dab5a5b5c81f80494298822"
+    "sha256": "db1ffb89fb710b18e5e23c50bd04a5c500bea3a9602bc7148def1cd9b712572c"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "3f823b2d1e5a98af40443c0f04c5180e2d40c0ae8dab5a5b5c81f80494298822",
+    "contact_sheet": "db1ffb89fb710b18e5e23c50bd04a5c500bea3a9602bc7148def1cd9b712572c",
     "fidelity_receipt": "fd3c0b8d0ae82ecad0cbeb13974361d5bf8f9e76083619edf5a88d77b0b5f664",
     "reference_screenshot": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
     "smoke_receipt": null,

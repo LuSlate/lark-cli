@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/neo-grid-bold.html",
     "render_status": "missing_smoke",
-    "sha256": "ceebdd152351e3d9124f365de2ea46b5b03bd90f8ca532d7f99f79bc29cfd95d"
+    "sha256": "dfdb0c6be0e75f49ecd5d5a782eff136bb25cc679bfbfd17540b9aa47d14356e"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "ceebdd152351e3d9124f365de2ea46b5b03bd90f8ca532d7f99f79bc29cfd95d",
+    "contact_sheet": "dfdb0c6be0e75f49ecd5d5a782eff136bb25cc679bfbfd17540b9aa47d14356e",
     "fidelity_receipt": "9d0ced3d64a642e028edf86ff6457c36def39175b3079fff6a4c97b645803228",
     "reference_screenshot": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
     "smoke_receipt": null,

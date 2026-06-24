@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/biennale-yellow.html",
     "render_status": "missing_smoke",
-    "sha256": "d0b40a3bfc2420a4c9c8b4c9baaf3cdf08c204a8e504d0917f1458a9b90e01e8"
+    "sha256": "1c72a9c2b36088f74069f44fc0226aff8002f0b3507243531da6edf96ae4aff7"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "d0b40a3bfc2420a4c9c8b4c9baaf3cdf08c204a8e504d0917f1458a9b90e01e8",
+    "contact_sheet": "1c72a9c2b36088f74069f44fc0226aff8002f0b3507243531da6edf96ae4aff7",
     "fidelity_receipt": "27b20213513d6a895ae84c07aea6d784f5acd5a5fcd4b5a6baf0d1868f4a7dfe",
     "reference_screenshot": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
     "smoke_receipt": null,

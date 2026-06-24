@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/coral.html",
     "render_status": "missing_smoke",
-    "sha256": "402b5732bbb22f8145a73ec00176e0653a5f2744245bf10ec9ea757f8b6c1e70"
+    "sha256": "b47a477b472ff5e219ff685d2fd247587ea389cdbd726d2276ffabbbfebf5403"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "402b5732bbb22f8145a73ec00176e0653a5f2744245bf10ec9ea757f8b6c1e70",
+    "contact_sheet": "b47a477b472ff5e219ff685d2fd247587ea389cdbd726d2276ffabbbfebf5403",
     "fidelity_receipt": "dd795f5b763b8b5769e173a07ba63f2a2da2345fefaf96cb48989b7a5ba4ef2c",
     "reference_screenshot": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
     "smoke_receipt": null,

@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/bold-poster.html",
     "render_status": "missing_smoke",
-    "sha256": "55b5c1c1fb0a11183ee0779e02f4a374cb989adceb4e3999f754dcf815f2e161"
+    "sha256": "17a715b8c3cab33d9e80c8abbbd902fa00ae702f63a86ad87fa0bdeb68913433"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "55b5c1c1fb0a11183ee0779e02f4a374cb989adceb4e3999f754dcf815f2e161",
+    "contact_sheet": "17a715b8c3cab33d9e80c8abbbd902fa00ae702f63a86ad87fa0bdeb68913433",
     "fidelity_receipt": "5cb7f128615cbb801b3e66df177a5c1d61b3339c92cba3a04b9db00aadce0635",
     "reference_screenshot": "95a9351619463053bda29bdf472702ed4bc650a4510fa6b3cfcc34d5e3ba79b1",
     "smoke_receipt": null,

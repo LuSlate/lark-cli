@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/scatterbrain.html",
     "render_status": "missing_smoke",
-    "sha256": "4cf01462c6953780cc59a29d83f051278e5315763f9365240abc3138c204eca2"
+    "sha256": "5a5157baf391062f4ed34e0bde225c820785e216e69b9e7af3d7c460ffdb0c80"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "4cf01462c6953780cc59a29d83f051278e5315763f9365240abc3138c204eca2",
+    "contact_sheet": "5a5157baf391062f4ed34e0bde225c820785e216e69b9e7af3d7c460ffdb0c80",
     "fidelity_receipt": "8f986c32012e5a26fff7d1e4b2c73fb73db59885a7bb3f8ba7fc7f1f0cfd927f",
     "reference_screenshot": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
     "smoke_receipt": null,

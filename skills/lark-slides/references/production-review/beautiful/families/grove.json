@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/grove.html",
     "render_status": "missing_smoke",
-    "sha256": "35333c79ea1ad148e7763b55a6d5886dae6c077cd65c49430a954e69d5997eb7"
+    "sha256": "da6b1ce28c3ae75ea17159bc4a656369fc659bdbfcff3b953aa9ac3ca4c74e28"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "35333c79ea1ad148e7763b55a6d5886dae6c077cd65c49430a954e69d5997eb7",
+    "contact_sheet": "da6b1ce28c3ae75ea17159bc4a656369fc659bdbfcff3b953aa9ac3ca4c74e28",
     "fidelity_receipt": "72a5d983bb922049b536f086eedb89d0e3a7959b72480aab5fcfce63842d7455",
     "reference_screenshot": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
     "smoke_receipt": null,

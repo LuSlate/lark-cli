@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/pink-script.html",
     "render_status": "missing_smoke",
-    "sha256": "b0b78d2776184009efaedb026d3c5dc4528a29f8fba7d7b6c5da4618fbd42497"
+    "sha256": "be97ade117aa12ee9ffcd562c2e2f905076db7c4ba21ebbc3efa92b4aa0890ae"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "b0b78d2776184009efaedb026d3c5dc4528a29f8fba7d7b6c5da4618fbd42497",
+    "contact_sheet": "be97ade117aa12ee9ffcd562c2e2f905076db7c4ba21ebbc3efa92b4aa0890ae",
     "fidelity_receipt": "ff075c2947f7c09785c47c57f68d995722873676d91251a822747e0b096b88bf",
     "reference_screenshot": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
     "smoke_receipt": null,

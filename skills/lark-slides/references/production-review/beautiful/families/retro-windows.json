@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/retro-windows.html",
     "render_status": "missing_smoke",
-    "sha256": "847e69a200f8f595339c4816826ed87853faf0a4fc468a6b0672f6f2946cf8a3"
+    "sha256": "599e3dad5711c9a858067f8ce03036d104d9b8a01cc12c9eef04e7efd5550437"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "847e69a200f8f595339c4816826ed87853faf0a4fc468a6b0672f6f2946cf8a3",
+    "contact_sheet": "599e3dad5711c9a858067f8ce03036d104d9b8a01cc12c9eef04e7efd5550437",
     "fidelity_receipt": "d9f718418fe0cba65d03c26230b5655764011c1197b9b52cb3ab15b0787cd8b6",
     "reference_screenshot": "8d9fc0a05ab025310cc35f15c2d3b2de629c79a49df9fe1c7d63b2f7b8a00543",
     "smoke_receipt": null,

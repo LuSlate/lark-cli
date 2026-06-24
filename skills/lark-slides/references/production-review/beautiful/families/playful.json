@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/playful.html",
     "render_status": "missing_smoke",
-    "sha256": "8c06c02b5802f957b497d1332e8cb0ab3d3a2c1825f551c946d00c38244aadad"
+    "sha256": "dce30937bc181379275aeb74ef278b312b7cbceea99f2e2522aaefe6d6f16878"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "8c06c02b5802f957b497d1332e8cb0ab3d3a2c1825f551c946d00c38244aadad",
+    "contact_sheet": "dce30937bc181379275aeb74ef278b312b7cbceea99f2e2522aaefe6d6f16878",
     "fidelity_receipt": "e828f367dda5704dca8c804fb833051e8e3888202e9b76169082ac50164873d8",
     "reference_screenshot": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
     "smoke_receipt": null,

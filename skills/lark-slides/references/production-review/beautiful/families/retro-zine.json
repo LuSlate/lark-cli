@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/retro-zine.html",
     "render_status": "missing_smoke",
-    "sha256": "5328e4b636054dbd363032e7fdb7fea6f0b31eb39d87215ffb4badae2fe02a97"
+    "sha256": "2461333873da620b3c97e88c9ad80c1814ed28433cbc211c781f4999b1a62833"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "5328e4b636054dbd363032e7fdb7fea6f0b31eb39d87215ffb4badae2fe02a97",
+    "contact_sheet": "2461333873da620b3c97e88c9ad80c1814ed28433cbc211c781f4999b1a62833",
     "fidelity_receipt": "70330ed527a665653b1934d49e3ad5f14e2f4f866de429f38615ca98f18657ba",
     "reference_screenshot": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
     "smoke_receipt": null,

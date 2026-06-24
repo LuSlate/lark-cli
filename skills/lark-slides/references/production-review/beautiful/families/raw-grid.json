@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/raw-grid.html",
     "render_status": "missing_smoke",
-    "sha256": "87221867c254043e20ca653260daa52ccb0f88492fe1fc5595db51edb2d5c87a"
+    "sha256": "0fc408b566d5f90530b8afb2e380258a3d6013f7ed2089e4b53921eb49d97c57"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "87221867c254043e20ca653260daa52ccb0f88492fe1fc5595db51edb2d5c87a",
+    "contact_sheet": "0fc408b566d5f90530b8afb2e380258a3d6013f7ed2089e4b53921eb49d97c57",
     "fidelity_receipt": "fee9ac2b5c6d69612a2a082849f1829f5b3c75f2a5c2d29b76657361f4fc04cc",
     "reference_screenshot": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
     "smoke_receipt": null,
