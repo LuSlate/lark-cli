@@ -10,7 +10,7 @@
 |----------------------|----|------------------------------------------------------------------------|
 | `--whiteboard-token` | 是  | 画板 token，需要拥有画板的读权限                                                    |
 | `--output_as`        | 是  | 输出格式：`image`（预览图片）、`svg`（SVG 矢量图）、`code`（PlantUML/Mermaid 代码）、`raw`（OpenAPI 原生画板节点格式） |
-| `--output`           | 否  | 输出路径。当 `--output_as image` 时必填；当 `--output_as code/raw` 时可选，不填则直接输出到终端 |
+| `--output`           | 否  | 输出路径。当 `--output_as image` 时必填；当 `--output_as svg/code/raw` 时可选，不填则直接输出到终端 |
 | `--overwrite`        | 否  | 覆盖已存在的文件，默认为 false                                                     |
 
 ## 输出格式

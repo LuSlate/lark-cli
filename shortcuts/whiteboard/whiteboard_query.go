@@ -139,10 +139,12 @@ var WhiteboardQuery = common.Shortcut{
 	},
 }
 
+// exportReq defines the request body for whiteboard export APIs.
 type exportReq struct {
 	ExportType string `json:"export_type"`
 }
 
+// exportResp models the whiteboard export response envelope.
 type exportResp struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
@@ -152,6 +154,7 @@ type exportResp struct {
 	} `json:"data"`
 }
 
+// exportWhiteboardSvg exports a whiteboard as SVG and writes it to stdout or a file.
 func exportWhiteboardSvg(runtime *common.RuntimeContext, wbToken, outDir string) error {
 	reqBody := exportReq{ExportType: "svg"}
 	req := &larkcore.ApiReq{
@@ -165,6 +168,19 @@ func exportWhiteboardSvg(runtime *common.RuntimeContext, wbToken, outDir string)
 		return wrapWbNetworkErr(err, "export whiteboard svg failed: %v", err)
 	}
 
+	var exportData exportResp
+	if err := json.Unmarshal(resp.RawBody, &exportData); err == nil {
+		if exportData.Code != 0 {
+			subtype := errs.SubtypeUnknown
+			if resp.StatusCode == http.StatusNotFound {
+				subtype = errs.SubtypeNotFound
+			}
+			return errs.NewAPIError(subtype, "export whiteboard svg failed: %s", exportData.Msg).WithCode(exportData.Code)
+		}
+	} else if resp.StatusCode == http.StatusOK {
+		return errs.NewInternalError(errs.SubtypeInvalidResponse, "parse export response failed: %v", err).WithCause(err)
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		body := common.TruncateStr(strings.TrimSpace(string(resp.RawBody)), 500)
 		if resp.StatusCode >= 500 {
@@ -172,16 +188,12 @@ func exportWhiteboardSvg(runtime *common.RuntimeContext, wbToken, outDir string)
 				WithCode(resp.StatusCode).
 				WithRetryable()
 		}
-		return errs.NewAPIError(errs.SubtypeUnknown, "export whiteboard svg failed: HTTP %d: %s", resp.StatusCode, body).
+		subtype := errs.SubtypeUnknown
+		if resp.StatusCode == http.StatusNotFound {
+			subtype = errs.SubtypeNotFound
+		}
+		return errs.NewAPIError(subtype, "export whiteboard svg failed: HTTP %d: %s", resp.StatusCode, body).
 			WithCode(resp.StatusCode)
-	}
-
-	var exportData exportResp
-	if err := json.Unmarshal(resp.RawBody, &exportData); err != nil {
-		return errs.NewInternalError(errs.SubtypeInvalidResponse, "parse export response failed: %v", err).WithCause(err)
-	}
-	if exportData.Code != 0 {
-		return errs.NewAPIError(errs.SubtypeUnknown, "export whiteboard svg failed: %s", exportData.Msg).WithCode(exportData.Code)
 	}
 
 	svgBytes, err := base64.StdEncoding.DecodeString(exportData.Data.Content)

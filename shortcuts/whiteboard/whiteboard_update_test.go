@@ -6,6 +6,7 @@ package whiteboard
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -477,11 +478,12 @@ A-->B`
 	}
 }
 
+// TestWhiteboardUpdateExecute_SVGFormat verifies svg update requests use syntax_type=3 and send the source payload.
 func TestWhiteboardUpdateExecute_SVGFormat(t *testing.T) {
 	factory, stdout, reg := newUpdateExecuteFactory(t)
 
 	// SVG shares the /nodes/plantuml endpoint with plantuml/mermaid via syntax_type=3.
-	reg.Register(&httpmock.Stub{
+	stub := &httpmock.Stub{
 		Method: "POST",
 		URL:    "/open-apis/board/v1/whiteboards/test-token-svg/nodes/plantuml",
 		Body: map[string]interface{}{
@@ -491,12 +493,25 @@ func TestWhiteboardUpdateExecute_SVGFormat(t *testing.T) {
 				"node_id": "node1",
 			},
 		},
-	})
+	}
+	reg.Register(stub)
 
 	source := `<svg xmlns="http://www.w3.org/2000/svg"/>`
 	args := []string{"+update", "--whiteboard-token", "test-token-svg", "--input_format", "svg", "--source", source}
 	if err := runUpdateShortcut(t, WhiteboardUpdate, args, factory, stdout); err != nil {
 		t.Fatalf("err=%v", err)
+	}
+
+	var body map[string]interface{}
+	if err := json.Unmarshal(stub.CapturedBody, &body); err != nil {
+		t.Fatalf("unmarshal captured body: %v\nraw=%s", err, string(stub.CapturedBody))
+	}
+
+	if got := body["syntax_type"]; got != float64(3) {
+		t.Fatalf("syntax_type = %#v, want 3; body=%s", got, string(stub.CapturedBody))
+	}
+	if got := body["plant_uml_code"]; got != source {
+		t.Fatalf("plant_uml_code = %#v, want %q; body=%s", got, source, string(stub.CapturedBody))
 	}
 }
 
