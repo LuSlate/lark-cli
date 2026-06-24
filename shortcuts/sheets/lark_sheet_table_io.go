@@ -882,7 +882,15 @@ func sheetCreateDims(s *tableSheetSpec) (rows, cols int) {
 	_, col0, row0, _ := sheetAnchor(s)
 	cols = col0 + len(s.Columns)
 	rows = row0 + len(s.Rows)
-	if headerOn(s) {
+	// Match writeSheetData's header decision exactly. headerOn() is false for
+	// append mode by default, but writeSheetData *forces* a header when append
+	// hits an empty sheet with no explicit Header choice (so column names
+	// aren't lost on the first append). sheetCreateDims runs only when the
+	// sheet is being created — therefore the sheet IS empty and that forced
+	// header WILL be written, so size for it here. Without this the sheet is
+	// created one row short and append-near-50000 / append-at-N-cols-200
+	// would bounce off the backend's hard cap.
+	if headerOn(s) || (s.Mode == "append" && s.Header == nil) {
 		rows++
 	}
 	if cols < 20 {
@@ -1059,10 +1067,19 @@ var TableGet = common.Shortcut{
 		if rng == "" {
 			rng = "<each sheet's used range (full-grid current_region)>"
 		}
-		body, _ = buildToolBody("get_cell_ranges", map[string]interface{}{
+		// Mirror the selector the Execute path will pass to get_cell_ranges so the
+		// dry-run body matches the real request shape; agents that validate one and
+		// run the other would otherwise see a sheet_id/sheet_name field appear out
+		// of nowhere. Network-free: only echoes the flags the caller already gave.
+		input := map[string]interface{}{
 			"excel_id": token, "ranges": []string{rng},
 			"include_styles": true, "value_render_option": "raw_value",
-		})
+		}
+		sheetSelectorForToolInput(input,
+			strings.TrimSpace(runtime.Str("sheet-id")),
+			strings.TrimSpace(runtime.Str("sheet-name")),
+		)
+		body, _ = buildToolBody("get_cell_ranges", input)
 		dry.POST(toolInvokePath(token, ToolKindRead)).
 			Desc(fmt.Sprintf("read cells (%s) + styles via get_cell_ranges, then infer column types", rng)).
 			Body(body)
@@ -1497,10 +1514,42 @@ func inferColumnType(dataRows [][]map[string]interface{}, c int) (string, string
 }
 
 // isDateNumberFormat reports whether a number_format denotes a date/time. Date
-// formats carry a year token ('y'); pure numeric formats (#,##0, 0.00, 0.00%,
-// @) do not.
+// formats carry a year token (Excel's 'yy' or 'yyyy'); pure numeric formats
+// (#,##0, 0.00, 0.00%, @) do not.
+//
+// Token-aware so currency / unit prefixes that happen to contain a lone 'y' or
+// 'Y' — most notably "JPY #,##0" — are not misread as dates. The scanner skips:
+//   - characters inside double-quoted literals  ("Yen ")
+//   - the character following a backslash escape (\y)
+//   - characters inside [...] sections          ([Red], [$EUR-2])
+//
+// and only fires on an unquoted/unescaped/unbracketed 'yy' (a single 'y' is
+// not a year token in Excel; "JPY 0" has 'Y' but never 'yy').
 func isDateNumberFormat(nf string) bool {
-	return strings.ContainsRune(strings.ToLower(nf), 'y')
+	s := strings.ToLower(nf)
+	inQuote, inBracket, escape := false, false, false
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if escape {
+			escape = false
+			continue
+		}
+		switch {
+		case c == '\\':
+			escape = true
+		case !inBracket && c == '"':
+			inQuote = !inQuote
+		case !inQuote && c == '[':
+			inBracket = true
+		case !inQuote && c == ']':
+			inBracket = false
+		case !inQuote && !inBracket:
+			if c == 'y' && i+1 < len(s) && s[i+1] == 'y' {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // isTextNumberFormat reports whether a number_format is Excel/Lark text format

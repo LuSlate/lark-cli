@@ -545,6 +545,16 @@ func TestTablePut_SheetCreateDims(t *testing.T) {
 		{"start_cell offset adds to both", tableSheetSpec{StartCell: "C5", Columns: cols(40), Rows: rows(5)}, 200, 42},
 		{"header:false drops the header row", tableSheetSpec{Header: bp(false), Columns: cols(3), Rows: rows(500)}, 500, 20},
 		{"columns clamp at backend max 200", tableSheetSpec{Columns: cols(250), Rows: rows(5)}, 200, 200},
+		// Default headerOn() is false for append mode, but writeSheetData forces
+		// a header when append hits an empty sheet with no explicit Header
+		// choice (so column names aren't lost). sheetCreateDims runs only on
+		// brand-new sheets — which are empty by definition — so it has to
+		// match: append + Header=nil ⇒ +1 row. Otherwise an append-near-50000
+		// payload would be created one row short.
+		{"append on new sheet sizes for the forced header row (49999 data rows + 1 header = 50000)",
+			tableSheetSpec{Mode: "append", Columns: cols(3), Rows: rows(49999)}, 50000, 20},
+		{"append + Header=false (explicit) does NOT add the forced header row",
+			tableSheetSpec{Mode: "append", Header: bp(false), Columns: cols(3), Rows: rows(50)}, 200, 20},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -989,14 +999,23 @@ func TestTableGet_SerialRoundTrip(t *testing.T) {
 
 func TestTableGet_IsDateNumberFormat(t *testing.T) {
 	t.Parallel()
-	for _, nf := range []string{"yyyy-mm-dd", "yyyy-mm", "yyyy/m/d", "YYYY/MM/DD"} {
+	for _, nf := range []string{"yyyy-mm-dd", "yyyy-mm", "yyyy/m/d", "YYYY/MM/DD", "yy-mm-dd", "[Red]yyyy-mm-dd", `"At "yyyy`} {
 		if !isDateNumberFormat(nf) {
 			t.Errorf("%q should be a date format", nf)
 		}
 	}
-	for _, nf := range []string{"#,##0", "0.00", "0.00%", "@", ""} {
+	// JPY (and other currency / unit prefixes that happen to contain a lone Y)
+	// were previously misread as dates because the scanner saw any lowercase 'y'.
+	// Pure numeric formats, escaped/quoted literals, and bracket sections must
+	// never trigger the date branch — those rows would have round-tripped
+	// integer cells as ISO dates.
+	for _, nf := range []string{
+		"#,##0", "0.00", "0.00%", "@", "",
+		"JPY #,##0", "JPY 0", `"YEN "#,##0`, "[$JPY-411] #,##0",
+		`\y\y`, // escaped letters, not a year token
+	} {
 		if isDateNumberFormat(nf) {
-			t.Errorf("%q should not be a date format", nf)
+			t.Errorf("%q should NOT be a date format", nf)
 		}
 	}
 }
@@ -1302,6 +1321,62 @@ func TestTableGet_DryRunIncludesCellRead(t *testing.T) {
 	}
 	if !found {
 		t.Error("dry-run should include a get_cell_ranges read")
+	}
+}
+
+// TestTableGet_DryRunMirrorsExecuteSelector pins the dry-run get_cell_ranges
+// body to the same selector field Execute will send. Agents validate the
+// dry-run shape and then expect the live call to look the same — without this
+// the selector field appeared in Execute but not in dry-run, so a request
+// shape mismatch would have been invisible.
+func TestTableGet_DryRunMirrorsExecuteSelector(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name       string
+		args       []string
+		wantField  string
+		wantValue  string
+		otherField string // must NOT be present
+	}{
+		{
+			name:       "by --sheet-name",
+			args:       []string{"--url", testURL, "--sheet-name", "销售"},
+			wantField:  "sheet_name",
+			wantValue:  "销售",
+			otherField: "sheet_id",
+		},
+		{
+			name:       "by --sheet-id",
+			args:       []string{"--url", testURL, "--sheet-id", testSheetID},
+			wantField:  "sheet_id",
+			wantValue:  testSheetID,
+			otherField: "sheet_name",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			calls := parseDryRunAPI(t, TableGet, tt.args)
+			var cellInput map[string]any
+			for _, c := range calls {
+				body, _ := c.(map[string]any)["body"].(map[string]any)
+				if body == nil {
+					continue
+				}
+				if tn, _ := body["tool_name"].(string); tn == "get_cell_ranges" {
+					cellInput = decodeToolInput(t, body, "get_cell_ranges")
+				}
+			}
+			if cellInput == nil {
+				t.Fatalf("dry-run had no get_cell_ranges body; calls=%#v", calls)
+			}
+			if got := cellInput[tt.wantField]; got != tt.wantValue {
+				t.Errorf("get_cell_ranges body %s = %#v, want %q", tt.wantField, got, tt.wantValue)
+			}
+			if _, has := cellInput[tt.otherField]; has {
+				t.Errorf("get_cell_ranges body should not carry %s when only the other selector was given; got=%#v", tt.otherField, cellInput)
+			}
+		})
 	}
 }
 
