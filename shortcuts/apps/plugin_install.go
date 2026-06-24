@@ -299,10 +299,11 @@ func pluginResolveVersion(ctx context.Context, rctx *common.RuntimeContext, key,
 		return "", appsValidationError("no version found for plugin %q", key).
 			WithHint("check plugin key and version")
 	}
-	rv, _ := match["plugin_version"].(string)
+	// API returns "version" (not "plugin_version")
+	rv, _ := match["version"].(string)
 	if rv == "" {
 		return "", appsValidationError("incomplete version info for plugin %q", key).
-			WithHint("API returned version info without plugin_version; contact plugin maintainer")
+			WithHint("API returned version info without version field; contact plugin maintainer")
 	}
 	return rv, nil
 }
@@ -323,14 +324,15 @@ func pluginFindVersionInItems(data map[string]interface{}, key, version string) 
 		if !ok {
 			continue
 		}
-		pk, _ := item["plugin_key"].(string)
+		// API returns "key" (not "plugin_key")
+		pk, _ := item["key"].(string)
 		if pk != key {
 			continue
 		}
 		if isLatest {
 			return item
 		}
-		pv, _ := item["plugin_version"].(string)
+		pv, _ := item["version"].(string)
 		if pv == version {
 			return item
 		}

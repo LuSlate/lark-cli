@@ -30,8 +30,10 @@ func TestPluginInstall_SinglePlugin(t *testing.T) {
 			"data": map[string]interface{}{
 				"items": []interface{}{
 					map[string]interface{}{
-						"plugin_key":     "@test/my-plugin",
-						"plugin_version": "1.0.0",
+						"key":                "@test/my-plugin",
+						"version":            "1.0.0",
+						"download_approach":  "inner",
+						"status":             "active",
 					},
 				},
 			},
