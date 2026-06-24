@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/cmdutil"
 	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/shortcuts/common"
@@ -31,10 +32,10 @@ import (
 //   - 多语句部分失败：`Statement K: ✗ <message> [<code>]` + 末尾「前序语句已落地」提示
 //
 // 失败语义：server 多语句失败仍返 code:0，把失败语句标成 ERROR 哨兵塞进 result。Execute 检测到哨兵
-// 后升级成 typed api_error（exit 非 0、detail 带 statement_index / completed / rolled_back），
-// 避免 agent 误判 ok:true 假成功。rolled_back 反映真实状态（inferRolledBack 按 completed 里
-// BEGIN/COMMIT 计数推断）：失败发生在用户显式 BEGIN…COMMIT 事务内 → 服务端整批回滚、前序未落库
-// （rolled_back=true、completed=[]）；否则 DBA 模式逐条 auto-commit、前序已落地（rolled_back=false）。
+// 后升级成 typed errs.APIError（CategoryAPI → exit 1），避免 agent 误判 ok:true 假成功。诊断信息
+// （第几条失败 / 共几条 / 是否整批回滚 / 前序是否落地）写进 message+hint 文案（errs.* 信封扁平、无
+// detail 容器）：失败在用户显式 BEGIN…COMMIT 事务内 → 整批回滚、前序未落库；否则 DBA 模式逐条
+// auto-commit、前序已落地。rolled_back 语义由 inferRolledBack 按 BEGIN/COMMIT 计数推断。
 //
 // JSON（成功路径）按 SQL 类型归一化 `data`（不透传后端 result 字符串）：
 //   - 单 SELECT → data 是行数组 `[{...}]`（空 → `[]`）
@@ -216,48 +217,29 @@ func findErrorSentinel(stmts []map[string]interface{}) (int, map[string]interfac
 	return 0, nil, false
 }
 
-// sqlStatementError 把 ERROR 哨兵升级成 typed api_error。
+// sqlStatementError 把 ERROR 哨兵升级成 typed errs.APIError（CategoryAPI → exit 1）。
 //
-// rolled_back 反映真实状态（实测后端把 BEGIN/COMMIT 也作为 statement 返回）：
-//   - 失败时仍在用户显式事务内（completed 里 BEGIN 多于 COMMIT/ROLLBACK）→ 服务端
-//     closeUserTxIfOpen 回滚整个事务，前序语句**均未落库** → rolled_back=true、completed=[]；
-//   - 否则 DBA 模式逐条 auto-commit，失败前的语句**已落地** → rolled_back=false、completed 列出。
-//
-// 对齐 miaoda-cli 的 inferRolledBack（按 completed 里 BEGIN/COMMIT/ROLLBACK 计数推断）。
+// 多语句失败的全部诊断信息——第几条失败 / 共几条 / 是否整批回滚 / 前序是否落地——都写进
+// message + hint 的人类可读文案（errs.* 信封是扁平字段、不带结构化 detail 容器）：
+//   - message 末尾 "(at statement N of M)" 给出失败位置；
+//   - hint 区分两种语义（由 inferRolledBack 推断，实测后端把 BEGIN/COMMIT 也作为 statement 返回）：
+//     失败仍在用户显式事务内 → 服务端整批回滚、前序未落库（hint: "rolled back ... NO statements persisted"）；
+//     否则 DBA 模式逐条 auto-commit、前序已落地（hint: "statements 1-N already applied ... not rolled back"）。
 func sqlStatementError(stmts []map[string]interface{}, errIdx int, errStmt map[string]interface{}) error {
 	code, msg := parseErrorSentinel(common.GetString(errStmt, "data"))
 	stmtNo := errIdx + 1 // 1-based 给人看
 	fullMsg := fmt.Sprintf("%s (at statement %d of %d)", msg, stmtNo, len(stmts))
 
-	rolledBack := inferRolledBack(stmts[:errIdx])
-	// rolled_back=true 时整个事务回滚，前序语句都没落库 → completed 置空（避免误导成「已落地」）。
-	// rolled_back=false（auto-commit）时 completed 列出已落地的前序语句（归一化成 {command,...}）。
-	completed := make([]map[string]interface{}, 0, errIdx)
-	if !rolledBack {
-		for _, s := range stmts[:errIdx] {
-			completed = append(completed, multiStatementElement(s))
-		}
+	var hint string
+	switch {
+	case inferRolledBack(stmts[:errIdx]):
+		hint = fmt.Sprintf("statement %d failed inside an explicit transaction — it was rolled back and NO statements persisted; fix the SQL and re-run the whole script.", stmtNo)
+	case errIdx > 0:
+		hint = fmt.Sprintf("statements 1-%d already applied (DBA mode auto-commits each statement; not rolled back); fix statement %d and re-run only the remaining statements.", errIdx, stmtNo)
+	default:
+		hint = "no statements were applied (the first statement failed; nothing to roll back); fix the SQL and re-run."
 	}
-	apiErr := output.ErrAPI(code, fullMsg, map[string]interface{}{
-		"statement_index": errIdx,
-		"completed":       completed,
-		"rolled_back":     rolledBack,
-	})
-	if apiErr.Detail != nil {
-		switch {
-		case rolledBack:
-			apiErr.Detail.Hint = fmt.Sprintf(
-				"statement %d failed inside an explicit transaction — it was rolled back and NO statements persisted; fix the SQL and re-run the whole script.",
-				stmtNo)
-		case errIdx > 0:
-			apiErr.Detail.Hint = fmt.Sprintf(
-				"statements 1-%d were already applied (DBA mode auto-commits each statement); fix statement %d and re-run only the remaining statements.",
-				errIdx, stmtNo)
-		default:
-			apiErr.Detail.Hint = "no statements were applied; fix the SQL and re-run."
-		}
-	}
-	return apiErr
+	return errs.NewAPIError(errs.SubtypeServerError, "%s", fullMsg).WithCode(code).WithHint("%s", hint)
 }
 
 // inferRolledBack 推断失败时是否处于用户显式事务内（→ 服务端整批回滚）。

@@ -5,12 +5,12 @@ package apps
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 	"github.com/larksuite/cli/internal/output"
 )
@@ -593,10 +593,10 @@ func TestAppsDBExecute_PrettyMultiStatementsPartialFailureWithErrorSentinel(t *t
 	}
 }
 
-// TestAppsDBExecute_MultiStatementFailureReturnsTypedError 钉死「多语句失败 → typed api_error」：
-// json 默认不再打 ok:true 假成功，而是返回 *output.ExitError（type=api_error、非零 exit），
-// detail 带 statement_index / completed / rolled_back。rolled_back=false 因 CLI 永远 DBA 模式
-// （真机 boe 实证：失败前的语句已落地）。
+// TestAppsDBExecute_MultiStatementFailureReturnsTypedError 钉死「多语句失败 → typed errs.APIError」：
+// json 默认不再打 ok:true 假成功，而是返回 typed errs.* 错误（type=api / subtype=server_error、
+// exit=1）。失败位置在 message 的 "(at statement N of M)"，前序是否落地/是否回滚写在 hint。
+// 本例无 BEGIN → auto-commit，前序已落地、未回滚（hint 含 "already applied ... not rolled back"）。
 func TestAppsDBExecute_MultiStatementFailureReturnsTypedError(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -622,34 +622,25 @@ func TestAppsDBExecute_MultiStatementFailureReturnsTypedError(t *testing.T) {
 	if strings.Contains(stdout.String(), `"ok": true`) {
 		t.Errorf("must not emit ok:true success envelope on failure; stdout:\n%s", stdout.String())
 	}
-	var exitErr *output.ExitError
-	if !errors.As(err, &exitErr) || exitErr.Detail == nil {
-		t.Fatalf("want *output.ExitError with detail, got %T: %v", err, err)
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("want a typed errs.* error, got %T: %v", err, err)
 	}
-	if exitErr.Detail.Type != "api_error" {
-		t.Errorf("error.type = %q, want api_error", exitErr.Detail.Type)
+	if p.Category != errs.CategoryAPI || p.Subtype != errs.SubtypeServerError {
+		t.Errorf("category/subtype = %s/%s, want api/server_error", p.Category, p.Subtype)
 	}
-	if exitErr.Detail.Code != 1300002 {
-		t.Errorf("error.code = %d, want 1300002", exitErr.Detail.Code)
+	if p.Code != 1300002 {
+		t.Errorf("code = %d, want 1300002", p.Code)
 	}
-	if !strings.Contains(exitErr.Detail.Message, "(at statement 2 of 2)") {
-		t.Errorf("error.message missing statement locator: %q", exitErr.Detail.Message)
+	if !strings.Contains(p.Message, "(at statement 2 of 2)") {
+		t.Errorf("message missing statement locator: %q", p.Message)
+	}
+	// 无 BEGIN → auto-commit：前序已落地、未回滚，语义写在 hint。
+	if !strings.Contains(p.Hint, "already applied") || !strings.Contains(p.Hint, "not rolled back") {
+		t.Errorf("hint should state prior statements applied & not rolled back: %q", p.Hint)
 	}
 	if output.ExitCodeOf(err) != output.ExitAPI {
 		t.Errorf("exit = %d, want %d (ExitAPI)", output.ExitCodeOf(err), output.ExitAPI)
-	}
-	detail, ok := exitErr.Detail.Detail.(map[string]interface{})
-	if !ok {
-		t.Fatalf("error.detail not a map: %T", exitErr.Detail.Detail)
-	}
-	if detail["statement_index"] != 1 {
-		t.Errorf("statement_index = %v, want 1", detail["statement_index"])
-	}
-	if detail["rolled_back"] != false {
-		t.Errorf("rolled_back = %v, want false (DBA mode persists prior statements)", detail["rolled_back"])
-	}
-	if completed, ok := detail["completed"].([]map[string]interface{}); !ok || len(completed) != 1 {
-		t.Errorf("completed = %v, want 1 persisted statement", detail["completed"])
 	}
 }
 
@@ -673,25 +664,22 @@ func TestAppsDBExecute_SingleErrorReturnsTypedError(t *testing.T) {
 	if err == nil {
 		t.Fatalf("single ERROR sentinel must return a typed error; stdout:\n%s", stdout.String())
 	}
-	var exitErr *output.ExitError
-	if !errors.As(err, &exitErr) || exitErr.Detail == nil {
-		t.Fatalf("want *output.ExitError with detail, got %T: %v", err, err)
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("want a typed errs.* error, got %T: %v", err, err)
 	}
-	if !strings.Contains(exitErr.Detail.Message, "(at statement 1 of 1)") {
-		t.Errorf("error.message missing locator: %q", exitErr.Detail.Message)
+	if !strings.Contains(p.Message, "(at statement 1 of 1)") {
+		t.Errorf("message missing locator: %q", p.Message)
 	}
-	detail, _ := exitErr.Detail.Detail.(map[string]interface{})
-	if detail["statement_index"] != 0 {
-		t.Errorf("statement_index = %v, want 0", detail["statement_index"])
-	}
-	if completed, ok := detail["completed"].([]map[string]interface{}); !ok || len(completed) != 0 {
-		t.Errorf("completed = %v, want empty", detail["completed"])
+	// 第一条就失败、无落地 的语义写在 hint。
+	if !strings.Contains(p.Hint, "no statements were applied") {
+		t.Errorf("hint should state nothing applied: %q", p.Hint)
 	}
 }
 
-// TestAppsDBExecute_TransactionFailureRolledBack 钉死「显式事务内失败 → rolled_back=true」：
-// 实测后端把 BEGIN 也作为 statement 返回；失败时 completed 含未配对 BEGIN → 整批回滚，
-// rolled_back=true、completed=[]、statement_index 指向 ERROR 位置。
+// TestAppsDBExecute_TransactionFailureRolledBack 钉死「显式事务内失败 → 整批回滚」：
+// 实测后端把 BEGIN 也作为 statement 返回；completed 含未配对 BEGIN → inferRolledBack 判定回滚。
+// 回滚语义现写在 hint（"rolled back ... NO statements persisted"），失败位置在 message。
 func TestAppsDBExecute_TransactionFailureRolledBack(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -716,22 +704,19 @@ func TestAppsDBExecute_TransactionFailureRolledBack(t *testing.T) {
 	if err == nil {
 		t.Fatalf("transaction failure must return a typed error; stdout:\n%s", stdout.String())
 	}
-	var exitErr *output.ExitError
-	if !errors.As(err, &exitErr) || exitErr.Detail == nil {
-		t.Fatalf("want *output.ExitError with detail, got %T: %v", err, err)
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("want a typed errs.* error, got %T: %v", err, err)
 	}
-	detail, _ := exitErr.Detail.Detail.(map[string]interface{})
-	if detail["statement_index"] != 3 {
-		t.Errorf("statement_index = %v, want 3", detail["statement_index"])
+	if p.Category != errs.CategoryAPI || p.Subtype != errs.SubtypeServerError {
+		t.Errorf("category/subtype = %s/%s, want api/server_error", p.Category, p.Subtype)
 	}
-	if detail["rolled_back"] != true {
-		t.Errorf("rolled_back = %v, want true (failure inside explicit BEGIN…COMMIT transaction)", detail["rolled_back"])
+	if !strings.Contains(p.Message, "(at statement 4 of 4)") {
+		t.Errorf("message missing statement locator: %q", p.Message)
 	}
-	if completed, ok := detail["completed"].([]map[string]interface{}); !ok || len(completed) != 0 {
-		t.Errorf("completed = %v, want empty (nothing persisted on rollback)", detail["completed"])
-	}
-	if !strings.Contains(exitErr.Detail.Hint, "rolled back") {
-		t.Errorf("hint should mention rollback: %q", exitErr.Detail.Hint)
+	// 事务整批回滚 / 前序未落库 的语义写在 hint。
+	if !strings.Contains(p.Hint, "rolled back") || !strings.Contains(p.Hint, "NO statements persisted") {
+		t.Errorf("hint should state transaction rolled back & nothing persisted: %q", p.Hint)
 	}
 }
 

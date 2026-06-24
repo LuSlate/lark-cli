@@ -32,7 +32,7 @@ lark-cli apps +db-execute --app-id app_xxx --env dev --sql - --yes < /Users/.../
   - 单 DDL → `data = {command}`（如 `{"command":"CREATE_TABLE"}`）。
   - 多语句 → `data` 是元素数组：SELECT 为 `{command:"SELECT", rows:[...]}`，DML 为 `{command, rows_affected}`，DDL 为 `{command}`。
 - pretty 会按 SELECT/DML/DDL 自适应渲染；多语句会逐条显示 Statement 摘要。
-- 失败可能仍有前序语句已执行；看 `error.detail.statement_index`、`completed`、`rolled_back` 和 `hint` 决定从哪条继续。
+- 失败返回 typed `error`（`type:"api"`、`subtype:"server_error"`、`code`、`message`、`hint`）：失败位置在 `message` 的「(at statement N of M)」；前序是否落地 / 是否整批回滚写在 `hint`——事务内失败「rolled back ... NO statements persisted」，否则 auto-commit「statements 1-N already applied ... not rolled back」。据此决定整段重跑还是只跑剩余语句。
 
 ## Agent 规则
 
