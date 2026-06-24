@@ -19,7 +19,6 @@ import (
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/extension/fileio"
-	"github.com/larksuite/cli/internal/cmdutil"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -84,12 +83,39 @@ func parseDataframePayload(rctx *common.RuntimeContext) (*tablePayload, error) {
 // one-shot (one command per process). Tests reset by setting it back to nil.
 var dataframeStdinCache []byte
 
+// Memory caps for --dataframe. The Arrow IPC reader allocates large buffers up
+// front, and arrowRecordToRows materializes every cell into [][]interface{}, so
+// an unbounded input could OOM the CLI before the backend's per-write limits
+// kicked in. The caps mirror the backend's per-sheet hard ceilings (200 cols,
+// 50000 rows) plus a generous overall byte cap that still fits the worst-case
+// dense numeric payload (200 × 50000 cells × ~25 bytes Arrow overhead ≈ 250 MB).
+const (
+	dataframeMaxBytes = 256 * 1024 * 1024 // 256 MiB raw IPC payload
+	dataframeMaxCols  = 200               // backend hard ceiling
+	dataframeMaxRows  = 50000             // backend hard ceiling
+)
+
 // readDataframeBytes resolves --dataframe to raw binary. A literal `@` prefix
 // is tolerated for symmetry with --sheets (`@/tmp/x.arrow` and `/tmp/x.arrow`
 // both work). `-` reads stdin verbatim — cached on first call so Validate /
 // Execute / DryRun all see the same bytes. Bytes are returned untouched: no
 // TrimSpace, no BOM strip — both would corrupt an Arrow IPC stream.
 func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error) {
+	// readCapped pulls up to dataframeMaxBytes+1 bytes from r so we can detect
+	// "exceeded cap" without allocating the entire oversized payload up front.
+	readCapped := func(r io.Reader) ([]byte, error) {
+		data, err := io.ReadAll(io.LimitReader(r, dataframeMaxBytes+1))
+		if err != nil {
+			return nil, err
+		}
+		if len(data) > dataframeMaxBytes {
+			return nil, common.ValidationErrorf(
+				"--dataframe: payload exceeds %d MiB cap (limits CLI memory; the backend per-sheet ceilings are 200 cols × 50000 rows)",
+				dataframeMaxBytes/(1024*1024))
+		}
+		return data, nil
+	}
+
 	if raw == "-" {
 		if dataframeStdinCache != nil {
 			return dataframeStdinCache, nil
@@ -102,12 +128,15 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 			return nil, common.ValidationErrorf("--dataframe: stdin (-) can only be used by one flag").
 				WithHint("a process has a single stdin, so only one flag per call may use '-'; pass the others as @file (e.g. --styles @/path/to/styles.json)")
 		}
-		io := rctx.IO()
-		if io == nil || io.In == nil {
+		ios := rctx.IO()
+		if ios == nil || ios.In == nil {
 			return nil, common.ValidationErrorf("--dataframe: stdin is not available")
 		}
-		data, err := readAllBytes(io.In)
+		data, err := readCapped(ios.In)
 		if err != nil {
+			if errs.IsTyped(err) {
+				return nil, err
+			}
 			return nil, common.ValidationErrorf("--dataframe: read stdin: %v", err).WithCause(err)
 		}
 		if len(data) == 0 {
@@ -118,8 +147,27 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 		return data, nil
 	}
 	path := strings.TrimPrefix(raw, "@")
-	data, err := cmdutil.ReadInputFile(rctx.FileIO(), path)
+	fio := rctx.FileIO()
+	if fio == nil {
+		return nil, common.ValidationErrorf("--dataframe: file input is not available in this context")
+	}
+	// Pre-check size via Stat so a multi-GB file is rejected immediately
+	// instead of being streamed all the way to the cap.
+	if info, statErr := fio.Stat(path); statErr == nil && info.Size() > dataframeMaxBytes {
+		return nil, common.ValidationErrorf(
+			"--dataframe: file %q is %d MiB, exceeds %d MiB cap",
+			path, info.Size()/(1024*1024), dataframeMaxBytes/(1024*1024))
+	}
+	f, err := fio.Open(path)
 	if err != nil {
+		return nil, common.ValidationErrorf("--dataframe: %v", err).WithCause(err)
+	}
+	defer f.Close()
+	data, err := readCapped(f)
+	if err != nil {
+		if errs.IsTyped(err) {
+			return nil, err
+		}
 		return nil, common.ValidationErrorf("--dataframe: %v", err).WithCause(err)
 	}
 	if len(data) == 0 {
@@ -127,10 +175,6 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 	}
 	return data, nil
 }
-
-// readAllBytes is a thin wrapper so tests can fake the io.Reader without
-// importing io. Mirrors io.ReadAll exactly.
-func readAllBytes(r io.Reader) ([]byte, error) { return io.ReadAll(r) }
 
 // decodeArrowToSheet reads `data` as an Arrow IPC file (single schema,
 // possibly multi-batch) and produces a tableSheetSpec with name + columns +
@@ -149,6 +193,12 @@ func decodeArrowToSheet(data []byte, sheetName string) (tableSheetSpec, error) {
 	}
 
 	ncols := schema.NumFields()
+	if ncols > dataframeMaxCols {
+		// Fail fast at the schema layer before allocating per-column slices.
+		// 200 cols matches the backend's per-sheet hard ceiling — anything past
+		// that would error on the first set_cell_range anyway.
+		return tableSheetSpec{}, fmt.Errorf("%d columns exceeds the per-sheet ceiling of %d", ncols, dataframeMaxCols) //nolint:forbidigo // intermediate error; the command layer wraps it into a typed --dataframe/--dataframe-out validation error
+	}
 	cols := make([]tableColumnSpec, ncols)
 	seen := make(map[string]bool, ncols)
 	for i := 0; i < ncols; i++ {
@@ -173,6 +223,14 @@ func decodeArrowToSheet(data []byte, sheetName string) (tableSheetSpec, error) {
 		rec, err := reader.RecordAt(b)
 		if err != nil {
 			return tableSheetSpec{}, fmt.Errorf("read record batch %d: %w", b, err) //nolint:forbidigo // intermediate error; the command layer wraps it into a typed --dataframe/--dataframe-out validation error
+		}
+		// Reject early during iteration before materializing more rows into the
+		// [][]interface{} buffer — without this, a 1M-row Arrow file would be
+		// fully decoded into memory before the writer's per-batch size check
+		// kicks in.
+		if int64(len(rows))+rec.NumRows() > int64(dataframeMaxRows) {
+			rec.Release()
+			return tableSheetSpec{}, fmt.Errorf("%d rows exceeds the per-sheet ceiling of %d", int64(len(rows))+rec.NumRows(), dataframeMaxRows) //nolint:forbidigo // intermediate error; the command layer wraps it into a typed --dataframe/--dataframe-out validation error
 		}
 		batchRows, err := arrowRecordToRows(rec, cols)
 		rec.Release()

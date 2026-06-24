@@ -223,6 +223,29 @@ func TestDataframe_BadBytes(t *testing.T) {
 	}
 }
 
+// TestDecodeArrowToSheet_RejectsTooManyColumns guards the per-sheet column cap.
+// Without it a wide Arrow file (e.g. 201+ columns) would allocate a long
+// tableColumnSpec slice + decode every batch before the backend's 200-column
+// per-sheet ceiling rejected the first set_cell_range — wasting both CPU and
+// memory before the failure surfaces. Cap matches the backend hard ceiling.
+func TestDecodeArrowToSheet_RejectsTooManyColumns(t *testing.T) {
+	t.Parallel()
+	fields := make([]arrow.Field, dataframeMaxCols+1)
+	for i := range fields {
+		fields[i] = arrow.Field{Name: "c" + strings.TrimSpace(string(rune('0'+i%10))) + "_" + strings.Repeat("x", i/10+1), Type: arrow.BinaryTypes.String}
+	}
+	schema := arrow.NewSchema(fields, nil)
+	buf := buildArrowIPC(t, schema, func(b *array.RecordBuilder) {
+		for i := range fields {
+			b.Field(i).(*array.StringBuilder).Append("")
+		}
+	})
+	_, err := decodeArrowToSheet(buf, "S")
+	if err == nil || !strings.Contains(err.Error(), "exceeds the per-sheet ceiling") {
+		t.Errorf("err = %v, want column-cap error", err)
+	}
+}
+
 // TestReadDataframeBytes_RejectsSecondStdinConsumer covers the case where another
 // flag (e.g. --styles) has already consumed stdin via the common Input resolver:
 // since --dataframe bypasses that resolver, the only thing keeping the two from
