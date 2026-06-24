@@ -506,17 +506,6 @@ lark-cli sheets +table-put --spreadsheet-token "<token>" --sheets @payload.json
 
 每个 sheet 还可带 `"allow_overwrite": false`（遇非空拒写、保护原数据）、`"header": false`（只写数据不写表头）。完整字段跑 `+table-put --print-schema --flag-name sheets`。
 
-> 💡 **pandas DataFrame 直读直写：用 `scripts/sheets_df.py`**。本 skill 附带的脚本把 `df.to_json(orient="split")` + `df.dtypes` 编排成 `--sheets` payload、把 `+table-get` 输出还原成 DataFrame——CLI 二进制本身不处理 DataFrame / Arrow / pandas 类型，所有列式 / 类型转换都留在调用方 Python 进程里（CLI 保持「只说 JSON/REST」的瘦客户端形态）。一行命令：
->
-> ```bash
-> # 写：本地 .parquet / .feather / .arrow / .csv / .json → 一张表
-> python3 skills/lark-sheets/scripts/sheets_df.py put --url "<spreadsheet-url>" --in data.parquet --sheet-name Sheet1
-> # 读：一张表 → 本地 .parquet / .feather / .arrow / .csv / .json
-> python3 skills/lark-sheets/scripts/sheets_df.py get --url "<spreadsheet-url>" --sheet-name Sheet1 --out out.parquet
-> ```
->
-> 适用面：来源是 pandas / pyarrow 的全部场景。脚本里没有自定义协议，纯走 `+table-put --sheets` / `+table-get`，所以 round-trip 行为与手拼 JSON 完全一致。若已经手拼好 `--sheets` payload（如 LLM 直接产 `{"sheets":[...]}`）就继续用 `+table-put`，无需绕道脚本。
-
 #### DataFrame → 协议（5 行 helper）
 
 pandas 的 `df.to_json(orient="split", date_format="iso")` 一步完成所有清洗（NaN→null、Timestamp→ISO 字符串、numpy 标量→原生数字），helper 只要把 dtypes 拼上去——5 行覆盖单 / 多 sheet：

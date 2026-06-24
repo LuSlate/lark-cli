@@ -59,14 +59,6 @@ metadata:
 
 > ⚠️ **两种图片别选错**：图若**绑定某条记录、要随行排序 / 筛选 / 增删**（凭证 / 证件照 / 每行配图，话里带「对应 / 每行 / 这列」等绑定词）→ 单元格图片 `+cells-set-image`；只是自由摆放的装饰（logo / 水印 / 封面）→ 浮动图片 `+float-image-create`。别因「浮动图更好控制 / 更熟」默认选浮动图。
 > ⚠️ **纯文本还是数值语义**：要写的列里有数字 / 金额 / 百分比 / 日期 / 计数 → `+table-put`（写入已有表；外层 `{"sheets":[...]}` 包裹、列 pandas dtype 用 `dtypes`、展示格式用 `formats`，保留排序 / 求和 / 图表 / 透视能力；**目标表还不存在就用 `+workbook-create --sheets`**，同 typed 协议、一步建表 + 写入，别先建空表再 `+table-put`）；只有纯文本才用 `+csv-put`。两者写完显示可以完全相同，但 `+csv-put` 落的是文本、不能参与计算——别把数值在本地拼成带 `$` / `%` 的字符串再走 `+csv-put`。
-> 💡 **pandas / DataFrame 用户走脚本**：本地已经是 `pd.DataFrame` 时，不用手拼 `--sheets` JSON——本 skill 附带 `scripts/sheets_df.py` 做 DataFrame ↔ 一张表的双向转换，底层仍走 `+table-put` / `+table-get` 的 typed JSON 协议，例：
-> ```bash
-> # 写：本地 DataFrame 文件 → 一张表（支持 .parquet / .feather / .arrow / .csv / .json）
-> python3 skills/lark-sheets/scripts/sheets_df.py put --url "<spreadsheet-url>" --in data.parquet --sheet-name Sheet1
-> # 读：一张表 → 本地 DataFrame 文件
-> python3 skills/lark-sheets/scripts/sheets_df.py get --url "<spreadsheet-url>" --sheet-name Sheet1 --out out.parquet
-> ```
-> 脚本只是把 `df.to_json(orient="split") + dtypes` 编排成 `--sheets` payload、把 `+table-get` 输出还原成 DataFrame——CLI 二进制本身不处理 DataFrame，所有 pandas 依赖留在调用方 Python 进程里，避免 CLI 引入列式运行时。
 > ⚠️ **定位 flag**：`+cells-get` / `+cells-set` / `+csv-get` 用 `--range`；`+csv-put` 规范用 `--start-cell`（单个左上角锚点格），也接受 `--range` 别名（区间自动取左上角），二者择一即可。
 > ⚠️ **读取附加信息**一律走 `+cells-get --include …`，**没有** `--with-styles` 这类 flag；**看合并单元格**用 `+sheet-info` 的 `merged_cells`，不要在 `+cells-get` 里找 merge flag。
 
