@@ -32,6 +32,24 @@ REQUIRED_FAMILY_FIELDS = {
 
 
 class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
+    def _install_fake_source_page_screenshots(self) -> Path:
+        original = gallery.SOURCE_PAGE_SCREENSHOT_DIR
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        root = Path(tmpdir.name) / "source-page-screenshots"
+        gallery.SOURCE_PAGE_SCREENSHOT_DIR = root
+        self.addCleanup(setattr, gallery, "SOURCE_PAGE_SCREENSHOT_DIR", original)
+
+        manifest = gallery.build_gallery_manifest()
+        for family in manifest["families"]:
+            for page in family["pages"]:
+                slide_index = page["source_slide_index"]
+                variant_id = page["page_variant_id"]
+                path = root / family["family_id"] / f"{int(slide_index):03d}-{gallery.slug(variant_id)}.jpg"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"\xff\xd8" + (b"0" * 21_000) + b"\xff\xd9")
+        return root
+
     def test_gallery_manifest_contains_all_34_candidates_with_review_fields(self) -> None:
         manifest = gallery.build_gallery_manifest()
 
@@ -101,22 +119,25 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         self.assertIn("missing_smoke", candidate["known_blockers"])
         self.assertIn("production_review_pending", candidate["known_blockers"])
 
-    def test_missing_source_screenshot_does_not_fallback_to_cover(self) -> None:
+    def test_local_source_page_screenshots_cover_every_page_without_fallback(self) -> None:
+        self._install_fake_source_page_screenshots()
         manifest = gallery.build_gallery_manifest()
         blue = next(item for item in manifest["families"] if item["family_id"] == "blue-professional")
+        all_pages = [page for family in manifest["families"] for page in family["pages"]]
 
         cover = next(page for page in blue["pages"] if page["page_variant_id"] == "cover")
         agenda = next(page for page in blue["pages"] if page["page_variant_id"] == "agenda")
         bars = next(page for page in blue["pages"] if page["page_variant_id"] == "bars")
 
-        self.assertEqual("exact", cover["source_screenshot"]["status"])
-        self.assertTrue(cover["source_screenshot"]["path"].endswith("blue-professional-1.png"))
-        self.assertEqual("exact", bars["source_screenshot"]["status"])
-        self.assertTrue(bars["source_screenshot"]["path"].endswith("blue-professional-6.png"))
-        self.assertEqual("missing", agenda["source_screenshot"]["status"])
-        self.assertIsNone(agenda["source_screenshot"]["path"])
-        self.assertIsNone(agenda["source_screenshot"]["uri"])
-        self.assertTrue(agenda["source_screenshot"]["expected_path"].endswith("blue-professional-2.png"))
+        self.assertEqual(347, len(all_pages))
+        self.assertTrue(all(page["source_screenshot"]["status"] == "generated_from_template_html" for page in all_pages))
+        self.assertTrue(all(page["source_screenshot"]["path"] for page in all_pages))
+        self.assertTrue(all(page["source_screenshot"]["uri"] for page in all_pages))
+        self.assertTrue(all(page["source_screenshot"]["bytes"] > 20_000 for page in all_pages))
+        self.assertTrue(all(not page["source_screenshot"].get("fallback_used") for page in all_pages))
+        self.assertTrue(cover["source_screenshot"]["path"].endswith("blue-professional/001-cover.jpg"))
+        self.assertTrue(agenda["source_screenshot"]["path"].endswith("blue-professional/002-agenda.jpg"))
+        self.assertTrue(bars["source_screenshot"]["path"].endswith("blue-professional/006-bars.jpg"))
         self.assertTrue(agenda["source_screenshot"]["reference_screenshot"].endswith("blue-professional-1.png"))
 
     def test_write_artifacts_keeps_production_default_counts_unchanged(self) -> None:
@@ -138,6 +159,7 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         self.assertTrue(manifest["not_promotion_receipt"])
 
     def test_rendered_html_is_human_review_entrypoint_not_promotion_action(self) -> None:
+        self._install_fake_source_page_screenshots()
         with tempfile.TemporaryDirectory() as tmpdir:
             result = gallery.write_gallery_artifacts(Path(tmpdir), Path(tmpdir) / "receipt.json")
             output_dir = Path(tmpdir)
@@ -156,7 +178,8 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
             self.assertIn("does not automatically modify production/default", page_html)
             self.assertIn("skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json", page_html)
             self.assertIn("apply script", page_html)
-        self.assertIn("source screenshot missing", family_html)
+        self.assertNotIn("source screenshot missing", family_html)
+        self.assertIn("source screenshot: generated_from_template_html", family_html)
 
 
 if __name__ == "__main__":

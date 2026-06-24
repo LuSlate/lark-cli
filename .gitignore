@@ -45,4 +45,8 @@ app.log
 .tmp/
 cover*.out
 
+# SVGlide local review caches
+skills/lark-slides/references/production-review/beautiful/source-page-screenshots/
+skills/lark-slides/references/receipts/production-review/beautiful-34-source-page-screenshots.json
+
 lark-env.sh

@@ -18,6 +18,7 @@ SOURCE_ROOT = Path("/Users/bytedance/bd-projects/beautiful-html-templates")
 MATRIX_PATH = REFERENCES_DIR / "beautiful-template-executable-matrix.json"
 DEFAULT_OUTPUT_DIR = REFERENCES_DIR / "production-review" / "beautiful"
 DEFAULT_RECEIPT_PATH = REFERENCES_DIR / "receipts" / "production-review" / "beautiful-34-gallery.json"
+SOURCE_PAGE_SCREENSHOT_DIR = DEFAULT_OUTPUT_DIR / "source-page-screenshots"
 GENERATOR_VERSION = "svglide-beautiful-production-review-gallery/v2"
 REVIEW_BATCH_ID = "beautiful-34"
 HUMAN_REVIEW_STATUS = "pending"
@@ -116,6 +117,12 @@ def file_uri(path: Path | None) -> str | None:
     if path is None or not path.exists():
         return None
     return path.resolve().as_uri()
+
+
+def slug(value: object) -> str:
+    text = "".join(char.lower() if char.isalnum() else "-" for char in str(value or ""))
+    text = "-".join(part for part in text.split("-") if part)
+    return text or "page"
 
 
 def matrix_rows() -> list[dict[str, Any]]:
@@ -303,9 +310,22 @@ def _promotion_gate_summary(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _source_screenshot_for_page(family_id: str, slide_index: object, fallback: object) -> dict[str, Any]:
+def _source_screenshot_for_page(family_id: str, slide_index: object, variant_id: object, fallback: object) -> dict[str, Any]:
     reference = resolve_path(fallback)
     if isinstance(slide_index, int):
+        generated = SOURCE_PAGE_SCREENSHOT_DIR / family_id / f"{slide_index:03d}-{slug(variant_id)}.jpg"
+        if generated.is_file():
+            return {
+                "status": "generated_from_template_html",
+                "path": relpath(generated),
+                "uri": file_uri(generated),
+                "sha256": optional_sha256(generated),
+                "bytes": generated.stat().st_size,
+                "expected_path": relpath(generated),
+                "reference_screenshot": relpath(reference),
+                "source_template_html": relpath(SOURCE_ROOT / "templates" / family_id / "template.html"),
+                "fallback_used": False,
+            }
         candidate = SOURCE_ROOT / "screenshots" / f"{family_id}-{slide_index}.png"
         if candidate.is_file():
             return {
@@ -313,6 +333,7 @@ def _source_screenshot_for_page(family_id: str, slide_index: object, fallback: o
                 "path": relpath(candidate),
                 "uri": file_uri(candidate),
                 "sha256": optional_sha256(candidate),
+                "bytes": candidate.stat().st_size,
                 "expected_path": relpath(candidate),
                 "reference_screenshot": relpath(reference),
                 "fallback_used": False,
@@ -327,6 +348,7 @@ def _source_screenshot_for_page(family_id: str, slide_index: object, fallback: o
         "path": None,
         "uri": None,
         "sha256": None,
+        "bytes": None,
         "expected_path": relpath(expected_path),
         "reference_screenshot": relpath(reference),
         "missing_reason": reason,
@@ -372,7 +394,7 @@ def _source_smoke_deck(row: dict[str, Any], variants: list[dict[str, Any]], smok
     for page_number, variant in enumerate(variants, start=1):
         variant_id = str(variant.get("page_variant_id") or f"page-{page_number}")
         evidence = _page_render_evidence(row, variant_id, smoke)
-        screenshot = _source_screenshot_for_page(family_id, variant.get("source_slide_index"), row.get("reference_screenshot"))
+        screenshot = _source_screenshot_for_page(family_id, variant.get("source_slide_index"), variant_id, row.get("reference_screenshot"))
         pages.append(
             {
                 "page": page_number,
