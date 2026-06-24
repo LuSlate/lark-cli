@@ -27,7 +27,6 @@ func newMeetingEventsRuntime() *common.RuntimeContext {
 	cmd.Flags().String("page-token", "", "")
 	cmd.Flags().String("page-size", "", "")
 	cmd.Flags().Bool("page-all", false, "")
-	cmd.Flags().String("view", "compact", "")
 	return common.TestNewRuntimeContext(cmd, defaultConfig())
 }
 
@@ -592,39 +591,6 @@ func TestMeetingEvents_ExecuteJSON_UserIdentitySkipsBotInfo(t *testing.T) {
 	}
 }
 
-func TestMeetingEvents_ExecuteRawJSONSkipsBotInfo(t *testing.T) {
-	f, stdout, _, reg := cmdutil.TestFactory(t, defaultConfig())
-	reg.Register(meetingEventsStub([]interface{}{participantJoinedEvent()}, true, "1710000000000000000"))
-
-	err := mountAndRun(t, VCMeetingEvents, []string{
-		"+meeting-events",
-		"--meeting-id", "7628568141510692381",
-		"--format", "json",
-		"--view", "raw",
-		"--as", "bot",
-	}, f, stdout)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	reg.Verify(t)
-
-	out := strings.ReplaceAll(stdout.String(), " ", "")
-	out = strings.ReplaceAll(out, "\n", "")
-	for _, want := range []string{
-		`"events":[`,
-		`"event_type":"participant_joined"`,
-		`"has_more":true`,
-		`"page_token":"1710000000000000000"`,
-	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("raw json output missing %q: %s", want, stdout.String())
-		}
-	}
-	if strings.Contains(out, `"current_roster"`) || strings.Contains(out, `"identity":{`) || strings.Contains(out, `"bot":{`) {
-		t.Fatalf("raw json should preserve legacy events envelope without normalized fields: %s", stdout.String())
-	}
-}
-
 func TestMeetingEvents_ExecuteNDJSONIncludesMetadataRow(t *testing.T) {
 	f, stdout, _, reg := cmdutil.TestFactory(t, defaultConfig())
 	reg.Register(meetingEventsStub([]interface{}{participantJoinedEvent()}, true, "1710000000000000000"))
@@ -661,25 +627,6 @@ func TestMeetingEvents_ExecuteNDJSONIncludesMetadataRow(t *testing.T) {
 		if !strings.Contains(lines[1], want) {
 			t.Fatalf("metadata ndjson row missing %q: %s", want, lines[1])
 		}
-	}
-}
-
-func TestMeetingEvents_Validation_RawRejectsPretty(t *testing.T) {
-	runtime := newMeetingEventsRuntime()
-	mustSetMeetingEventsFlag(t, runtime, "meeting-id", "7628568141510692381")
-	mustSetMeetingEventsFlag(t, runtime, "view", "raw")
-	runtime.Format = "pretty"
-
-	err := VCMeetingEvents.Validate(context.Background(), runtime)
-	if err == nil {
-		t.Fatal("expected validation error for raw pretty")
-	}
-	var ve *errs.ValidationError
-	if !errors.As(err, &ve) {
-		t.Fatalf("expected *errs.ValidationError, got %T: %v", err, err)
-	}
-	if ve.Param != "--view" {
-		t.Errorf("Param = %q, want %q", ve.Param, "--view")
 	}
 }
 

@@ -46,7 +46,7 @@ lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --format prett
 
 # 方式 3：只回答当前登录用户所在会议发生了什么
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as user --meeting-id <id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as user --meeting-id <id> --page-all --format pretty
 ```
 
 ## 多会议选择

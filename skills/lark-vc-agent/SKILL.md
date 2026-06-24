@@ -72,7 +72,7 @@ metadata:
    - 再根据 `note_display_type`、`note_id`、`minute_token` 和用户意图，按 [`lark-vc`](../lark-vc/SKILL.md) 的产物决策读取正文、逐字稿或妙记。
    - 想看参会人快照：用 `vc meeting get --with-participants`（见 [`lark-vc`](../lark-vc/SKILL.md)）
 5. **默认必须使用** **`--page-all`**，除非用户明确要求“只查一页”，或确实需要控制返回体大小。
-6. 默认 `--view compact` 输出 normalized 契约：`meeting`、`identity`、`current_roster`、`events`、`has_more`、`page_token`，参会人含 `participant_type`、`role`、`is_self` 和可读 `label`。需要兼容旧事件包时用 `--view raw --format json`，raw 不支持 pretty/ndjson。
+6. 命令默认输出 normalized 事件契约：`meeting`、`identity`、`current_roster`、`events`、`has_more`、`page_token`，参会人含 `participant_type`、`role`、`is_self` 和可读 `label`；事件中的原始细节保留在 `payload/raw`。
 7. 输出格式默认优先 `--format pretty`（时间线更易读，并带当前身份与当前名单标签）；需要结构化处理时用 `--format json`；需要流式消费事件时用 `--format ndjson`。
 8. **必须识别分页信号**：只要响应里出现 `has_more=true`、pretty 里的 `more available`，或返回了非空 `page_token`，就不能把当前结果当作完整事件流；默认应继续分页，或明确告诉用户当前只是部分结果。
 9. 保留响应里的 `page_token`，下次增量拉取直接续，不要从头再拉。
@@ -106,7 +106,7 @@ MID=$(echo "$JOIN" | jq -r '.data.meeting.id')
 # 2. 会中轮询事件
 #    默认用 --page-all 拉全当前可见事件；下次增量优先复用 page_token
 #    典型间隔 10-30 秒
-lark-cli vc +meeting-events --as bot --meeting-id "$MID" --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id "$MID" --page-all --format pretty
 
 # 3. 会后可选：进入 lark-vc 获取会议产物信息，再按 note_display_type / minute_token 决策读取
 lark-cli vc +notes --meeting-ids "$MID"
@@ -118,14 +118,14 @@ lark-cli vc +notes --meeting-ids "$MID"
 
 ```bash
 lark-cli vc +meeting-list-active --as bot --user-id <user_open_id> --format json
-lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as bot --meeting-id <id> --page-all --format pretty
 ```
 
 如果只是回答当前登录用户所在会议发生了什么，使用用户身份一路查：
 
 ```bash
 lark-cli vc +meeting-list-active --as user --format json
-lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --view compact --format pretty
+lark-cli vc +meeting-events --as user --meeting-id <meeting_id> --page-all --format pretty
 ```
 
 ## Shortcuts

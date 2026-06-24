@@ -32,13 +32,6 @@ const (
 
 var meetingDisplayLocation = time.FixedZone("UTC+8", 8*60*60)
 
-type meetingEventsView string
-
-const (
-	meetingEventsViewCompact meetingEventsView = "compact"
-	meetingEventsViewRaw     meetingEventsView = "raw"
-)
-
 // toUnixSeconds converts a supported CLI time input into a Unix seconds string.
 func toUnixSeconds(input string, hint ...string) (string, error) {
 	ts, err := common.ParseTime(input, hint...)
@@ -67,13 +60,9 @@ var VCMeetingEvents = common.Shortcut{
 		{Name: "page-token", Desc: "page token for the next page"},
 		{Name: "page-size", Default: "20", Desc: "page size, 20-100 (default 20)"},
 		{Name: "page-all", Type: "bool", Desc: "automatically paginate through all available pages"},
-		{Name: "view", Default: string(meetingEventsViewCompact), Desc: "output view: compact or raw"},
 	},
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		if err := validateMeetingEventsMeetingID(runtime.Str("meeting-id")); err != nil {
-			return err
-		}
-		if _, err := meetingEventsOutputView(runtime); err != nil {
 			return err
 		}
 		if _, err := meetingEventsPageSize(runtime); err != nil {
@@ -111,12 +100,6 @@ var VCMeetingEvents = common.Shortcut{
 		data, events, hasMore, pageToken, err := fetchMeetingEvents(ctx, runtime, startTime, endTime)
 		if err != nil {
 			return err
-		}
-		if view, err := meetingEventsOutputView(runtime); err != nil {
-			return err
-		} else if view == meetingEventsViewRaw {
-			runtime.Out(data, &output.Meta{Count: len(events)})
-			return nil
 		}
 		events = compactMeetingEvents(events)
 		identity, err := meetingEventsCurrentIdentity(runtime)
@@ -190,24 +173,6 @@ type normalizedMeetingEvent struct {
 	Actors    []normalizedIdentity   `json:"actors,omitempty"`
 	Payload   map[string]interface{} `json:"payload,omitempty"`
 	Raw       map[string]interface{} `json:"raw,omitempty"`
-}
-
-func meetingEventsOutputView(runtime *common.RuntimeContext) (meetingEventsView, error) {
-	view := strings.TrimSpace(runtime.Str("view"))
-	if view == "" {
-		view = string(meetingEventsViewCompact)
-	}
-	switch meetingEventsView(view) {
-	case meetingEventsViewCompact:
-		return meetingEventsViewCompact, nil
-	case meetingEventsViewRaw:
-		if runtime.Format != "" && runtime.Format != "json" {
-			return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--view raw only supports --format json").WithParam("--view")
-		}
-		return meetingEventsViewRaw, nil
-	default:
-		return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "--view must be compact or raw, got %q", view).WithParam("--view")
-	}
 }
 
 func buildNormalizedMeetingEvents(data map[string]interface{}, events []interface{}, currentRoster []interface{}, identity normalizedIdentity) normalizedMeetingEventsOutput {
