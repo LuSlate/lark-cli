@@ -7,6 +7,7 @@
 在真正创建或替换前，至少检查：
 
 - 特殊字符已转义：正文和标题里的 `&`、`<`、`>` 不能裸写；属性值里的裸 `&` 也必须写成 `&amp;`。
+- 普通可见符号直接写 Unicode，不要输出 HTML/XML entity 后再转义：`«姓名»`、`●`、`✓` 是正确文本；`&amp;#171;姓名&amp;#187;`、`&amp;#9679;`、`&amp;nbsp;` 会在页面中泄漏成字面量。
 - 属性引号安全：XML 属性、shell 引号、JSON 字符串包装之间没有互相打断。
 - 结构合法：`<slide>` 下只放 `<style>`、`<data>`、`<note>`，文本都在 `<content>` 内。
 - 图片路径正确：`<img src="@...">` 只在 `+create --slides` 的支持链路中使用；直接调用 `xml_presentation.slide.create` 必须先拿到 `file_token`。
@@ -17,9 +18,9 @@
 
 1. 记录 `xml_presentation_id`，不要假设失败代表什么都没创建。
 2. 用 `xml_presentations.get` 回读，确认是否已有部分页面写入。
-3. 检查失败页是否含未转义字符：`Q&A -> Q&amp;A`，文本 `<` / `>` 写成 `&lt;` / `&gt;`，属性 URL `a=1&b=2 -> a=1&amp;b=2`。
+3. 检查失败页是否含未转义字符：`Q&A -> Q&amp;A`，文本 `<` / `>` 写成 `&lt;` / `&gt;`，属性 URL `a=1&b=2 -> a=1&amp;b=2`；同时检查是否有 `double_escaped_entity`，如 `&amp;#9679;`、`&amp;nbsp;`、`&amp;lt;`。
 4. 检查标签闭合、属性引号、`<content>` 结构，以及 `<slide>` 直接子元素。
-5. 页面空白、溢出、重叠或越界时，按 [validation-checklist.md](validation-checklist.md) 运行 XML 文本重叠检查，并人工核对越界、截断、图文压盖等视觉风险；工具当前只会报告 `xml_not_well_formed` / `bbox_overlap`。
+5. 页面空白、溢出、重叠、乱码或越界时，按 [validation-checklist.md](validation-checklist.md) 运行 XML 文本重叠检查，并人工核对越界、截断、图文压盖等视觉风险；工具会报告 XML 语法、二次转义实体、文本重叠和部分异常换行风险。
 6. 如果使用 `--slides '[...]'`，怀疑 shell 截断时直接切到两步创建：先 `slides +create`，再用 `xml_presentation.slide.create` 逐页添加。
 7. 局部问题用 `+replace-slide` 块级修正；整页结构要改时再用 `slide.delete` 旧页 + `slide.create` 新页。
 
@@ -52,7 +53,7 @@
 | 400 无法删除唯一幻灯片 | 演示文稿至少保留一页 | 先创建新页，再删除旧页 |
 | 1061002 媒体上传 params error | slides 媒体上传参数不符合约定 | 用 `slides +media-upload`，不要手拼原生 `medias/upload_all`；slides 唯一可用 `parent_type` 是 `slide_file` |
 | 1061004 forbidden | 当前身份对演示文稿无编辑权限 | 确认 user/bot 对目标 PPT 有编辑权限；bot 常见于 PPT 非该 bot 创建 |
-| 3350001 | XML 非 well-formed、XML 结构不符合服务端要求，或 replace 片段问题 | 优先检查未转义字符；replace 场景再看 `block_id` 和 `<content/>` |
+| 3350001 | XML 非 well-formed、XML 结构不符合服务端要求，或 replace 片段问题 | 优先检查未转义字符和二次转义实体；replace 场景再看 `block_id` 和 `<content/>` |
 | 3350002 | `revision_id` 大于当前版本 | 用 `-1` 取当前版本，或重新读 `xml_presentations.get` 取最新 `revision_id` |
 | validation: unsafe file path | `--file` 给了绝对路径或上层路径 | `--file` 必须是 CWD 内相对路径；先 `cd` 到素材目录再执行 |
 

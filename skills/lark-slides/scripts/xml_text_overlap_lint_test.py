@@ -96,6 +96,65 @@ class XmlTextOverlapLintTest(unittest.TestCase):
         self.assertEqual(result["summary"]["error_count"], 0)
         self.assertNotIn("issues", result)
 
+    def test_lint_xml_reports_double_escaped_numeric_entities(self) -> None:
+        result = xml_text_overlap_lint.lint_xml(
+            """
+            <slide xmlns="http://www.larkoffice.com/sml/2.0">
+              <data>
+                <shape type="text" topLeftX="80" topLeftY="80" width="420" height="90">
+                  <content textType="body"><p>&amp;#171;姓名&amp;#187;</p><p>&amp;#9679; 占位符</p></content>
+                </shape>
+              </data>
+            </slide>
+            """
+        )
+        issues = result["slides"][0]["issues"]
+        self.assertEqual(result["summary"]["warning_count"], 3)
+        self.assertTrue(all(issue["code"] == "double_escaped_entity" for issue in issues))
+        self.assertEqual(issues[0]["entity"], "&amp;#171;")
+        self.assertEqual(issues[0]["preview"], "«姓名»")
+        self.assertEqual(issues[0]["confidence"], "high")
+        self.assertEqual(issues[2]["entity"], "&amp;#9679;")
+        self.assertEqual(issues[2]["preview"], "● 占位符")
+
+    def test_lint_xml_reports_double_escaped_named_entities(self) -> None:
+        result = xml_text_overlap_lint.lint_xml(
+            """
+            <slide xmlns="http://www.larkoffice.com/sml/2.0">
+              <data>
+                <shape type="text" topLeftX="80" topLeftY="80" width="420" height="90">
+                  <content textType="body"><p>&amp;lt;字段&amp;gt;</p><p>A&amp;nbsp;B</p></content>
+                </shape>
+              </data>
+            </slide>
+            """
+        )
+        issues = result["slides"][0]["issues"]
+        self.assertEqual(result["summary"]["warning_count"], 3)
+        self.assertEqual([issue["entity"] for issue in issues], ["&amp;lt;", "&amp;gt;", "&amp;nbsp;"])
+        self.assertEqual(issues[0]["preview"], "<字段>")
+        self.assertEqual(issues[2]["preview"], "A B")
+        self.assertEqual(issues[0]["confidence"], "medium")
+
+    def test_lint_xml_does_not_report_regular_ampersands_urls_or_space_entities(self) -> None:
+        result = xml_text_overlap_lint.lint_xml(
+            """
+            <slide xmlns="http://www.larkoffice.com/sml/2.0">
+              <data>
+                <shape type="text" topLeftX="80" topLeftY="80" width="640" height="120">
+                  <content textType="body">
+                    <p>Q&amp;A</p>
+                    <p><a href="https://example.com/?a=1&amp;b=2">link</a></p>
+                    <p>A&#32;B&#9;C</p>
+                  </content>
+                </shape>
+              </data>
+            </slide>
+            """
+        )
+        self.assertEqual(result["summary"]["error_count"], 0)
+        self.assertEqual(result["summary"]["warning_count"], 0)
+
     def test_lint_xml_accepts_chinese_full_width_punctuation(self) -> None:
         result = xml_text_overlap_lint.lint_xml(
             """

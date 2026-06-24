@@ -34,6 +34,7 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 通过标准：
 
 - `summary.error_count == 0`。任何 error 都必须先修复再交付。
+- `double_escaped_entity` warning 必须先修复再交付；它通常表示 HTML/XML 实体被二次转义，页面会显示 `&#...;` / `&nbsp;` / `&lt;` 这类字面量。
 - 对异常换行、文本框高度不足等 wrap quality warning，默认也应修复后再交付；仅当它是普通正文的自然换行且用户明确允许时，才可在验证记录中说明豁免原因。
 - 当前工具检查 XML well-formed、文本元素之间的明显重叠，以及部分规则化异常换行；它不检查越界、图文压盖、表格/图表压盖或底部拥挤。
 - 该工具不能替代页数核对、关键内容核对或真实视觉验收。
@@ -43,6 +44,7 @@ python3 skills/lark-slides/scripts/xml_text_overlap_lint.py --input <presentatio
 | code | 含义 | 处理方式 |
 |------|------|----------|
 | `xml_not_well_formed` | XML 语法错误或文本未转义 | 修复标签闭合、属性引号、`&` / `<` / `>` 转义 |
+| `double_escaped_entity` | 文本中含二次转义实体，如 `&amp;#9679;`、`&amp;nbsp;`、`&amp;lt;` | 改成目标 Unicode 文本，如 `●`、空格、`<`；只对 XML 保留字符做一层必要转义 |
 | `bbox_overlap` | 文本元素的估算绘制区域明显重叠 | 拉开文本坐标、缩小文本框/字号，或改成明确的分栏/分组结构 |
 | `text_word_split` / `text_phrase_split` | 中文词语或高频短语被异常拆行 | 增宽文本框、降低字号、改写短语或调整换行点，避免把词语/短语拆开 |
 | `text_orphan_line` | 最后一行只有极短中文尾巴 | 增宽文本框、缩小字号或重排文本，让尾行形成可读短句 |

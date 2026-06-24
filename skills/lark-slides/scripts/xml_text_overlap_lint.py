@@ -9,6 +9,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from difflib import SequenceMatcher
+from html import unescape
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,9 @@ class XmlTextOverlapLintError(Exception):
 
 TITLE_LIKE_TEXT_TYPES = {"title", "headline", "sub-headline", "card_title", "callout"}
 CENTER_ALLOWED_TEXT_TYPES = {"title", "quote", "hero"}
+DOUBLE_ESCAPED_ENTITY_PATTERN = re.compile(
+    r"&#(?:[0-9]+|x[0-9A-Fa-f]+);|&(?:lt|gt|quot|apos|nbsp);"
+)
 
 
 def fail(message: str) -> None:
@@ -89,6 +93,52 @@ def chinese_text(value: str) -> str:
 
 def xml_local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1] if tag.startswith("{") else tag
+
+
+def preview_double_escaped_entity(text: str) -> str:
+    return unescape(text).replace("\xa0", " ")
+
+
+def lint_double_escaped_entities(slide_xml: str) -> list[dict[str, Any]]:
+    try:
+        root = ET.fromstring(slide_xml)
+    except ET.ParseError:
+        return []
+
+    issues: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for node in root.iter():
+        if xml_local_name(node.tag) != "content":
+            continue
+        for text in node.itertext():
+            if not text:
+                continue
+            for match in DOUBLE_ESCAPED_ENTITY_PATTERN.finditer(text):
+                entity = match.group(0)
+                context = collapse_space(text)
+                key = (entity, context)
+                if key in seen:
+                    continue
+                seen.add(key)
+                is_numeric = entity.startswith("&#")
+                raw_entity = entity.replace("&", "&amp;", 1)
+                issues.append(
+                    {
+                        "level": "warning",
+                        "code": "double_escaped_entity",
+                        "message": f"Text contains a likely double-escaped XML/HTML entity: {raw_entity}",
+                        "entity": raw_entity,
+                        "context": context,
+                        "preview": preview_double_escaped_entity(text),
+                        "confidence": "high" if is_numeric else "medium",
+                        "hint": (
+                            "Use the intended literal Unicode text in slide XML, and only XML-escape reserved "
+                            "characters once. For example, write «姓名», ●, or ✓ directly instead of "
+                            "&amp;#171;姓名&amp;#187;, &amp;#9679;, or &amp;#10003;."
+                        ),
+                    }
+                )
+    return issues
 
 
 def extract_content_lines(content_xml: str) -> list[str]:
@@ -554,7 +604,7 @@ def lint_wrap_quality(element: dict[str, Any]) -> list[dict[str, Any]]:
 
 def lint_slide(slide_xml: str, slide_number: int) -> dict[str, Any]:
     elements = extract_elements(slide_xml)
-    issues: list[dict[str, Any]] = []
+    issues: list[dict[str, Any]] = lint_double_escaped_entities(slide_xml)
 
     for element in elements:
         issues.extend(lint_wrap_quality(element))

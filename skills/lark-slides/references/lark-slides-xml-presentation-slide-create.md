@@ -103,7 +103,7 @@ lark-cli slides xml_presentation.slide create --as user --params '{
   "xml_presentation_id": "slides_example_presentation_id"
 }' --data '{
   "slide": {
-    "content": "<slide xmlns=\"http://www.larkoffice.com/sml/2.0\"><data><shape type=\"text\" topLeftX=\"80\" topLeftY=\"80\" width=\"520\" height=\"120\"><content textType=\"title\"><p>数据展示</p></content></shape><shape type=\"rect\" topLeftX=\"700\" topLeftY=\"100\" width=\"200\" height=\"150\"><fill><fillColor color=\"rgb(100, 149, 237)\"/></fill></shape></data></slide>"
+    "content": "<slide xmlns=\"http://www.larkoffice.com/sml/2.0\"><data><shape type=\"text\" topLeftX=\"80\" topLeftY=\"80\" width=\"520\" height=\"120\"><content textType=\"title\"><p>数据展示</p></content></shape><shape type=\"rect\" topLeftX=\"700\" topLeftY=\"100\" width=\"200\" height=\"150\"><fill><fillColor color=\"rgb(100, 149, 237)\"/></fill><content/></shape></data></slide>"
   }
 }'
 ```

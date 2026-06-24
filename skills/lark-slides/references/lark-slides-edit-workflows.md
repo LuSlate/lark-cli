@@ -46,7 +46,7 @@ REV=$(lark-cli slides xml_presentation.slide get --as user \
 # 写时传该版本号，服务端以此为 base
 lark-cli slides +replace-slide --as user \
   --presentation "$PID" --slide-id "$SID" --revision-id "$REV" \
-  --parts '[{"action":"block_replace","block_id":"bUn","replacement":"<shape type=\"rect\" topLeftX=\"100\" topLeftY=\"100\" width=\"200\" height=\"100\"/>"}]'
+  --parts '[{"action":"block_replace","block_id":"bUn","replacement":"<shape type=\"rect\" topLeftX=\"100\" topLeftY=\"100\" width=\"200\" height=\"100\"><content/></shape>"}]'
 ```
 
 注意：传不存在的版本号（超过当前 revision）会返回 3350002 not found；不确定时用 `-1` 即可。
