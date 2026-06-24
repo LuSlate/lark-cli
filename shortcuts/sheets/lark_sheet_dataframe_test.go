@@ -15,6 +15,7 @@ import (
 	"github.com/apache/arrow/go/v17/arrow/array"
 	"github.com/apache/arrow/go/v17/arrow/ipc"
 	"github.com/apache/arrow/go/v17/arrow/memory"
+	"github.com/larksuite/cli/shortcuts/common"
 )
 
 // buildArrowIPC writes one record into a Feather v2 (Arrow IPC file) blob.
@@ -219,6 +220,30 @@ func TestDataframe_BadBytes(t *testing.T) {
 	_, err := decodeArrowToSheet([]byte("not arrow"), "S")
 	if err == nil || !strings.Contains(err.Error(), "Arrow") {
 		t.Errorf("err = %v, want Arrow-decode error", err)
+	}
+}
+
+// TestReadDataframeBytes_RejectsSecondStdinConsumer covers the case where another
+// flag (e.g. --styles) has already consumed stdin via the common Input resolver:
+// since --dataframe bypasses that resolver, the only thing keeping the two from
+// racing for an empty stream is the explicit StdinConsumed() check in
+// readDataframeBytes. Without that check, fangshuyu's report holds — both flags
+// silently accept '-' and one of them sees empty bytes downstream.
+func TestReadDataframeBytes_RejectsSecondStdinConsumer(t *testing.T) {
+	// process-wide cache must be reset so the test isn't served from a prior run.
+	saved := dataframeStdinCache
+	dataframeStdinCache = nil
+	t.Cleanup(func() { dataframeStdinCache = saved })
+
+	rctx := &common.RuntimeContext{}
+	rctx.MarkStdinConsumed()
+
+	_, err := readDataframeBytes(rctx, "-")
+	if err == nil {
+		t.Fatal("err is nil; want stdin-already-consumed validation error")
+	}
+	if !strings.Contains(err.Error(), "stdin (-) can only be used by one flag") {
+		t.Fatalf("err = %q, want it to flag the stdin-already-consumed conflict", err.Error())
 	}
 }
 

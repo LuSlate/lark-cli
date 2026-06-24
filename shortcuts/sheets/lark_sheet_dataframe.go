@@ -94,6 +94,14 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 		if dataframeStdinCache != nil {
 			return dataframeStdinCache, nil
 		}
+		// A process has a single stdin: --dataframe is binary and bypasses the
+		// common Input resolver, so we have to share the stdin-consumed flag with
+		// it explicitly. Without this, e.g. `+table-put --dataframe - --styles -`
+		// would be accepted and one of them would silently see an empty stream.
+		if rctx.StdinConsumed() {
+			return nil, common.ValidationErrorf("--dataframe: stdin (-) can only be used by one flag").
+				WithHint("a process has a single stdin, so only one flag per call may use '-'; pass the others as @file (e.g. --styles @/path/to/styles.json)")
+		}
 		io := rctx.IO()
 		if io == nil || io.In == nil {
 			return nil, common.ValidationErrorf("--dataframe: stdin is not available")
@@ -106,6 +114,7 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 			return nil, common.ValidationErrorf("--dataframe: stdin is empty")
 		}
 		dataframeStdinCache = data
+		rctx.MarkStdinConsumed()
 		return data, nil
 	}
 	path := strings.TrimPrefix(raw, "@")

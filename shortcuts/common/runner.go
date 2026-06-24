@@ -49,7 +49,20 @@ type RuntimeContext struct {
 	apiClientFunc func() (*client.APIClient, error) // sync.OnceValues; initialized in newRuntimeContext
 	botInfoFunc   func() (*BotInfo, error)          // sync.OnceValues; lazy bot identity from /bot/v3/info
 	larkSDK       *lark.Client                      // eagerly initialized in mountDeclarative
+	stdinConsumed bool                              // set when any flag has consumed stdin (`-`); used so out-of-band binary readers (e.g. sheets +table-put --dataframe) can refuse a second stdin consumer instead of racing for an already-empty stream
 }
+
+// StdinConsumed reports whether stdin has already been consumed by an Input
+// flag's `-` form via resolveInputFlags. Out-of-band binary readers that read
+// stdin themselves (currently sheets +table-put / +workbook-create --dataframe)
+// must check this before reading — a process has a single stdin, so two
+// consumers would race and one would see an empty stream.
+func (ctx *RuntimeContext) StdinConsumed() bool { return ctx.stdinConsumed }
+
+// MarkStdinConsumed marks stdin as consumed. Out-of-band binary readers must
+// call this after they read stdin so a later Input-flag `-` is rejected cleanly
+// instead of racing on an empty stream.
+func (ctx *RuntimeContext) MarkStdinConsumed() { ctx.stdinConsumed = true }
 
 // ── Identity ──
 
@@ -1029,7 +1042,6 @@ func stripUTF8BOM(s string) string {
 // resolveInputFlags resolves @file and - (stdin) for flags with Input sources.
 // Must be called before Validate/DryRun/Execute so that runtime.Str() returns resolved content.
 func resolveInputFlags(rctx *RuntimeContext, flags []Flag) error {
-	stdinUsed := false
 	for _, fl := range flags {
 		if len(fl.Input) == 0 {
 			continue
@@ -1049,12 +1061,15 @@ func resolveInputFlags(rctx *RuntimeContext, flags []Flag) error {
 				return ValidationErrorf("--%s does not support stdin (-)", fl.Name).
 					WithParam("--" + fl.Name)
 			}
-			if stdinUsed {
+			// stdinConsumed also covers out-of-band readers like sheets +table-put
+			// --dataframe (binary, doesn't go through Input). A process has a
+			// single stdin, so we reject a second consumer regardless of source.
+			if rctx.stdinConsumed {
 				return ValidationErrorf("--%s: stdin (-) can only be used by one flag", fl.Name).
 					WithParam("--"+fl.Name).
 					WithHint("a process has a single stdin, so only one flag per call may use '-'; pass the others as @file (e.g. --%s @/path/to/file)", fl.Name)
 			}
-			stdinUsed = true
+			rctx.stdinConsumed = true
 			data, err := io.ReadAll(rctx.IO().In)
 			if err != nil {
 				return ValidationErrorf("--%s: failed to read from stdin: %v", fl.Name, err).
