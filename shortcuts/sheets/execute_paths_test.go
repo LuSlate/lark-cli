@@ -154,6 +154,40 @@ func TestExecute_WikiURLIncompleteNode(t *testing.T) {
 	}
 }
 
+// TestExecute_RangeMove_WikiURL guards the transformExecuteFn path: +range-move
+// and +range-copy use a named Execute helper (not an inline func), so they must
+// still resolve a /wiki/ URL to the backing spreadsheet token before calling
+// transform_range. The tool stub is keyed on the resolved obj_token, so an
+// unresolved node_token would miss it and fail this test.
+func TestExecute_RangeMove_WikiURL(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{
+					"obj_type":  "sheet",
+					"obj_token": testToken,
+				},
+			},
+		},
+	}
+	tool := toolOutputStub(testToken, "write", `{"updated_range":"A10:B11"}`)
+	out, err := runShortcutWithStubs(t, RangeMove,
+		[]string{
+			"--url", "https://example.feishu.cn/wiki/wikTestNODE",
+			"--sheet-id", testSheetID,
+			"--source-range", "A1:B2",
+			"--target-range", "A10",
+		}, getNode, tool)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
+	}
+}
+
 // TestExecute_SheetMove_LookupsIndex covers the two-step path: SheetMove
 // when only --sheet-name is given (and --source-index omitted) first
 // reads the workbook structure to derive sheet_id + source_index, then
