@@ -722,6 +722,7 @@ func pluginGenerateAndPersistTypes(projectPath string, cap map[string]interface{
 		"// ============================================================",
 		fmt.Sprintf("// 插件 %s (%s) 的类型定义", id, name),
 		"// 由 lark-cli +plugin-instance-types 自动生成",
+		"// 调用方式请参考项目 Skill: .agents/skills/plugin-guide/SKILL.md",
 		"// ============================================================",
 	)
 
@@ -757,20 +758,6 @@ func pluginGenerateAndPersistTypes(projectPath string, cap map[string]interface{
 
 		outputSchema, _ := action["outputSchema"].(map[string]interface{})
 		if outputSchema != nil {
-			if props, ok := outputSchema["properties"].(map[string]interface{}); ok && len(props) > 0 {
-				keys := make([]string, 0, 3)
-				for k := range props {
-					if len(keys) < 3 {
-						keys = append(keys, k)
-					}
-				}
-				parts = append(parts, "",
-					"/**",
-					fmt.Sprintf(" * capabilityClient.load('%s').call<%s>('%s', input)", id, outputName, actionKey),
-					fmt.Sprintf(" * const { %s } = result;", strings.Join(keys, ", ")),
-					" */",
-				)
-			}
 			if iface := pluginGenerateInterface(outputName, outputSchema); iface != "" {
 				parts = append(parts, iface)
 				typeNames = append(typeNames, outputName)
