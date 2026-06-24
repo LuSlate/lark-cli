@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/raw-grid.html",
     "render_status": "missing_smoke",
-    "sha256": "0fc408b566d5f90530b8afb2e380258a3d6013f7ed2089e4b53921eb49d97c57"
+    "sha256": "fdf2bb28d2e0633f363998a26dd7a0d16c74373670d2025e33780dd6c55da74d"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "0fc408b566d5f90530b8afb2e380258a3d6013f7ed2089e4b53921eb49d97c57",
+    "contact_sheet": "fdf2bb28d2e0633f363998a26dd7a0d16c74373670d2025e33780dd6c55da74d",
     "fidelity_receipt": "fee9ac2b5c6d69612a2a082849f1829f5b3c75f2a5c2d29b76657361f4fc04cc",
     "reference_screenshot": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
     "smoke_receipt": null,
@@ -404,8 +404,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
         "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
       },
       "source_slide_index": 1
@@ -440,9 +444,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -478,9 +487,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -515,8 +529,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
         "sha256": "5ddc01db338c2f149e6aab55051e55ff9e3d7a3abf166b26c0cdf871ebdb8d82",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png"
       },
       "source_slide_index": 4
@@ -551,9 +569,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -588,9 +611,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -627,9 +655,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -663,8 +696,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
         "sha256": "a71de0f79d56fa531ea042480a18c66fc61ab08fbecb7650d74a31d52dc79395",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png"
       },
       "source_slide_index": 8
@@ -698,9 +735,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -734,9 +776,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-        "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     }
@@ -886,8 +933,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
           "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
         },
         "source_slide_index": 1
@@ -922,9 +973,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -960,9 +1016,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -997,8 +1058,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
           "sha256": "5ddc01db338c2f149e6aab55051e55ff9e3d7a3abf166b26c0cdf871ebdb8d82",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-4.png"
         },
         "source_slide_index": 4
@@ -1033,9 +1098,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1070,9 +1140,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1109,9 +1184,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1145,8 +1225,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
           "sha256": "a71de0f79d56fa531ea042480a18c66fc61ab08fbecb7650d74a31d52dc79395",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-8.png"
         },
         "source_slide_index": 8
@@ -1180,9 +1264,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1216,9 +1305,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
-          "sha256": "4056c85b9415ba7a9a988d45f5316cbdfbaf18ee959e3f7727e2ef90f59f42bc",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/raw-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       }

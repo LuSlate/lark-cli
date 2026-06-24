@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/biennale-yellow.html",
     "render_status": "missing_smoke",
-    "sha256": "1c72a9c2b36088f74069f44fc0226aff8002f0b3507243531da6edf96ae4aff7"
+    "sha256": "466afce69a119c4a9d67d7d35397d06fca56ade2b43aeafbea28d4bbf1754c8b"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "1c72a9c2b36088f74069f44fc0226aff8002f0b3507243531da6edf96ae4aff7",
+    "contact_sheet": "466afce69a119c4a9d67d7d35397d06fca56ade2b43aeafbea28d4bbf1754c8b",
     "fidelity_receipt": "27b20213513d6a895ae84c07aea6d784f5acd5a5fcd4b5a6baf0d1868f4a7dfe",
     "reference_screenshot": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
     "smoke_receipt": null,
@@ -344,8 +344,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
         "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
       },
       "source_slide_index": 1
@@ -380,9 +384,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -416,9 +425,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -452,9 +466,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-4.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 4
     },
@@ -488,8 +507,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
         "sha256": "af3134e5fdf9341f688074e9ef84e0f5904bde831c28cc1624e5c03aa4a9dd77",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png"
       },
       "source_slide_index": 5
@@ -524,9 +547,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -559,9 +587,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-        "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -594,8 +627,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
         "sha256": "311ddec24da62fb5626d68e9befbb08d4c48c8a042983a92c7638987ae6b39a0",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png"
       },
       "source_slide_index": 8
@@ -741,8 +778,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
           "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
         },
         "source_slide_index": 1
@@ -777,9 +818,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -813,9 +859,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -849,9 +900,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-4.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 4
       },
@@ -885,8 +941,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
           "sha256": "af3134e5fdf9341f688074e9ef84e0f5904bde831c28cc1624e5c03aa4a9dd77",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-5.png"
         },
         "source_slide_index": 5
@@ -921,9 +981,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -956,9 +1021,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
-          "sha256": "8acd74e991ff533d6982f60fc2934ad2020d5ea8e03c5d79d00c24899d6f9e8d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -991,8 +1061,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-1.png",
           "sha256": "311ddec24da62fb5626d68e9befbb08d4c48c8a042983a92c7638987ae6b39a0",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/biennale-yellow-8.png"
         },
         "source_slide_index": 8

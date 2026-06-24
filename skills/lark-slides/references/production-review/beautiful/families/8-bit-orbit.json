@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/8-bit-orbit.html",
     "render_status": "missing_smoke",
-    "sha256": "6700d6ce17310762eeb43dec97eee6a0c706da5ab7082cdf6c0d0dda83a2453d"
+    "sha256": "62e2b5ad94eede702c948bfa876b94f8b9052c0081fb6375dc99cf004726be8d"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "6700d6ce17310762eeb43dec97eee6a0c706da5ab7082cdf6c0d0dda83a2453d",
+    "contact_sheet": "62e2b5ad94eede702c948bfa876b94f8b9052c0081fb6375dc99cf004726be8d",
     "fidelity_receipt": "31bab9cafb1fabb4453980f01a8255d16c9a79e1f882d01585b319dee779d556",
     "reference_screenshot": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
     "smoke_receipt": null,
@@ -407,8 +407,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
         "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
       },
       "source_slide_index": 1
@@ -443,9 +447,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -480,9 +489,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -517,9 +531,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-4.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 4
     },
@@ -554,8 +573,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-5.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-5.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
         "sha256": "169a44bcae5c5908be923b780130cbdce09d161d4d697da66d48d00bd090c1c3",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-5.png"
       },
       "source_slide_index": 5
@@ -592,8 +615,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-6.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-6.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
         "sha256": "c4547ed996fe52337d73f57330807b714e88da5226a88498f699158331c01219",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-6.png"
       },
       "source_slide_index": 6
@@ -630,9 +657,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -666,9 +698,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-8.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 8
     },
@@ -703,9 +740,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -740,9 +782,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-        "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     }
@@ -892,8 +939,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
           "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
         },
         "source_slide_index": 1
@@ -928,9 +979,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -965,9 +1021,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -1002,9 +1063,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-4.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 4
       },
@@ -1039,8 +1105,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-5.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-5.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
           "sha256": "169a44bcae5c5908be923b780130cbdce09d161d4d697da66d48d00bd090c1c3",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-5.png"
         },
         "source_slide_index": 5
@@ -1077,8 +1147,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-6.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-6.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
           "sha256": "c4547ed996fe52337d73f57330807b714e88da5226a88498f699158331c01219",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-6.png"
         },
         "source_slide_index": 6
@@ -1115,9 +1189,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1151,9 +1230,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-8.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 8
       },
@@ -1188,9 +1272,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1225,9 +1314,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
-          "sha256": "c1f0517225fbe17807d69de03a7260881738d25bc456bd4151af67fabbb15281",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/8-bit-orbit-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       }

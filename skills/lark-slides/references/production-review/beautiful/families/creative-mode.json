@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/creative-mode.html",
     "render_status": "missing_smoke",
-    "sha256": "d25bb924c36879bf68e1282a46c1818b201962ec80ad0d845a1b2bef6d5b2292"
+    "sha256": "3778ffbed3412ba9d50e0ff9dc9bb79698c338d62acba528390c3b1aa52cf233"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "d25bb924c36879bf68e1282a46c1818b201962ec80ad0d845a1b2bef6d5b2292",
+    "contact_sheet": "3778ffbed3412ba9d50e0ff9dc9bb79698c338d62acba528390c3b1aa52cf233",
     "fidelity_receipt": "51de4317d40671c7a4ba0868cacfa3c86ca2de0d14eecb8d07177f6c53506acf",
     "reference_screenshot": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
     "smoke_receipt": null,
@@ -344,8 +344,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
         "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
       },
       "source_slide_index": 1
@@ -381,9 +385,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-        "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -417,9 +426,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-        "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -453,8 +467,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
         "sha256": "f647916273c148a26267ce8cb15cfafffd8601f577d8edf43613b6f5d4ca9eda",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-4.png"
       },
       "source_slide_index": 4
@@ -489,9 +507,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-        "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -525,8 +548,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-6.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-6.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
         "sha256": "31b5ce6966d3480fb7a415e69f9fedc7c903b05d1e7bcaaf50e07c21cf7a091d",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-6.png"
       },
       "source_slide_index": 6
@@ -560,9 +587,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-        "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -597,9 +629,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-        "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-8.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 8
     }
@@ -741,8 +778,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
           "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
         },
         "source_slide_index": 1
@@ -778,9 +819,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-          "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -814,9 +860,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-          "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -850,8 +901,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
           "sha256": "f647916273c148a26267ce8cb15cfafffd8601f577d8edf43613b6f5d4ca9eda",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-4.png"
         },
         "source_slide_index": 4
@@ -886,9 +941,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-          "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -922,8 +982,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-6.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-6.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
           "sha256": "31b5ce6966d3480fb7a415e69f9fedc7c903b05d1e7bcaaf50e07c21cf7a091d",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-6.png"
         },
         "source_slide_index": 6
@@ -957,9 +1021,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-          "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -994,9 +1063,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
-          "sha256": "aaac87da4e7f0e1e294f8f3d88616b067174687f4b89dafcad0acb4b967e9633",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-8.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/creative-mode-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 8
       }

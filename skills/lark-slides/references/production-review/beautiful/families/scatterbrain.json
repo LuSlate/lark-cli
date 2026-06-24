@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/scatterbrain.html",
     "render_status": "missing_smoke",
-    "sha256": "5a5157baf391062f4ed34e0bde225c820785e216e69b9e7af3d7c460ffdb0c80"
+    "sha256": "998da5bac5e3a18aa2b9d4f3ca47684ee2a663ff30567e063b73183ad28cb90a"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "5a5157baf391062f4ed34e0bde225c820785e216e69b9e7af3d7c460ffdb0c80",
+    "contact_sheet": "998da5bac5e3a18aa2b9d4f3ca47684ee2a663ff30567e063b73183ad28cb90a",
     "fidelity_receipt": "8f986c32012e5a26fff7d1e4b2c73fb73db59885a7bb3f8ba7fc7f1f0cfd927f",
     "reference_screenshot": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
     "smoke_receipt": null,
@@ -358,8 +358,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
         "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
       },
       "source_slide_index": 1
@@ -395,9 +399,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-        "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -433,9 +442,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-        "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -470,8 +484,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
         "sha256": "39194027896b173c471b8f6d1b9e586f9ab8e504f5676433d472b8d7653a871d",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-4.png"
       },
       "source_slide_index": 4
@@ -507,9 +525,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-        "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -543,9 +566,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-        "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -581,9 +609,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-        "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -618,8 +651,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
         "sha256": "6584ccf4edb736dd8273c69a4f8a2283e449bf49450ca3e797620591d8dd4f07",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-8.png"
       },
       "source_slide_index": 8
@@ -767,8 +804,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
           "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
         },
         "source_slide_index": 1
@@ -804,9 +845,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-          "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -842,9 +888,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-          "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -879,8 +930,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
           "sha256": "39194027896b173c471b8f6d1b9e586f9ab8e504f5676433d472b8d7653a871d",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-4.png"
         },
         "source_slide_index": 4
@@ -916,9 +971,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-          "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -952,9 +1012,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-          "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -990,9 +1055,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
-          "sha256": "c2ed8f8d89fd124c65976fa3ece9b153afe4f4542d95880c367922bb88d910ca",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1027,8 +1097,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-1.png",
           "sha256": "6584ccf4edb736dd8273c69a4f8a2283e449bf49450ca3e797620591d8dd4f07",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/scatterbrain-8.png"
         },
         "source_slide_index": 8

@@ -304,17 +304,33 @@ def _promotion_gate_summary(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _source_screenshot_for_page(family_id: str, slide_index: object, fallback: object) -> dict[str, Any]:
-    path = None
+    reference = resolve_path(fallback)
     if isinstance(slide_index, int):
         candidate = SOURCE_ROOT / "screenshots" / f"{family_id}-{slide_index}.png"
         if candidate.is_file():
-            path = candidate
-    if path is None:
-        path = resolve_path(fallback)
+            return {
+                "status": "exact",
+                "path": relpath(candidate),
+                "uri": file_uri(candidate),
+                "sha256": optional_sha256(candidate),
+                "expected_path": relpath(candidate),
+                "reference_screenshot": relpath(reference),
+                "fallback_used": False,
+            }
+        expected_path = candidate
+        reason = "source_screenshot_missing_for_slide"
+    else:
+        expected_path = None
+        reason = "source_slide_index_missing"
     return {
-        "path": relpath(path),
-        "uri": file_uri(path),
-        "sha256": optional_sha256(path),
+        "status": "missing",
+        "path": None,
+        "uri": None,
+        "sha256": None,
+        "expected_path": relpath(expected_path),
+        "reference_screenshot": relpath(reference),
+        "missing_reason": reason,
+        "fallback_used": False,
     }
 
 
@@ -758,12 +774,21 @@ def _render_family_html(family: dict[str, Any]) -> str:
         img = ""
         if screenshot.get("uri"):
             img = f'<img src="{html.escape(str(screenshot["uri"]))}" alt="{html.escape(str(page["page_variant_id"]))}" />'
+        else:
+            expected = screenshot.get("expected_path") or "unknown"
+            img = (
+                '<div class="missing-thumb">'
+                "<strong>source screenshot missing</strong>"
+                f"<small>{html.escape(str(expected))}</small>"
+                "</div>"
+            )
         pages.append(
             "<section class=\"page\">"
             f"<div class=\"thumb\">{img}</div>"
             f"<h2>{html.escape(str(page['page']))}. {html.escape(str(page['page_variant_id']))}</h2>"
             f"<p>{html.escape(str(page.get('page_role') or 'unknown'))} / {html.escape(str(page.get('role_group') or 'unmapped'))}</p>"
             f"<p>{_badge(page.get('render_status'))}</p>"
+            f"<p>source screenshot: {html.escape(str(screenshot.get('status') or 'missing'))}</p>"
             f"<p><code>{html.escape(str(page.get('source_class') or ''))}</code></p>"
             "</section>"
         )
@@ -786,6 +811,8 @@ def _render_family_html(family: dict[str, Any]) -> str:
     .page {{ background: #fff; border: 1px solid #dfe5ee; border-radius: 8px; padding: 10px; }}
     .thumb {{ background: #eef2f7; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 6px; border: 1px solid #d8dee9; }}
     .thumb img {{ width: 100%; height: 100%; object-fit: contain; }}
+    .missing-thumb {{ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #7c2d12; background: #ffedd5; width: 100%; height: 100%; text-align: center; padding: 12px; box-sizing: border-box; }}
+    .missing-thumb small {{ color: #9a3412; word-break: break-all; }}
     h2 {{ margin: 10px 0 4px; font-size: 15px; }}
     p {{ margin: 5px 0; font-size: 12px; color: #536071; }}
     code {{ word-break: break-all; font-size: 11px; }}

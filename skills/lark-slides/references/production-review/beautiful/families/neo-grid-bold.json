@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/neo-grid-bold.html",
     "render_status": "missing_smoke",
-    "sha256": "dfdb0c6be0e75f49ecd5d5a782eff136bb25cc679bfbfd17540b9aa47d14356e"
+    "sha256": "4d48702088a0d550be284edfef1535ec301ab12a6dcc107641a25b34468cc6a7"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "dfdb0c6be0e75f49ecd5d5a782eff136bb25cc679bfbfd17540b9aa47d14356e",
+    "contact_sheet": "4d48702088a0d550be284edfef1535ec301ab12a6dcc107641a25b34468cc6a7",
     "fidelity_receipt": "9d0ced3d64a642e028edf86ff6457c36def39175b3079fff6a4c97b645803228",
     "reference_screenshot": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
     "smoke_receipt": null,
@@ -452,8 +452,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
         "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
       },
       "source_slide_index": 1
@@ -489,9 +493,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -526,8 +535,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-3.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-3.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
         "sha256": "c591b469d9709f7689a22f23a34af1b2f8e1ad403b4651dfbfb98f3618ecca1a",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-3.png"
       },
       "source_slide_index": 3
@@ -562,9 +575,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-4.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 4
     },
@@ -598,9 +616,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -635,9 +658,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -670,9 +698,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -706,8 +739,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
         "sha256": "bfddba44fd59b4dc5f462fb226308623c2b23fce71d4deec94c1e4f8c9be329c",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-8.png"
       },
       "source_slide_index": 8
@@ -744,9 +781,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -780,9 +822,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     },
@@ -818,9 +865,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-11.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 11
     },
@@ -853,9 +905,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-        "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-12.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 12
     }
@@ -1009,8 +1066,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
           "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
         },
         "source_slide_index": 1
@@ -1046,9 +1107,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -1083,8 +1149,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-3.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-3.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
           "sha256": "c591b469d9709f7689a22f23a34af1b2f8e1ad403b4651dfbfb98f3618ecca1a",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-3.png"
         },
         "source_slide_index": 3
@@ -1119,9 +1189,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-4.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 4
       },
@@ -1155,9 +1230,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1192,9 +1272,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1227,9 +1312,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1263,8 +1353,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
           "sha256": "bfddba44fd59b4dc5f462fb226308623c2b23fce71d4deec94c1e4f8c9be329c",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-8.png"
         },
         "source_slide_index": 8
@@ -1301,9 +1395,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1337,9 +1436,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       },
@@ -1375,9 +1479,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-11.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 11
       },
@@ -1410,9 +1519,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
-          "sha256": "c53ba5da0f1b85b23ad1975da65edafaee84f029f06c468b2fbd036031ce15e5",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-12.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/neo-grid-bold-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 12
       }

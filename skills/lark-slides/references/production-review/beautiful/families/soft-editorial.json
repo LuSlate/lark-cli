@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/soft-editorial.html",
     "render_status": "missing_smoke",
-    "sha256": "f377bd08e444ba86e0ebb24b2b6fb6147a292402479d5854424ad483450e6aa3"
+    "sha256": "6523747364782607bd6648d036e7949ab72c17c288b1f47984ad1901ad964f12"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "f377bd08e444ba86e0ebb24b2b6fb6147a292402479d5854424ad483450e6aa3",
+    "contact_sheet": "6523747364782607bd6648d036e7949ab72c17c288b1f47984ad1901ad964f12",
     "fidelity_receipt": "a7543b7f841153c3dd8d182b0c43d5d3688dc128b4da2f392cb41ee20d275ff3",
     "reference_screenshot": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
     "smoke_receipt": null,
@@ -449,9 +449,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-1.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 1
     },
@@ -484,9 +489,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -520,9 +530,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -557,8 +572,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
         "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
       },
       "source_slide_index": 4
@@ -593,9 +612,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -628,8 +652,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-6.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-6.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
         "sha256": "c46b72e1ee7445beb0ccf9d35943b9f9eede81158ad1af470f4322623b132a3a",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-6.png"
       },
       "source_slide_index": 6
@@ -663,9 +691,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -700,9 +733,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-8.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 8
     },
@@ -738,9 +776,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -774,8 +817,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-10.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-10.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
         "sha256": "e4c7e89704ac9bc5f1ad1de58b01ab939676554f3b1c5d24b722b391bf3a8041",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-10.png"
       },
       "source_slide_index": 10
@@ -812,9 +859,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-11.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 11
     },
@@ -847,9 +899,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-        "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-12.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 12
     }
@@ -1003,9 +1060,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-1.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 1
       },
@@ -1038,9 +1100,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -1074,9 +1141,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -1111,8 +1183,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
           "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
         },
         "source_slide_index": 4
@@ -1147,9 +1223,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1182,8 +1263,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-6.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-6.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
           "sha256": "c46b72e1ee7445beb0ccf9d35943b9f9eede81158ad1af470f4322623b132a3a",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-6.png"
         },
         "source_slide_index": 6
@@ -1217,9 +1302,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1254,9 +1344,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-8.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 8
       },
@@ -1292,9 +1387,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1328,8 +1428,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-10.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-10.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
           "sha256": "e4c7e89704ac9bc5f1ad1de58b01ab939676554f3b1c5d24b722b391bf3a8041",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-10.png"
         },
         "source_slide_index": 10
@@ -1366,9 +1470,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-11.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 11
       },
@@ -1401,9 +1510,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
-          "sha256": "3e37602cf749a0a383ef0f0a1f25db85e9633da1d74bafc2be76a91b004a866b",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-12.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/soft-editorial-4.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 12
       }

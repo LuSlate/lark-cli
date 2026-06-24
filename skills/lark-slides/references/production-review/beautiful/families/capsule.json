@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/capsule.html",
     "render_status": "missing_smoke",
-    "sha256": "b89c818def92fdd5638e4d0c343bdfd8a1ae201087c5701f9740e66d21d41636"
+    "sha256": "8895cdd8e0e19d4ec92d78a8a56c30d32a7c4b4961e471d8c0c014bfc64ebdbf"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "b89c818def92fdd5638e4d0c343bdfd8a1ae201087c5701f9740e66d21d41636",
+    "contact_sheet": "8895cdd8e0e19d4ec92d78a8a56c30d32a7c4b4961e471d8c0c014bfc64ebdbf",
     "fidelity_receipt": "38ef8db0e9fdaf4d3c4f83f3b9ab1a2c956661315784c6090c301faac93f2f8c",
     "reference_screenshot": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
     "smoke_receipt": null,
@@ -402,8 +402,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
         "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
       },
       "source_slide_index": 1
@@ -438,9 +442,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -476,9 +485,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -513,8 +527,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
         "sha256": "f57e18e93e39530b7c74a0236465b65f30f2fa455668454423a971f52eb9360d",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-4.png"
       },
       "source_slide_index": 4
@@ -550,9 +568,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -587,9 +610,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -623,9 +651,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -658,8 +691,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
         "sha256": "fc8ddf4d07a3f443556a449a9f50b90c554564d29e1df2df6e0f8e7dad4aa8ac",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-8.png"
       },
       "source_slide_index": 8
@@ -694,9 +731,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -729,9 +771,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-        "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     }
@@ -882,8 +929,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
           "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
         },
         "source_slide_index": 1
@@ -918,9 +969,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -956,9 +1012,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -993,8 +1054,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
           "sha256": "f57e18e93e39530b7c74a0236465b65f30f2fa455668454423a971f52eb9360d",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-4.png"
         },
         "source_slide_index": 4
@@ -1030,9 +1095,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1067,9 +1137,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1103,9 +1178,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1138,8 +1218,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
           "sha256": "fc8ddf4d07a3f443556a449a9f50b90c554564d29e1df2df6e0f8e7dad4aa8ac",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-8.png"
         },
         "source_slide_index": 8
@@ -1174,9 +1258,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1209,9 +1298,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
-          "sha256": "468b1b618668660274e7a46a528d0a323fb926c3e47f7e5895ec03189efd35b3",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/capsule-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       }

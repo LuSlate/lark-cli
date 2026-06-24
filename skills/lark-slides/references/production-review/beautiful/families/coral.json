@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/coral.html",
     "render_status": "missing_smoke",
-    "sha256": "b47a477b472ff5e219ff685d2fd247587ea389cdbd726d2276ffabbbfebf5403"
+    "sha256": "44f948abee14374306cdb6d5bc16a9efaf4e6f4011e7855cfa810b6d01992ee8"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "b47a477b472ff5e219ff685d2fd247587ea389cdbd726d2276ffabbbfebf5403",
+    "contact_sheet": "44f948abee14374306cdb6d5bc16a9efaf4e6f4011e7855cfa810b6d01992ee8",
     "fidelity_receipt": "dd795f5b763b8b5769e173a07ba63f2a2da2345fefaf96cb48989b7a5ba4ef2c",
     "reference_screenshot": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
     "smoke_receipt": null,
@@ -402,8 +402,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
         "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
       },
       "source_slide_index": 1
@@ -437,9 +441,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -473,9 +482,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -510,8 +524,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
         "sha256": "dc7b8872a39a378c4cd9e65546fa8f60821379f773fbef925aceddd81faf8f57",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-4.png"
       },
       "source_slide_index": 4
@@ -546,9 +564,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -585,9 +608,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -621,9 +649,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -657,8 +690,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
         "sha256": "eed8f9f99d5539ee946433a83dd17f77bc97470eb70b195292ae4a2406f5f777",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-8.png"
       },
       "source_slide_index": 8
@@ -693,9 +730,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -729,9 +771,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-        "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     }
@@ -882,8 +929,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
           "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
         },
         "source_slide_index": 1
@@ -917,9 +968,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -953,9 +1009,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -990,8 +1051,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
           "sha256": "dc7b8872a39a378c4cd9e65546fa8f60821379f773fbef925aceddd81faf8f57",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-4.png"
         },
         "source_slide_index": 4
@@ -1026,9 +1091,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1065,9 +1135,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1101,9 +1176,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1137,8 +1217,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
           "sha256": "eed8f9f99d5539ee946433a83dd17f77bc97470eb70b195292ae4a2406f5f777",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-8.png"
         },
         "source_slide_index": 8
@@ -1173,9 +1257,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1209,9 +1298,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
-          "sha256": "3cce11542e0c380396c14d2e7ac7406af704af163e7ba85b8ce9e2fdf7d12015",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/coral-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       }

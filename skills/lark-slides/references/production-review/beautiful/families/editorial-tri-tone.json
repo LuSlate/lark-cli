@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/editorial-tri-tone.html",
     "render_status": "missing_smoke",
-    "sha256": "dfa4ea5c54fbd6428d4c98cba1707e4e7a6fa3f11b74dc8879c25305b20ca07f"
+    "sha256": "b67f2c7a6d040f97eed08aa2f985175f56c4059c2b55cc68dc8660ea16b44ab4"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "dfa4ea5c54fbd6428d4c98cba1707e4e7a6fa3f11b74dc8879c25305b20ca07f",
+    "contact_sheet": "b67f2c7a6d040f97eed08aa2f985175f56c4059c2b55cc68dc8660ea16b44ab4",
     "fidelity_receipt": "5bf44805d7dc674b07da8f0ac8f0a749bfc78893371e921567db82e5bf3a251b",
     "reference_screenshot": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
     "smoke_receipt": null,
@@ -352,8 +352,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
         "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
       },
       "source_slide_index": 1
@@ -388,9 +392,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-        "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -426,8 +435,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-3.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-3.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
         "sha256": "1c2e874640b07260cf4134f6307be23ee3965b349b8720e3aea12a31078346e7",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-3.png"
       },
       "source_slide_index": 3
@@ -463,8 +476,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
         "sha256": "e3a5f244b705b652be851cf975c4a255058f6a9a65f5db8c01da834f78166cf0",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-4.png"
       },
       "source_slide_index": 4
@@ -500,9 +517,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-        "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -538,9 +560,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-        "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -574,9 +601,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-        "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -610,9 +642,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-        "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-8.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 8
     }
@@ -757,8 +794,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
           "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
         },
         "source_slide_index": 1
@@ -793,9 +834,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-          "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -831,8 +877,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-3.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-3.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
           "sha256": "1c2e874640b07260cf4134f6307be23ee3965b349b8720e3aea12a31078346e7",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-3.png"
         },
         "source_slide_index": 3
@@ -868,8 +918,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
           "sha256": "e3a5f244b705b652be851cf975c4a255058f6a9a65f5db8c01da834f78166cf0",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-4.png"
         },
         "source_slide_index": 4
@@ -905,9 +959,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-          "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -943,9 +1002,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-          "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -979,9 +1043,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-          "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1015,9 +1084,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
-          "sha256": "0b89022af5bfcc26356b7bdb48156510ba16b643e9bc01027ae8197092ead507",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-8.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/editorial-tri-tone-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 8
       }

@@ -101,6 +101,24 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
         self.assertIn("missing_smoke", candidate["known_blockers"])
         self.assertIn("production_review_pending", candidate["known_blockers"])
 
+    def test_missing_source_screenshot_does_not_fallback_to_cover(self) -> None:
+        manifest = gallery.build_gallery_manifest()
+        blue = next(item for item in manifest["families"] if item["family_id"] == "blue-professional")
+
+        cover = next(page for page in blue["pages"] if page["page_variant_id"] == "cover")
+        agenda = next(page for page in blue["pages"] if page["page_variant_id"] == "agenda")
+        bars = next(page for page in blue["pages"] if page["page_variant_id"] == "bars")
+
+        self.assertEqual("exact", cover["source_screenshot"]["status"])
+        self.assertTrue(cover["source_screenshot"]["path"].endswith("blue-professional-1.png"))
+        self.assertEqual("exact", bars["source_screenshot"]["status"])
+        self.assertTrue(bars["source_screenshot"]["path"].endswith("blue-professional-6.png"))
+        self.assertEqual("missing", agenda["source_screenshot"]["status"])
+        self.assertIsNone(agenda["source_screenshot"]["path"])
+        self.assertIsNone(agenda["source_screenshot"]["uri"])
+        self.assertTrue(agenda["source_screenshot"]["expected_path"].endswith("blue-professional-2.png"))
+        self.assertTrue(agenda["source_screenshot"]["reference_screenshot"].endswith("blue-professional-1.png"))
+
     def test_write_artifacts_keeps_production_default_counts_unchanged(self) -> None:
         before = gallery.matrix_status_counts()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -138,6 +156,7 @@ class BeautifulTemplateProductionReviewGalleryTest(unittest.TestCase):
             self.assertIn("does not automatically modify production/default", page_html)
             self.assertIn("skills/lark-slides/references/receipts/production-review/beautiful-34-gallery.json", page_html)
             self.assertIn("apply script", page_html)
+        self.assertIn("source screenshot missing", family_html)
 
 
 if __name__ == "__main__":

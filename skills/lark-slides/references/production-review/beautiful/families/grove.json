@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/grove.html",
     "render_status": "missing_smoke",
-    "sha256": "da6b1ce28c3ae75ea17159bc4a656369fc659bdbfcff3b953aa9ac3ca4c74e28"
+    "sha256": "7061090759d0623e6da3a618454f880be1374eff230a24fcefb21500175ef146"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "da6b1ce28c3ae75ea17159bc4a656369fc659bdbfcff3b953aa9ac3ca4c74e28",
+    "contact_sheet": "7061090759d0623e6da3a618454f880be1374eff230a24fcefb21500175ef146",
     "fidelity_receipt": "72a5d983bb922049b536f086eedb89d0e3a7959b72480aab5fcfce63842d7455",
     "reference_screenshot": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
     "smoke_receipt": null,
@@ -463,8 +463,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
         "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
       },
       "source_slide_index": 1
@@ -500,9 +504,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -536,9 +545,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -574,8 +588,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
         "sha256": "8f734550801c22f83ec27722774839c7ceb4e70d9542ff4d6a04e1aae5b00bf8",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-4.png"
       },
       "source_slide_index": 4
@@ -612,9 +630,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -651,9 +674,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -688,9 +716,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -726,8 +759,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
         "sha256": "fe004df143b8158d418d98728bd10a17e81ac9890cd3538f45f92daf8ea4241e",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-8.png"
       },
       "source_slide_index": 8
@@ -763,9 +800,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -800,9 +842,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     },
@@ -836,9 +883,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-11.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 11
     },
@@ -873,9 +925,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-        "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-12.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 12
     }
@@ -1030,8 +1087,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
           "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
         },
         "source_slide_index": 1
@@ -1067,9 +1128,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -1103,9 +1169,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -1141,8 +1212,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
           "sha256": "8f734550801c22f83ec27722774839c7ceb4e70d9542ff4d6a04e1aae5b00bf8",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-4.png"
         },
         "source_slide_index": 4
@@ -1179,9 +1254,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1218,9 +1298,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1255,9 +1340,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1293,8 +1383,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
           "sha256": "fe004df143b8158d418d98728bd10a17e81ac9890cd3538f45f92daf8ea4241e",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-8.png"
         },
         "source_slide_index": 8
@@ -1330,9 +1424,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1367,9 +1466,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       },
@@ -1403,9 +1507,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-11.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 11
       },
@@ -1440,9 +1549,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
-          "sha256": "6a01598d4b183837b96c698eb9453962fea4bea072a431ee4d71aef6e09da3eb",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-12.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/grove-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 12
       }

@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/pink-script.html",
     "render_status": "missing_smoke",
-    "sha256": "be97ade117aa12ee9ffcd562c2e2f905076db7c4ba21ebbc3efa92b4aa0890ae"
+    "sha256": "46d04c1e45074bd1ff49230440b221aa45a11bd933ba6dfb48373038e4cf4543"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "be97ade117aa12ee9ffcd562c2e2f905076db7c4ba21ebbc3efa92b4aa0890ae",
+    "contact_sheet": "46d04c1e45074bd1ff49230440b221aa45a11bd933ba6dfb48373038e4cf4543",
     "fidelity_receipt": "ff075c2947f7c09785c47c57f68d995722873676d91251a822747e0b096b88bf",
     "reference_screenshot": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
     "smoke_receipt": null,
@@ -375,8 +375,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
         "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
       },
       "source_slide_index": 1
@@ -411,9 +415,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-        "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -448,9 +457,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-        "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -484,8 +498,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
         "sha256": "8af653667d89a7467b01f35f978d6ead5bfa70f2f03f0c7fc1bb2267699a8d0c",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-4.png"
       },
       "source_slide_index": 4
@@ -521,9 +539,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-        "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -558,9 +581,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-        "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -594,9 +622,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-        "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -629,8 +662,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
         "sha256": "98c1cd1c817aab2ef1d9efc0a60ea4cf0a5e6586ca873d95d48da6360998178d",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-8.png"
       },
       "source_slide_index": 8
@@ -667,9 +704,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-        "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     }
@@ -816,8 +858,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
           "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
         },
         "source_slide_index": 1
@@ -852,9 +898,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-          "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -889,9 +940,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-          "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -925,8 +981,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
           "sha256": "8af653667d89a7467b01f35f978d6ead5bfa70f2f03f0c7fc1bb2267699a8d0c",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-4.png"
         },
         "source_slide_index": 4
@@ -962,9 +1022,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-          "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -999,9 +1064,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-          "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1035,9 +1105,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-          "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1070,8 +1145,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
           "sha256": "98c1cd1c817aab2ef1d9efc0a60ea4cf0a5e6586ca873d95d48da6360998178d",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-8.png"
         },
         "source_slide_index": 8
@@ -1108,9 +1187,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
-          "sha256": "d39af58b620fe59ab0e28db0f070fd6e13214896115aa984be069369ef594ff7",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/pink-script-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       }

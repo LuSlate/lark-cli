@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/retro-zine.html",
     "render_status": "missing_smoke",
-    "sha256": "2461333873da620b3c97e88c9ad80c1814ed28433cbc211c781f4999b1a62833"
+    "sha256": "37d6239c2fc0310d7f7bd546e3ae673f13010bf54cf9496d24fcaa71cd2ece82"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "2461333873da620b3c97e88c9ad80c1814ed28433cbc211c781f4999b1a62833",
+    "contact_sheet": "37d6239c2fc0310d7f7bd546e3ae673f13010bf54cf9496d24fcaa71cd2ece82",
     "fidelity_receipt": "70330ed527a665653b1934d49e3ad5f14e2f4f866de429f38615ca98f18657ba",
     "reference_screenshot": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
     "smoke_receipt": null,
@@ -396,8 +396,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
         "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
       },
       "source_slide_index": 1
@@ -431,9 +435,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -467,9 +476,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -502,8 +516,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
         "sha256": "0a2b57ed755f8727ffa1802347b8101d3fb7dc0122660ff50fcb95495edfe74c",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-4.png"
       },
       "source_slide_index": 4
@@ -539,9 +557,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -575,9 +598,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -610,9 +638,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -646,8 +679,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
         "sha256": "08f7c2266ae969ef453cfd048ce02458408a12eb0217ab76f45e29dd608eabad",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-8.png"
       },
       "source_slide_index": 8
@@ -683,9 +720,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -718,9 +760,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-        "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     }
@@ -870,8 +917,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
           "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
         },
         "source_slide_index": 1
@@ -905,9 +956,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -941,9 +997,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -976,8 +1037,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
           "sha256": "0a2b57ed755f8727ffa1802347b8101d3fb7dc0122660ff50fcb95495edfe74c",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-4.png"
         },
         "source_slide_index": 4
@@ -1013,9 +1078,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1049,9 +1119,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1084,9 +1159,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1120,8 +1200,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
           "sha256": "08f7c2266ae969ef453cfd048ce02458408a12eb0217ab76f45e29dd608eabad",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-8.png"
         },
         "source_slide_index": 8
@@ -1157,9 +1241,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1192,9 +1281,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
-          "sha256": "bd93d862d934f00253a36df8f03f4aef74f87fb1b0f870c777002b39ae7f2af9",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/retro-zine-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       }

@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/playful.html",
     "render_status": "missing_smoke",
-    "sha256": "dce30937bc181379275aeb74ef278b312b7cbceea99f2e2522aaefe6d6f16878"
+    "sha256": "49548ca624a665ca2a16bba78c5b0086a420670be3e2a145fc556a944f2185e6"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "dce30937bc181379275aeb74ef278b312b7cbceea99f2e2522aaefe6d6f16878",
+    "contact_sheet": "49548ca624a665ca2a16bba78c5b0086a420670be3e2a145fc556a944f2185e6",
     "fidelity_receipt": "e828f367dda5704dca8c804fb833051e8e3888202e9b76169082ac50164873d8",
     "reference_screenshot": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
     "smoke_receipt": null,
@@ -405,8 +405,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
         "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
       },
       "source_slide_index": 1
@@ -444,9 +448,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -479,9 +488,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -516,9 +530,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-4.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 4
     },
@@ -553,9 +572,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -590,8 +614,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
         "sha256": "b4c66f765e8b741bbe4262dd4854b48ab501981ec2b528a0ddc6a5c35742818b",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png"
       },
       "source_slide_index": 6
@@ -627,9 +655,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -664,8 +697,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
         "sha256": "98ea41ea3c16781085dd5e3824c31bc398fadc4063a72d8cdf23dab8d26b22e3",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png"
       },
       "source_slide_index": 8
@@ -700,9 +737,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -736,9 +778,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-        "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     }
@@ -888,8 +935,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
           "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
         },
         "source_slide_index": 1
@@ -927,9 +978,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -962,9 +1018,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -999,9 +1060,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-4.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 4
       },
@@ -1036,9 +1102,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1073,8 +1144,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
           "sha256": "b4c66f765e8b741bbe4262dd4854b48ab501981ec2b528a0ddc6a5c35742818b",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-6.png"
         },
         "source_slide_index": 6
@@ -1110,9 +1185,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1147,8 +1227,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
           "sha256": "98ea41ea3c16781085dd5e3824c31bc398fadc4063a72d8cdf23dab8d26b22e3",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-8.png"
         },
         "source_slide_index": 8
@@ -1183,9 +1267,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1219,9 +1308,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
-          "sha256": "75c22cf0736c2c349599de769e984af4e55440dbf83fb4abac35e5c0842abe81",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/playful-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       }

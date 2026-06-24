@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/broadside.html",
     "render_status": "missing_smoke",
-    "sha256": "db1ffb89fb710b18e5e23c50bd04a5c500bea3a9602bc7148def1cd9b712572c"
+    "sha256": "54bb6ff1873eb2d6a14e6ea9861007de189cd21112c315d86fe72a5dbedaeb5a"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "db1ffb89fb710b18e5e23c50bd04a5c500bea3a9602bc7148def1cd9b712572c",
+    "contact_sheet": "54bb6ff1873eb2d6a14e6ea9861007de189cd21112c315d86fe72a5dbedaeb5a",
     "fidelity_receipt": "fd3c0b8d0ae82ecad0cbeb13974361d5bf8f9e76083619edf5a88d77b0b5f664",
     "reference_screenshot": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
     "smoke_receipt": null,
@@ -556,8 +556,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
         "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
       },
       "source_slide_index": 1
@@ -592,9 +596,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -629,9 +638,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-3.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 3
     },
@@ -666,8 +680,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-4.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-4.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
         "sha256": "b3ec95db1e926d3791ffa41014ba098eba5034bfb55a8b158ab2b264a206c081",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-4.png"
       },
       "source_slide_index": 4
@@ -702,9 +720,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-5.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 5
     },
@@ -738,9 +761,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -776,9 +804,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -812,9 +845,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-8.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 8
     },
@@ -850,9 +888,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-9.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 9
     },
@@ -887,9 +930,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-10.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 10
     },
@@ -922,9 +970,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-11.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 11
     },
@@ -959,9 +1012,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-12.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 12
     },
@@ -994,8 +1052,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-13.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-13.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
         "sha256": "18a124480343b97a0c2aab335e66a0c41ab6f6d01884380c6526fef50a560601",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-13.png"
       },
       "source_slide_index": 13
@@ -1030,9 +1092,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-14.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 14
     },
@@ -1065,9 +1132,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-15.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 15
     },
@@ -1103,9 +1175,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-        "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-16.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 16
     }
@@ -1268,8 +1345,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
           "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
         },
         "source_slide_index": 1
@@ -1304,9 +1385,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -1341,9 +1427,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-3.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 3
       },
@@ -1378,8 +1469,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-4.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-4.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
           "sha256": "b3ec95db1e926d3791ffa41014ba098eba5034bfb55a8b158ab2b264a206c081",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-4.png"
         },
         "source_slide_index": 4
@@ -1414,9 +1509,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-5.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 5
       },
@@ -1450,9 +1550,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -1488,9 +1593,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1524,9 +1634,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-8.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 8
       },
@@ -1562,9 +1677,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-9.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 9
       },
@@ -1599,9 +1719,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-10.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 10
       },
@@ -1634,9 +1759,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-11.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 11
       },
@@ -1671,9 +1801,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-12.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 12
       },
@@ -1706,8 +1841,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-13.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-13.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
           "sha256": "18a124480343b97a0c2aab335e66a0c41ab6f6d01884380c6526fef50a560601",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-13.png"
         },
         "source_slide_index": 13
@@ -1742,9 +1881,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-14.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 14
       },
@@ -1777,9 +1921,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-15.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 15
       },
@@ -1815,9 +1964,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
-          "sha256": "96805bd67e4502f94b078b723d252717183fe8eb34f2eb529c44b772b4dcdce4",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-16.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/broadside-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 16
       }

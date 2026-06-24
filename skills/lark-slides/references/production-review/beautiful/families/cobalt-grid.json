@@ -10,11 +10,11 @@
     "artifact_kind": "smoke_deck_contact_sheet_review_model",
     "html_path": "families/cobalt-grid.html",
     "render_status": "missing_smoke",
-    "sha256": "4fd837a9e9c7fc3da874f451915c9942f7c35b2f179f07986e2523c8fb0e2e9f"
+    "sha256": "bf24db9ea3f62efbbde0f0cdf3bf769aeb9c98818cc5f07c3866e48437984c9e"
   },
   "default_selectable": false,
   "evidence_hashes": {
-    "contact_sheet": "4fd837a9e9c7fc3da874f451915c9942f7c35b2f179f07986e2523c8fb0e2e9f",
+    "contact_sheet": "bf24db9ea3f62efbbde0f0cdf3bf769aeb9c98818cc5f07c3866e48437984c9e",
     "fidelity_receipt": "fd2b394777733364723f20d0d732a346f93edba0a748628ce9a1e5596726cb02",
     "reference_screenshot": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
     "smoke_receipt": null,
@@ -352,8 +352,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
         "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
       },
       "source_slide_index": 1
@@ -387,9 +391,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-        "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-2.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 2
     },
@@ -423,8 +432,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-3.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-3.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
         "sha256": "835573ec7f08c1df8734fe3511486d171c3a55e489f371becaf4d67cd4bf1dc4",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-3.png"
       },
       "source_slide_index": 3
@@ -460,9 +473,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-        "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-4.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 4
     },
@@ -496,8 +514,12 @@
         }
       ],
       "source_screenshot": {
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-5.png",
+        "fallback_used": false,
         "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-5.png",
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
         "sha256": "652d10972a8c198393e1ea3d8b0f857d50b2c496c3cd0d5da0b01eb0153e8ee4",
+        "status": "exact",
         "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-5.png"
       },
       "source_slide_index": 5
@@ -533,9 +555,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-        "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-6.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 6
     },
@@ -568,9 +595,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-        "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-7.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 7
     },
@@ -605,9 +637,14 @@
         }
       ],
       "source_screenshot": {
-        "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-        "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-        "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+        "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-8.png",
+        "fallback_used": false,
+        "missing_reason": "source_screenshot_missing_for_slide",
+        "path": null,
+        "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+        "sha256": null,
+        "status": "missing",
+        "uri": null
       },
       "source_slide_index": 8
     }
@@ -754,8 +791,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
           "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
         },
         "source_slide_index": 1
@@ -789,9 +830,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-          "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-2.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 2
       },
@@ -825,8 +871,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-3.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-3.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
           "sha256": "835573ec7f08c1df8734fe3511486d171c3a55e489f371becaf4d67cd4bf1dc4",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-3.png"
         },
         "source_slide_index": 3
@@ -862,9 +912,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-          "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-4.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 4
       },
@@ -898,8 +953,12 @@
           }
         ],
         "source_screenshot": {
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-5.png",
+          "fallback_used": false,
           "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-5.png",
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
           "sha256": "652d10972a8c198393e1ea3d8b0f857d50b2c496c3cd0d5da0b01eb0153e8ee4",
+          "status": "exact",
           "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-5.png"
         },
         "source_slide_index": 5
@@ -935,9 +994,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-          "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-6.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 6
       },
@@ -970,9 +1034,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-          "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-7.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 7
       },
@@ -1007,9 +1076,14 @@
           }
         ],
         "source_screenshot": {
-          "path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
-          "sha256": "e85989914eb7ca3bb279e03cc792df19c5d06f8d3ba0e59515211164fca5ae2d",
-          "uri": "file:///Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png"
+          "expected_path": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-8.png",
+          "fallback_used": false,
+          "missing_reason": "source_screenshot_missing_for_slide",
+          "path": null,
+          "reference_screenshot": "/Users/bytedance/bd-projects/beautiful-html-templates/screenshots/cobalt-grid-1.png",
+          "sha256": null,
+          "status": "missing",
+          "uri": null
         },
         "source_slide_index": 8
       }
