@@ -267,7 +267,7 @@ func parseTablePutPayload(runtime flagView) (*tablePayload, error) {
 		Sheets []tableSheetIn `json:"sheets"`
 	}
 	if err := dec.Decode(&wire); err != nil {
-		return nil, common.ValidationErrorf("--sheets: invalid JSON: %w", err)
+		return nil, common.ValidationErrorf("--sheets: invalid JSON: %v", err).WithCause(err)
 	}
 	// Reject trailing non-whitespace after the first JSON value: json.Decoder
 	// accepts it silently (unlike json.Unmarshal), so e.g. `--sheets '{...} oops'`
@@ -378,7 +378,7 @@ func (p *tablePayload) validate() error {
 			// stray empty spreadsheet behind.
 			for c := range s.Columns {
 				if _, err := buildTypedCell(&s.Columns[c], s.Rows[r][c]); err != nil {
-					return common.ValidationErrorf("--sheets[%d] %q: row %d column %q: %w", i, s.Name, r, s.Columns[c].Name, err)
+					return common.ValidationErrorf("--sheets[%d] %q: row %d column %q: %v", i, s.Name, r, s.Columns[c].Name, err).WithCause(err)
 				}
 			}
 		}
@@ -442,7 +442,7 @@ func buildSheetMatrix(s *tableSheetSpec, writeHeader bool) ([][]interface{}, err
 		for c := range s.Columns {
 			cell, err := buildTypedCell(&s.Columns[c], s.Rows[r][c])
 			if err != nil {
-				return nil, common.ValidationErrorf("sheet %q row %d column %q: %w", s.Name, r, s.Columns[c].Name, err)
+				return nil, common.ValidationErrorf("sheet %q row %d column %q: %v", s.Name, r, s.Columns[c].Name, err).WithCause(err)
 			}
 			row[c] = cell
 		}
@@ -1097,7 +1097,7 @@ var TableGet = common.Shortcut{
 			spec, _ := sheets[0].(map[string]interface{})
 			data, err := encodeSheetMapToArrowIPC(spec)
 			if err != nil {
-				return common.ValidationErrorf("--dataframe-out: encode arrow: %w", err)
+				return common.ValidationErrorf("--dataframe-out: encode arrow: %v", err).WithCause(err)
 			}
 			if err := writeDataframeOut(runtime, dfOut, data); err != nil {
 				return err

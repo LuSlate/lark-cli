@@ -68,7 +68,7 @@ func parseDataframePayload(rctx *common.RuntimeContext) (*tablePayload, error) {
 	}
 	spec, err := decodeArrowToSheet(data, dataframeDefaultSheetName)
 	if err != nil {
-		return nil, common.ValidationErrorf("--dataframe: %w", err)
+		return nil, common.ValidationErrorf("--dataframe: %v", err).WithCause(err)
 	}
 	payload := &tablePayload{Sheets: []tableSheetSpec{spec}}
 	if err := payload.validate(); err != nil {
@@ -108,7 +108,7 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 		}
 		data, err := readAllBytes(io.In)
 		if err != nil {
-			return nil, common.ValidationErrorf("--dataframe: read stdin: %w", err)
+			return nil, common.ValidationErrorf("--dataframe: read stdin: %v", err).WithCause(err)
 		}
 		if len(data) == 0 {
 			return nil, common.ValidationErrorf("--dataframe: stdin is empty")
@@ -120,7 +120,7 @@ func readDataframeBytes(rctx *common.RuntimeContext, raw string) ([]byte, error)
 	path := strings.TrimPrefix(raw, "@")
 	data, err := cmdutil.ReadInputFile(rctx.FileIO(), path)
 	if err != nil {
-		return nil, common.ValidationErrorf("--dataframe: %w", err)
+		return nil, common.ValidationErrorf("--dataframe: %v", err).WithCause(err)
 	}
 	if len(data) == 0 {
 		return nil, common.ValidationErrorf("--dataframe: file %q is empty", path)
