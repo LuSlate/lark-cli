@@ -81,15 +81,12 @@ func TestReadDataShortcuts_DryRun(t *testing.T) {
 // every other get_cell_ranges wrapper uses.
 func TestDropdownGet_RequiresSheetSelector(t *testing.T) {
 	t.Parallel()
-	stdout, stderr, err := runShortcutCapturingErr(t, DropdownGet, []string{
+	_, _, err := runShortcutCapturingErr(t, DropdownGet, []string{
 		"--url", testURL, "--range", "A2:A100", "--dry-run",
 	})
-	if err == nil {
-		t.Fatalf("expected validation error; stdout=%s stderr=%s", stdout, stderr)
-	}
-	combined := stdout + stderr + err.Error()
-	if !strings.Contains(combined, "sheet-id") && !strings.Contains(combined, "sheet-name") {
-		t.Errorf("expected --sheet-id/--sheet-name guard; got=%s|%s|%v", stdout, stderr, err)
+	ve := requireValidation(t, err, "")
+	if !strings.Contains(ve.Message, "sheet-id") && !strings.Contains(ve.Message, "sheet-name") {
+		t.Errorf("expected --sheet-id/--sheet-name guard; got message=%q", ve.Message)
 	}
 }
 
@@ -109,15 +106,10 @@ func TestReadData_RequiresRange(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			stdout, stderr, err := runShortcutCapturingErr(t, c.sc, []string{
+			_, _, err := runShortcutCapturingErr(t, c.sc, []string{
 				"--url", testURL, "--sheet-id", testSheetID, "--range", "  ", "--dry-run",
 			})
-			if err == nil {
-				t.Fatalf("expected validation error; stdout=%s stderr=%s", stdout, stderr)
-			}
-			if !strings.Contains(stdout+stderr+err.Error(), "--range is required") {
-				t.Errorf("expected --range guard; got=%s|%s|%v", stdout, stderr, err)
-			}
+			requireValidation(t, err, "--range is required")
 		})
 	}
 }

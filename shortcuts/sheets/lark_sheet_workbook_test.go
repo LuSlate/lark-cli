@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -227,14 +228,8 @@ func TestSheetMove_DryRunResolvePlaceholders(t *testing.T) {
 // high-risk-write — exit code 10 (confirmation_required) without --yes.
 func TestSheetDelete_HighRiskWriteRequiresYes(t *testing.T) {
 	t.Parallel()
-	stdout, stderr, err := runShortcutCapturingErr(t, SheetDelete, []string{"--url", testURL, "--sheet-id", testSheetID})
-	if err == nil {
-		t.Fatalf("expected confirmation_required error; got nil. stdout=%s stderr=%s", stdout, stderr)
-	}
-	combined := stdout + stderr + err.Error()
-	if !strings.Contains(combined, "confirmation_required") && !strings.Contains(combined, "requires confirmation") {
-		t.Errorf("expected confirmation envelope; got=%s|%s|%v", stdout, stderr, err)
-	}
+	_, _, err := runShortcutCapturingErr(t, SheetDelete, []string{"--url", testURL, "--sheet-id", testSheetID})
+	requireProblem(t, err, errs.CategoryConfirmation, errs.SubtypeConfirmationRequired, "")
 }
 
 // TestWorkbook_Validation covers a few critical validation paths shared
@@ -248,6 +243,11 @@ func TestWorkbook_Validation(t *testing.T) {
 		sc      common.Shortcut
 		args    []string
 		wantMsg string
+		// cobraNative=true means the error originates from cobra's native
+		// flag parsing (e.g. required-flag enforcement) which is not wrapped
+		// into a typed errs.ValidationError, so the test falls back to a
+		// substring match on err.Error().
+		cobraNative bool
 	}{
 		{
 			name:    "+workbook-info needs --url or --spreadsheet-token",
@@ -256,10 +256,11 @@ func TestWorkbook_Validation(t *testing.T) {
 			wantMsg: "at least one of --url or --spreadsheet-token",
 		},
 		{
-			name:    "+workbook-info rejects both url and token",
-			sc:      WorkbookInfo,
-			args:    []string{"--url", testURL, "--spreadsheet-token", testToken},
-			wantMsg: "mutually exclusive",
+			name:        "+workbook-info rejects both url and token",
+			sc:          WorkbookInfo,
+			args:        []string{"--url", testURL, "--spreadsheet-token", testToken},
+			wantMsg:     "mutually exclusive",
+			cobraNative: true,
 		},
 		{
 			name:    "+sheet-delete needs sheet selector",
@@ -268,10 +269,11 @@ func TestWorkbook_Validation(t *testing.T) {
 			wantMsg: "at least one of --sheet-id or --sheet-name",
 		},
 		{
-			name:    "+sheet-create requires --title",
-			sc:      SheetCreate,
-			args:    []string{"--url", testURL},
-			wantMsg: "required flag(s) \"title\" not set",
+			name:        "+sheet-create requires --title",
+			sc:          SheetCreate,
+			args:        []string{"--url", testURL},
+			wantMsg:     "required flag(s) \"title\" not set",
+			cobraNative: true,
 		},
 		{
 			name:    "+sheet-create row-count over cap",
@@ -283,14 +285,14 @@ func TestWorkbook_Validation(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			stdout, stderr, err := runShortcutCapturingErr(t, tt.sc, append(tt.args, "--dry-run"))
-			if err == nil {
-				t.Fatalf("expected validation error; got nil. stdout=%s stderr=%s", stdout, stderr)
+			_, _, err := runShortcutCapturingErr(t, tt.sc, append(tt.args, "--dry-run"))
+			if tt.cobraNative {
+				if err == nil || !strings.Contains(err.Error(), tt.wantMsg) {
+					t.Errorf("error message missing %q; got=%v", tt.wantMsg, err)
+				}
+				return
 			}
-			combined := stdout + stderr + err.Error()
-			if !strings.Contains(combined, tt.wantMsg) {
-				t.Errorf("error message missing %q; got=%s", tt.wantMsg, combined)
-			}
+			requireValidation(t, err, tt.wantMsg)
 		})
 	}
 }
@@ -495,10 +497,8 @@ func TestWorkbookCreate_DataValidation(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			stdout, stderr, err := runShortcutCapturingErr(t, WorkbookCreate, append(tt.args, "--dry-run"))
-			if err == nil || !strings.Contains(stdout+stderr+err.Error(), tt.want) {
-				t.Errorf("expected %q; got=%s|%s|%v", tt.want, stdout, stderr, err)
-			}
+			_, _, err := runShortcutCapturingErr(t, WorkbookCreate, append(tt.args, "--dry-run"))
+			requireValidation(t, err, tt.want)
 		})
 	}
 }
@@ -542,12 +542,10 @@ func TestWorkbookExport_DryRun(t *testing.T) {
 
 	t.Run("csv requires --sheet-id", func(t *testing.T) {
 		t.Parallel()
-		stdout, stderr, err := runShortcutCapturingErr(t, WorkbookExport, []string{
+		_, _, err := runShortcutCapturingErr(t, WorkbookExport, []string{
 			"--url", testURL, "--file-extension", "csv", "--dry-run",
 		})
-		if err == nil || !strings.Contains(stdout+stderr+err.Error(), "--sheet-id is required") {
-			t.Errorf("expected sheet-id guard; got=%s|%s|%v", stdout, stderr, err)
-		}
+		requireValidation(t, err, "--sheet-id is required")
 	})
 }
 

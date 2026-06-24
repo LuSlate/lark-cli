@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -472,24 +473,18 @@ func TestPivotCreate_SheetSelectorSemantics(t *testing.T) {
 
 	t.Run("both set is rejected", func(t *testing.T) {
 		t.Parallel()
-		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+		_, _, err := runShortcutCapturingErr(t, PivotCreate, []string{
 			"--url", testURL,
 			"--target-sheet-id", testSheetID,
 			"--target-sheet-name", "Sheet1",
 			"--properties", `{"rows":[{"field":"A"}]}`,
 			"--source", "Sheet1!A1:F1000",
 		})
-		if err == nil {
-			t.Fatalf("expected CLI to reject both --target-sheet-id and --target-sheet-name set; stderr=%s", stderr)
-		}
-		combined := stderr + err.Error()
-		if !strings.Contains(combined, "mutually exclusive") {
-			t.Errorf("expected error to say 'mutually exclusive'; got=%s|%v", stderr, err)
-		}
+		ve := requireValidation(t, err, "mutually exclusive")
 		// 错误信息必须用真实的 flag 名（target-*），否则模型按消息提示去
 		// 改 --sheet-id 还是错的。
-		if !strings.Contains(combined, "--target-sheet-id") {
-			t.Errorf("expected error to quote --target-sheet-id flag name; got=%s|%v", stderr, err)
+		if !strings.Contains(ve.Message, "--target-sheet-id") {
+			t.Errorf("expected error to quote --target-sheet-id flag name; got message=%q", ve.Message)
 		}
 	})
 
@@ -519,7 +514,7 @@ func TestPivotCreate_TargetPositionRangeMutex(t *testing.T) {
 
 	t.Run("both non-default values rejected", func(t *testing.T) {
 		t.Parallel()
-		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+		_, _, err := runShortcutCapturingErr(t, PivotCreate, []string{
 			"--url", testURL,
 			"--target-sheet-id", testSheetID,
 			"--properties", `{"rows":[{"field":"A"}]}`,
@@ -527,15 +522,9 @@ func TestPivotCreate_TargetPositionRangeMutex(t *testing.T) {
 			"--target-position", "B5",
 			"--range", "F1",
 		})
-		if err == nil {
-			t.Fatalf("expected CLI to reject --target-position with --range; stderr=%s", stderr)
-		}
-		combined := stderr + err.Error()
-		if !strings.Contains(combined, "mutually exclusive") {
-			t.Errorf("expected error to say 'mutually exclusive'; got=%s|%v", stderr, err)
-		}
-		if !strings.Contains(combined, "--target-position") || !strings.Contains(combined, "--range") {
-			t.Errorf("expected error to quote both --target-position and --range; got=%s|%v", stderr, err)
+		ve := requireValidation(t, err, "mutually exclusive")
+		if !strings.Contains(ve.Message, "--target-position") || !strings.Contains(ve.Message, "--range") {
+			t.Errorf("expected error to quote both --target-position and --range; got message=%q", ve.Message)
 		}
 	})
 
@@ -568,35 +557,27 @@ func TestPivotCreate_SchemaValidates(t *testing.T) {
 
 	t.Run("rejects wrong type for rows", func(t *testing.T) {
 		t.Parallel()
-		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+		_, _, err := runShortcutCapturingErr(t, PivotCreate, []string{
 			"--url", testURL,
 			"--properties", `{"rows":"not-an-array"}`,
 			"--source", "Sheet1!A1:F1000",
 			"--dry-run",
 		})
-		if err == nil {
-			t.Fatalf("expected schema validator to reject rows=string; stderr=%s", stderr)
-		}
-		combined := stderr + err.Error()
-		if !strings.Contains(combined, "rows") || !strings.Contains(combined, "array") {
-			t.Errorf("expected error to mention rows/array; got=%s|%v", stderr, err)
+		ve := requireValidation(t, err, "rows")
+		if !strings.Contains(ve.Message, "array") {
+			t.Errorf("expected error to mention array; got message=%q", ve.Message)
 		}
 	})
 
 	t.Run("rejects out-of-enum summarize_by", func(t *testing.T) {
 		t.Parallel()
-		_, stderr, err := runShortcutCapturingErr(t, PivotCreate, []string{
+		_, _, err := runShortcutCapturingErr(t, PivotCreate, []string{
 			"--url", testURL,
 			"--properties", `{"values":[{"field":"A","summarize_by":"BOGUS"}]}`,
 			"--source", "Sheet1!A1:F1000",
 			"--dry-run",
 		})
-		if err == nil {
-			t.Fatalf("expected schema validator to reject summarize_by=BOGUS; stderr=%s", stderr)
-		}
-		if !strings.Contains(stderr+err.Error(), "summarize_by") {
-			t.Errorf("expected error to mention summarize_by; got=%s|%v", stderr, err)
-		}
+		requireValidation(t, err, "summarize_by")
 	})
 
 	t.Run("schema-conformant input is accepted", func(t *testing.T) {
@@ -630,14 +611,8 @@ func TestObjectCreate_RequiresSheetSelector(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, stderr, err := runShortcutCapturingErr(t, tt.sc, tt.args)
-			if err == nil {
-				t.Fatalf("expected CLI to reject empty sheet selector for +%s-create; stderr=%s", tt.name, stderr)
-			}
-			combined := stderr + err.Error()
-			if !strings.Contains(combined, "specify at least one of --sheet-id or --sheet-name") {
-				t.Errorf("expected 'specify at least one of --sheet-id or --sheet-name'; got=%s|%v", stderr, err)
-			}
+			_, _, err := runShortcutCapturingErr(t, tt.sc, tt.args)
+			requireValidation(t, err, "specify at least one of --sheet-id or --sheet-name")
 		})
 	}
 }
@@ -648,19 +623,13 @@ func TestObjectCreate_RequiresSheetSelector(t *testing.T) {
 // +sparkline-list, before any server call goes out.
 func TestSparklineUpdate_MissingSparklineID(t *testing.T) {
 	t.Parallel()
-	_, stderr, err := runShortcutCapturingErr(t, SparklineUpdate, []string{
+	_, _, err := runShortcutCapturingErr(t, SparklineUpdate, []string{
 		"--url", testURL, "--sheet-id", testSheetID, "--group-id", "grpA",
 		"--properties", `{"sparklines":[{"source":"Sheet1!A1:A10"}]}`,
 	})
-	if err == nil {
-		t.Fatalf("expected CLI to reject missing sparkline_id; stderr=%s", stderr)
-	}
-	combined := stderr + err.Error()
-	if !strings.Contains(combined, "missing sparkline_id") {
-		t.Errorf("expected error to mention missing sparkline_id; got=%s|%v", stderr, err)
-	}
-	if !strings.Contains(combined, "+sparkline-list") {
-		t.Errorf("expected error to point at +sparkline-list; got=%s|%v", stderr, err)
+	ve := requireValidation(t, err, "missing sparkline_id")
+	if !strings.Contains(ve.Message, "+sparkline-list") {
+		t.Errorf("expected error to point at +sparkline-list; got message=%q", ve.Message)
 	}
 }
 
@@ -729,12 +698,7 @@ func TestCondFormatAttrs_ShapeMatchesRuleType(t *testing.T) {
 			t.Parallel()
 			_, stderr, err := runShortcutCapturingErr(t, tt.sc, tt.args)
 			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("expected rejection; stderr=%s", stderr)
-				}
-				if combined := stderr + err.Error(); tt.wantMsg != "" && !strings.Contains(combined, tt.wantMsg) {
-					t.Errorf("expected error to mention %q; got=%s|%v", tt.wantMsg, stderr, err)
-				}
+				requireValidation(t, err, tt.wantMsg)
 				return
 			}
 			if err != nil {
@@ -851,18 +815,13 @@ func TestCondFormatAttrsRequired_MatchesSchemaOneOf(t *testing.T) {
 // create still mandates one of --image / --image-token / --image-uri.
 func TestFloatImageCreate_RequiresImageSource(t *testing.T) {
 	t.Parallel()
-	_, stderr, err := runShortcutCapturingErr(t, FloatImageCreate, []string{
+	_, _, err := runShortcutCapturingErr(t, FloatImageCreate, []string{
 		"--url", testURL, "--sheet-id", testSheetID,
 		"--image-name", "x.png",
 		"--position-row", "0", "--position-col", "A",
 		"--size-width", "10", "--size-height", "10",
 	})
-	if err == nil {
-		t.Fatalf("expected CLI to require an image source on create; stderr=%s", stderr)
-	}
-	if combined := stderr + err.Error(); !strings.Contains(combined, "one of --image, --image-token, or --image-uri is required") {
-		t.Errorf("expected error to require an image source; got=%s|%v", stderr, err)
-	}
+	requireValidation(t, err, "one of --image, --image-token, or --image-uri is required")
 }
 
 // TestObjectDelete_AllHighRisk asserts every delete shortcut blocks
@@ -885,14 +844,8 @@ func TestObjectDelete_AllHighRisk(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			stdout, stderr, err := runShortcutCapturingErr(t, tt.sc, tt.args)
-			if err == nil {
-				t.Fatalf("expected confirmation_required; stdout=%s stderr=%s", stdout, stderr)
-			}
-			combined := stdout + stderr + err.Error()
-			if !strings.Contains(combined, "confirmation_required") && !strings.Contains(combined, "requires confirmation") {
-				t.Errorf("expected confirmation gate; got=%s|%s|%v", stdout, stderr, err)
-			}
+			_, _, err := runShortcutCapturingErr(t, tt.sc, tt.args)
+			requireProblem(t, err, errs.CategoryConfirmation, errs.SubtypeConfirmationRequired, "")
 		})
 	}
 }

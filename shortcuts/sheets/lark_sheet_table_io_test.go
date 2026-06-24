@@ -285,9 +285,7 @@ func TestTablePut_PayloadValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			_, err := parseTablePutPayload(stubFlagView{"sheets": tt.json})
-			if err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Errorf("want error containing %q, got %v", tt.want, err)
-			}
+			requireValidation(t, err, tt.want)
 		})
 	}
 }
@@ -392,18 +390,13 @@ func TestTablePut_DryRunWithStyles(t *testing.T) {
 // doesn't match the payload sheet is rejected at Validate, before any write.
 func TestTablePut_StylesNameMismatchRejected(t *testing.T) {
 	t.Parallel()
-	stdout, stderr, err := runShortcutCapturingErr(t, TablePut, []string{
+	_, _, err := runShortcutCapturingErr(t, TablePut, []string{
 		"--url", testURL,
 		"--sheets", `{"sheets":[{"name":"数据","columns":["a"],"data":[["x"]]}]}`,
 		"--styles", `{"styles":[{"name":"其他","cell_styles":[{"range":"A1","font_weight":"bold"}]}]}`,
 		"--dry-run",
 	})
-	if err == nil {
-		t.Fatalf("expected validation error; got nil. stdout=%s stderr=%s", stdout, stderr)
-	}
-	if !strings.Contains(stdout+stderr+err.Error(), "must match") {
-		t.Errorf("error should flag the name mismatch; got=%s|%s|%v", stdout, stderr, err)
-	}
+	requireValidation(t, err, "must match")
 }
 
 // TestTablePut_ExecuteWithStyles drives the full write + visual-ops path: the
@@ -469,13 +462,8 @@ func TestTablePut_Validation(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			stdout, stderr, err := runShortcutCapturingErr(t, TablePut, append(tt.args, "--dry-run"))
-			if err == nil {
-				t.Fatalf("expected validation error; got nil. stdout=%s stderr=%s", stdout, stderr)
-			}
-			if !strings.Contains(stdout+stderr+err.Error(), tt.want) {
-				t.Errorf("error missing %q; got=%s|%s|%v", tt.want, stdout, stderr, err)
-			}
+			_, _, err := runShortcutCapturingErr(t, TablePut, append(tt.args, "--dry-run"))
+			requireValidation(t, err, tt.want)
 		})
 	}
 }
@@ -692,13 +680,8 @@ func TestWorkbookCreate_TypedMutualExclusion(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			_, stderr, err := runShortcutCapturingErr(t, WorkbookCreate, tc.args)
-			if err == nil {
-				t.Fatalf("expected mutual-exclusion error; got nil (stderr=%s)", stderr)
-			}
-			if !strings.Contains(err.Error(), "mutually exclusive") {
-				t.Errorf("want 'mutually exclusive' error; got %v", err)
-			}
+			_, _, err := runShortcutCapturingErr(t, WorkbookCreate, tc.args)
+			requireValidation(t, err, "mutually exclusive")
 		})
 	}
 }
@@ -708,13 +691,8 @@ func TestWorkbookCreate_TypedMutualExclusion(t *testing.T) {
 // through to creating an empty workbook.
 func TestWorkbookCreate_EmptySheetsErrors(t *testing.T) {
 	t.Parallel()
-	_, stderr, err := runShortcutCapturingErr(t, WorkbookCreate, []string{"--title", "X", "--sheets", ""})
-	if err == nil {
-		t.Fatalf("expected error for empty --sheets; got nil (stderr=%s)", stderr)
-	}
-	if !strings.Contains(err.Error(), "empty") {
-		t.Errorf("want 'empty' error; got %v", err)
-	}
+	_, _, err := runShortcutCapturingErr(t, WorkbookCreate, []string{"--title", "X", "--sheets", ""})
+	requireValidation(t, err, "empty")
 }
 
 // TestWorkbookCreate_TypedAdoptsDefaultSheet covers the one-step typed create:
@@ -897,9 +875,7 @@ func TestTablePut_HeaderAndMode(t *testing.T) {
 func TestTablePut_BadModeRejected(t *testing.T) {
 	t.Parallel()
 	_, err := parseTablePutPayload(stubFlagView{"sheets": `{"sheets":[{"name":"S","mode":"upsert","columns":["a"],"data":[]}]}`})
-	if err == nil || !strings.Contains(err.Error(), "invalid") {
-		t.Errorf("mode \"upsert\" should be rejected, got %v", err)
-	}
+	requireValidation(t, err, "invalid")
 }
 
 // TestTablePut_AppendEmptySheetWritesHeader: appending to an EMPTY sheet still
@@ -1210,17 +1186,11 @@ func TestTableGet_DuplicateHeaderRejected(t *testing.T) {
 		`[{"value":"amount"},{"value":"amount"}],`+
 		`[{"value":1},{"value":2}]`+
 		`]}]}`)
-	out, err := runShortcutWithStubs(t, TableGet,
+	_, err := runShortcutWithStubs(t, TableGet,
 		[]string{"--url", testURL, "--sheet-name", "S"}, structure, region, cells)
-	if err == nil {
-		t.Fatalf("expected validation error for duplicate header; got nil. out=%s", out)
-	}
-	combined := out + err.Error()
-	if !strings.Contains(combined, "duplicate header column name") {
-		t.Errorf("error should flag duplicate header; got=%s", combined)
-	}
-	if !strings.Contains(combined, "--no-header") {
-		t.Errorf("error should hint about --no-header; got=%s", combined)
+	ve := requireValidation(t, err, "duplicate header column name")
+	if !strings.Contains(ve.Message, "--no-header") {
+		t.Errorf("error should hint about --no-header; got message=%q", ve.Message)
 	}
 }
 

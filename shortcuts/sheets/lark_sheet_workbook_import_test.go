@@ -66,10 +66,8 @@ func TestWorkbookImport_RejectsNonSheetFile(t *testing.T) {
 
 	// Validate runs before DryRun, so the pinned-sheet check rejects .docx up
 	// front and the error surfaces through the normal envelope/err path.
-	stdout, stderr, err := runShortcutCapturingErr(t, WorkbookImport, []string{"--file", "./notes.docx", "--dry-run"})
-	if err == nil || !strings.Contains(stdout+stderr+err.Error(), "can only be imported") {
-		t.Errorf("expected .docx → sheet type-mismatch rejection; got stdout=%s stderr=%s err=%v", stdout, stderr, err)
-	}
+	_, _, err := runShortcutCapturingErr(t, WorkbookImport, []string{"--file", "./notes.docx", "--dry-run"})
+	requireValidation(t, err, "can only be imported")
 }
 
 // TestWorkbookImport_ExecuteCreatesSheet runs the full upload → create → poll

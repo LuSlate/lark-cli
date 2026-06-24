@@ -81,6 +81,53 @@ func runShortcutWithStubs(t *testing.T, sc common.Shortcut, args []string, stubs
 	return stdout.String(), err
 }
 
+// requireProblem asserts err carries a typed errs.Problem with the given
+// category and (optional) subtype, and that its message contains msgContains
+// (skip the message check by passing ""). Returns the Problem so callers can
+// drill into the typed envelope's category-specific fields (e.g. cast to
+// *errs.ValidationError to read .Param / .Params / .Cause).
+//
+// Replaces the older "strings.Contains(stdout+stderr+err.Error(), ...)" pattern
+// across sheets tests: substring on a rendered envelope was brittle (any
+// message tweak silently broke it) and didn't verify that the typed contract —
+// category / subtype / cause preservation — held. Per coding guideline
+// "Error-path tests must assert typed metadata via errs.ProblemOf
+// (category / subtype / param) and cause preservation, not message substrings
+// alone."
+func requireProblem(t *testing.T, err error, wantCategory errs.Category, wantSubtype errs.Subtype, msgContains string) *errs.Problem {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("expected typed error carrying errs.Problem, got %T: %v", err, err)
+	}
+	if p.Category != wantCategory {
+		t.Errorf("category = %q, want %q (err=%v)", p.Category, wantCategory, err)
+	}
+	if wantSubtype != "" && p.Subtype != wantSubtype {
+		t.Errorf("subtype = %q, want %q (err=%v)", p.Subtype, wantSubtype, err)
+	}
+	if msgContains != "" && !strings.Contains(p.Message, msgContains) {
+		t.Errorf("message = %q, want containing %q", p.Message, msgContains)
+	}
+	return p
+}
+
+// requireValidation is shorthand for the most common case: a typed
+// CategoryValidation error with SubtypeInvalidArgument. Returns the
+// *errs.ValidationError so callers can also assert on .Param / .Params / .Cause.
+func requireValidation(t *testing.T, err error, msgContains string) *errs.ValidationError {
+	t.Helper()
+	requireProblem(t, err, errs.CategoryValidation, errs.SubtypeInvalidArgument, msgContains)
+	var ve *errs.ValidationError
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected *errs.ValidationError, got %T: %v", err, err)
+	}
+	return ve
+}
+
 func TestSheetHelpersValidationMetadata(t *testing.T) {
 	t.Parallel()
 

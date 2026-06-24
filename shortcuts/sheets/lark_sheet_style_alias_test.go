@@ -58,12 +58,7 @@ func TestNormalizeCellStyleAliases(t *testing.T) {
 			"horizontal_alignment": "left",
 		}
 		err := normalizeCellStyleAliases(style, "cell_styles[0]")
-		if err == nil {
-			t.Fatalf("expected conflict error, got nil")
-		}
-		if !strings.Contains(err.Error(), "conflicts with horizontal_alignment") {
-			t.Errorf("error should name the conflict: %v", err)
-		}
+		requireValidation(t, err, "conflicts with horizontal_alignment")
 	})
 
 	t.Run("no shorthand leaves the map untouched", func(t *testing.T) {
@@ -142,12 +137,7 @@ func TestNormalizeTypedCellsStyleAliases(t *testing.T) {
 			},
 		}
 		err := normalizeTypedCellsStyleAliases(cells, "--cells")
-		if err == nil {
-			t.Fatalf("expected conflict error, got nil")
-		}
-		if !strings.Contains(err.Error(), "--cells[0][0].cell_styles") {
-			t.Errorf("error should carry the cell path: %v", err)
-		}
+		requireValidation(t, err, "--cells[0][0].cell_styles")
 	})
 }
 

@@ -47,19 +47,16 @@ func TestExecute_WorkbookInfo_ToolError(t *testing.T) {
 			"data": map[string]interface{}{},
 		},
 	}
-	stdout, stderr, err := func() (string, string, error) {
+	_, _, err := func() (string, string, error) {
 		parent, stdout, stderr, reg := newTestRig(t, WorkbookInfo)
 		reg.Register(stub)
 		parent.SetArgs([]string{"+workbook-info", "--url", testURL})
 		err := parent.Execute()
 		return stdout.String(), stderr.String(), err
 	}()
-	if err == nil {
-		t.Fatalf("expected non-zero code to surface as error; stdout=%s stderr=%s", stdout, stderr)
-	}
-	combined := stdout + stderr + err.Error()
-	if !strings.Contains(combined, "1310201") && !strings.Contains(combined, "not found") {
-		t.Errorf("expected error code in envelope; got=%s|%s|%v", stdout, stderr, err)
+	p := requireProblem(t, err, errs.CategoryAPI, errs.SubtypeServerError, "")
+	if !strings.Contains(p.Message, "1310201") && !strings.Contains(p.Message, "not found") {
+		t.Errorf("expected error code or message in problem; got message=%q", p.Message)
 	}
 }
 
@@ -113,18 +110,9 @@ func TestExecute_WikiURLWrongObjType(t *testing.T) {
 			},
 		},
 	}
-	out, err := runShortcutWithStubs(t, WorkbookInfo,
+	_, err := runShortcutWithStubs(t, WorkbookInfo,
 		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode)
-	if err == nil {
-		t.Fatalf("want error for non-sheet wiki node; out=%s", out)
-	}
-	if !strings.Contains(err.Error(), "obj_type") {
-		t.Fatalf("error = %v, want mention of obj_type", err)
-	}
-	var ve *errs.ValidationError
-	if !errors.As(err, &ve) {
-		t.Fatalf("wrong-obj_type error = %T, want *errs.ValidationError", err)
-	}
+	requireValidation(t, err, "obj_type")
 }
 
 // TestExecute_WikiURLIncompleteNode treats an incomplete get_node response

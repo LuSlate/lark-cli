@@ -239,12 +239,7 @@ func TestReadDataframeBytes_RejectsSecondStdinConsumer(t *testing.T) {
 	rctx.MarkStdinConsumed()
 
 	_, err := readDataframeBytes(rctx, "-")
-	if err == nil {
-		t.Fatal("err is nil; want stdin-already-consumed validation error")
-	}
-	if !strings.Contains(err.Error(), "stdin (-) can only be used by one flag") {
-		t.Fatalf("err = %q, want it to flag the stdin-already-consumed conflict", err.Error())
-	}
+	requireValidation(t, err, "stdin (-) can only be used by one flag")
 }
 
 // TestDataframe_EncodeRoundTrip checks --dataframe-out's encoder against its
