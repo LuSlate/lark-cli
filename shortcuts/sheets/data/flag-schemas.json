@@ -44,6 +44,8 @@
                 "+sheet-hide",
                 "+sheet-unhide",
                 "+sheet-set-tab-color",
+                "+sheet-show-gridline",
+                "+sheet-hide-gridline",
                 "+chart-create",
                 "+chart-update",
                 "+chart-delete",
