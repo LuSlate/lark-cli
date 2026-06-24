@@ -260,6 +260,15 @@ func TestCollectScopesForDomains_NonexistentDomain(t *testing.T) {
 	}
 }
 
+func TestCollectScopesForDomains_SlidesDoesNotAdvertiseScreenshotScope(t *testing.T) {
+	scopes := collectScopesForDomains([]string{"slides"}, "user", "")
+	for _, scope := range scopes {
+		if scope == "slides:presentation:screenshot" {
+			t.Fatalf("slides domain scopes must not advertise allowlist-gated screenshot scope: %#v", scopes)
+		}
+	}
+}
+
 func TestGetDomainMetadata_IncludesFromMeta(t *testing.T) {
 	domains := getDomainMetadata("zh")
 	nameSet := make(map[string]bool)
