@@ -669,6 +669,9 @@ func TestAppsDBExecute_SingleErrorReturnsTypedError(t *testing.T) {
 	if !ok {
 		t.Fatalf("want a typed errs.* error, got %T: %v", err, err)
 	}
+	if p.Category != errs.CategoryAPI || p.Subtype != errs.SubtypeServerError {
+		t.Errorf("category/subtype = %s/%s, want api/server_error", p.Category, p.Subtype)
+	}
 	if !strings.Contains(p.Message, "(at statement 1 of 1)") {
 		t.Errorf("message missing locator: %q", p.Message)
 	}
