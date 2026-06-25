@@ -2,21 +2,21 @@
 
 > **前置条件：** 先阅读 [`../SKILL.md`](../SKILL.md) 和 [`../../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和路由规则。
 
-当用户要查看思维笔记节点、读取节点内容、批量创建节点时，入口属于 `lark-doc`，但实际执行命令使用 `lark-cli mindnote ...`，不是 `docs +...`。
+当用户要查看思维笔记节点、读取节点内容、批量创建节点时，入口属于 `lark-doc`，但实际执行命令使用 `lark-cli mindnotes ...`，不是 `docs +...`。
 
 ## 命令
 
 ```bash
-# 调用前先看 schema
-lark-cli schema mindnote.nodes.list
-lark-cli schema mindnote.nodes.create
+# 先看命令帮助
+lark-cli mindnotes nodes list --help
+lark-cli mindnotes nodes create --help
 
 # 读取节点列表
-lark-cli mindnote nodes list --params '{"mindnote_id":"D05hbLa3dm08GbnerjwbvNmUcgf"}'
+lark-cli mindnotes nodes list --mindnote-id "D05hbLa3dm08GbnerjwbvNmUcgf"
 
 # 创建子节点
-lark-cli mindnote nodes create \
-  --params '{"mindnote_id":"D05hbLa3dm08GbnerjwbvNmUcgf"}' \
+lark-cli mindnotes nodes create \
+  --mindnote-id "D05hbLa3dm08GbnerjwbvNmUcgf" \
   --data '{
     "client_token":"fe599b60-450f-46ff-b2ef-9f6675625b97",
     "nodes":[
@@ -34,15 +34,24 @@ lark-cli mindnote nodes create \
 
 ## 参数
 
-### `mindnote nodes list`
+### `mindnotes nodes list`
 
 | 参数 | 必填 | 说明 |
 |------|------|------|
-| `mindnote_id` | 是 | 思维笔记 token / 唯一标识 |
+| `--mindnote-id` | 是 | 思维笔记 token / 唯一标识 |
 
 返回重点：`data.nodes` 中常见字段有 `node_id`、`parent_id`、`texts`、`notes`、`images`、`finish`、`highlight`。
 
-### `mindnote nodes create`
+### `mindnotes nodes create`
+
+命令参数：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--mindnote-id` | 是 | 思维笔记 token / 唯一标识 |
+| `--data` | 是 | JSON 请求体 |
+
+请求体字段：
 
 | 字段 | 必填 | 说明 |
 |------|------|------|
@@ -64,12 +73,12 @@ lark-cli mindnote nodes create \
 ## 推荐工作流
 
 1. 先拿到 `mindnote_id`。
-2. 先执行 `mindnote nodes list`，确认目标 `parent_id`。
-3. 再执行 `mindnote nodes create`。
+2. 先执行 `mindnotes nodes list`，确认目标 `parent_id`。
+3. 再执行 `mindnotes nodes create`。
 4. 写操作优先带 `client_token`，避免重试时重复创建。
 
 > [!CAUTION]
-> `mindnote nodes create` 是写操作，执行前确认目标思维笔记和插入位置。
+> `mindnotes nodes create` 是写操作，执行前确认目标思维笔记和插入位置。
 
 ## 参考
 
