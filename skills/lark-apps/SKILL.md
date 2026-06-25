@@ -1,7 +1,7 @@
 ---
 name: lark-apps
 version: 1.0.0
-description: "妙搭（Spark/Miaoda）应用开发与托管：应用创建、HTML静态站点发布、本地全栈开发、云端生成迭代、AI插件集成。当用户要开发/新建一个系统·工具·平台·应用，或要本地开发 / 云端开发 / 修改 / 部署 / 发布 / 上线 / 拿可分享链接，或用 HTML 做页面·网站给人看，或提到妙搭/Spark/Miaoda、应用数据库、可见范围时使用。当用户要接入AI能力时也使用：AI生文/AI生图/AI翻译/AI摘要/AI分类/图片理解/图片识别/图片抠图/图片对比/图生图/语音识别/语音合成/文档解析/网页抓取/文本转JSON/搜索摘要，或提到Plugin/PluginInstance/Capability/插件安装/插件实例。不负责普通云盘文件上传（lark-drive）、飞书文档编辑（lark-doc）、原生幻灯片创建（lark-slides）。"
+description: "妙搭（Spark/Miaoda）应用开发与托管：应用创建、HTML静态站点发布、本地全栈开发、云端生成迭代、外部能力（插件）集成。当用户要开发/新建一个系统·工具·平台·应用，或要本地开发 / 云端开发 / 修改 / 部署 / 发布 / 上线 / 拿可分享链接，或用 HTML 做页面·网站给人看，或提到妙搭/Spark/Miaoda、应用数据库、可见范围时使用。当用户需要接入外部能力（AI模型服务、飞书平台能力等）或提到插件/Plugin/Capability时也使用。不负责普通云盘文件上传（lark-drive）、飞书文档编辑（lark-doc）、原生幻灯片创建（lark-slides）。"
 metadata:
   requires:
     bins: ["lark-cli"]
@@ -29,7 +29,7 @@ metadata:
 | 设置或查看运行时可见范围 | `+access-scope-set`, `+access-scope-get` | 对应 access-scope reference |
 | 云端 Agent 生成/迭代应用（开发方式已定为云端后） | `+session-create` -> `+chat` -> `+session-get` | [`lark-apps-cloud-dev.md`](references/lark-apps-cloud-dev.md) |
 | 查看某次会话某一轮（turn）的回复消息（含仍在生成中的本轮）/ 导出上一轮模型回复（"这一轮回复了什么""上一轮的回复""导出某轮消息"） | 先 `+session-get`（取 `latest_turn.turn_id`）-> `+session-messages-list --turn-id <id>`（仅 user 身份；分页用 `--page-token`） | [`lark-apps-session-messages-list.md`](references/lark-apps-session-messages-list.md) |
-| 插件集成 — 用户要实现以下能力时必须走插件链路：AI生文/AI生图/AI翻译/AI摘要/AI分类/图片理解/图片识别/图片抠图/图片对比/图生图/语音识别/语音合成/文档解析/网页抓取/文本转JSON/搜索摘要；或提到 Plugin/PluginInstance/Capability/插件安装/卸载/创建实例 | **⚠️ 涉及插件则 [`lark-apps-plugin.md`](references/lark-apps-plugin.md) 必读**（含可用插件目录 17 个 + 用户意图→插件选择表 + 命令速查 + 铁律），不读则不知道哪些能力可用。创建/更新实例时必读 [`lark-apps-plugin-crud.md`](references/lark-apps-plugin-crud.md)（Schema 规则 + 链路），写调用代码时必读 [`lark-apps-plugin-call.md`](references/lark-apps-plugin-call.md)（Client/Server 决策 + call/callStream 写法） | [`lark-apps-plugin.md`](references/lark-apps-plugin.md) |
+| 插件集成 — 用户需求涉及外部能力或提到插件/Plugin/Capability。**判断规则**：(1) AI 模型服务能力（文本生成、图片理解、语音识别等）**必须**通过插件接入，禁止自行编写替代实现；(2) 飞书平台能力（操作多维表格、发送消息等）**优先**查看是否有对应插件，插件不支持时再考虑自行通过飞书 OpenAPI 实现 | **⚠️ 必须先读仓库 Skill** `<project-path>/.agents/skills/plugin-guide/SKILL.md`（插件目录、Schema 规则、CRUD 流程、调用代码生成等完整指引）。CLI 命令参考见各 `lark-apps-plugin-*.md` reference | 仓库 Skill |
 
 ## 选择开发路径（进意图路由前先判这步）
 
