@@ -2,6 +2,10 @@
 
 更新已有插件实例的配置。运行时命令事实以 `lark-cli apps +plugin-instance-update --help` 为准。
 
+## 前置条件
+
+`--form-value`、`--params-schema` 的设计规则在仓库 Skill 中。未读 `<project-path>/.agents/skills/plugin-guide/SKILL.md` 直接修改会导致参数错误。
+
 ## 何时用
 
 用户要修改已有插件实例的 name、formValue 或 paramsSchema（如改 prompt、换参数）。
@@ -20,12 +24,12 @@
 
 ```bash
 # 只改名
-lark-cli apps +plugin-instance-update --id task-text-summary --name "新名称" --project-path ./my-app
+lark-cli apps +plugin-instance-update --id <id> --name <新名称> --project-path <path>
 
 # 改 formValue + paramsSchema
-lark-cli apps +plugin-instance-update --id task-text-summary \
+lark-cli apps +plugin-instance-update --id <id> \
   --form-value @form.json --params-schema @schema.json \
-  --project-path ./my-app --format json
+  --project-path <path> --format json
 ```
 
 ## 输出契约

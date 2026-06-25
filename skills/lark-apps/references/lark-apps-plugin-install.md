@@ -10,16 +10,17 @@
 
 ## 命令骨架
 
-- `--name <key>`：插件包 key，如 `@official-plugins/ai-text-generate`。不传则批量安装 `actionPlugins` 中声明的所有插件。
+- `--name <key>`：插件包 key（从仓库 Skill 的「AI 插件目录」获取）。不传则批量安装 `actionPlugins` 中声明的所有插件。
 - `--project-path`：妙搭应用根目录。
 
 ## 示例
 
 ```bash
-lark-cli apps +plugin-install --name @official-plugins/ai-text-generate --project-path ./my-app
+# plugin-key 从仓库 Skill 的「AI 插件目录」获取
+lark-cli apps +plugin-install --name <plugin-key> --project-path <path>
 
 # 批量安装已声明的所有插件
-lark-cli apps +plugin-install --project-path ./my-app
+lark-cli apps +plugin-install --project-path <path>
 ```
 
 ## 输出契约

@@ -14,7 +14,7 @@
 ## 示例
 
 ```bash
-lark-cli apps +plugin-uninstall --name @official-plugins/ai-text-generate --project-path ./my-app
+lark-cli apps +plugin-uninstall --name <plugin-key> --project-path <path>
 ```
 
 ## 输出契约
