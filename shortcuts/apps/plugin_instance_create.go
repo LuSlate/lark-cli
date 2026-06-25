@@ -44,12 +44,18 @@ var AppsPluginInstanceCreate = common.Shortcut{
 		if pluginVersion != "" {
 			pluginRef += "@" + pluginVersion
 		}
+		// Resolve output paths for preview (read-only, safe in dry-run)
+		projectPath, _ := pluginResolveProjectPath(rctx.Str("project-path"))
+		capDir, _ := pluginResolveCapDir(projectPath, rctx.Str("capabilities-dir"))
 		return common.NewDryRunAPI().
-			Desc("Create plugin instance (write capability JSON)").
+			Desc("Create plugin instance: validate formValue, write capability JSON, auto-generate TypeScript types").
 			Set("action", "create").
 			Set("id", id).
 			Set("plugin", pluginRef).
-			Set("target", fmt.Sprintf("<capabilities_dir>/%s.json", id))
+			Set("target", fmt.Sprintf("<capabilities_dir>/%s.json", id)).
+			Set("version_source", "resolved from package.json actionPlugins").
+			Set("output", filepath.Join(capDir, id+".json")).
+			Set("types_output", filepath.Join(projectPath, "shared", "plugin-types.ts"))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		if strings.TrimSpace(rctx.Str("plugin")) == "" {

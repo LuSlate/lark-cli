@@ -32,11 +32,15 @@ var AppsPluginInstanceUpdate = common.Shortcut{
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		id := strings.TrimSpace(rctx.Str("id"))
+		projectPath, _ := pluginResolveProjectPath(rctx.Str("project-path"))
+		capDir, _ := pluginResolveCapDir(projectPath, rctx.Str("capabilities-dir"))
 		return common.NewDryRunAPI().
-			Desc("Update plugin instance (modify capability JSON)").
+			Desc("Update plugin instance: merge partial updates to existing capability, validate formValue, write back, auto-regenerate TypeScript types").
 			Set("action", "update").
 			Set("id", id).
-			Set("target", fmt.Sprintf("<capabilities_dir>/%s.json", id))
+			Set("target", fmt.Sprintf("<capabilities_dir>/%s.json", id)).
+			Set("output", filepath.Join(capDir, id+".json")).
+			Set("types_output", filepath.Join(projectPath, "shared", "plugin-types.ts"))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		id := strings.TrimSpace(rctx.Str("id"))

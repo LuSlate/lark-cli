@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"github.com/larksuite/cli/shortcuts/common"
@@ -26,11 +27,13 @@ var AppsPluginInstanceGet = common.Shortcut{
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		id := strings.TrimSpace(rctx.Str("id"))
+		projectPath, _ := pluginResolveProjectPath(rctx.Str("project-path"))
+		capDir, _ := pluginResolveCapDir(projectPath, rctx.Str("capabilities-dir"))
 		return common.NewDryRunAPI().
 			Desc("Get plugin instance (read capability JSON)").
 			Set("action", "get").
 			Set("id", id).
-			Set("source", fmt.Sprintf("<capabilities_dir>/%s.json", id))
+			Set("source", filepath.Join(capDir, id+".json"))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		id := strings.TrimSpace(rctx.Str("id"))

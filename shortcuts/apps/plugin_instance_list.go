@@ -25,9 +25,12 @@ var AppsPluginInstanceList = common.Shortcut{
 		{Name: "capabilities-dir", Desc: "explicit capabilities directory (relative to project or absolute)"},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
+		projectPath, _ := pluginResolveProjectPath(rctx.Str("project-path"))
+		capDir, _ := pluginResolveCapDir(projectPath, rctx.Str("capabilities-dir"))
 		return common.NewDryRunAPI().
 			Desc("List plugin instances (scan capabilities directory)").
 			Set("action", "list").
+			Set("scan_dir", capDir).
 			Set("summary", fmt.Sprintf("%v", rctx.Bool("summary")))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
