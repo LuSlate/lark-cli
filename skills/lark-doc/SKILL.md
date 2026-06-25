@@ -21,15 +21,15 @@ lark-cli docs +create --api-version v2 --content '<title>标题</title><p>内容
 lark-cli docs +update --api-version v2 --doc "文档URL或token" --command append --content '<p>内容</p>'
 ```
 
-## 前置条件 — 执行操作前必读
+## 操作入口 — 执行操作前必读
 
-**CRITICAL — 执行对应操作前，MUST 先用 Read 工具读取以下文件，缺一不可：**
-1. [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md) — 认证、权限处理、全局参数（所有操作通用）
-2. **读取文档（`docs +fetch --api-version v2`）** → 必读 [`lark-doc-fetch.md`](references/lark-doc-fetch.md)（`--scope` / `--detail` 选择、局部读取策略、`<fragment>` / `<excerpt>` 输出结构）
-3. **创建或编辑文档内容** → 必读 [`lark-doc-xml.md`](references/lark-doc-xml.md)（XML 语法规则，仅当用户明确要求 Markdown 时改读 [`lark-doc-md.md`](references/lark-doc-md.md)）；从零创建时加读 [`lark-doc-create-workflow.md`](references/style/lark-doc-create-workflow.md)；编辑已有文档时加读 [`lark-doc-update.md`](references/lark-doc-update.md) 和 [`lark-doc-update-workflow.md`](references/style/lark-doc-update-workflow.md)
-4. **需要使用 callout、grid、table、whiteboard 等富 block 时** → 参考 [`lark-doc-style.md`](references/style/lark-doc-style.md) 的元素能力说明。该文件不是固定模板或强制排版规范；除非用户明确要求美化、重排版或特定风格，不要为了“达标”主动套用固定结构。
+**CRITICAL — 先根据操作大类查 [`lark-doc-operation-guide.md`](references/lark-doc-operation-guide.md)，再读取该操作对应的必读 reference。**
 
-**未读完以上文件就执行相应操作会导致参数选择错误或格式错误。**
+操作 guide 把“操作大类 → 必读 reference → 条件加读 → 易混边界”集中维护，避免只凭记忆选择参数或遗漏格式规则。
+
+**所有操作通用前置：** MUST 先读取 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)，了解认证、权限处理、全局参数、安全规则和路径限制。
+
+**未读完 guide 中对应操作的必读文件就执行操作会导致参数选择错误或格式错误。**
 
 > **格式选择规则（全局）：**
 > - **创建 / 导入场景**（`docs +create`，或 `docs +update --command append/overwrite` 的整段写入）：XML 和 Markdown 都可以。用户提供 `.md` 本地文件、或明确说"导入 Markdown"时，直接用 Markdown；否则默认 XML（可用 callout、grid、checkbox 等富 block）。
@@ -59,21 +59,6 @@ lark-cli docs +update --api-version v2 --doc "文档URL或token" --command appen
 | `<cite type="doc" file-type="bitable" token="..." table-id="...">` | 同 `<bitable>` | [`lark-base`](../lark-base/SKILL.md) |
 | `<vc-transcribe-tab vc-node-id="...">` | `vc-node-id` -> note_id | [`lark-note`](../lark-note/SKILL.md)：先 `note +detail --note-id <vc-node-id>` |
 | `<synced_reference src-token="..." src-block-id="...">` | `src-token` -> doc_token, `src-block-id` -> block_id | 用 `docs +fetch --api-version v2` 读取 src-token 文档，定位 block |
-
-## Shortcuts（推荐优先使用）
-
-Shortcut 是对常用操作的高级封装（`lark-cli docs +<verb> [flags]`）。有 Shortcut 的操作优先使用。
-
-| Shortcut | 说明 |
-|----------|------|
-| [`+create`](references/lark-doc-create.md) | Create a Lark document (XML / Markdown) |
-| [`+fetch`](references/lark-doc-fetch.md) | Fetch Lark document content (XML / Markdown / im-markdown; `im-markdown` only after fetch for `lark-im`) |
-| [`+update`](references/lark-doc-update.md) | Update a Lark document (str_replace / block_insert_after / block_replace / ...) |
-| [`+media-insert`](references/lark-doc-media-insert.md) | Insert a local image or file at the end of a Lark document (4-step orchestration + auto-rollback). Prefer `--from-clipboard` when the image is already on the system clipboard (screenshots, copy from Feishu/browser); use `--file` only for on-disk sources. |
-| [`+media-download`](references/lark-doc-media-download.md) | Download document media or whiteboard thumbnail (auto-detects extension) |
-| [`+media-preview`](references/lark-doc-media-preview.md) | Preview document media file (auto-detects extension) |
-| [`+resource-download` / `+resource-update` / `+resource-delete`](references/lark-doc-resource-cover.md) | Download, update, or delete a Docx cover image resource with `--type cover` |
-| [`+whiteboard-update`](../lark-whiteboard/references/lark-whiteboard-update.md) | Alias of `whiteboard +update`. Update an existing whiteboard with DSL, Mermaid or PlantUML. Prefer `whiteboard +update`; refer to lark-whiteboard skill for details. |
 
 ## 不在本 Skill 范围
 
