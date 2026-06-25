@@ -215,7 +215,7 @@ func cellsBatchSetStyleInput(runtime *common.RuntimeContext, token string) (map[
 	if borderStyles != nil {
 		prototype["border_styles"] = borderStyles
 	}
-	var ops []interface{}
+	ops := make([]interface{}, 0, len(ranges))
 	for _, rng := range ranges {
 		sheet, sub, err := splitSheetPrefixedRange(rng)
 		if err != nil {
@@ -224,6 +224,9 @@ func cellsBatchSetStyleInput(runtime *common.RuntimeContext, token string) (map[
 		rows, cols, err := rangeDimensions(sub)
 		if err != nil {
 			return nil, sheetsValidationForFlag("range", "range %q: %v", rng, err)
+		}
+		if err := checkStampMatrixBudget("ranges", rng, rows, cols); err != nil {
+			return nil, err
 		}
 		cells := fillCellsMatrix(rows, cols, prototype)
 		ops = append(ops, map[string]interface{}{
@@ -299,7 +302,7 @@ func cellsBatchClearInput(runtime *common.RuntimeContext, token string) (map[str
 		return nil, err
 	}
 	clearType := normalizeClearType(runtime.Str("scope"))
-	var ops []interface{}
+	ops := make([]interface{}, 0, len(ranges))
 	for _, rng := range ranges {
 		sheet, sub, err := splitSheetPrefixedRange(rng)
 		if err != nil {
@@ -432,7 +435,7 @@ func dropdownBatchInput(runtime *common.RuntimeContext, token string, clear bool
 		}
 		prototype = map[string]interface{}{"data_validation": validation}
 	}
-	var ops []interface{}
+	ops := make([]interface{}, 0, len(ranges))
 	for _, rng := range ranges {
 		sheet, sub, err := splitSheetPrefixedRange(rng)
 		if err != nil {
@@ -441,6 +444,9 @@ func dropdownBatchInput(runtime *common.RuntimeContext, token string, clear bool
 		rows, cols, err := rangeDimensions(sub)
 		if err != nil {
 			return nil, sheetsValidationForFlag("range", "range %q: %v", rng, err)
+		}
+		if err := checkStampMatrixBudget("ranges", rng, rows, cols); err != nil {
+			return nil, err
 		}
 		cells := fillCellsMatrix(rows, cols, prototype)
 		ops = append(ops, map[string]interface{}{
