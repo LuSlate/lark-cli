@@ -27,6 +27,7 @@ var AppsFileDownload = common.Shortcut{
 	Risk:        "read",
 	Tips: []string{
 		"Example: lark-cli apps +file-download --app-id <app_id> --path /1858537546760216.png --output ./logo.png",
+		"Example (omit --output): lark-cli apps +file-download --app-id <app_id> --path /1858537546760216.png   # saves to ./1858537546760216.png",
 	},
 	Scopes:    []string{"spark:app:read"},
 	AuthTypes: []string{"user"},
@@ -85,23 +86,24 @@ var AppsFileDownload = common.Shortcut{
 		}
 		resp, err := newFileTransferClient().Do(req) //nolint:forbidigo // see above: direct presigned-URL download, RuntimeContext.DoAPI does not apply.
 		if err != nil {
-			return errs.NewNetworkError(errs.SubtypeNetworkTransport, "download failed").WithCause(err)
+			// dial/transport 失败是典型可重试场景。
+			return errs.NewNetworkError(errs.SubtypeNetworkTransport, "download failed").WithCause(err).WithRetryable()
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode >= 400 {
 			io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
-			subtype := errs.SubtypeNetworkTransport
+			// 5xx 是上游瞬时故障，标 retryable；4xx（如签名过期）需重新签名而非盲重试，不标。
 			if resp.StatusCode >= 500 {
-				subtype = errs.SubtypeNetworkServer
+				return errs.NewNetworkError(errs.SubtypeNetworkServer, "download failed: HTTP %d", resp.StatusCode).WithRetryable()
 			}
-			return errs.NewNetworkError(subtype, "download failed: HTTP %d", resp.StatusCode)
+			return errs.NewNetworkError(errs.SubtypeNetworkTransport, "download failed: HTTP %d", resp.StatusCode)
 		}
 		saved, err := rctx.FileIO().Save(out, fileio.SaveOptions{
 			ContentType:   resp.Header.Get("Content-Type"),
 			ContentLength: resp.ContentLength,
 		}, resp.Body)
 		if err != nil {
-			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--output").WithParam("--output").WithCause(err)
+			return errs.NewValidationError(errs.SubtypeInvalidArgument, "--output: %v", err).WithParam("--output").WithCause(err)
 		}
 		resolved, perr := rctx.FileIO().ResolvePath(out)
 		if perr != nil || resolved == "" {

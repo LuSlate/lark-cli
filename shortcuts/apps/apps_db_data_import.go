@@ -105,7 +105,7 @@ var AppsDBDataImport = common.Shortcut{
 			Body:        fd,
 		}, larkcore.WithFileUpload())
 		if err != nil {
-			return withAppsHint(errs.NewNetworkError(errs.SubtypeNetworkTransport, "import request failed").WithCause(err), dbDataImportHint)
+			return withAppsHint(errs.NewNetworkError(errs.SubtypeNetworkTransport, "import request failed").WithCause(err).WithRetryable(), dbDataImportHint)
 		}
 		data, err := rctx.ClassifyAPIResponse(resp)
 		if err != nil {

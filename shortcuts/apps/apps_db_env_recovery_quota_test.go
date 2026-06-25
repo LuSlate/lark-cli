@@ -339,3 +339,31 @@ func TestAppsDBQuotaGet_NoQuotaOmitsFields(t *testing.T) {
 		t.Fatalf("expected used + tables retained:\n%s", got)
 	}
 }
+
+// TestProjectDbQuota_WhitelistsFields 验证 projectDbQuota 白名单投影：只保留 used/tables/views（及配额已对接时的
+// quota/usage_percent），后端额外字段不透传。
+func TestProjectDbQuota_WhitelistsFields(t *testing.T) {
+	out := projectDbQuota(map[string]interface{}{
+		"storage_used_bytes": 2048, "storage_quota_bytes": float64(0), "usage_percent": float64(0),
+		"tables": 2, "views": 1, "tenant_key": "leak", "internal_shard": "s1",
+	})
+	if _, ok := out["storage_quota_bytes"]; ok {
+		t.Errorf("zero quota should be omitted: %v", out)
+	}
+	if out["storage_used_bytes"] != 2048 || out["tables"] != 2 || out["views"] != 1 {
+		t.Errorf("whitelisted fields should be kept: %v", out)
+	}
+	for _, leaked := range []string{"tenant_key", "internal_shard"} {
+		if _, ok := out[leaked]; ok {
+			t.Errorf("non-whitelisted field %q must be dropped: %v", leaked, out)
+		}
+	}
+
+	out2 := projectDbQuota(map[string]interface{}{"storage_used_bytes": 2048, "storage_quota_bytes": float64(4096), "usage_percent": float64(50), "tables": 2})
+	if _, ok := out2["storage_quota_bytes"]; !ok {
+		t.Errorf("non-zero quota should be kept: %v", out2)
+	}
+	if _, ok := out2["usage_percent"]; !ok {
+		t.Errorf("usage_percent should be kept when quota>0: %v", out2)
+	}
+}

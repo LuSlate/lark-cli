@@ -22,6 +22,7 @@ var AppsDBQuotaGet = common.Shortcut{
 	Risk:        "read",
 	Tips: []string{
 		"Example: lark-cli apps +db-quota-get --app-id <app_id>",
+		"Example: lark-cli apps +db-quota-get --app-id <app_id> --env dev",
 	},
 	Scopes:    []string{"spark:app:read"},
 	AuthTypes: []string{"user"},
@@ -50,16 +51,31 @@ var AppsDBQuotaGet = common.Shortcut{
 		if err != nil {
 			return withAppsHint(err, appIDListHint)
 		}
-		// 配额未对接（storage_quota_bytes=0/缺失）时删掉 quota / usage_percent。
-		if q, ok := numericAsFloat(data["storage_quota_bytes"]); !ok || q == 0 {
-			delete(data, "storage_quota_bytes")
-			delete(data, "usage_percent")
-		}
-		rctx.OutFormat(data, nil, func(w io.Writer) {
-			renderDbQuotaPretty(w, data)
+		out := projectDbQuota(data)
+		rctx.OutFormat(out, nil, func(w io.Writer) {
+			renderDbQuotaPretty(w, out)
 		})
 		return nil
 	},
+}
+
+// projectDbQuota 白名单投影 db quota 字段：只保留 storage_used_bytes / tables / views，
+// 配额已对接时再加 storage_quota_bytes / usage_percent。不透传后端其它字段，避免无用字段消耗上下文。
+func projectDbQuota(data map[string]interface{}) map[string]interface{} {
+	out := map[string]interface{}{"storage_used_bytes": data["storage_used_bytes"]}
+	for _, k := range []string{"tables", "views"} {
+		if v, ok := data[k]; ok {
+			out[k] = v
+		}
+	}
+	// 配额未对接（storage_quota_bytes=0/缺失）时不输出 quota / usage_percent。
+	if q, ok := numericAsFloat(data["storage_quota_bytes"]); ok && q > 0 {
+		out["storage_quota_bytes"] = data["storage_quota_bytes"]
+		if v, ok := data["usage_percent"]; ok {
+			out["usage_percent"] = v
+		}
+	}
+	return out
 }
 
 // renderDbQuotaPretty 打 Storage（已用 / 配额 (百分比)）与 Tables / Views 行（标签对齐 miaoda-cli）。

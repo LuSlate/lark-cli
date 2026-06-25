@@ -22,6 +22,7 @@ var AppsFileQuotaGet = common.Shortcut{
 	Risk:        "read",
 	Tips: []string{
 		"Example: lark-cli apps +file-quota-get --app-id <app_id>",
+		"Tip: get just the usage percent with -q '.usage_percent'",
 	},
 	Scopes:    []string{"spark:app:read"},
 	AuthTypes: []string{"user"},
@@ -48,21 +49,29 @@ var AppsFileQuotaGet = common.Shortcut{
 		if err != nil {
 			return err
 		}
-		// 配额未对接（storage_quota_bytes=0/缺失）时删掉 quota / usage_percent，避免误导。
-		projectFileQuota(data)
-		rctx.OutFormat(data, nil, func(w io.Writer) {
-			renderFileQuotaPretty(w, data)
+		out := projectFileQuota(data)
+		rctx.OutFormat(out, nil, func(w io.Writer) {
+			renderFileQuotaPretty(w, out)
 		})
 		return nil
 	},
 }
 
-// projectFileQuota 在配额未对接时移除 storage_quota_bytes / usage_percent。
-func projectFileQuota(data map[string]interface{}) {
-	if q, ok := numericAsFloat(data["storage_quota_bytes"]); !ok || q == 0 {
-		delete(data, "storage_quota_bytes")
-		delete(data, "usage_percent")
+// projectFileQuota 白名单投影 file quota 字段：只保留 agent 需要的 storage_used_bytes / files，
+// 配额已对接时再加 storage_quota_bytes / usage_percent。不透传后端其它字段，避免无用字段消耗上下文。
+func projectFileQuota(data map[string]interface{}) map[string]interface{} {
+	out := map[string]interface{}{"storage_used_bytes": data["storage_used_bytes"]}
+	if v, ok := data["files"]; ok {
+		out["files"] = v
 	}
+	// 配额未对接（storage_quota_bytes=0/缺失）时不输出 quota / usage_percent，避免误导。
+	if q, ok := numericAsFloat(data["storage_quota_bytes"]); ok && q > 0 {
+		out["storage_quota_bytes"] = data["storage_quota_bytes"]
+		if v, ok := data["usage_percent"]; ok {
+			out["usage_percent"] = v
+		}
+	}
+	return out
 }
 
 // renderFileQuotaPretty 打 Storage（已用 / 配额 (百分比)）与 Files 行（标签对齐 miaoda-cli）。

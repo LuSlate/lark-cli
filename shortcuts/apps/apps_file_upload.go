@@ -34,6 +34,7 @@ var AppsFileUpload = common.Shortcut{
 	Risk:        "write",
 	Tips: []string{
 		"Example: lark-cli apps +file-upload --app-id <app_id> --file ./logo.png",
+		"Example: lark-cli apps +file-upload --app-id <app_id> --file ./report.pdf -q '.path'   # print the platform-generated file path",
 	},
 	Scopes:    []string{"spark:app:write"},
 	AuthTypes: []string{"user"},
@@ -138,16 +139,17 @@ func putFileBytes(ctx context.Context, url string, content []byte, contentType, 
 	req.Header.Set("Content-Disposition", "attachment; filename=\""+sanitizeUploadFileName(fileName)+"\"")
 	resp, err := newFileTransferClient().Do(req)
 	if err != nil {
-		return "", errs.NewNetworkError(errs.SubtypeNetworkTransport, "upload failed").WithCause(err)
+		// dial/transport 失败是典型可重试场景。
+		return "", errs.NewNetworkError(errs.SubtypeNetworkTransport, "upload failed").WithCause(err).WithRetryable()
 	}
 	defer resp.Body.Close()
 	io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
 	if resp.StatusCode >= 400 {
-		subtype := errs.SubtypeNetworkTransport
+		// 5xx 是上游瞬时故障，标 retryable；4xx（如签名过期）需重新签名而非盲重试，不标。
 		if resp.StatusCode >= 500 {
-			subtype = errs.SubtypeNetworkServer
+			return "", errs.NewNetworkError(errs.SubtypeNetworkServer, "upload failed: HTTP %d", resp.StatusCode).WithRetryable()
 		}
-		return "", errs.NewNetworkError(subtype, "upload failed: HTTP %d", resp.StatusCode)
+		return "", errs.NewNetworkError(errs.SubtypeNetworkTransport, "upload failed: HTTP %d", resp.StatusCode)
 	}
 	return resp.Header.Get("ETag"), nil
 }

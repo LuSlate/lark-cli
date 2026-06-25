@@ -37,7 +37,8 @@ func pollUntil(ctx context.Context, interval, maxWait time.Duration,
 			return data, nil
 		}
 		if i+1 >= maxAttempts {
-			return nil, errs.NewNetworkError(errs.SubtypeNetworkTimeout, "timed out waiting for completion after %s", maxWait)
+			// async 任务多半还在服务端推进，poll 超时是可重试的——标 retryable 让 agent 重新轮询而非放弃。
+			return nil, errs.NewNetworkError(errs.SubtypeNetworkTimeout, "timed out waiting for completion after %s", maxWait).WithRetryable()
 		}
 		select {
 		case <-ctx.Done():

@@ -63,20 +63,34 @@ func TestAppsFileQuotaGet_UnconnectedOmitsQuotaFields(t *testing.T) {
 	}
 }
 
-// TestProjectFileQuota_DeletesZeroQuota 验证 projectFileQuota：quota=0 时删除 storage_quota_bytes/usage_percent，非零时保留。
-func TestProjectFileQuota_DeletesZeroQuota(t *testing.T) {
-	data := map[string]interface{}{"storage_used_bytes": 100, "storage_quota_bytes": float64(0), "usage_percent": float64(0), "files": 3}
-	projectFileQuota(data)
-	if _, ok := data["storage_quota_bytes"]; ok {
-		t.Errorf("zero quota should be deleted: %v", data)
+// TestProjectFileQuota_OmitsZeroQuotaAndDropsUnknownFields 验证 projectFileQuota 白名单投影：
+// quota=0 时不输出 storage_quota_bytes/usage_percent，非零时保留；后端额外字段不透传。
+func TestProjectFileQuota_OmitsZeroQuotaAndDropsUnknownFields(t *testing.T) {
+	out := projectFileQuota(map[string]interface{}{
+		"storage_used_bytes": 100, "storage_quota_bytes": float64(0), "usage_percent": float64(0),
+		"files": 3, "tenant_key": "leak", "request_id": "rid",
+	})
+	if _, ok := out["storage_quota_bytes"]; ok {
+		t.Errorf("zero quota should be omitted: %v", out)
 	}
-	if _, ok := data["usage_percent"]; ok {
-		t.Errorf("usage_percent should be deleted when quota=0: %v", data)
+	if _, ok := out["usage_percent"]; ok {
+		t.Errorf("usage_percent should be omitted when quota=0: %v", out)
+	}
+	if out["storage_used_bytes"] != 100 || out["files"] != 3 {
+		t.Errorf("whitelisted fields should be kept: %v", out)
+	}
+	// 白名单外的字段必须被丢弃，避免无用字段消耗 agent 上下文。
+	for _, leaked := range []string{"tenant_key", "request_id"} {
+		if _, ok := out[leaked]; ok {
+			t.Errorf("non-whitelisted field %q must be dropped: %v", leaked, out)
+		}
 	}
 
-	data2 := map[string]interface{}{"storage_used_bytes": 100, "storage_quota_bytes": float64(1024), "usage_percent": float64(9.8), "files": 3}
-	projectFileQuota(data2)
-	if _, ok := data2["storage_quota_bytes"]; !ok {
-		t.Errorf("non-zero quota should be kept: %v", data2)
+	out2 := projectFileQuota(map[string]interface{}{"storage_used_bytes": 100, "storage_quota_bytes": float64(1024), "usage_percent": float64(9.8), "files": 3})
+	if _, ok := out2["storage_quota_bytes"]; !ok {
+		t.Errorf("non-zero quota should be kept: %v", out2)
+	}
+	if _, ok := out2["usage_percent"]; !ok {
+		t.Errorf("usage_percent should be kept when quota>0: %v", out2)
 	}
 }
