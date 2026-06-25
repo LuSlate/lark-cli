@@ -20,7 +20,7 @@ var AppsPluginInstanceDelete = common.Shortcut{
 	Service:     appsService,
 	Command:     "+plugin-instance-delete",
 	Description: "Delete a plugin instance",
-	Risk: "write",
+	Risk: "write", Hidden: true,
 	Flags: []common.Flag{
 		{Name: "id", Desc: "instance id", Required: true},
 		{Name: "project-path", Desc: "project root path (defaults to current directory)"},

@@ -21,7 +21,7 @@ var AppsPluginInstanceUpdate = common.Shortcut{
 	Service:     appsService,
 	Command:     "+plugin-instance-update",
 	Description: "Update a plugin instance (modify capability JSON)",
-	Risk: "write",
+	Risk: "write", Hidden: true,
 	Flags: []common.Flag{
 		{Name: "id", Desc: "instance id", Required: true},
 		{Name: "name", Desc: "new display name"},

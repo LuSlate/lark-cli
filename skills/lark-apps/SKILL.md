@@ -29,7 +29,7 @@ metadata:
 | 设置或查看运行时可见范围 | `+access-scope-set`, `+access-scope-get` | 对应 access-scope reference |
 | 云端 Agent 生成/迭代应用（开发方式已定为云端后） | `+session-create` -> `+chat` -> `+session-get` | [`lark-apps-cloud-dev.md`](references/lark-apps-cloud-dev.md) |
 | 查看某次会话某一轮（turn）的回复消息（含仍在生成中的本轮）/ 导出上一轮模型回复（"这一轮回复了什么""上一轮的回复""导出某轮消息"） | 先 `+session-get`（取 `latest_turn.turn_id`）-> `+session-messages-list --turn-id <id>`（仅 user 身份；分页用 `--page-token`） | [`lark-apps-session-messages-list.md`](references/lark-apps-session-messages-list.md) |
-| 插件集成 — 用户需求涉及外部能力或提到插件/Plugin/Capability。**判断规则**：(1) AI 模型服务能力（文本生成、图片理解、语音识别等）**必须**通过插件接入，禁止自行编写替代实现；(2) 飞书平台能力（操作多维表格、发送消息等）**优先**查看是否有对应插件，插件不支持时再考虑自行通过飞书 OpenAPI 实现 | **⚠️ 必须先读仓库 Skill** `<project-path>/.agents/skills/plugin-guide/SKILL.md`（插件目录、Schema 规则、CRUD 流程、调用代码生成等完整指引）。CLI 命令参考见各 `lark-apps-plugin-*.md` reference | 仓库 Skill |
+| 插件集成 — 用户需求涉及外部能力或提到插件/Plugin/Capability。**判断规则**：(1) AI 模型服务能力（文本生成、图片理解、语音识别等）**必须**通过插件接入，禁止自行编写替代实现；(2) 飞书平台能力（操作多维表格、发送消息等）**优先**查看是否有对应插件，插件不支持时再考虑自行通过飞书 OpenAPI 实现 | **⚠️ 必须先读仓库 Skill** `<project-path>/.agents/skills/plugin-guide/SKILL.md`（插件目录、Schema 规则、实例 CRUD、调用代码生成等完整指引）。插件包管理（安装/卸载/查看）参考 [`lark-apps-plugin-install.md`](references/lark-apps-plugin-install.md) / [`lark-apps-plugin-uninstall.md`](references/lark-apps-plugin-uninstall.md) / [`lark-apps-plugin-list.md`](references/lark-apps-plugin-list.md) | 仓库 Skill |
 
 ## 选择开发路径（进意图路由前先判这步）
 

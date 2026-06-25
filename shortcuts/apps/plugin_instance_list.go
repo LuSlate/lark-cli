@@ -18,7 +18,7 @@ var AppsPluginInstanceList = common.Shortcut{
 	Service:     appsService,
 	Command:     "+plugin-instance-list",
 	Description: "List all plugin instances in the project",
-	Risk: "read",
+	Risk: "read", Hidden: true,
 	Flags: []common.Flag{
 		{Name: "summary", Type: "bool", Desc: "show only id and name"},
 		{Name: "project-path", Desc: "project root path (defaults to current directory)"},

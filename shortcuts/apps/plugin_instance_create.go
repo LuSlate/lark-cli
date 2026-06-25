@@ -22,7 +22,7 @@ var AppsPluginInstanceCreate = common.Shortcut{
 	Service:     appsService,
 	Command:     "+plugin-instance-create",
 	Description: "Create a plugin instance (write capability JSON)",
-	Risk: "write",
+	Risk: "write", Hidden: true,
 	Flags: []common.Flag{
 		{Name: "id", Desc: "semantic instance id (lowercase + hyphens); auto-derived from plugin key if omitted"},
 		{Name: "plugin", Desc: "plugin key (e.g. @official-plugins/ai-text-generate); version is resolved from package.json actionPlugins", Required: true},

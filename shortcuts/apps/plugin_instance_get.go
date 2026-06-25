@@ -19,7 +19,7 @@ var AppsPluginInstanceGet = common.Shortcut{
 	Service:     appsService,
 	Command:     "+plugin-instance-get",
 	Description: "Get a plugin instance by id",
-	Risk: "read",
+	Risk: "read", Hidden: true,
 	Flags: []common.Flag{
 		{Name: "id", Desc: "instance id (filename without .json in capabilities/)", Required: true},
 		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
