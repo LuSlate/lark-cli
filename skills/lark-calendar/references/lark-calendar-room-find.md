@@ -1,6 +1,5 @@
 # calendar +room-find
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md)。
 
 针对一个或多个时间块查找/搜索可用会议室。会议室是日程的一种资源型参与人，不能脱离日程单独预定。
 

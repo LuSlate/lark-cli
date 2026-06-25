@@ -1,6 +1,5 @@
 # calendar +rsvp
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
 
 回复指定的日程，更新当前用户的 RSVP 状态（接受、拒绝或待定）。
 
@@ -39,4 +38,3 @@ lark-cli calendar +rsvp --calendar-id cal_xxx --event-id evt_xxx --rsvp-status a
 ## 参考
 
 - [lark-calendar](../SKILL.md) -- 日历全部命令
-- [lark-shared](../../lark-shared/SKILL.md) -- 认证和全局参数

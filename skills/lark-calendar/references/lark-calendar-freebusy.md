@@ -1,7 +1,6 @@
 
 # calendar +freebusy
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md)。
 
 查询用户主日历的忙闲信息，返回指定时间范围内的忙碌时段列表和rsvp的状态。
 

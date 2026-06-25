@@ -1,6 +1,5 @@
 # minutes +upload
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
 
 上传音视频文件到飞书妙记并生成妙记（Minute）。
 
@@ -103,4 +102,3 @@ lark-cli minutes +detail --minute-tokens obcnxxxxxxxxxxxxxxxx --wait-ready --sum
 
 - [lark-minutes](../SKILL.md) -- 妙记相关功能说明
 - [drive +upload](../../lark-drive/references/lark-drive-upload.md) -- 上传文件到云空间（云盘/云存储）
-- [lark-shared](../../lark-shared/SKILL.md) -- 认证和全局参数

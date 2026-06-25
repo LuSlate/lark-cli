@@ -1,6 +1,5 @@
 # calendar +suggestion
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md)。
 
 根据非明确时间或一段时间范围，推荐多个可用时间块方案。帮助用户解决协调时间的难题。
 

@@ -1,6 +1,5 @@
 # calendar +update
 
-> **前置条件：** 先阅读 [`../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和安全规则。
 
 更新既有日程字段，或独立增量添加/移除参会人和会议室。
 
@@ -99,7 +98,6 @@ lark-cli calendar +update \
 ## 参考
 
 - [lark-calendar](../SKILL.md) -- 日历全部命令
-- [lark-shared](../../lark-shared/SKILL.md) -- 认证和全局参数
 - [lark-calendar-schedule-meeting](lark-calendar-schedule-meeting.md) -- 预约/改约会议与会议室工作流
 - [lark-calendar-room-find](lark-calendar-room-find.md) -- 查找可用会议室
 - [lark-calendar-freebusy](lark-calendar-freebusy.md) -- 查询忙闲
