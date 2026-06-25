@@ -35,11 +35,5 @@ func Shortcuts() []common.Shortcut {
 		AppsPluginInstall,
 		AppsPluginUninstall,
 		AppsPluginList,
-		AppsPluginInstanceList,
-		AppsPluginInstanceGet,
-		AppsPluginInstanceCreate,
-		AppsPluginInstanceUpdate,
-		AppsPluginInstanceDelete,
-		AppsPluginInstanceTypes,
 	}
 }

@@ -11,16 +11,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/validate"
 )
-
-// pluginIDPattern validates semantic instance ids: lowercase alphanumeric + hyphens,
-// not starting or ending with a hyphen.
-var pluginIDPattern = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`)
 
 // pluginResolveProjectPath resolves --project-path to an absolute path,
 // defaulting to cwd when empty.
@@ -136,19 +131,6 @@ func pluginDirExists(path string) bool {
 	return err == nil && info.IsDir()
 }
 
-// pluginReadCapJSON reads and parses a single capability JSON file.
-func pluginReadCapJSON(path string) (map[string]interface{}, error) {
-	data, err := os.ReadFile(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local capability file read.
-	if err != nil {
-		return nil, err
-	}
-	var cap map[string]interface{}
-	if err := json.Unmarshal(data, &cap); err != nil {
-		return nil, fmt.Errorf("invalid JSON in %s: %w", filepath.Base(path), err)
-	}
-	return cap, nil
-}
-
 // pluginListCapabilities reads all *.json files from capDir.
 // Returns nil (not error) if the directory does not exist.
 func pluginListCapabilities(capDir string) ([]map[string]interface{}, error) {
@@ -165,114 +147,17 @@ func pluginListCapabilities(capDir string) ([]map[string]interface{}, error) {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
 		}
-		cap, err := pluginReadCapJSON(filepath.Join(capDir, entry.Name()))
+		data, err := os.ReadFile(filepath.Join(capDir, entry.Name())) //nolint:forbidigo
 		if err != nil {
+			continue
+		}
+		var cap map[string]interface{}
+		if err := json.Unmarshal(data, &cap); err != nil {
 			continue
 		}
 		caps = append(caps, cap)
 	}
 	return caps, nil
-}
-
-// pluginGetCapability reads a single capability by id from capDir.
-// The file is expected at capDir/{id}.json.
-func pluginGetCapability(capDir, id string) (map[string]interface{}, error) {
-	path := filepath.Join(capDir, id+".json")
-	cap, err := pluginReadCapJSON(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, appsValidationError("instance %q not found", id).
-				WithHint("list instances with 'lark-cli apps +plugin-instance-list'")
-		}
-		return nil, appsFileIOError(err, "cannot read capability %s", path)
-	}
-	return cap, nil
-}
-
-// pluginReadManifest reads manifest.json from node_modules for the given pluginKey.
-func pluginReadManifest(projectPath, pluginKey string) (map[string]interface{}, error) {
-	path := filepath.Join(projectPath, "node_modules", pluginKey, "manifest.json")
-	data, err := os.ReadFile(path) //nolint:forbidigo // shortcuts cannot import internal/vfs; local manifest read.
-	if err != nil {
-		return nil, err
-	}
-	var manifest map[string]interface{}
-	if err := json.Unmarshal(data, &manifest); err != nil {
-		return nil, fmt.Errorf("invalid manifest.json for %s: %w", pluginKey, err)
-	}
-	return manifest, nil
-}
-
-// pluginParseKeyVersion splits "key@version" into (key, version).
-// The key may start with "@" (scoped npm package), so the split is at the last "@".
-func pluginParseKeyVersion(s string) (string, string, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return "", "", appsValidationParamError("--plugin", "--plugin is required")
-	}
-	idx := strings.LastIndex(s, "@")
-	if idx <= 0 {
-		return "", "", appsValidationParamError("--plugin",
-			"invalid format %q; expected key@version (e.g. @official-plugins/ai-text-generate@1.0.0)", s)
-	}
-	key, version := s[:idx], s[idx+1:]
-	if key == "" || version == "" {
-		return "", "", appsValidationParamError("--plugin",
-			"invalid format %q; expected key@version", s)
-	}
-	return key, version, nil
-}
-
-// pluginDeriveID derives an instance id from a plugin key.
-// "@official-plugins/ai-text-generate" → "official-plugins-ai-text-generate"
-func pluginDeriveID(pluginKey string) string {
-	id := strings.TrimPrefix(pluginKey, "@")
-	id = strings.ReplaceAll(id, "/", "-")
-	return id
-}
-
-// pluginValidateID checks that id is a valid semantic instance id.
-func pluginValidateID(id string) error {
-	if !pluginIDPattern.MatchString(id) {
-		return appsValidationParamError("--id",
-			"invalid id %q; must be lowercase alphanumeric with hyphens, not starting/ending with hyphen", id)
-	}
-	return nil
-}
-
-// pluginValidateJSONFlag checks that value is non-empty valid JSON.
-func pluginValidateJSONFlag(flagName, value string) error {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return appsValidationParamError(flagName, "%s value is required", flagName)
-	}
-	if !json.Valid([]byte(value)) {
-		return appsValidationParamError(flagName, "%s must be valid JSON", flagName)
-	}
-	return nil
-}
-
-// pluginCheckInstalled verifies that the plugin package is installed in node_modules
-// with a valid manifest.json. Distinguishes three failure cases:
-//   - plugin directory does not exist → "not installed"
-//   - plugin directory exists but manifest.json missing → "not built"
-//   - other I/O error
-func pluginCheckInstalled(projectPath, pluginKey string) error {
-	pluginDir := filepath.Join(projectPath, "node_modules", pluginKey)
-	manifestPath := filepath.Join(pluginDir, "manifest.json")
-	if _, err := os.Stat(manifestPath); err != nil { //nolint:forbidigo // shortcuts cannot import internal/vfs; local stat for plugin check.
-		if os.IsNotExist(err) {
-			if pluginDirExists(pluginDir) {
-				return appsFailedPreconditionError(
-					"plugin %q exists in node_modules but manifest.json is missing; the package may not have been built correctly", pluginKey,
-				).WithHint("run 'lark-cli apps +plugin-install --name %s' to reinstall from registry", pluginKey)
-			}
-			return appsFailedPreconditionError("plugin %q is not installed", pluginKey).
-				WithHint("run 'lark-cli apps +plugin-install --name %s' to install", pluginKey)
-		}
-		return appsFileIOError(err, "cannot check plugin installation for %s", pluginKey)
-	}
-	return nil
 }
 
 // pluginCheckDependentInstances scans the capabilities directory for instances
@@ -305,183 +190,24 @@ func pluginCheckDependentInstances(projectPath, pluginKey, capDirFlag string) er
 	).WithHint("delete these instances first (lark-cli apps +plugin-instance-delete --id <id> for each), clean up calling code and types, then retry uninstall")
 }
 
-// pluginCheckInstalledVersion checks that the plugin is installed and warns if
-// the installed version differs from the declared version. Returns (warnings, error).
-func pluginCheckInstalledVersion(projectPath, pluginKey, declaredVersion string) ([]string, error) {
-	if err := pluginCheckInstalled(projectPath, pluginKey); err != nil {
-		return nil, err
-	}
-	var warnings []string
-	if installed := pluginInstalledVersion(projectPath, pluginKey); installed != "" && installed != declaredVersion {
-		warnings = append(warnings, fmt.Sprintf(
-			"installed version %s differs from declared %s; run 'lark-cli apps +plugin-install --name %s@%s' to update, or continue with the installed version",
-			installed, declaredVersion, pluginKey, declaredVersion))
-	}
-	return warnings, nil
-}
-
-// ── formValue validation (aligned with feida-ai validatePluginInstance) ──
-
-// Forbidden Handlebars block-level helpers.
-var pluginForbiddenTemplatePatterns = []*regexp.Regexp{
-	regexp.MustCompile(`\{\{#if\b`),
-	regexp.MustCompile(`\{\{#each\b`),
-	regexp.MustCompile(`\{\{#unless\b`),
-	regexp.MustCompile(`\{\{/if\}\}`),
-	regexp.MustCompile(`\{\{/each\}\}`),
-	regexp.MustCompile(`\{\{/unless\}\}`),
-	regexp.MustCompile(`\{\{else\}\}`),
-}
-
-// pluginInputRefPattern matches {{input.xxx}} template references.
-var pluginInputRefPattern = regexp.MustCompile(`\{\{input\.(\w+)\}\}`)
-
-// pluginTemplateRefExact matches a string that is exactly one {{input.xxx}} with no surrounding text.
-var pluginTemplateRefExact = regexp.MustCompile(`^\{\{input\.(\w+)\}\}$`)
-
-// pluginValidateFormValue validates formValue and paramsSchema following feida-ai's
-// validatePluginInstance rules. Returns all violations; empty means valid.
-// Also auto-fixes array double-wrapping in formValue (mutates fvMap in place).
-func pluginValidateFormValue(formValue, paramsSchema interface{}) []string {
-	var errors []string
-
-	fvMap, _ := formValue.(map[string]interface{})
-
-	// Rule 1: Forbidden Handlebars control syntax (recursive)
-	pluginTraverseValues(formValue, "formValue", func(s, path string) {
-		for _, pat := range pluginForbiddenTemplatePatterns {
-			if pat.MatchString(s) {
-				errors = append(errors, fmt.Sprintf("forbidden Handlebars syntax at %s: %s", path, pat.FindString(s)))
+// pluginCheckInstalled verifies that the plugin package is installed in node_modules
+// with a valid manifest.json.
+func pluginCheckInstalled(projectPath, pluginKey string) error {
+	pluginDir := filepath.Join(projectPath, "node_modules", pluginKey)
+	manifestPath := filepath.Join(pluginDir, "manifest.json")
+	if _, err := os.Stat(manifestPath); err != nil { //nolint:forbidigo // shortcuts cannot import internal/vfs; local stat for plugin check.
+		if os.IsNotExist(err) {
+			if pluginDirExists(pluginDir) {
+				return appsFailedPreconditionError(
+					"plugin %q exists in node_modules but manifest.json is missing; the package may not have been built correctly", pluginKey,
+				).WithHint("run 'lark-cli apps +plugin-install --name %s' to reinstall from registry", pluginKey)
 			}
+			return appsFailedPreconditionError("plugin %q is not installed", pluginKey).
+				WithHint("run 'lark-cli apps +plugin-install --name %s' to install", pluginKey)
 		}
-	})
-
-	// If no paramsSchema provided, skip schema-dependent rules
-	psMap, _ := paramsSchema.(map[string]interface{})
-	properties, _ := psMap["properties"].(map[string]interface{})
-	definedParams := make(map[string]bool, len(properties))
-	for k := range properties {
-		definedParams[k] = true
+		return appsFileIOError(err, "cannot check plugin installation for %s", pluginKey)
 	}
-
-	// Rule 2: paramsSchema property type validation
-	allowedTypes := map[string]bool{"string": true, "array": true}
-	allowedFormats := map[string]bool{"plugin-image-url": true, "plugin-file-url": true}
-	for paramName, paramDef := range properties {
-		def, ok := paramDef.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		paramType, _ := def["type"].(string)
-		if !allowedTypes[paramType] {
-			errors = append(errors, fmt.Sprintf("paramsSchema property %q type %q is invalid; only string or array allowed", paramName, paramType))
-		}
-		if paramType == "array" {
-			if _, hasItems := def["items"]; !hasItems {
-				errors = append(errors, fmt.Sprintf("paramsSchema property %q is array but missing items", paramName))
-			}
-		}
-		if f, ok := def["format"].(string); ok && !allowedFormats[f] {
-			errors = append(errors, fmt.Sprintf("paramsSchema property %q format %q is invalid; only plugin-image-url or plugin-file-url allowed", paramName, f))
-		}
-		if _, hasDesc := def["description"]; !hasDesc {
-			errors = append(errors, fmt.Sprintf("paramsSchema property %q missing description", paramName))
-		}
-	}
-
-	// Rule 3: {{input.xxx}} references must exist in paramsSchema
-	pluginTraverseValues(formValue, "formValue", func(s, path string) {
-		for _, match := range pluginInputRefPattern.FindAllStringSubmatch(s, -1) {
-			if !definedParams[match[1]] {
-				errors = append(errors, fmt.Sprintf("{{input.%s}} at %s is not defined in paramsSchema", match[1], path))
-			}
-		}
-	})
-
-	// Rule 4: every paramsSchema property must be consumed by {{input.xxx}} in formValue
-	if len(definedParams) > 0 && fvMap != nil {
-		fvStr, _ := json.Marshal(fvMap)
-		fvJSON := string(fvStr)
-		for paramName := range definedParams {
-			ref := "{{input." + paramName + "}}"
-			if !strings.Contains(fvJSON, ref) {
-				errors = append(errors, fmt.Sprintf("paramsSchema property %q is never referenced as %s in formValue", paramName, ref))
-			}
-		}
-	}
-
-	// Rule 5: array double-wrapping auto-fix
-	// If paramsSchema declares a field as type:array, and formValue wraps it in
-	// ["{{input.xxx}}"], auto-fix to "{{input.xxx}}" to prevent runtime [[val]] nesting.
-	if fvMap != nil {
-		arrayParams := make(map[string]bool)
-		for paramName, paramDef := range properties {
-			if def, ok := paramDef.(map[string]interface{}); ok {
-				if t, _ := def["type"].(string); t == "array" {
-					arrayParams[paramName] = true
-				}
-			}
-		}
-		if len(arrayParams) > 0 {
-			pluginAutoFixArrayWrapping(fvMap, arrayParams)
-		}
-	}
-
-	return errors
-}
-
-// pluginTraverseValues recursively visits all string leaf values in a nested
-// structure (object / array / string), calling visitor for each.
-func pluginTraverseValues(value interface{}, path string, visitor func(s, path string)) {
-	switch v := value.(type) {
-	case string:
-		visitor(v, path)
-	case []interface{}:
-		for i, item := range v {
-			pluginTraverseValues(item, fmt.Sprintf("%s[%d]", path, i), visitor)
-		}
-	case map[string]interface{}:
-		for key, val := range v {
-			pluginTraverseValues(val, path+"."+key, visitor)
-		}
-	}
-}
-
-// pluginAutoFixArrayWrapping fixes ["{{input.xxx}}"] → "{{input.xxx}}" for
-// array-typed params to prevent runtime double-wrapping.
-func pluginAutoFixArrayWrapping(obj map[string]interface{}, arrayParams map[string]bool) {
-	for key, value := range obj {
-		arr, ok := value.([]interface{})
-		if ok && len(arr) == 1 {
-			if s, ok := arr[0].(string); ok {
-				if m := pluginTemplateRefExact.FindStringSubmatch(s); m != nil && arrayParams[m[1]] {
-					obj[key] = s
-				}
-			}
-		}
-		if nested, ok := value.(map[string]interface{}); ok {
-			pluginAutoFixArrayWrapping(nested, arrayParams)
-		}
-	}
-}
-
-// pluginWriteCapJSON writes a capability map to capDir/{id}.json atomically.
-func pluginWriteCapJSON(capPath string, cap map[string]interface{}) error {
-	data, err := json.MarshalIndent(cap, "", "  ")
-	if err != nil {
-		return appsFileIOError(err, "cannot marshal capability JSON")
-	}
-	data = append(data, '\n')
-	return validate.AtomicWrite(capPath, data, 0o644)
-}
-
-// pluginCapRelPath returns the capability file path relative to projectPath.
-func pluginCapRelPath(projectPath, capPath string) string {
-	rel, err := filepath.Rel(projectPath, capPath)
-	if err != nil {
-		return capPath
-	}
-	return rel
+	return nil
 }
 
 // ── package.json helpers ──
@@ -527,18 +253,6 @@ func pluginGetActionPlugins(pkg map[string]interface{}) map[string]string {
 		}
 	}
 	return out
-}
-
-// pluginActionPluginVersion returns the installed version of a plugin from
-// actionPlugins. Returns ("", false) if the key is not declared.
-func pluginActionPluginVersion(projectPath, key string) (string, bool) {
-	pkg, err := pluginReadPackageJSON(projectPath)
-	if err != nil {
-		return "", false
-	}
-	declared := pluginGetActionPlugins(pkg)
-	v, ok := declared[key]
-	return v, ok
 }
 
 // pluginSetActionPlugin adds or updates a plugin entry in actionPlugins.
@@ -698,243 +412,4 @@ func pluginStripFirstComponent(name string) string {
 		return name[i+1:]
 	}
 	return ""
-}
-
-// ── TypeScript type generation ──
-
-const pluginTypesFile = "shared/plugin-types.ts"
-const pluginBlockStartPrefix = "// ---- plugin:"
-const pluginBlockEndPrefix = "// ---- end:"
-
-// pluginGenerateAndPersistTypes reads manifest + capability, generates TypeScript
-// interfaces, and writes them to shared/plugin-types.ts with per-id block replacement.
-// Returns (outputPath, typeNames, error).
-func pluginGenerateAndPersistTypes(projectPath string, cap map[string]interface{}) (string, []string, error) {
-	pluginKey, _ := cap["pluginKey"].(string)
-	id, _ := cap["id"].(string)
-	name, _ := cap["name"].(string)
-	if pluginKey == "" || id == "" {
-		return "", nil, fmt.Errorf("capability missing pluginKey or id")
-	}
-
-	manifest, err := pluginReadManifest(projectPath, pluginKey)
-	if err != nil {
-		return "", nil, fmt.Errorf("cannot read manifest for %s: %w", pluginKey, err)
-	}
-
-	actions, _ := manifest["actions"].([]interface{})
-	if len(actions) == 0 {
-		return "", nil, fmt.Errorf("plugin %s has no actions defined", pluginKey)
-	}
-
-	prefix := pluginToPascalCase(id)
-	var typeNames []string
-	var parts []string
-	parts = append(parts,
-		"// ============================================================",
-		fmt.Sprintf("// 插件 %s (%s) 的类型定义", id, name),
-		"// 由 lark-cli +plugin-instance-types 自动生成",
-		"// 调用方式请参考项目 Skill: .agents/skills/plugin-guide/SKILL.md",
-		"// ============================================================",
-	)
-
-	paramsSchema, _ := cap["paramsSchema"].(map[string]interface{})
-
-	for i, rawAction := range actions {
-		action, ok := rawAction.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		actionKey, _ := action["key"].(string)
-		actionSuffix := ""
-		if len(actions) > 1 {
-			actionSuffix = pluginToPascalCase(actionKey)
-		}
-		inputName := prefix + actionSuffix + "Input"
-		outputName := prefix + actionSuffix + "Output"
-
-		// inputSchema: first action uses paramsSchema if available
-		var inputSchema map[string]interface{}
-		if i == 0 && paramsSchema != nil && len(paramsSchema) > 0 {
-			inputSchema = paramsSchema
-		} else {
-			inputSchema, _ = action["inputSchema"].(map[string]interface{})
-		}
-
-		if inputSchema != nil {
-			if iface := pluginGenerateInterface(inputName, inputSchema); iface != "" {
-				parts = append(parts, "", iface)
-				typeNames = append(typeNames, inputName)
-			}
-		}
-
-		outputSchema, _ := action["outputSchema"].(map[string]interface{})
-		if outputSchema != nil {
-			if iface := pluginGenerateInterface(outputName, outputSchema); iface != "" {
-				parts = append(parts, iface)
-				typeNames = append(typeNames, outputName)
-			}
-		}
-	}
-
-	typesCode := strings.Join(parts, "\n")
-	outputPath := filepath.Join(projectPath, pluginTypesFile)
-
-	if err := pluginPersistTypesBlock(outputPath, id, typesCode); err != nil {
-		return "", nil, err
-	}
-
-	return pluginTypesFile, typeNames, nil
-}
-
-// pluginToPascalCase converts "task-text-summary" → "TaskTextSummary".
-// Handles digit-prefixed segments: "4s-store" → "FourSStore".
-func pluginToPascalCase(id string) string {
-	digitWords := map[byte]string{
-		'0': "Zero", '1': "One", '2': "Two", '3': "Three", '4': "Four",
-		'5': "Five", '6': "Six", '7': "Seven", '8': "Eight", '9': "Nine",
-	}
-	parts := strings.FieldsFunc(id, func(r rune) bool { return r == '-' || r == '_' })
-	var result strings.Builder
-	for _, part := range parts {
-		if part == "" {
-			continue
-		}
-		if part[0] >= '0' && part[0] <= '9' {
-			i := 0
-			for i < len(part) && part[i] >= '0' && part[i] <= '9' {
-				if w, ok := digitWords[part[i]]; ok {
-					result.WriteString(w)
-				}
-				i++
-			}
-			if i < len(part) {
-				result.WriteByte(part[i] - 32) // uppercase
-				result.WriteString(strings.ToLower(part[i+1:]))
-			}
-		} else {
-			result.WriteByte(part[0] &^ 0x20) // uppercase first char
-			result.WriteString(strings.ToLower(part[1:]))
-		}
-	}
-	return result.String()
-}
-
-// pluginGenerateInterface generates "export interface Name { ... }" from a JSON Schema.
-func pluginGenerateInterface(name string, schema map[string]interface{}) string {
-	props, ok := schema["properties"].(map[string]interface{})
-	if !ok || len(props) == 0 {
-		return ""
-	}
-	requiredSet := make(map[string]bool)
-	if req, ok := schema["required"].([]interface{}); ok {
-		for _, r := range req {
-			if s, ok := r.(string); ok {
-				requiredSet[s] = true
-			}
-		}
-	}
-	var lines []string
-	for key, val := range props {
-		propMap, _ := val.(map[string]interface{})
-		optional := ""
-		if !requiredSet[key] {
-			optional = "?"
-		}
-		tsType := pluginSchemaToTS(propMap, "  ")
-		desc, _ := propMap["description"].(string)
-		if desc != "" {
-			lines = append(lines, fmt.Sprintf("  /** %s */", desc))
-		}
-		safeKey := pluginQuoteKey(key)
-		lines = append(lines, fmt.Sprintf("  %s%s: %s;", safeKey, optional, tsType))
-	}
-	return fmt.Sprintf("export interface %s {\n%s\n}", name, strings.Join(lines, "\n"))
-}
-
-// pluginSchemaToTS converts a JSON Schema property to a TypeScript type string.
-func pluginSchemaToTS(prop map[string]interface{}, indent string) string {
-	if prop == nil {
-		return "unknown"
-	}
-	t, _ := prop["type"].(string)
-	switch t {
-	case "string":
-		return "string"
-	case "number", "integer":
-		return "number"
-	case "boolean":
-		return "boolean"
-	case "array":
-		if items, ok := prop["items"].(map[string]interface{}); ok {
-			return pluginSchemaToTS(items, indent) + "[]"
-		}
-		return "unknown[]"
-	case "object":
-		if innerProps, ok := prop["properties"].(map[string]interface{}); ok && len(innerProps) > 0 {
-			inner := indent + "  "
-			var fields []string
-			for k, v := range innerProps {
-				vm, _ := v.(map[string]interface{})
-				fields = append(fields, fmt.Sprintf("%s%s: %s;", inner, pluginQuoteKey(k), pluginSchemaToTS(vm, inner)))
-			}
-			return fmt.Sprintf("{\n%s\n%s}", strings.Join(fields, "\n"), indent)
-		}
-		return "Record<string, unknown>"
-	}
-	// No explicit type: infer from structure
-	if _, ok := prop["properties"]; ok {
-		return pluginSchemaToTS(map[string]interface{}{"type": "object", "properties": prop["properties"]}, indent)
-	}
-	if _, ok := prop["items"]; ok {
-		return pluginSchemaToTS(map[string]interface{}{"type": "array", "items": prop["items"]}, indent)
-	}
-	return "unknown"
-}
-
-// pluginQuoteKey returns the key as-is if it's a valid JS identifier, else quoted.
-func pluginQuoteKey(key string) string {
-	clean := strings.Map(func(r rune) rune {
-		if r == '\n' || r == '\r' || r == '\t' {
-			return ' '
-		}
-		return r
-	}, strings.TrimSpace(key))
-	if regexp.MustCompile(`^[a-zA-Z_$][a-zA-Z0-9_$]*$`).MatchString(clean) {
-		return clean
-	}
-	return "'" + strings.ReplaceAll(clean, "'", "\\'") + "'"
-}
-
-// pluginPersistTypesBlock writes a type block to the types file, replacing existing
-// blocks for the same id or appending if new.
-func pluginPersistTypesBlock(outputPath, id, typesCode string) error {
-	blockStart := pluginBlockStartPrefix + id + " ----"
-	blockEnd := pluginBlockEndPrefix + id + " ----"
-	newBlock := blockStart + "\n" + typesCode + "\n" + blockEnd
-
-	existing, err := os.ReadFile(outputPath) //nolint:forbidigo // shortcuts cannot import internal/vfs; local types file read.
-	if err != nil && !os.IsNotExist(err) {
-		return appsFileIOError(err, "cannot read %s", outputPath)
-	}
-	content := string(existing)
-
-	var updated string
-	if startIdx := strings.Index(content, blockStart); startIdx >= 0 {
-		endIdx := strings.Index(content, blockEnd)
-		if endIdx >= 0 {
-			updated = content[:startIdx] + newBlock + content[endIdx+len(blockEnd):]
-		} else {
-			updated = content + "\n\n" + newBlock
-		}
-	} else if content != "" {
-		updated = content + "\n\n" + newBlock
-	} else {
-		updated = newBlock + "\n"
-	}
-
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil { //nolint:forbidigo
-		return appsFileIOError(err, "cannot create directory for %s", outputPath)
-	}
-	return validate.AtomicWrite(outputPath, []byte(updated), 0o644)
 }
