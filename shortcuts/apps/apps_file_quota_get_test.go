@@ -12,6 +12,7 @@ import (
 
 const fileQuotaURL = "/open-apis/spark/v1/apps/app_x/storage/file_quota"
 
+// TestAppsFileQuotaGet_QuotaConnectedShowsAllFields 验证配额已对接时输出 storage_quota_bytes/usage_percent/files 全字段。
 func TestAppsFileQuotaGet_QuotaConnectedShowsAllFields(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -62,6 +63,7 @@ func TestAppsFileQuotaGet_UnconnectedOmitsQuotaFields(t *testing.T) {
 	}
 }
 
+// TestProjectFileQuota_DeletesZeroQuota 验证 projectFileQuota：quota=0 时删除 storage_quota_bytes/usage_percent，非零时保留。
 func TestProjectFileQuota_DeletesZeroQuota(t *testing.T) {
 	data := map[string]interface{}{"storage_used_bytes": 100, "storage_quota_bytes": float64(0), "usage_percent": float64(0), "files": 3}
 	projectFileQuota(data)

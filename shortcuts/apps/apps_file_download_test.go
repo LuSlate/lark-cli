@@ -20,6 +20,7 @@ import (
 
 const fileSignURLForDownload = "/open-apis/spark/v1/apps/app_x/storage/file_sign"
 
+// TestAppsFileDownload_RequiresAppIDAndPath 验证仅含空白的 --path 触发 --path typed 校验错误。
 func TestAppsFileDownload_RequiresAppIDAndPath(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileDownload,
@@ -33,6 +34,7 @@ func TestAppsFileDownload_RequiresAppIDAndPath(t *testing.T) {
 	}
 }
 
+// TestAppsFileDownload_DryRunSignsFirst 验证 dry-run 第一步是 POST file_sign。
 func TestAppsFileDownload_DryRunSignsFirst(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsFileDownload,

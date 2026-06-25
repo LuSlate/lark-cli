@@ -18,6 +18,7 @@ import (
 	"github.com/larksuite/cli/internal/httpmock"
 )
 
+// TestAppsFileUpload_RequiresAppIDAndFile 验证仅含空白的 --file 经 Validate 去空后触发 --file typed 校验错误。
 func TestAppsFileUpload_RequiresAppIDAndFile(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	// --file is a cobra-required flag; pass whitespace so cobra's required check
@@ -33,6 +34,7 @@ func TestAppsFileUpload_RequiresAppIDAndFile(t *testing.T) {
 	}
 }
 
+// TestAppsFileUpload_RejectsDirectory 验证 --file 指向目录时触发 --file typed 校验错误。
 func TestAppsFileUpload_RejectsDirectory(t *testing.T) {
 	dir := t.TempDir()
 	oldWD, _ := os.Getwd()
@@ -55,6 +57,7 @@ func TestAppsFileUpload_RejectsDirectory(t *testing.T) {
 	}
 }
 
+// TestAppsFileUpload_DryRunPreUpload 验证 dry-run 输出 POST file_pre_upload，body.file_name 取文件 basename。
 func TestAppsFileUpload_DryRunPreUpload(t *testing.T) {
 	// Validate 会 Stat --file（在 DryRun 之前），故 dry-run 也需要真实存在的文件。
 	dir := t.TempDir()
@@ -149,6 +152,7 @@ func TestAppsFileUpload_EndToEnd(t *testing.T) {
 	}
 }
 
+// TestSanitizeUploadFileName_Cases 验证 sanitizeUploadFileName：空格转 %20、去 TOS 非法字符、全非法兜底、非 ASCII 百分号编码。
 func TestSanitizeUploadFileName_Cases(t *testing.T) {
 	cases := []struct{ in, want string }{
 		{"logo.png", "logo.png"},
@@ -164,6 +168,7 @@ func TestSanitizeUploadFileName_Cases(t *testing.T) {
 	}
 }
 
+// TestMimeByExt_Cases 验证 mimeByExt：按扩展名识别 image/png，未知扩展名兜底 application/octet-stream。
 func TestMimeByExt_Cases(t *testing.T) {
 	if got := mimeByExt("a.png"); !strings.HasPrefix(got, "image/png") {
 		t.Errorf("mimeByExt(a.png)=%q want image/png", got)

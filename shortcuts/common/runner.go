@@ -407,6 +407,8 @@ func (ctx *RuntimeContext) StreamPages(method, url string, params map[string]int
 	return ac.StreamPages(ctx.ctx, req, onItems, opts)
 }
 
+// buildRequest assembles a client.RawApiRequest for the current identity,
+// attaching any shortcut-scoped header options carried on the context.
 func (ctx *RuntimeContext) buildRequest(method, url string, params map[string]interface{}, data interface{}) client.RawApiRequest {
 	req := client.RawApiRequest{
 		Method: method,
@@ -421,6 +423,8 @@ func (ctx *RuntimeContext) buildRequest(method, url string, params map[string]in
 	return req
 }
 
+// callRaw issues the request via the cached APIClient.CallAPI and returns the
+// raw result; it is the shared transport behind CallAPI and RawAPI.
 func (ctx *RuntimeContext) callRaw(method, url string, params map[string]interface{}, data interface{}) (interface{}, error) {
 	ac, err := ctx.getAPIClient()
 	if err != nil {
@@ -514,6 +518,8 @@ func (ctx *RuntimeContext) DoAPIJSONTyped(method, apiPath string, query larkcore
 	return ctx.ClassifyAPIResponse(resp)
 }
 
+// doAPIJSON issues an API request and decodes the response into a JSON map, mapping
+// HTTP/business errors to typed output errors (optionally attaching the log id when includeLogID).
 func (ctx *RuntimeContext) doAPIJSON(method, apiPath string, query larkcore.QueryParams, body any, includeLogID bool) (map[string]any, error) {
 	req := &larkcore.ApiReq{
 		HttpMethod:  method,
@@ -821,6 +827,8 @@ func (ctx *RuntimeContext) OutFormatRaw(data interface{}, meta *output.Meta, pre
 	ctx.outFormat(data, meta, prettyFn, true)
 }
 
+// outFormat renders data according to ctx.Format (pretty/json/table/csv/ndjson), running the
+// safety scan and pretty renderer for pretty mode; raw selects the unwrapped output sink.
 func (ctx *RuntimeContext) outFormat(data interface{}, meta *output.Meta, prettyFn func(w io.Writer), raw bool) {
 	outFn := ctx.Out
 	if raw {
@@ -931,12 +939,17 @@ func (s Shortcut) Mount(parent *cobra.Command, f *cmdutil.Factory) {
 	s.MountWithContext(context.Background(), parent, f)
 }
 
+// MountWithContext registers the shortcut on parent using the given context,
+// dispatching to mountDeclarative when the shortcut defines an Execute func.
 func (s Shortcut) MountWithContext(ctx context.Context, parent *cobra.Command, f *cmdutil.Factory) {
 	if s.Execute != nil {
 		s.mountDeclarative(ctx, parent, f)
 	}
 }
 
+// mountDeclarative builds the cobra.Command for a declarative shortcut — wiring
+// RunE to runShortcut, registering flags, identities, tips and risk, and adding
+// it to parent — defaulting AuthTypes to user and deriving the bot-only flag.
 func (s Shortcut) mountDeclarative(ctx context.Context, parent *cobra.Command, f *cmdutil.Factory) {
 	shortcut := s
 	if len(shortcut.AuthTypes) == 0 {
@@ -1064,6 +1077,8 @@ func runShortcut(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, botOnly bo
 	return rctx.outputErr
 }
 
+// resolveShortcutIdentity determines the effective identity (--as > default-as >
+// auto-detect), enforces strict mode, and verifies the shortcut supports it.
 func resolveShortcutIdentity(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut) (core.Identity, error) {
 	// Step 1: determine identity (--as > default-as > auto-detect).
 	asFlag, _ := cmd.Flags().GetString("as")
@@ -1080,6 +1095,9 @@ func resolveShortcutIdentity(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut
 	return as, nil
 }
 
+// checkShortcutScopes runs the pre-flight scope check for the resolved identity,
+// returning a typed PermissionError (with a login hint) when scopes are missing;
+// it is a no-op when no scopes are required or scope metadata is unavailable.
 func checkShortcutScopes(f *cmdutil.Factory, ctx context.Context, as core.Identity, config *core.CliConfig, scopes []string) error {
 	if len(scopes) == 0 {
 		return nil
@@ -1098,6 +1116,9 @@ func checkShortcutScopes(f *cmdutil.Factory, ctx context.Context, as core.Identi
 		WithHint("run `lark-cli auth login --scope \"%s\"` in the background. It blocks and outputs a verification URL — retrieve the URL and open it in a browser to complete login.", strings.Join(missing, " "))
 }
 
+// newRuntimeContext builds a RuntimeContext for a shortcut invocation: it seeds
+// the shortcut context, lazily wires the API client and bot-info providers,
+// eagerly initializes the Lark SDK, and reads the format and jq flags.
 func newRuntimeContext(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut, config *core.CliConfig, as core.Identity, botOnly bool) (*RuntimeContext, error) {
 	ctx := cmd.Context()
 	ctx = cmdutil.ContextWithShortcut(ctx, s.Service+":"+s.Command, uuid.New().String())
@@ -1200,6 +1221,8 @@ func resolveInputFlags(rctx *RuntimeContext, flags []Flag) error {
 	return nil
 }
 
+// validateEnumFlags checks that every flag with an Enum constraint holds an
+// allowed value, returning a validation error naming the flag otherwise.
 func validateEnumFlags(rctx *RuntimeContext, flags []Flag) error {
 	for _, fl := range flags {
 		if len(fl.Enum) == 0 {
@@ -1224,6 +1247,8 @@ func validateEnumFlags(rctx *RuntimeContext, flags []Flag) error {
 	return nil
 }
 
+// handleShortcutDryRun runs the shortcut's DryRun hook and prints its result
+// (pretty or JSON per --format), erroring if the shortcut declares no DryRun.
 func handleShortcutDryRun(f *cmdutil.Factory, rctx *RuntimeContext, s *Shortcut) error {
 	if s.DryRun == nil {
 		return ValidationErrorf("--dry-run is not supported for %s %s", s.Service, s.Command).
@@ -1252,10 +1277,16 @@ func rejectPositionalArgs() cobra.PositionalArgs {
 	}
 }
 
+// registerShortcutFlags registers the shortcut's flags using a background
+// context; a convenience wrapper over registerShortcutFlagsWithContext.
 func registerShortcutFlags(cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut) {
 	registerShortcutFlagsWithContext(context.Background(), cmd, f, s)
 }
 
+// registerShortcutFlagsWithContext declares all of the shortcut's flags on cmd —
+// typed flags with enum/input hints, completions, required and hidden markers —
+// plus the framework flags (--dry-run, --format/--json, --jq, identity, and the
+// --print-schema/--flag-name introspection flags when opted in).
 func registerShortcutFlagsWithContext(ctx context.Context, cmd *cobra.Command, f *cmdutil.Factory, s *Shortcut) {
 	for _, fl := range s.Flags {
 		desc := fl.Desc

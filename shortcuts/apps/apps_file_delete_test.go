@@ -15,6 +15,7 @@ import (
 
 const fileDeleteURL = "/open-apis/spark/v1/apps/app_x/storage/file_batch_remove"
 
+// TestAppsFileDelete_RequiresAppIDAndPath 验证仅含空白的 --path 去空后为空时，Validate 报 --path typed 校验错误。
 func TestAppsFileDelete_RequiresAppIDAndPath(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	// 传入仅含空白的 --path：满足 cobra 的 Required 检查，但 cleanDeletePaths 去空后为空，
@@ -40,6 +41,7 @@ func TestAppsFileDelete_RequiresConfirmation(t *testing.T) {
 	}
 }
 
+// TestAppsFileDelete_DryRunSendsPaths 验证 dry-run 输出 POST file_batch_remove，body.paths 按序携带多个 --path。
 func TestAppsFileDelete_DryRunSendsPaths(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsFileDelete,
@@ -105,6 +107,7 @@ func TestAppsFileDelete_PartialFailureStillOK(t *testing.T) {
 	}
 }
 
+// TestAppsFileDelete_PrettySummary 验证 pretty 输出逐项 ✓/✗ 标记并汇总 "1/2 deleted"。
 func TestAppsFileDelete_PrettySummary(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{

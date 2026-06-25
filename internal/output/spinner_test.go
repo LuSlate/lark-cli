@@ -9,6 +9,7 @@ import (
 	"testing"
 )
 
+// TestStartSpinner_DisabledIsNoop asserts that a disabled spinner writes nothing and its stop func is idempotent.
 func TestStartSpinner_DisabledIsNoop(t *testing.T) {
 	var buf bytes.Buffer
 	stop := StartSpinner(&buf, false, "working")
@@ -19,11 +20,13 @@ func TestStartSpinner_DisabledIsNoop(t *testing.T) {
 	}
 }
 
+// TestStartSpinner_NilWriterIsNoop asserts that a nil writer is a no-op and stopping does not panic.
 func TestStartSpinner_NilWriterIsNoop(t *testing.T) {
 	stop := StartSpinner(nil, true, "working")
 	stop() // must not panic
 }
 
+// TestStartSpinner_EnabledAnimatesAndCleansUp asserts that an enabled spinner renders a frame and label, then clears the line and restores the cursor on stop.
 func TestStartSpinner_EnabledAnimatesAndCleansUp(t *testing.T) {
 	var buf bytes.Buffer
 	stop := StartSpinner(&buf, true, "Publishing")

@@ -23,6 +23,7 @@ const (
 
 // ── audit-status ──
 
+// TestAppsDBAuditStatus_SingleTableObjectWithPlaceholder 验证单表查询无记录时返回 enabled:false 的占位对象（非数组）。
 func TestAppsDBAuditStatus_SingleTableObjectWithPlaceholder(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -48,6 +49,7 @@ func TestAppsDBAuditStatus_SingleTableObjectWithPlaceholder(t *testing.T) {
 	}
 }
 
+// TestAppsDBAuditStatus_MultiTablePrettyTable 验证多表 pretty 输出含 enabled/yes/no 列与 retention 值。
 func TestAppsDBAuditStatus_MultiTablePrettyTable(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -69,6 +71,7 @@ func TestAppsDBAuditStatus_MultiTablePrettyTable(t *testing.T) {
 
 // ── audit-enable / disable ──
 
+// TestAppsDBAuditEnable_RequiresTableAndValidRetention 验证缺 --table 报必填错、非法 --retention 报 ValidationError。
 func TestAppsDBAuditEnable_RequiresTableAndValidRetention(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	// 缺 --table → cobra required, exit 1
@@ -89,6 +92,7 @@ func TestAppsDBAuditEnable_RequiresTableAndValidRetention(t *testing.T) {
 	}
 }
 
+// TestAppsDBAuditEnable_DryRunAndSuccess 验证 dry-run 发出 enabled:true+retention 的 POST，成功时打印 pretty 确认行。
 func TestAppsDBAuditEnable_DryRunAndSuccess(t *testing.T) {
 	// dry-run body {table, enabled:true, retention}
 	factory, stdout, _ := newAppsExecuteFactory(t)
@@ -124,6 +128,7 @@ func TestAppsDBAuditEnable_DryRunAndSuccess(t *testing.T) {
 	}
 }
 
+// TestAppsDBAuditDisable_DryRunAndSuccess 验证 dry-run 发出 enabled:false 的 POST，成功时打印 pretty 确认行。
 func TestAppsDBAuditDisable_DryRunAndSuccess(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBAuditDisable,
@@ -156,6 +161,7 @@ func TestAppsDBAuditDisable_DryRunAndSuccess(t *testing.T) {
 
 // ── audit-list ──
 
+// TestAppsDBAuditList_RequiresTable 验证缺 --table 时报必填错误。
 func TestAppsDBAuditList_RequiresTable(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBAuditList,
@@ -164,6 +170,7 @@ func TestAppsDBAuditList_RequiresTable(t *testing.T) {
 	}
 }
 
+// TestAppsDBAuditList_DryRunJoinsTables 验证 dry-run 将多个 --table 合并为 tables=orders,users 且归一化 since。
 func TestAppsDBAuditList_DryRunJoinsTables(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBAuditList,
@@ -188,6 +195,7 @@ func TestAppsDBAuditList_DryRunJoinsTables(t *testing.T) {
 }
 
 // 单表查询：不预过滤、直接打 audit_list（后端就 not-found/not-enabled 报错），无 skipped。
+// TestAppsDBAuditList_SingleTableNoPreflight 验证单表查询不预过滤、operator/before/after 还原为对象、无 skipped。
 func TestAppsDBAuditList_SingleTableNoPreflight(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -220,6 +228,7 @@ func TestAppsDBAuditList_SingleTableNoPreflight(t *testing.T) {
 	}
 }
 
+// TestAppsDBAuditList_SingleTableEmptyPretty 验证单表无事件时不报错、pretty 打印 "No audit events found." 且无 Skipped。
 func TestAppsDBAuditList_SingleTableEmptyPretty(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -238,6 +247,7 @@ func TestAppsDBAuditList_SingleTableEmptyPretty(t *testing.T) {
 
 // 多表查询：CLI 用 schema（存在性）+ status（审计开关）预过滤，只把有效表传给 audit_list，
 // 不存在 / 未开启审计的表进 skipped。
+// TestAppsDBAuditList_MultiTablePreflightFilters 验证多表查询用 schema+status 预过滤，仅传有效表，不存在/未开审计的表进 skipped。
 func TestAppsDBAuditList_MultiTablePreflightFilters(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	// schema：orders/users/carts 存在，ghost 不存在。
@@ -281,6 +291,7 @@ func TestAppsDBAuditList_MultiTablePreflightFilters(t *testing.T) {
 }
 
 // 多表查询且全部被过滤掉 → 不调 audit_list，直接空 + skipped 提示。
+// TestAppsDBAuditList_MultiTableAllFilteredSkipsQuery 验证多表全部被过滤时跳过 audit_list 调用，直接输出空结果加 Skipped 提示。
 func TestAppsDBAuditList_MultiTableAllFilteredSkipsQuery(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{

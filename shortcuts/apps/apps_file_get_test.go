@@ -15,6 +15,7 @@ import (
 
 const fileGetURL = "/open-apis/spark/v1/apps/app_x/storage/file"
 
+// TestAppsFileGet_RequiresAppIDAndPath 验证空白 --app-id 与空白 --path 分别触发对应的 typed 校验错误。
 func TestAppsFileGet_RequiresAppIDAndPath(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileGet,
@@ -38,6 +39,7 @@ func TestAppsFileGet_RequiresAppIDAndPath(t *testing.T) {
 	}
 }
 
+// TestAppsFileGet_DryRunSendsPathQuery 验证 dry-run 输出 GET file，path 作为 query 参数下发。
 func TestAppsFileGet_DryRunSendsPathQuery(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsFileGet,
@@ -57,6 +59,7 @@ func TestAppsFileGet_DryRunSendsPathQuery(t *testing.T) {
 	}
 }
 
+// TestAppsFileGet_SuccessAndPrettyKeyValue 验证 pretty key/value 展示 size 含 bytes、uploaded_by 只显示 name 且不泄漏 user id。
 func TestAppsFileGet_SuccessAndPrettyKeyValue(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{

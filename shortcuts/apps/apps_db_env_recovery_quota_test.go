@@ -23,6 +23,7 @@ const (
 
 // ── env-diff ──
 
+// TestAppsDBEnvDiff_DryRunBody 校验 dry-run 请求体：POST env_migrate 且 dry_run=true。
 func TestAppsDBEnvDiff_DryRunBody(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBEnvDiff,
@@ -43,6 +44,7 @@ func TestAppsDBEnvDiff_DryRunBody(t *testing.T) {
 	}
 }
 
+// TestAppsDBEnvDiff_SuccessRendersChanges 验证 pretty 输出渲染出 dev → online 变更摘要及 DDL 语句。
 func TestAppsDBEnvDiff_SuccessRendersChanges(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -64,6 +66,7 @@ func TestAppsDBEnvDiff_SuccessRendersChanges(t *testing.T) {
 	}
 }
 
+// TestAppsDBEnvDiff_EmptyChanges 验证无变更时 pretty 输出"无待发布变更"提示。
 func TestAppsDBEnvDiff_EmptyChanges(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -81,6 +84,7 @@ func TestAppsDBEnvDiff_EmptyChanges(t *testing.T) {
 
 // ── env-migrate ──
 
+// TestAppsDBEnvMigrate_DryRunBody 校验 migrate 的 dry-run 请求体里 dry_run=false（真实迁移）。
 func TestAppsDBEnvMigrate_DryRunBody(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBEnvMigrate,
@@ -119,6 +123,7 @@ func TestAppsDBEnvMigrate_AsyncPollSuccess(t *testing.T) {
 	}
 }
 
+// TestAppsDBEnvMigrate_PollFailedSurfacesError 验证轮询到 failed 时返回 API/server_error 类型错误，携带服务端 message 与恢复 hint。
 func TestAppsDBEnvMigrate_PollFailedSurfacesError(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -143,6 +148,7 @@ func TestAppsDBEnvMigrate_PollFailedSurfacesError(t *testing.T) {
 	}
 }
 
+// TestAppsDBEnvMigrate_RequiresConfirmation 验证 high-risk-write 无 --yes 时被确认门拦截。
 func TestAppsDBEnvMigrate_RequiresConfirmation(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	// high-risk-write 无 --yes → 应被确认门拦截（非 0 退出）。
@@ -154,6 +160,7 @@ func TestAppsDBEnvMigrate_RequiresConfirmation(t *testing.T) {
 
 // ── recovery-diff ──
 
+// TestAppsDBRecoveryDiff_RequiresTarget 验证缺少 --target 时报必填错误。
 func TestAppsDBRecoveryDiff_RequiresTarget(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBRecoveryDiff,
@@ -162,6 +169,7 @@ func TestAppsDBRecoveryDiff_RequiresTarget(t *testing.T) {
 	}
 }
 
+// TestAppsDBRecoveryDiff_DryRunNormalizesTarget 验证 dry-run 走 POST env_recovery 且 --target 被归一化为 RFC3339 UTC。
 func TestAppsDBRecoveryDiff_DryRunNormalizesTarget(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBRecoveryDiff,
@@ -185,6 +193,7 @@ func TestAppsDBRecoveryDiff_DryRunNormalizesTarget(t *testing.T) {
 	}
 }
 
+// TestAppsDBRecoveryDiff_SuccessRendersChanges 验证 preview 成功后 pretty 渲染受影响表数、行增删与预估耗时。
 func TestAppsDBRecoveryDiff_SuccessRendersChanges(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -213,6 +222,7 @@ func TestAppsDBRecoveryDiff_SuccessRendersChanges(t *testing.T) {
 	}
 }
 
+// TestAppsDBRecoveryDiff_PreviewFailed 验证 preview_status=failed 时返回 API/server_error，携带 message 与 PITR window hint。
 func TestAppsDBRecoveryDiff_PreviewFailed(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -239,6 +249,7 @@ func TestAppsDBRecoveryDiff_PreviewFailed(t *testing.T) {
 
 // ── recovery-apply ──
 
+// TestAppsDBRecoveryApply_NoChangesShortCircuits 验证 status=no_changes 时短路输出"已是该状态"，不再轮询。
 func TestAppsDBRecoveryApply_NoChangesShortCircuits(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -254,6 +265,7 @@ func TestAppsDBRecoveryApply_NoChangesShortCircuits(t *testing.T) {
 	}
 }
 
+// TestAppsDBRecoveryApply_AsyncPollSuccess 验证 running → 轮询 success 后 pretty 输出恢复完成及耗时。
 func TestAppsDBRecoveryApply_AsyncPollSuccess(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -273,6 +285,7 @@ func TestAppsDBRecoveryApply_AsyncPollSuccess(t *testing.T) {
 	}
 }
 
+// TestAppsDBRecoveryApply_RequiresConfirmation 验证无 --yes 时被确认门拦截。
 func TestAppsDBRecoveryApply_RequiresConfirmation(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBRecoveryApply,
@@ -283,6 +296,7 @@ func TestAppsDBRecoveryApply_RequiresConfirmation(t *testing.T) {
 
 // ── quota-get ──
 
+// TestAppsDBQuotaGet_WithQuotaPretty 验证已对接配额时 pretty 渲染存储用量、百分比及 tables/views 数。
 func TestAppsDBQuotaGet_WithQuotaPretty(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{

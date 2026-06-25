@@ -547,6 +547,7 @@ func isDMLType(sqlType string) bool {
 	return false
 }
 
+// dmlVerb 把 DML sql_type 映射成过去分词动词：INSERT→inserted / UPDATE→updated / DELETE→deleted / MERGE→merged，未知 → affected。
 func dmlVerb(sqlType string) string {
 	switch strings.ToUpper(sqlType) {
 	case "INSERT":
@@ -561,6 +562,7 @@ func dmlVerb(sqlType string) string {
 	return "affected"
 }
 
+// plural 返回英文复数后缀：n==1 时空串，否则 "s"。
 func plural(n int64) string {
 	if n == 1 {
 		return ""

@@ -15,6 +15,7 @@ import (
 	"github.com/larksuite/cli/internal/output"
 )
 
+// TestAppsDBExecute_SingleSELECTJSONIsRowArray 断言单条 SELECT 的 JSON data 直接是行数组（不再透传 result 字符串）。
 func TestAppsDBExecute_SingleSELECTJSONIsRowArray(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -48,6 +49,7 @@ func TestAppsDBExecute_SingleSELECTJSONIsRowArray(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_SingleDMLJSONShape 断言单条 DML 的 JSON data 形如 {command, rows_affected}。
 func TestAppsDBExecute_SingleDMLJSONShape(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -80,6 +82,7 @@ func TestAppsDBExecute_SingleDMLJSONShape(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_SingleDDLJSONShape 断言单条 DDL 的 JSON data 形如 {command}。
 func TestAppsDBExecute_SingleDDLJSONShape(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -111,6 +114,7 @@ func TestAppsDBExecute_SingleDDLJSONShape(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_MultiStatementJSONShape 断言多语句的 JSON data 是元素数组，且 SELECT 包成 {command:"SELECT", rows:[...]}。
 func TestAppsDBExecute_MultiStatementJSONShape(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -153,6 +157,7 @@ func TestAppsDBExecute_MultiStatementJSONShape(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_DryRunSendsTransactionalFalse 断言 dry-run 发出的请求是 POST、params 带 transactional=false（DBA 模式）且 transactional 不在 body 里。
 func TestAppsDBExecute_DryRunSendsTransactionalFalse(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBExecute,
@@ -188,6 +193,7 @@ func TestAppsDBExecute_DryRunSendsTransactionalFalse(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_RejectsEmptySQL 断言 --sql 全空白时校验报错（提示需要 --sql 或 --file）。
 func TestAppsDBExecute_RejectsEmptySQL(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBExecute,
@@ -250,6 +256,7 @@ func TestAppsDBExecute_FileReadsSQLIntoBody(t *testing.T) {
 // 输入用 BOE 真实抓包数据（test_scripts/boe_e2e/run.log）。
 // ============================================================================
 
+// TestAppsDBExecute_LegacyWireSingleSelect 断言 legacy 字符串数组 wire 的单 SELECT 能正常渲染表格、不回退到 RAW。
 func TestAppsDBExecute_LegacyWireSingleSelect(t *testing.T) {
 	// BOE 实测：SELECT 1 AS x  →  result: "[\"[{\\\"x\\\":1}]\"]"
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -281,6 +288,7 @@ func TestAppsDBExecute_LegacyWireSingleSelect(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_LegacyWireSingleSelectJSONIsRowArray 断言 legacy wire 的 SELECT 同样归一化成 PRD 行数组形态。
 func TestAppsDBExecute_LegacyWireSingleSelectJSONIsRowArray(t *testing.T) {
 	// 验证 legacy wire 的 SELECT 也归一化成 PRD 行数组形态（data 直接是行）
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -313,6 +321,7 @@ func TestAppsDBExecute_LegacyWireSingleSelectJSONIsRowArray(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_LegacyWireMultiSelect 断言 legacy wire 多 SELECT 输出带 Statement N header 与末尾 "✓ N statements executed" 汇总。
 func TestAppsDBExecute_LegacyWireMultiSelect(t *testing.T) {
 	// BOE 实测：SELECT 1; SELECT 2  →  result: "[\"[{\\\"?column?\\\":1}]\",\"[{\\\"?column?\\\":2}]\"]"
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -342,6 +351,7 @@ func TestAppsDBExecute_LegacyWireMultiSelect(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_LegacyWireDDLEmptyResult 断言 result 为空字符串时（legacy DDL）pretty 输出 "(empty result)"。
 func TestAppsDBExecute_LegacyWireDDLEmptyResult(t *testing.T) {
 	// BOE 实测：CREATE TABLE  →  result: "" （空字符串，无 rows）
 	// 老 wire 不区分 DDL/DML/无返回，统一标 "ok"
@@ -368,6 +378,7 @@ func TestAppsDBExecute_LegacyWireDDLEmptyResult(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_LegacyWireMultiSelectWithRealTable 断言含 CJK / uuid / int 字段的真实表行能正确显示在 pretty 表格里。
 func TestAppsDBExecute_LegacyWireMultiSelectWithRealTable(t *testing.T) {
 	// BOE 实测真实表抓包（course 表第一行）：复杂 JSON 含 CJK / timestamp / uuid 字段
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -426,6 +437,7 @@ func TestAppsDBExecute_PrettySingleSelectTable(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_PrettyEmptySelect 断言空 SELECT 的 pretty 输出为 "(0 rows)"。
 func TestAppsDBExecute_PrettyEmptySelect(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -448,6 +460,7 @@ func TestAppsDBExecute_PrettyEmptySelect(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_PrettySingleDMLAndDDL 断言单条 DML 渲染 "✓ N row(s) <verb>"、各类 DDL（含细粒度动词）渲染 "✓ DDL executed"。
 func TestAppsDBExecute_PrettySingleDMLAndDDL(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -484,6 +497,7 @@ func TestAppsDBExecute_PrettySingleDMLAndDDL(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_PrettyMultiStatementsAllSuccess 断言多语句全成功时逐条 Statement 摘要 + 末尾 "✓ N statements executed"。
 func TestAppsDBExecute_PrettyMultiStatementsAllSuccess(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -553,6 +567,7 @@ func TestAppsDBExecute_PrettyMultiStatementsDDL(t *testing.T) {
 	}
 }
 
+// TestAppsDBExecute_PrettyMultiStatementsPartialFailureWithErrorSentinel 断言多语句部分失败时 pretty 仍打逐条 ✓/✗ 摘要、声明前序已 commit 未回滚，且返回 typed error、不打成功汇总。
 func TestAppsDBExecute_PrettyMultiStatementsPartialFailureWithErrorSentinel(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -724,6 +739,7 @@ func TestAppsDBExecute_TransactionFailureRolledBack(t *testing.T) {
 	}
 }
 
+// TestInferRolledBack_Cases 断言 inferRolledBack 按 BEGIN/COMMIT/ROLLBACK 计数判定失败时事务是否仍开着（即整批回滚）。
 func TestInferRolledBack_Cases(t *testing.T) {
 	stmt := func(t string) map[string]interface{} { return map[string]interface{}{"sql_type": t} }
 	cases := []struct {
@@ -747,6 +763,7 @@ func TestInferRolledBack_Cases(t *testing.T) {
 	}
 }
 
+// TestCellString_AllKinds 断言 cellString 对 nil/string/bool/整数/小数/对象各类型的字符串化结果。
 func TestCellString_AllKinds(t *testing.T) {
 	cases := []struct {
 		name string
@@ -770,6 +787,7 @@ func TestCellString_AllKinds(t *testing.T) {
 	}
 }
 
+// TestCodeString_Forms 断言 codeString 处理 nil / "k_dl_xxx" / 纯数字串 / float64 / 不支持类型各形态。
 func TestCodeString_Forms(t *testing.T) {
 	cases := []struct {
 		name string
@@ -791,6 +809,7 @@ func TestCodeString_Forms(t *testing.T) {
 	}
 }
 
+// TestDmlVerb_AllVerbs 断言 dmlVerb 对 INSERT/UPDATE/DELETE/MERGE 的动词映射（大小写不敏感），非 DML 返回 affected。
 func TestDmlVerb_AllVerbs(t *testing.T) {
 	cases := map[string]string{
 		"INSERT":       "inserted",
@@ -806,6 +825,7 @@ func TestDmlVerb_AllVerbs(t *testing.T) {
 	}
 }
 
+// TestIntOrZero_Cases 断言 intOrZero 对 JSON number 取整、对非数字 / nil 返回 0。
 func TestIntOrZero_Cases(t *testing.T) {
 	if got := intOrZero(float64(5)); got != 5 {
 		t.Errorf("intOrZero(5)=%d want 5", got)
@@ -818,6 +838,7 @@ func TestIntOrZero_Cases(t *testing.T) {
 	}
 }
 
+// TestErrorSummary_Cases 断言 errorSummary 对空 / 非法 JSON / 带 code / 无 code 各情形生成 "message [code]" 文案。
 func TestErrorSummary_Cases(t *testing.T) {
 	cases := []struct {
 		name, in, want string
@@ -836,6 +857,7 @@ func TestErrorSummary_Cases(t *testing.T) {
 	}
 }
 
+// TestParseErrorSentinel_Cases 断言 parseErrorSentinel 解析 ERROR 哨兵 data 得到数值 code 与 message（含空 / 非法 / 空 message 回退）。
 func TestParseErrorSentinel_Cases(t *testing.T) {
 	cases := []struct {
 		name, in string
@@ -857,6 +879,7 @@ func TestParseErrorSentinel_Cases(t *testing.T) {
 	}
 }
 
+// TestIsStructuredResult_Cases 断言 isStructuredResult 仅在首元素含 sql_type 时判为新结构化形态。
 func TestIsStructuredResult_Cases(t *testing.T) {
 	if !isStructuredResult([]map[string]interface{}{{"sql_type": "SELECT"}}) {
 		t.Error("expected structured=true when sql_type present")
@@ -869,6 +892,7 @@ func TestIsStructuredResult_Cases(t *testing.T) {
 	}
 }
 
+// TestNormalizeLegacyStatement_Cases 断言 normalizeLegacyStatement 把空 / null / 非 JSON 标为 OK、把 rows 数组标为 SELECT 并带 record_count。
 func TestNormalizeLegacyStatement_Cases(t *testing.T) {
 	t.Run("empty -> OK", func(t *testing.T) {
 		got := normalizeLegacyStatement("")
@@ -899,6 +923,7 @@ func TestNormalizeLegacyStatement_Cases(t *testing.T) {
 	})
 }
 
+// TestCellString_MarshalFallback 断言 cellString 对 json.Marshal 拒绝的类型（如 complex）回退到 fmt %v。
 func TestCellString_MarshalFallback(t *testing.T) {
 	// complex128 is not switch-handled and json.Marshal rejects it →
 	// falls back to fmt.Sprintf("%v", v), which is deterministic for complex.
@@ -907,6 +932,7 @@ func TestCellString_MarshalFallback(t *testing.T) {
 	}
 }
 
+// TestRenderSingleStatementPretty_Branches 断言 renderSingleStatementPretty 对 SELECT/ERROR/DML/legacy OK/DDL 各分支的输出。
 func TestRenderSingleStatementPretty_Branches(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -930,6 +956,7 @@ func TestRenderSingleStatementPretty_Branches(t *testing.T) {
 	}
 }
 
+// TestRenderSelectRowsAsTable_Branches 断言 renderSelectRowsAsTable 对空串 / 空数组 / 非法 JSON 回退 / 正常 rows 各分支的输出。
 func TestRenderSelectRowsAsTable_Branches(t *testing.T) {
 	cases := []struct {
 		name   string

@@ -28,6 +28,7 @@ func chdirTemp(t *testing.T) string {
 	return dir
 }
 
+// TestAppsDBDataImport_RequiresAppID 验证空白 --app-id 报 --app-id 的 ValidationError。
 func TestAppsDBDataImport_RequiresAppID(t *testing.T) {
 	chdirTemp(t)
 	_ = os.WriteFile("orders.csv", []byte("id\n1\n"), 0o600)
@@ -43,6 +44,7 @@ func TestAppsDBDataImport_RequiresAppID(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataImport_RejectsUnsupportedFormat 验证非 csv/json 文件（.txt）报不支持格式的校验错误。
 func TestAppsDBDataImport_RejectsUnsupportedFormat(t *testing.T) {
 	chdirTemp(t)
 	_ = os.WriteFile("data.txt", []byte("x\n"), 0o600)
@@ -55,6 +57,7 @@ func TestAppsDBDataImport_RejectsUnsupportedFormat(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataImport_RequiresConfirmation 验证缺 --yes 时报 requires confirmation 错误。
 func TestAppsDBDataImport_RequiresConfirmation(t *testing.T) {
 	chdirTemp(t)
 	_ = os.WriteFile("orders.csv", []byte("id\n1\n"), 0o600)
@@ -66,6 +69,7 @@ func TestAppsDBDataImport_RequiresConfirmation(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataImport_RejectsOversizeFile 验证超过 1MB 上限的文件报 --file 的 ValidationError。
 func TestAppsDBDataImport_RejectsOversizeFile(t *testing.T) {
 	chdirTemp(t)
 	// >1MB → size 校验
@@ -84,6 +88,7 @@ func TestAppsDBDataImport_RejectsOversizeFile(t *testing.T) {
 }
 
 // dry-run：multipart 上传——file_name + file 走 body，env + table 走 query（table 缺省取文件名）。
+// TestAppsDBDataImport_DryRunMultipartShape 验证 dry-run 的 multipart 形态：file_name+file 走 body、env+table 走 query 且不再发 format。
 func TestAppsDBDataImport_DryRunMultipartShape(t *testing.T) {
 	chdirTemp(t)
 	_ = os.WriteFile("orders.csv", []byte("id\n1\n"), 0o600)
@@ -116,6 +121,7 @@ func TestAppsDBDataImport_DryRunMultipartShape(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataImport_Success 验证成功导入后输出含 table、rows 与回显的 file 名。
 func TestAppsDBDataImport_Success(t *testing.T) {
 	chdirTemp(t)
 	_ = os.WriteFile("orders.csv", []byte("id,name\n1,a\n2,b\n"), 0o600)
@@ -134,6 +140,7 @@ func TestAppsDBDataImport_Success(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataImport_TableDefaultsToFileBasename 验证未传 --table 时表名缺省取文件名去扩展名（customers.json→customers）。
 func TestAppsDBDataImport_TableDefaultsToFileBasename(t *testing.T) {
 	chdirTemp(t)
 	_ = os.WriteFile("customers.json", []byte(`[{"id":1}]`), 0o600)

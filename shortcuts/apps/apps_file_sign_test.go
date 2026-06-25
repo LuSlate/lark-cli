@@ -15,6 +15,7 @@ import (
 
 const fileSignURL = "/open-apis/spark/v1/apps/app_x/storage/file_sign"
 
+// TestAppsFileSign_DryRunBody 验证 dry-run 输出 POST file_sign，body 携带 path 与 expires_in。
 func TestAppsFileSign_DryRunBody(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsFileSign,
@@ -38,6 +39,7 @@ func TestAppsFileSign_DryRunBody(t *testing.T) {
 	}
 }
 
+// TestAppsFileSign_RejectsDurationOverMax 验证 --expires-in 超过上限时触发 --expires-in typed 校验错误。
 func TestAppsFileSign_RejectsDurationOverMax(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileSign,
@@ -51,6 +53,7 @@ func TestAppsFileSign_RejectsDurationOverMax(t *testing.T) {
 	}
 }
 
+// TestAppsFileSign_PrettyPrintsSignedURL 验证 pretty 只输出 signed_url 本身。
 func TestAppsFileSign_PrettyPrintsSignedURL(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{

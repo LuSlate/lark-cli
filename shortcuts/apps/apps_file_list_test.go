@@ -68,6 +68,7 @@ func TestNormalizeTimestamp_AllFormats(t *testing.T) {
 
 const fileListURL = "/open-apis/spark/v1/apps/app_x/storage/file_list"
 
+// TestAppsFileList_RequiresAppID 验证空白 --app-id 触发 --app-id typed 校验错误。
 func TestAppsFileList_RequiresAppID(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsFileList,
@@ -197,6 +198,7 @@ func TestAppsFileList_SuccessProjectsCreatedToUploaded(t *testing.T) {
 	}
 }
 
+// TestAppsFileList_PrettyTableAndEmpty 验证 pretty 非空时渲染表头与人类可读 size，空结果时输出 "No files found."。
 func TestAppsFileList_PrettyTableAndEmpty(t *testing.T) {
 	// 非空：5 列表头。
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -233,6 +235,7 @@ func TestAppsFileList_PrettyTableAndEmpty(t *testing.T) {
 	}
 }
 
+// TestParseFileUser_Cases 验证 parseFileUser：合法 JSON 解析成对象，空串/非法/全空字段均返回 nil。
 func TestParseFileUser_Cases(t *testing.T) {
 	if u := parseFileUser(`{"id":"1","name":"a"}`); u == nil || u.ID != "1" || u.Name != "a" {
 		t.Fatalf("valid parse failed: %#v", u)

@@ -44,6 +44,7 @@ func TestAppsShortcuts_IncludesSessionCommands(t *testing.T) {
 	}
 }
 
+// TestAppsGitCredentialHelper_IsNotAShortcut 确认 git credential helper 不作为 shortcut 暴露。
 func TestAppsGitCredentialHelper_IsNotAShortcut(t *testing.T) {
 	for _, shortcut := range Shortcuts() {
 		if shortcut.Command == "git-credential-helper" {
@@ -52,18 +53,21 @@ func TestAppsGitCredentialHelper_IsNotAShortcut(t *testing.T) {
 	}
 }
 
+// TestAppsGitCredentialRemove_IsLocalCleanupWithoutScopes 确认 git credential remove 是本地清理、不带任何 scope。
 func TestAppsGitCredentialRemove_IsLocalCleanupWithoutScopes(t *testing.T) {
 	if len(AppsGitCredentialRemove.Scopes) != 0 {
 		t.Fatalf("git credential remove scopes = %#v, want none for local cleanup", AppsGitCredentialRemove.Scopes)
 	}
 }
 
+// TestAppsGitCredentialList_IsLocalReadWithoutScopes 确认 git credential list 是本地读取、不带任何 scope。
 func TestAppsGitCredentialList_IsLocalReadWithoutScopes(t *testing.T) {
 	if len(AppsGitCredentialList.Scopes) != 0 {
 		t.Fatalf("git credential list scopes = %#v, want none for local read", AppsGitCredentialList.Scopes)
 	}
 }
 
+// TestInstallOnApps_AddsHiddenGitCredentialHelper 验证 InstallOnApps 挂载一个隐藏、带 RunE 且独立于 shortcut 管线的 git-credential-helper 命令。
 func TestInstallOnApps_AddsHiddenGitCredentialHelper(t *testing.T) {
 	parent := &cobra.Command{Use: "apps"}
 	InstallOnApps(parent, nil)

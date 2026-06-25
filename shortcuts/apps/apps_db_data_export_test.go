@@ -18,6 +18,7 @@ import (
 const dbDataExportURL = "/open-apis/spark/v1/apps/app_x/db/data_export"
 const dbOrdersRecordsURL = "/open-apis/spark/v1/apps/app_x/tables/orders/records"
 
+// TestAppsDBDataExport_RequiresTable 验证缺 --table 时报必填错误。
 func TestAppsDBDataExport_RequiresTable(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	// 缺 --table → cobra required-flag, exit 1
@@ -28,6 +29,7 @@ func TestAppsDBDataExport_RequiresTable(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataExport_RejectsBadLimit 验证越界 --limit（0/-1/5001）均报 --limit 的 ValidationError。
 func TestAppsDBDataExport_RejectsBadLimit(t *testing.T) {
 	for _, lim := range []string{"0", "-1", "5001"} {
 		factory, stdout, _ := newAppsExecuteFactory(t)
@@ -43,6 +45,7 @@ func TestAppsDBDataExport_RejectsBadLimit(t *testing.T) {
 	}
 }
 
+// TestAppsDBDataExport_RejectsBadOutputExtension 验证不支持的 --output 扩展名（.xml）报校验错误。
 func TestAppsDBDataExport_RejectsBadOutputExtension(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBDataExport,
@@ -54,6 +57,7 @@ func TestAppsDBDataExport_RejectsBadOutputExtension(t *testing.T) {
 }
 
 // dry-run：format 跟随 --output 扩展名；缺省 csv。
+// TestAppsDBDataExport_DryRunFormatFromOutput 验证 dry-run 的 format 参数跟随 --output 扩展名、缺省为 csv，并带 limit。
 func TestAppsDBDataExport_DryRunFormatFromOutput(t *testing.T) {
 	cases := []struct{ output, wantFmt string }{
 		{"", "csv"}, {"orders.csv", "csv"}, {"orders.json", "json"}, {"dump.sql", "sql"},
@@ -89,6 +93,7 @@ func TestAppsDBDataExport_DryRunFormatFromOutput(t *testing.T) {
 }
 
 // 成功：先查 records 列表 total 计行，再把原始字节落盘。
+// TestAppsDBDataExport_SuccessWritesFile 验证成功路径先查 records total 计行、再将导出原始字节落盘并输出 rows/format/table。
 func TestAppsDBDataExport_SuccessWritesFile(t *testing.T) {
 	dir := chdirTemp(t)
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -119,6 +124,7 @@ func TestAppsDBDataExport_SuccessWritesFile(t *testing.T) {
 }
 
 // 行数取自 records total，且按 --limit 截顶（min(total, limit)）。
+// TestAppsDBDataExport_RowsFromTotalCappedByLimit 验证行数取 records total 并按 --limit 截顶（total=10000、limit=100 → rows=100）。
 func TestAppsDBDataExport_RowsFromTotalCappedByLimit(t *testing.T) {
 	chdirTemp(t)
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -140,6 +146,7 @@ func TestAppsDBDataExport_RowsFromTotalCappedByLimit(t *testing.T) {
 }
 
 // total 查询失败（records 列表报错）→ 回退按导出文件内容数行，不阻断导出。
+// TestAppsDBDataExport_FallsBackToFileCountWhenTotalUnavailable 验证 records total 查询失败时回退按导出文件内容数行，不阻断落盘。
 func TestAppsDBDataExport_FallsBackToFileCountWhenTotalUnavailable(t *testing.T) {
 	dir := chdirTemp(t)
 	factory, stdout, reg := newAppsExecuteFactory(t)
@@ -165,6 +172,7 @@ func TestAppsDBDataExport_FallsBackToFileCountWhenTotalUnavailable(t *testing.T)
 }
 
 // 业务错误：网关回 JSON 信封 {code,msg}（非原始字节）→ typed error，不落盘。
+// TestAppsDBDataExport_BusinessErrorEnvelope 验证响应为 JSON 错误信封（非原始字节）时返回 typed error 且不落盘。
 func TestAppsDBDataExport_BusinessErrorEnvelope(t *testing.T) {
 	chdirTemp(t)
 	factory, stdout, reg := newAppsExecuteFactory(t)

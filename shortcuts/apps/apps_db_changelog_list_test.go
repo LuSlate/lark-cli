@@ -15,6 +15,7 @@ import (
 
 const dbChangelogURL = "/open-apis/spark/v1/apps/app_x/db/changelog_list"
 
+// TestAppsDBChangelogList_RequiresAppID 验证空白 --app-id 报 --app-id 的 ValidationError。
 func TestAppsDBChangelogList_RequiresAppID(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBChangelogList,
@@ -28,6 +29,7 @@ func TestAppsDBChangelogList_RequiresAppID(t *testing.T) {
 	}
 }
 
+// TestAppsDBChangelogList_DryRunFiltersAndTimeNormalize 验证 dry-run 透传 env/table/change_id 过滤参数并将 since 归一化为 RFC3339 UTC。
 func TestAppsDBChangelogList_DryRunFiltersAndTimeNormalize(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsDBChangelogList,
@@ -55,6 +57,7 @@ func TestAppsDBChangelogList_DryRunFiltersAndTimeNormalize(t *testing.T) {
 	}
 }
 
+// TestAppsDBChangelogList_RejectsBadSince 验证不可解析的 --since 报 --since 的 ValidationError。
 func TestAppsDBChangelogList_RejectsBadSince(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsDBChangelogList,
@@ -68,6 +71,7 @@ func TestAppsDBChangelogList_RejectsBadSince(t *testing.T) {
 	}
 }
 
+// TestAppsDBChangelogList_SuccessParsesOperator 验证成功响应中 operator JSON 串被解析为对象并输出变更字段。
 func TestAppsDBChangelogList_SuccessParsesOperator(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -93,6 +97,7 @@ func TestAppsDBChangelogList_SuccessParsesOperator(t *testing.T) {
 	}
 }
 
+// TestAppsDBChangelogList_ChangeIDNotFoundPretty 验证按 --change-id 查询无结果时 pretty 打印 not-found 提示。
 func TestAppsDBChangelogList_ChangeIDNotFoundPretty(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	reg.Register(&httpmock.Stub{
@@ -108,6 +113,7 @@ func TestAppsDBChangelogList_ChangeIDNotFoundPretty(t *testing.T) {
 	}
 }
 
+// TestParseOperator_Cases 验证 parseOperator 处理合法 JSON、空 name 回退 id、非 JSON 原样、空串返回 nil，以及 operatorName(nil) 为占位符。
 func TestParseOperator_Cases(t *testing.T) {
 	if op := parseOperator(`{"id":"1","name":"a"}`); op == nil || op.ID != "1" || op.Name != "a" {
 		t.Fatalf("valid: %#v", op)
@@ -126,6 +132,7 @@ func TestParseOperator_Cases(t *testing.T) {
 	}
 }
 
+// TestSafeParseJSON_Cases 验证 safeParseJSON 合法 JSON 解析为对象、非法 JSON 原样返回字符串。
 func TestSafeParseJSON_Cases(t *testing.T) {
 	if v := safeParseJSON(`{"a":1}`); v == nil {
 		t.Fatalf("valid json → object")
