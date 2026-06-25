@@ -53,7 +53,7 @@ lark-cli apps +db-table-get --app-id app_xxx --table orders --env dev --format p
 
 ### 多环境数据库（初始化 + 发布）
 
-**`+db-env-create`（高危）**：把存量单库应用初始化为 dev/online 两套库，不可逆，必须带 `--yes`。`--env` 目前只支持 `dev`（默认 `dev`）；`--sync-data` 把现有 online 数据复制到新环境（不传则不复制）。注意：`+create --app-type full_stack` 新建的应用通常已自带多环境，重复初始化会返回「已初始化」（`Multi-env is already initialized`）——转述状态即可，别重复初始化。
+**`+db-env-create`（高危）**：把存量单库应用初始化为 dev/online 两套库，不可逆，必须带 `--yes`。`--env` 目前只支持 `dev`（默认 `dev`）；`--sync-data` 把现有 online 数据复制到新环境（不传则不复制）。注意：`+create --app-type full_stack` 新建的应用通常已自带多环境，重复初始化会返回冲突错误（应用已是多环境）——按 `error.hint` 转述状态即可，别重复初始化。
 
 ```bash
 lark-cli apps +db-env-create --app-id app_xxx --env dev --dry-run
