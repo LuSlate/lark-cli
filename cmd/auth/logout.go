@@ -102,6 +102,7 @@ func authLogoutRun(opts *LogoutOptions) error {
 		output.PrintJson(f.IOStreams.Out, map[string]interface{}{
 			"ok":        true,
 			"loggedOut": true,
+			"message":   "注销成功",
 		})
 		return nil
 	}
