@@ -32,6 +32,11 @@ func assertValidationError(t *testing.T, err error, wantSubstr string) {
 	}
 }
 
+func assertEnvPullBody(t *testing.T, req *http.Request) {
+	t.Helper()
+	assertEnvVarBody(t, req, map[string]interface{}{"env": "dev"})
+}
+
 func TestResolveEnvPullTarget_DefaultProjectPathUsesCWD(t *testing.T) {
 	cwd := t.TempDir()
 	oldwd, err := os.Getwd()
@@ -288,7 +293,7 @@ func TestAppsEnvPull_PrettyOutput_WithDatabaseLine(t *testing.T) {
 		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		OnMatch: func(req *http.Request) {
-			assertEnvVarBody(t, req, map[string]interface{}{"env": "dev"})
+			assertEnvPullBody(t, req)
 		},
 		Body: map[string]interface{}{
 			"code": 0,
@@ -554,6 +559,36 @@ func TestAppsEnvPull_ExecuteUsesNestedDataEnvVars(t *testing.T) {
 	}
 	if !strings.Contains(string(data), `AAA="value-a"`) {
 		t.Fatalf("expected nested data env vars to be written, got %q", string(data))
+	}
+}
+
+func TestAppsEnvPull_NonObjectJSONDoesNotCarryAppIDHint(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method:  "POST",
+		URL:     "/open-apis/spark/v1/apps/app_x/env_vars",
+		RawBody: []byte("[]"),
+		OnMatch: func(req *http.Request) {
+			assertEnvPullBody(t, req)
+		},
+	})
+
+	err := runAppsShortcut(t, AppsEnvPull,
+		[]string{"+env-pull", "--app-id", "app_x", "--project-path", t.TempDir(), "--as", "user"},
+		factory, stdout,
+	)
+	if err == nil {
+		t.Fatalf("expected non-object JSON failure, got nil; stdout=%s", stdout.String())
+	}
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("expected typed problem, got %T: %v", err, err)
+	}
+	if p.Category != errs.CategoryInternal || p.Subtype != errs.SubtypeInvalidResponse {
+		t.Fatalf("classification = %s/%s, want internal/invalid_response", p.Category, p.Subtype)
+	}
+	if strings.Contains(p.Hint, "apps +list") || strings.Contains(p.Hint, "--app-id") {
+		t.Fatalf("hint should not point to app-id/list recovery for malformed upstream JSON: %q", p.Hint)
 	}
 }
 

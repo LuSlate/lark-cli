@@ -108,9 +108,9 @@ func TestAppsMetricQuery_AutoDownSampleByRange(t *testing.T) {
 func TestAppsMetricQuery_RejectsDevEnv(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsMetricQuery, []string{
-		"+metric-query", "--app-id", "app_x", "--metric", "requests", "--env", "dev", "--as", "user",
+		"+metric-query", "--app-id", "app_x", "--metric", "requests", "--environment", "dev", "--as", "user",
 	}, factory, stdout)
-	requireAppsValidationParam(t, err, "--env")
+	requireAppsValidationParam(t, err, "--environment")
 }
 
 func TestAppsMetricQuery_FillsMissingRequestValuesWithZero(t *testing.T) {

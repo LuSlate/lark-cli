@@ -74,8 +74,8 @@ func TestAppsLogList_DoesNotAcceptLogIDFlag(t *testing.T) {
 
 func TestAppsLogList_RejectsDevEnv(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	err := runAppsShortcut(t, AppsLogList, []string{"+log-list", "--app-id", "app_x", "--env", "dev", "--as", "user"}, factory, stdout)
-	requireAppsValidationParam(t, err, "--env")
+	err := runAppsShortcut(t, AppsLogList, []string{"+log-list", "--app-id", "app_x", "--environment", "dev", "--as", "user"}, factory, stdout)
+	requireAppsValidationParam(t, err, "--environment")
 }
 
 func TestAppsLogGet_SearchesByLogIDLimitOne(t *testing.T) {
@@ -105,6 +105,49 @@ func TestAppsLogGet_SearchesByLogIDLimitOne(t *testing.T) {
 	}
 	if sent["app_env"] != "runtime" {
 		t.Fatalf("app_env = %v, want runtime", sent["app_env"])
+	}
+}
+
+func TestAppsLogGet_AcceptsDataArraySearchResponse(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	search := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_logs",
+		RawBody: []byte(`{
+			"code": 0,
+			"data": [
+				{
+					"log_id": "LOG7655249917057764881",
+					"level": "ERROR",
+					"attributes": {
+						"commit_id": "commit_array",
+						"source_map_file_prefix": "sourcemaps/array",
+						"frames": [{"file":"main.js","line":10,"column":20}]
+					}
+				}
+			]
+		}`),
+	}
+	resolve := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/resolve_stack_trace",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"source_stack": []interface{}{
+					map[string]interface{}{"file": "src/App.tsx", "line": 7, "column": 9},
+				},
+			},
+		},
+	}
+	reg.Register(search)
+	reg.Register(resolve)
+
+	if err := runAppsShortcut(t, AppsLogGet, []string{"+log-get", "--app-id", "app_x", "--log-id", "LOG7655249917057764881", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	if got := stdout.String(); !strings.Contains(got, `"source_stack_status": "resolved"`) || !strings.Contains(got, "src/App.tsx") {
+		t.Fatalf("stdout missing resolved source stack from data array response: %s", got)
 	}
 }
 
@@ -297,6 +340,212 @@ func TestAppsLogGet_ResolvesSourceStackWhenFieldsPresent(t *testing.T) {
 	}
 }
 
+func TestAppsLogGet_ResolvesSourceStackFromNestedKVAttributes(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	search := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_logs",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"log_items": []interface{}{
+					map[string]interface{}{
+						"log_id":       "LOG7655249917057764881",
+						"severityText": "ERROR",
+						"attributes": []interface{}{
+							map[string]interface{}{"key": "commit_id", "value": "commit_nested"},
+							map[string]interface{}{"key": "source_map_file_prefix", "value": "sourcemaps/nested"},
+							map[string]interface{}{
+								"key": "exception",
+								"value": map[string]interface{}{
+									"stackTrace": strings.Join([]string{
+										"TypeError: failed to render",
+										"    at render (https://cdn.example.com/assets/main.js:12:34)",
+										"    at https://cdn.example.com/assets/chunk.js:56:78",
+									}, "\n"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	resolve := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/resolve_stack_trace",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"source_stack": []interface{}{
+					map[string]interface{}{"file": "src/App.tsx", "line": 12, "column": 34},
+				},
+			},
+		},
+	}
+	reg.Register(search)
+	reg.Register(resolve)
+
+	if err := runAppsShortcut(t, AppsLogGet, []string{"+log-get", "--app-id", "app_x", "--log-id", "LOG7655249917057764881", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	var sent map[string]interface{}
+	if err := json.Unmarshal(resolve.CapturedBody, &sent); err != nil {
+		t.Fatal(err)
+	}
+	if sent["commit_id"] != "commit_nested" || sent["source_map_file_prefix"] != "sourcemaps/nested" {
+		t.Fatalf("resolve body missing nested source map fields: %#v", sent)
+	}
+	frames, ok := sent["frames"].([]interface{})
+	if !ok || len(frames) != 2 {
+		t.Fatalf("resolve frames = %#v, want parsed stack frames", sent["frames"])
+	}
+	frame, ok := frames[0].(map[string]interface{})
+	if !ok {
+		t.Fatalf("parsed frame = %#v, want object", frames[0])
+	}
+	if frame["function"] != "render" || frame["file_name"] != "main.js" || frame["line"] != float64(12) || frame["column"] != float64(34) {
+		t.Fatalf("parsed frame = %#v", frame)
+	}
+	bare, ok := frames[1].(map[string]interface{})
+	if !ok {
+		t.Fatalf("bare frame = %#v, want object", frames[1])
+	}
+	if bare["file_name"] != "chunk.js" || bare["line"] != float64(56) || bare["column"] != float64(78) {
+		t.Fatalf("bare frame = %#v", bare)
+	}
+	if got := stdout.String(); !strings.Contains(got, `"source_stack_status": "resolved"`) || !strings.Contains(got, "src/App.tsx") {
+		t.Fatalf("stdout missing resolved source stack: %s", got)
+	}
+}
+
+func TestAppsLogGet_ResolvesSourceStackFromReleaseCommitJSONStack(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	search := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_logs",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"log_items": []interface{}{
+					map[string]interface{}{
+						"log_id":       "LOG7655249917057764881",
+						"severityText": "ERROR",
+						"attributes": map[string]interface{}{
+							"tenant_id":         "110564",
+							"release_commit_id": "4b393e4e0ca9ca1a855ba4585bc6750a7db2266f",
+							"stack": `[{"fileName":"main.js","line":3348,"column":540585},` +
+								`{"fileName":"main.js","line":3107,"column":51935},` +
+								`{"fileName":"main.js","line":62,"column":12516}]`,
+						},
+					},
+				},
+			},
+		},
+	}
+	resolve := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/resolve_stack_trace",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"source_stack": []interface{}{
+					map[string]interface{}{"file": "src/App.tsx", "line": 42, "column": 7},
+				},
+			},
+		},
+	}
+	reg.Register(search)
+	reg.Register(resolve)
+
+	if err := runAppsShortcut(t, AppsLogGet, []string{"+log-get", "--app-id", "app_x", "--log-id", "LOG7655249917057764881", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	var sent map[string]interface{}
+	if err := json.Unmarshal(resolve.CapturedBody, &sent); err != nil {
+		t.Fatal(err)
+	}
+	if sent["commit_id"] != "4b393e4e0ca9ca1a855ba4585bc6750a7db2266f" || sent["source_map_file_prefix"] != defaultSourceMapPrefix || sent["tenant_id"] != "110564" {
+		t.Fatalf("resolve body missing release source map fields: %#v", sent)
+	}
+	frames, ok := sent["frames"].([]interface{})
+	if !ok || len(frames) != 3 {
+		t.Fatalf("resolve frames = %#v, want all valid generated frames", sent["frames"])
+	}
+	first, ok := frames[0].(map[string]interface{})
+	if !ok {
+		t.Fatalf("first frame = %#v, want object", frames[0])
+	}
+	if first["file_name"] != "main.js" || first["line"] != float64(3348) || first["column"] != float64(540585) {
+		t.Fatalf("first frame = %#v", first)
+	}
+	if got := stdout.String(); !strings.Contains(got, `"source_stack_status": "resolved"`) || !strings.Contains(got, "src/App.tsx") {
+		t.Fatalf("stdout missing resolved source stack: %s", got)
+	}
+}
+
+func TestAppsLogGet_ResolvesSourceStackFromJSONBodyStack(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	search := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/search_logs",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"log_items": []interface{}{
+					map[string]interface{}{
+						"log_id":       "LOG_BODY_STACK",
+						"severityText": "ERROR",
+						"attributes": map[string]interface{}{
+							"release_commit_id": "commit_body",
+						},
+						"body": `{"error":{"stack":"AxiosError: failed\n    at request (https://cdn.example.com/client/assets/body.js:9:88)"}}`,
+					},
+				},
+			},
+		},
+	}
+	resolve := &httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/resolve_stack_trace",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"source_stack": []interface{}{
+					map[string]interface{}{"file": "src/request.ts", "line": 9, "column": 88},
+				},
+			},
+		},
+	}
+	reg.Register(search)
+	reg.Register(resolve)
+
+	if err := runAppsShortcut(t, AppsLogGet, []string{"+log-get", "--app-id", "app_x", "--log-id", "LOG_BODY_STACK", "--as", "user"}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	var sent map[string]interface{}
+	if err := json.Unmarshal(resolve.CapturedBody, &sent); err != nil {
+		t.Fatal(err)
+	}
+	if sent["commit_id"] != "commit_body" || sent["source_map_file_prefix"] != defaultSourceMapPrefix {
+		t.Fatalf("resolve body missing body stack source map fields: %#v", sent)
+	}
+	frames, ok := sent["frames"].([]interface{})
+	if !ok || len(frames) != 1 {
+		t.Fatalf("resolve frames = %#v, want parsed JSON body stack frame", sent["frames"])
+	}
+	frame, ok := frames[0].(map[string]interface{})
+	if !ok {
+		t.Fatalf("frame = %#v, want object", frames[0])
+	}
+	if frame["function"] != "request" || frame["file_name"] != "body.js" || frame["line"] != float64(9) || frame["column"] != float64(88) {
+		t.Fatalf("frame = %#v", frame)
+	}
+	if got := stdout.String(); !strings.Contains(got, `"source_stack_status": "resolved"`) || !strings.Contains(got, "src/request.ts") {
+		t.Fatalf("stdout missing resolved source stack: %s", got)
+	}
+}
+
 func TestAppsLogGet_SourceStackMissingFieldsDoesNotFail(t *testing.T) {
 	factory, stdout, reg := newAppsExecuteFactory(t)
 	search := &httpmock.Stub{
@@ -403,6 +652,9 @@ func TestAppsLogGet_SourceStackResolveFailureIsRedacted(t *testing.T) {
 	got := stdout.String()
 	if !strings.Contains(got, `"source_stack_status": "unresolved"`) {
 		t.Fatalf("stdout missing unresolved status: %s", got)
+	}
+	if !strings.Contains(got, `"source_stack_error_code": 999`) {
+		t.Fatalf("stdout missing resolve error code: %s", got)
 	}
 	for _, banned := range []string{"secret", "token", "raw request payload"} {
 		if strings.Contains(strings.ToLower(got), banned) {

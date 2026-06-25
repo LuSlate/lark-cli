@@ -5,6 +5,7 @@ package apps
 
 import (
 	"context"
+	"io"
 	"sort"
 	"strings"
 
@@ -12,23 +13,26 @@ import (
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
-const defaultAppsEnvVarEnv = "dev"
+const (
+	defaultAppsEnvVarEnv   = "dev"
+	defaultAppsEnvVarScene = 2
+)
 
 // AppsEnvVarList lists app environment variables without values by default.
 var AppsEnvVarList = common.Shortcut{
 	Service:     appsService,
-	Command:     "+envvar-list",
+	Command:     "+env-list",
 	Description: "List app environment variables",
 	Risk:        "read",
 	Tips: []string{
-		"Example: lark-cli apps +envvar-list --app-id <app_id>",
+		"Example: lark-cli apps +env-list --app-id <app_id>",
 	},
 	Scopes:    []string{"spark:app:read"},
 	AuthTypes: []string{"user"},
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID", Required: true},
-		{Name: "env", Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
 		{Name: "include-values", Type: "bool", Desc: "include environment variable values"},
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
@@ -57,7 +61,10 @@ var AppsEnvVarList = common.Shortcut{
 		if err != nil {
 			return withAppsHint(err, appIDListHint)
 		}
-		rctx.OutFormat(normalizeEnvVarListOutput(data, includeValues), nil, nil)
+		out := normalizeEnvVarListOutput(data, includeValues)
+		rctx.OutFormat(out, nil, func(w io.Writer) {
+			appsPrintSchemaTable(w, out.Items, envVarListSchema(includeValues))
+		})
 		return nil
 	},
 }
@@ -65,18 +72,18 @@ var AppsEnvVarList = common.Shortcut{
 // AppsEnvVarSet sets one app environment variable. Values are never printed.
 var AppsEnvVarSet = common.Shortcut{
 	Service:     appsService,
-	Command:     "+envvar-set",
+	Command:     "+env-set",
 	Description: "Set an app environment variable",
 	Risk:        "write",
 	Tips: []string{
-		"Example: lark-cli apps +envvar-set --app-id <app_id> --key FOO --value bar",
+		"Example: lark-cli apps +env-set --app-id <app_id> --key FOO --value bar",
 	},
 	Scopes:    []string{"spark:app:write"},
 	AuthTypes: []string{"user"},
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID", Required: true},
-		{Name: "env", Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
 		{Name: "key", Desc: "environment variable key", Required: true},
 		{Name: "value", Desc: "environment variable value", Required: true, Input: []string{common.File, common.Stdin}},
 		{Name: "yes", Type: "bool", Desc: "confirm setting variables in online"},
@@ -113,8 +120,8 @@ var AppsEnvVarSet = common.Shortcut{
 		if env == "online" && !rctx.Bool("yes") {
 			return errs.NewConfirmationRequiredError(
 				errs.RiskWrite,
-				"apps +envvar-set --env online",
-				"apps +envvar-set --env online requires confirmation",
+				"apps +env-set --environment online",
+				"apps +env-set --environment online requires confirmation",
 			).WithHint("add --yes to confirm")
 		}
 		appID, err := requireAppID(rctx.Str("app-id"))
@@ -131,7 +138,7 @@ var AppsEnvVarSet = common.Shortcut{
 			"value": rctx.Str("value"),
 		})
 		if err != nil {
-			return withAppsHint(err, appIDListHint)
+			return withAppsHint(err, envVarMutationHint(err))
 		}
 		action := envVarStringAny(data, "action")
 		if action == "" {
@@ -149,18 +156,18 @@ var AppsEnvVarSet = common.Shortcut{
 // AppsEnvVarDelete deletes one or more app environment variables.
 var AppsEnvVarDelete = common.Shortcut{
 	Service:     appsService,
-	Command:     "+envvar-delete",
+	Command:     "+env-delete",
 	Description: "Delete app environment variables",
 	Risk:        "high-risk-write",
 	Tips: []string{
-		"Example: lark-cli apps +envvar-delete --app-id <app_id> --key FOO --yes",
+		"Example: lark-cli apps +env-delete --app-id <app_id> --key FOO --yes",
 	},
 	Scopes:    []string{"spark:app:write"},
 	AuthTypes: []string{"user"},
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID", Required: true},
-		{Name: "env", Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsEnvVarEnv, Enum: []string{"dev", "online"}, Desc: "target environment"},
 		{Name: "key", Type: "string_array", Desc: "environment variable key; repeatable", Required: true},
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
@@ -193,7 +200,7 @@ var AppsEnvVarDelete = common.Shortcut{
 		env := envVarEnv(rctx)
 		data, err := rctx.CallAPITyped("POST", envVarDeletePath(appID), nil, buildEnvVarDeleteBody(env, keys))
 		if err != nil {
-			return withAppsHint(err, appIDListHint)
+			return withAppsHint(err, envVarMutationHint(err))
 		}
 		deletedKeys := envVarStringSliceAny(data, "deleted_keys", "deletedKeys")
 		if len(deletedKeys) == 0 {
@@ -208,7 +215,7 @@ var AppsEnvVarDelete = common.Shortcut{
 }
 
 func envVarEnv(rctx *common.RuntimeContext) string {
-	env := strings.TrimSpace(rctx.Str("env"))
+	env := strings.TrimSpace(rctx.Str(appsEnvironmentFlag))
 	if env == "" {
 		return defaultAppsEnvVarEnv
 	}
@@ -229,7 +236,8 @@ func envVarDeletePath(appID string) string {
 
 func buildEnvVarListBody(rctx *common.RuntimeContext) map[string]interface{} {
 	return map[string]interface{}{
-		"env": envVarEnv(rctx),
+		"env":   envVarEnv(rctx),
+		"scene": defaultAppsEnvVarScene,
 	}
 }
 
@@ -238,6 +246,21 @@ func buildEnvVarDeleteBody(env string, keys []string) map[string]interface{} {
 		"env":  env,
 		"keys": keys,
 	}
+}
+
+func envVarMutationHint(err error) string {
+	if isEnvVarNotModifiableError(err) {
+		return "this environment variable is platform-managed and cannot be modified; remove protected keys from --key and retry only with user-defined variables"
+	}
+	return appIDListHint
+}
+
+func isEnvVarNotModifiableError(err error) bool {
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		return false
+	}
+	return strings.Contains(strings.ToLower(p.Message), "not modifiable")
 }
 
 func requireEnvVarKey(raw string) (string, error) {
@@ -337,6 +360,17 @@ func filterEnvVarItem(item map[string]interface{}, includeValues bool) map[strin
 		out[key] = value
 	}
 	return out
+}
+
+func envVarListSchema(includeValues bool) appsOutputSchema {
+	columns := []appsOutputColumn{
+		{Key: "key"},
+		{Key: "env"},
+	}
+	if includeValues {
+		columns = append(columns, appsOutputColumn{Key: "value"})
+	}
+	return appsOutputSchema{Columns: columns, Strict: true}
 }
 
 func envVarStringAny(data map[string]interface{}, keys ...string) string {

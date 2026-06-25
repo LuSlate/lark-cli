@@ -14,6 +14,9 @@ func TestAppsShortcutsHaveExamples(t *testing.T) {
 	email := regexp.MustCompile(`[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}`)
 	phone := regexp.MustCompile(`\b1[3-9]\d{9}\b`)
 	for _, s := range Shortcuts() {
+		if s.Hidden {
+			continue
+		}
 		hasExample := false
 		for _, tip := range s.Tips {
 			if strings.HasPrefix(tip, "Example: lark-cli apps +") {
@@ -51,15 +54,15 @@ func TestHighFreqCommandsHaveMultipleExamples(t *testing.T) {
 	}
 }
 
-func TestAppsEnvVarTipsCoverConfirmations(t *testing.T) {
-	envvarSet := requireShortcutForExamples(t, "+envvar-set")
-	if !tipsContainAll(envvarSet.Tips, "--env online", "--yes") {
-		t.Fatalf("+envvar-set tips must include an online write example with --env online --yes: %#v", envvarSet.Tips)
+func TestAppsEnvTipsCoverConfirmations(t *testing.T) {
+	envSet := requireShortcutForExamples(t, "+env-set")
+	if !tipsContainAll(envSet.Tips, "--environment online", "--yes") {
+		t.Fatalf("+env-set tips must include an online write example with --environment online --yes: %#v", envSet.Tips)
 	}
 
-	envvarDelete := requireShortcutForExamples(t, "+envvar-delete")
-	if !tipsContainAll(envvarDelete.Tips, "--yes") {
-		t.Fatalf("+envvar-delete tips must include --yes: %#v", envvarDelete.Tips)
+	envDelete := requireShortcutForExamples(t, "+env-delete")
+	if !tipsContainAll(envDelete.Tips, "--yes") {
+		t.Fatalf("+env-delete tips must include --yes: %#v", envDelete.Tips)
 	}
 }
 
@@ -73,7 +76,7 @@ func TestAppsObservabilityTipsMentionOnlineOnly(t *testing.T) {
 		"+analytics-query",
 	} {
 		shortcut := requireShortcutForExamples(t, cmd)
-		if !tipsContainAll(shortcut.Tips, "online-only", "--env online") {
+		if !tipsContainAll(shortcut.Tips, "online-only", "--environment online") {
 			t.Fatalf("%s tips should mention online-only env: %#v", cmd, shortcut.Tips)
 		}
 	}

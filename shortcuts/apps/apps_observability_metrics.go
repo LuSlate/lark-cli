@@ -40,7 +40,7 @@ var AppsMetricQuery = common.Shortcut{
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online metrics should be queried", Required: true},
-		{Name: "env", Default: defaultAppsMetricEnv, Desc: "observability environment; only online is supported"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsMetricEnv, Desc: "observability environment; only online is supported"},
 		{Name: "metric", Desc: "metric family to query", Required: true, Enum: []string{"requests", "latency", "cpu", "memory"}},
 		{Name: "series", Desc: "metric series within the family, such as total/error or p50/p99"},
 		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
@@ -102,7 +102,7 @@ var AppsAnalyticsQuery = common.Shortcut{
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online analytics should be queried", Required: true},
-		{Name: "env", Default: defaultAppsAnalyticsEnv, Desc: "observability environment; only online is supported"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsAnalyticsEnv, Desc: "observability environment; only online is supported"},
 		{Name: "analytics", Desc: "analytics family to query", Required: true, Enum: []string{"users", "page-view"}},
 		{Name: "series", Desc: "analytics series within the family, such as active-users or desktop-view"},
 		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339; defaults to 30 days before --until"},
@@ -163,7 +163,7 @@ func analyticsQueryPath(appID string) string {
 }
 
 func buildMetricQueryBody(rctx *common.RuntimeContext) (map[string]interface{}, []string, []string, bool, error) {
-	env := strings.TrimSpace(rctx.Str("env"))
+	env := strings.TrimSpace(rctx.Str(appsEnvironmentFlag))
 	if env == "" {
 		env = defaultAppsMetricEnv
 	}
@@ -221,7 +221,7 @@ func buildMetricQueryFilter(rctx *common.RuntimeContext) map[string]interface{} 
 }
 
 func buildAnalyticsQueryBody(rctx *common.RuntimeContext) (map[string]interface{}, []string, []string, error) {
-	env := strings.TrimSpace(rctx.Str("env"))
+	env := strings.TrimSpace(rctx.Str(appsEnvironmentFlag))
 	if env == "" {
 		env = defaultAppsAnalyticsEnv
 	}

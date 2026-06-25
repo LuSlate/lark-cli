@@ -8,18 +8,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/shortcuts/common"
+	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 )
 
 const (
-	defaultAppsLogEnv      = "online"
-	logSearchEndpoint      = "search_logs"
-	resolveStackEndpoint   = "resolve_stack_trace"
-	sourceStackStatusOK    = "resolved"
-	sourceStackStatusError = "unresolved"
+	defaultAppsLogEnv       = "online"
+	logSearchEndpoint       = "search_logs"
+	resolveStackEndpoint    = "resolve_stack_trace"
+	sourceStackStatusOK     = "resolved"
+	sourceStackStatusError  = "unresolved"
+	sourceStackMaxScanDepth = 8
+	sourceStackMaxFrames    = 2000
+	defaultSourceMapPrefix  = "client/assets/"
+)
+
+var (
+	jsStackFrameParenRe = regexp.MustCompile(`^\s*(?:at\s+(.+?)\s+)?\((.+):(\d+):(\d+)\)\s*$`)
+	jsStackFrameBareRe  = regexp.MustCompile(`^\s*(?:at\s+)?(.+):(\d+):(\d+)\s*$`)
 )
 
 // AppsLogList searches online app logs with observability filters.
@@ -37,7 +48,7 @@ var AppsLogList = common.Shortcut{
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online logs should be searched", Required: true},
-		{Name: "env", Default: defaultAppsLogEnv, Desc: "observability environment; only online is supported"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsLogEnv, Desc: "observability environment; only online is supported"},
 		{Name: "since", Desc: "start time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
 		{Name: "until", Desc: "end time, relative duration (30s, 5m, 0.5h, 2h, 3d, 1w), local date/time, or RFC3339"},
 		{Name: "level", Type: "string_array", Desc: "log level filter; repeatable, one of DEBUG, INFO, WARN, ERROR (case-insensitive)"},
@@ -100,7 +111,7 @@ var AppsLogGet = common.Shortcut{
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online logs should be searched", Required: true},
 		{Name: "log-id", Desc: "log ID to fetch", Required: true},
-		{Name: "env", Default: defaultAppsLogEnv, Desc: "observability environment; only online is supported"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsLogEnv, Desc: "observability environment; only online is supported"},
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		if _, err := requireAppID(rctx.Str("app-id")); err != nil {
@@ -109,7 +120,7 @@ var AppsLogGet = common.Shortcut{
 		if strings.TrimSpace(rctx.Str("log-id")) == "" {
 			return appsValidationParamError("--log-id", "--log-id is required")
 		}
-		return validateObservabilityEnv(rctx.Str("env"))
+		return validateObservabilityEnv(rctx.Str(appsEnvironmentFlag))
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		return common.NewDryRunAPI().
@@ -119,14 +130,14 @@ var AppsLogGet = common.Shortcut{
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		appID, _ := requireAppID(rctx.Str("app-id"))
-		data, err := rctx.CallAPITyped("POST", logSearchPath(appID), nil, buildLogGetSearchBody(rctx))
+		data, err := callLogGetSearch(rctx, appID, buildLogGetSearchBody(rctx))
 		if err != nil {
 			return withAppsHint(err, appIDListHint)
 		}
 		out := normalizeLogSearchResponse(data)
 		if len(out.Items) == 0 {
 			return appsFailedPreconditionParamError("--log-id", "log not found").
-				WithHint("verify --log-id and --env online")
+				WithHint("verify --log-id and --environment online")
 		}
 		log := out.Items[0]
 		enrichLogSourceStack(rctx, appID, log)
@@ -135,6 +146,25 @@ var AppsLogGet = common.Shortcut{
 		})
 		return nil
 	},
+}
+
+func callLogGetSearch(rctx *common.RuntimeContext, appID string, body map[string]interface{}) (map[string]interface{}, error) {
+	resp, err := rctx.DoAPI(&larkcore.ApiReq{
+		HttpMethod: "POST",
+		ApiPath:    logSearchPath(appID),
+		Body:       body,
+	})
+	if err != nil {
+		return nil, err
+	}
+	data, err := rctx.ClassifyAPIResponse(resp)
+	if err == nil && data != nil {
+		return data, nil
+	}
+	if flex, ok := flexibleLogSearchData(resp.RawBody); ok && (err == nil || isNonObjectInvalidResponse(err)) {
+		return flex, nil
+	}
+	return data, err
 }
 
 type logSearchOutput struct {
@@ -152,7 +182,7 @@ func resolveStackPath(appID string) string {
 }
 
 func buildLogSearchBody(rctx *common.RuntimeContext) (map[string]interface{}, error) {
-	env := strings.TrimSpace(rctx.Str("env"))
+	env := strings.TrimSpace(rctx.Str(appsEnvironmentFlag))
 	if env == "" {
 		env = defaultAppsLogEnv
 	}
@@ -330,6 +360,40 @@ func firstMapSlice(data map[string]interface{}, keys ...string) []map[string]int
 	return nil
 }
 
+func flexibleLogSearchData(raw []byte) (map[string]interface{}, bool) {
+	var result interface{}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, false
+	}
+	switch value := result.(type) {
+	case []interface{}:
+		return map[string]interface{}{"items": value}, true
+	case map[string]interface{}:
+		data, ok := value["data"]
+		if !ok {
+			return nil, false
+		}
+		items, ok := data.([]interface{})
+		if !ok {
+			return nil, false
+		}
+		out := map[string]interface{}{"items": items}
+		for _, key := range []string{"page_token", "next_page_token", "pageToken", "nextPageToken", "has_more", "hasMore"} {
+			if v, present := value[key]; present {
+				out[key] = v
+			}
+		}
+		return out, true
+	default:
+		return nil, false
+	}
+}
+
+func isNonObjectInvalidResponse(err error) bool {
+	p, ok := errs.ProblemOf(err)
+	return ok && p.Category == errs.CategoryInternal && p.Subtype == errs.SubtypeInvalidResponse
+}
+
 func firstLogString(data map[string]interface{}, keys ...string) string {
 	for _, key := range keys {
 		if s, ok := data[key].(string); ok && strings.TrimSpace(s) != "" {
@@ -429,8 +493,7 @@ func enrichLogSourceStack(rctx *common.RuntimeContext, appID string, log map[str
 	data, err := rctx.CallAPITyped("POST", resolveStackPath(appID), nil, body)
 	if err != nil {
 		if _, typed := errs.ProblemOf(err); typed {
-			log["source_stack_status"] = sourceStackStatusError
-			log["source_stack_reason"] = "resolve_stack_trace failed"
+			markSourceStackResolveError(log, err)
 		}
 		return
 	}
@@ -440,6 +503,20 @@ func enrichLogSourceStack(rctx *common.RuntimeContext, appID string, log map[str
 	}
 	log["source_stack_status"] = sourceStackStatusOK
 	log["source_stack"] = stack
+}
+
+func markSourceStackResolveError(log map[string]interface{}, err error) {
+	log["source_stack_status"] = sourceStackStatusError
+	log["source_stack_reason"] = "resolve_stack_trace failed"
+	if problem, ok := errs.ProblemOf(err); ok {
+		if problem.Code != 0 {
+			log["source_stack_error_code"] = problem.Code
+			log["source_stack_reason"] = fmt.Sprintf("resolve_stack_trace failed: code %d", problem.Code)
+		}
+		if problem.LogID != "" {
+			log["source_stack_log_id"] = problem.LogID
+		}
+	}
 }
 
 func shouldResolveSourceStack(log map[string]interface{}) bool {
@@ -479,24 +556,78 @@ func isSourceMapSignal(value string) bool {
 }
 
 func extractSourceStackResolveBody(log map[string]interface{}) (map[string]interface{}, bool) {
-	sources := []map[string]interface{}{log}
-	if attrs, ok := log["attributes"].(map[string]interface{}); ok {
-		sources = append([]map[string]interface{}{attrs}, sources...)
-	}
-	if bodyMap, ok := log["body"].(map[string]interface{}); ok {
-		sources = append([]map[string]interface{}{bodyMap}, sources...)
-	}
-	commitID := firstStringInMaps(sources, "commit_id", "commitID", "commitId")
+	sources := collectSourceStackMaps(log)
+	commitID := firstStringInMaps(sources, "commit_id", "commitID", "commitId", "release_commit_id", "releaseCommitID", "releaseCommitId")
 	prefix := firstStringInMaps(sources, "source_map_file_prefix", "sourceMapFilePrefix", "source_map_prefix", "sourceMapPrefix")
-	frames := firstFramesInMaps(sources, "frames", "stack_frames", "stackFrames", "source_stack_frames", "sourceStackFrames")
+	if prefix == "" && firstStringInMaps(sources, "release_commit_id", "releaseCommitID", "releaseCommitId") != "" {
+		prefix = defaultSourceMapPrefix
+	}
+	frames := firstFramesInMaps(
+		sources,
+		"frames",
+		"stack_frames",
+		"stackFrames",
+		"source_stack_frames",
+		"sourceStackFrames",
+		"stack",
+		"stack_trace",
+		"stackTrace",
+		"error_stack",
+		"errorStack",
+		"exception_stack",
+		"exceptionStack",
+		"message",
+		"body",
+	)
 	if commitID == "" || prefix == "" || len(frames) == 0 {
 		return nil, false
 	}
-	return map[string]interface{}{
+	body := map[string]interface{}{
 		"commit_id":              commitID,
 		"source_map_file_prefix": prefix,
 		"frames":                 frames,
-	}, true
+	}
+	if tenantID := firstStringInMaps(sources, "tenant_id", "tenantID", "tenantId"); tenantID != "" {
+		body["tenant_id"] = tenantID
+	}
+	return body, true
+}
+
+func collectSourceStackMaps(value interface{}) []map[string]interface{} {
+	out := make([]map[string]interface{}, 0, 8)
+	collectSourceStackMapsInto(value, 0, &out)
+	return out
+}
+
+func collectSourceStackMapsInto(value interface{}, depth int, out *[]map[string]interface{}) {
+	if depth > sourceStackMaxScanDepth || value == nil {
+		return
+	}
+	switch v := value.(type) {
+	case map[string]interface{}:
+		*out = append(*out, v)
+		for _, nested := range v {
+			collectSourceStackMapsInto(nested, depth+1, out)
+		}
+	case []interface{}:
+		if attrs := observabilityKVList(v); len(attrs) > 0 {
+			*out = append(*out, attrs)
+			for _, nested := range attrs {
+				collectSourceStackMapsInto(nested, depth+1, out)
+			}
+		}
+		for _, nested := range v {
+			collectSourceStackMapsInto(nested, depth+1, out)
+		}
+	case []map[string]interface{}:
+		for _, nested := range v {
+			collectSourceStackMapsInto(nested, depth+1, out)
+		}
+	case string:
+		if parsed := parseJSONObjectString(v); parsed != nil {
+			collectSourceStackMapsInto(parsed, depth+1, out)
+		}
+	}
 }
 
 func firstStringInMaps(sources []map[string]interface{}, keys ...string) string {
@@ -509,8 +640,8 @@ func firstStringInMaps(sources []map[string]interface{}, keys ...string) string 
 }
 
 func firstFramesInMaps(sources []map[string]interface{}, keys ...string) []interface{} {
-	for _, source := range sources {
-		for _, key := range keys {
+	for _, key := range keys {
+		for _, source := range sources {
 			frames := normalizeFrames(source[key])
 			if len(frames) > 0 {
 				return frames
@@ -525,16 +656,22 @@ func normalizeFrames(raw interface{}) []interface{} {
 	case []interface{}:
 		out := make([]interface{}, 0, len(frames))
 		for _, frame := range frames {
-			if isNonEmptyFrame(frame) {
-				out = append(out, frame)
+			if normalized, ok := normalizeFrame(frame); ok {
+				out = append(out, normalized)
+				if len(out) >= sourceStackMaxFrames {
+					return out
+				}
 			}
 		}
 		return out
 	case []map[string]interface{}:
 		out := make([]interface{}, 0, len(frames))
 		for _, frame := range frames {
-			if len(frame) > 0 {
-				out = append(out, frame)
+			if normalized, ok := normalizeFrame(frame); ok {
+				out = append(out, normalized)
+				if len(out) >= sourceStackMaxFrames {
+					return out
+				}
 			}
 		}
 		return out
@@ -545,17 +682,104 @@ func normalizeFrames(raw interface{}) []interface{} {
 	}
 }
 
-func isNonEmptyFrame(frame interface{}) bool {
+func normalizeFrame(frame interface{}) (map[string]interface{}, bool) {
 	switch f := frame.(type) {
 	case map[string]interface{}:
-		return len(f) > 0
+		return normalizeFrameMap(f)
 	case map[string]string:
-		return len(f) > 0
+		m := make(map[string]interface{}, len(f))
+		for key, value := range f {
+			m[key] = value
+		}
+		return normalizeFrameMap(m)
 	case string:
-		return strings.TrimSpace(f) != ""
+		parsed := parseJSStackFrameLine(f)
+		if _, ok := parsed["file_name"]; !ok {
+			return nil, false
+		}
+		return parsed, true
 	default:
-		return frame != nil
+		return nil, false
 	}
+}
+
+func normalizeFrameMap(frame map[string]interface{}) (map[string]interface{}, bool) {
+	fileName := normalizeSourceFrameFileName(firstLogString(frame, "file_name", "fileName", "filename", "file", "url"))
+	line, lineOK := firstFrameInt(frame, "line", "line_number", "lineNumber")
+	column, columnOK := firstFrameInt(frame, "column", "col", "column_number", "columnNumber")
+	if fileName == "" || !lineOK || !columnOK {
+		return nil, false
+	}
+	out := map[string]interface{}{
+		"file_name": fileName,
+		"line":      line,
+		"column":    column,
+	}
+	if fn := firstLogString(frame, "function", "function_name", "functionName", "method", "methodName"); fn != "" {
+		out["function"] = fn
+	}
+	return out, true
+}
+
+func normalizeSourceFrameFileName(fileName string) string {
+	fileName = strings.TrimSpace(fileName)
+	if fileName == "" {
+		return ""
+	}
+	parts := strings.FieldsFunc(fileName, func(r rune) bool {
+		return r == '/' || r == '?' || r == '#'
+	})
+	for i := len(parts) - 1; i >= 0; i-- {
+		if part := strings.TrimSpace(parts[i]); part != "" {
+			return part
+		}
+	}
+	return fileName
+}
+
+func firstFrameInt(frame map[string]interface{}, keys ...string) (int, bool) {
+	for _, key := range keys {
+		if value, ok := frame[key]; ok {
+			if n, valid := frameInt(value); valid {
+				return n, true
+			}
+		}
+	}
+	return 0, false
+}
+
+func frameInt(value interface{}) (int, bool) {
+	switch v := value.(type) {
+	case int:
+		return positiveFrameInt(v)
+	case int64:
+		if v > int64(^uint(0)>>1) {
+			return 0, false
+		}
+		return positiveFrameInt(int(v))
+	case float64:
+		if v != float64(int(v)) {
+			return 0, false
+		}
+		return positiveFrameInt(int(v))
+	case json.Number:
+		n, err := strconv.Atoi(v.String())
+		if err != nil {
+			return 0, false
+		}
+		return positiveFrameInt(n)
+	case string:
+		return parsePositiveInt(v)
+	default:
+		return 0, false
+	}
+}
+
+func positiveFrameInt(n int) (int, bool) {
+	if n < 1 {
+		return 0, false
+	}
+	return n, true
 }
 
 func parseFrameString(raw string) []interface{} {
@@ -571,11 +795,76 @@ func parseFrameString(raw string) []interface{} {
 	out := make([]interface{}, 0, len(lines))
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line != "" {
-			out = append(out, map[string]interface{}{"raw": line})
+		if line == "" {
+			continue
+		}
+		if frame, ok := normalizeFrame(parseJSStackFrameLine(line)); ok {
+			out = append(out, frame)
+			if len(out) >= sourceStackMaxFrames {
+				return out
+			}
 		}
 	}
 	return out
+}
+
+func parseJSStackFrameLine(line string) map[string]interface{} {
+	if frame := parseJSStackFrameMatch(line, jsStackFrameParenRe.FindStringSubmatch(line)); frame != nil {
+		return frame
+	}
+	if frame := parseJSStackFrameMatch(line, jsStackFrameBareRe.FindStringSubmatch(line)); frame != nil {
+		return frame
+	}
+	return map[string]interface{}{"raw": line}
+}
+
+func parseJSStackFrameMatch(raw string, match []string) map[string]interface{} {
+	if match == nil {
+		return nil
+	}
+	switch len(match) {
+	case 4:
+		line, lineOK := parsePositiveInt(match[2])
+		column, columnOK := parsePositiveInt(match[3])
+		if lineOK && columnOK {
+			return map[string]interface{}{"file_name": normalizeSourceFrameFileName(match[1]), "line": line, "column": column}
+		}
+	case 5:
+		line, lineOK := parsePositiveInt(match[3])
+		column, columnOK := parsePositiveInt(match[4])
+		if lineOK && columnOK {
+			out := map[string]interface{}{
+				"file_name": normalizeSourceFrameFileName(match[2]),
+				"line":      line,
+				"column":    column,
+			}
+			if fn := strings.TrimSpace(match[1]); fn != "" {
+				out["function"] = fn
+			}
+			return out
+		}
+	}
+	return map[string]interface{}{"raw": raw}
+}
+
+func parseJSONObjectString(raw string) map[string]interface{} {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || !strings.HasPrefix(raw, "{") {
+		return nil
+	}
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return nil
+	}
+	return parsed
+}
+
+func parsePositiveInt(raw string) (int, bool) {
+	n, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || n < 1 {
+		return 0, false
+	}
+	return n, true
 }
 
 func firstLogValue(data map[string]interface{}, keys ...string) interface{} {

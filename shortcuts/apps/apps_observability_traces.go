@@ -34,7 +34,7 @@ var AppsTraceList = common.Shortcut{
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online traces should be searched", Required: true},
-		{Name: "env", Default: defaultAppsTraceEnv, Desc: "observability environment; only online is supported"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsTraceEnv, Desc: "observability environment; only online is supported"},
 		{Name: "trace-id", Type: "string_array", Desc: "trace ID filter; repeatable"},
 		{Name: "root-span", Desc: "root span keyword filter applied by the trace search backend"},
 		{Name: "user-id", Desc: "end user ID filter"},
@@ -90,7 +90,7 @@ var AppsTraceGet = common.Shortcut{
 	HasFormat: true,
 	Flags: []common.Flag{
 		{Name: "app-id", Desc: "app ID whose online trace should be fetched", Required: true},
-		{Name: "env", Default: defaultAppsTraceEnv, Desc: "observability environment; only online is supported"},
+		{Name: appsEnvironmentFlag, Default: defaultAppsTraceEnv, Desc: "observability environment; only online is supported"},
 		{Name: "trace-id", Desc: "trace ID to fetch", Required: true},
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
@@ -100,7 +100,7 @@ var AppsTraceGet = common.Shortcut{
 		if strings.TrimSpace(rctx.Str("trace-id")) == "" {
 			return appsValidationParamError("--trace-id", "--trace-id is required")
 		}
-		return validateObservabilityEnv(rctx.Str("env"))
+		return validateObservabilityEnv(rctx.Str(appsEnvironmentFlag))
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		return common.NewDryRunAPI().
@@ -137,7 +137,7 @@ func traceGetPath(appID string) string {
 }
 
 func buildTraceSearchBody(rctx *common.RuntimeContext) (map[string]interface{}, error) {
-	env := strings.TrimSpace(rctx.Str("env"))
+	env := strings.TrimSpace(rctx.Str(appsEnvironmentFlag))
 	if env == "" {
 		env = defaultAppsTraceEnv
 	}

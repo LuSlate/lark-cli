@@ -14,6 +14,7 @@ import (
 const (
 	defaultAppsPageSize = 50
 	maxAppsPageSize     = 100
+	appsEnvironmentFlag = "environment"
 
 	// The CLI exposes the user-facing online environment, while the
 	// observability backend stores online app runtime telemetry under runtime.
@@ -34,8 +35,8 @@ func validateObservabilityEnv(env string) error {
 	case "", "online":
 		return nil
 	default:
-		return appsValidationParamError("--env", "observability commands only support online (got %q)", env).
-			WithHint("only online is supported; omit --env to use the default online environment")
+		return appsValidationParamError("--environment", "observability commands only support online (got %q)", env).
+			WithHint("only online is supported; omit --environment to use the default online environment")
 	}
 }
 
@@ -44,7 +45,7 @@ func validateEnvVarEnv(env string) error {
 	case "dev", "online":
 		return nil
 	default:
-		return appsValidationParamError("--env", "env var commands only support --env dev or --env online (got %q)", env)
+		return appsValidationParamError("--environment", "env var commands only support --environment dev or --environment online (got %q)", env)
 	}
 }
 

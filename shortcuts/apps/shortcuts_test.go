@@ -11,7 +11,7 @@ import (
 
 // 钉死域内 shortcut 数量。少一条（漏挂）或多一条（误加）都会被这个测试拦截。
 // 6 基础 + 1 init + 3 publish + 1 env-pull + 6 observability
-// + 3 envvar + 4 db（table-list/table-schema/sql/dev-init）
+// + 3 env + 4 db（table-list/table-schema/sql/dev-init）
 // + 3 git-credential + 5 session（create/list/get/stop/chat）+ 1 session-messages-list = 33。
 func TestAppsShortcuts_Returns33(t *testing.T) {
 	got := Shortcuts()
@@ -20,10 +20,32 @@ func TestAppsShortcuts_Returns33(t *testing.T) {
 	}
 }
 
-func TestAppsShortcuts_DoesNotIncludeEnvVarGet(t *testing.T) {
+func TestAppsShortcuts_DoesNotIncludeEnvGet(t *testing.T) {
 	for _, sc := range Shortcuts() {
-		if sc.Command == "+envvar-get" {
-			t.Fatalf("Shortcuts() must not register +envvar-get")
+		switch sc.Command {
+		case "+env-get", "+envvar-get", "+envvar-list", "+envvar-set", "+envvar-delete":
+			t.Fatalf("Shortcuts() must not register %s", sc.Command)
+		}
+	}
+}
+
+func TestAppsShortcuts_EnvCommandsUseCanonicalNames(t *testing.T) {
+	want := map[string]bool{
+		"+env-list":   false,
+		"+env-set":    false,
+		"+env-delete": false,
+	}
+	for _, sc := range Shortcuts() {
+		if _, ok := want[sc.Command]; ok {
+			want[sc.Command] = true
+			if sc.Hidden {
+				t.Errorf("%s must be visible", sc.Command)
+			}
+		}
+	}
+	for cmd, found := range want {
+		if !found {
+			t.Errorf("Shortcuts() missing canonical %s", cmd)
 		}
 	}
 }

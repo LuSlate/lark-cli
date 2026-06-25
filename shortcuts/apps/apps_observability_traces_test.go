@@ -60,8 +60,8 @@ func TestAppsTraceList_DryRunBuildsSearchTracesBody(t *testing.T) {
 
 func TestAppsTraceList_RejectsDevEnv(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
-	err := runAppsShortcut(t, AppsTraceList, []string{"+trace-list", "--app-id", "app_x", "--env", "dev", "--as", "user"}, factory, stdout)
-	requireAppsValidationParam(t, err, "--env")
+	err := runAppsShortcut(t, AppsTraceList, []string{"+trace-list", "--app-id", "app_x", "--environment", "dev", "--as", "user"}, factory, stdout)
+	requireAppsValidationParam(t, err, "--environment")
 }
 
 func TestAppsTraceGet_DryRunBuildsGetTraceBody(t *testing.T) {

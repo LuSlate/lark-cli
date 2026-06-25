@@ -62,9 +62,9 @@ var AppsEnvPull = common.Shortcut{
 		projectPath, envFile, _ := resolveEnvPullTarget(strings.TrimSpace(rctx.Str("project-path")))
 		appID := strings.TrimSpace(rctx.Str("app-id"))
 		return common.NewDryRunAPI().
-			POST(fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))).
+			POST(envPullVarsPath(appID)).
 			Desc("Pull app startup env vars into the local .env.local file").
-			Body(map[string]interface{}{"env": "dev"}).
+			Body(envPullVarsBody()).
 			Set("project_path", projectPath).
 			Set("env_file", envFile)
 	},
@@ -81,8 +81,7 @@ var AppsEnvPull = common.Shortcut{
 			return err
 		}
 
-		path := fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))
-		data, err := rctx.CallAPITyped("POST", path, nil, map[string]interface{}{"env": "dev"})
+		data, err := rctx.CallAPITyped("POST", envPullVarsPath(appID), nil, envPullVarsBody())
 		if err != nil {
 			return withAppsHint(err, "verify --app-id is correct and you have access to the app; list your apps with `lark-cli apps +list`")
 		}
@@ -115,6 +114,16 @@ var AppsEnvPull = common.Shortcut{
 		_ = created
 		return nil
 	},
+}
+
+func envPullVarsPath(appID string) string {
+	return fmt.Sprintf("%s/apps/%s/env_vars", apiBasePath, validate.EncodePathSegment(appID))
+}
+
+func envPullVarsBody() map[string]interface{} {
+	return map[string]interface{}{
+		"env": "dev",
+	}
 }
 
 func resolveEnvPullTarget(projectPath string) (string, string, error) {

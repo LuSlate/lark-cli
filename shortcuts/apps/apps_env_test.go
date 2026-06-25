@@ -29,6 +29,10 @@ func assertEnvVarBody(t *testing.T, req *http.Request, want map[string]interface
 	}
 }
 
+func expectedEnvVarSceneJSON() float64 {
+	return float64(defaultAppsEnvVarScene)
+}
+
 func decodeEnvVarEnvelopeData(t *testing.T, stdout string) map[string]interface{} {
 	t.Helper()
 	var envelope struct {
@@ -65,7 +69,7 @@ func TestAppsEnvVarList_DefaultsToDevAndHidesValues(t *testing.T) {
 		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		OnMatch: func(req *http.Request) {
-			assertEnvVarBody(t, req, map[string]interface{}{"env": "dev"})
+			assertEnvVarBody(t, req, map[string]interface{}{"env": "dev", "scene": expectedEnvVarSceneJSON()})
 		},
 		Body: map[string]interface{}{
 			"code": 0,
@@ -78,7 +82,7 @@ func TestAppsEnvVarList_DefaultsToDevAndHidesValues(t *testing.T) {
 	})
 
 	if err := runAppsShortcut(t, AppsEnvVarList,
-		[]string{"+envvar-list", "--app-id", "app_x", "--as", "user"}, factory, stdout); err != nil {
+		[]string{"+env-list", "--app-id", "app_x", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("execute err=%v", err)
 	}
 
@@ -106,7 +110,7 @@ func TestAppsEnvVarList_IncludeValuesAllowsValues(t *testing.T) {
 		Method: "POST",
 		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
 		OnMatch: func(req *http.Request) {
-			assertEnvVarBody(t, req, map[string]interface{}{"env": "online"})
+			assertEnvVarBody(t, req, map[string]interface{}{"env": "online", "scene": expectedEnvVarSceneJSON()})
 		},
 		Body: map[string]interface{}{
 			"code": 0,
@@ -119,7 +123,7 @@ func TestAppsEnvVarList_IncludeValuesAllowsValues(t *testing.T) {
 	})
 
 	if err := runAppsShortcut(t, AppsEnvVarList,
-		[]string{"+envvar-list", "--app-id", "app_x", "--env", "online", "--include-values", "--as", "user"}, factory, stdout); err != nil {
+		[]string{"+env-list", "--app-id", "app_x", "--environment", "online", "--include-values", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("execute err=%v", err)
 	}
 
@@ -129,10 +133,73 @@ func TestAppsEnvVarList_IncludeValuesAllowsValues(t *testing.T) {
 	}
 }
 
+func TestAppsEnvVarList_DoesNotAcceptEnvironmentShorthand(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	err := runAppsShortcut(t, AppsEnvVarList,
+		[]string{"+env-list", "--app-id", "app_x", "-e", "online", "--as", "user"}, factory, stdout)
+	if err == nil || !strings.Contains(err.Error(), "unknown shorthand flag: 'e'") {
+		t.Fatalf("expected unknown -e shorthand, got %v", err)
+	}
+}
+
+func TestAppsEnvVarList_DryRunIncludesScene(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	if err := runAppsShortcut(t, AppsEnvVarList, []string{
+		"+env-list", "--app-id", "app_x", "--include-values", "--dry-run", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("dry-run err=%v", err)
+	}
+	var dryRun struct {
+		API []struct {
+			Body map[string]interface{} `json:"body"`
+		} `json:"api"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &dryRun); err != nil {
+		t.Fatalf("decode dry-run: %v\n%s", err, stdout.String())
+	}
+	if got := dryRun.API[0].Body["scene"]; got != expectedEnvVarSceneJSON() {
+		t.Fatalf("body.scene = %#v, want %v; stdout:\n%s", got, expectedEnvVarSceneJSON(), stdout.String())
+	}
+}
+
+func TestAppsEnvVarList_PrettyDisplaysTable(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/env_vars",
+		Body: map[string]interface{}{
+			"code": 0,
+			"data": map[string]interface{}{
+				"envVars": []interface{}{
+					map[string]interface{}{"key": "API_HOST", "value": "https://example.com", "env": "online"},
+				},
+			},
+		},
+	})
+
+	if err := runAppsShortcut(t, AppsEnvVarList, []string{
+		"+env-list", "--app-id", "app_x", "--environment", "online", "--include-values", "--format", "pretty", "--as", "user",
+	}, factory, stdout); err != nil {
+		t.Fatalf("execute err=%v", err)
+	}
+	got := stdout.String()
+	if !strings.HasPrefix(got, "key") {
+		t.Fatalf("pretty output should start with key column, got:\n%s", got)
+	}
+	for _, want := range []string{"API_HOST", "online", "https://example.com"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("pretty output missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, `"ok"`) || strings.Contains(got, `"data"`) {
+		t.Fatalf("pretty output should not fall back to JSON envelope:\n%s", got)
+	}
+}
+
 func TestAppsEnvVarSet_OnlineRequiresYesOutsideDryRun(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsEnvVarSet,
-		[]string{"+envvar-set", "--app-id", "app_x", "--env", "online",
+		[]string{"+env-set", "--app-id", "app_x", "--environment", "online",
 			"--key", "SECRET_TOKEN", "--value", "super-secret", "--as", "user"}, factory, stdout)
 
 	p := requireAppsProblem(t, err, errs.CategoryConfirmation)
@@ -147,7 +214,7 @@ func TestAppsEnvVarSet_OnlineRequiresYesOutsideDryRun(t *testing.T) {
 func TestAppsEnvVarSet_OnlineDryRunDoesNotRequireYes(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsEnvVarSet,
-		[]string{"+envvar-set", "--app-id", "app_x", "--env", "online",
+		[]string{"+env-set", "--app-id", "app_x", "--environment", "online",
 			"--key", "SECRET_TOKEN", "--value", "super-secret", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("dry-run err=%v", err)
 	}
@@ -184,7 +251,7 @@ func TestAppsEnvVarSet_ExecutesWithYesAndDoesNotEchoValue(t *testing.T) {
 	reg.Register(stub)
 
 	if err := runAppsShortcut(t, AppsEnvVarSet,
-		[]string{"+envvar-set", "--app-id", "app_x", "--env", "online",
+		[]string{"+env-set", "--app-id", "app_x", "--environment", "online",
 			"--key", "SECRET_TOKEN", "--value", "super-secret", "--yes", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("execute err=%v", err)
 	}
@@ -223,7 +290,7 @@ func TestAppsEnvVarDelete_BuildsDeleteBodyWithKeys(t *testing.T) {
 	reg.Register(stub)
 
 	if err := runAppsShortcut(t, AppsEnvVarDelete,
-		[]string{"+envvar-delete", "--app-id", "app_x", "--env", "online",
+		[]string{"+env-delete", "--app-id", "app_x", "--environment", "online",
 			"--key", "SECRET_ONE", "--key", "SECRET_TWO", "--yes", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("execute err=%v", err)
 	}
@@ -247,10 +314,41 @@ func TestAppsEnvVarDelete_BuildsDeleteBodyWithKeys(t *testing.T) {
 	}
 }
 
+func TestAppsEnvVarDelete_NotModifiableHint(t *testing.T) {
+	factory, stdout, reg := newAppsExecuteFactory(t)
+	reg.Register(&httpmock.Stub{
+		Method: "POST",
+		URL:    "/open-apis/spark/v1/apps/app_x/delete_env_vars",
+		Body: map[string]interface{}{
+			"code": 400000072,
+			"msg":  "Invalid Request: env var (INTEGRATION_TOKEN) is not modifiable",
+		},
+	})
+
+	err := runAppsShortcut(t, AppsEnvVarDelete,
+		[]string{"+env-delete", "--app-id", "app_x", "--key", "INTEGRATION_TOKEN", "--yes", "--as", "user"}, factory, stdout)
+	if err == nil {
+		t.Fatalf("expected not modifiable error, got nil; stdout=%s", stdout.String())
+	}
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("expected typed problem, got %T: %v", err, err)
+	}
+	if p.Code != 400000072 {
+		t.Fatalf("code = %d, want 400000072", p.Code)
+	}
+	if !strings.Contains(p.Hint, "platform-managed") || !strings.Contains(p.Hint, "user-defined") {
+		t.Fatalf("hint = %q, want platform-managed/user-defined guidance", p.Hint)
+	}
+	if strings.Contains(p.Hint, "apps +list") {
+		t.Fatalf("hint should not point at app listing for protected env vars: %q", p.Hint)
+	}
+}
+
 func TestAppsEnvVarDelete_OnlineDryRunDoesNotRequireYes(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	if err := runAppsShortcut(t, AppsEnvVarDelete,
-		[]string{"+envvar-delete", "--app-id", "app_x", "--env", "online",
+		[]string{"+env-delete", "--app-id", "app_x", "--environment", "online",
 			"--key", "SECRET_ONE", "--key", "SECRET_TWO", "--dry-run", "--as", "user"}, factory, stdout); err != nil {
 		t.Fatalf("dry-run err=%v", err)
 	}
@@ -281,14 +379,23 @@ func TestAppsEnvVarDelete_OnlineDryRunDoesNotRequireYes(t *testing.T) {
 func TestAppsEnvVarList_InvalidEnvTypedValidation(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsEnvVarList,
-		[]string{"+envvar-list", "--app-id", "app_x", "--env", "prod", "--as", "user"}, factory, stdout)
-	requireEnvVarValidationProblem(t, err, "--env")
+		[]string{"+env-list", "--app-id", "app_x", "--environment", "prod", "--as", "user"}, factory, stdout)
+	requireEnvVarValidationProblem(t, err, "--environment")
+}
+
+func TestAppsEnvVarList_OldEnvFlagIsNotAlias(t *testing.T) {
+	factory, stdout, _ := newAppsExecuteFactory(t)
+	err := runAppsShortcut(t, AppsEnvVarList,
+		[]string{"+env-list", "--app-id", "app_x", "--env", "online", "--as", "user"}, factory, stdout)
+	if err == nil || !strings.Contains(err.Error(), "unknown flag: --env") {
+		t.Fatalf("expected old --env to be rejected, got %v", err)
+	}
 }
 
 func TestAppsEnvVarSet_InvalidKeyTypedValidation(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsEnvVarSet,
-		[]string{"+envvar-set", "--app-id", "app_x", "--key", "bad-key",
+		[]string{"+env-set", "--app-id", "app_x", "--key", "bad-key",
 			"--value", "super-secret", "--as", "user"}, factory, stdout)
 	requireEnvVarValidationProblem(t, err, "--key")
 }
@@ -296,7 +403,7 @@ func TestAppsEnvVarSet_InvalidKeyTypedValidation(t *testing.T) {
 func TestAppsEnvVarDelete_InvalidKeyTypedValidation(t *testing.T) {
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsEnvVarDelete,
-		[]string{"+envvar-delete", "--app-id", "app_x", "--key", "bad-key",
+		[]string{"+env-delete", "--app-id", "app_x", "--key", "bad-key",
 			"--yes", "--as", "user"}, factory, stdout)
 	requireEnvVarValidationProblem(t, err, "--key")
 }

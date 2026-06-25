@@ -22,7 +22,7 @@ func TestAppsEnvPull_4xxFailureCarriesListHint(t *testing.T) {
 		Status: http.StatusForbidden,
 		Body:   map[string]interface{}{"msg": "permission denied"},
 		OnMatch: func(req *http.Request) {
-			assertEnvVarBody(t, req, map[string]interface{}{"env": "dev"})
+			assertEnvPullBody(t, req)
 		},
 	})
 

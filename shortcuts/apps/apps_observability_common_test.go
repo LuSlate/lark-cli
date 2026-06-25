@@ -33,9 +33,9 @@ func TestAppsObservabilityValidateEnvOnlyOnline(t *testing.T) {
 		t.Fatalf("online should pass: %v", err)
 	}
 	err := validateObservabilityEnv("dev")
-	p := requireAppsValidationParam(t, err, "--env")
+	p := requireAppsValidationParam(t, err, "--environment")
 	if p.Subtype != errs.SubtypeInvalidArgument {
-		t.Fatalf("problem = %#v, want invalid_argument param --env", p)
+		t.Fatalf("problem = %#v, want invalid_argument param --environment", p)
 	}
 	if !strings.Contains(p.Hint, "only online is supported") {
 		t.Fatalf("hint = %q, want only-online guidance", p.Hint)
@@ -63,8 +63,8 @@ func TestAppsObservabilityCommonHelpers(t *testing.T) {
 			t.Fatalf("validateEnvVarEnv(%q) err=%v", env, err)
 		}
 	}
-	requireAppsValidationParam(t, validateEnvVarEnv(""), "--env")
-	requireAppsValidationParam(t, validateEnvVarEnv("boe"), "--env")
+	requireAppsValidationParam(t, validateEnvVarEnv(""), "--environment")
+	requireAppsValidationParam(t, validateEnvVarEnv("boe"), "--environment")
 	got := cleanRepeatedStrings([]string{" a ", "b", "a", "", "b", "c"})
 	want := []string{"a", "b", "c"}
 	if len(got) != len(want) {
