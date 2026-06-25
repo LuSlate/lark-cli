@@ -2,7 +2,7 @@
 
 > **前置条件：** 先阅读 [`../SKILL.md`](../SKILL.md) 和 [`../../lark-shared/SKILL.md`](../../lark-shared/SKILL.md) 了解认证、全局参数和路由规则。
 
-当用户要查看思维笔记节点、读取节点内容、批量创建节点时，入口属于 `lark-doc`，但实际执行命令使用 `lark-cli mindnotes ...`，不是 `docs +...`。
+当用户要查看思维笔记节点 / 节点内容或批量创建节点时，入口属于 `lark-doc`，但实际执行命令使用 `lark-cli mindnotes nodes list/create`，不是 `docs +...`。
 
 ## 命令
 
