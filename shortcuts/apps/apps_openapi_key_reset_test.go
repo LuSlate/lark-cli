@@ -28,7 +28,7 @@ func TestOpenAPIKeyResetExecute_ReturnsNewRaw(t *testing.T) {
 			"code": 0, "msg": "",
 			"data": map[string]interface{}{
 				"api_key": "xxxxxxxxxxxx",
-				"info":    map[string]interface{}{"api_key_id": "1", "name": "k", "api_key": "xxxxxxxxxxxx", "status": float64(1)},
+				"info":    map[string]interface{}{"api_key_id": "k1", "name": "k", "api_key": "xxxxxxxxxxxx", "status": float64(1)},
 			},
 		},
 	})
@@ -42,7 +42,7 @@ func TestOpenAPIKeyResetExecute_ReturnsNewRaw(t *testing.T) {
 	if strings.Count(out, "xxxxxxxxxxxx") != 1 {
 		t.Errorf("raw key must appear exactly once (top-level only, info must be redacted): %s", out)
 	}
-	if !strings.Contains(out, "****9999") {
+	if !strings.Contains(out, "****xxxx") {
 		t.Errorf("redacted info must carry key_preview: %s", out)
 	}
 }
