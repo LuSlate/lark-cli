@@ -6,6 +6,9 @@ package sheets
 import (
 	"bytes"
 	"context"
+	"errors"
+	"io"
+	"io/fs"
 	"mime"
 	"mime/multipart"
 	"os"
@@ -13,6 +16,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/cmdutil"
 	"github.com/larksuite/cli/internal/core"
 	"github.com/larksuite/cli/internal/httpmock"
@@ -104,16 +108,36 @@ func TestUploadSheetImage_ParentType(t *testing.T) {
 	}
 }
 
-// TestUploadSheetImage_FileOpenError confirms a missing image surfaces as an
-// error and no upload request is attempted.
+// TestUploadSheetImage_FileOpenError confirms a missing image surfaces as a
+// typed validation error (category=validation, subtype=invalid_argument) with
+// the original os-level cause preserved for errors.Is, and proves the upload
+// endpoint is never hit. No httpmock stub is registered, so if uploadSheetImage
+// ever tried to POST upload_all the RoundTrip would return a
+// "no stub for POST ..." network failure — that would surface as a
+// non-validation category and fail the metadata assertion below. The
+// category=validation + fs.ErrNotExist cause therefore strictly implies the
+// short-circuit happened before the wire.
 func TestUploadSheetImage_FileOpenError(t *testing.T) {
 	runtime, _ := newSheetMediaTestRuntime(t)
 	cmdutil.TestChdir(t, t.TempDir())
-	// No upload stub is registered: a file-open failure must short-circuit
-	// before any request reaches the wire.
+
 	_, err := uploadSheetImage(runtime, "shtcnTOK123", "missing.png", "missing.png", 1)
 	if err == nil {
 		t.Fatal("expected error for missing file, got nil")
+	}
+
+	p, ok := errs.ProblemOf(err)
+	if !ok {
+		t.Fatalf("err = %v; want typed problem carrier", err)
+	}
+	if p.Category != errs.CategoryValidation {
+		t.Fatalf("category = %q, want %q (non-validation implies the upload endpoint was reached)", p.Category, errs.CategoryValidation)
+	}
+	if p.Subtype != errs.SubtypeInvalidArgument {
+		t.Fatalf("subtype = %q, want %q", p.Subtype, errs.SubtypeInvalidArgument)
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("err = %v; want wrapped fs.ErrNotExist cause to be preserved", err)
 	}
 }
 
@@ -150,10 +174,15 @@ func decodeSheetMediaMultipartBody(t *testing.T, stub *httpmock.Stub) sheetMedia
 	for {
 		part, err := reader.NextPart()
 		if err != nil {
-			break
+			if err == io.EOF {
+				break
+			}
+			t.Fatalf("read multipart part: %v", err)
 		}
 		buf := new(bytes.Buffer)
-		_, _ = buf.ReadFrom(part)
+		if _, err := buf.ReadFrom(part); err != nil {
+			t.Fatalf("read multipart body for %q: %v", part.FormName(), err)
+		}
 		if part.FileName() != "" {
 			body.Files[part.FormName()] = buf.Bytes()
 			continue

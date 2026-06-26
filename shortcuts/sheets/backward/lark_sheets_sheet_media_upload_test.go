@@ -91,6 +91,39 @@ func TestSheetMediaUploadDryRunSmallFile(t *testing.T) {
 	}
 }
 
+// TestSheetMediaUploadDryRunSmallFileOfficeParentType pins the small-file
+// upload_all dry-run preview to the token-derived parent_type so the preview
+// agents/users will copy matches what Execute actually sends. Without this the
+// multipart dry-run branch could drift back to a hard-coded "sheet_image".
+func TestSheetMediaUploadDryRunSmallFileOfficeParentType(t *testing.T) {
+	dir := t.TempDir()
+	withSheetsTestWorkingDir(t, dir)
+	if err := os.WriteFile("img.png", []byte("png-bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, sheetsTestConfig())
+	err := mountAndRunSheets(t, SheetMediaUpload, []string{
+		"+media-upload",
+		"--spreadsheet-token", "fake_office_abc123",
+		"--file", "img.png",
+		"--dry-run", "--as", "user",
+	}, f, stdout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "/open-apis/drive/v1/medias/upload_all") {
+		t.Fatalf("dry-run should use upload_all for small file, got: %s", out)
+	}
+	if !strings.Contains(out, `"office_sheet_file"`) {
+		t.Fatalf("dry-run should include parent_type=office_sheet_file for fake_office_ token, got: %s", out)
+	}
+	if strings.Contains(out, `"sheet_image"`) {
+		t.Fatalf("dry-run must not emit sheet_image for fake_office_ token, got: %s", out)
+	}
+}
+
 func TestSheetMediaUploadDryRunURLExtractsToken(t *testing.T) {
 	dir := t.TempDir()
 	withSheetsTestWorkingDir(t, dir)

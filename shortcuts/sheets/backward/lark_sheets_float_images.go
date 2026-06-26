@@ -90,7 +90,7 @@ var SheetMediaUpload = common.Shortcut{
 			POST("/open-apis/drive/v1/medias/upload_all").
 			Body(map[string]interface{}{
 				"file_name":   fileName,
-				"parent_type": sheetImageParentType,
+				"parent_type": sheetMediaParentType(parentNode),
 				"parent_node": parentNode,
 				"size":        "<file_size>",
 				"file":        "@" + filePath,
