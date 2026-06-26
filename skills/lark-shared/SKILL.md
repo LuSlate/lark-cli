@@ -121,6 +121,19 @@ lark-cli 命令执行后，如果检测到新版本，JSON 输出中会包含 `_
 
 **规则**：不要静默忽略更新提示。即使当前任务与更新无关，也应在完成用户请求后补充告知。
 
+### 自定义安装部分 skills（suite 模式）
+
+默认 `lark-cli update` 会同步全部官方 skills。如果只想安装其中一部分，用 `--skills` 指定（逗号分隔）：
+
+```bash
+lark-cli update --skills lark-calendar,lark-im   # 只安装/同步这些 skill
+```
+
+- 选择会被**记住**：之后直接跑 `lark-cli update` 只同步这个子集，不会装回全部。
+- 恢复全部：`lark-cli update --skills all`。
+- 只同步、**不卸载**：设置 suite 不会删除本地已安装的其他 skill。
+- 名字非法或不是官方 skill 时命令以退出码 `2` 失败，不安装任何东西。
+
 ## 安全规则
 
 - **禁止输出密钥**（appSecret、accessToken）到终端明文。
