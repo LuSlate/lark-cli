@@ -86,10 +86,12 @@ func symArrow() string {
 
 // UpdateOptions holds inputs for the update command.
 type UpdateOptions struct {
-	Factory *cmdutil.Factory
-	JSON    bool
-	Force   bool
-	Check   bool
+	Factory       *cmdutil.Factory
+	JSON          bool
+	Force         bool
+	Check         bool
+	Skills        []string
+	SuiteProvided bool
 }
 
 // NewCmdUpdate creates the update command.
@@ -108,6 +110,7 @@ Detects the installation method automatically:
 Use --json for structured output (for AI agents and scripts).
 Use --check to only check for updates without installing.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.SuiteProvided = cmd.Flags().Changed("skills")
 			return updateRun(opts)
 		},
 	}
@@ -115,6 +118,8 @@ Use --check to only check for updates without installing.`,
 	cmd.Flags().BoolVar(&opts.JSON, "json", false, "structured JSON output")
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force reinstall even if already up to date")
 	cmd.Flags().BoolVar(&opts.Check, "check", false, "only check for updates, do not install")
+	cmd.Flags().StringSliceVar(&opts.Skills, "skills", nil,
+		"comma-separated lark skill names to install and remember (the suite); use --skills all to reset to all official skills")
 	cmdutil.SetRisk(cmd, "high-risk-write")
 
 	return cmd
@@ -124,6 +129,18 @@ func updateRun(opts *UpdateOptions) error {
 	io := opts.Factory.IOStreams
 	cur := currentVersion()
 	updater := newUpdater()
+
+	// 早期格式校验:在任何网络/安装动作之前 fail-fast。
+	var suite *skillscheck.SuiteSelection
+	if opts.SuiteProvided {
+		parsed, err := skillscheck.ParseSuiteSelection(opts.Skills)
+		if err != nil {
+			return reportError(opts, io, "validation",
+				errs.NewValidationError(errs.SubtypeInvalidArgument, "%s", err).
+					WithHint("e.g. --skills lark-calendar,lark-im (or --skills all to reset)"))
+		}
+		suite = parsed
+	}
 
 	if !opts.Check {
 		updater.CleanupStaleFiles()
@@ -147,7 +164,10 @@ func updateRun(opts *UpdateOptions) error {
 	if !opts.Force && !update.IsNewer(latest, cur) {
 		var skillsResult *skillscheck.SyncResult
 		if !opts.Check {
-			skillsResult = runSkillsAndState(updater, io, cur, opts.Force)
+			skillsResult = runSkillsAndState(updater, io, cur, opts.Force, suite)
+			if err := suiteInputError(opts, io, skillsResult); err != nil {
+				return err
+			}
 		}
 		return reportAlreadyUpToDate(opts, io, cur, latest, skillsResult, opts.Check)
 	}
@@ -162,9 +182,9 @@ func updateRun(opts *UpdateOptions) error {
 
 	// 6. Execute update
 	if !detect.CanAutoUpdate() {
-		return doManualUpdate(opts, io, cur, latest, detect, updater)
+		return doManualUpdate(opts, io, cur, latest, detect, updater, suite)
 	}
-	return doNpmUpdate(opts, io, cur, latest, updater)
+	return doNpmUpdate(opts, io, cur, latest, updater, suite)
 }
 
 // --- Output helpers ---
@@ -207,8 +227,11 @@ func reportCheckResult(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest s
 	return nil
 }
 
-func doManualUpdate(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest string, detect selfupdate.DetectResult, updater *selfupdate.Updater) error {
-	skillsResult := runSkillsAndState(updater, io, cur, opts.Force)
+func doManualUpdate(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest string, detect selfupdate.DetectResult, updater *selfupdate.Updater, suite *skillscheck.SuiteSelection) error {
+	skillsResult := runSkillsAndState(updater, io, cur, opts.Force, suite)
+	if err := suiteInputError(opts, io, skillsResult); err != nil {
+		return err
+	}
 
 	reason := detect.ManualReason()
 	if opts.JSON {
@@ -231,7 +254,7 @@ func doManualUpdate(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest stri
 	return nil
 }
 
-func doNpmUpdate(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest string, updater *selfupdate.Updater) error {
+func doNpmUpdate(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest string, updater *selfupdate.Updater, suite *skillscheck.SuiteSelection) error {
 	restore, err := updater.PrepareSelfReplace()
 	if err != nil {
 		return reportError(opts, io, "update_error",
@@ -287,7 +310,10 @@ func doNpmUpdate(opts *UpdateOptions, io *cmdutil.IOStreams, cur, latest string,
 		return output.ErrBare(output.ExitAPI)
 	}
 
-	skillsResult := runSkillsAndState(updater, io, latest, opts.Force)
+	skillsResult := runSkillsAndState(updater, io, latest, opts.Force, suite)
+	if err := suiteInputError(opts, io, skillsResult); err != nil {
+		return err
+	}
 
 	if opts.JSON {
 		result := map[string]interface{}{
@@ -324,8 +350,8 @@ func verificationFailureHint(updater *selfupdate.Updater, latest string) string 
 	return fmt.Sprintf("automatic rollback is unavailable on this platform; reinstall manually (skills will not be synced): npm install -g %s@%s && npx skills add larksuite/cli -y -g, or download %s", selfupdate.NpmPackage, latest, releaseURL(latest))
 }
 
-func runSkillsAndState(updater *selfupdate.Updater, io *cmdutil.IOStreams, stateVersion string, force bool) *skillscheck.SyncResult {
-	if !force {
+func runSkillsAndState(updater *selfupdate.Updater, io *cmdutil.IOStreams, stateVersion string, force bool, suite *skillscheck.SuiteSelection) *skillscheck.SyncResult {
+	if !force && suite == nil {
 		if existing, ok := skillscheck.ReadSyncedVersion(); ok && normalizeVersion(existing) == normalizeVersion(stateVersion) {
 			return nil
 		}
@@ -334,11 +360,23 @@ func runSkillsAndState(updater *selfupdate.Updater, io *cmdutil.IOStreams, state
 		Version: stateVersion,
 		Force:   force,
 		Runner:  updater,
+		Suite:   suite,
 	})
 	if result.Err != nil && strings.Contains(result.Err.Error(), "state not written") {
 		fmt.Fprintf(io.ErrOut, "warning: %v\n", result.Err)
 	}
 	return result
+}
+
+// suiteInputError 把 suite 名字非法(InvalidInput)的 sync 结果映射为退出码 2 的 validation 错误。
+// 返回 nil 表示不是输入错误,调用方继续正常输出流程。
+func suiteInputError(opts *UpdateOptions, io *cmdutil.IOStreams, r *skillscheck.SyncResult) error {
+	if r == nil || !r.InvalidInput {
+		return nil
+	}
+	return reportError(opts, io, "validation",
+		errs.NewValidationError(errs.SubtypeInvalidArgument, "%s", r.Err).
+			WithHint("use a valid official skill name; nothing was installed"))
 }
 
 // reportAlreadyUpToDate emits the JSON / pretty output for the
@@ -402,6 +440,9 @@ func applySkillsResult(env map[string]interface{}, r *skillscheck.SyncResult) {
 		env["skills_action"] = "synced"
 		env["skills_summary"] = skillsSummary(r)
 	}
+	if r != nil && len(r.Suite) > 0 {
+		env["skills_suite"] = r.Suite
+	}
 }
 
 func skillsSummary(r *skillscheck.SyncResult) map[string]interface{} {
@@ -433,5 +474,8 @@ func emitSkillsTextHints(io *cmdutil.IOStreams, r *skillscheck.SyncResult) {
 		if len(r.SkippedDeleted) > 0 {
 			fmt.Fprintf(io.ErrOut, "  To restore all official skills: lark-cli update --force\n")
 		}
+	}
+	if r != nil && len(r.Suite) > 0 {
+		fmt.Fprintf(io.ErrOut, "  Suite: %s (run `lark-cli update --skills all` to restore all)\n", strings.Join(r.Suite, ", "))
 	}
 }

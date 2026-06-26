@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -1006,7 +1007,7 @@ func TestRunSkillsAndState_DedupHit(t *testing.T) {
 			return &selfupdate.NpmResult{}
 		},
 	}
-	got := runSkillsAndState(updater, newTestIO(), "1.0.21", false)
+	got := runSkillsAndState(updater, newTestIO(), "1.0.21", false, nil)
 	if got != nil {
 		t.Errorf("runSkillsAndState() = %+v, want nil for dedup hit", got)
 	}
@@ -1027,7 +1028,7 @@ func TestRunSkillsAndState_DedupForceBypass(t *testing.T) {
 			return successfulSkillsCommand()(args...)
 		},
 	}
-	got := runSkillsAndState(updater, newTestIO(), "1.0.21", true)
+	got := runSkillsAndState(updater, newTestIO(), "1.0.21", true, nil)
 	if got == nil || got.Err != nil {
 		t.Fatalf("runSkillsAndState(force=true) = %+v, want successful result", got)
 	}
@@ -1039,7 +1040,7 @@ func TestRunSkillsAndState_DedupForceBypass(t *testing.T) {
 func TestRunSkillsAndState_SuccessWritesState(t *testing.T) {
 	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
 	updater := &selfupdate.Updater{SkillsCommandOverride: successfulSkillsCommand()}
-	got := runSkillsAndState(updater, newTestIO(), "1.0.21", false)
+	got := runSkillsAndState(updater, newTestIO(), "1.0.21", false, nil)
 	if got == nil || got.Err != nil {
 		t.Fatalf("runSkillsAndState() = %+v, want non-nil with nil Err", got)
 	}
@@ -1064,7 +1065,7 @@ func TestRunSkillsAndState_FailureKeepsOldState(t *testing.T) {
 			return r
 		},
 	}
-	got := runSkillsAndState(updater, newTestIO(), "1.0.21", false)
+	got := runSkillsAndState(updater, newTestIO(), "1.0.21", false, nil)
 	if got == nil || got.Err == nil {
 		t.Fatalf("runSkillsAndState() = %+v, want non-nil with non-nil Err", got)
 	}
@@ -1357,7 +1358,7 @@ func TestRunSkillsAndState_StateWriteFailureWarns(t *testing.T) {
 	t.Cleanup(func() { syncSkills = origSync })
 
 	f, _, stderr := newTestFactory(t)
-	got := runSkillsAndState(&selfupdate.Updater{}, f.IOStreams, "1.0.21", false)
+	got := runSkillsAndState(&selfupdate.Updater{}, f.IOStreams, "1.0.21", false, nil)
 	if got == nil || got.Err == nil {
 		t.Fatalf("runSkillsAndState() = %+v, want non-nil with write error", got)
 	}
@@ -1593,4 +1594,176 @@ func containsString(values []string, target string) bool {
 		}
 	}
 	return false
+}
+
+// captureSyncSkills 替换 syncSkills,记录传入的 SyncOptions 并返回固定结果。
+func captureSyncSkills(t *testing.T, result *skillscheck.SyncResult) *skillscheck.SyncOptions {
+	t.Helper()
+	var captured skillscheck.SyncOptions
+	orig := syncSkills
+	syncSkills = func(opts skillscheck.SyncOptions) *skillscheck.SyncResult {
+		captured = opts
+		return result
+	}
+	t.Cleanup(func() { syncSkills = orig })
+	return &captured
+}
+
+func TestUpdate_SkillsFlagParsedIntoSuite(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, _, _ := newTestFactory(t)
+	cmd := NewCmdUpdate(f)
+	cmd.SetArgs([]string{"--json", "--skills", "lark-calendar,lark-im"})
+
+	origFetch := fetchLatest
+	fetchLatest = func() (string, error) { return "1.0.0", nil }
+	defer func() { fetchLatest = origFetch }()
+	origVersion := currentVersion
+	currentVersion = func() string { return "1.0.0" } // already up to date path
+	defer func() { currentVersion = origVersion }()
+
+	captured := captureSyncSkills(t, &skillscheck.SyncResult{
+		Action: "synced", Official: []string{"lark-calendar", "lark-im"},
+		Updated: []string{"lark-calendar", "lark-im"}, Suite: []string{"lark-calendar", "lark-im"},
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute() err = %v", err)
+	}
+	if captured.Suite == nil || captured.Suite.All {
+		t.Fatalf("captured.Suite = %#v, want explicit list", captured.Suite)
+	}
+	if !reflect.DeepEqual(captured.Suite.Skills, []string{"lark-calendar", "lark-im"}) {
+		t.Fatalf("captured.Suite.Skills = %#v, want [lark-calendar lark-im]", captured.Suite.Skills)
+	}
+}
+
+func TestUpdate_SkillsAllParsedAsReset(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, _, _ := newTestFactory(t)
+	cmd := NewCmdUpdate(f)
+	cmd.SetArgs([]string{"--skills", "all"})
+
+	origFetch := fetchLatest
+	fetchLatest = func() (string, error) { return "1.0.0", nil }
+	defer func() { fetchLatest = origFetch }()
+	origVersion := currentVersion
+	currentVersion = func() string { return "1.0.0" }
+	defer func() { currentVersion = origVersion }()
+
+	captured := captureSyncSkills(t, &skillscheck.SyncResult{Action: "synced"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute() err = %v", err)
+	}
+	if captured.Suite == nil || !captured.Suite.All {
+		t.Fatalf("captured.Suite = %#v, want All=true", captured.Suite)
+	}
+}
+
+func TestUpdate_InvalidSkillsFlag_JSONExit2(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, stdout, _ := newTestFactory(t)
+	cmd := NewCmdUpdate(f)
+	cmd.SetArgs([]string{"--json", "--skills", "all,lark-im"})
+
+	// fetchLatest must NOT be called — validation happens first.
+	origFetch := fetchLatest
+	fetchLatest = func() (string, error) {
+		t.Fatal("fetchLatest called before --skills validation")
+		return "", nil
+	}
+	defer func() { fetchLatest = origFetch }()
+
+	err := cmd.Execute()
+	if got := output.ExitCodeOf(err); got != output.ExitValidation {
+		t.Fatalf("exit code = %d, want %d (ExitValidation)", got, output.ExitValidation)
+	}
+	if !strings.Contains(stdout.String(), `"type": "validation"`) {
+		t.Fatalf("JSON output missing validation type: %s", stdout.String())
+	}
+}
+
+func TestUpdate_UnknownSkillResult_Exit2(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, _, _ := newTestFactory(t)
+	cmd := NewCmdUpdate(f)
+	cmd.SetArgs([]string{"--json", "--skills", "lark-bogus"})
+
+	origFetch := fetchLatest
+	fetchLatest = func() (string, error) { return "1.0.0", nil }
+	defer func() { fetchLatest = origFetch }()
+	origVersion := currentVersion
+	currentVersion = func() string { return "1.0.0" }
+	defer func() { currentVersion = origVersion }()
+
+	captureSyncSkills(t, &skillscheck.SyncResult{
+		Action: "failed", InvalidInput: true,
+		Err: errors.New("unknown skill(s) not in official list: lark-bogus"),
+	})
+
+	err := cmd.Execute()
+	if got := output.ExitCodeOf(err); got != output.ExitValidation {
+		t.Fatalf("exit code = %d, want %d", got, output.ExitValidation)
+	}
+}
+
+func TestUpdate_SkillsSuiteInJSONOutput(t *testing.T) {
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", t.TempDir())
+	f, stdout, _ := newTestFactory(t)
+	cmd := NewCmdUpdate(f)
+	cmd.SetArgs([]string{"--json", "--skills", "lark-im"})
+
+	origFetch := fetchLatest
+	fetchLatest = func() (string, error) { return "1.0.0", nil }
+	defer func() { fetchLatest = origFetch }()
+	origVersion := currentVersion
+	currentVersion = func() string { return "1.0.0" }
+	defer func() { currentVersion = origVersion }()
+
+	captureSyncSkills(t, &skillscheck.SyncResult{
+		Action: "synced", Official: []string{"lark-im"}, Updated: []string{"lark-im"},
+		Suite: []string{"lark-im"},
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute() err = %v", err)
+	}
+	if !strings.Contains(stdout.String(), `"skills_suite"`) {
+		t.Fatalf("JSON output missing skills_suite: %s", stdout.String())
+	}
+}
+
+func TestUpdate_SkillsFlagBypassesVersionEarlyReturn(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	// State synced at the same version → without --skills this would skip sync.
+	if err := skillscheck.WriteState(skillscheck.SkillsState{
+		Version: "1.0.0", UpdatedAt: "2026-06-26T00:00:00Z",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	f, _, _ := newTestFactory(t)
+	cmd := NewCmdUpdate(f)
+	cmd.SetArgs([]string{"--skills", "lark-im"})
+
+	origFetch := fetchLatest
+	fetchLatest = func() (string, error) { return "1.0.0", nil }
+	defer func() { fetchLatest = origFetch }()
+	origVersion := currentVersion
+	currentVersion = func() string { return "1.0.0" }
+	defer func() { currentVersion = origVersion }()
+
+	called := false
+	orig := syncSkills
+	syncSkills = func(opts skillscheck.SyncOptions) *skillscheck.SyncResult {
+		called = true
+		return &skillscheck.SyncResult{Action: "synced", Suite: []string{"lark-im"}}
+	}
+	t.Cleanup(func() { syncSkills = orig })
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute() err = %v", err)
+	}
+	if !called {
+		t.Fatal("syncSkills not called — --skills must bypass the same-version early return")
+	}
 }
