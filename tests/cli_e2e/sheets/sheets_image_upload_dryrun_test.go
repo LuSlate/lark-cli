@@ -29,9 +29,6 @@ func TestSheets_ImageUploadDryRunParentType(t *testing.T) {
 	workDir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(workDir, "img.png"), []byte("png-bytes"), 0o600))
 
-	const nativeToken = "shtDryRunNative"
-	const officeToken = "fake_office_dryrun123"
-
 	type tc struct {
 		name           string
 		args           []string
@@ -43,48 +40,48 @@ func TestSheets_ImageUploadDryRunParentType(t *testing.T) {
 			name: "media-upload native",
 			args: []string{
 				"sheets", "+media-upload",
-				"--spreadsheet-token", nativeToken,
+				"--spreadsheet-token", "shtDryRunNative",
 				"--file", "img.png",
 				"--dry-run",
 			},
-			token:          nativeToken,
+			token:          "shtDryRunNative",
 			wantParentType: "sheet_image",
 		},
 		{
 			name: "media-upload office",
 			args: []string{
 				"sheets", "+media-upload",
-				"--spreadsheet-token", officeToken,
+				"--spreadsheet-token", "fake_office_dryrun",
 				"--file", "img.png",
 				"--dry-run",
 			},
-			token:          officeToken,
+			token:          "fake_office_dryrun",
 			wantParentType: "office_sheet_file",
 		},
 		{
 			name: "cells-set-image native",
 			args: []string{
 				"sheets", "+cells-set-image",
-				"--spreadsheet-token", nativeToken,
+				"--spreadsheet-token", "shtDryRunNative",
 				"--sheet-id", "sheet1",
 				"--range", "A1",
 				"--image", "img.png",
 				"--dry-run",
 			},
-			token:          nativeToken,
+			token:          "shtDryRunNative",
 			wantParentType: "sheet_image",
 		},
 		{
 			name: "cells-set-image office",
 			args: []string{
 				"sheets", "+cells-set-image",
-				"--spreadsheet-token", officeToken,
+				"--spreadsheet-token", "fake_office_dryrun",
 				"--sheet-id", "sheet1",
 				"--range", "A1",
 				"--image", "img.png",
 				"--dry-run",
 			},
-			token:          officeToken,
+			token:          "fake_office_dryrun",
 			wantParentType: "office_sheet_file",
 		},
 	}
