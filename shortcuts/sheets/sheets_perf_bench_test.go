@@ -5,6 +5,7 @@ package sheets
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"runtime"
 	"strings"
@@ -113,6 +114,79 @@ func TestStampMatrixBudgetCap(t *testing.T) {
 	// The pathological case from the review (2.6M cells) → rejected.
 	if err := checkStampMatrixBudget("ranges", "Sheet1!A1:Z100000", 100000, 26); err == nil {
 		t.Fatal("2.6M-cell fan-out should be rejected")
+	}
+}
+
+// --- sibling cap gaps: +table-put/+workbook-create payload, batch aggregate,
+//     batch-update operation count (follow-up to the single fan-out cap) ---
+
+// TestTablePutCellBudgetCap covers the --sheets/--values materialization cap:
+// buildSheetMatrix builds the whole matrix in memory, so the total cell count is
+// bounded before that allocation, summed across all sheets.
+func TestTablePutCellBudgetCap(t *testing.T) {
+	// 1000×1000 = 1,000,000 == cap → allowed.
+	atCap := &tablePayload{Sheets: []tableSheetSpec{{
+		Columns: make([]tableColumnSpec, 1000),
+		Rows:    make([][]interface{}, 1000),
+	}}}
+	if err := atCap.checkCellBudget(); err != nil {
+		t.Fatalf("1,000,000 cells (== cap) should pass, got: %v", err)
+	}
+	// 1000×1001 = 1,001,000 > cap → rejected.
+	over := &tablePayload{Sheets: []tableSheetSpec{{
+		Columns: make([]tableColumnSpec, 1000),
+		Rows:    make([][]interface{}, 1001),
+	}}}
+	if err := over.checkCellBudget(); err == nil {
+		t.Fatal("1,001,000 cells should be rejected")
+	}
+	// Budget is summed across sheets, not per-sheet: 600k + 600k = 1.2M > cap.
+	twoSheets := &tablePayload{Sheets: []tableSheetSpec{
+		{Columns: make([]tableColumnSpec, 1000), Rows: make([][]interface{}, 600)},
+		{Columns: make([]tableColumnSpec, 1000), Rows: make([][]interface{}, 600)},
+	}}
+	if err := twoSheets.checkCellBudget(); err == nil {
+		t.Fatal("1.2M cells across two sheets should be rejected")
+	}
+}
+
+// TestBatchStampAggregateCap covers the batch fan-out aggregate budget — the
+// per-range cap can't stop many ranges from summing past the matrix ceiling.
+func TestBatchStampAggregateCap(t *testing.T) {
+	if err := checkBatchStampBudget(maxStampMatrixCells); err != nil {
+		t.Fatalf("aggregate == cap should pass, got: %v", err)
+	}
+	if err := checkBatchStampBudget(maxStampMatrixCells + 1); err == nil {
+		t.Fatal("aggregate over cap should be rejected")
+	}
+}
+
+// TestBatchFanoutRangeCountCap drives a fan-out shortcut with > maxBatchRanges
+// ranges and expects the shared validateDropdownRanges cap to reject it.
+func TestBatchFanoutRangeCountCap(t *testing.T) {
+	ranges := make([]string, maxBatchRanges+1)
+	for i := range ranges {
+		ranges[i] = "sheet1!A1"
+	}
+	rangesJSON, _ := json.Marshal(ranges)
+	_, _, err := runShortcutCapturingErr(t, CellsBatchSetStyle, []string{
+		"--url", testURL,
+		"--ranges", string(rangesJSON),
+		"--font-weight", "bold",
+		"--dry-run",
+	})
+	requireValidation(t, err, "at most")
+}
+
+// TestBatchOperationsCountCap covers the +batch-update sub-operation count cap.
+func TestBatchOperationsCountCap(t *testing.T) {
+	ops := make([]interface{}, maxBatchOperations+1)
+	for i := range ops {
+		ops[i] = map[string]interface{}{"shortcut": "+cells-set", "input": map[string]interface{}{}}
+	}
+	_, err := translateBatchOperations(ops, testURL)
+	if err == nil || !strings.Contains(err.Error(), "at most") {
+		t.Fatalf("expected operations count cap error, got: %v", err)
 	}
 }
 
