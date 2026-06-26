@@ -13,7 +13,7 @@ npx @larksuite/cli@latest install
 ## 安装插件
 
 ```
-/plugin marketplace add LuSlate/cli
+/plugin marketplace add LuSlate/lark-cli
 /plugin install lark-cli@larksuite
 ```
 
