@@ -853,3 +853,41 @@ func TestSyncSkills_FallbackBreaksDegradationLoop(t *testing.T) {
 		t.Fatalf("second sync: installedAll = %d, want 0 (incremental, not fallback)", runner2.installedAll)
 	}
 }
+
+func TestParseSuiteSelection(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		wantAll  bool
+		wantList []string
+		wantErr  string // substring; "" means no error
+	}{
+		{name: "explicit list", input: []string{"lark-calendar", "lark-im"}, wantList: []string{"lark-calendar", "lark-im"}},
+		{name: "trim and dedup and sort", input: []string{" lark-im ", "lark-im", "lark-calendar"}, wantList: []string{"lark-calendar", "lark-im"}},
+		{name: "all keyword", input: []string{"all"}, wantAll: true},
+		{name: "all case insensitive", input: []string{"ALL"}, wantAll: true},
+		{name: "all mixed", input: []string{"all", "lark-im"}, wantErr: "cannot be combined"},
+		{name: "empty", input: []string{"", "  "}, wantErr: "at least one"},
+		{name: "invalid name", input: []string{"bad name"}, wantErr: "invalid skill name"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseSuiteSelection(tt.input)
+			if tt.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("ParseSuiteSelection(%v) err = %v, want substring %q", tt.input, err, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("ParseSuiteSelection(%v) err = %v, want nil", tt.input, err)
+			}
+			if got.All != tt.wantAll {
+				t.Fatalf("All = %v, want %v", got.All, tt.wantAll)
+			}
+			if !tt.wantAll && !reflect.DeepEqual(got.Skills, tt.wantList) {
+				t.Fatalf("Skills = %#v, want %#v", got.Skills, tt.wantList)
+			}
+		})
+	}
+}

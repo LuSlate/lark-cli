@@ -28,6 +28,56 @@ type SyncInput struct {
 	Force          bool
 }
 
+// SuiteSelection 表示本次调用通过 --skills 传入的 suite 选择。
+// All 为 true 表示 "--skills all"(重置为全部官方 skill);否则 Skills 为显式名单。
+type SuiteSelection struct {
+	All    bool
+	Skills []string
+}
+
+// ParseSuiteSelection 解析 --skills 的原始值,只做格式校验(不校验名字是否是真实官方 skill)。
+// 调用方仅在用户显式传入 --skills 时调用本函数。
+func ParseSuiteSelection(rawNames []string) (*SuiteSelection, error) {
+	seen := map[string]bool{}
+	cleaned := []string{}
+	hasAll := false
+	for _, raw := range rawNames {
+		name := strings.TrimSpace(raw)
+		if name == "" {
+			continue
+		}
+		if strings.EqualFold(name, "all") {
+			hasAll = true
+			continue
+		}
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		cleaned = append(cleaned, name)
+	}
+	if hasAll {
+		if len(cleaned) > 0 {
+			return nil, fmt.Errorf("--skills all cannot be combined with other skill names")
+		}
+		return &SuiteSelection{All: true}, nil
+	}
+	if len(cleaned) == 0 {
+		return nil, fmt.Errorf("--skills requires at least one skill name")
+	}
+	invalid := []string{}
+	for _, name := range cleaned {
+		if !skillNamePattern.MatchString(name) {
+			invalid = append(invalid, name)
+		}
+	}
+	if len(invalid) > 0 {
+		return nil, fmt.Errorf("invalid skill name(s): %s", strings.Join(invalid, ", "))
+	}
+	sort.Strings(cleaned)
+	return &SuiteSelection{Skills: cleaned}, nil
+}
+
 type SyncPlan struct {
 	Version        string
 	OfficialSkills []string
