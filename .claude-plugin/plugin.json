@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "lark-cli",
+  "displayName": "Lark / Feishu CLI",
+  "description": "飞书/Lark 官方 CLI 的 AI Agent 技能集：日历、IM、文档、表格、多维表格、任务、审批、邮件、会议、OKR、Wiki 等 18 个业务域共 200+ 命令。技能调用 lark-cli 二进制，需先安装：npx @larksuite/cli@latest install",
+  "author": {
+    "name": "larksuite"
+  },
+  "homepage": "https://github.com/larksuite/cli",
+  "repository": "https://github.com/larksuite/cli",
+  "license": "Apache-2.0",
+  "keywords": ["lark", "feishu", "飞书", "cli", "calendar", "im", "doc", "sheet", "base", "task", "approval"],
+  "skills": ["./skills"]
+}

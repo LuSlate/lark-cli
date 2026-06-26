@@ -1,0 +1,41 @@
+name: Sync skills from upstream
+
+# 每日把 larksuite/cli 的 skills/ 镜像到本 fork。
+# 只改 skills/，所以默认 GITHUB_TOKEN 即可推送（无需 PAT，也不碰 .github/workflows）。
+# 每产生一个新 commit，Claude Code 插件版本(=commit SHA)即更新，用户 /plugin update 可拉取。
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # 每天 03:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mirror skills/ from larksuite/cli
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/larksuite/cli.git
+          git fetch --depth=1 upstream main
+          rm -rf skills
+          git checkout FETCH_HEAD -- skills
+          git add -A skills
+
+      - name: Commit & push if changed
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo "skills already up to date"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          UP=$(git rev-parse --short FETCH_HEAD)
+          git commit -m "chore: sync skills from larksuite/cli@${UP}"
+          git push

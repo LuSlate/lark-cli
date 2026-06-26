@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "larksuite",
+  "owner": {
+    "name": "larksuite"
+  },
+  "description": "飞书/Lark CLI 的 Claude Code 插件市场。skills 每日自动同步上游 larksuite/cli。",
+  "plugins": [
+    {
+      "name": "lark-cli",
+      "source": "./",
+      "description": "飞书/Lark 官方 CLI 的 AI Agent 技能集（26 个技能，18 个业务域）。需先安装 lark-cli 二进制：npx @larksuite/cli@latest install"
+    }
+  ]
+}
