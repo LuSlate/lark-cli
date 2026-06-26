@@ -19,6 +19,10 @@ var AppsPluginList = common.Shortcut{
 	Command:     "+plugin-list",
 	Description: "List declared plugin packages and their installation status",
 	Risk: "read",
+	Tips: []string{
+		"Example: lark-cli apps +plugin-list",
+		"Example: lark-cli apps +plugin-list --format pretty",
+	},
 	Flags: []common.Flag{},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		return common.NewDryRunAPI().

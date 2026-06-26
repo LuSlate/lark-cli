@@ -32,6 +32,11 @@ var AppsPluginInstall = common.Shortcut{
 	Risk:             "write",
 	ConditionalScopes: []string{"spark:app:read"},
 	AuthTypes:         []string{"user"},
+	Tips: []string{
+		"Example: lark-cli apps +plugin-install --name @official-plugins/ai-text-generate",
+		"Example: lark-cli apps +plugin-install --name @official-plugins/ai-text-generate --version 1.0.0",
+		"Example: lark-cli apps +plugin-install  (install all declared plugins in package.json)",
+	},
 	Flags: []common.Flag{
 		{Name: "name", Desc: "plugin key (e.g. @official-plugins/ai-text-generate); omit to install all declared plugins"},
 		{Name: "version", Desc: "plugin version (e.g. 1.0.0); omit to install latest"},
