@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/extension/fileio"
-	"github.com/larksuite/cli/internal/output"
 	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/shortcuts/common"
 	"github.com/larksuite/cli/shortcuts/drive"
@@ -54,7 +54,7 @@ var WorkbookInfo = common.Shortcut{
 		})
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ var SheetCreate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -114,17 +114,20 @@ var SheetCreate = common.Shortcut{
 		runtime.Out(out, nil)
 		return nil
 	},
+	Tips: []string{
+		"+sheet-create makes an empty sub-sheet. To create a sub-sheet and fill it with typed data and/or styles in one step, use +table-put (missing sheets named in the payload are created automatically) with its --sheets and --styles flags.",
+	},
 }
 
 func sheetCreateInput(runtime flagView, token string) (map[string]interface{}, error) {
 	if strings.TrimSpace(runtime.Str("title")) == "" {
-		return nil, common.FlagErrorf("--title is required")
+		return nil, common.ValidationErrorf("--title is required")
 	}
 	if n := runtime.Int("row-count"); n < 0 || n > 50000 {
-		return nil, common.FlagErrorf("--row-count must be between 0 and 50000")
+		return nil, common.ValidationErrorf("--row-count must be between 0 and 50000")
 	}
 	if n := runtime.Int("col-count"); n < 0 || n > 200 {
-		return nil, common.FlagErrorf("--col-count must be between 0 and 200")
+		return nil, common.ValidationErrorf("--col-count must be between 0 and 200")
 	}
 	input := map[string]interface{}{
 		"excel_id":   token,
@@ -163,7 +166,7 @@ func sheetRenameInput(runtime flagView, token, sheetID, sheetName string) (map[s
 		return nil, err
 	}
 	if strings.TrimSpace(runtime.Str("title")) == "" {
-		return nil, common.FlagErrorf("--title is required")
+		return nil, common.ValidationErrorf("--title is required")
 	}
 	input := map[string]interface{}{
 		"excel_id":  token,
@@ -188,7 +191,7 @@ func sheetSetTabColorInput(runtime flagView, token, sheetID, sheetName string) (
 		return nil, err
 	}
 	if !runtime.Changed("color") {
-		return nil, common.FlagErrorf("--color is required (empty string clears)")
+		return nil, common.ValidationErrorf("--color is required (empty string clears)")
 	}
 	input := map[string]interface{}{
 		"excel_id":  token,
@@ -218,7 +221,7 @@ var SheetDelete = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -260,7 +263,7 @@ var SheetRename = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -307,13 +310,13 @@ var SheetMove = common.Shortcut{
 			return err
 		}
 		if !runtime.Changed("index") {
-			return common.FlagErrorf("--index is required")
+			return common.ValidationErrorf("--index is required")
 		}
 		if runtime.Int("index") < 0 {
-			return common.FlagErrorf("--index must be >= 0")
+			return common.ValidationErrorf("--index must be >= 0")
 		}
 		if runtime.Changed("source-index") && runtime.Int("source-index") < 0 {
-			return common.FlagErrorf("--source-index must be >= 0")
+			return common.ValidationErrorf("--source-index must be >= 0")
 		}
 		return nil
 	},
@@ -330,7 +333,7 @@ var SheetMove = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -402,7 +405,7 @@ var SheetCopy = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -475,7 +478,7 @@ func newSheetVisibilityShortcut(command, desc, op string) common.Shortcut {
 			return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -515,7 +518,7 @@ var SheetSetTabColor = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "modify_workbook_structure", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -569,18 +572,19 @@ var WorkbookCreate = common.Shortcut{
 	Flags:       flagsFor("+workbook-create"),
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		if strings.TrimSpace(runtime.Str("title")) == "" {
-			return common.FlagErrorf("--title is required")
+			return common.ValidationErrorf("--title is required")
 		}
-		// --sheets (typed) is an alternative, mutually exclusive data entry to the
-		// untyped --values. Gated on Changed (not just non-empty): an explicitly-
-		// given but empty --sheets (e.g. empty stdin / file) is an error, not a
-		// silent fall-through to creating an empty workbook.
-		if runtime.Changed("sheets") {
+		// --sheets (typed JSON) is the typed data entry, mutually exclusive
+		// with the untyped --values. Gating on Changed (not just non-empty)
+		// catches an explicitly-given but empty payload as an error instead
+		// of letting it fall through to creating an empty workbook.
+		sheetsGiven := runtime.Changed("sheets")
+		if sheetsGiven && runtime.Str("values") != "" {
+			return common.ValidationErrorf("--values is mutually exclusive with --sheets")
+		}
+		if sheetsGiven {
 			if strings.TrimSpace(runtime.Str("sheets")) == "" {
-				return common.FlagErrorf("--sheets was given but resolved to empty (empty stdin/file?); pass a typed payload, or drop --sheets to create an empty workbook")
-			}
-			if runtime.Str("values") != "" {
-				return common.FlagErrorf("--sheets is mutually exclusive with --values")
+				return common.ValidationErrorf("--sheets was given but resolved to empty (empty stdin/file?); pass a typed payload, or drop --sheets to create an empty workbook")
 			}
 			payload, err := parseTablePutPayload(runtime)
 			if err != nil {
@@ -617,6 +621,13 @@ var WorkbookCreate = common.Shortcut{
 		// Mirrors +table-put's dry-run against a placeholder token.
 		payload, sheetStyles, _ := workbookCreateData(runtime)
 		if payload == nil {
+			// Style-only payload with no cell-rectangle extent (e.g. only
+			// row_sizes or col_sizes). No set_cell_range to render, but the
+			// visual ops (merges / row+col sizes) still run in Execute, so
+			// they should show up in the dry-run plan too.
+			if styles := sheetStyles.styleFor(0); styles != nil {
+				appendWorkbookCreateVisualOpsDryRun(dry, "<new-token>", "", valuesSheetName, styles)
+			}
 			return dry
 		}
 		for i := range payload.Sheets {
@@ -643,7 +654,7 @@ var WorkbookCreate = common.Shortcut{
 		if v := strings.TrimSpace(runtime.Str("folder-token")); v != "" {
 			body["folder_token"] = v
 		}
-		data, err := runtime.CallAPI("POST", "/open-apis/sheets/v3/spreadsheets", nil, body)
+		data, err := runtime.CallAPITyped("POST", "/open-apis/sheets/v3/spreadsheets", nil, body)
 		if err != nil {
 			return err
 		}
@@ -653,7 +664,7 @@ var WorkbookCreate = common.Shortcut{
 			token = common.GetString(ss, "token")
 		}
 		if token == "" {
-			return output.Errorf(output.ExitAPI, "api_error", "spreadsheet created but token missing in response")
+			return errs.NewInternalError(errs.SubtypeInvalidResponse, "spreadsheet created but token missing in response")
 		}
 
 		result := map[string]interface{}{"spreadsheet": ss}
@@ -669,15 +680,27 @@ var WorkbookCreate = common.Shortcut{
 		if payload != nil {
 			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
 			if err != nil {
-				return workbookCreatedButFillFailed(token, ss,
-					fmt.Sprintf("resolving its default sheet for the write failed: %v", err))
+				return workbookCreatedButFillFailed(runtime, token, "resolving its default sheet for the write failed", err)
 			}
 			written, err := writeTypedSheets(ctx, runtime, token, payload, firstSheetID, sheetStyles)
 			if err != nil {
-				return workbookCreatedButFillFailed(token, ss,
-					fmt.Sprintf("write failed: %v", err))
+				return workbookCreatedButFillFailed(runtime, token, "initial fill failed", err)
 			}
 			result["sheets"] = written
+		} else if styles := sheetStyles.styleFor(0); styles != nil {
+			// Style-only payloads (e.g. --styles with only row_sizes or col_sizes
+			// and no --values/--sheets) don't write any cells but still need their
+			// visual ops applied — otherwise the merges/sizes would be silently
+			// dropped. workbookCreateStyleDimensions can't expand a row-only or
+			// column-only range into a cell rectangle, so the no-data branch lives
+			// here.
+			firstSheetID, err := lookupFirstSheetID(ctx, runtime, token)
+			if err != nil {
+				return workbookCreatedButFillFailed(runtime, token, "resolving its default sheet for the write failed", err)
+			}
+			if err := applyWorkbookCreateVisualOps(ctx, runtime, token, firstSheetID, styles); err != nil {
+				return workbookCreatedButFillFailed(runtime, token, "applying visual styles failed", err)
+			}
 		}
 		runtime.Out(result, nil)
 		return nil
@@ -688,24 +711,35 @@ var WorkbookCreate = common.Shortcut{
 	},
 }
 
-// workbookCreatedButFillFailed builds a structured partial-success error for the
-// window where the spreadsheet POST succeeded but the follow-up initial fill did
-// not. The new spreadsheet_token is surfaced in the error detail so callers can
-// retry the fill (+cells-set / +csv-put) or delete the orphan, instead of only
-// finding the token interpolated into a bare error string.
-func workbookCreatedButFillFailed(token string, spreadsheet interface{}, reason string) error {
-	return &output.ExitError{
-		Code: output.ExitAPI,
-		Detail: &output.ErrDetail{
-			Type:    "partial_success",
-			Message: fmt.Sprintf("spreadsheet %s created but %s", token, reason),
-			Hint:    "the spreadsheet exists; retry the fill with the returned spreadsheet_token, or delete it",
-			Detail: map[string]interface{}{
-				"spreadsheet_token": token,
-				"spreadsheet":       spreadsheet,
-			},
-		},
+// workbookCreatedButFillFailed reports a workbook-create where the spreadsheet
+// POST succeeded but the follow-up initial fill did not. It is the same
+// partial-state shape as +table-put's multi-sheet half-write: stdout carries an
+// ok:false envelope with the new spreadsheet_token (so the caller can retry the
+// fill via +cells-set / +csv-put, or delete the orphan), and the process exits
+// with the partial-failure signal — keeping a single sheets-domain contract for
+// "the side effect landed but the follow-up didn't" instead of two (this used to
+// surface as a typed failed_precondition on stderr, which agents couldn't tell
+// apart from a plain validation refusal). The underlying cause's typed shape is
+// flattened into a structured `cause` field so the inner subtype / category /
+// message stays diagnosable from the JSON envelope alone.
+func workbookCreatedButFillFailed(runtime *common.RuntimeContext, token, reason string, cause error) error {
+	data := map[string]interface{}{
+		"spreadsheet_token": token,
+		"reason":            fmt.Sprintf("spreadsheet %s created but %s", token, reason),
+		"hint":              "the spreadsheet exists; retry the fill with the returned spreadsheet_token (+cells-set / +csv-put), or delete it",
 	}
+	if cause != nil {
+		if p, ok := errs.ProblemOf(cause); ok {
+			data["cause"] = map[string]interface{}{
+				"category": string(p.Category),
+				"subtype":  string(p.Subtype),
+				"message":  p.Message,
+			}
+		} else {
+			data["cause"] = map[string]interface{}{"message": cause.Error()}
+		}
+	}
+	return runtime.OutPartialFailure(data, nil)
 }
 
 // valuesSheetName is the synthesized sheet name for the untyped --values path.
@@ -823,17 +857,22 @@ func parseValuesRows(runtime flagView) ([][]interface{}, error) {
 	dec.UseNumber()
 	var v interface{}
 	if err := dec.Decode(&v); err != nil {
-		return nil, common.FlagErrorf("--values: invalid JSON: %v", err)
+		return nil, common.ValidationErrorf("--values: invalid JSON: %v", err)
+	}
+	// Reject trailing non-whitespace after the first JSON value: see
+	// decoderExpectEOF in lark_sheet_table_io.go for the rationale.
+	if err := decoderExpectEOF(dec); err != nil {
+		return nil, common.ValidationErrorf("--values: %v", err).WithCause(err)
 	}
 	arr, ok := v.([]interface{})
 	if !ok {
-		return nil, common.FlagErrorf("--values must be a JSON 2D array")
+		return nil, common.ValidationErrorf("--values must be a JSON 2D array")
 	}
 	rows := make([][]interface{}, len(arr))
 	for i, r := range arr {
 		cells, ok := r.([]interface{})
 		if !ok {
-			return nil, common.FlagErrorf("--values[%d] must be an array", i)
+			return nil, common.ValidationErrorf("--values[%d] must be an array", i)
 		}
 		rows[i] = cells
 	}
@@ -894,7 +933,7 @@ func parseWorkbookCreateStyles(runtime flagView) (*workbookCreateStylePayload, e
 		return nil, err
 	}
 	if len(items) != 1 {
-		return nil, common.FlagErrorf("--styles.styles must contain exactly one item when using --values")
+		return nil, common.ValidationErrorf("--styles.styles must contain exactly one item when using --values")
 	}
 	return parseWorkbookCreateStyleItem(items[0], "--styles.styles[0]")
 }
@@ -915,17 +954,17 @@ func parseWorkbookCreateSheetStyles(runtime flagView, payload *tablePayload) (*w
 		return nil, err
 	}
 	if len(items) != len(payload.Sheets) {
-		return nil, common.FlagErrorf("--styles.styles has %d items, want %d to match --sheets.sheets", len(items), len(payload.Sheets))
+		return nil, common.ValidationErrorf("--styles.styles has %d items, want %d to match --sheets.sheets", len(items), len(payload.Sheets))
 	}
 	out := &workbookCreateSheetStyles{ByName: map[string]*workbookCreateStylePayload{}}
 	out.ByIndex = make([]*workbookCreateStylePayload, len(payload.Sheets))
 	for i, item := range items {
 		name, _ := item["name"].(string)
 		if strings.TrimSpace(name) == "" {
-			return nil, common.FlagErrorf("--styles.styles[%d].name is required", i)
+			return nil, common.ValidationErrorf("--styles.styles[%d].name is required", i)
 		}
 		if name != payload.Sheets[i].Name {
-			return nil, common.FlagErrorf("--styles.styles[%d].name %q must match --sheets.sheets[%d].name %q", i, name, i, payload.Sheets[i].Name)
+			return nil, common.ValidationErrorf("--styles.styles[%d].name %q must match --sheets.sheets[%d].name %q", i, name, i, payload.Sheets[i].Name)
 		}
 		style, err := parseWorkbookCreateStyleItem(item, fmt.Sprintf("--styles.styles[%d]", i))
 		if err != nil {
@@ -940,21 +979,21 @@ func parseWorkbookCreateSheetStyles(runtime flagView, payload *tablePayload) (*w
 func parseWorkbookCreateStylesItems(v interface{}) ([]map[string]interface{}, error) {
 	root, ok := v.(map[string]interface{})
 	if !ok {
-		return nil, common.FlagErrorf("--styles must be a JSON object shaped as {\"styles\":[...]}")
+		return nil, common.ValidationErrorf("--styles must be a JSON object shaped as {\"styles\":[...]}")
 	}
 	rawItems, ok := root["styles"]
 	if !ok {
-		return nil, common.FlagErrorf("--styles.styles is required")
+		return nil, common.ValidationErrorf("--styles.styles is required")
 	}
 	arr, ok := rawItems.([]interface{})
 	if !ok {
-		return nil, common.FlagErrorf("--styles.styles must be an array")
+		return nil, common.ValidationErrorf("--styles.styles must be an array")
 	}
 	items := make([]map[string]interface{}, len(arr))
 	for i, raw := range arr {
 		item, ok := raw.(map[string]interface{})
 		if !ok {
-			return nil, common.FlagErrorf("--styles.styles[%d] must be an object", i)
+			return nil, common.ValidationErrorf("--styles.styles[%d] must be an object", i)
 		}
 		items[i] = item
 	}
@@ -989,7 +1028,7 @@ func parseWorkbookCreateStyleItem(item map[string]interface{}, path string) (*wo
 		}
 	}
 	if len(payload.CellStyles) == 0 && len(payload.RowSizes) == 0 && len(payload.ColSizes) == 0 && len(payload.CellMerges) == 0 {
-		return nil, common.FlagErrorf("%s must include at least one of cell_styles/row_sizes/col_sizes/cell_merges", path)
+		return nil, common.ValidationErrorf("%s must include at least one of cell_styles/row_sizes/col_sizes/cell_merges", path)
 	}
 	return payload, nil
 }
@@ -997,20 +1036,20 @@ func parseWorkbookCreateStyleItem(item map[string]interface{}, path string) (*wo
 func parseWorkbookCreateCellStyleOps(v interface{}, path string) ([]workbookCreateCellStyleOp, error) {
 	arr, ok := v.([]interface{})
 	if !ok {
-		return nil, common.FlagErrorf("%s must be an array", path)
+		return nil, common.ValidationErrorf("%s must be an array", path)
 	}
 	ops := make([]workbookCreateCellStyleOp, 0, len(arr))
 	for i, raw := range arr {
 		op, ok := raw.(map[string]interface{})
 		if !ok {
-			return nil, common.FlagErrorf("%s[%d] must be an object", path, i)
+			return nil, common.ValidationErrorf("%s[%d] must be an object", path, i)
 		}
 		rangeStr, err := requireWorkbookCreateRange(op, fmt.Sprintf("%s[%d]", path, i))
 		if err != nil {
 			return nil, err
 		}
 		if _, _, _, _, err := workbookCreateStyleRangeBounds(rangeStr); err != nil {
-			return nil, common.FlagErrorf("%s[%d].range %q: %v", path, i, rangeStr, err)
+			return nil, common.ValidationErrorf("%s[%d].range %q: %v", path, i, rangeStr, err)
 		}
 		styleObj := make(map[string]interface{}, len(op)-1)
 		for k, v := range op {
@@ -1024,7 +1063,7 @@ func parseWorkbookCreateCellStyleOps(v interface{}, path string) ([]workbookCrea
 			return nil, err
 		}
 		if len(style) == 0 {
-			return nil, common.FlagErrorf("%s[%d] must include at least one style field", path, i)
+			return nil, common.ValidationErrorf("%s[%d] must include at least one style field", path, i)
 		}
 		ops = append(ops, workbookCreateCellStyleOp{Range: rangeStr, Style: style})
 	}
@@ -1034,33 +1073,33 @@ func parseWorkbookCreateCellStyleOps(v interface{}, path string) ([]workbookCrea
 func parseWorkbookCreateMergeOps(v interface{}, path string) ([]workbookCreateMergeOp, error) {
 	arr, ok := v.([]interface{})
 	if !ok {
-		return nil, common.FlagErrorf("%s must be an array", path)
+		return nil, common.ValidationErrorf("%s must be an array", path)
 	}
 	ops := make([]workbookCreateMergeOp, 0, len(arr))
 	for i, raw := range arr {
 		op, ok := raw.(map[string]interface{})
 		if !ok {
-			return nil, common.FlagErrorf("%s[%d] must be an object", path, i)
+			return nil, common.ValidationErrorf("%s[%d] must be an object", path, i)
 		}
 		rangeStr, err := requireWorkbookCreateRange(op, fmt.Sprintf("%s[%d]", path, i))
 		if err != nil {
 			return nil, err
 		}
 		if _, _, _, _, err := workbookCreateStyleRangeBounds(rangeStr); err != nil {
-			return nil, common.FlagErrorf("%s[%d].range %q: %v", path, i, rangeStr, err)
+			return nil, common.ValidationErrorf("%s[%d].range %q: %v", path, i, rangeStr, err)
 		}
 		mergeType := "all"
 		if raw, ok := op["merge_type"]; ok {
 			v, ok := raw.(string)
 			if !ok || strings.TrimSpace(v) == "" {
-				return nil, common.FlagErrorf("%s[%d].merge_type must be a non-empty string", path, i)
+				return nil, common.ValidationErrorf("%s[%d].merge_type must be a non-empty string", path, i)
 			}
 			mergeType = strings.TrimSpace(v)
 		}
 		switch mergeType {
 		case "all", "rows", "columns":
 		default:
-			return nil, common.FlagErrorf("%s[%d].merge_type %q is invalid (want all/rows/columns)", path, i, mergeType)
+			return nil, common.ValidationErrorf("%s[%d].merge_type %q is invalid (want all/rows/columns)", path, i, mergeType)
 		}
 		if err := rejectUnexpectedWorkbookStyleFields(op, fmt.Sprintf("%s[%d]", path, i), "range", "merge_type"); err != nil {
 			return nil, err
@@ -1073,13 +1112,13 @@ func parseWorkbookCreateMergeOps(v interface{}, path string) ([]workbookCreateMe
 func parseWorkbookCreateResizeOps(v interface{}, path, dimension string) ([]workbookCreateResizeOp, error) {
 	arr, ok := v.([]interface{})
 	if !ok {
-		return nil, common.FlagErrorf("%s must be an array", path)
+		return nil, common.ValidationErrorf("%s must be an array", path)
 	}
 	ops := make([]workbookCreateResizeOp, 0, len(arr))
 	for i, raw := range arr {
 		op, ok := raw.(map[string]interface{})
 		if !ok {
-			return nil, common.FlagErrorf("%s[%d] must be an object", path, i)
+			return nil, common.ValidationErrorf("%s[%d] must be an object", path, i)
 		}
 		rangeStr, err := requireWorkbookCreateRange(op, fmt.Sprintf("%s[%d]", path, i))
 		if err != nil {
@@ -1091,41 +1130,41 @@ func parseWorkbookCreateResizeOps(v interface{}, path, dimension string) ([]work
 			if dimension == "column" {
 				want = "column letters like A:E"
 			}
-			return nil, common.FlagErrorf("%s[%d].range %q must use %s: %v", path, i, rangeStr, want, err)
+			return nil, common.ValidationErrorf("%s[%d].range %q must use %s: %v", path, i, rangeStr, want, err)
 		}
 		if parsedDim != dimension {
 			want := "row numbers like 2:10"
 			if dimension == "column" {
 				want = "column letters like A:E"
 			}
-			return nil, common.FlagErrorf("%s[%d].range %q must use %s", path, i, rangeStr, want)
+			return nil, common.ValidationErrorf("%s[%d].range %q must use %s", path, i, rangeStr, want)
 		}
 		resizeType, _ := op["type"].(string)
 		resizeType = strings.TrimSpace(resizeType)
 		if resizeType == "" {
-			return nil, common.FlagErrorf("%s[%d].type is required (pixel/standard%s)", path, i, autoSuffix(dimension))
+			return nil, common.ValidationErrorf("%s[%d].type is required (pixel/standard%s)", path, i, autoSuffix(dimension))
 		}
 		if dimension == "column" && resizeType == "auto" {
-			return nil, common.FlagErrorf("%s[%d].type auto is rows-only", path, i)
+			return nil, common.ValidationErrorf("%s[%d].type auto is rows-only", path, i)
 		}
 		switch resizeType {
 		case "pixel", "standard", "auto":
 		default:
-			return nil, common.FlagErrorf("%s[%d].type %q is invalid (want pixel/standard%s)", path, i, resizeType, autoSuffix(dimension))
+			return nil, common.ValidationErrorf("%s[%d].type %q is invalid (want pixel/standard%s)", path, i, resizeType, autoSuffix(dimension))
 		}
 		size := 0
 		if raw, ok := op["size"]; ok {
 			n, ok := util.ToFloat64(raw)
 			if !ok || n <= 0 {
-				return nil, common.FlagErrorf("%s[%d].size must be a positive number", path, i)
+				return nil, common.ValidationErrorf("%s[%d].size must be a positive number", path, i)
 			}
 			size = int(n)
 		}
 		if resizeType == "pixel" && size <= 0 {
-			return nil, common.FlagErrorf("%s[%d].type pixel requires size", path, i)
+			return nil, common.ValidationErrorf("%s[%d].type pixel requires size", path, i)
 		}
 		if resizeType != "pixel" && size > 0 {
-			return nil, common.FlagErrorf("%s[%d].size is only valid with type pixel", path, i)
+			return nil, common.ValidationErrorf("%s[%d].size is only valid with type pixel", path, i)
 		}
 		if err := rejectUnexpectedWorkbookStyleFields(op, fmt.Sprintf("%s[%d]", path, i), "range", "type", "size"); err != nil {
 			return nil, err
@@ -1138,11 +1177,11 @@ func parseWorkbookCreateResizeOps(v interface{}, path, dimension string) ([]work
 func requireWorkbookCreateRange(op map[string]interface{}, path string) (string, error) {
 	rangeRaw, ok := op["range"]
 	if !ok {
-		return "", common.FlagErrorf("%s.range is required", path)
+		return "", common.ValidationErrorf("%s.range is required", path)
 	}
 	rangeStr, ok := rangeRaw.(string)
 	if !ok || strings.TrimSpace(rangeStr) == "" {
-		return "", common.FlagErrorf("%s.range must be a non-empty string", path)
+		return "", common.ValidationErrorf("%s.range must be a non-empty string", path)
 	}
 	return strings.TrimSpace(rangeStr), nil
 }
@@ -1154,7 +1193,7 @@ func rejectUnexpectedWorkbookStyleFields(op map[string]interface{}, path string,
 	}
 	for k := range op {
 		if _, ok := allow[k]; !ok {
-			return common.FlagErrorf("%s.%s is not valid here", path, k)
+			return common.ValidationErrorf("%s.%s is not valid here", path, k)
 		}
 	}
 	return nil
@@ -1172,26 +1211,29 @@ func normalizeWorkbookCreateStyleObject(in map[string]interface{}, path string) 
 	if len(in) == 0 {
 		return nil, nil
 	}
+	if err := normalizeCellStyleAliases(in, path); err != nil {
+		return nil, err
+	}
 	out := map[string]interface{}{}
 	cellStyle := map[string]interface{}{}
 	for k, v := range in {
 		switch k {
 		case "cell_styles":
-			return nil, common.FlagErrorf("%s.cell_styles is not supported inside cell_styles[]; put style fields directly on the item", path)
+			return nil, common.ValidationErrorf("%s.cell_styles is not supported inside cell_styles[]; put style fields directly on the item", path)
 		case "border_styles":
 			m, ok := v.(map[string]interface{})
 			if !ok {
-				return nil, common.FlagErrorf("%s.border_styles must be a JSON object", path)
+				return nil, common.ValidationErrorf("%s.border_styles must be a JSON object", path)
 			}
 			if err := validateWorkbookBorderStyles(m, path); err != nil {
 				return nil, err
 			}
 			out["border_styles"] = m
 		case "value", "formula", "rich_text", "multiple_values", "note", "data_validation":
-			return nil, common.FlagErrorf("%s is for styles only; put content in --values or use --sheets for typed cell objects", path)
+			return nil, common.ValidationErrorf("%s is for styles only; put content in --values or use --sheets for typed cell objects", path)
 		default:
 			if !workbookCreateCellStyleField(k) {
-				return nil, common.FlagErrorf("%s.%s is not a supported style field", path, k)
+				return nil, common.ValidationErrorf("%s.%s is not a supported style field", path, k)
 			}
 			cellStyle[k] = v
 		}
@@ -1223,28 +1265,28 @@ func validateWorkbookBorderStyles(m map[string]interface{}, path string) error {
 		switch side {
 		case "top", "bottom", "left", "right":
 		default:
-			return common.FlagErrorf("%s.border_styles.%s is not a valid side (want top/bottom/left/right)", path, side)
+			return common.ValidationErrorf("%s.border_styles.%s is not a valid side (want top/bottom/left/right)", path, side)
 		}
 		spec, ok := raw.(map[string]interface{})
 		if !ok {
-			return common.FlagErrorf("%s.border_styles.%s must be a JSON object", path, side)
+			return common.ValidationErrorf("%s.border_styles.%s must be a JSON object", path, side)
 		}
 		for k, v := range spec {
 			switch k {
 			case "style":
 				if s, _ := v.(string); !workbookBorderStyleEnum(s) {
-					return common.FlagErrorf("%s.border_styles.%s.style %q is invalid (want solid/dashed/dotted/double/none)", path, side, s)
+					return common.ValidationErrorf("%s.border_styles.%s.style %q is invalid (want solid/dashed/dotted/double/none)", path, side, s)
 				}
 			case "weight":
 				if w, _ := v.(string); w != "thin" && w != "medium" && w != "thick" {
-					return common.FlagErrorf("%s.border_styles.%s.weight %q is invalid (want thin/medium/thick)", path, side, w)
+					return common.ValidationErrorf("%s.border_styles.%s.weight %q is invalid (want thin/medium/thick)", path, side, w)
 				}
 			case "color":
 				if _, ok := v.(string); !ok {
-					return common.FlagErrorf("%s.border_styles.%s.color must be a string", path, side)
+					return common.ValidationErrorf("%s.border_styles.%s.color must be a string", path, side)
 				}
 			default:
-				return common.FlagErrorf("%s.border_styles.%s.%s is not valid (want style/weight/color)", path, side, k)
+				return common.ValidationErrorf("%s.border_styles.%s.%s is not valid (want style/weight/color)", path, side, k)
 			}
 		}
 	}
@@ -1263,13 +1305,13 @@ func workbookCreateStyleDimensions(styles *workbookCreateStylePayload, baseCol, 
 	if styles == nil {
 		return 0, 0
 	}
-	for _, op := range styles.CellStyles {
-		startCol, startRow, endCol, endRow, err := workbookCreateStyleRangeBounds(op.Range)
+	expandCellRange := func(rng string) {
+		startCol, startRow, endCol, endRow, err := workbookCreateStyleRangeBounds(rng)
 		if err != nil {
-			continue
+			return
 		}
 		if startCol < baseCol || startRow < baseRow {
-			continue
+			return
 		}
 		if endCol-baseCol+1 > cols {
 			cols = endCol - baseCol + 1
@@ -1277,6 +1319,40 @@ func workbookCreateStyleDimensions(styles *workbookCreateStylePayload, baseCol, 
 		if endRow-baseRow+1 > rows {
 			rows = endRow - baseRow + 1
 		}
+	}
+	expandRowRange := func(rng string) {
+		dim, _, endIdx, err := parseA1Range(rng)
+		if err != nil || dim != "row" || endIdx < baseRow {
+			return
+		}
+		if endIdx-baseRow+1 > rows {
+			rows = endIdx - baseRow + 1
+		}
+	}
+	expandColRange := func(rng string) {
+		dim, _, endIdx, err := parseA1Range(rng)
+		if err != nil || dim != "column" || endIdx < baseCol {
+			return
+		}
+		if endIdx-baseCol+1 > cols {
+			cols = endIdx - baseCol + 1
+		}
+	}
+	for _, op := range styles.CellStyles {
+		expandCellRange(op.Range)
+	}
+	// cell_merges / row_sizes / col_sizes also contribute to the write extent —
+	// without this, a style-only payload (e.g. just cell_merges) would compute
+	// extent 0 and the Execute path would skip writeTypedSheets entirely,
+	// silently dropping the visual ops.
+	for _, op := range styles.CellMerges {
+		expandCellRange(op.Range)
+	}
+	for _, op := range styles.RowSizes {
+		expandRowRange(op.Range)
+	}
+	for _, op := range styles.ColSizes {
+		expandColRange(op.Range)
 	}
 	return rows, cols
 }
@@ -1288,10 +1364,10 @@ func applyWorkbookCreateStylesToMatrix(rows [][]interface{}, styles *workbookCre
 	for i, op := range styles.CellStyles {
 		startCol, startRow, endCol, endRow, err := workbookCreateStyleRangeBounds(op.Range)
 		if err != nil {
-			return common.FlagErrorf("%s[%d].range %q: %v", label, i, op.Range, err)
+			return common.ValidationErrorf("%s[%d].range %q: %v", label, i, op.Range, err)
 		}
 		if startCol < baseCol || startRow < baseRow || endRow-baseRow >= len(rows) || len(rows) == 0 || endCol-baseCol >= len(rows[0]) {
-			return common.FlagErrorf("%s[%d].range %q is outside the write range %s%d:%s%d",
+			return common.ValidationErrorf("%s[%d].range %q is outside the write range %s%d:%s%d",
 				label, i, op.Range,
 				columnIndexToLetter(baseCol), baseRow+1,
 				columnIndexToLetter(baseCol+len(rows[0])-1), baseRow+len(rows))
@@ -1331,7 +1407,16 @@ func applyWorkbookCreateVisualOps(ctx context.Context, runtime *common.RuntimeCo
 			continue
 		}
 		if _, err := callTool(ctx, runtime, token, ToolKindWrite, toolName, input); err != nil {
-			return fmt.Errorf("%s %s failed: %w", op.Kind, op.Range, err)
+			// callTool already returns a typed error; pass it through unchanged
+			// (re-wrapping would downgrade its classification) and attach the
+			// failing op as a recovery hint when one isn't already set.
+			if p, ok := errs.ProblemOf(err); ok {
+				if p.Hint == "" {
+					p.Hint = fmt.Sprintf("failed while applying %s on %s", op.Kind, op.Range)
+				}
+				return err
+			}
+			return errs.NewInternalError(errs.SubtypeUnknown, "%s %s failed", op.Kind, op.Range).WithCause(err)
 		}
 	}
 	return nil
@@ -1400,23 +1485,23 @@ func workbookCreateStyleRangeBounds(rangeStr string) (startCol, startRow, endCol
 	}
 	rangeStr = strings.TrimSpace(rangeStr)
 	if rangeStr == "" {
-		return 0, 0, 0, 0, fmt.Errorf("empty range")
+		return 0, 0, 0, 0, fmt.Errorf("empty range") //nolint:forbidigo // intermediate error; callers wrap it into a typed validation error with flag/param context
 	}
 	parts := strings.SplitN(rangeStr, ":", 2)
 	if len(parts) == 1 {
 		col, row, ok := splitCellRef(parts[0])
 		if !ok {
-			return 0, 0, 0, 0, fmt.Errorf("invalid cell ref %q", parts[0])
+			return 0, 0, 0, 0, fmt.Errorf("invalid cell ref %q", parts[0]) //nolint:forbidigo // intermediate error; callers wrap it into a typed validation error with flag/param context
 		}
 		return col, row, col, row, nil
 	}
 	startCol, startRow, ok1 := splitCellRef(parts[0])
 	endCol, endRow, ok2 := splitCellRef(parts[1])
 	if !ok1 || !ok2 {
-		return 0, 0, 0, 0, fmt.Errorf("unsupported range form %q (need rectangular A1:B2)", rangeStr)
+		return 0, 0, 0, 0, fmt.Errorf("unsupported range form %q (need rectangular A1:B2)", rangeStr) //nolint:forbidigo // intermediate error; callers wrap it into a typed validation error with flag/param context
 	}
 	if endRow < startRow || endCol < startCol {
-		return 0, 0, 0, 0, fmt.Errorf("end %q must be at or after start %q", parts[1], parts[0])
+		return 0, 0, 0, 0, fmt.Errorf("end %q must be at or after start %q", parts[1], parts[0]) //nolint:forbidigo // intermediate error; callers wrap it into a typed validation error with flag/param context
 	}
 	return startCol, startRow, endCol, endRow, nil
 }
@@ -1482,7 +1567,7 @@ var WorkbookExport = common.Shortcut{
 			ext = "xlsx"
 		}
 		if ext == "csv" && strings.TrimSpace(runtime.Str("sheet-id")) == "" {
-			return common.FlagErrorf("--sheet-id is required when --file-extension=csv")
+			return common.ValidationErrorf("--sheet-id is required when --file-extension=csv")
 		}
 		return nil
 	},
@@ -1494,6 +1579,12 @@ var WorkbookExport = common.Shortcut{
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
 		p, err := workbookExportParams(runtime)
 		if err != nil {
+			return err
+		}
+		// workbookExportParams resolves --url network-free (DryRun shares it); a
+		// /wiki/ URL carries a node_token that needs the get_node step only
+		// Execute may take, so re-resolve the token here.
+		if p.Token, err = resolveSpreadsheetTokenExec(runtime); err != nil {
 			return err
 		}
 		applyWorkbookOutputPath(&p, runtime.FileIO(), runtime.Str("output-path"))
@@ -1557,7 +1648,7 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 	}
 	m, ok := out.(map[string]interface{})
 	if !ok {
-		return "", 0, output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned non-object output")
+		return "", 0, errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned non-object output")
 	}
 	sheets, _ := m["sheets"].([]interface{})
 	for _, raw := range sheets {
@@ -1576,7 +1667,7 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 		if (sheetID != "" && id == sheetID) || (sheetName != "" && name == sheetName) {
 			idx, ok := util.ToFloat64(sm["index"])
 			if !ok {
-				return "", 0, output.Errorf(output.ExitAPI, "tool_output", "sheet entry missing index field")
+				return "", 0, errs.NewInternalError(errs.SubtypeInvalidResponse, "sheet entry missing index field")
 			}
 			return id, int(idx), nil
 		}
@@ -1585,7 +1676,7 @@ func lookupSheetIndex(ctx context.Context, runtime *common.RuntimeContext, token
 	if target == "" {
 		target = sheetName
 	}
-	return "", 0, output.Errorf(output.ExitAPI, "not_found", fmt.Sprintf("sheet %q not found in workbook", target))
+	return "", 0, errs.NewValidationError(errs.SubtypeFailedPrecondition, "sheet %q not found in workbook", target)
 }
 
 // lookupFirstSheetID returns the sheet_id of the sub-sheet at index 0 (the
@@ -1602,7 +1693,7 @@ func lookupFirstSheetID(ctx context.Context, runtime *common.RuntimeContext, tok
 	}
 	m, ok := out.(map[string]interface{})
 	if !ok {
-		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned non-object output")
+		return "", errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned non-object output")
 	}
 	sheets, _ := m["sheets"].([]interface{})
 	bestID := ""
@@ -1630,7 +1721,7 @@ func lookupFirstSheetID(ctx context.Context, runtime *common.RuntimeContext, tok
 		}
 	}
 	if bestID == "" {
-		return "", output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned no sheets")
+		return "", errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned no sheets")
 	}
 	return bestID, nil
 }

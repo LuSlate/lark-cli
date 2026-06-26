@@ -1,38 +1,4 @@
 {
-  "+changeset-get": {
-    "risk": "read",
-    "flags": [
-      {
-        "name": "url",
-        "kind": "public",
-        "type": "string",
-        "required": "xor",
-        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
-      },
-      {
-        "name": "spreadsheet-token",
-        "kind": "public",
-        "type": "string",
-        "required": "xor",
-        "desc": "Spreadsheet token (XOR with `--url`)"
-      },
-      {
-        "name": "start-revision",
-        "kind": "own",
-        "type": "int",
-        "required": "required",
-        "desc": "Start version (CS revision); the 'before' baseline for review (must be >= 1)"
-      },
-      {
-        "name": "end-revision",
-        "kind": "own",
-        "type": "int",
-        "required": "optional",
-        "desc": "End version (CS revision); defaults to the latest revision. Gap (end-start+1) must be <= 20",
-        "default": "-1"
-      }
-    ]
-  },
   "+workbook-info": {
     "risk": "read",
     "flags": [
@@ -82,6 +48,40 @@
         "type": "bool",
         "required": "optional",
         "desc": ""
+      }
+    ]
+  },
+  "+changeset-get": {
+    "risk": "read",
+    "flags": [
+      {
+        "name": "url",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet URL (XOR with `--spreadsheet-token`)"
+      },
+      {
+        "name": "spreadsheet-token",
+        "kind": "public",
+        "type": "string",
+        "required": "xor",
+        "desc": "Spreadsheet token (XOR with `--url`)"
+      },
+      {
+        "name": "start-revision",
+        "kind": "own",
+        "type": "int",
+        "required": "required",
+        "desc": "Start version (CS revision); the 'before' baseline for review (must be >= 1)"
+      },
+      {
+        "name": "end-revision",
+        "kind": "own",
+        "type": "int",
+        "required": "optional",
+        "desc": "End version (CS revision); defaults to the latest revision. Gap (end-start+1) must be <= 20",
+        "default": "-1"
       }
     ]
   },
@@ -586,7 +586,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Typed table payload as JSON (same shape as `+table-put`): a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool. Mutually exclusive with --values. Creates the workbook, then writes typed type-faithful data (dates land as real dates, numbers keep precision).",
+        "desc": "Typed table payload as JSON (same shape as `+table-put`): top-level `{\"sheets\":[...]}`, with each array item a sub-sheet `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[\"colA\",\"colB\",...], data:[[...]], dtypes?:{colA:pandasDtype, ...}, formats?:{colA:numberFormat, ...}}` — `name` and the outer `sheets` envelope are both required. Agents typically use `df_to_sheet(df, name)` from `scripts/sheets_df.py` to pack each DataFrame into one item, then wrap the list in `{\"sheets\":[...]}`. Mutually exclusive with --values. Creates the workbook, then writes typed type-faithful data (dates land as real dates, numbers keep precision).",
         "input": [
           "file",
           "stdin"
@@ -653,7 +653,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "Local save path; export is triggered but not downloaded when omitted"
+        "desc": "Local save path. When omitted, **only the export task is triggered + polled, the file is NOT downloaded** (returns file_token / status so a later step can resume the download). Pass a concrete path (e.g. `./out.xlsx`) or a directory (`.` keeps the server-provided filename) to download. Note: the equivalent `lark-cli drive +export --doc-type sheet` uses three separate flags (`--output-dir` / `--file-name` / `--overwrite`) and defaults to downloading into the current directory; this wrapper collapses them into a single `--output-path` for ergonomics but defaults to no-download — fall back to `drive +export` if the split flag set fits better."
       },
       {
         "name": "dry-run",
@@ -1259,9 +1259,8 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Safety cap; default 200000",
-        "default": "200000",
-        "hidden": true
+        "desc": "Max output chars per call; default 500000 (safety cap). Large reads are usually better redirected to a file; only lower it (e.g. 25000) when you want results inline without triggering file offload, paging via has_more",
+        "default": "500000"
       },
       {
         "name": "skip-hidden",
@@ -1369,9 +1368,8 @@
         "kind": "own",
         "type": "int",
         "required": "optional",
-        "desc": "Safety cap; default 200000",
-        "default": "200000",
-        "hidden": true
+        "desc": "Max output chars per call; default 500000 (safety cap). Large reads are usually better redirected to a file; only lower it (e.g. 25000) when you want results inline without triggering file offload, paging via has_more",
+        "default": "500000"
       },
       {
         "name": "include-row-prefix",
@@ -1433,7 +1431,7 @@
         "kind": "own",
         "type": "string",
         "required": "optional",
-        "desc": "A1 range to read; omit to read each sheet current region"
+        "desc": "A1 range to read; omit to read each sheet's full used range (spans internal blank rows/columns, not just the A1 current region)"
       },
       {
         "name": "no-header",
@@ -2125,7 +2123,18 @@
         "kind": "own",
         "type": "string",
         "required": "required",
-        "desc": "Typed table payload as JSON: a top-level `sheets` array, each item `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[{name,type,format?}], rows:[[...]]}`; column `type` is one of string/number/date/bool",
+        "desc": "Typed table payload (pandas-DataFrame-shaped) as JSON: top-level `{\"sheets\":[...]}`, with each array item a sub-sheet `{name, start_cell?, mode?, header?, allow_overwrite?, columns:[\"colA\",\"colB\",...], data:[[...]], dtypes?:{colA:pandasDtype, ...}, formats?:{colA:numberFormat, ...}}` — `name` and the outer `sheets` envelope are both required. Agents typically use `df_to_sheet(df, name)` from `scripts/sheets_df.py` to pack each DataFrame into one item, then wrap the list in `{\"sheets\":[...]}`. `dtypes` values are pandas dtype strings (`int64`, `float64`, `Int64`, `bool`, `boolean`, `datetime64[ns]`, `object`, ...); the writer maps them to internal string/number/date/bool — omit `dtypes` and a column writes as text (good for raw CSV-shaped data). `formats[col]` is an Excel number_format string (e.g. `#,##0.00`, `0.0%`, `yyyy-mm`); when absent, date columns default to `yyyy-mm-dd` and string columns to text format (`@`).",
+        "input": [
+          "file",
+          "stdin"
+        ]
+      },
+      {
+        "name": "styles",
+        "kind": "own",
+        "type": "string",
+        "required": "optional",
+        "desc": "Visual operations applied after the typed write, as JSON: top-level `{styles:[...]}`. Each item corresponds to one written sheet and must include `name`, plus at least one of `cell_styles` / `row_sizes` / `col_sizes` / `cell_merges`. `cell_styles` entries use +cells-set-style fields with a cell range; row/col sizes use dimension ranges plus type/size; merges use cell ranges plus optional merge_type. The styles array length/order/name must match the written sheets in --sheets.sheets. Run `+table-put --print-schema --flag-name styles` for the full cell_styles field schema.",
         "input": [
           "file",
           "stdin"

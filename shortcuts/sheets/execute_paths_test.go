@@ -5,9 +5,11 @@ package sheets
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/httpmock"
 	"github.com/larksuite/cli/internal/output"
 )
@@ -46,19 +48,132 @@ func TestExecute_WorkbookInfo_ToolError(t *testing.T) {
 			"data": map[string]interface{}{},
 		},
 	}
-	stdout, stderr, err := func() (string, string, error) {
+	_, _, err := func() (string, string, error) {
 		parent, stdout, stderr, reg := newTestRig(t, WorkbookInfo)
 		reg.Register(stub)
 		parent.SetArgs([]string{"+workbook-info", "--url", testURL})
 		err := parent.Execute()
 		return stdout.String(), stderr.String(), err
 	}()
-	if err == nil {
-		t.Fatalf("expected non-zero code to surface as error; stdout=%s stderr=%s", stdout, stderr)
+	p := requireProblem(t, err, errs.CategoryAPI, errs.SubtypeServerError, "")
+	if !strings.Contains(p.Message, "1310201") && !strings.Contains(p.Message, "not found") {
+		t.Errorf("expected error code or message in problem; got message=%q", p.Message)
 	}
-	combined := stdout + stderr + err.Error()
-	if !strings.Contains(combined, "1310201") && !strings.Contains(combined, "not found") {
-		t.Errorf("expected error code in envelope; got=%s|%s|%v", stdout, stderr, err)
+}
+
+// TestExecute_WikiURLResolvesToSheet covers the two-step wiki path: a /wiki/
+// URL is resolved via get_node to its spreadsheet obj_token, which then feeds
+// the tool invoke. The tool stub is keyed on the resolved obj_token, so the
+// test would fail if the node_token were used unresolved.
+func TestExecute_WikiURLResolvesToSheet(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{
+					"obj_type":  "sheet",
+					"obj_token": testToken,
+				},
+			},
+		},
+	}
+	tool := toolOutputStub(testToken, "read", `{"sheets":[{"sheet_id":"sh1","title":"Sheet1","index":0}]}`)
+	out, err := runShortcutWithStubs(t, WorkbookInfo,
+		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode, tool)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
+	}
+	data := decodeEnvelopeData(t, out)
+	if sheets, _ := data["sheets"].([]interface{}); len(sheets) != 1 {
+		t.Fatalf("sheets len = %d, want 1; out=%s", len(sheets), out)
+	}
+}
+
+// TestExecute_WikiURLWrongObjType rejects a wiki node that resolves to a
+// non-spreadsheet obj_type before any tool invoke.
+func TestExecute_WikiURLWrongObjType(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{
+					"obj_type":  "docx",
+					"obj_token": "docABC",
+				},
+			},
+		},
+	}
+	_, err := runShortcutWithStubs(t, WorkbookInfo,
+		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode)
+	requireValidation(t, err, "obj_type")
+}
+
+// TestExecute_WikiURLIncompleteNode treats an incomplete get_node response
+// (missing obj_type/obj_token) as an internal/server error, not a user --url
+// validation error.
+func TestExecute_WikiURLIncompleteNode(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{},
+			},
+		},
+	}
+	_, err := runShortcutWithStubs(t, WorkbookInfo,
+		[]string{"--url", "https://example.feishu.cn/wiki/wikTestNODE"}, getNode)
+	if err == nil {
+		t.Fatal("want error for incomplete get_node node data")
+	}
+	var ve *errs.ValidationError
+	if errors.As(err, &ve) {
+		t.Fatalf("incomplete-data error classified as validation (%v); want internal", err)
+	}
+}
+
+// TestExecute_RangeMove_WikiURL guards the transformExecuteFn path: +range-move
+// and +range-copy use a named Execute helper (not an inline func), so they must
+// still resolve a /wiki/ URL to the backing spreadsheet token before calling
+// transform_range. The tool stub is keyed on the resolved obj_token, so an
+// unresolved node_token would miss it and fail this test.
+func TestExecute_RangeMove_WikiURL(t *testing.T) {
+	t.Parallel()
+	getNode := &httpmock.Stub{
+		Method: "GET",
+		URL:    "/open-apis/wiki/v2/spaces/get_node",
+		Body: map[string]interface{}{
+			"code": 0,
+			"msg":  "success",
+			"data": map[string]interface{}{
+				"node": map[string]interface{}{
+					"obj_type":  "sheet",
+					"obj_token": testToken,
+				},
+			},
+		},
+	}
+	tool := toolOutputStub(testToken, "write", `{"updated_range":"A10:B11"}`)
+	out, err := runShortcutWithStubs(t, RangeMove,
+		[]string{
+			"--url", "https://example.feishu.cn/wiki/wikTestNODE",
+			"--sheet-id", testSheetID,
+			"--source-range", "A1:B2",
+			"--target-range", "A10",
+		}, getNode, tool)
+	if err != nil {
+		t.Fatalf("execute failed: %v\nout=%s", err, out)
 	}
 }
 
@@ -432,10 +547,14 @@ func TestExecute_WorkbookCreate_EmptyArraysSkipFill(t *testing.T) {
 	}
 }
 
-// TestExecute_WorkbookCreate_FillFailureKeepsToken locks the partial-success
+// TestExecute_WorkbookCreate_FillFailureKeepsToken locks the partial-state
 // contract: when the spreadsheet is created but the follow-up fill can't resolve
-// its first sheet, the error must be structured and retain spreadsheet_token so
-// the caller can recover instead of orphaning the new workbook.
+// its first sheet, the result lands on stdout as an ok:false envelope carrying
+// spreadsheet_token + reason + a structured cause field, and the process exits
+// with the bare partial-failure signal — matching +table-put's tablePutPartial
+// shape so agents see one consistent "side effect landed but follow-up didn't"
+// contract across the sheets domain (instead of the old failed_precondition
+// stderr envelope).
 func TestExecute_WorkbookCreate_FillFailureKeepsToken(t *testing.T) {
 	t.Parallel()
 	create := &httpmock.Stub{
@@ -449,22 +568,41 @@ func TestExecute_WorkbookCreate_FillFailureKeepsToken(t *testing.T) {
 		},
 	}
 	// Structure comes back with no sheets, so lookupFirstSheetID fails AFTER the
-	// spreadsheet already exists — exercising the partial-success path.
+	// spreadsheet already exists — exercising the partial-state path.
 	structure := toolOutputStub("shtNEW", "read", `{"sheets":[]}`)
 	out, err := runShortcutWithStubs(t, WorkbookCreate, []string{"--title", "X", "--values", `[["a"]]`}, create, structure)
 	if err == nil {
-		t.Fatalf("expected a partial-success error; got nil\nout=%s", out)
+		t.Fatalf("expected partial-failure exit signal; got nil. out=%s", out)
 	}
-	exitErr, ok := err.(*output.ExitError)
-	if !ok {
-		t.Fatalf("error type = %T, want *output.ExitError (structured)", err)
+	var pfErr *output.PartialFailureError
+	if !errors.As(err, &pfErr) {
+		t.Fatalf("expected *output.PartialFailureError exit signal; got %T %v", err, err)
 	}
-	if exitErr.Detail == nil {
-		t.Fatal("ExitError.Detail is nil; want structured detail carrying the token")
+
+	var env map[string]interface{}
+	if jerr := json.Unmarshal([]byte(out), &env); jerr != nil {
+		t.Fatalf("decode envelope: %v\nraw=%s", jerr, out)
 	}
-	detail, _ := exitErr.Detail.Detail.(map[string]interface{})
-	if detail["spreadsheet_token"] != "shtNEW" {
-		t.Errorf("detail.spreadsheet_token = %v, want shtNEW (must survive the fill failure)", detail["spreadsheet_token"])
+	if ok, _ := env["ok"].(bool); ok {
+		t.Errorf("partial-state envelope must be ok:false; got out=%s", out)
+	}
+	data, _ := env["data"].(map[string]interface{})
+	if got := data["spreadsheet_token"]; got != "shtNEW" {
+		t.Errorf("spreadsheet_token = %v, want shtNEW (recovery requires the token to be in the envelope)", got)
+	}
+	reason, _ := data["reason"].(string)
+	if !strings.Contains(reason, "shtNEW") {
+		t.Errorf("reason = %q, want the spreadsheet token named for recovery", reason)
+	}
+	hint, _ := data["hint"].(string)
+	if !strings.Contains(hint, "spreadsheet_token") {
+		t.Errorf("hint = %q, want recovery guidance naming spreadsheet_token", hint)
+	}
+	// The underlying fill failure's typed shape is flattened into the cause
+	// field so the inner subtype stays diagnosable from the JSON envelope alone.
+	cause, _ := data["cause"].(map[string]interface{})
+	if got := cause["subtype"]; got != string(errs.SubtypeInvalidResponse) {
+		t.Errorf("cause.subtype = %v, want the underlying invalid_response subtype", got)
 	}
 }
 

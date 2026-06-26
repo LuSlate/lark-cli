@@ -96,6 +96,107 @@ func TestRunSchema_JSONOutput(t *testing.T) {
 	}
 }
 
+func TestRunSchema_TaskUpdateUserAccessJSON(t *testing.T) {
+	f, stdout, _, _ := cmdutil.TestFactory(t, &core.CliConfig{AppID: "test"})
+
+	if err := runSchema(f, "task.task.update_user_access_v2", true); err != nil {
+		t.Fatalf("runSchema json: %v", err)
+	}
+
+	var payload map[string]interface{}
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("output is not valid JSON: %v\n%s", err, stdout.String())
+	}
+	if payload["jq_root_path"] != ".event" {
+		t.Errorf("jq_root_path = %v, want .event", payload["jq_root_path"])
+	}
+	if payload["single_consumer"] != true {
+		t.Errorf("single_consumer = %v, want true", payload["single_consumer"])
+	}
+	resolved := payload["resolved_output_schema"].(map[string]interface{})
+	props := resolved["properties"].(map[string]interface{})
+	eventProps := props["event"].(map[string]interface{})["properties"].(map[string]interface{})
+	if got := eventProps["task_guid"].(map[string]interface{})["format"]; got != "task_guid" {
+		t.Errorf("task_guid format = %v, want task_guid", got)
+	}
+	if _, ok := eventProps["event_types"].(map[string]interface{})["items"].(map[string]interface{})["enum"]; !ok {
+		t.Fatalf("event_types enum missing in schema: %#v", eventProps["event_types"])
+	}
+}
+
+func TestSchema_RendersSubscriptionKeyMarker(t *testing.T) {
+	const syntheticKey = "test.evt_sub"
+	t.Cleanup(func() { eventlib.UnregisterKeyForTest(syntheticKey) })
+
+	eventlib.RegisterKey(eventlib.KeyDefinition{
+		Key:       syntheticKey,
+		EventType: syntheticKey,
+		Params: []eventlib.ParamDef{
+			{Name: "mailbox", SubscriptionKey: true, Description: "subscription id source"},
+			{Name: "folders", Description: "filter only"},
+		},
+		Schema: eventlib.SchemaDef{Native: &eventlib.SchemaSpec{Type: reflect.TypeOf(struct{ X string }{})}},
+	})
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, &core.CliConfig{AppID: "test"})
+	if err := runSchema(f, syntheticKey, false); err != nil {
+		t.Fatalf("runSchema: %v", err)
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "SUB-KEY") {
+		t.Errorf("missing SUB-KEY column header in:\n%s", out)
+	}
+
+	// Find the mailbox row and verify "yes" is present
+	var mailboxRow string
+	for _, ln := range strings.Split(out, "\n") {
+		if strings.Contains(ln, "mailbox") && !strings.Contains(ln, "NAME") {
+			mailboxRow = ln
+			break
+		}
+	}
+	if !strings.Contains(mailboxRow, "yes") {
+		t.Errorf("mailbox row missing yes SUB-KEY marker: %q", mailboxRow)
+	}
+
+	// Find the folders row and verify "no" is present
+	var foldersRow string
+	for _, ln := range strings.Split(out, "\n") {
+		if strings.Contains(ln, "folders") && !strings.Contains(ln, "NAME") {
+			foldersRow = ln
+			break
+		}
+	}
+	if !strings.Contains(foldersRow, "no") {
+		t.Errorf("folders row missing no SUB-KEY marker: %q", foldersRow)
+	}
+}
+
+func TestSchema_JSON_IncludesSubscriptionKey(t *testing.T) {
+	const syntheticKey = "test.evt_json"
+	t.Cleanup(func() { eventlib.UnregisterKeyForTest(syntheticKey) })
+
+	eventlib.RegisterKey(eventlib.KeyDefinition{
+		Key:       syntheticKey,
+		EventType: syntheticKey,
+		Params:    []eventlib.ParamDef{{Name: "mailbox", SubscriptionKey: true}},
+		Schema:    eventlib.SchemaDef{Native: &eventlib.SchemaSpec{Type: reflect.TypeOf(struct{ X string }{})}},
+	})
+
+	f, stdout, _, _ := cmdutil.TestFactory(t, &core.CliConfig{AppID: "test"})
+	if err := runSchema(f, syntheticKey, true); err != nil {
+		t.Fatalf("runSchema json: %v", err)
+	}
+
+	if !strings.Contains(stdout.String(), `"subscription_key"`) {
+		t.Errorf("JSON output missing subscription_key field: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `true`) {
+		t.Errorf("JSON output missing subscription_key: true value: %s", stdout.String())
+	}
+}
+
 func TestResolveSchemaJSON_CustomWithOverlay(t *testing.T) {
 	const syntheticKey = "t.custom.overlay"
 	t.Cleanup(func() { eventlib.UnregisterKeyForTest(syntheticKey) })

@@ -7,9 +7,10 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
@@ -50,10 +51,18 @@ type objectCRUDSpec struct {
 	enhanceCreateInput func(rt flagView, input map[string]interface{})
 	enhanceUpdateInput func(rt flagView, input map[string]interface{})
 	// validateCreateInput, when set, runs after enhanceCreateInput to
-	// enforce *cross-flag, create-only* constraints JSON Schema can't
-	// express (e.g. pivot rejects --target-position vs --range when
-	// both carry non-default values — they map to the same wire field
-	// and conflicting values are ambiguous). Mirrors validateUpdateInput.
+	// enforce cross-flag / cross-field, create-only constraints JSON
+	// Schema can't express. Two uses today:
+	//   - pivot rejects --target-position vs --range when both carry
+	//     non-default values — they map to the same wire field and
+	//     conflicting values are ambiguous (needs raw flags via rt).
+	//   - cond-format requires every properties.attrs entry to match the
+	//     sibling rule_type's shape (see validateCondFormatAttrs); a
+	//     colorScale rule fed cellIs-shaped attrs writes a color-less
+	//     segment that breaks the sheet on open (inspects input only).
+	// It is the create-path twin of validateUpdateInput; the same scope
+	// notes apply. Validators that only inspect the wire input can ignore
+	// the rt argument.
 	validateCreateInput func(rt flagView, input map[string]interface{}) error
 	// validateUpdateInput, when set, runs after enhanceUpdateInput to
 	// enforce *cross-field, update-only* constraints JSON Schema can't
@@ -146,7 +155,7 @@ func newObjectCreateShortcut(spec objectCRUDSpec) common.Shortcut {
 			return dr
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -235,7 +244,7 @@ func newObjectUpdateShortcut(spec objectCRUDSpec) common.Shortcut {
 			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -262,7 +271,7 @@ func objectUpdateInput(runtime flagView, token, sheetID, sheetName string, spec 
 		return nil, err
 	}
 	if spec.idFlag != "" && strings.TrimSpace(runtime.Str(spec.idFlag)) == "" {
-		return nil, common.FlagErrorf("--%s is required", spec.idFlag)
+		return nil, sheetsValidationForFlag(spec.idFlag, "--%s is required", spec.idFlag)
 	}
 	props, err := requireJSONObject(runtime, "properties")
 	if err != nil {
@@ -319,7 +328,7 @@ func newObjectDeleteShortcut(spec objectCRUDSpec) common.Shortcut {
 			return invokeToolDryRun(token, ToolKindWrite, spec.toolName, input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -346,7 +355,7 @@ func objectDeleteInput(runtime flagView, token, sheetID, sheetName string, spec 
 		return nil, err
 	}
 	if spec.idFlag != "" && strings.TrimSpace(runtime.Str(spec.idFlag)) == "" {
-		return nil, common.FlagErrorf("--%s is required", spec.idFlag)
+		return nil, sheetsValidationForFlag(spec.idFlag, "--%s is required", spec.idFlag)
 	}
 	input := map[string]interface{}{
 		"excel_id":  token,
@@ -415,7 +424,7 @@ var pivotSpec = objectCRUDSpec{
 		pos := strings.TrimSpace(rt.Str("target-position"))
 		rng := strings.TrimSpace(rt.Str("range"))
 		if pos != "" && pos != "A1" && rng != "" {
-			return common.FlagErrorf("--target-position and --range are mutually exclusive (both map to properties.range; pass only one)")
+			return common.ValidationErrorf("--target-position and --range are mutually exclusive (both map to properties.range; pass only one)")
 		}
 		return nil
 	},
@@ -511,7 +520,118 @@ var condFormatSpec = objectCRUDSpec{
 	idField:            "conditional_format_id",
 	enhanceCreateInput: condFormatEnhance,
 	enhanceUpdateInput: condFormatEnhance,
+	// validateCondFormatAttrs only inspects the wire input, so the create
+	// hook ignores rt; the update hook (func(input)) calls it directly.
+	validateCreateInput: func(_ flagView, input map[string]interface{}) error {
+		return validateCondFormatAttrs(input)
+	},
+	validateUpdateInput: validateCondFormatAttrs,
 }
+
+// condFormatAttrsRequired maps each conditional-format rule_type to the
+// keys every properties.attrs entry must carry for that rule. It mirrors
+// the per-rule attrs contract the tool's manage_conditional_format_object
+// converter reads (byted-sheet ai-tools manage-conditional-format-object.ts):
+// that converter maps each attrs entry *blindly by rule_type*, so a
+// colorScale rule fed cellIs-shaped attrs ({compare_type,value}) silently
+// yields a color-less color-scale segment — dirty data that crashes the
+// frontend on snapshot deserialization (the 5005 "can't open" report this
+// validator was added for).
+//
+// JSON Schema can't catch this: properties.attrs.items is a oneOf over all
+// nine shapes, and the validator accepts an entry as soon as *any* branch
+// matches — blind to the sibling rule_type. {compare_type,value} matches
+// the cellIs branch regardless of whether rule_type says colorScale.
+//
+// Rule types absent from the map (duplicateValues, uniqueValues,
+// containsBlanks, notContainsBlanks) carry no attrs, so nothing to check.
+// Counts (dataBar==2, colorScale 2–3, iconSet ordering) stay the tool's
+// job — it already rejects those with actionable messages; the gap this
+// closes is per-entry *shape*, which the tool does not check.
+var condFormatAttrsRequired = map[string][]string{
+	"cellIs":       {"compare_type", "value"},
+	"containsText": {"compare_type", "text"},
+	"timePeriod":   {"operator", "time_period"},
+	"dataBar":      {"color", "value_type"},
+	"colorScale":   {"value_type", "color"},
+	"rank":         {"is_bottom", "value_type"},
+	"aboveAverage": {"operator"},
+	"expression":   {"formula"},
+	"iconSet":      {"icon_type", "value_type", "operator"},
+}
+
+// validateCondFormatAttrs enforces that every properties.attrs entry
+// matches the shape required by the sibling properties.rule_type. Shared
+// by create and update. On update, rule_type may be omitted (the caller is
+// editing style only and the existing rule's type governs the attrs shape,
+// which the CLI can't see); in that case validation is deferred to the
+// server. Missing/empty attrs is likewise left to the tool, which already
+// reports "attrs are required for rule_type: X" clearly.
+func validateCondFormatAttrs(input map[string]interface{}) error {
+	props, _ := input["properties"].(map[string]interface{})
+	if props == nil {
+		return nil
+	}
+	ruleType, _ := props["rule_type"].(string)
+	ruleType = strings.TrimSpace(ruleType)
+	if ruleType == "" {
+		return nil
+	}
+	required, ok := condFormatAttrsRequired[ruleType]
+	if !ok {
+		return nil
+	}
+	attrs, ok := props["attrs"].([]interface{})
+	if !ok {
+		// Missing attrs, or a non-array shape the schema check already
+		// flagged — nothing for this cross-field rule to add.
+		return nil
+	}
+	for i, entryRaw := range attrs {
+		entry, ok := entryRaw.(map[string]interface{})
+		if !ok {
+			continue // schema validation owns per-entry type errors.
+		}
+		for _, key := range required {
+			if v, has := entry[key]; !has || condAttrIsBlank(v) {
+				return common.ValidationErrorf(
+					"--properties: attrs[%d] is missing %q, which rule_type %q requires on every entry (expected keys %s; got %s). "+
+						"A common cause is reusing another rule's attrs shape — e.g. cellIs-style {compare_type,value} under a colorScale rule, which writes a color-less segment that breaks the sheet on open.",
+					i, key, ruleType, strings.Join(required, "+"), condAttrPresentKeys(entry))
+			}
+		}
+	}
+	return nil
+}
+
+// condAttrIsBlank treats a present-but-empty string (after trimming) as
+// missing. The crash-causing case is an empty `color`, but an empty value
+// for any required key is never meaningful in these branches, so the rule
+// is uniform. Non-string values (numbers, booleans) count as present.
+func condAttrIsBlank(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+	if s, ok := v.(string); ok {
+		return strings.TrimSpace(s) == ""
+	}
+	return false
+}
+
+// condAttrPresentKeys lists the keys actually present on an attrs entry,
+// sorted, for the "got ..." half of the error message.
+func condAttrPresentKeys(entry map[string]interface{}) string {
+	if len(entry) == 0 {
+		return "{}"
+	}
+	keys := make([]string, 0, len(entry))
+	for k := range entry {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return "{" + strings.Join(keys, ",") + "}"
+}
+
 var CondFormatCreate = newObjectCreateShortcut(condFormatSpec)
 var CondFormatUpdate = newObjectUpdateShortcut(condFormatSpec)
 var CondFormatDelete = newObjectDeleteShortcut(condFormatSpec)
@@ -541,16 +661,16 @@ func validateSparklineUpdateItems(input map[string]interface{}) error {
 	}
 	arr, ok := raw.([]interface{})
 	if !ok {
-		return common.FlagErrorf("+sparkline-update properties.sparklines must be an array")
+		return sheetsValidationForFlag("properties", "+sparkline-update properties.sparklines must be an array")
 	}
 	for i, item := range arr {
 		m, _ := item.(map[string]interface{})
 		if m == nil {
-			return common.FlagErrorf("+sparkline-update properties.sparklines[%d] must be an object", i)
+			return sheetsValidationForFlag("properties", "+sparkline-update properties.sparklines[%d] must be an object", i)
 		}
 		id, _ := m["sparkline_id"].(string)
 		if strings.TrimSpace(id) == "" {
-			return common.FlagErrorf("+sparkline-update properties.sparklines[%d] missing sparkline_id (run `+sparkline-list --group-id <id>` first to read sparkline_id for each item, then echo each id back on the corresponding update entry)", i)
+			return sheetsValidationForFlag("properties", "+sparkline-update properties.sparklines[%d] missing sparkline_id (run `+sparkline-list --group-id <id>` first to read sparkline_id for each item, then echo each id back on the corresponding update entry)", i)
 		}
 	}
 	return nil
@@ -619,20 +739,44 @@ func floatImageProperties(runtime flagView, uploadedImageToken string, requireIm
 		}
 	}
 	if set == 0 && requireImageSource {
-		return nil, common.FlagErrorf("one of --image, --image-token, or --image-uri is required")
+		return nil, common.ValidationErrorf("one of --image, --image-token, or --image-uri is required").WithParams(sheetsInvalidParam("image", "required; specify one"), sheetsInvalidParam("image-token", "required; specify one"), sheetsInvalidParam("image-uri", "required; specify one"))
 	}
 	if set > 1 {
-		return nil, common.FlagErrorf("--image, --image-token, and --image-uri are mutually exclusive")
+		params := make([]errs.InvalidParam, 0, 3)
+		if img != "" {
+			params = append(params, sheetsInvalidParam("image", "mutually exclusive"))
+		}
+		if token != "" {
+			params = append(params, sheetsInvalidParam("image-token", "mutually exclusive"))
+		}
+		if uri != "" {
+			params = append(params, sheetsInvalidParam("image-uri", "mutually exclusive"))
+		}
+		return nil, common.ValidationErrorf("--image, --image-token, and --image-uri are mutually exclusive").WithParams(params...)
 	}
 	name := floatImageName(runtime)
 	if name == "" {
-		return nil, common.FlagErrorf("--image-name is required")
+		return nil, sheetsValidationForFlag("image-name", "--image-name is required")
 	}
 	if !runtime.Changed("position-row") || !runtime.Changed("position-col") {
-		return nil, common.FlagErrorf("--position-row and --position-col are required")
+		params := make([]errs.InvalidParam, 0, 2)
+		if !runtime.Changed("position-row") {
+			params = append(params, sheetsInvalidParam("position-row", "required"))
+		}
+		if !runtime.Changed("position-col") {
+			params = append(params, sheetsInvalidParam("position-col", "required"))
+		}
+		return nil, common.ValidationErrorf("--position-row and --position-col are required").WithParams(params...)
 	}
 	if !runtime.Changed("size-width") || !runtime.Changed("size-height") {
-		return nil, common.FlagErrorf("--size-width and --size-height are required")
+		params := make([]errs.InvalidParam, 0, 2)
+		if !runtime.Changed("size-width") {
+			params = append(params, sheetsInvalidParam("size-width", "required"))
+		}
+		if !runtime.Changed("size-height") {
+			params = append(params, sheetsInvalidParam("size-height", "required"))
+		}
+		return nil, common.ValidationErrorf("--size-width and --size-height are required").WithParams(params...)
 	}
 	props := map[string]interface{}{
 		"image_name": name,
@@ -650,7 +794,9 @@ func floatImageProperties(runtime flagView, uploadedImageToken string, requireIm
 		// Local file: validate path safety here so --dry-run also rejects
 		// unsafe paths; Execute uploads it and passes the real token in.
 		if _, err := validate.SafeLocalFlagPath("--image", img); err != nil {
-			return nil, output.ErrValidation("%s", err)
+			return nil, errs.NewValidationError(errs.SubtypeInvalidArgument, "%s", err).
+				WithParam("--image").
+				WithCause(err)
 		}
 		if uploadedImageToken != "" {
 			props["image_token"] = uploadedImageToken
@@ -730,7 +876,7 @@ func newFloatImageWriteShortcut(command, description, op string, withIDFlag, isH
 			return invokeToolDryRun(token, ToolKindWrite, "manage_float_image_object", input)
 		},
 		Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-			token, err := resolveSpreadsheetToken(runtime)
+			token, err := resolveSpreadsheetTokenExec(runtime)
 			if err != nil {
 				return err
 			}
@@ -770,9 +916,9 @@ func uploadFloatImageIfLocal(runtime *common.RuntimeContext, spreadsheetToken st
 	}
 	info, err := runtime.FileIO().Stat(img)
 	if err != nil {
-		return "", common.WrapInputStatError(err)
+		return "", sheetsInputStatError("image", err)
 	}
-	return common.UploadDriveMediaAll(runtime, common.DriveMediaUploadAllConfig{
+	return common.UploadDriveMediaAllTyped(runtime, common.DriveMediaUploadAllConfig{
 		FilePath:   img,
 		FileName:   floatImageName(runtime),
 		FileSize:   info.Size(),
@@ -786,7 +932,7 @@ func floatImageWriteInput(runtime flagView, token, sheetID, sheetName, op string
 		return nil, err
 	}
 	if withIDFlag && strings.TrimSpace(runtime.Str("float-image-id")) == "" {
-		return nil, common.FlagErrorf("--float-image-id is required")
+		return nil, sheetsValidationForFlag("float-image-id", "--float-image-id is required")
 	}
 	props, err := floatImageProperties(runtime, uploadedImageToken, op == "create")
 	if err != nil {
@@ -880,7 +1026,7 @@ var FilterCreate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "manage_filter_object", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -906,7 +1052,7 @@ func filterCreateInput(runtime flagView, token, sheetID, sheetName string) (map[
 		return nil, err
 	}
 	if strings.TrimSpace(runtime.Str("range")) == "" {
-		return nil, common.FlagErrorf("--range is required")
+		return nil, sheetsValidationForFlag("range", "--range is required")
 	}
 	props := map[string]interface{}{
 		"range": strings.TrimSpace(runtime.Str("range")),
@@ -955,7 +1101,7 @@ var FilterUpdate = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "manage_filter_object", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -981,10 +1127,10 @@ func filterUpdateInput(runtime flagView, token, sheetID, sheetName string) (map[
 		return nil, err
 	}
 	if sheetID == "" {
-		return nil, common.FlagErrorf("+filter-update requires --sheet-id (filter_id must equal sheet_id; --sheet-name needs a network lookup unavailable here — call +workbook-info first or pass --sheet-id directly)")
+		return nil, sheetsValidationForFlag("sheet-id", "+filter-update requires --sheet-id (filter_id must equal sheet_id; --sheet-name needs a network lookup unavailable here — call +workbook-info first or pass --sheet-id directly)")
 	}
 	if strings.TrimSpace(runtime.Str("range")) == "" {
-		return nil, common.FlagErrorf("--range is required")
+		return nil, sheetsValidationForFlag("range", "--range is required")
 	}
 	props, err := requireJSONObject(runtime, "properties")
 	if err != nil {
@@ -1023,7 +1169,7 @@ var FilterDelete = common.Shortcut{
 		return invokeToolDryRun(token, ToolKindWrite, "manage_filter_object", input)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -1055,7 +1201,7 @@ func filterDeleteInput(runtime flagView, token, sheetID, sheetName string) (map[
 		return nil, err
 	}
 	if sheetID == "" {
-		return nil, common.FlagErrorf("+filter-delete requires --sheet-id (filter_id must equal sheet_id; --sheet-name needs a network lookup unavailable here — call +workbook-info first or pass --sheet-id directly)")
+		return nil, sheetsValidationForFlag("sheet-id", "+filter-delete requires --sheet-id (filter_id must equal sheet_id; --sheet-name needs a network lookup unavailable here — call +workbook-info first or pass --sheet-id directly)")
 	}
 	input := map[string]interface{}{
 		"excel_id":  token,

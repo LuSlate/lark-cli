@@ -41,7 +41,7 @@ The official [Lark/Feishu](https://www.larksuite.com/) CLI tool, maintained by t
 | ✍️ Approval   | Query approval tasks, approve/reject/transfer tasks, cancel and CC instances                                                      |
 | 🎯 OKR        | Query, create, update OKRs; manage objective & key results, alignments, indicators and progress.                                  |
 | 📋 Project    | Meegle — manage work items, schedules, and data via the standalone [meegle-cli](https://github.com/larksuite/meegle-cli) (install separately) |
-| 🔗 Apps       | Develop, deploy HTML, web pages and applications                                                                                  |
+| 🔗 Apps       | Create Spark/Miaoda apps, publish HTML/static sites, run cloud generation, and manage access scope                                 |
 
 ## Installation & Quick Start
 
@@ -198,7 +198,7 @@ Prefixed with `+`, designed to be friendly for both humans and AI, with smart de
 ```bash
 lark-cli calendar +agenda
 lark-cli im +messages-send --chat-id "oc_xxx" --text "Hello"
-lark-cli docs +create --api-version v2 --doc-format markdown --content $'<title>Weekly Report</title>\n# Progress\n- Completed feature X'
+lark-cli docs +create --doc-format markdown --content $'<title>Weekly Report</title>\n# Progress\n- Completed feature X'
 ```
 
 Run `lark-cli <service> --help` to see all shortcut commands.

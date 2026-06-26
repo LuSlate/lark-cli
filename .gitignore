@@ -7,6 +7,11 @@ bin/
 # Node
 node_modules/
 
+# Python (skill-bundled helper scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+
 
 # OS
 .DS_Store
@@ -35,6 +40,8 @@ tests/mail/reports/
 # Generated / test artifacts
 .hammer/
 .lark-slides/
+/notes/
+/minutes/
 internal/registry/meta_data.json
 cmd/api/download.bin
 app.log
@@ -44,3 +51,4 @@ app.log
 cover*.out
 
 lark-env.sh
+/automations/

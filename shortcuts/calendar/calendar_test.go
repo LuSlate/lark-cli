@@ -49,7 +49,7 @@ func warmTokenCache(t *testing.T) {
 			Command:   "+warm",
 			AuthTypes: []string{"bot"},
 			Execute: func(_ context.Context, rctx *common.RuntimeContext) error {
-				_, err := rctx.CallAPI("GET", "/open-apis/test/v1/warm", nil, nil)
+				_, err := rctx.CallAPITyped("GET", "/open-apis/test/v1/warm", nil, nil)
 				return err
 			},
 		}
@@ -2234,10 +2234,10 @@ func TestResolveStartEnd_ExplicitValues(t *testing.T) {
 // Shortcuts() registration test
 // ---------------------------------------------------------------------------
 
-func TestShortcuts_Returns7(t *testing.T) {
+func TestShortcuts_Returns9(t *testing.T) {
 	shortcuts := Shortcuts()
-	if len(shortcuts) != 7 {
-		t.Fatalf("expected 7 shortcuts, got %d", len(shortcuts))
+	if len(shortcuts) != 9 {
+		t.Fatalf("expected 9 shortcuts, got %d", len(shortcuts))
 	}
 
 	names := map[string]bool{}

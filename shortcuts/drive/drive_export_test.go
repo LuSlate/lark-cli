@@ -5,6 +5,7 @@ package drive
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -50,6 +51,15 @@ func TestValidateDriveExportSpec(t *testing.T) {
 		{
 			name: "base bitable ok",
 			spec: driveExportSpec{Token: "base123", DocType: "bitable", FileExtension: "base"},
+		},
+		{
+			name: "base bitable only schema ok",
+			spec: driveExportSpec{Token: "base123", DocType: "bitable", FileExtension: "base", OnlySchema: true},
+		},
+		{
+			name:    "only schema non base rejected",
+			spec:    driveExportSpec{Token: "base123", DocType: "bitable", FileExtension: "xlsx", OnlySchema: true},
+			wantErr: "--only-schema is only used",
 		},
 		{
 			name: "slides pptx ok",
@@ -678,6 +688,7 @@ func TestDriveExportBitableBaseAsyncSuccess(t *testing.T) {
 		"--token", "bitable123",
 		"--doc-type", "bitable",
 		"--file-extension", "base",
+		"--only-schema",
 		"--as", "bot",
 	}, f, stdout)
 	if err != nil {
@@ -693,6 +704,9 @@ func TestDriveExportBitableBaseAsyncSuccess(t *testing.T) {
 	}
 	if createBody["type"] != "bitable" {
 		t.Fatalf("export_tasks body type = %v, want %q", createBody["type"], "bitable")
+	}
+	if createBody["only_schema"] != true {
+		t.Fatalf("export_tasks body only_schema = %v, want true", createBody["only_schema"])
 	}
 
 	data, err := os.ReadFile(filepath.Join(tmpDir, "crm.base"))
@@ -1085,5 +1099,39 @@ func TestDriveTaskResultExportIncludesReadyFlags(t *testing.T) {
 	}
 	if !bytes.Contains(stdout.Bytes(), []byte(`"job_status_label": "processing"`)) {
 		t.Fatalf("stdout missing job_status_label: %s", stdout.String())
+	}
+}
+
+// TestWrapExportContextErr verifies the export poll loop's typed wrapping for
+// context cancellation / deadline. Previously the poll loop returned ctx.Err()
+// directly so an untyped context.Canceled would escape as a plain string at
+// the command layer, bypassing the typed-error contract.
+func TestWrapExportContextErr(t *testing.T) {
+	if err := wrapExportContextErr(nil); err != nil {
+		t.Errorf("wrapExportContextErr(nil) = %v, want nil", err)
+	}
+
+	cancelled := wrapExportContextErr(context.Canceled)
+	var netErrCancel *errs.NetworkError
+	if !errors.As(cancelled, &netErrCancel) {
+		t.Fatalf("wrapExportContextErr(Canceled) = %T, want *errs.NetworkError", cancelled)
+	}
+	if netErrCancel.Subtype != errs.SubtypeNetworkTransport {
+		t.Errorf("Canceled subtype = %q, want %q", netErrCancel.Subtype, errs.SubtypeNetworkTransport)
+	}
+	if !errors.Is(cancelled, context.Canceled) {
+		t.Error("wrapExportContextErr should preserve context.Canceled via errors.Is")
+	}
+
+	deadline := wrapExportContextErr(context.DeadlineExceeded)
+	var netErrDeadline *errs.NetworkError
+	if !errors.As(deadline, &netErrDeadline) {
+		t.Fatalf("wrapExportContextErr(DeadlineExceeded) = %T, want *errs.NetworkError", deadline)
+	}
+	if netErrDeadline.Subtype != errs.SubtypeNetworkTimeout {
+		t.Errorf("DeadlineExceeded subtype = %q, want %q", netErrDeadline.Subtype, errs.SubtypeNetworkTimeout)
+	}
+	if !errors.Is(deadline, context.DeadlineExceeded) {
+		t.Error("wrapExportContextErr should preserve context.DeadlineExceeded via errors.Is")
 	}
 }

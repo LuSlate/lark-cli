@@ -6,12 +6,16 @@ package sheets
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/larksuite/cli/internal/output"
+	"github.com/larksuite/cli/errs"
+	"github.com/larksuite/cli/internal/util"
 	"github.com/larksuite/cli/shortcuts/common"
 )
 
@@ -52,27 +56,51 @@ var TablePut = common.Shortcut{
 		if _, err := resolveSpreadsheetToken(runtime); err != nil {
 			return err
 		}
-		_, err := parseTablePutPayload(runtime)
+		payload, err := resolveTablePayload(runtime)
+		if err != nil {
+			return err
+		}
+		// --styles is parsed (and aligned against the payload's sheets) up front
+		// so a malformed style item fails before any write lands — mirroring
+		// +workbook-create's Validate.
+		_, err = parseWorkbookCreateSheetStyles(runtime, payload)
 		return err
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		return tablePutDryRun(runtime)
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
-		payload, err := parseTablePutPayload(runtime)
+		payload, err := resolveTablePayload(runtime)
 		if err != nil {
 			return err
 		}
-		return tablePutWrite(ctx, runtime, token, payload)
+		styles, err := parseWorkbookCreateSheetStyles(runtime, payload)
+		if err != nil {
+			return err
+		}
+		return tablePutWrite(ctx, runtime, token, payload, styles)
 	},
 	Tips: []string{
 		"Writes into an existing spreadsheet — pass --url or --spreadsheet-token. To create a new workbook first, use +workbook-create, then point --spreadsheet-token here.",
 		"Payload sheets are matched to existing sub-sheets by name (created when absent). Date columns take ISO yyyy-mm-dd strings — converted to real dates (serial + date format).",
+		"--styles applies number formats, colors, merges, and row/col sizes in the same call (same shape as +workbook-create's --styles): one styles item per written sheet, name-matched. Skips the separate +cells-set-style round-trip.",
 	},
+}
+
+// resolveTablePayload parses --sheets (typed JSON, multi-sheet) into the
+// unified internal tablePayload. Both +table-put and +workbook-create funnel
+// through here so the two entry points stay in lockstep; Validate / Execute /
+// DryRun / workbookCreateData all share this one decision. Network-free.
+func resolveTablePayload(rctx *common.RuntimeContext) (*tablePayload, error) {
+	sheetsGiven := rctx.Changed("sheets") && strings.TrimSpace(rctx.Str("sheets")) != ""
+	if !sheetsGiven {
+		return nil, common.ValidationErrorf("--sheets is required")
+	}
+	return parseTablePutPayload(rctx)
 }
 
 // ─── protocol ─────────────────────────────────────────────────────────
@@ -81,81 +109,256 @@ type tablePayload struct {
 	Sheets []tableSheetSpec `json:"sheets"`
 }
 
+// tableSheetSpec is the *internal* representation a sheet is normalized into
+// after parsing the wire protocol. It carries everything buildSheetMatrix and
+// friends need (typed columns + format + 2D row matrix) and is what the rest of
+// this file works against. The wire shape — string columns + dtypes/formats
+// maps + `data` — lives in tableSheetIn and is collapsed into this struct by
+// (*tableSheetIn).normalize.
 type tableSheetSpec struct {
-	Name      string `json:"name"`
-	StartCell string `json:"start_cell"`
+	Name      string
+	StartCell string
 	// Mode controls write placement: "overwrite" (default) writes a header+data
 	// block from start_cell; "append" writes data below the sheet's existing
 	// data (start_cell's row is ignored, its column is honored).
-	Mode string `json:"mode"`
+	Mode string
 	// Header is whether to write a header row of column names. nil defaults by
 	// mode: true for overwrite, false for append (so appended rows don't repeat
 	// the header). Set explicitly to override.
-	Header *bool `json:"header"`
+	Header *bool
 	// AllowOverwrite, when explicitly false, makes the write fail if it would
 	// land on a non-empty cell. nil defaults to true (overwrite).
-	AllowOverwrite *bool             `json:"allow_overwrite"`
-	Columns        []tableColumnSpec `json:"columns"`
-	Rows           [][]interface{}   `json:"rows"`
+	AllowOverwrite *bool
+	Columns        []tableColumnSpec
+	Rows           [][]interface{}
 }
 
 type tableColumnSpec struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Format string `json:"format"`
+	Name   string
+	Type   string
+	Format string
+}
+
+// tableSheetIn is the wire-level shape of one sheet in --sheets. It is
+// pandas-DataFrame-shaped on purpose: `columns` is a plain string list, `data`
+// is a 2D array, and the per-column type / display format are *separate*
+// dtypes/formats maps keyed by column name. That gives agents a one-liner
+// (`{**json.loads(df.to_json(orient="split")), "dtypes":
+// df.dtypes.astype(str).to_dict()}`) and lets handwritten payloads stay flat
+// rather than nest a {name, type, format} object per column.
+type tableSheetIn struct {
+	Name           string            `json:"name"`
+	StartCell      string            `json:"start_cell"`
+	Mode           string            `json:"mode"`
+	Header         *bool             `json:"header"`
+	AllowOverwrite *bool             `json:"allow_overwrite"`
+	Columns        []string          `json:"columns"`
+	Data           [][]interface{}   `json:"data"`
+	Dtypes         map[string]string `json:"dtypes"`
+	Formats        map[string]string `json:"formats"`
+}
+
+// dtypeToTypeFormat maps a pandas-style dtype string to the internal column
+// (type, default format) pair. The mapping is deliberately permissive: a missing
+// or unknown dtype falls through to string + text format (`@`) so a
+// `to_json(orient="split")` payload that omits `dtypes` writes correctly as an
+// all-string table. Recognized families:
+//   - int*/uint* (lowercase numpy + capitalized nullable pandas) → number
+//   - float* / Float* / complex*                                  → number
+//   - bool / boolean (nullable)                                   → bool
+//   - datetime*  (incl. tz-aware datetime64[ns, UTC])             → date, "yyyy-mm-dd"
+//   - everything else (object, string, category, empty, unknown) → string, "@"
+//
+// Explicit `formats[col]` is layered on top of this default by normalize, so a
+// user-supplied `#,##0.00` on a float64 column still wins.
+func dtypeToTypeFormat(dtype string) (typ, format string) {
+	d := strings.TrimSpace(dtype)
+	if d == "" {
+		return "string", "@"
+	}
+	lower := strings.ToLower(d)
+	switch {
+	case strings.HasPrefix(lower, "datetime"):
+		return "date", "yyyy-mm-dd"
+	case lower == "bool" || lower == "boolean":
+		return "bool", ""
+	case isNumericDtype(lower):
+		return "number", ""
+	default:
+		return "string", "@"
+	}
+}
+
+// isNumericDtype recognizes pandas/numpy numeric dtype strings (lowercased).
+// Covers numpy ints (`int8`/`int64`/...), unsigned ints (`uint*`), floats
+// (`float32`/`float64`), complex, and pandas' nullable variants
+// (`int64`/`uint64`/`float64` lowercased from `Int64`/`UInt64`/`Float64`).
+func isNumericDtype(lower string) bool {
+	for _, p := range []string{"int", "uint", "float", "complex"} {
+		if strings.HasPrefix(lower, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// typeToDtype is the inverse used by +table-get to label each output column.
+// Choices are picked to be safe under a single `df.astype(dtypes)` round-trip:
+//   - string → object (pandas default, no-op astype)
+//   - number → float64 (works for all numeric cells, including ones with NaN)
+//   - date   → datetime64[ns] (matches the ISO strings we emit)
+//   - bool   → bool (inferColumnType only picks bool when every cell is bool)
+//
+// Anything else (defensive default) maps to object.
+func typeToDtype(typ string) string {
+	switch typ {
+	case "number":
+		return "float64"
+	case "date":
+		return "datetime64[ns]"
+	case "bool":
+		return "bool"
+	default:
+		return "object"
+	}
+}
+
+// decoderExpectEOF ensures the decoder has nothing left to read after a
+// successful Decode. json.Decoder accepts trailing non-whitespace after the
+// first JSON value (unlike json.Unmarshal), so a payload like `{...} trailing`
+// would silently be treated as the leading object only. Use this after the
+// first Decode to surface the trailing data as a validation error.
+func decoderExpectEOF(dec *json.Decoder) error {
+	var trailing json.RawMessage
+	if err := dec.Decode(&trailing); err == nil {
+		return fmt.Errorf("trailing data after JSON value") //nolint:forbidigo // intermediate error; the caller wraps it into a typed --sheets/--values validation error
+	} else if !errors.Is(err, io.EOF) {
+		return fmt.Errorf("trailing data after JSON value: %w", err) //nolint:forbidigo // intermediate error; the caller wraps it into a typed --sheets/--values validation error
+	}
+	return nil
 }
 
 // parseTablePutPayload reads --sheets (JSON, supports @file / stdin) into a
 // validated payload. UseNumber keeps numeric cells as json.Number so large
 // integers (order IDs, etc.) survive without precision loss or scientific
-// notation. Network-free: safe from Validate and DryRun.
+// notation. The wire shape (tableSheetIn: string columns + dtypes/formats maps
+// + `data`) is normalized into the internal tableSheetSpec so the rest of the
+// file (buildSheetMatrix, sheetCreateDims, …) is unaware of it. Network-free:
+// safe from Validate and DryRun.
 func parseTablePutPayload(runtime flagView) (*tablePayload, error) {
 	raw := strings.TrimSpace(runtime.Str("sheets"))
 	if raw == "" {
-		return nil, common.FlagErrorf("--sheets is required")
+		return nil, common.ValidationErrorf("--sheets is required")
 	}
 	dec := json.NewDecoder(strings.NewReader(raw))
 	dec.UseNumber()
-	var p tablePayload
-	if err := dec.Decode(&p); err != nil {
-		return nil, common.FlagErrorf("--sheets: invalid JSON: %v", err)
+	var wire struct {
+		Sheets []tableSheetIn `json:"sheets"`
+	}
+	if err := dec.Decode(&wire); err != nil {
+		return nil, common.ValidationErrorf("--sheets: invalid JSON: %v", err).WithCause(err)
+	}
+	// Reject trailing non-whitespace after the first JSON value: json.Decoder
+	// accepts it silently (unlike json.Unmarshal), so e.g. `--sheets '{...} oops'`
+	// would otherwise pass Validate and surface as confusing downstream errors.
+	if err := decoderExpectEOF(dec); err != nil {
+		return nil, common.ValidationErrorf("--sheets: %v", err).WithCause(err)
+	}
+	p := &tablePayload{Sheets: make([]tableSheetSpec, 0, len(wire.Sheets))}
+	for i := range wire.Sheets {
+		spec, err := wire.Sheets[i].normalize(i)
+		if err != nil {
+			return nil, err
+		}
+		p.Sheets = append(p.Sheets, spec)
 	}
 	if err := p.validate(); err != nil {
 		return nil, err
 	}
-	return &p, nil
+	return p, nil
+}
+
+// normalize collapses the wire-level pandas-shaped tableSheetIn into the
+// internal tableSheetSpec used by the writer. It pairs each column name with
+// its dtype-derived (type, format) — with `formats[name]` overriding the
+// default — and renames `data` back to the writer's `Rows`. Per-column
+// validation that needs the resolved type lives in tablePayload.validate (so
+// errors carry the sheet-index/name context the writer already prints).
+func (in *tableSheetIn) normalize(idx int) (tableSheetSpec, error) {
+	spec := tableSheetSpec{
+		Name:           in.Name,
+		StartCell:      in.StartCell,
+		Mode:           in.Mode,
+		Header:         in.Header,
+		AllowOverwrite: in.AllowOverwrite,
+		Rows:           in.Data,
+	}
+	seenCol := make(map[string]bool, len(in.Columns))
+	spec.Columns = make([]tableColumnSpec, len(in.Columns))
+	for j, name := range in.Columns {
+		trimmed := strings.TrimSpace(name)
+		if trimmed == "" {
+			return tableSheetSpec{}, common.ValidationErrorf("--sheets[%d] %q: columns[%d] name is required", idx, in.Name, j)
+		}
+		if seenCol[name] {
+			return tableSheetSpec{}, common.ValidationErrorf("--sheets[%d] %q: duplicate column name %q", idx, in.Name, name)
+		}
+		seenCol[name] = true
+		typ, format := dtypeToTypeFormat(in.Dtypes[name])
+		if f, ok := in.Formats[name]; ok {
+			format = strings.TrimSpace(f)
+		}
+		spec.Columns[j] = tableColumnSpec{Name: name, Type: typ, Format: format}
+	}
+	// Surface dtypes/formats entries that reference a column the sheet doesn't
+	// have — almost always a typo (`"foramt"`, `"营 收"` with stray spaces) and
+	// silently ignoring them would let the writer succeed with the wrong
+	// formatting. The check runs after the column list is built so we can
+	// compare against the canonical set.
+	for k := range in.Dtypes {
+		if !seenCol[k] {
+			return tableSheetSpec{}, common.ValidationErrorf("--sheets[%d] %q: dtypes references unknown column %q", idx, in.Name, k)
+		}
+	}
+	for k := range in.Formats {
+		if !seenCol[k] {
+			return tableSheetSpec{}, common.ValidationErrorf("--sheets[%d] %q: formats references unknown column %q", idx, in.Name, k)
+		}
+	}
+	return spec, nil
 }
 
 func (p *tablePayload) validate() error {
 	if len(p.Sheets) == 0 {
-		return common.FlagErrorf("--sheets: must contain at least one sheet")
+		return common.ValidationErrorf("--sheets: must contain at least one sheet")
 	}
 	seen := make(map[string]bool, len(p.Sheets))
 	for i := range p.Sheets {
 		s := &p.Sheets[i]
 		if strings.TrimSpace(s.Name) == "" {
-			return common.FlagErrorf("--sheets[%d]: name is required", i)
+			return common.ValidationErrorf("--sheets[%d]: name is required", i)
 		}
 		if seen[s.Name] {
-			return common.FlagErrorf("--sheets[%d]: duplicate sheet name %q", i, s.Name)
+			return common.ValidationErrorf("--sheets[%d]: duplicate sheet name %q", i, s.Name)
 		}
 		seen[s.Name] = true
 		if len(s.Columns) == 0 {
-			return common.FlagErrorf("--sheets[%d] %q: columns must be non-empty", i, s.Name)
+			return common.ValidationErrorf("--sheets[%d] %q: columns must be non-empty", i, s.Name)
 		}
 		for j := range s.Columns {
 			c := &s.Columns[j]
-			if strings.TrimSpace(c.Name) == "" {
-				return common.FlagErrorf("--sheets[%d] %q: columns[%d].name is required", i, s.Name, j)
-			}
+			// validColumnType still guards the internal Type so a future
+			// dtype-mapping change (or a direct test-time construction of a
+			// tableSheetSpec) can't silently route an unknown type into
+			// buildTypedCell's default branch.
 			if !validColumnType(c.Type) {
-				return common.FlagErrorf("--sheets[%d] %q: columns[%d] %q has invalid type %q (want string/number/date/bool)",
+				return common.ValidationErrorf("--sheets[%d] %q: columns[%d] %q has invalid type %q (want string/number/date/bool)",
 					i, s.Name, j, c.Name, c.Type)
 			}
 		}
 		for r := range s.Rows {
 			if len(s.Rows[r]) != len(s.Columns) {
-				return common.FlagErrorf("--sheets[%d] %q: row %d has %d cells, want %d (column count)",
+				return common.ValidationErrorf("--sheets[%d] %q: row %d has %d cells, want %d (column count)",
 					i, s.Name, r, len(s.Rows[r]), len(s.Columns))
 			}
 			// Validate each cell's value against its column type up front (pure,
@@ -164,19 +367,19 @@ func (p *tablePayload) validate() error {
 			// stray empty spreadsheet behind.
 			for c := range s.Columns {
 				if _, err := buildTypedCell(&s.Columns[c], s.Rows[r][c]); err != nil {
-					return common.FlagErrorf("--sheets[%d] %q: row %d column %q: %v", i, s.Name, r, s.Columns[c].Name, err)
+					return common.ValidationErrorf("--sheets[%d] %q: row %d column %q: %v", i, s.Name, r, s.Columns[c].Name, err).WithCause(err)
 				}
 			}
 		}
 		if sc := strings.TrimSpace(s.StartCell); sc != "" {
 			if _, _, ok := splitCellRef(sc); !ok {
-				return common.FlagErrorf("--sheets[%d] %q: start_cell %q must be a single cell ref (e.g. A1)", i, s.Name, sc)
+				return common.ValidationErrorf("--sheets[%d] %q: start_cell %q must be a single cell ref (e.g. A1)", i, s.Name, sc)
 			}
 		}
 		switch s.Mode {
 		case "", "overwrite", "append":
 		default:
-			return common.FlagErrorf("--sheets[%d] %q: mode %q is invalid (want \"overwrite\" or \"append\")", i, s.Name, s.Mode)
+			return common.ValidationErrorf("--sheets[%d] %q: mode %q is invalid (want \"overwrite\" or \"append\")", i, s.Name, s.Mode)
 		}
 	}
 	return nil
@@ -228,7 +431,7 @@ func buildSheetMatrix(s *tableSheetSpec, writeHeader bool) ([][]interface{}, err
 		for c := range s.Columns {
 			cell, err := buildTypedCell(&s.Columns[c], s.Rows[r][c])
 			if err != nil {
-				return nil, common.FlagErrorf("sheet %q row %d column %q: %v", s.Name, r, s.Columns[c].Name, err)
+				return nil, common.ValidationErrorf("sheet %q row %d column %q: %v", s.Name, r, s.Columns[c].Name, err).WithCause(err)
 			}
 			row[c] = cell
 		}
@@ -275,19 +478,19 @@ func buildTypedCell(col *tableColumnSpec, raw interface{}) (map[string]interface
 	case "number":
 		n, ok := raw.(json.Number)
 		if !ok {
-			return nil, fmt.Errorf("number expects a numeric value, got %s", describeJSONType(raw))
+			return nil, fmt.Errorf("number expects a numeric value, got %s", describeJSONType(raw)) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
 		}
 		cell["value"] = n
 	case "bool":
 		b, ok := raw.(bool)
 		if !ok {
-			return nil, fmt.Errorf("bool expects true/false, got %s", describeJSONType(raw))
+			return nil, fmt.Errorf("bool expects true/false, got %s", describeJSONType(raw)) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
 		}
 		cell["value"] = b
 	case "date":
 		str, ok := raw.(string)
 		if !ok {
-			return nil, fmt.Errorf("date expects an ISO yyyy-mm-dd string, got %s", describeJSONType(raw))
+			return nil, fmt.Errorf("date expects an ISO yyyy-mm-dd string, got %s", describeJSONType(raw)) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
 		}
 		serial, err := isoDateToSerial(str)
 		if err != nil {
@@ -295,7 +498,7 @@ func buildTypedCell(col *tableColumnSpec, raw interface{}) (map[string]interface
 		}
 		cell["value"] = serial
 	default:
-		return nil, fmt.Errorf("unsupported type %q", col.Type)
+		return nil, fmt.Errorf("unsupported type %q", col.Type) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
 	}
 	return cell, nil
 }
@@ -345,10 +548,22 @@ var excelEpoch = time.Date(1899, 12, 30, 0, 0, 0, 0, time.UTC)
 // number. The result is written as a numeric cell value with a date
 // number_format, which is the only combination that yields a real (sortable,
 // pivotable, ISNUMBER=TRUE) date in Lark Sheets.
+//
+// Accepts both bare dates (`2024-01-15`) and full ISO datetime strings with a
+// `T` separator (`2024-01-15T00:00:00.000`, `2024-01-15T08:30:00+08:00`). The
+// `T...` suffix is dropped before parsing so the pandas `df_to_sheet` helper
+// — which uses `df.to_json(orient="split", date_format="iso")` and therefore
+// always emits the full ISO form — round-trips without an extra string clean
+// step on the agent side. A leading `T` (no date prefix) is left alone so the
+// parser still rejects it cleanly.
 func isoDateToSerial(s string) (int, error) {
-	t, err := time.Parse("2006-01-02", strings.TrimSpace(s))
+	s = strings.TrimSpace(s)
+	if i := strings.Index(s, "T"); i > 0 {
+		s = s[:i]
+	}
+	t, err := time.Parse("2006-01-02", s)
 	if err != nil {
-		return 0, fmt.Errorf("date %q must be ISO yyyy-mm-dd: %v", s, err)
+		return 0, fmt.Errorf("date %q must be ISO yyyy-mm-dd: %w", s, err) //nolint:forbidigo // intermediate error; callers wrap it into a typed --sheets/--values validation error with row/column context
 	}
 	return int(math.Round(t.Sub(excelEpoch).Hours() / 24)), nil
 }
@@ -370,14 +585,19 @@ func sheetAnchor(s *tableSheetSpec) (anchor string, col0, row0 int, err error) {
 	}
 	c, r, ok := splitCellRef(anchor)
 	if !ok {
-		return "", 0, 0, common.FlagErrorf("start_cell %q must be a single cell ref (e.g. A1)", anchor)
+		return "", 0, 0, common.ValidationErrorf("start_cell %q must be a single cell ref (e.g. A1)", anchor)
 	}
 	return anchor, c, r, nil
 }
 
 // tablePutFullRange is the A1 rectangle the whole matrix (header + data)
-// occupies, for reporting in the result / dry-run.
+// occupies, for reporting in the result / dry-run. Returns "" when there is
+// nothing to write (e.g. header=false with no data rows) — the previous
+// formula would have produced an invalid trailing row like "A1:C0".
 func tablePutFullRange(s *tableSheetSpec, totalRows int) string {
+	if totalRows <= 0 || len(s.Columns) == 0 {
+		return ""
+	}
 	_, col0, row0, err := sheetAnchor(s)
 	if err != nil {
 		return strings.TrimSpace(s.StartCell)
@@ -393,7 +613,7 @@ func tablePutFullRange(s *tableSheetSpec, totalRows int) string {
 // writeSheetData writes one sheet's matrix via set_cell_range, splitting into
 // row batches when the cell count would exceed tablePutMaxCellsPerWrite.
 // Returns a per-sheet summary for the result envelope.
-func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, s *tableSheetSpec, styles *workbookCreateStylePayload) (map[string]interface{}, error) {
+func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, s *tableSheetSpec, styles *workbookCreateStylePayload, dims gridDims) (map[string]interface{}, error) {
 	_, col0, row0, err := sheetAnchor(s)
 	if err != nil {
 		return nil, err
@@ -405,9 +625,9 @@ func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, 
 	baseRow := row0
 	writeHeader := headerOn(s)
 	if s.Mode == "append" {
-		lastRow, err := lastDataRow(ctx, runtime, token, sheetID)
+		lastRow, err := lastDataRow(ctx, runtime, token, sheetID, dims)
 		if err != nil {
-			return nil, fmt.Errorf("resolving last data row for append: %w", err)
+			return nil, fmt.Errorf("resolving last data row for append: %w", err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 		}
 		if lastRow > 0 {
 			baseRow = lastRow // 0-based index of the row just below the 1-based last data row
@@ -461,12 +681,12 @@ func writeSheetData(ctx context.Context, runtime *common.RuntimeContext, token, 
 			input["allow_overwrite"] = false
 		}
 		if _, err := callTool(ctx, runtime, token, ToolKindWrite, "set_cell_range", input); err != nil {
-			return nil, fmt.Errorf("writing rows %d-%d: %w", start+1, end, err)
+			return nil, fmt.Errorf("writing rows %d-%d: %w", start+1, end, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 		}
 		writes++
 	}
 	if err := applyWorkbookCreateVisualOps(ctx, runtime, token, sheetID, styles); err != nil {
-		return nil, fmt.Errorf("applying visual styles: %w", err)
+		return nil, fmt.Errorf("applying visual styles: %w", err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 	}
 	return map[string]interface{}{
 		"name":      s.Name,
@@ -491,12 +711,24 @@ func writeModeName(s *tableSheetSpec) string {
 // lastDataRow returns the 1-based row number of the last row containing data in
 // the sheet (0 when empty), so append mode can place new rows just below it. It
 // reads current_region via get_range_as_csv — the backend's reported true data
-// extent — anchored at A1.
-func lastDataRow(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string) (int, error) {
+// extent.
+//
+// The anchor range matters for the same reason it does in sheetCurrentRegion:
+// current_region is the bounding box of non-empty cells WITHIN the requested
+// range, so an A1 anchor stops at the first fully-empty row and reports a
+// too-small last row — append would then write on top of and overwrite the data
+// past that gap. Anchoring over the whole grid (A1:<lastCol><lastRow>, from the
+// sheet's row_count / column_count) makes the probe span internal blank rows.
+// When dimensions are unknown it falls back to the legacy A1 anchor.
+func lastDataRow(ctx context.Context, runtime *common.RuntimeContext, token, sheetID string, dims gridDims) (int, error) {
+	anchor := "A1"
+	if dims.rows > 0 && dims.cols > 0 {
+		anchor = "A1:" + columnIndexToLetter(dims.cols-1) + strconv.Itoa(dims.rows)
+	}
 	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_range_as_csv", map[string]interface{}{
 		"excel_id": token,
 		"sheet_id": sheetID,
-		"range":    "A1",
+		"range":    anchor,
 		"max_rows": unboundedReadLimit,
 	})
 	if err != nil {
@@ -530,7 +762,7 @@ func lastDataRow(ctx context.Context, runtime *common.RuntimeContext, token, she
 // On failure it returns the summaries written so far alongside the error, so
 // the caller can surface a partial_success.
 func writeTypedSheets(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, adoptSheetID string, styles *workbookCreateSheetStyles) ([]interface{}, error) {
-	byName, err := listSheetIDsByName(ctx, runtime, token)
+	byName, dimsByName, err := listSheetIDsByName(ctx, runtime, token)
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +774,7 @@ func writeTypedSheets(ctx context.Context, runtime *common.RuntimeContext, token
 		first := payload.Sheets[0].Name
 		if _, exists := byName[first]; !exists {
 			if err := renameSheet(ctx, runtime, token, adoptSheetID, first); err != nil {
-				return nil, fmt.Errorf("adopting the default sheet as %q failed: %w", first, err)
+				return nil, fmt.Errorf("adopting the default sheet as %q failed: %w", first, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 			}
 			byName[first] = adoptSheetID
 		}
@@ -556,13 +788,15 @@ func writeTypedSheets(ctx context.Context, runtime *common.RuntimeContext, token
 			rows, cols := sheetCreateDims(s)
 			sheetID, err = createSheet(ctx, runtime, token, s.Name, rows, cols)
 			if err != nil {
-				return written, fmt.Errorf("creating sheet %q failed: %w", s.Name, err)
+				return written, fmt.Errorf("creating sheet %q failed: %w", s.Name, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 			}
 			byName[s.Name] = sheetID
+			// A freshly created sheet's grid is exactly what we just asked for.
+			dimsByName[s.Name] = gridDims{rows: rows, cols: cols}
 		}
-		summary, err := writeSheetData(ctx, runtime, token, sheetID, s, styles.styleFor(i))
+		summary, err := writeSheetData(ctx, runtime, token, sheetID, s, styles.styleFor(i), dimsByName[s.Name])
 		if err != nil {
-			return written, fmt.Errorf("writing sheet %q failed: %w", s.Name, err)
+			return written, fmt.Errorf("writing sheet %q failed: %w", s.Name, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 		}
 		written = append(written, summary)
 	}
@@ -584,11 +818,13 @@ func renameSheet(ctx context.Context, runtime *common.RuntimeContext, token, she
 
 // tablePutWrite writes the payload into an existing workbook and emits the
 // +table-put envelope. The shared write loop lives in writeTypedSheets; this
-// wrapper adds +table-put's output shape and partial-success reporting.
-func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload) error {
-	written, err := writeTypedSheets(ctx, runtime, token, payload, "", nil)
+// wrapper adds +table-put's output shape and partial-success reporting. styles
+// (optional, parsed from --styles) is forwarded so per-sheet visual ops apply
+// in the same call.
+func tablePutWrite(ctx context.Context, runtime *common.RuntimeContext, token string, payload *tablePayload, styles *workbookCreateSheetStyles) error {
+	written, err := writeTypedSheets(ctx, runtime, token, payload, "", styles)
 	if err != nil {
-		return tablePutPartial(token, nil, written, err.Error())
+		return tablePutPartial(runtime, token, nil, written, err.Error())
 	}
 	runtime.Out(map[string]interface{}{
 		"spreadsheet_token": token,
@@ -621,7 +857,7 @@ func createSheet(ctx context.Context, runtime *common.RuntimeContext, token, nam
 	}
 	id, _, err := lookupSheetIndex(ctx, runtime, token, "", name)
 	if err != nil {
-		return "", fmt.Errorf("sheet %q created but resolving its id failed: %w", name, err)
+		return "", fmt.Errorf("sheet %q created but resolving its id failed: %w", name, err) //nolint:forbidigo // intermediate error; surfaced as a partial_success message string via tablePutPartial, not a typed final error
 	}
 	return id, nil
 }
@@ -635,7 +871,15 @@ func sheetCreateDims(s *tableSheetSpec) (rows, cols int) {
 	_, col0, row0, _ := sheetAnchor(s)
 	cols = col0 + len(s.Columns)
 	rows = row0 + len(s.Rows)
-	if headerOn(s) {
+	// Match writeSheetData's header decision exactly. headerOn() is false for
+	// append mode by default, but writeSheetData *forces* a header when append
+	// hits an empty sheet with no explicit Header choice (so column names
+	// aren't lost on the first append). sheetCreateDims runs only when the
+	// sheet is being created — therefore the sheet IS empty and that forced
+	// header WILL be written, so size for it here. Without this the sheet is
+	// created one row short and append-near-50000 / append-at-N-cols-200
+	// would bounce off the backend's hard cap.
+	if headerOn(s) || (s.Mode == "append" && s.Header == nil) {
 		rows++
 	}
 	if cols < 20 {
@@ -653,82 +897,77 @@ func sheetCreateDims(s *tableSheetSpec) (rows, cols int) {
 	return rows, cols
 }
 
-// listSheetIDsByName maps every existing sub-sheet's display name to its id via
-// a single get_workbook_structure read. Used by write mode to decide which
-// payload sheets already exist.
-func listSheetIDsByName(ctx context.Context, runtime *common.RuntimeContext, token string) (map[string]string, error) {
+// gridDims is a sub-sheet's physical grid size (row_count × column_count from
+// get_workbook_structure). A zero in either field means "unknown", which makes
+// the used-range probes (sheetCurrentRegion / lastDataRow) fall back to their
+// legacy A1 anchor instead of a full-grid one.
+type gridDims struct {
+	rows int
+	cols int
+}
+
+// listSheetIDsByName maps every existing sub-sheet's display name to its id and
+// physical grid dimensions via a single get_workbook_structure read. Used by
+// write mode to decide which payload sheets already exist (and, for append, to
+// anchor the last-data-row probe over the whole grid — see lastDataRow).
+func listSheetIDsByName(ctx context.Context, runtime *common.RuntimeContext, token string) (map[string]string, map[string]gridDims, error) {
 	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_workbook_structure", map[string]interface{}{
 		"excel_id": token,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	m, ok := out.(map[string]interface{})
 	if !ok {
-		return nil, output.Errorf(output.ExitAPI, "tool_output", "get_workbook_structure returned non-object output")
+		return nil, nil, errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned non-object output")
 	}
 	sheets, _ := m["sheets"].([]interface{})
 	byName := make(map[string]string, len(sheets))
+	dimsByName := make(map[string]gridDims, len(sheets))
 	for _, raw := range sheets {
-		sm, ok := raw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		id, _ := sm["sheet_id"].(string)
-		name, _ := sm["sheet_name"].(string)
-		if name == "" {
-			name, _ = sm["title"].(string)
-		}
+		id, name, rc, cc := tableGetSheetMeta(raw)
 		if id != "" && name != "" {
 			byName[name] = id
+			dimsByName[name] = gridDims{rows: rc, cols: cc}
 		}
 	}
-	return byName, nil
+	return byName, dimsByName, nil
 }
 
-// tablePutPartial builds a structured error for a multi-sheet write that failed
-// partway. When some sheets already landed it's a partial_success (their
-// summaries are surfaced so callers can retry the rest or delete the workbook);
-// when nothing landed — the first or only sheet failed — it's a plain failure,
-// so we don't misleadingly claim "some sheets were written".
-func tablePutPartial(token string, spreadsheet interface{}, written []interface{}, reason string) error {
-	detail := map[string]interface{}{
+// tablePutPartial reports a multi-sheet write that failed partway. When some
+// sheets already landed it is a partial_success: their summaries are the primary
+// machine-readable output, so we emit an ok:false result envelope on stdout (via
+// OutPartialFailure) carrying written_sheets, and return the partial-failure exit
+// signal — callers can retry the rest or delete the workbook. When nothing landed
+// — the first or only sheet failed — it is a plain failure, so we return a typed
+// errs.APIError rather than misleadingly claiming "some sheets were written".
+func tablePutPartial(runtime *common.RuntimeContext, token string, spreadsheet interface{}, written []interface{}, reason string) error {
+	if len(written) == 0 {
+		return errs.NewAPIError(errs.SubtypeServerError, "table-put failed on %s: %s", token, reason).
+			WithHint("no sheets were written; fix the cause and retry")
+	}
+	data := map[string]interface{}{
 		"spreadsheet_token": token,
 		"written_sheets":    written,
+		"reason":            reason,
+		"hint":              "some sheets were written; inspect written_sheets, then retry the remaining sheets or delete the spreadsheet",
 	}
 	if spreadsheet != nil {
-		detail["spreadsheet"] = spreadsheet
+		data["spreadsheet"] = spreadsheet
 	}
-	if len(written) == 0 {
-		return &output.ExitError{
-			Code: output.ExitAPI,
-			Detail: &output.ErrDetail{
-				Type:    "api_error",
-				Message: fmt.Sprintf("table-put failed on %s: %s", token, reason),
-				Hint:    "no sheets were written; fix the cause and retry",
-				Detail:  detail,
-			},
-		}
-	}
-	return &output.ExitError{
-		Code: output.ExitAPI,
-		Detail: &output.ErrDetail{
-			Type:    "partial_success",
-			Message: fmt.Sprintf("table-put partially applied to %s: %s", token, reason),
-			Hint:    "some sheets were written; inspect written_sheets, then retry the remaining sheets or delete the spreadsheet",
-			Detail:  detail,
-		},
-	}
+	return runtime.OutPartialFailure(data, nil)
 }
 
 // ─── dry-run ──────────────────────────────────────────────────────────
 
 // tablePutDryRun renders the set_cell_range write the shortcut would send for
-// each sheet. Network-free; the payload and locator have already been validated
-// by Validate, so errors here degrade to an empty preview rather than twice.
+// each sheet, plus any --styles visual ops (cell_styles merged into the matrix;
+// merges / row+col sizes as their own tool calls). Network-free; the payload,
+// locator, and styles have already been validated by Validate, so errors here
+// degrade to an empty preview rather than twice.
 func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 	dry := common.NewDryRunAPI()
-	payload, err := parseTablePutPayload(runtime)
+	payload, err := resolveTablePayload(runtime)
 	if err != nil {
 		return dry
 	}
@@ -736,6 +975,7 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 	if err != nil {
 		return dry
 	}
+	sheetStyles, _ := parseWorkbookCreateSheetStyles(runtime, payload)
 	for i := range payload.Sheets {
 		s := &payload.Sheets[i]
 		matrix, _ := buildSheetMatrix(s, headerOn(s))
@@ -744,6 +984,13 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 		rng := tablePutFullRange(s, len(matrix))
 		if s.Mode == "append" {
 			rng = "<append below existing data>"
+		} else {
+			// cell_styles are merged into the matrix only for overwrite mode,
+			// where the anchor row is known statically; append's base row is
+			// resolved at execute time, so the preview leaves the matrix bare
+			// (the merges / sizes ops below still render).
+			_, col0, row0, _ := sheetAnchor(s)
+			_ = applyWorkbookCreateStylesToMatrix(matrix, sheetStyles.styleFor(i), col0, row0, fmt.Sprintf("--styles for sheet %q", s.Name))
 		}
 		input := map[string]interface{}{
 			"excel_id":   token,
@@ -756,6 +1003,7 @@ func tablePutDryRun(runtime *common.RuntimeContext) *common.DryRunAPI {
 		}
 		wireBody, _ := buildToolBody("set_cell_range", input)
 		dry.POST(toolInvokePath(token, ToolKindWrite)).Desc(desc).Body(wireBody)
+		appendWorkbookCreateVisualOpsDryRun(dry, token, "", s.Name, sheetStyles.styleFor(i))
 	}
 	return dry
 }
@@ -783,32 +1031,42 @@ var TableGet = common.Shortcut{
 			return err
 		}
 		if strings.TrimSpace(runtime.Str("sheet-id")) != "" && strings.TrimSpace(runtime.Str("sheet-name")) != "" {
-			return common.FlagErrorf("--sheet-id and --sheet-name are mutually exclusive")
+			return common.ValidationErrorf("--sheet-id and --sheet-name are mutually exclusive")
 		}
 		return nil
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		token, _ := resolveSpreadsheetToken(runtime)
 		dry := common.NewDryRunAPI()
-		if strings.TrimSpace(runtime.Str("sheet-id")) == "" && strings.TrimSpace(runtime.Str("sheet-name")) == "" {
-			body, _ := buildToolBody("get_workbook_structure", map[string]interface{}{"excel_id": token})
-			dry.POST(toolInvokePath(token, ToolKindRead)).Desc("list sub-sheets via get_workbook_structure").Body(body)
-		}
+		// get_workbook_structure runs on every path now (not just whole-workbook):
+		// the single-sheet selector path also reads it to learn the grid's physical
+		// dimensions, which anchor the default used-range probe over the full grid.
+		body, _ := buildToolBody("get_workbook_structure", map[string]interface{}{"excel_id": token})
+		dry.POST(toolInvokePath(token, ToolKindRead)).Desc("read sub-sheets + grid dimensions via get_workbook_structure").Body(body)
 		rng := strings.TrimSpace(runtime.Str("range"))
 		if rng == "" {
-			rng = "<each sheet's current region>"
+			rng = "<each sheet's used range (full-grid current_region)>"
 		}
-		body, _ := buildToolBody("get_cell_ranges", map[string]interface{}{
+		// Mirror the selector the Execute path will pass to get_cell_ranges so the
+		// dry-run body matches the real request shape; agents that validate one and
+		// run the other would otherwise see a sheet_id/sheet_name field appear out
+		// of nowhere. Network-free: only echoes the flags the caller already gave.
+		input := map[string]interface{}{
 			"excel_id": token, "ranges": []string{rng},
 			"include_styles": true, "value_render_option": "raw_value",
-		})
+		}
+		sheetSelectorForToolInput(input,
+			strings.TrimSpace(runtime.Str("sheet-id")),
+			strings.TrimSpace(runtime.Str("sheet-name")),
+		)
+		body, _ = buildToolBody("get_cell_ranges", input)
 		dry.POST(toolInvokePath(token, ToolKindRead)).
 			Desc(fmt.Sprintf("read cells (%s) + styles via get_cell_ranges, then infer column types", rng)).
 			Body(body)
 		return dry
 	},
 	Execute: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		token, err := resolveSpreadsheetToken(runtime)
+		token, err := resolveSpreadsheetTokenExec(runtime)
 		if err != nil {
 			return err
 		}
@@ -836,64 +1094,134 @@ var TableGet = common.Shortcut{
 }
 
 // tableGetSheet identifies a sheet to read back.
+//
+// rowCount / colCount carry the sheet's physical grid dimensions
+// (get_workbook_structure's row_count / column_count). They're used to anchor
+// the default used-range probe over the whole grid instead of A1 — see
+// sheetCurrentRegion. 0 means "unknown" (structure read skipped or failed), in
+// which case the probe falls back to the legacy A1 anchor.
 type tableGetSheet struct {
-	id   string
-	name string
+	id       string
+	name     string
+	rowCount int
+	colCount int
 }
 
 // tableGetTargets resolves which sheets +table-get reads: the one named by
 // --sheet-id / --sheet-name, or every sheet (in workbook order) when neither is
-// given.
+// given. Either way it reads get_workbook_structure once so each target carries
+// its physical grid dimensions (rowCount / colCount) — the default used-range
+// probe needs them to anchor over the full grid. For the single-sheet selector
+// path this also backfills the missing name (handy when only --sheet-id was
+// given, so the output spec isn't left nameless).
 func tableGetTargets(ctx context.Context, runtime *common.RuntimeContext, token string) ([]tableGetSheet, error) {
 	id := strings.TrimSpace(runtime.Str("sheet-id"))
 	name := strings.TrimSpace(runtime.Str("sheet-name"))
-	if id != "" {
-		return []tableGetSheet{{id: id}}, nil
-	}
-	if name != "" {
-		return []tableGetSheet{{name: name}}, nil
-	}
+
 	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_workbook_structure", map[string]interface{}{"excel_id": token})
 	if err != nil {
+		// Single-sheet selector path can degrade gracefully without dimensions
+		// (the probe falls back to the A1 anchor); the whole-workbook path can't
+		// enumerate sheets without the structure, so it must surface the error.
+		// Name doubles as id for --sheet-id so the output spec is never nameless
+		// (an empty name would break +table-get → +table-put round-trip — the
+		// writer requires a non-empty sheet name).
+		if id != "" {
+			return []tableGetSheet{{id: id, name: id}}, nil
+		}
+		if name != "" {
+			return []tableGetSheet{{name: name}}, nil
+		}
 		return nil, err
 	}
 	m, _ := out.(map[string]interface{})
 	raw, _ := m["sheets"].([]interface{})
+
+	// Selector path: find the matching sheet to pick up its dimensions (and
+	// backfill name when only --sheet-id was given). If no row matches, fall
+	// back to a dimensionless target so the read still proceeds via the A1
+	// anchor rather than erroring on a structure/selector mismatch — same
+	// id-as-name backfill applies so the output spec round-trips.
+	if id != "" || name != "" {
+		for _, r := range raw {
+			sid, sname, rc, cc := tableGetSheetMeta(r)
+			if (id != "" && sid == id) || (name != "" && sname == name) {
+				return []tableGetSheet{{id: sid, name: sname, rowCount: rc, colCount: cc}}, nil
+			}
+		}
+		if id != "" {
+			return []tableGetSheet{{id: id, name: id}}, nil
+		}
+		return []tableGetSheet{{name: name}}, nil
+	}
+
 	targets := make([]tableGetSheet, 0, len(raw))
 	for _, r := range raw {
-		sm, ok := r.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		sid, _ := sm["sheet_id"].(string)
-		sname, _ := sm["sheet_name"].(string)
-		if sname == "" {
-			sname, _ = sm["title"].(string)
-		}
+		sid, sname, rc, cc := tableGetSheetMeta(r)
 		if sid != "" {
-			targets = append(targets, tableGetSheet{id: sid, name: sname})
+			targets = append(targets, tableGetSheet{id: sid, name: sname, rowCount: rc, colCount: cc})
 		}
 	}
 	if len(targets) == 0 {
-		return nil, output.Errorf(output.ExitAPI, "tool_output", "no sheets found in workbook")
+		return nil, errs.NewInternalError(errs.SubtypeInvalidResponse, "get_workbook_structure returned no sheets")
 	}
 	return targets, nil
 }
 
+// tableGetSheetMeta pulls one sheet's id, name (title fallback), and physical
+// grid dimensions out of a get_workbook_structure sheets[] entry. Dimensions
+// default to 0 ("unknown") when absent or non-numeric.
+func tableGetSheetMeta(r interface{}) (id, name string, rowCount, colCount int) {
+	sm, ok := r.(map[string]interface{})
+	if !ok {
+		return "", "", 0, 0
+	}
+	id, _ = sm["sheet_id"].(string)
+	name, _ = sm["sheet_name"].(string)
+	if name == "" {
+		name, _ = sm["title"].(string)
+	}
+	if f, ok := util.ToFloat64(sm["row_count"]); ok {
+		rowCount = int(f)
+	}
+	if f, ok := util.ToFloat64(sm["column_count"]); ok {
+		colCount = int(f)
+	}
+	return id, name, rowCount, colCount
+}
+
 // readSheetAsSpec reads one sheet's region and rebuilds it as a typed-protocol
-// sheet (name + typed columns + JSON-safe rows), the inverse of the put path.
+// sheet — the inverse of the put path and the same wire shape +table-put
+// accepts: a string `columns` list, a 2D `data` matrix, and `dtypes` / `formats`
+// maps keyed by column name. That symmetry lets callers round-trip via the
+// pandas-native idiom
+//
+//	pd.DataFrame(sheet["data"], columns=sheet["columns"]).astype(sheet["dtypes"])
+//
+// without a custom helper. `dtypes` is always emitted (one entry per column, so
+// a single `astype()` call covers every column); `formats` is emitted only for
+// columns whose source cells carry a non-empty number_format, since `astype`
+// ignores it and we'd rather not pollute the output.
 func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token string, t tableGetSheet, userRange string, noHeader bool) (map[string]interface{}, error) {
-	spec := map[string]interface{}{"name": t.name, "columns": []interface{}{}, "rows": []interface{}{}}
+	emptySpec := func() map[string]interface{} {
+		return map[string]interface{}{
+			"name":    t.name,
+			"columns": []interface{}{},
+			"data":    []interface{}{},
+			"dtypes":  map[string]interface{}{},
+			"range":   "",
+		}
+	}
 	region := userRange
 	if region == "" {
-		r, err := sheetCurrentRegion(ctx, runtime, token, t.id, t.name)
+		r, err := sheetCurrentRegion(ctx, runtime, token, t)
 		if err != nil {
 			return nil, err
 		}
 		region = r
 	}
 	if region == "" {
-		return spec, nil // empty sheet
+		return emptySpec(), nil // empty sheet
 	}
 	input := map[string]interface{}{
 		"excel_id":            token,
@@ -909,7 +1237,7 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 	}
 	grid := extractCellGrid(out)
 	if len(grid) == 0 {
-		return spec, nil
+		return emptySpec(), nil
 	}
 
 	var headerRow []map[string]interface{}
@@ -925,36 +1253,84 @@ func readSheetAsSpec(ctx context.Context, runtime *common.RuntimeContext, token 
 		}
 	}
 
-	columns := make([]interface{}, ncols)
+	columnNames := make([]interface{}, ncols)
 	colTypes := make([]string, ncols)
+	dtypes := make(map[string]interface{}, ncols)
+	formats := map[string]interface{}{}
+	// Duplicate header names break +table-get → +table-put round-trip: the dtypes
+	// map (keyed by name) silently collapses to a single entry and the writer
+	// later rejects the duplicate columns in --sheets validation. Fail fast with
+	// an actionable hint when the source sheet actually has duplicate headers.
+	// noHeader mode is exempt because tableGetColumnName falls back to positional
+	// col<N> names which are always unique.
+	seenNames := map[string]int{}
 	for c := 0; c < ncols; c++ {
 		typ, format := inferColumnType(dataRows, c)
 		colTypes[c] = typ
-		col := map[string]interface{}{"name": tableGetColumnName(headerRow, c, noHeader), "type": typ}
-		if format != "" {
-			col["format"] = format
+		name := tableGetColumnName(headerRow, c, noHeader)
+		if !noHeader {
+			if prev, dup := seenNames[name]; dup {
+				return nil, common.ValidationErrorf(
+					"sheet %q: duplicate header column name %q at columns %d and %d; this would break the +table-get → +table-put round-trip. Rename the headers or pass --no-header to read by position (col1/col2/…).",
+					t.name, name, prev+1, c+1)
+			}
+			seenNames[name] = c
 		}
-		columns[c] = col
+		columnNames[c] = name
+		dtypes[name] = typeToDtype(typ)
+		// Only emit a format when the column actually has one and it's not the
+		// implicit text-format we paint on string columns (the `@` is a writer
+		// convention, not user intent — surfacing it would round-trip back as
+		// an explicit format the user never set).
+		if format != "" && !isTextNumberFormat(format) {
+			formats[name] = format
+		}
 	}
 
-	rows := make([][]interface{}, 0, len(dataRows))
+	data := make([][]interface{}, 0, len(dataRows))
 	for _, r := range dataRows {
 		row := make([]interface{}, ncols)
 		for c := 0; c < ncols; c++ {
 			row[c] = cellToTyped(cellAt(r, c), colTypes[c])
 		}
-		rows = append(rows, row)
+		data = append(data, row)
 	}
-	spec["columns"] = columns
-	spec["rows"] = rows
+	spec := map[string]interface{}{
+		"name":    t.name,
+		"columns": columnNames,
+		"data":    data,
+		"dtypes":  dtypes,
+		// The range actually read — whether from --range or the computed used
+		// range. get_cell_ranges has no has_more flag, so this is the only signal
+		// a caller has to detect truncation (compare its extent against the source
+		// xlsx / +workbook-info). Harmless on round-trip: +table-put ignores it.
+		"range": region,
+	}
+	if len(formats) > 0 {
+		spec["formats"] = formats
+	}
 	return spec, nil
 }
 
-// sheetCurrentRegion returns the A1 range covering the sheet's existing data
-// (current_region), or "" for an empty sheet.
-func sheetCurrentRegion(ctx context.Context, runtime *common.RuntimeContext, token, sheetID, sheetName string) (string, error) {
-	input := map[string]interface{}{"excel_id": token, "range": "A1", "max_rows": unboundedReadLimit}
-	sheetSelectorForToolInput(input, sheetID, sheetName)
+// sheetCurrentRegion returns the A1 range covering the sheet's existing data,
+// or "" for an empty sheet.
+//
+// It reads get_range_as_csv's current_region, but the anchor range it requests
+// is critical: current_region is the bounding box of the non-empty cells WITHIN
+// the requested range, so an A1 anchor stops at the first fully-empty row or
+// column and silently truncates everything past it (the pro016 / pro025
+// incident). Anchoring over the whole physical grid (A1:<lastCol><lastRow>,
+// from the sheet's row_count / column_count) instead makes the backend span
+// internal gaps and report the true used range. When dimensions are unknown
+// (structure read skipped / failed) it falls back to the legacy A1 anchor so
+// the path degrades to its prior behavior rather than erroring.
+func sheetCurrentRegion(ctx context.Context, runtime *common.RuntimeContext, token string, t tableGetSheet) (string, error) {
+	anchor := "A1"
+	if t.rowCount > 0 && t.colCount > 0 {
+		anchor = "A1:" + columnIndexToLetter(t.colCount-1) + strconv.Itoa(t.rowCount)
+	}
+	input := map[string]interface{}{"excel_id": token, "range": anchor, "max_rows": unboundedReadLimit}
+	sheetSelectorForToolInput(input, t.id, t.name)
 	out, err := callTool(ctx, runtime, token, ToolKindRead, "get_range_as_csv", input)
 	if err != nil {
 		return "", err
@@ -1092,10 +1468,42 @@ func inferColumnType(dataRows [][]map[string]interface{}, c int) (string, string
 }
 
 // isDateNumberFormat reports whether a number_format denotes a date/time. Date
-// formats carry a year token ('y'); pure numeric formats (#,##0, 0.00, 0.00%,
-// @) do not.
+// formats carry a year token (Excel's 'yy' or 'yyyy'); pure numeric formats
+// (#,##0, 0.00, 0.00%, @) do not.
+//
+// Token-aware so currency / unit prefixes that happen to contain a lone 'y' or
+// 'Y' — most notably "JPY #,##0" — are not misread as dates. The scanner skips:
+//   - characters inside double-quoted literals  ("Yen ")
+//   - the character following a backslash escape (\y)
+//   - characters inside [...] sections          ([Red], [$EUR-2])
+//
+// and only fires on an unquoted/unescaped/unbracketed 'yy' (a single 'y' is
+// not a year token in Excel; "JPY 0" has 'Y' but never 'yy').
 func isDateNumberFormat(nf string) bool {
-	return strings.ContainsRune(strings.ToLower(nf), 'y')
+	s := strings.ToLower(nf)
+	inQuote, inBracket, escape := false, false, false
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if escape {
+			escape = false
+			continue
+		}
+		switch {
+		case c == '\\':
+			escape = true
+		case !inBracket && c == '"':
+			inQuote = !inQuote
+		case !inQuote && c == '[':
+			inBracket = true
+		case !inQuote && c == ']':
+			inBracket = false
+		case !inQuote && !inBracket:
+			if c == 'y' && i+1 < len(s) && s[i+1] == 'y' {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // isTextNumberFormat reports whether a number_format is Excel/Lark text format

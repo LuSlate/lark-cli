@@ -5,6 +5,7 @@ package drive
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,24 @@ import (
 	"github.com/larksuite/cli/internal/validate"
 	"github.com/larksuite/cli/shortcuts/common"
 )
+
+// wrapExportContextErr converts a context cancellation / deadline error into a
+// typed errs.NetworkError so the cobra layer sees a typed envelope (with cause
+// preserved for errors.Is) instead of an untyped context.Canceled /
+// context.DeadlineExceeded escaping as a plain string. CR-flagged hole on the
+// poll loop: returning ctx.Err() directly bypassed the typed-error contract.
+func wrapExportContextErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	subtype := errs.SubtypeNetworkTransport
+	msg := "drive +export polling cancelled: %s"
+	if errors.Is(err, context.DeadlineExceeded) {
+		subtype = errs.SubtypeNetworkTimeout
+		msg = "drive +export polling deadline exceeded: %s"
+	}
+	return errs.NewNetworkError(subtype, msg, err).WithCause(err)
+}
 
 // DriveExport exports Drive-native documents to local files and falls back to
 // a follow-up command when the async export task does not finish in time.
@@ -34,12 +53,13 @@ var DriveExport = common.Shortcut{
 		{Name: "doc-type", Desc: "source document type: doc | docx | sheet | bitable | slides", Required: true, Enum: []string{"doc", "docx", "sheet", "bitable", "slides"}},
 		{Name: "file-extension", Desc: "export format: docx | pdf | xlsx | csv | markdown | base (bitable only) | pptx (slides only)", Required: true, Enum: []string{"docx", "pdf", "xlsx", "csv", "markdown", "base", "pptx"}},
 		{Name: "sub-id", Desc: "sub-table/sheet ID, required when exporting sheet/bitable as csv"},
+		{Name: "only-schema", Type: "bool", Desc: "export only bitable schema when --doc-type bitable --file-extension base"},
 		{Name: "file-name", Desc: "preferred output filename (optional)"},
 		{Name: "output-dir", Default: ".", Desc: "local output directory (default: current directory)"},
 		{Name: "overwrite", Type: "bool", Desc: "overwrite existing output file"},
 	},
 	Validate: func(ctx context.Context, runtime *common.RuntimeContext) error {
-		return ValidateExport(exportParamsFromFlags(runtime))
+		return validateExport(exportParamsFromFlags(runtime))
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		return PlanExportDryRun(runtime, exportParamsFromFlags(runtime))
@@ -59,6 +79,7 @@ type ExportParams struct {
 	DocType       string
 	FileExtension string
 	SubID         string
+	OnlySchema    bool
 	OutputDir     string
 	FileName      string
 	Overwrite     bool
@@ -70,6 +91,7 @@ func (p ExportParams) spec() driveExportSpec {
 		DocType:       p.DocType,
 		FileExtension: p.FileExtension,
 		SubID:         p.SubID,
+		OnlySchema:    p.OnlySchema,
 	}
 }
 
@@ -88,14 +110,18 @@ func exportParamsFromFlags(runtime *common.RuntimeContext) ExportParams {
 		DocType:       runtime.Str("doc-type"),
 		FileExtension: runtime.Str("file-extension"),
 		SubID:         runtime.Str("sub-id"),
+		OnlySchema:    runtime.Bool("only-schema"),
 		OutputDir:     outputDir,
 		FileName:      strings.TrimSpace(runtime.Str("file-name")),
 		Overwrite:     runtime.Bool("overwrite"),
 	}
 }
 
-// ValidateExport runs the CLI-level export constraint checks.
-func ValidateExport(p ExportParams) error {
+// validateExport runs the CLI-level export constraint checks. Unexported because
+// only drive +export's Validate consumes it directly; sheets +workbook-export
+// reuses RunExport / PlanExportDryRun but inlines its own (sheet-specific)
+// validation, so there is no cross-package call site to keep exported.
+func validateExport(p ExportParams) error {
 	return validateDriveExportSpec(p.spec())
 }
 
@@ -126,6 +152,9 @@ func PlanExportDryRun(runtime *common.RuntimeContext, p ExportParams) *common.Dr
 	}
 	if strings.TrimSpace(spec.SubID) != "" {
 		body["sub_id"] = spec.SubID
+	}
+	if spec.OnlySchema {
+		body["only_schema"] = true
 	}
 
 	dr := common.NewDryRunAPI().
@@ -219,12 +248,12 @@ func RunExport(ctx context.Context, runtime *common.RuntimeContext, p ExportPara
 		if attempt > 1 {
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return wrapExportContextErr(ctx.Err())
 			case <-time.After(driveExportPollInterval):
 			}
 		}
 		if err := ctx.Err(); err != nil {
-			return err
+			return wrapExportContextErr(err)
 		}
 
 		status, err := getDriveExportStatus(runtime, spec.Token, ticket)

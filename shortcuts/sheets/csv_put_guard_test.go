@@ -35,11 +35,12 @@ func TestGuardCSVValueIsNotFilePath(t *testing.T) {
 
 	// Bare value naming an existing file → guarded with a fix-it hint.
 	err := guardCSVValueIsNotFilePath(newCSVGuardRuntime("data.csv"))
-	if err == nil {
-		t.Fatal("expected guard error when --csv names an existing file")
+	ve := requireValidation(t, err, "existing file")
+	if !strings.Contains(ve.Message, "@data.csv") {
+		t.Errorf("message should suggest @data.csv, got: %q", ve.Message)
 	}
-	if !strings.Contains(err.Error(), "existing file") || !strings.Contains(err.Error(), "@data.csv") {
-		t.Errorf("error should flag the file and suggest @data.csv, got: %v", err)
+	if ve.Param != "--csv" {
+		t.Errorf("param = %q, want --csv", ve.Param)
 	}
 
 	// Content that is not a real file must pass through unchanged.
