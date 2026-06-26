@@ -4,8 +4,6 @@
 
 查看近期日程安排。只读操作，不修改任何日程。
 
-需要的scopes: ["calendar:calendar.event:read"]
-
 ## 命令
 
 ```bash
@@ -73,4 +71,4 @@ lark-cli calendar +agenda --calendar-id cal_xxx
 
 ## 参考
 
-- [lark-calendar](../SKILL.md) -- 日历全部命令
+- [lark-calendar](../SKILL.md) -- skill 入口与路由

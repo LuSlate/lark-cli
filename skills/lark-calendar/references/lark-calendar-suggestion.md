@@ -7,8 +7,6 @@
 - ✅ **当用户需求涉及寻找时间块，且时间未完全确定**（如`今天`、`近三天`、`本周`、`下午`, `无时间描述`）时，调用此工具来获取推荐时间块给用户选择（包括但不限于预约日程）。
 - ❌ **当用户已经明确了具体的时间点**（如`今天下午3点`），则**不需要**调用此工具
 
-需要的scopes: ["calendar:calendar.free_busy:read"]
-
 ## 命令
 
 ```bash
@@ -121,4 +119,4 @@ lark-cli calendar +suggestion \
 
 - [lark-calendar-create](lark-calendar-create.md) — 创建日程
 - [lark-calendar-freebusy](lark-calendar-freebusy.md) — 查询忙闲时段和rsvp状态
-- [lark-calendar](../SKILL.md) — 日历完整 API
+- [lark-calendar](../SKILL.md) — skill 入口与路由

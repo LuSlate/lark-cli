@@ -5,8 +5,6 @@
 
 `+update` 支持三类互相独立的动作：更新日程字段、添加参会人/会议室、移除参会人/会议室。它们可以单独执行，也可以在同一次命令中组合执行。
 
-需要的 scopes: ["calendar:calendar.event:update"]
-
 ## 推荐命令
 
 ```bash
@@ -71,9 +69,7 @@ lark-cli calendar +update \
 
 `+update` 只覆盖标题、描述、时间、重复规则，以及参会人/会议室的增量添加或移除。
 
-如需更新 `location`（地理位置，不含会议室位置）、`visibility`（日程公开范围）、自定义 `reminders`（提醒设置）、自定义 `attendee_ability`（参与人权限）、自定义 `free_busy_status`（日程忙闲状态）、`color`（颜色）、附件、视频会议信息、全天日程，或在新增参会人时配置可选参加状态 等高级参数，请改用完整的 API 命令。建议先通过 `lark-cli schema calendar.events.patch`、`lark-cli schema calendar.event.attendees.create`、`lark-cli schema calendar.event.attendees.batch_delete` 查看完整参数定义。
-
-> 完整 API 命令的时间参数是 **Unix 秒字符串**（非 ISO 8601）。
+如需更新 `location`（地理位置，不含会议室位置）、`visibility`、自定义提醒、参与人权限、忙闲状态、颜色、附件、视频会议信息、全天日程，或在新增参会人时配置可选参加状态，改用完整 API 命令并先通过 `lark-cli schema` 查看参数。完整 API 命令的时间参数是 **Unix 秒字符串**（非 ISO 8601）。
 
 ## 预约/改约会议室场景
 
@@ -96,7 +92,7 @@ lark-cli calendar +update \
 
 ## 参考
 
-- [lark-calendar](../SKILL.md) -- 日历全部命令
+- [lark-calendar](../SKILL.md) -- skill 入口与路由
 - [lark-calendar-schedule-meeting](lark-calendar-schedule-meeting.md) -- 预约/改约会议与会议室工作流
 - [lark-calendar-room-find](lark-calendar-room-find.md) -- 查找可用会议室
 - [lark-calendar-freebusy](lark-calendar-freebusy.md) -- 查询忙闲

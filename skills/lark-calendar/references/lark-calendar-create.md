@@ -4,8 +4,6 @@
 
 创建日程并按需邀请参会人。
 
-需要的scopes: ["calendar:calendar.event:create","calendar:calendar.event:update"]
-
 ## 推荐命令
 
 ```bash
@@ -49,42 +47,12 @@ lark-cli calendar +create --summary "..." --start "..." --end "..." \
 
 ## 高级用法（完整 API 命令）
 
-如需配置 `location`（地理位置，不含会议室位置）、`visibility`（日程公开范围）、自定义 `reminders`（提醒设置）、自定义 `attendee_ability`（参与人权限）、自定义 `free_busy_status`（日程忙闲状态）、参与人可选参加状态或全天日程等高级参数，请使用完整的 API 命令：
-**注意**：
-- 全天日程的开始日期和结束日期必须分别是日程开始的第一天和结束的最后一天。如果只有一天的话，开始日期和结束日期是相同。
+`+create` 覆盖最常见的新建日程和邀请参会人场景。如需配置 `location`（地理位置，不含会议室位置）、`visibility`、自定义提醒、参与人权限、忙闲状态、参与人可选参加状态或全天日程等高级字段，改用完整 API 命令并先通过 `lark-cli schema` 查看参数。
 
-```bash
-# 第一步：创建日程（含高级参数）
-## 查看完整参数定义
-lark-cli schema calendar.events.create
-## 创建日程
-lark-cli calendar events create \
-  --params '{"calendar_id":"<CALENDAR_ID>"}' \
-  --data '{
-  "summary": "技术分享：CLI 架构设计",
-  "start_time": { "timestamp": "1741586400" },
-  "end_time": { "timestamp": "1741593600" }
-}'
-
-# 第二步：添加参会人（使用第一步返回的 calendar_id 和 event_id）
-## 查看完整参数定义
-lark-cli schema calendar.event.attendees.create
-## 添加参会人
-lark-cli calendar event.attendees create \
-  --params '{"calendar_id":"<CALENDAR_ID>","event_id":"<EVENT_ID>"}' \
-  --data '{"attendees": [{"type": "user", "user_id": "ou_xxx"}]}'
-
-# 可选第三步（推荐）：若第二步失败，回滚删除空日程
-## 查看完整参数定义
-lark-cli schema calendar.events.delete
-## 删除空日程
-lark-cli calendar events delete \
-  --params '{"calendar_id":"<CALENDAR_ID>","event_id":"<EVENT_ID>","need_notification":false}'
-
-```
-
-> 完整 API 命令的时间参数是 **Unix 秒字符串**（非 ISO 8601）。
-> 当你手动拆成两步执行时，建议保留“失败后回滚删除”的第三步，避免遗留空日程。
+完整 API 命令的关键差异：
+- 时间参数是 **Unix 秒字符串**（非 ISO 8601）。
+- 全天日程的开始日期和结束日期必须分别是日程开始的第一天和结束的最后一天；单日全天日程两者相同。
+- 手动拆成“创建日程 + 添加参会人”两步时，若第二步失败，建议删除刚创建的空日程，避免遗留无参会人的日程。
 
 ## 参会人类型
 
@@ -100,5 +68,5 @@ lark-cli calendar events delete \
 
 ## 参考
 
-- [lark-calendar](../SKILL.md) -- 日历全部命令
+- [lark-calendar](../SKILL.md) -- skill 入口与路由
 - [lark-calendar-suggestion](lark-calendar-suggestion.md) -- 根据非明确时间或一段时间范围，推荐多个可用时间块方案
