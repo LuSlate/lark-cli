@@ -1,7 +1,7 @@
 ---
 name: lark-apps
 version: 1.0.0
-description: "妙搭（Spark/Miaoda）应用开发与托管：应用创建、HTML静态站点发布、本地全栈开发、云端生成迭代、外部能力（AI模型能力和飞书平台能力）集成、日志/Trace/监控指标/PV/UV 查询、环境变量管理。当用户要开发/新建一个系统·工具·平台·应用，或要本地开发 / 云端开发 / 修改 / 部署 / 发布 / 上线 / 拿可分享链接，或用 HTML 做页面·网站·部署到妙搭，或提到妙搭/Spark/Miaoda（应用运行时域名形如 *.aiforce.cloud）、应用数据库、应用文件存储、开放 API Key、可见范围、线上日志、接口请求量、错误量、延迟、访问量、环境变量时使用。当用户需要接入外部能力（AI模型服务、飞书平台能力等）或提到插件/Plugin/Capability时也使用。不负责普通云盘文件上传（lark-drive）、飞书文档编辑（lark-doc）、原生幻灯片创建（lark-slides）。"
+description: "妙搭（Spark/Miaoda）应用开发与托管：应用创建、HTML静态站点发布、本地全栈开发、云端生成迭代、AI相关能力和飞书平台能力或者其他外部能力集成、日志/Trace/监控指标/PV/UV 查询、环境变量管理。当用户要开发/新建一个系统·工具·平台·应用，或要本地开发 / 云端开发 / 修改 / 部署 / 发布 / 上线 / 拿可分享链接，或用 HTML 做页面·网站·部署到妙搭，或提到妙搭/Spark/Miaoda（应用运行时域名形如 *.aiforce.cloud）、应用数据库、应用文件存储、开放 API Key、可见范围、线上日志、接口请求量、错误量、延迟、访问量、环境变量时使用。不负责普通云盘文件上传（lark-drive）、飞书文档编辑（lark-doc）、原生幻灯片创建（lark-slides）。"
 metadata:
   requires:
     bins: ["lark-cli"]
@@ -13,6 +13,8 @@ metadata:
 妙搭应用属于用户资产。默认用 `--as user`；认证、scope、exit-10、高风险确认、`_notice` 等通用处理只读 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)，不要在本 skill 里复制。妙搭应用有三条开发路径：**本地全栈**（拉源码本地写）/ **HTML 托管**（发布静态产物）/ **云端会话**（妙搭 AI 生成）。
 
 ## 意图路由
+
+**插件能力优先**：涉及 AI 模型能力（生成、识别、提取、翻译、总结、合成、分类等）或飞书平台能力等外部能力时，先读 `.agents/skills/plugin-guide/SKILL.md` 确认是否有对应插件。无插件覆盖再自行实现。
 
 按具体操作查命令（开发路径先用下方「选择开发路径」判定表定好再进来取命令）：
 
@@ -34,7 +36,7 @@ metadata:
 | 云端 Agent 生成/迭代应用（开发方式已定为云端后） | `+session-create` -> `+chat` -> `+session-get` | [`lark-apps-cloud-dev.md`](references/lark-apps-cloud-dev.md) |
 | 管理妙搭应用开放 API Key（创建/查看/启停/重置/删除凭证；密钥仅 create/reset 一次性返回） | `+openapi-key-list/get/create/update/enable/disable/delete/reset` | [`lark-apps-openapi-key.md`](references/lark-apps-openapi-key.md) |
 | 查看某次会话某一轮（turn）的回复消息（含仍在生成中的本轮）/ 导出上一轮模型回复（"这一轮回复了什么""上一轮的回复""导出某轮消息"） | 先 `+session-get`（取 `latest_turn.turn_id`）-> `+session-messages-list --turn-id <id>`（仅 user 身份；分页用 `--page-token`） | [`lark-apps-session-messages-list.md`](references/lark-apps-session-messages-list.md) |
-| 外部AI能力（插件）集成 — 用户需求涉及外部能力或提到插件/Plugin/Capability。**判断规则**：(1) AI 模型服务能力（文本生成、图片理解、语音识别等）**必须**通过插件接入，禁止自行编写替代实现；(2) 飞书平台能力（操作多维表格、发送消息等）**优先**查看是否有对应插件，插件不支持时再考虑自行通过飞书 OpenAPI 实现 | **⚠️ 必须先读仓库 Skill** `<project-path>/.agents/skills/plugin-guide/SKILL.md`（插件目录、Schema 规则、实例 CRUD、调用代码生成等完整指引）。插件包管理（安装/卸载/查看）参考 [`lark-apps-plugin-install.md`](references/lark-apps-plugin-install.md) / [`lark-apps-plugin-uninstall.md`](references/lark-apps-plugin-uninstall.md) / [`lark-apps-plugin-list.md`](references/lark-apps-plugin-list.md) | 仓库 Skill |
+| 外部能力(AI模型能力和飞书平台能力)集成/插件/Plugin/Capability | `+plugin-install`, `+plugin-list`, `+plugin-uninstall` | [`lark-apps-plugin-install.md`](references/lark-apps-plugin-install.md), [`lark-apps-plugin-uninstall.md`](references/lark-apps-plugin-uninstall.md), [`lark-apps-plugin-list.md`](references/lark-apps-plugin-list.md) |
 
 ## 高频路径
 
