@@ -35,7 +35,7 @@ func TestSheetMediaParentType(t *testing.T) {
 		want  string
 	}{
 		{"native spreadsheet token", "shtcnABC123", sheetImageParentType},
-		{"wiki-resolved spreadsheet token", "shtcnWikiResolvedFixture", sheetImageParentType},
+		{"wiki-resolved spreadsheet token", "shtcnWikiResolvedFixture", sheetImageParentType}, //gitleaks:allow
 		{"empty token", "", sheetImageParentType},
 		{"office imported token", "fake_office_abc123", officeSheetFileParentType},
 		{"office token, only the prefix", fakeOfficeTokenPrefix, officeSheetFileParentType},
