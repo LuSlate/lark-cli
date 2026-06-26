@@ -130,6 +130,14 @@ func TestSetAppSecret_ConfirmGate(t *testing.T) {
 		t.Errorf("exit code = %d, want 10", got)
 	}
 
+	// 2b. Typed metadata must carry the confirmation contract (category/subtype),
+	// not just the concrete Go type.
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok for confirmation error")
+	} else if p.Category != errs.CategoryConfirmation || p.Subtype != errs.SubtypeConfirmationRequired {
+		t.Errorf("Problem = {%q,%q}, want {confirmation, confirmation_required}", p.Category, p.Subtype)
+	}
+
 	// 3. Target must be populated with app_id.
 	if cre.Target == nil {
 		t.Fatal("cre.Target is nil, want populated")
@@ -245,6 +253,12 @@ func TestSetAppSecret_ConfirmGate_ProfileNotFound(t *testing.T) {
 	if !errors.As(err, &ce) {
 		t.Fatalf("want *errs.ConfigError, got %T: %v", err, err)
 	}
+	// Typed metadata: category/subtype must identify a not_configured config error.
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryConfig || p.Subtype != errs.SubtypeNotConfigured {
+		t.Errorf("Problem = {%q,%q}, want {config, not_configured}", p.Category, p.Subtype)
+	}
 }
 
 // TestSetAppSecret_YesWithoutAppSecretStdin verifies that --yes without
@@ -270,8 +284,15 @@ func TestSetAppSecret_YesWithoutAppSecretStdin(t *testing.T) {
 	if !errors.As(err, &ve) {
 		t.Fatalf("want *errs.ValidationError, got %T: %v", err, err)
 	}
+	// Param is exposed only on *errs.ValidationError (not via ProblemOf).
 	if ve.Param != "--app-secret-stdin" {
 		t.Errorf("param = %q, want %q", ve.Param, "--app-secret-stdin")
+	}
+	// Typed metadata: category/subtype via ProblemOf.
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryValidation || p.Subtype != errs.SubtypeInvalidArgument {
+		t.Errorf("Problem = {%q,%q}, want {validation, invalid_argument}", p.Category, p.Subtype)
 	}
 }
 
@@ -298,6 +319,11 @@ func TestSetAppSecret_YesStdinEmpty(t *testing.T) {
 	if !errors.As(err, &ve) {
 		t.Fatalf("want *errs.ValidationError, got %T: %v", err, err)
 	}
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryValidation || p.Subtype != errs.SubtypeInvalidArgument {
+		t.Errorf("Problem = {%q,%q}, want {validation, invalid_argument}", p.Category, p.Subtype)
+	}
 }
 
 // TestSetAppSecret_YesStdinWhitespaceOnly verifies that --yes + --app-secret-stdin
@@ -322,6 +348,11 @@ func TestSetAppSecret_YesStdinWhitespaceOnly(t *testing.T) {
 	var ve *errs.ValidationError
 	if !errors.As(err, &ve) {
 		t.Fatalf("want *errs.ValidationError, got %T: %v", err, err)
+	}
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryValidation || p.Subtype != errs.SubtypeInvalidArgument {
+		t.Errorf("Problem = {%q,%q}, want {validation, invalid_argument}", p.Category, p.Subtype)
 	}
 }
 
@@ -378,6 +409,12 @@ func TestSetAppSecret_VerifyBeforeWrite_InvalidClient(t *testing.T) {
 	if cfgErr.Subtype != errs.SubtypeInvalidClient {
 		t.Errorf("Subtype = %q, want %q", cfgErr.Subtype, errs.SubtypeInvalidClient)
 	}
+	// Typed metadata: category via ProblemOf (subtype asserted above).
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryConfig {
+		t.Errorf("Category = %q, want %q", p.Category, errs.CategoryConfig)
+	}
 
 	// Exit code must be 3 (CategoryConfig → ExitAuth).
 	if got := output.ExitCodeOf(err); got != output.ExitAuth {
@@ -387,6 +424,12 @@ func TestSetAppSecret_VerifyBeforeWrite_InvalidClient(t *testing.T) {
 	// keychain.Set must not have been called (nothing written).
 	if spy.setCalls != 0 {
 		t.Errorf("keychain.Set called %d times, want 0 (no write on invalid secret)", spy.setCalls)
+	}
+
+	// Structured target must identify the affected profile/app: the failure
+	// envelope contract (not just the hint text) must name the bot that changed.
+	if cfgErr.Target == nil || cfgErr.Target.AppID != appID {
+		t.Errorf("cfgErr.Target = %+v, want AppID=%q", cfgErr.Target, appID)
 	}
 
 	// Retry guidance: the target was already confirmed (this is the --yes apply
@@ -435,6 +478,18 @@ func TestSetAppSecret_VerifyBeforeWrite_TransientError(t *testing.T) {
 		t.Errorf("keychain.Set called %d times, want 0 (no write on transient error)", spy.setCalls)
 	}
 
+	// Typed metadata: category/subtype via ProblemOf.
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryNetwork || p.Subtype != errs.SubtypeNetworkTransport {
+		t.Errorf("Problem = {%q,%q}, want {network, transport}", p.Category, p.Subtype)
+	}
+
+	// Structured target must identify the affected profile/app.
+	if netErr.Target == nil || netErr.Target.AppID != appID {
+		t.Errorf("netErr.Target = %+v, want AppID=%q", netErr.Target, appID)
+	}
+
 	// Transient failure is retryable and the target is already confirmed: the
 	// hint must guide a same-command --yes retry (no re-preview), pinned by --profile.
 	if !strings.Contains(netErr.Hint, "--profile "+appID) ||
@@ -448,9 +503,12 @@ func TestSetAppSecret_VerifyBeforeWrite_TransientError(t *testing.T) {
 // FetchTAT itself fails with a transport error (connection refused, etc.).
 // Expected: *errs.NetworkError, exit 4, keychain.Set 0 calls.
 func TestSetAppSecret_VerifyBeforeWrite_NetworkTransport(t *testing.T) {
+	// Use a sentinel so we can assert the underlying transport cause is preserved
+	// through FetchTAT and the .WithCause(err) wrapping (errors.Is below).
+	transportErr := errors.New("connection refused")
 	rt := &fakeRT{
 		tatHandler: func(req *http.Request) (*http.Response, error) {
-			return nil, errors.New("connection refused")
+			return nil, transportErr
 		},
 	}
 	const appID = "cli_verify_transport"
@@ -472,6 +530,24 @@ func TestSetAppSecret_VerifyBeforeWrite_NetworkTransport(t *testing.T) {
 	}
 	if spy.setCalls != 0 {
 		t.Errorf("keychain.Set called %d times, want 0", spy.setCalls)
+	}
+
+	// Cause preservation: the underlying transport error must survive the
+	// .WithCause(err) contract so callers/log can inspect the root failure.
+	if !errors.Is(err, transportErr) {
+		t.Errorf("expected wrapped cause %v to be preserved, got %v", transportErr, err)
+	}
+
+	// Typed metadata: category/subtype via ProblemOf.
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatal("ProblemOf returned !ok")
+	} else if p.Category != errs.CategoryNetwork || p.Subtype != errs.SubtypeNetworkTransport {
+		t.Errorf("Problem = {%q,%q}, want {network, transport}", p.Category, p.Subtype)
+	}
+
+	// Structured target must identify the affected profile/app.
+	if netErr.Target == nil || netErr.Target.AppID != appID {
+		t.Errorf("netErr.Target = %+v, want AppID=%q", netErr.Target, appID)
 	}
 }
 
@@ -742,7 +818,9 @@ func assertOtherProfileUnchanged(t *testing.T, configPath string) {
 // setAppSecretFactoryOutput creates a factory for Task 7 output tests.
 // The TAT endpoint returns success (200 with a valid token body).
 // appCred controls whether the source is plaintext/file (migrated=true) or keychain (migrated=false).
-func setAppSecretFactoryOutput(t *testing.T, appID string, appCred core.SecretInput) (*cmdutil.Factory, *mapKeychain, *bytes.Buffer) {
+// Returns the factory, keychain, and the stdout + stderr buffers so success
+// tests can assert stdout carries the envelope and stderr stays empty.
+func setAppSecretFactoryOutput(t *testing.T, appID string, appCred core.SecretInput) (*cmdutil.Factory, *mapKeychain, *bytes.Buffer, *bytes.Buffer) {
 	t.Helper()
 	kc := newMapKeychain()
 	// Pre-seed keychain so Get works for keychain-source profiles.
@@ -760,11 +838,13 @@ func setAppSecretFactoryOutput(t *testing.T, appID string, appCred core.SecretIn
 	f.Keychain = kc
 
 	outBuf := &bytes.Buffer{}
+	errBuf := &bytes.Buffer{}
 	f.IOStreams.Out = outBuf
+	f.IOStreams.ErrOut = errBuf
 	// IsTerminal=false → non-TUI / JSON mode (default for tests).
 	f.IOStreams.IsTerminal = false
 
-	return f, kc, outBuf
+	return f, kc, outBuf, errBuf
 }
 
 // TestSetAppSecret_SuccessOutput_JSON_Migrated verifies that for a plaintext-source
@@ -776,7 +856,7 @@ func setAppSecretFactoryOutput(t *testing.T, appID string, appCred core.SecretIn
 func TestSetAppSecret_SuccessOutput_JSON_Migrated(t *testing.T) {
 	const appID = "cli_out_migrated"
 	plainSecret := core.PlainSecret("old-plain")
-	f, _, outBuf := setAppSecretFactoryOutput(t, appID, plainSecret)
+	f, _, outBuf, errBuf := setAppSecretFactoryOutput(t, appID, plainSecret)
 	f.IOStreams.In = strings.NewReader("test-secret")
 
 	opts := &SetAppSecretOptions{Factory: f, AppSecretStdin: true, Yes: true}
@@ -843,6 +923,10 @@ func TestSetAppSecret_SuccessOutput_JSON_Migrated(t *testing.T) {
 			t.Errorf("unexpected top-level field %q in envelope", k)
 		}
 	}
+	// stdout-only contract: success must not leak anything to stderr.
+	if errBuf.Len() != 0 {
+		t.Errorf("stderr must be empty on success (JSON mode), got %q", errBuf.String())
+	}
 }
 
 // TestSetAppSecret_SuccessOutput_JSON_NotMigrated verifies that for a keychain-source
@@ -850,7 +934,7 @@ func TestSetAppSecret_SuccessOutput_JSON_Migrated(t *testing.T) {
 func TestSetAppSecret_SuccessOutput_JSON_NotMigrated(t *testing.T) {
 	const appID = "cli_out_keychain"
 	keychainSecret := core.SecretInput{Ref: &core.SecretRef{Source: "keychain", ID: "appsecret" + ":" + appID}}
-	f, _, outBuf := setAppSecretFactoryOutput(t, appID, keychainSecret)
+	f, _, outBuf, errBuf := setAppSecretFactoryOutput(t, appID, keychainSecret)
 	f.IOStreams.In = strings.NewReader("test-secret")
 
 	opts := &SetAppSecretOptions{Factory: f, AppSecretStdin: true, Yes: true}
@@ -887,6 +971,10 @@ func TestSetAppSecret_SuccessOutput_JSON_NotMigrated(t *testing.T) {
 	if _, hasSource := data["source"]; hasSource {
 		t.Errorf("data.source must NOT be present")
 	}
+	// stdout-only contract: success must not leak anything to stderr.
+	if errBuf.Len() != 0 {
+		t.Errorf("stderr must be empty on success (JSON mode), got %q", errBuf.String())
+	}
 }
 
 // TestSetAppSecret_SuccessOutput_Pretty verifies that in terminal (IsTerminal=true)
@@ -894,7 +982,7 @@ func TestSetAppSecret_SuccessOutput_JSON_NotMigrated(t *testing.T) {
 func TestSetAppSecret_SuccessOutput_Pretty(t *testing.T) {
 	const appID = "cli_out_pretty"
 	plainSecret := core.PlainSecret("old-plain")
-	f, _, outBuf := setAppSecretFactoryOutput(t, appID, plainSecret)
+	f, _, outBuf, errBuf := setAppSecretFactoryOutput(t, appID, plainSecret)
 	// Switch to terminal/pretty mode.
 	f.IOStreams.IsTerminal = true
 	f.IOStreams.In = strings.NewReader("test-secret")
@@ -924,5 +1012,9 @@ func TestSetAppSecret_SuccessOutput_Pretty(t *testing.T) {
 	var env map[string]interface{}
 	if json.Unmarshal([]byte(strings.TrimSpace(pretty)), &env) == nil {
 		t.Errorf("pretty output should not be valid JSON: %q", pretty)
+	}
+	// stdout-only contract: success must not leak anything to stderr (pretty mode).
+	if errBuf.Len() != 0 {
+		t.Errorf("stderr must be empty on success (pretty mode), got %q", errBuf.String())
 	}
 }
