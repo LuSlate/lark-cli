@@ -14,7 +14,7 @@ metadata:
 
 ## 意图路由
 
-**仓库 Skill 优先**：执行任何操作前，先读应用代码仓库 `.agents/skills/plugin-guide/SKILL.md` 确认对应的能力。
+**仓库 Skill 优先**：先尝试读 `.agents/skills/plugin-guide/SKILL.md` 确认对应的能力。如果文件不存在（应用尚未初始化），按下方路由表 `+init` 初始化应用，初始化完成后必须重新回到此处读取仓库 Skill。如果文件存在，禁止跳过仓库 Skill 直接手写替代方案。
 
 按具体操作查命令（开发路径先用下方「选择开发路径」判定表定好再进来取命令）：
 
