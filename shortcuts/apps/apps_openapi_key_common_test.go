@@ -10,8 +10,8 @@ import (
 
 func TestMaskAPIKey(t *testing.T) {
 	cases := map[string]string{
-		"":                      "****",
-		"abcd":                  "****",
+		"":             "****",
+		"abcd":         "****",
 		"xxxxxxxxxxxx": "****xxxx",
 	}
 	for in, want := range cases {
