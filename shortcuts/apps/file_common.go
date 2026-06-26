@@ -57,21 +57,21 @@ func normalizeTimestamp(raw string) (string, error) {
 	if reTsDate.MatchString(s) {
 		t, err := time.ParseInLocation("2006-01-02", s, time.Local)
 		if err != nil {
-			return "", fmt.Errorf("invalid date %q", s)
+			return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid date %q", s)
 		}
 		return t.UTC().Format(time.RFC3339), nil
 	}
 	if reTsLocalDateTime.MatchString(s) {
 		t, err := time.ParseInLocation("2006-01-02T15:04:05", s, time.Local)
 		if err != nil {
-			return "", fmt.Errorf("invalid local datetime %q", s)
+			return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid local datetime %q", s)
 		}
 		return t.UTC().Format(time.RFC3339), nil
 	}
 	if t, err := time.Parse(time.RFC3339, s); err == nil {
 		return t.UTC().Format(time.RFC3339), nil
 	}
-	return "", fmt.Errorf("invalid timestamp %q (want relative 7d/2h/30s, date 2026-04-15, datetime 2026-04-15T10:00:00, or ISO 8601 with TZ)", s)
+	return "", errs.NewValidationError(errs.SubtypeInvalidArgument, "invalid timestamp %q (want relative 7d/2h/30s, date 2026-04-15, datetime 2026-04-15T10:00:00, or ISO 8601 with TZ)", s)
 }
 
 // newFileTransferClient 直传 / 直下对象存储 presigned URL 用（绕开 Lark 网关，无需 auth、无超时以容纳大文件）。
