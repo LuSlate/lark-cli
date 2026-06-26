@@ -33,22 +33,11 @@ func NewCmdConfigSetAppSecret(f *cmdutil.Factory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-app-secret",
 		Short: "Rotate a profile's stored app secret (verified before saving)",
-		Long: `Update a profile's app secret after you reset it on the Lark/Feishu open
-platform. The new secret is piped to stdin (--app-secret-stdin) and
-verified against Lark before anything is saved; only the target profile
-changes.
+		Long: `Rotate a profile's app secret after you reset it on the Lark/Feishu open platform.
+The new secret is verified against Lark before anything is saved; only the target
+profile changes — other profiles and the active selection stay untouched.
 
-Defaults to the active profile; use the global --profile <name|app_id> to
-target another.
-
-Without --yes it previews the target (profile + app_id) and exits 10
-without reading stdin or writing anything — confirm it is the right bot,
-then re-run with --yes. AI agents: show the preview to the user first, and
-on the re-run pass --profile <app_id> to pin that exact bot.
-
-Example:
-  read -rs S; printf '%s' "$S" | lark-cli --profile <app_id> \
-    config set-app-secret --app-secret-stdin --yes`,
+Targets the active profile; use the global --profile <name|app_id> to pick another.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return setAppSecretRun(f, opts)
 		},
