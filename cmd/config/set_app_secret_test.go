@@ -361,6 +361,51 @@ func TestSetAppSecret_YesStdinWhitespaceOnly(t *testing.T) {
 	}
 }
 
+// ── Interactive target selection (non-TUI branches) ──────────────────────────
+
+// TestSelectTargetProfile_Override verifies that --profile resolves the exact
+// profile, and an unknown --profile yields a typed config/not_configured error
+// (the TUI picker is never reached on these branches).
+func TestSelectTargetProfile_Override(t *testing.T) {
+	multi := &core.MultiAppConfig{Apps: []core.AppConfig{
+		{Name: "a", AppId: "cli_a", AppSecret: core.PlainSecret("test-secret"), Brand: core.BrandFeishu},
+		{Name: "b", AppId: "cli_b", AppSecret: core.PlainSecret("test-secret"), Brand: core.BrandFeishu},
+	}}
+
+	app, err := selectTargetProfile(multi, "cli_b")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if app.AppId != "cli_b" {
+		t.Errorf("AppId = %q, want %q", app.AppId, "cli_b")
+	}
+
+	_, err = selectTargetProfile(multi, "cli_does_not_exist")
+	if err == nil {
+		t.Fatal("want error for unknown --profile, got nil")
+	}
+	if p, ok := errs.ProblemOf(err); !ok {
+		t.Fatalf("ProblemOf returned !ok for %T", err)
+	} else if p.Category != errs.CategoryConfig || p.Subtype != errs.SubtypeNotConfigured {
+		t.Errorf("Problem = {%q,%q}, want {config, not_configured}", p.Category, p.Subtype)
+	}
+}
+
+// TestSelectTargetProfile_SingleProfile verifies that with exactly one profile
+// and no --profile, the single profile is used directly (no TUI picker).
+func TestSelectTargetProfile_SingleProfile(t *testing.T) {
+	multi := &core.MultiAppConfig{Apps: []core.AppConfig{
+		{Name: "only", AppId: "cli_only", AppSecret: core.PlainSecret("test-secret"), Brand: core.BrandFeishu},
+	}}
+	app, err := selectTargetProfile(multi, "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if app.AppId != "cli_only" {
+		t.Errorf("AppId = %q, want %q", app.AppId, "cli_only")
+	}
+}
+
 // ── Task 5: verify-before-write ───────────────────────────────────────────────
 
 // setAppSecretFactory sets up an isolated config factory with the given
