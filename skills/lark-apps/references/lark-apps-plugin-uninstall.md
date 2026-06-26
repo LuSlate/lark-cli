@@ -9,12 +9,13 @@
 ## 命令骨架
 
 - `--name <key>`：要卸载的插件包 key。
-- `--project-path`：妙搭应用根目录。
+
+在项目根目录下运行（和 npm 一样，无需指定路径）。
 
 ## 示例
 
 ```bash
-lark-cli apps +plugin-uninstall --name <plugin-key> --project-path <path>
+lark-cli apps +plugin-uninstall --name <plugin-key>
 ```
 
 ## 输出契约

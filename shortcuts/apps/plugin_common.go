@@ -315,20 +315,6 @@ func pluginCheckPeerDeps(projectPath, pluginKey string) []string {
 	return missing
 }
 
-// pluginParseInstallTarget parses "key[@version]" where version is optional.
-// For scoped packages like "@scope/name@1.0.0", the split is at the last "@".
-func pluginParseInstallTarget(s string) (key string, version string) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return "", ""
-	}
-	idx := strings.LastIndex(s, "@")
-	if idx <= 0 {
-		return s, ""
-	}
-	return s[:idx], s[idx+1:]
-}
-
 // pluginInstalledVersion reads the version of an installed plugin from its
 // package.json in node_modules. Returns "" if not found or unreadable.
 func pluginInstalledVersion(projectPath, pluginKey string) string {

@@ -22,11 +22,12 @@ func TestPluginUninstall_Basic(t *testing.T) {
 	pluginDir := filepath.Join(dir, "node_modules", "@test/my-plugin")
 	os.MkdirAll(pluginDir, 0o755) //nolint:forbidigo
 	os.WriteFile(filepath.Join(pluginDir, "manifest.json"), []byte("{}"), 0o644) //nolint:forbidigo
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginUninstall, []string{
 		"+plugin-uninstall", "--name", "@test/my-plugin",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -48,11 +49,12 @@ func TestPluginUninstall_Basic(t *testing.T) {
 func TestPluginUninstall_NotInstalled(t *testing.T) {
 	dir := t.TempDir()
 	writeTestPkgJSON(t, dir, map[string]interface{}{})
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginUninstall, []string{
 		"+plugin-uninstall", "--name", "@test/not-here",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("uninstalling non-existent plugin should succeed: %v", err)
@@ -86,11 +88,12 @@ func TestPluginUninstall_BlockedByDependentInstance(t *testing.T) {
 		"pluginKey": "@test/my-plugin",
 		"name":      "My Instance",
 	})
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginUninstall, []string{
 		"+plugin-uninstall", "--name", "@test/my-plugin",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err == nil {
 		t.Fatal("expected error when uninstalling a plugin with dependent instances, got nil")
@@ -133,11 +136,12 @@ func TestPluginUninstall_WithUnrelatedInstances(t *testing.T) {
 		"pluginKey": "@test/other-plugin",
 		"name":      "Other Instance",
 	})
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginUninstall, []string{
 		"+plugin-uninstall", "--name", "@test/my-plugin",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("uninstall should succeed when instances reference different plugins: %v", err)
@@ -158,11 +162,12 @@ func TestPluginUninstall_PreservesOtherPlugins(t *testing.T) {
 			"@test/keep-me":   "2.0.0",
 		},
 	})
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginUninstall, []string{
 		"+plugin-uninstall", "--name", "@test/remove-me",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

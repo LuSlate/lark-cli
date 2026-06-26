@@ -23,7 +23,6 @@ var AppsPluginUninstall = common.Shortcut{
 	Risk: "write",
 	Flags: []common.Flag{
 		{Name: "name", Desc: "plugin key (e.g. @official-plugins/ai-text-generate)", Required: true},
-		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		key := strings.TrimSpace(rctx.Str("name"))
@@ -38,7 +37,7 @@ var AppsPluginUninstall = common.Shortcut{
 		if strings.TrimSpace(rctx.Str("name")) == "" {
 			return appsValidationParamError("--name", "--name is required")
 		}
-		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
+		projectPath, err := pluginResolveProjectPath("")
 		if err != nil {
 			return err
 		}
@@ -46,7 +45,7 @@ var AppsPluginUninstall = common.Shortcut{
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
 		key := strings.TrimSpace(rctx.Str("name"))
-		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
+		projectPath, err := pluginResolveProjectPath("")
 		if err != nil {
 			return err
 		}

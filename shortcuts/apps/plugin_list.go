@@ -19,9 +19,7 @@ var AppsPluginList = common.Shortcut{
 	Command:     "+plugin-list",
 	Description: "List declared plugin packages and their installation status",
 	Risk: "read",
-	Flags: []common.Flag{
-		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
-	},
+	Flags: []common.Flag{},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		return common.NewDryRunAPI().
 			Desc("List declared plugin packages and installation status").
@@ -29,14 +27,14 @@ var AppsPluginList = common.Shortcut{
 			Set("source", "package.json actionPlugins + node_modules")
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
-		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
+		projectPath, err := pluginResolveProjectPath("")
 		if err != nil {
 			return err
 		}
 		return pluginCheckProjectDir(projectPath)
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
-		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
+		projectPath, err := pluginResolveProjectPath("")
 		if err != nil {
 			return err
 		}

@@ -11,16 +11,21 @@
 ## 命令骨架
 
 - `--name <key>`：插件包 key（从仓库 Skill 的「AI 插件目录」获取）。不传则批量安装 `actionPlugins` 中声明的所有插件。
-- `--project-path`：妙搭应用根目录。
+- `--version <ver>`：指定版本（如 `1.0.0`）。不传则安装最新版。
+
+在项目根目录下运行（和 npm 一样，无需指定路径）。
 
 ## 示例
 
 ```bash
-# plugin-key 从仓库 Skill 的「AI 插件目录」获取
-lark-cli apps +plugin-install --name <plugin-key> --project-path <path>
+# 安装最新版
+lark-cli apps +plugin-install --name <plugin-key>
+
+# 安装指定版本
+lark-cli apps +plugin-install --name <plugin-key> --version 1.0.0
 
 # 批量安装已声明的所有插件
-lark-cli apps +plugin-install --project-path <path>
+lark-cli apps +plugin-install
 ```
 
 ## 输出契约

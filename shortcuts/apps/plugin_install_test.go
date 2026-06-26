@@ -18,6 +18,7 @@ import (
 func TestPluginInstall_SinglePlugin(t *testing.T) {
 	dir := t.TempDir()
 	writeTestPkgJSON(t, dir, map[string]interface{}{})
+	chdirTest(t, dir)
 
 	factory, stdout, reg := newAppsExecuteFactory(t)
 
@@ -53,8 +54,8 @@ func TestPluginInstall_SinglePlugin(t *testing.T) {
 	})
 
 	err := runAppsShortcut(t, AppsPluginInstall, []string{
-		"+plugin-install", "--name", "@test/my-plugin@1.0.0",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"+plugin-install", "--name", "@test/my-plugin", "--version", "1.0.0",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -93,11 +94,12 @@ func TestPluginInstall_AlreadyInstalled(t *testing.T) {
 	pkgDir := filepath.Join(dir, "node_modules", "@test/my-plugin")
 	os.MkdirAll(pkgDir, 0o755) //nolint:forbidigo
 	os.WriteFile(filepath.Join(pkgDir, "package.json"), []byte(`{"version":"1.0.0"}`), 0o644) //nolint:forbidigo
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginInstall, []string{
-		"+plugin-install", "--name", "@test/my-plugin@1.0.0",
-		"--project-path", dir, "--format", "json", "--as", "user",
+		"+plugin-install", "--name", "@test/my-plugin", "--version", "1.0.0",
+		"--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -153,28 +155,6 @@ func TestPluginExtractTGZ_PathTraversal(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(destDir, "..", "..", "etc", "passwd")); err == nil { //nolint:forbidigo
 		t.Error("path traversal should have been blocked")
-	}
-}
-
-func TestPluginParseInstallTarget(t *testing.T) {
-	tests := []struct {
-		input       string
-		wantKey     string
-		wantVersion string
-	}{
-		{"@scope/name@1.0.0", "@scope/name", "1.0.0"},
-		{"@scope/name@latest", "@scope/name", "latest"},
-		{"@scope/name", "@scope/name", ""},
-		{"simple@2.0.0", "simple", "2.0.0"},
-		{"simple", "simple", ""},
-		{"", "", ""},
-	}
-	for _, tt := range tests {
-		key, ver := pluginParseInstallTarget(tt.input)
-		if key != tt.wantKey || ver != tt.wantVersion {
-			t.Errorf("pluginParseInstallTarget(%q) = (%q, %q), want (%q, %q)",
-				tt.input, key, ver, tt.wantKey, tt.wantVersion)
-		}
 	}
 }
 

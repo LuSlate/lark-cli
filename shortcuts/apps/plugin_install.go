@@ -33,35 +33,39 @@ var AppsPluginInstall = common.Shortcut{
 	ConditionalScopes: []string{"spark:app:read"},
 	AuthTypes:         []string{"user"},
 	Flags: []common.Flag{
-		{Name: "name", Desc: "plugin key[@version] (e.g. @official-plugins/ai-text-generate@1.0.0); omit to install all declared plugins"},
+		{Name: "name", Desc: "plugin key (e.g. @official-plugins/ai-text-generate); omit to install all declared plugins"},
+		{Name: "version", Desc: "plugin version (e.g. 1.0.0); omit to install latest"},
 		{Name: "local", Desc: "install from a local .tgz file (dev/test only)", Hidden: true},
-		{Name: "project-path", Desc: "project root path (defaults to current directory)"},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
-		name := strings.TrimSpace(rctx.Str("name"))
-		if name == "" {
+		key := strings.TrimSpace(rctx.Str("name"))
+		if key == "" {
 			return common.NewDryRunAPI().
 				POST(apiBasePath+"/plugin/versions/batch_query").
 				Desc("Batch-install all declared plugins from package.json actionPlugins").
 				Set("request_body", `{"plugin_keys": [<from actionPlugins>], "latest_only": false}`)
 		}
-		key, version := pluginParseInstallTarget(name)
+		version := strings.TrimSpace(rctx.Str("version"))
 		isLatest := version == "" || version == "latest"
+		desc := fmt.Sprintf("Query version for %s, then download .tgz", key)
+		if isLatest {
+			desc = fmt.Sprintf("Install latest version of %s (omit --version to install latest)", key)
+		}
 		return common.NewDryRunAPI().
 			POST(apiBasePath+"/plugin/versions/batch_query").
-			Desc("Query plugin version, then POST /plugin/versions/download_package to download .tgz").
+			Desc(desc).
 			Set("request_body", fmt.Sprintf(`{"plugin_keys": ["%s"], "latest_only": %v}`, key, isLatest)).
 			Set("download_body", fmt.Sprintf(`{"plugin_key": "%s", "plugin_version": "%s"}`, key, version))
 	},
 	Validate: func(ctx context.Context, rctx *common.RuntimeContext) error {
-		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
+		projectPath, err := pluginResolveProjectPath("")
 		if err != nil {
 			return err
 		}
 		return pluginCheckProjectDir(projectPath)
 	},
 	Execute: func(ctx context.Context, rctx *common.RuntimeContext) error {
-		projectPath, err := pluginResolveProjectPath(rctx.Str("project-path"))
+		projectPath, err := pluginResolveProjectPath("")
 		if err != nil {
 			return err
 		}
@@ -70,19 +74,19 @@ var AppsPluginInstall = common.Shortcut{
 			return pluginInstallLocal(rctx, projectPath, localTgz)
 		}
 
-		name := strings.TrimSpace(rctx.Str("name"))
-		if name == "" {
+		key := strings.TrimSpace(rctx.Str("name"))
+		if key == "" {
 			return pluginInstallAll(ctx, rctx, projectPath)
 		}
-		return pluginInstallOne(ctx, rctx, projectPath, name)
+		version := strings.TrimSpace(rctx.Str("version"))
+		return pluginInstallOne(ctx, rctx, projectPath, key, version)
 	},
 }
 
-// pluginInstallOne installs a single plugin by key[@version].
-func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectPath, name string) error {
-	key, version := pluginParseInstallTarget(name)
+// pluginInstallOne installs a single plugin by key and optional version.
+func pluginInstallOne(ctx context.Context, rctx *common.RuntimeContext, projectPath, key, version string) error {
 	if key == "" {
-		return appsValidationParamError("--name", "invalid plugin name %q", name)
+		return appsValidationParamError("--name", "--name is required")
 	}
 
 	// Check if already installed with same version (pre-API fast path)
@@ -185,8 +189,7 @@ func pluginInstallAll(ctx context.Context, rctx *common.RuntimeContext, projectP
 		if existing != "" && existing == version {
 			continue
 		}
-		target := key + "@" + version
-		if err := pluginInstallOne(ctx, rctx, projectPath, target); err != nil {
+		if err := pluginInstallOne(ctx, rctx, projectPath, key, version); err != nil {
 			return fmt.Errorf("install %s: %w", key, err)
 		}
 		installed++
@@ -296,8 +299,12 @@ func pluginResolveVersion(ctx context.Context, rctx *common.RuntimeContext, key,
 	// Response: data.items is a flat list of plugin_version objects
 	match := pluginFindVersionInItems(data, key, version)
 	if match == nil {
+		hint := "check plugin key spelling"
+		if !isLatest {
+			hint = fmt.Sprintf("version %q not found for %s; omit --version to install latest", version, key)
+		}
 		return "", appsValidationError("no version found for plugin %q", key).
-			WithHint("check plugin key and version")
+			WithHint(hint)
 	}
 	// API returns "version" (not "plugin_version")
 	rv, _ := match["version"].(string)

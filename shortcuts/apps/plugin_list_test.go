@@ -13,10 +13,11 @@ import (
 func TestPluginList_Empty(t *testing.T) {
 	dir := t.TempDir()
 	writeTestPkgJSON(t, dir, map[string]interface{}{})
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginList, []string{
-		"+plugin-list", "--project-path", dir, "--format", "json", "--as", "user",
+		"+plugin-list", "--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -41,10 +42,11 @@ func TestPluginList_Installed(t *testing.T) {
 	manifestDir := filepath.Join(dir, "node_modules", "@test/my-plugin")
 	os.MkdirAll(manifestDir, 0o755) //nolint:forbidigo
 	os.WriteFile(filepath.Join(manifestDir, "package.json"), []byte(`{"version":"1.0.0"}`), 0o644) //nolint:forbidigo
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginList, []string{
-		"+plugin-list", "--project-path", dir, "--format", "json", "--as", "user",
+		"+plugin-list", "--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -70,10 +72,11 @@ func TestPluginList_DeclaredNotInstalled(t *testing.T) {
 			"@test/missing": "1.0.0",
 		},
 	})
+	chdirTest(t, dir)
 
 	factory, stdout, _ := newAppsExecuteFactory(t)
 	err := runAppsShortcut(t, AppsPluginList, []string{
-		"+plugin-list", "--project-path", dir, "--format", "json", "--as", "user",
+		"+plugin-list", "--format", "json", "--as", "user",
 	}, factory, stdout)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -93,6 +96,18 @@ func TestPluginList_DeclaredNotInstalled(t *testing.T) {
 }
 
 // --- helpers ---
+
+func chdirTest(t *testing.T, dir string) {
+	t.Helper()
+	prev, err := os.Getwd() //nolint:forbidigo
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil { //nolint:forbidigo
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chdir(prev) }) //nolint:forbidigo,errcheck
+}
 
 func writeTestPkgJSON(t *testing.T, dir string, pkg map[string]interface{}) {
 	t.Helper()
