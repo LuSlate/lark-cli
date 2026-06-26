@@ -57,6 +57,10 @@ import (
 	"github.com/larksuite/cli/shortcuts/mail/filecheck"
 )
 
+// lmsReplyTypeHeaderKey is the MIME header name for the reply type
+// ("REPLY" or "FORWARD"), read by data-access to populate BodyExtra.ReplyType.
+const lmsReplyTypeHeaderKey = "X-LMS-Reply-Type"
+
 // MaxEMLSize is the maximum allowed raw EML size in bytes.
 const MaxEMLSize = 25 * 1024 * 1024 // 25 MB
 
@@ -90,6 +94,7 @@ type Builder struct {
 	inReplyTo                 string // raw value, without angle brackets
 	references                string // space-separated list of message IDs, with angle brackets
 	lmsReplyToMessageID       string // Lark internal message_id of the original message
+	lmsReplyType              string // "REPLY" or "FORWARD", written as X-LMS-Reply-Type
 	textBody                  []byte
 	htmlBody                  []byte
 	calendarBody              []byte
@@ -392,6 +397,22 @@ func (b Builder) LMSReplyToMessageID(id string) Builder {
 		return b
 	}
 	b.lmsReplyToMessageID = id
+	return b
+}
+
+// LMSReplyType sets the reply type header X-LMS-Reply-Type.
+// t must be "REPLY" or "FORWARD"; other values are silently ignored.
+// This header is written unconditionally when set, independent of In-Reply-To.
+// Returns an error builder if t contains CR, LF, or other dangerous characters.
+func (b Builder) LMSReplyType(t string) Builder {
+	if b.err != nil {
+		return b
+	}
+	if err := validateHeaderValue(t); err != nil {
+		b.err = err
+		return b
+	}
+	b.lmsReplyType = t
 	return b
 }
 
@@ -731,6 +752,9 @@ func (b Builder) Build() ([]byte, error) {
 	}
 	for _, kv := range b.extraHeaders {
 		writeHeader(&buf, kv[0], kv[1])
+	}
+	if b.lmsReplyType != "" {
+		writeHeader(&buf, lmsReplyTypeHeaderKey, b.lmsReplyType)
 	}
 
 	// ── Body ───────────────────────────────────────────────────────────────────

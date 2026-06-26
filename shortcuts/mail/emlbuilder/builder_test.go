@@ -285,6 +285,48 @@ func TestBuild_LMSReplyToMessageID_NotWrittenWithoutInReplyTo(t *testing.T) {
 	}
 }
 
+// TestBuild_LMSReplyType verifies LMS reply type header writing.
+func TestBuild_LMSReplyType(t *testing.T) {
+	raw, err := New().
+		From("", "alice@example.com").
+		To("", "bob@example.com").
+		Subject("Re: hello").
+		Date(fixedDate).
+		LMSReplyType("REPLY").
+		TextBody([]byte("my reply")).
+		Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	eml := string(raw)
+
+	got := headerValue(eml, "X-LMS-Reply-Type")
+	if got != "REPLY" {
+		t.Errorf("X-LMS-Reply-Type: got %q, want REPLY", got)
+	}
+}
+
+// TestBuild_LMSReplyType_Forward verifies LMSReplyType with FORWARD value.
+func TestBuild_LMSReplyType_Forward(t *testing.T) {
+	raw, err := New().
+		From("", "alice@example.com").
+		To("", "bob@example.com").
+		Subject("Fw: hello").
+		Date(fixedDate).
+		LMSReplyType("FORWARD").
+		TextBody([]byte("fw body")).
+		Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	eml := string(raw)
+
+	got := headerValue(eml, "X-LMS-Reply-Type")
+	if got != "FORWARD" {
+		t.Errorf("X-LMS-Reply-Type: got %q, want FORWARD", got)
+	}
+}
+
 // ── Disposition-Notification-To (read receipt) ───────────────────────────────
 
 // TestBuild_DispositionNotificationTo verifies build disposition notification to.

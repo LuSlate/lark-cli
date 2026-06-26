@@ -278,6 +278,7 @@ var MailReplyAll = common.Shortcut{
 		}
 		if messageId != "" {
 			bld = bld.LMSReplyToMessageID(messageId)
+			bld = bld.LMSReplyType("REPLY")
 		}
 		var autoResolvedPaths []string
 		var composedHTMLBody string
