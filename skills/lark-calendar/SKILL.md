@@ -12,7 +12,7 @@ metadata:
 
 开始前先读 [`../lark-shared/SKILL.md`](../lark-shared/SKILL.md)（认证、权限处理）。
 
-**CRITICAL — 凡涉及预约日程/会议或查询/搜索会议室，第一步 MUST 读 [`references/lark-calendar-schedule-meeting.md`](references/lark-calendar-schedule-meeting.md)。禁止跳过此步直接调用 API 或 Shortcut！**
+**CRITICAL — 凡涉及预约日程/会议室、调整时间或查询/搜索会议室，第一步 MUST 读 [`references/lark-calendar-schedule-meeting.md`](references/lark-calendar-schedule-meeting.md)。仅编辑字段（改标题/描述）或增删参会人（不涉及时间和会议室）时可跳过，直接读 [`references/lark-calendar-update.md`](references/lark-calendar-update.md)。**
 
 ## 身份
 
@@ -44,8 +44,9 @@ lark-cli calendar +agenda --as user
 
 | 场景 | 前置要求 |
 |------|----------|
-| 预约日程/会议、查会议室 | 先读 [lark-calendar-schedule-meeting.md](references/lark-calendar-schedule-meeting.md) |
-| 编辑已有日程 | 先定位目标日程 `event_id`；若是重复性日程，必须定位到具体实例的 `event_id`（禁止使用原重复日程 ID） |
+| 预约日程/会议、调整时间、查会议室 | 先读 [lark-calendar-schedule-meeting.md](references/lark-calendar-schedule-meeting.md) |
+| 仅编辑字段（标题/描述）或增删参会人 | 先定位 `event_id`，再读 [lark-calendar-update.md](references/lark-calendar-update.md) |
+| 编辑已有日程（涉及时间或会议室） | 先定位目标日程 `event_id`；若是重复性日程，必须定位到具体实例的 `event_id`（禁止使用原重复日程 ID） |
 | 调用任何 Shortcut | 先读其对应 reference 文档 |
 
 ## 写操作反馈
@@ -73,7 +74,8 @@ lark-cli calendar +agenda --as user
 | 按关键词搜索日程 | 本 skill（`+search-event`） |
 | 从日程获取关联的视频会议 ID 或用户绑定的会议纪要文档 | 本 skill（`+meeting`） |
 | 从日程进一步拿 AI 智能纪要 / 逐字稿 / 妙记产物 | 先 `+meeting` 取 `meeting_id`，再 [`vc +detail`](../lark-vc/references/lark-vc-detail.md) → [`note +detail`](../lark-note/references/lark-note-detail.md) / [`minutes +detail`](../lark-minutes/references/lark-minutes-detail.md) |
-| 预约/改约日程、添加/移除参会人、添加/更换会议室、调整时间 | 先判断新建 vs 编辑，再进入 [schedule-meeting 工作流](references/lark-calendar-schedule-meeting.md) |
+| 预约/改约日程、调整时间、添加/更换会议室、查会议室 | 先判断新建 vs 编辑，再进入 [schedule-meeting 工作流](references/lark-calendar-schedule-meeting.md) |
+| 仅编辑日程字段（标题/描述）或增删参会人（不涉及时间和会议室） | 先定位 `event_id`，再读 [+update](references/lark-calendar-update.md) 执行变更 |
 
 ## 任务类型分流
 
@@ -90,7 +92,7 @@ lark-cli calendar +agenda --as user
 
 ## 会议室规则
 
-- 凡是"预定/查询/搜索可用会议室"，都必须进入 [schedule-meeting 工作流](references/lark-calendar-schedule-meeting.md)。
+- 凡是"预定/查询/搜索可用会议室"，都必须进入 [schedule-meeting 工作流](references/lark-calendar-schedule-meeting.md)，会议室参数规范详见 [+room-find](references/lark-calendar-room-find.md)。
 - `+room-find` 的时间输入必须是确定时间块，不能是时间区间搜索。
 - 用户仅要求"查会议室"但未提供明确时间时，必须先调用 `+suggestion` 获取可用时间块，再将时间块交给 `+room-find`。严禁猜测时间盲目调用。
 - 编辑已有日程时，"添加会议室"默认是增量语义，保留已有会议室；只有用户明确说"更换会议室""移除会议室"时才删除旧会议室。
