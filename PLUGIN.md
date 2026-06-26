@@ -2,9 +2,11 @@
 
 把 [larksuite/cli](https://github.com/larksuite/cli) 的 26 个 AI Agent 技能作为 Claude Code 插件分发。本 fork 通过 GitHub Action 每日自动同步上游 `skills/`，**上游更新 → 插件可更新**。
 
-## 前置：安装 lark-cli 二进制
+## 前置：lark-cli 二进制（已自动处理）
 
-技能调用 `lark-cli` 命令，需先安装一次：
+技能调用 `lark-cli` 命令。插件带了一个 `SessionStart` 钩子：检测到二进制缺失时，会**后台自动安装**（`npm install -g @larksuite/cli`，只装二进制、不重复装 skills）。装好后需用 `lark-cli` 登录鉴权（见 `lark-shared` 技能）。
+
+钩子失败或想手动装，运行：
 
 ```bash
 npx @larksuite/cli@latest install
