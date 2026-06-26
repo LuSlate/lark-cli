@@ -40,7 +40,7 @@ var AppsPluginInstall = common.Shortcut{
 	Flags: []common.Flag{
 		{Name: "name", Desc: "plugin key (e.g. @official-plugins/ai-text-generate); omit to install all declared plugins"},
 		{Name: "version", Desc: "plugin version (e.g. 1.0.0); omit to install latest"},
-		{Name: "local", Desc: "install from a local .tgz file (dev/test only)", Hidden: true},
+		{Name: "file", Desc: "install from a local .tgz file (dev/test only)", Hidden: true},
 	},
 	DryRun: func(ctx context.Context, rctx *common.RuntimeContext) *common.DryRunAPI {
 		key := strings.TrimSpace(rctx.Str("name"))
@@ -75,7 +75,7 @@ var AppsPluginInstall = common.Shortcut{
 			return err
 		}
 
-		if localTgz := strings.TrimSpace(rctx.Str("local")); localTgz != "" {
+		if localTgz := strings.TrimSpace(rctx.Str("file")); localTgz != "" {
 			return pluginInstallLocal(rctx, projectPath, localTgz)
 		}
 
@@ -213,7 +213,7 @@ func pluginInstallAll(ctx context.Context, rctx *common.RuntimeContext, projectP
 func pluginInstallLocal(rctx *common.RuntimeContext, projectPath, tgzPath string) error {
 	tgzData, err := os.ReadFile(tgzPath) //nolint:forbidigo // shortcuts cannot import internal/vfs; local tgz read.
 	if err != nil {
-		return appsValidationParamError("--local", "cannot read tgz file %s: %v", tgzPath, err).WithCause(err)
+		return appsValidationParamError("--file", "cannot read tgz file %s: %v", tgzPath, err).WithCause(err)
 	}
 
 	// Extract to a temp dir first to read package.json
@@ -239,7 +239,7 @@ func pluginInstallLocal(rctx *common.RuntimeContext, projectPath, tgzPath string
 	key, _ := pkgMeta["name"].(string)
 	version, _ := pkgMeta["version"].(string)
 	if key == "" {
-		return appsValidationParamError("--local", "package.json in tgz missing 'name' field")
+		return appsValidationParamError("--file", "package.json in tgz missing 'name' field")
 	}
 	if version == "" {
 		version = "0.0.0"
@@ -367,11 +367,27 @@ func pluginDownloadPackage(ctx context.Context, rctx *common.RuntimeContext, key
 		Body:       bytes.NewReader(body),
 	})
 	if err != nil {
-		return nil, appsFileIOError(err, "download failed for %s@%s", key, version)
+		return nil, errs.NewNetworkError(errs.SubtypeNetworkTransport, "download failed for %s@%s: %v", key, version, err).
+			WithHint("check network connectivity and retry").
+			WithRetryable().
+			WithCause(err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 500 {
+		return nil, errs.NewNetworkError(errs.SubtypeNetworkServer, "download failed for %s@%s: HTTP %d", key, version, resp.StatusCode).
+			WithHint("plugin registry returned a server error; retry after a short wait").
+			WithRetryable()
+	}
 	if resp.StatusCode >= 400 {
-		return nil, appsFileIOError(fmt.Errorf("HTTP %d", resp.StatusCode), "download failed for %s@%s", key, version)
+		respBody, _ := io.ReadAll(resp.Body)
+		hint := "check plugin key and version spelling"
+		if resp.StatusCode == 403 {
+			hint = "download token may have expired; retry the install to get a fresh token"
+		} else if resp.StatusCode == 404 {
+			hint = fmt.Sprintf("package %s@%s not found in registry; check plugin key and version", key, version)
+		}
+		return nil, errs.NewAPIError(errs.SubtypeUnknown, "download failed for %s@%s: HTTP %d: %s", key, version, resp.StatusCode, string(respBody)).
+			WithHint(hint)
 	}
 	return io.ReadAll(resp.Body)
 }

@@ -50,20 +50,12 @@ func pluginCheckProjectDir(projectPath string) error {
 	return nil
 }
 
-// pluginResolveCapDir resolves the capabilities directory using a 4-level fallback:
-//  1. capDirFlag (explicit --capabilities-dir)
-//  2. MIAODA_CAPABILITIES_DIR env var
-//  3. MIAODA_APP_TYPE env var (2→server/capabilities, 6→shared/capabilities)
-//     3.5 Read .env.local for MIAODA_APP_TYPE
-//  4. Detect by checking which directories exist under projectPath
-func pluginResolveCapDir(projectPath, capDirFlag string) (string, error) {
-	if dir := strings.TrimSpace(capDirFlag); dir != "" {
-		if filepath.IsAbs(dir) {
-			return dir, nil
-		}
-		return filepath.Join(projectPath, dir), nil
-	}
-
+// pluginResolveCapDir resolves the capabilities directory using a 3-level fallback:
+//  1. MIAODA_CAPABILITIES_DIR env var
+//  2. MIAODA_APP_TYPE env var (2→server/capabilities, 6→shared/capabilities)
+//     2.5 Read .env.local for MIAODA_APP_TYPE
+//  3. Detect by checking which directories exist under projectPath
+func pluginResolveCapDir(projectPath string) (string, error) {
 	if dir := os.Getenv("MIAODA_CAPABILITIES_DIR"); dir != "" { //nolint:forbidigo // env-based config lookup is intentional.
 		if filepath.IsAbs(dir) {
 			return dir, nil
@@ -71,7 +63,7 @@ func pluginResolveCapDir(projectPath, capDirFlag string) (string, error) {
 		return filepath.Join(projectPath, dir), nil
 	}
 
-	// 3. MIAODA_APP_TYPE: only appType=6 (Modern) uses shared/; everything else uses server/
+	// 2. MIAODA_APP_TYPE: only appType=6 (Modern) uses shared/; everything else uses server/
 	appType := os.Getenv("MIAODA_APP_TYPE") //nolint:forbidigo // env-based config lookup is intentional.
 	if appType == "" {
 		appType = pluginReadEnvLocalValue(projectPath, "MIAODA_APP_TYPE")
@@ -83,7 +75,7 @@ func pluginResolveCapDir(projectPath, capDirFlag string) (string, error) {
 		return filepath.Join(projectPath, "server", "capabilities"), nil
 	}
 
-	// 4. Directory detection
+	// 3. Directory detection
 	serverDir := filepath.Join(projectPath, "server", "capabilities")
 	sharedDir := filepath.Join(projectPath, "shared", "capabilities")
 	serverOK := pluginDirExists(serverDir)
@@ -93,13 +85,12 @@ func pluginResolveCapDir(projectPath, capDirFlag string) (string, error) {
 	case serverOK && sharedOK:
 		return "", appsFailedPreconditionError(
 			"ambiguous capabilities path: both server/capabilities/ and shared/capabilities/ exist",
-		).WithHint("use --capabilities-dir to specify which capabilities directory to use")
+		).WithHint("set MIAODA_APP_TYPE or MIAODA_CAPABILITIES_DIR in .env.local to resolve ambiguity")
 	case serverOK:
 		return serverDir, nil
 	case sharedOK:
 		return sharedDir, nil
 	default:
-		// Default to server/capabilities/ (most common app type)
 		return filepath.Join(projectPath, "server", "capabilities"), nil
 	}
 }
@@ -163,8 +154,8 @@ func pluginListCapabilities(capDir string) ([]map[string]interface{}, error) {
 // pluginCheckDependentInstances scans the capabilities directory for instances
 // that reference the given pluginKey. Returns nil if none found, an error with
 // the list of dependent instance ids if any exist, or the underlying I/O error.
-func pluginCheckDependentInstances(projectPath, pluginKey, capDirFlag string) error {
-	capDir, err := pluginResolveCapDir(projectPath, capDirFlag)
+func pluginCheckDependentInstances(projectPath, pluginKey string) error {
+	capDir, err := pluginResolveCapDir(projectPath)
 	if err != nil {
 		// No capabilities directory → no instances can exist → no conflict.
 		return nil
@@ -187,7 +178,7 @@ func pluginCheckDependentInstances(projectPath, pluginKey, capDirFlag string) er
 	}
 	return appsFailedPreconditionError(
 		"plugin %q is still referenced by %d instance(s): %s", pluginKey, len(deps), strings.Join(deps, ", "),
-	).WithHint("delete these instances first (lark-cli apps +plugin-instance-delete --id <id> for each), clean up calling code and types, then retry uninstall")
+	).WithHint("delete these instances first (see <project-path>/.agents/skills/plugin-guide/SKILL.md for instance removal steps), clean up calling code and types, then retry uninstall")
 }
 
 // pluginCheckInstalled verifies that the plugin package is installed in node_modules

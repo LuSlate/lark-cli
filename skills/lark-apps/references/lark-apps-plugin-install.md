@@ -4,7 +4,13 @@
 
 ## 何时用
 
-用户要接入 AI 能力或飞书平台能力，需要先安装对应的插件包。安装后才能创建插件实例。具体有哪些可用插件、该选哪个，读取仓库 Skill：`<project-path>/.agents/skills/plugin-guide/SKILL.md`。
+用户要接入 AI 能力或飞书平台能力，需要先安装对应的插件包。安装后才能创建插件实例。
+
+**判断规则**：
+1. AI 模型服务能力（文本生成、图片理解、语音识别等）必须通过插件接入，禁止自行编写替代实现。
+2. 飞书平台能力（操作多维表格、发送消息等）优先查看是否有对应插件，插件不支持时再考虑自行通过飞书 OpenAPI 实现。
+
+**前置步骤**：安装前先读仓库 Skill `<project-path>/.agents/skills/plugin-guide/SKILL.md`，获取插件目录、Schema 规则、实例 CRUD、调用代码生成等完整指引。
 
 **插件包 ≠ npm 包**：插件包写入 `actionPlugins`，npm 写入 `dependencies`，两套独立机制。禁止用 `npm install` 代替本命令。
 

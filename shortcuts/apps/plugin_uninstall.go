@@ -54,7 +54,7 @@ var AppsPluginUninstall = common.Shortcut{
 		}
 
 		// Block uninstall if any instances still reference this plugin package.
-		if err := pluginCheckDependentInstances(projectPath, key, rctx.Str("capabilities-dir")); err != nil {
+		if err := pluginCheckDependentInstances(projectPath, key); err != nil {
 			return err
 		}
 

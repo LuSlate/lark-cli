@@ -64,29 +64,9 @@ func TestPluginCheckProjectDir_Missing(t *testing.T) {
 
 // --- pluginResolveCapDir ---
 
-func TestPluginResolveCapDir_ExplicitFlag(t *testing.T) {
-	got, err := pluginResolveCapDir("/proj", "my/caps")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if want := filepath.Join("/proj", "my/caps"); got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
-func TestPluginResolveCapDir_ExplicitFlagAbsolute(t *testing.T) {
-	got, err := pluginResolveCapDir("/proj", "/absolute/caps")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if got != "/absolute/caps" {
-		t.Errorf("got %q, want /absolute/caps", got)
-	}
-}
-
 func TestPluginResolveCapDir_EnvVar(t *testing.T) {
 	t.Setenv("MIAODA_CAPABILITIES_DIR", "envdir/caps")
-	got, err := pluginResolveCapDir("/proj", "")
+	got, err := pluginResolveCapDir("/proj")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -97,7 +77,7 @@ func TestPluginResolveCapDir_EnvVar(t *testing.T) {
 
 func TestPluginResolveCapDir_AppTypeEnv(t *testing.T) {
 	t.Setenv("MIAODA_APP_TYPE", "2")
-	got, err := pluginResolveCapDir("/proj", "")
+	got, err := pluginResolveCapDir("/proj")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -108,7 +88,7 @@ func TestPluginResolveCapDir_AppTypeEnv(t *testing.T) {
 
 func TestPluginResolveCapDir_AppTypeEnvShared(t *testing.T) {
 	t.Setenv("MIAODA_APP_TYPE", "6")
-	got, err := pluginResolveCapDir("/proj", "")
+	got, err := pluginResolveCapDir("/proj")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -122,7 +102,7 @@ func TestPluginResolveCapDir_EnvLocal(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, ".env.local"), []byte("MIAODA_APP_TYPE=2\n"), 0o644); err != nil { //nolint:forbidigo
 		t.Fatal(err)
 	}
-	got, err := pluginResolveCapDir(dir, "")
+	got, err := pluginResolveCapDir(dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -136,7 +116,7 @@ func TestPluginResolveCapDir_DetectServer(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(dir, "server", "capabilities"), 0o755); err != nil { //nolint:forbidigo
 		t.Fatal(err)
 	}
-	got, err := pluginResolveCapDir(dir, "")
+	got, err := pluginResolveCapDir(dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -150,7 +130,7 @@ func TestPluginResolveCapDir_DetectShared(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(dir, "shared", "capabilities"), 0o755); err != nil { //nolint:forbidigo
 		t.Fatal(err)
 	}
-	got, err := pluginResolveCapDir(dir, "")
+	got, err := pluginResolveCapDir(dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -167,7 +147,7 @@ func TestPluginResolveCapDir_Ambiguous(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(dir, "shared", "capabilities"), 0o755); err != nil { //nolint:forbidigo
 		t.Fatal(err)
 	}
-	_, err := pluginResolveCapDir(dir, "")
+	_, err := pluginResolveCapDir(dir)
 	if err == nil {
 		t.Fatal("expected ambiguous error")
 	}
@@ -182,7 +162,7 @@ func TestPluginResolveCapDir_Ambiguous(t *testing.T) {
 
 func TestPluginResolveCapDir_NeitherExists_DefaultsToServer(t *testing.T) {
 	dir := t.TempDir()
-	got, err := pluginResolveCapDir(dir, "")
+	got, err := pluginResolveCapDir(dir)
 	if err != nil {
 		t.Fatalf("should default to server/capabilities, got error: %v", err)
 	}
@@ -193,7 +173,7 @@ func TestPluginResolveCapDir_NeitherExists_DefaultsToServer(t *testing.T) {
 
 func TestPluginResolveCapDir_AppType3_UsesServer(t *testing.T) {
 	t.Setenv("MIAODA_APP_TYPE", "3")
-	got, err := pluginResolveCapDir("/proj", "")
+	got, err := pluginResolveCapDir("/proj")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
