@@ -35,6 +35,7 @@ lark-cli apps +release-create --app-id app_xxx
 ```
 
 `+init` 是推荐便捷入口；想逐步手动控制时，先 `+git-credential-init` 拿 `repository_url`，再用原生 `git clone` / `git checkout sprint/default`。
+`+init`执行完成后，你需要读应用代码仓库 `.agents/skills/plugin-guide/SKILL.md` 来了解怎样开发相关的插件能力。
 
 ## 改完代码后部署上线
 
