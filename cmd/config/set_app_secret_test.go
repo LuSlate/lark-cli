@@ -406,6 +406,154 @@ func TestSelectTargetProfile_SingleProfile(t *testing.T) {
 	}
 }
 
+// TestProfileSelectOptions verifies the multi-profile picker options pre-select
+// the active profile.
+func TestProfileSelectOptions(t *testing.T) {
+	multi := &core.MultiAppConfig{Apps: []core.AppConfig{
+		{Name: "first", AppId: "cli_first", AppSecret: core.PlainSecret("test-secret"), Brand: core.BrandFeishu},
+		{Name: "second", AppId: "cli_second", AppSecret: core.PlainSecret("test-secret"), Brand: core.BrandFeishu},
+	}}
+	opts, selected := profileSelectOptions(multi)
+	if len(opts) != 2 {
+		t.Fatalf("options = %d, want 2", len(opts))
+	}
+	active := multi.CurrentAppConfig("")
+	wantIdx := 0
+	for i := range multi.Apps {
+		if active != nil && multi.Apps[i].ProfileName() == active.ProfileName() {
+			wantIdx = i
+		}
+	}
+	if selected != wantIdx {
+		t.Errorf("preselected index = %d, want %d (active)", selected, wantIdx)
+	}
+}
+
+// TestValidateAppSecret verifies the interactive secret input validator.
+func TestValidateAppSecret(t *testing.T) {
+	if err := validateAppSecret("a-real-secret"); err != nil {
+		t.Errorf("non-empty secret should pass, got %v", err)
+	}
+	for _, s := range []string{"", "   ", "\t\n "} {
+		if err := validateAppSecret(s); err == nil {
+			t.Errorf("empty/whitespace %q should fail validation", s)
+		}
+	}
+}
+
+// TestRunInteractive_Cancel verifies that declining the confirm step writes
+// nothing and exits cleanly (exit 0) with a readable notice.
+func TestRunInteractive_Cancel(t *testing.T) {
+	rt := &fakeRT{tatHandler: func(*http.Request) (*http.Response, error) {
+		t.Error("verify must not run on cancel")
+		return jsonResp(500, `{}`), nil
+	}}
+	const appID = "cli_run_cancel"
+	f, spy := setAppSecretFactory(t, rt, appID)
+	errBuf := &bytes.Buffer{}
+	f.IOStreams.ErrOut = errBuf
+	multi, err := core.LoadMultiAppConfig()
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	readCalled := false
+	p := secretPrompter{
+		selectProfile: func(m *core.MultiAppConfig, _ string) (*core.AppConfig, error) { return m.CurrentAppConfig(""), nil },
+		confirm:       func(*errs.ErrTarget) (bool, error) { return false, nil },
+		readInput:     func() (string, error) { readCalled = true; return "", nil },
+	}
+	if err := runInteractive(f, multi, "", p); err != nil {
+		t.Fatalf("cancel should return nil (clean exit 0), got %v", err)
+	}
+	if readCalled {
+		t.Error("readInput must not be called after a declined confirm")
+	}
+	if spy.setCalls != 0 {
+		t.Errorf("keychain.Set called %d times, want 0 on cancel", spy.setCalls)
+	}
+	if !strings.Contains(errBuf.String(), "cancelled") {
+		t.Errorf("want 'cancelled' notice on stderr, got %q", errBuf.String())
+	}
+}
+
+// TestRunInteractive_VerifyInvalid verifies that an invalid secret in the
+// interactive flow writes nothing, exits 3, and renders a readable line (not JSON).
+func TestRunInteractive_VerifyInvalid(t *testing.T) {
+	rt := &fakeRT{tatHandler: func(*http.Request) (*http.Response, error) {
+		return jsonResp(400, `{"error":"invalid_client","error_description":"bad","code":20002}`), nil
+	}}
+	const appID = "cli_run_invalid"
+	f, spy := setAppSecretFactory(t, rt, appID)
+	errBuf := &bytes.Buffer{}
+	f.IOStreams.ErrOut = errBuf
+	multi, err := core.LoadMultiAppConfig()
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	p := secretPrompter{
+		selectProfile: func(m *core.MultiAppConfig, _ string) (*core.AppConfig, error) { return m.CurrentAppConfig(""), nil },
+		confirm:       func(*errs.ErrTarget) (bool, error) { return true, nil },
+		readInput:     func() (string, error) { return "test-secret", nil },
+	}
+	err = runInteractive(f, multi, "", p)
+	if err == nil {
+		t.Fatal("want error for invalid secret, got nil")
+	}
+	if got := output.ExitCodeOf(err); got != output.ExitAuth {
+		t.Errorf("exit code = %d, want %d (ExitAuth)", got, output.ExitAuth)
+	}
+	if spy.setCalls != 0 {
+		t.Errorf("keychain.Set called %d times, want 0 on invalid secret", spy.setCalls)
+	}
+	out := errBuf.String()
+	if !strings.Contains(out, "invalid") {
+		t.Errorf("want a readable invalid-secret message on stderr, got %q", out)
+	}
+	// Interactive failures must be readable lines, not the agent JSON envelope.
+	if strings.Contains(out, `"error"`) || strings.Contains(out, `"subtype"`) {
+		t.Errorf("interactive failure must not be a JSON envelope, got %q", out)
+	}
+}
+
+// TestRunInteractive_Success verifies the happy interactive path verifies and
+// writes via the shared logic and emits the success envelope.
+func TestRunInteractive_Success(t *testing.T) {
+	const appID = "cli_run_ok"
+	kc := newMapKeychain()
+	_ = kc.Set("lark-cli", "appsecret"+":"+appID, "test-secret")
+	kc.setCalls = 0
+	keychainSecret := core.SecretInput{Ref: &core.SecretRef{Source: "keychain", ID: "appsecret" + ":" + appID}}
+	f, _ := setAppSecretFactoryFull(t, kc, appID, keychainSecret)
+	outBuf := &bytes.Buffer{}
+	f.IOStreams.Out = outBuf
+	f.IOStreams.IsTerminal = false
+	multi, err := core.LoadMultiAppConfig()
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	p := secretPrompter{
+		selectProfile: func(m *core.MultiAppConfig, _ string) (*core.AppConfig, error) { return m.CurrentAppConfig(""), nil },
+		confirm:       func(*errs.ErrTarget) (bool, error) { return true, nil },
+		readInput:     func() (string, error) { return "test-secret", nil },
+	}
+	if err := runInteractive(f, multi, "", p); err != nil {
+		t.Fatalf("success path returned error: %v", err)
+	}
+	if kc.setCalls == 0 {
+		t.Error("keychain.Set not called on success")
+	}
+	var env map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimSpace(outBuf.String())), &env); err != nil {
+		t.Fatalf("stdout is not JSON: %v (%q)", err, outBuf.String())
+	}
+	if env["ok"] != true {
+		t.Errorf("ok = %v, want true", env["ok"])
+	}
+}
+
 // ── Task 5: verify-before-write ───────────────────────────────────────────────
 
 // setAppSecretFactory sets up an isolated config factory with the given

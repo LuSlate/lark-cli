@@ -159,17 +159,42 @@ func setAppSecretNonInteractive(f *cmdutil.Factory, opts *SetAppSecretOptions, m
 
 // ── Interactive (human at a TTY) path ────────────────────────────────────────
 
+// secretPrompter supplies the three interactive steps (profile pick, confirm,
+// secret entry). The default implementation is backed by huh; tests inject fakes
+// to drive runInteractive's orchestration without a real terminal.
+type secretPrompter struct {
+	selectProfile func(multi *core.MultiAppConfig, profileOverride string) (*core.AppConfig, error)
+	confirm       func(target *errs.ErrTarget) (bool, error)
+	readInput     func() (string, error)
+}
+
+// defaultSecretPrompter wires the huh-backed interactive steps.
+func defaultSecretPrompter() secretPrompter {
+	return secretPrompter{
+		selectProfile: selectTargetProfile,
+		confirm:       confirmRotate,
+		readInput:     promptHiddenInput,
+	}
+}
+
 // setAppSecretInteractive walks a human through profile selection, an explicit
 // confirmation, and a hidden secret entry, then runs the same verify-before-write
-// and storage logic. Failures are rendered as readable lines (not JSON).
+// and storage logic.
 func setAppSecretInteractive(f *cmdutil.Factory, multi *core.MultiAppConfig, profileOverride string) error {
-	app, err := selectTargetProfile(multi, profileOverride)
+	return runInteractive(f, multi, profileOverride, defaultSecretPrompter())
+}
+
+// runInteractive orchestrates the interactive flow against the supplied prompter,
+// then runs the same verify-before-write / storage logic as the agent path.
+// Failures are rendered as readable lines (not the agent JSON envelope).
+func runInteractive(f *cmdutil.Factory, multi *core.MultiAppConfig, profileOverride string, p secretPrompter) error {
+	app, err := p.selectProfile(multi, profileOverride)
 	if err != nil {
 		return err
 	}
 	target := buildTarget(multi, app)
 
-	confirmed, err := confirmRotate(target)
+	confirmed, err := p.confirm(target)
 	if err != nil {
 		return err
 	}
@@ -178,7 +203,7 @@ func setAppSecretInteractive(f *cmdutil.Factory, multi *core.MultiAppConfig, pro
 		return nil // explicit decline is a clean no-op (exit 0)
 	}
 
-	newSecret, err := promptNewSecret()
+	newSecret, err := p.readInput()
 	if err != nil {
 		return err
 	}
@@ -187,8 +212,8 @@ func setAppSecretInteractive(f *cmdutil.Factory, multi *core.MultiAppConfig, pro
 		// Render a readable line for humans instead of the agent JSON envelope.
 		code := output.ExitCodeOf(err)
 		humanMsg := err.Error()
-		if p, ok := errs.ProblemOf(err); ok {
-			humanMsg = p.Message
+		if pr, ok := errs.ProblemOf(err); ok {
+			humanMsg = pr.Message
 		}
 		fmt.Fprintf(f.IOStreams.ErrOut, "✗ %s\n", humanMsg)
 		fmt.Fprintln(f.IOStreams.ErrOut, "  run the command again to retry")
@@ -221,19 +246,7 @@ func selectTargetProfile(multi *core.MultiAppConfig, profileOverride string) (*c
 		return &multi.Apps[0], nil
 	}
 
-	activeApp := multi.CurrentAppConfig("")
-	options := make([]huh.Option[int], 0, len(multi.Apps))
-	selected := 0
-	for i := range multi.Apps {
-		a := &multi.Apps[i]
-		label := fmt.Sprintf("%s (%s)", a.ProfileName(), a.AppId)
-		if activeApp != nil && activeApp.ProfileName() == a.ProfileName() {
-			label += " [active]"
-			selected = i
-		}
-		options = append(options, huh.NewOption(label, i))
-	}
-
+	options, selected := profileSelectOptions(multi)
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewSelect[int]().
@@ -249,6 +262,24 @@ func selectTargetProfile(multi *core.MultiAppConfig, profileOverride string) (*c
 		return nil, err
 	}
 	return &multi.Apps[selected], nil
+}
+
+// profileSelectOptions builds the huh picker options for multiple profiles,
+// labelling and pre-selecting the active one. Pure logic, unit-tested.
+func profileSelectOptions(multi *core.MultiAppConfig) ([]huh.Option[int], int) {
+	activeApp := multi.CurrentAppConfig("")
+	options := make([]huh.Option[int], 0, len(multi.Apps))
+	selected := 0
+	for i := range multi.Apps {
+		a := &multi.Apps[i]
+		label := fmt.Sprintf("%s (%s)", a.ProfileName(), a.AppId)
+		if activeApp != nil && activeApp.ProfileName() == a.ProfileName() {
+			label += " [active]"
+			selected = i
+		}
+		options = append(options, huh.NewOption(label, i))
+	}
+	return options, selected
 }
 
 // confirmRotate shows a y/N confirmation for the resolved target.
@@ -277,22 +308,16 @@ func confirmRotate(target *errs.ErrTarget) (bool, error) {
 	return confirmed, nil
 }
 
-// promptNewSecret reads the new secret with a hidden input (matches
+// promptHiddenInput reads the new secret with a hidden input (matches
 // config init's existing app-secret prompt style).
-func promptNewSecret() (string, error) {
+func promptHiddenInput() (string, error) {
 	var secret string
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Enter the new app secret").
 				EchoMode(huh.EchoModePassword).
-				Validate(func(s string) error {
-					if strings.TrimSpace(s) == "" {
-						//nolint:forbidigo // huh inline form-validation message shown in the TUI, not a final CLI error
-						return fmt.Errorf("app secret must not be empty")
-					}
-					return nil
-				}).
+				Validate(validateAppSecret).
 				Value(&secret),
 		),
 	).WithTheme(cmdutil.ThemeFeishu())
@@ -303,6 +328,16 @@ func promptNewSecret() (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(secret), nil
+}
+
+// validateAppSecret is the huh input validator: the new secret must be non-empty.
+// Pure logic, unit-tested.
+func validateAppSecret(s string) error {
+	if strings.TrimSpace(s) == "" {
+		//nolint:forbidigo // huh inline form-validation message shown in the TUI, not a final CLI error
+		return fmt.Errorf("app secret must not be empty")
+	}
+	return nil
 }
 
 // ── Shared verify / write / output ───────────────────────────────────────────
