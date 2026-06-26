@@ -190,14 +190,18 @@ func updateRun(opts *UpdateOptions) error {
 // --- Output helpers ---
 
 // reportError emits the failure on the requested surface: JSON mode prints the
-// {ok:false, error:{type, message}} envelope to stdout and signals the typed
-// error's exit code bare; human mode returns the typed error for the
-// dispatcher to render.
+// {ok:false, error:{type, message, hint?}} envelope to stdout and signals the
+// typed error's exit code bare; human mode returns the typed error for the
+// dispatcher to render. The hint is included only when the typed error carries
+// one, so AI-agent/script consumers reading JSON get the same actionable
+// guidance humans see on stderr.
 func reportError(opts *UpdateOptions, io *cmdutil.IOStreams, errType string, typedErr errs.TypedError) error {
 	if opts.JSON {
-		output.PrintJson(io.Out, map[string]interface{}{
-			"ok": false, "error": map[string]interface{}{"type": errType, "message": typedErr.ProblemDetail().Message},
-		})
+		errObj := map[string]interface{}{"type": errType, "message": typedErr.ProblemDetail().Message}
+		if hint := typedErr.ProblemDetail().Hint; hint != "" {
+			errObj["hint"] = hint
+		}
+		output.PrintJson(io.Out, map[string]interface{}{"ok": false, "error": errObj})
 		return output.ErrBare(output.ExitCodeOf(typedErr))
 	}
 	return typedErr

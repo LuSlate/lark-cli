@@ -1681,6 +1681,10 @@ func TestUpdate_InvalidSkillsFlag_JSONExit2(t *testing.T) {
 	if !strings.Contains(stdout.String(), `"type": "validation"`) {
 		t.Fatalf("JSON output missing validation type: %s", stdout.String())
 	}
+	// spec §3.8: JSON validation errors must carry the actionable hint too.
+	if !strings.Contains(stdout.String(), `"hint"`) {
+		t.Fatalf("JSON output missing hint field: %s", stdout.String())
+	}
 }
 
 func TestUpdate_UnknownSkillResult_Exit2(t *testing.T) {

@@ -72,7 +72,7 @@ func ParseSuiteSelection(rawNames []string) (*SuiteSelection, error) {
 		}
 	}
 	if len(invalid) > 0 {
-		return nil, fmt.Errorf("invalid skill name(s): %s", strings.Join(invalid, ", "))
+		return nil, fmt.Errorf("invalid skill name(s): %s (skill names use only letters, digits, and _ : -)", strings.Join(invalid, ", "))
 	}
 	sort.Strings(cleaned)
 	return &SuiteSelection{Skills: cleaned}, nil

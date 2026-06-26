@@ -869,6 +869,7 @@ func TestParseSuiteSelection(t *testing.T) {
 		{name: "all mixed", input: []string{"all", "lark-im"}, wantErr: "cannot be combined"},
 		{name: "empty", input: []string{"", "  "}, wantErr: "at least one"},
 		{name: "invalid name", input: []string{"bad name"}, wantErr: "invalid skill name"},
+		{name: "invalid name explains charset", input: []string{"bad name"}, wantErr: "letters, digits, and _ : -"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
