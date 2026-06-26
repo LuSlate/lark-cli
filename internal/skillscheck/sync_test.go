@@ -891,3 +891,151 @@ func TestParseSuiteSelection(t *testing.T) {
 		})
 	}
 }
+
+func TestSyncSkills_SuiteNarrowsAndPersists(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+
+	runner := &fakeSkillsRunner{
+		officialIndexOut: officialSkillsIndexOutput("lark-calendar", "lark-im", "lark-doc"),
+		globalJSONOut:    globalSkillsJSONOutput("lark-calendar", "lark-im", "lark-doc"),
+	}
+	result := SyncSkills(SyncOptions{
+		Version: "1.0.33",
+		Runner:  runner,
+		Now:     time.Now,
+		Suite:   &SuiteSelection{Skills: []string{"lark-calendar", "lark-im"}},
+	})
+	if result.Err != nil {
+		t.Fatalf("SyncSkills() err = %v, want nil", result.Err)
+	}
+	// Only suite skills installed, never the full set.
+	assertStrings(t, runner.installed[0], []string{"lark-calendar", "lark-im"})
+	if runner.installedAll != 0 {
+		t.Fatalf("installedAll = %d, want 0 (suite must not full-install)", runner.installedAll)
+	}
+	assertStrings(t, result.Suite, []string{"lark-calendar", "lark-im"})
+
+	st, ok, err := ReadState()
+	if err != nil || !ok {
+		t.Fatalf("ReadState() = (_, %v, %v), want readable", ok, err)
+	}
+	assertStrings(t, st.SuiteSkills, []string{"lark-calendar", "lark-im"})
+	assertStrings(t, st.OfficialSkills, []string{"lark-calendar", "lark-im"})
+}
+
+func TestSyncSkills_StickySuiteWhenFlagAbsent(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	// Previous run set a sticky suite.
+	if err := WriteState(SkillsState{
+		Version:        "1.0.32",
+		OfficialSkills: []string{"lark-calendar"},
+		SuiteSkills:    []string{"lark-calendar"},
+		UpdatedAt:      "2026-06-26T00:00:00Z",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	runner := &fakeSkillsRunner{
+		officialIndexOut: officialSkillsIndexOutput("lark-calendar", "lark-im", "lark-doc"),
+		globalJSONOut:    globalSkillsJSONOutput("lark-calendar"),
+	}
+	// No Suite in opts → must reuse sticky {lark-calendar}, NOT install all.
+	result := SyncSkills(SyncOptions{Version: "1.0.33", Runner: runner, Now: time.Now})
+	if result.Err != nil {
+		t.Fatalf("SyncSkills() err = %v", result.Err)
+	}
+	assertStrings(t, result.Suite, []string{"lark-calendar"})
+	assertStrings(t, suiteState(t).SuiteSkills, []string{"lark-calendar"})
+	if runner.installedAll != 0 {
+		t.Fatalf("installedAll = %d, want 0", runner.installedAll)
+	}
+	for _, batch := range runner.installed {
+		for _, name := range batch {
+			if name != "lark-calendar" {
+				t.Fatalf("installed %q, want only lark-calendar (sticky suite)", name)
+			}
+		}
+	}
+}
+
+func TestSyncSkills_AllResetsSuite(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	if err := WriteState(SkillsState{
+		Version:     "1.0.32",
+		SuiteSkills: []string{"lark-calendar"},
+		UpdatedAt:   "2026-06-26T00:00:00Z",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	runner := &fakeSkillsRunner{
+		officialIndexOut: officialSkillsIndexOutput("lark-calendar", "lark-im"),
+		globalJSONOut:    globalSkillsJSONOutput("lark-calendar", "lark-im"),
+	}
+	result := SyncSkills(SyncOptions{
+		Version: "1.0.33", Runner: runner, Now: time.Now,
+		Suite: &SuiteSelection{All: true},
+	})
+	if result.Err != nil {
+		t.Fatalf("SyncSkills() err = %v", result.Err)
+	}
+	if len(result.Suite) != 0 {
+		t.Fatalf("result.Suite = %#v, want empty after --skills all", result.Suite)
+	}
+	if got := suiteState(t).SuiteSkills; len(got) != 0 {
+		t.Fatalf("state.SuiteSkills = %#v, want cleared after --skills all", got)
+	}
+}
+
+func TestSyncSkills_UnknownSuiteNameFailsWithoutInstall(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	runner := &fakeSkillsRunner{
+		officialIndexOut: officialSkillsIndexOutput("lark-calendar", "lark-im"),
+		globalJSONOut:    globalSkillsJSONOutput("lark-calendar"),
+	}
+	result := SyncSkills(SyncOptions{
+		Version: "1.0.33", Runner: runner, Now: time.Now,
+		Suite: &SuiteSelection{Skills: []string{"lark-bogus"}},
+	})
+	if result.Err == nil || !result.InvalidInput {
+		t.Fatalf("result = %#v, want InvalidInput error for unknown skill", result)
+	}
+	if !strings.Contains(result.Err.Error(), "lark-bogus") {
+		t.Fatalf("err = %v, want mention of lark-bogus", result.Err)
+	}
+	if len(runner.installed) != 0 || runner.installedAll != 0 {
+		t.Fatalf("installed=%v installedAll=%d, want nothing installed", runner.installed, runner.installedAll)
+	}
+}
+
+func TestSyncSkills_SuiteNoFallbackWhenOfficialUnavailable(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	runner := &fakeSkillsRunner{
+		officialIndexErr: fmt.Errorf("network down"),
+		officialErr:      fmt.Errorf("network down"),
+		globalJSONOut:    globalSkillsJSONOutput("lark-calendar"),
+	}
+	result := SyncSkills(SyncOptions{
+		Version: "1.0.33", Runner: runner, Now: time.Now,
+		Suite: &SuiteSelection{Skills: []string{"lark-calendar"}},
+	})
+	if result.Err == nil {
+		t.Fatalf("result.Err = nil, want error when official list unavailable in suite mode")
+	}
+	if runner.installedAll != 0 {
+		t.Fatalf("installedAll = %d, want 0 (suite must never fall back to full install)", runner.installedAll)
+	}
+}
+
+// suiteState is a small helper to read state in assertions.
+func suiteState(t *testing.T) *SkillsState {
+	t.Helper()
+	s, ok, err := ReadState()
+	if err != nil || !ok {
+		t.Fatalf("ReadState() = (_, %v, %v), want readable", ok, err)
+	}
+	return s
+}

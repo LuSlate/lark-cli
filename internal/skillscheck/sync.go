@@ -309,6 +309,7 @@ type SyncOptions struct {
 	Force   bool
 	Runner  SkillsRunner
 	Now     func() time.Time
+	Suite   *SuiteSelection // nil = 本次未传 --skills(沿用 state 中的 sticky suite)
 }
 
 type SyncResult struct {
@@ -321,6 +322,31 @@ type SyncResult struct {
 	Err            error
 	Detail         string
 	Force          bool
+	Suite          []string // 生效的 suite(nil/空 = 全部模式)
+	InvalidInput   bool      // true 表示因用户输入非法(未知 skill 名)而失败 → 命令层映射为 exit 2
+}
+
+// resolveEffectiveSuite 决定本次实际生效的 suite。
+// 返回 (suite 名单, suiteActive)。suiteActive=false 表示全部模式。
+func resolveEffectiveSuite(optSuite *SuiteSelection, previous *SkillsState, readable bool) ([]string, bool) {
+	if optSuite != nil {
+		if optSuite.All {
+			return nil, false // 显式重置为全部
+		}
+		return optSuite.Skills, true
+	}
+	if readable && previous != nil && len(previous.SuiteSkills) > 0 {
+		return previous.SuiteSkills, true // 沿用 sticky suite
+	}
+	return nil, false
+}
+
+// suiteSkillsForState 返回写入 state 的 SuiteSkills(全部模式时为 nil,使其被 omitempty 省略/清空)。
+func suiteSkillsForState(active bool, suite []string) []string {
+	if !active {
+		return nil
+	}
+	return suite
 }
 
 func SyncSkills(opts SyncOptions) *SyncResult {
@@ -331,25 +357,67 @@ func SyncSkills(opts SyncOptions) *SyncResult {
 		return &SyncResult{Action: "failed", Err: fmt.Errorf("skills runner is nil")}
 	}
 
-	// --- Step 1: List official skills ---
-	official, reason, ok := listOfficialSkills(opts.Runner)
-	if !ok {
-		return fallbackFullInstall(opts, reason, nil)
-	}
-
-	// --- Step 2: List local (installed) skills ---
-	local, ok := listLocalSkills(opts.Runner)
-	if !ok {
-		return fallbackFullInstall(opts, "local skills list failed or parsed as empty", official)
-	}
-
-	// --- Step 3: Read previous state ---
+	// 先读 previous state——解析 sticky suite 需要它,且即便后续官方列表失败也要能判断是否处于 suite 模式。
 	previous, readable, err := ReadState()
 	if err != nil {
 		readable = false
 		previous = nil
 	}
 
+	effectiveSuite, suiteActive := resolveEffectiveSuite(opts.Suite, previous, readable)
+
+	// --- Step 1: List official skills ---
+	official, reason, ok := listOfficialSkills(opts.Runner)
+	if !ok {
+		if suiteActive {
+			// suite 模式绝不 fallback 装全部(会违背"只要子集"的意图)。
+			return &SyncResult{
+				Action: "failed",
+				Err:    fmt.Errorf("cannot apply skills suite: official skills list unavailable (%s)", reason),
+				Detail: reason,
+				Force:  opts.Force,
+				Suite:  effectiveSuite,
+			}
+		}
+		return fallbackFullInstall(opts, reason, nil)
+	}
+
+	// --- Step 1.5: suite 模式下校验名字 + 收窄官方集合 ---
+	if suiteActive {
+		officialSet := toSet(official)
+		unknown := []string{}
+		for _, name := range effectiveSuite {
+			if !officialSet[name] {
+				unknown = append(unknown, name)
+			}
+		}
+		if len(unknown) > 0 {
+			return &SyncResult{
+				Action:       "failed",
+				InvalidInput: true,
+				Err:          fmt.Errorf("unknown skill(s) not in official list: %s", strings.Join(unknown, ", ")),
+				Force:        opts.Force,
+				Suite:        effectiveSuite,
+			}
+		}
+		official = intersection(official, toSet(effectiveSuite))
+	}
+
+	// --- Step 2: List local (installed) skills ---
+	local, ok := listLocalSkills(opts.Runner)
+	if !ok {
+		if suiteActive {
+			return &SyncResult{
+				Action: "failed",
+				Err:    fmt.Errorf("cannot apply skills suite: local skills list unavailable"),
+				Force:  opts.Force,
+				Suite:  effectiveSuite,
+			}
+		}
+		return fallbackFullInstall(opts, "local skills list failed or parsed as empty", official)
+	}
+
+	// --- Step 3: Plan (previous state already read above) ---
 	plan := PlanSync(SyncInput{
 		Version:        opts.Version,
 		OfficialSkills: official,
@@ -359,32 +427,49 @@ func SyncSkills(opts SyncOptions) *SyncResult {
 		Force:          opts.Force,
 	})
 
+	toInstall := plan.ToUpdate
+	// suite 模式:若增量计算出"无需更新",仍要确保 suite 被安装(用户显式要这些 skill)。
+	if suiteActive && len(toInstall) == 0 {
+		toInstall = official
+	}
+
 	result := &SyncResult{
 		Action:         "synced",
 		Official:       plan.OfficialSkills,
-		Updated:        plan.ToUpdate,
+		Updated:        toInstall,
 		Added:          plan.Added,
 		SkippedDeleted: plan.SkippedDeleted,
 		Force:          opts.Force,
+		Suite:          suiteSkillsForState(suiteActive, effectiveSuite),
 	}
 
-	if len(plan.ToUpdate) == 0 {
+	if len(toInstall) == 0 {
+		// 仅非 suite 模式才会到这里。
 		return fallbackFullInstall(opts, "toUpdate skills empty fallback", official)
 	}
 
-	if len(plan.ToUpdate) > 0 {
-		installResult := opts.Runner.InstallSkill(plan.ToUpdate)
-		if installResult == nil || installResult.Err != nil {
-			return fallbackFullInstall(opts, resultDetail(installResult), official)
+	installResult := opts.Runner.InstallSkill(toInstall)
+	if installResult == nil || installResult.Err != nil {
+		if suiteActive {
+			// suite 模式安装失败也不 fallback 装全部。
+			return &SyncResult{
+				Action: "failed",
+				Err:    fmt.Errorf("skills suite install failed: %s", resultDetail(installResult)),
+				Detail: resultDetail(installResult),
+				Force:  opts.Force,
+				Suite:  effectiveSuite,
+			}
 		}
+		return fallbackFullInstall(opts, resultDetail(installResult), official)
 	}
 
 	state := SkillsState{
 		Version:              opts.Version,
 		OfficialSkills:       plan.OfficialSkills,
-		UpdatedSkills:        plan.ToUpdate,
+		UpdatedSkills:        toInstall,
 		AddedOfficialSkills:  plan.Added,
 		SkippedDeletedSkills: plan.SkippedDeleted,
+		SuiteSkills:          suiteSkillsForState(suiteActive, effectiveSuite),
 		UpdatedAt:            opts.Now().UTC().Format(time.RFC3339),
 	}
 	if err := WriteState(state); err != nil {
