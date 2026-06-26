@@ -323,7 +323,7 @@ type SyncResult struct {
 	Detail         string
 	Force          bool
 	Suite          []string // 生效的 suite(nil/空 = 全部模式)
-	InvalidInput   bool      // true 表示因用户输入非法(未知 skill 名)而失败 → 命令层映射为 exit 2
+	InvalidInput   bool     // true 表示因用户输入非法(未知 skill 名)而失败 → 命令层映射为 exit 2
 }
 
 // resolveEffectiveSuite 决定本次实际生效的 suite。
