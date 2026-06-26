@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -135,5 +136,59 @@ func TestReadSyncedVersionFromState(t *testing.T) {
 	}
 	if got, ok := ReadSyncedVersion(); ok || got != "" {
 		t.Fatalf("ReadSyncedVersion() = (%q, %v), want (\"\", false) for empty version", got, ok)
+	}
+}
+
+func TestSkillsStateSuiteRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+
+	if err := WriteState(SkillsState{
+		Version:     "1.2.3",
+		SuiteSkills: []string{"lark-calendar", "lark-im"},
+		UpdatedAt:   "2026-06-26T10:00:00Z",
+	}); err != nil {
+		t.Fatalf("WriteState() err = %v, want nil", err)
+	}
+
+	got, ok, err := ReadState()
+	if err != nil || !ok || got == nil {
+		t.Fatalf("ReadState() = (_, %v, %v), want readable state", ok, err)
+	}
+	if !reflect.DeepEqual(got.SuiteSkills, []string{"lark-calendar", "lark-im"}) {
+		t.Fatalf("SuiteSkills = %#v, want [lark-calendar lark-im]", got.SuiteSkills)
+	}
+}
+
+func TestSkillsStateSuiteBackCompat(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	// Old state file without suite_skills field.
+	old := `{"version":"1.0.0","official_skills":["lark-im"],"updated_at":"2026-01-01T00:00:00Z"}`
+	if err := os.WriteFile(filepath.Join(dir, stateFile), []byte(old), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got, ok, err := ReadState()
+	if err != nil || !ok || got == nil {
+		t.Fatalf("ReadState() = (_, %v, %v), want readable", ok, err)
+	}
+	if got.SuiteSkills != nil {
+		t.Fatalf("SuiteSkills = %#v, want nil for old state without the field", got.SuiteSkills)
+	}
+}
+
+func TestWriteStateOmitsEmptySuite(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("LARKSUITE_CLI_CONFIG_DIR", dir)
+	if err := WriteState(SkillsState{Version: "1.0.0"}); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, stateFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), "suite_skills") {
+		t.Fatalf("empty suite must be omitted from JSON, got: %s", raw)
 	}
 }

@@ -27,6 +27,7 @@ type SkillsState struct {
 	UpdatedSkills        []string `json:"updated_skills"`
 	AddedOfficialSkills  []string `json:"added_official_skills"`
 	SkippedDeletedSkills []string `json:"skipped_deleted_skills"`
+	SuiteSkills          []string `json:"suite_skills,omitempty"`
 	UpdatedAt            string   `json:"updated_at"`
 }
 
