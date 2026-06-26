@@ -193,21 +193,26 @@ func TestSetAppSecret_ConfirmGate_MessageAndHint(t *testing.T) {
 		t.Errorf("message mismatch:\n  got:  %q\n  want: %q", cre.Message, wantMsg)
 	}
 
-	wantHint := `re-run with: lark-cli --profile cli_abc123 config set-app-secret --app-secret-stdin --yes (pipe the new secret via stdin)`
+	wantHint := `add --profile cli_abc123 --yes to confirm (pins the target shown above; pipe the new secret via stdin)`
 	if cre.Hint != wantHint {
 		t.Errorf("hint mismatch:\n  got:  %q\n  want: %q", cre.Hint, wantHint)
 	}
 
-	// The framework `action` field must be the full, executable re-run command
-	// (pinned by --profile <appId> + --app-secret-stdin + --yes) so a caller
-	// that reads `action` cannot drift off the preview-confirmed target. It must
-	// be consistent with the hint (the hint embeds the same command).
-	wantAction := `lark-cli --profile cli_abc123 config set-app-secret --app-secret-stdin --yes`
+	// Per the framework confirmation convention (internal/cmdutil/confirm.go), the
+	// `action` field is the operation identifier — NOT a pre-built "lark-cli …"
+	// command. A pre-built command hardcodes the binary name and trips shell /
+	// wrong-binary pitfalls (e.g. an older installed lark-cli without this command).
+	wantAction := `config set-app-secret`
 	if cre.Action != wantAction {
 		t.Errorf("action mismatch:\n  got:  %q\n  want: %q", cre.Action, wantAction)
 	}
-	if !strings.Contains(cre.Hint, cre.Action) {
-		t.Errorf("action must be consistent with hint; action %q not found in hint %q", cre.Action, cre.Hint)
+	// The hint must guide the caller to pin the previewed target with --profile <app_id> --yes.
+	if !strings.Contains(cre.Hint, "--profile cli_abc123 --yes") {
+		t.Errorf("hint must guide --profile <app_id> --yes to pin the target, got: %q", cre.Hint)
+	}
+	// Neither action nor hint may hardcode the lark-cli binary name.
+	if strings.Contains(cre.Action, "lark-cli") || strings.Contains(cre.Hint, "lark-cli") {
+		t.Errorf("action/hint must not hardcode the lark-cli binary name; action=%q hint=%q", cre.Action, cre.Hint)
 	}
 }
 
@@ -435,10 +440,10 @@ func TestSetAppSecret_VerifyBeforeWrite_InvalidClient(t *testing.T) {
 	// Retry guidance: the target was already confirmed (this is the --yes apply
 	// path), so the hint must tell the caller to retry with --yes (no re-preview),
 	// pinned by --profile <appID> — never bounce back to the confirm gate.
-	if !strings.Contains(cfgErr.Hint, "--profile "+appID) ||
-		!strings.Contains(cfgErr.Hint, "--app-secret-stdin --yes") ||
-		!strings.Contains(cfgErr.Hint, "already confirmed") {
-		t.Errorf("invalid_client retry hint must guide a confirmed --yes retry pinned by --profile, got: %q", cfgErr.Hint)
+	if !strings.Contains(cfgErr.Hint, "--profile "+appID+" --yes") ||
+		!strings.Contains(cfgErr.Hint, "already confirmed") ||
+		strings.Contains(cfgErr.Hint, "lark-cli") {
+		t.Errorf("invalid_client retry hint must guide a confirmed --profile <app_id> --yes retry without a hardcoded binary, got: %q", cfgErr.Hint)
 	}
 }
 
@@ -492,10 +497,10 @@ func TestSetAppSecret_VerifyBeforeWrite_TransientError(t *testing.T) {
 
 	// Transient failure is retryable and the target is already confirmed: the
 	// hint must guide a same-command --yes retry (no re-preview), pinned by --profile.
-	if !strings.Contains(netErr.Hint, "--profile "+appID) ||
-		!strings.Contains(netErr.Hint, "--app-secret-stdin --yes") ||
-		!strings.Contains(netErr.Hint, "already confirmed") {
-		t.Errorf("transient retry hint must guide a confirmed --yes retry pinned by --profile, got: %q", netErr.Hint)
+	if !strings.Contains(netErr.Hint, "--profile "+appID+" --yes") ||
+		!strings.Contains(netErr.Hint, "already confirmed") ||
+		strings.Contains(netErr.Hint, "lark-cli") {
+		t.Errorf("transient retry hint must guide a confirmed --profile <app_id> --yes retry without a hardcoded binary, got: %q", netErr.Hint)
 	}
 }
 

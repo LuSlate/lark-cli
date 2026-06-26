@@ -90,21 +90,21 @@ func setAppSecretRun(f *cmdutil.Factory, opts *SetAppSecretOptions) error {
 
 	// ── Step 3: Confirm gate — MUST happen before any stdin read ─────────────
 	if !opts.Yes {
-		// rerun is the exact command the caller should run to apply, after
-		// confirming the target. It is reused for both the confirmation
-		// `action` field and the `hint` so they can never drift apart.
-		rerun := fmt.Sprintf(
-			"lark-cli --profile %s config set-app-secret --app-secret-stdin --yes",
-			app.AppId,
-		)
+		// Follow the framework confirmation convention (internal/cmdutil/confirm.go):
+		// `action` is the operation identifier, and the hint tells the caller what to
+		// append to THEIR OWN invocation — never a pre-built "lark-cli …" string.
+		// A pre-built command hardcodes the binary name and trips shell-quoting /
+		// wrong-binary pitfalls (e.g. an older installed `lark-cli` without this
+		// subcommand). We add --profile <app_id> to the guidance so the apply pins
+		// the previewed target and cannot drift to a different active profile.
 		msg := fmt.Sprintf(
 			"app secret for profile %q (%s) will be rotated; confirm the target, then re-run with --profile %s --yes",
 			app.ProfileName(), app.AppId, app.AppId,
 		)
-		hint := fmt.Sprintf("re-run with: %s (pipe the new secret via stdin)", rerun)
+		hint := fmt.Sprintf("add --profile %s --yes to confirm (pins the target shown above; pipe the new secret via stdin)", app.AppId)
 		return errs.NewConfirmationRequiredError(
 			errs.RiskHighRiskWrite,
-			rerun,
+			"config set-app-secret",
 			"%s", msg,
 		).WithHint("%s", hint).WithTarget(target)
 	}
@@ -146,7 +146,7 @@ func setAppSecretRun(f *cmdutil.Factory, opts *SetAppSecretOptions) error {
 	httpClient, err := f.HttpClient()
 	if err != nil {
 		return errs.NewNetworkError(errs.SubtypeNetworkTransport, "could not initialise HTTP client for secret verification, nothing was changed, please retry").
-			WithHint("retry the same command: lark-cli --profile %s config set-app-secret --app-secret-stdin --yes (target already confirmed — no need to preview again)", app.AppId).
+			WithHint("the target is already confirmed — re-run with --profile %s --yes (no need to preview again)", app.AppId).
 			WithCause(err).
 			WithTarget(target)
 	}
@@ -154,14 +154,14 @@ func setAppSecretRun(f *cmdutil.Factory, opts *SetAppSecretOptions) error {
 		if errs.IsTyped(err) {
 			// Deterministic credential rejection (invalid_client / unauthorized_client).
 			return errs.NewConfigError(errs.SubtypeInvalidClient, "new app secret is invalid, nothing was changed").
-				WithHint("provide a valid secret and retry: lark-cli --profile %s config set-app-secret --app-secret-stdin --yes (target already confirmed — no need to preview again)", app.AppId).
+				WithHint("the target is already confirmed — provide a valid secret and re-run with --profile %s --yes (no need to preview again)", app.AppId).
 				WithCause(err).
 				WithTarget(target)
 		}
 		// Transient / transport / timeout — surface as NetworkError so the caller
 		// knows to retry rather than treat it as a bad credential.
 		return errs.NewNetworkError(errs.SubtypeNetworkTransport, "could not verify the new secret (transient error), nothing was changed, please retry").
-			WithHint("retry the same command: lark-cli --profile %s config set-app-secret --app-secret-stdin --yes (target already confirmed — no need to preview again)", app.AppId).
+			WithHint("the target is already confirmed — re-run with --profile %s --yes (no need to preview again)", app.AppId).
 			WithCause(err).
 			WithTarget(target)
 	}
